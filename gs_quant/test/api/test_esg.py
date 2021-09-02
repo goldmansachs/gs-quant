@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 
-from gs_quant.api.gs.esg import GsEsgApi, Card, Measure
+from gs_quant.api.gs.esg import GsEsgApi, ESGCard, ESGMeasure
 from gs_quant.session import *
 
 
@@ -129,8 +129,8 @@ def test_get_risk_models(mocker):
     response = GsEsgApi.get_esg(entity_id='MPM9Y3434RDFVKA3',
                                 benchmark_id='MA4B66MW5E27U8P32SB',
                                 pricing_date=dt.date(2021, 4, 8),
-                                measures=[Measure.G_PERCENTILE, Measure.ES_DISCLOSURE_PERCENTAGE],
-                                cards=[Card.SUMMARY, Card.BOTTOM_TEN_RANKED])
+                                measures=[ESGMeasure.G_PERCENTILE, ESGMeasure.ES_DISCLOSURE_PERCENTAGE],
+                                cards=[ESGCard.SUMMARY, ESGCard.BOTTOM_TEN_RANKED])
     GsSession.current._get.assert_called_with(
         '/esg/MPM9Y3434RDFVKA3?&date=2021-04-08&benchmark=MA4B66MW5E27U8P32SB&measure=gPercentile&'
         'measure=esDisclosurePercentage&card=summary&card=bottomTenRanked')

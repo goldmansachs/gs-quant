@@ -898,6 +898,239 @@ class CommodSwap(Instrument):
         self.__strategy = value        
 
 
+class EqAutoroll(Instrument):
+        
+    """Instrument definition for equity autoroll"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        underlier_type: Union[UnderlierType, str] = None,
+        expiration_date: Union[datetime.date, str] = None,
+        settlement_delay: str = None,
+        payment_currency: Union[Currency, str] = None,
+        first_fixing_date: Union[datetime.date, str] = None,
+        last_fixing_date: Union[datetime.date, str] = None,
+        fixing_frequency: str = None,
+        business_day_calendar: str = None,
+        buffer_level: float = None,
+        local_return_cap: float = None,
+        trigger_level: float = None,
+        upside_leverage: float = None,
+        premium: float = None,
+        premium_payment_date: Union[datetime.date, str] = None,
+        premium_currency: Union[Currency, str] = None,
+        buy_sell: Union[BuySell, str] = None,
+        underlier: Union[float, str] = None,
+        notional: Union[float, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.underlier_type = underlier_type
+        self.expiration_date = expiration_date
+        self.settlement_delay = settlement_delay
+        self.payment_currency = payment_currency
+        self.first_fixing_date = first_fixing_date
+        self.last_fixing_date = last_fixing_date
+        self.fixing_frequency = fixing_frequency
+        self.business_day_calendar = business_day_calendar
+        self.buffer_level = buffer_level
+        self.local_return_cap = local_return_cap
+        self.trigger_level = trigger_level
+        self.upside_leverage = upside_leverage
+        self.premium = premium
+        self.premium_payment_date = premium_payment_date
+        self.premium_currency = premium_currency
+        self.buy_sell = buy_sell
+        self.underlier = underlier
+        self.notional = notional
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Equity"""
+        return AssetClass.Equity        
+
+    @property
+    def type(self) -> AssetType:
+        """Autoroll"""
+        return AssetType.Autoroll        
+
+    @property
+    def underlier_type(self) -> Union[UnderlierType, str]:
+        """Type of underlyer"""
+        return self.__underlier_type
+
+    @underlier_type.setter
+    def underlier_type(self, value: Union[UnderlierType, str]):
+        self._property_changed('underlier_type')
+        self.__underlier_type = get_enum_value(UnderlierType, value)        
+
+    @property
+    def expiration_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
+        return self.__expiration_date
+
+    @expiration_date.setter
+    def expiration_date(self, value: Union[datetime.date, str]):
+        self._property_changed('expiration_date')
+        self.__expiration_date = value        
+
+    @property
+    def settlement_delay(self) -> str:
+        """Tenor"""
+        return self.__settlement_delay
+
+    @settlement_delay.setter
+    def settlement_delay(self, value: str):
+        self._property_changed('settlement_delay')
+        self.__settlement_delay = value        
+
+    @property
+    def payment_currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__payment_currency
+
+    @payment_currency.setter
+    def payment_currency(self, value: Union[Currency, str]):
+        self._property_changed('payment_currency')
+        self.__payment_currency = get_enum_value(Currency, value)        
+
+    @property
+    def first_fixing_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
+        return self.__first_fixing_date
+
+    @first_fixing_date.setter
+    def first_fixing_date(self, value: Union[datetime.date, str]):
+        self._property_changed('first_fixing_date')
+        self.__first_fixing_date = value        
+
+    @property
+    def last_fixing_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
+        return self.__last_fixing_date
+
+    @last_fixing_date.setter
+    def last_fixing_date(self, value: Union[datetime.date, str]):
+        self._property_changed('last_fixing_date')
+        self.__last_fixing_date = value        
+
+    @property
+    def fixing_frequency(self) -> str:
+        """Tenor"""
+        return self.__fixing_frequency
+
+    @fixing_frequency.setter
+    def fixing_frequency(self, value: str):
+        self._property_changed('fixing_frequency')
+        self.__fixing_frequency = value        
+
+    @property
+    def business_day_calendar(self) -> str:
+        return self.__business_day_calendar
+
+    @business_day_calendar.setter
+    def business_day_calendar(self, value: str):
+        self._property_changed('business_day_calendar')
+        self.__business_day_calendar = value        
+
+    @property
+    def buffer_level(self) -> float:
+        return self.__buffer_level
+
+    @buffer_level.setter
+    def buffer_level(self, value: float):
+        self._property_changed('buffer_level')
+        self.__buffer_level = value        
+
+    @property
+    def local_return_cap(self) -> float:
+        return self.__local_return_cap
+
+    @local_return_cap.setter
+    def local_return_cap(self, value: float):
+        self._property_changed('local_return_cap')
+        self.__local_return_cap = value        
+
+    @property
+    def trigger_level(self) -> float:
+        return self.__trigger_level
+
+    @trigger_level.setter
+    def trigger_level(self, value: float):
+        self._property_changed('trigger_level')
+        self.__trigger_level = value        
+
+    @property
+    def upside_leverage(self) -> float:
+        return self.__upside_leverage
+
+    @upside_leverage.setter
+    def upside_leverage(self, value: float):
+        self._property_changed('upside_leverage')
+        self.__upside_leverage = value        
+
+    @property
+    def premium(self) -> float:
+        return self.__premium
+
+    @premium.setter
+    def premium(self, value: float):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_payment_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
+        return self.__premium_payment_date
+
+    @premium_payment_date.setter
+    def premium_payment_date(self, value: Union[datetime.date, str]):
+        self._property_changed('premium_payment_date')
+        self.__premium_payment_date = value        
+
+    @property
+    def premium_currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__premium_currency
+
+    @premium_currency.setter
+    def premium_currency(self, value: Union[Currency, str]):
+        self._property_changed('premium_currency')
+        self.__premium_currency = get_enum_value(Currency, value)        
+
+    @property
+    def buy_sell(self) -> Union[BuySell, str]:
+        """Buy or Sell side of contract"""
+        return self.__buy_sell
+
+    @buy_sell.setter
+    def buy_sell(self, value: Union[BuySell, str]):
+        self._property_changed('buy_sell')
+        self.__buy_sell = get_enum_value(BuySell, value)        
+
+    @property
+    def underlier(self) -> Union[float, str]:
+        """Underlier security identifier"""
+        return self.__underlier
+
+    @underlier.setter
+    def underlier(self, value: Union[float, str]):
+        self._property_changed('underlier')
+        self.__underlier = value        
+
+    @property
+    def notional(self) -> Union[float, str]:
+        """Size of some value, i.e. notional like 1.3b, 1.5, 1000"""
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: Union[float, str]):
+        self._property_changed('notional')
+        self.__notional = value        
+
+
 class EqCliquet(Instrument):
         
     """Object representation of an Equity Cliquet"""

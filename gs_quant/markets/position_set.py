@@ -222,7 +222,7 @@ class PositionSet:
         """ Create PostionSet instance from a list of position-object-like dataframes """
         positions.columns = positions.columns.str.lower()
         positions = positions[~positions['identifier'].isnull()]
-        id_map = cls.__resolve_identifiers(identifiers=positions['identifier'].to_list())
+        id_map = cls.__resolve_identifiers(identifiers=positions['identifier'].to_list(), date=date)
         equalize = not ('quantity' in positions.columns or 'weight' in positions.columns)
         equal_weight = 1 / len(positions)
         converted_positions = []
@@ -238,12 +238,17 @@ class PositionSet:
         return cls(converted_positions, date)
 
     @staticmethod
-    def __resolve_identifiers(identifiers: List[str]) -> Dict:
-        response = GsAssetApi.resolve_assets(identifier=identifiers, fields=['name', 'id'], limit=1)
+    def __resolve_identifiers(identifiers: List[str], date: datetime.date) -> Dict:
+        response = GsAssetApi.resolve_assets(
+            identifier=identifiers,
+            fields=['name', 'id'],
+            limit=1,
+            as_of=date
+        )
         try:
             id_map = dict(zip(response.keys(),
                           [dict(id=asset[0]['id'], name=asset[0]['name']) for asset in response.values()]))
-        except ValueError:
+        except IndexError:
             unmapped_assets = {_id for _id, asset in response.items() if not asset}
             raise MqValueError(f'Error in resolving the following identifiers: {unmapped_assets}')
         return id_map

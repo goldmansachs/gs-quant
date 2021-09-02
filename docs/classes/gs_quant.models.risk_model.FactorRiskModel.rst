@@ -19,13 +19,13 @@
    .. automethod:: create
    
    
-   .. automethod:: create_factor
+   .. automethod:: save_factor_metadata
    
    
    .. automethod:: delete
    
    
-   .. automethod:: delete_factor
+   .. automethod:: delete_factor_metadata
    
    
    .. automethod:: get_asset_universe

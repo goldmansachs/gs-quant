@@ -16,13 +16,29 @@ under the License.
 import datetime as dt
 import logging
 import urllib.parse
+from enum import Enum
 from typing import Tuple, List
 
+from gs_quant.base import EnumBase
 from gs_quant.session import GsSession
 from gs_quant.target.common import Currency
-from gs_quant.target.reports import Report, FactorRiskTableMode, OrderType
+from gs_quant.target.reports import Report
 
 _logger = logging.getLogger(__name__)
+
+
+class OrderType(EnumBase, Enum):
+    """Source object for position data"""
+
+    Ascending = 'Ascending'
+    Descending = 'Descending'
+
+
+class FactorRiskTableMode(EnumBase, Enum):
+    """Source object for position data"""
+
+    Exposure = 'Exposure'
+    ZScore = 'ZScore'
 
 
 class GsReportApi:
@@ -98,14 +114,17 @@ class GsReportApi:
                                        status_body)
 
     @classmethod
-    def get_risk_factor_data_results(cls,
-                                     risk_report_id: str,
-                                     factors: List[str] = None,
-                                     factor_categories: List[str] = None,
-                                     currency: Currency = None,
-                                     start_date: dt.date = None,
-                                     end_date: dt.date = None) -> dict:
+    def get_factor_risk_report_results(cls,
+                                       risk_report_id: str,
+                                       view: str = None,
+                                       factors: List[str] = None,
+                                       factor_categories: List[str] = None,
+                                       currency: Currency = None,
+                                       start_date: dt.date = None,
+                                       end_date: dt.date = None) -> dict:
         url = f'/risk/factors/reports/{risk_report_id}/results?'
+        if view is not None:
+            url += f'&view={view}'
         if factors is not None:
             factors = map(urllib.parse.quote, factors)  # to support factors like "Automobiles & Components"
             url += f'&factors={"&factors=".join(factors)}'
@@ -118,6 +137,24 @@ class GsReportApi:
         if end_date is not None:
             url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
 
+        return GsSession.current._get(url)
+
+    @classmethod
+    def get_factor_risk_report_view(cls,
+                                    risk_report_id: str,
+                                    view: str = None,
+                                    factor: str = None,
+                                    factor_category: str = None,
+                                    currency: Currency = None,
+                                    start_date: dt.date = None,
+                                    end_date: dt.date = None) -> dict:
+
+        query_string = urllib.parse.urlencode(
+            dict(filter(lambda item: item[1] is not None,
+                        dict(view=view, factor=factor, factorCategory=factor_category,
+                             currency=currency, startDate=start_date, endDate=end_date).items())))
+
+        url = f'/risk/factors/reports/{risk_report_id}/views?{query_string}'
         return GsSession.current._get(url)
 
     @classmethod

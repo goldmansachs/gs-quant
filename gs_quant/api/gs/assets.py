@@ -184,10 +184,11 @@ class GsAssetApi:
             identifier: [str],
             fields: IdList = [],
             limit: int = 100,
+            as_of: dt.datetime = dt.datetime.today(),
             **kwargs
     ) -> Tuple[dict, ...]:
         where = dict(identifier=identifier, **kwargs)
-        query = dict(where=where, limit=limit, fields=fields)
+        query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
         return GsSession.current._post('/assets/resolver', payload=query)
 
     @classmethod

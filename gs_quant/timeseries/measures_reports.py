@@ -23,14 +23,12 @@ from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError, MqError
-from gs_quant.markets.baskets import Basket
-from gs_quant.markets.factor import Factor
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport
 from gs_quant.markets.report import ThematicReport
-from gs_quant.models.risk_model import ReturnFormat
+from gs_quant.models.risk_model import ReturnFormat, FactorRiskModel
 from gs_quant.target.portfolios import RiskAumSource
 from gs_quant.timeseries import plot_measure_entity
-from gs_quant.timeseries.measures import _extract_series_from_df
+from gs_quant.timeseries.measures import _extract_series_from_df, SecurityMaster, AssetIdentifier
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.FACTOR_EXPOSURE])
@@ -194,10 +192,10 @@ def thematic_exposure(report_id: str, basket_ticker: str, *, source: str = None,
     :return: Timeseries of daily thematic beta of portfolio to requested flagship basket
     """
     thematic_report = ThematicReport.get(report_id)
-    thematic_basket = Basket.get(basket_ticker)
+    asset = SecurityMaster.get_asset(basket_ticker, AssetIdentifier.TICKER)
     df = thematic_report.get_thematic_exposure(start_date=DataContext.current.start_time,
                                                end_date=DataContext.current.end_time,
-                                               basket_ids=[thematic_basket.get_marquee_id()])
+                                               basket_ids=[asset.get_marquee_id()])
     if not df.empty:
         df.set_index('date', inplace=True)
         df.index = pd.to_datetime(df.index)
@@ -218,10 +216,10 @@ def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
     :return: Timeseries of daily thematic beta of portfolio to requested flagship basket
     """
     thematic_report = ThematicReport.get(report_id)
-    thematic_basket = Basket.get(basket_ticker)
+    asset = SecurityMaster.get_asset(basket_ticker, AssetIdentifier.TICKER)
     df = thematic_report.get_thematic_betas(start_date=DataContext.current.start_time,
                                             end_date=DataContext.current.end_time,
-                                            basket_ids=[thematic_basket.get_marquee_id()])
+                                            basket_ids=[asset.get_marquee_id()])
     if not df.empty:
         df.set_index('date', inplace=True)
         df.index = pd.to_datetime(df.index)
@@ -231,11 +229,11 @@ def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
 def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) -> pd.Series:
     # Check params
     report = FactorRiskReport.get(report_id)
-    risk_model_id = report.get_risk_model_id()
     if factor_name not in ['Factor', 'Specific', 'Total']:
         if query_type in [QueryType.DAILY_RISK, QueryType.ANNUAL_RISK]:
             raise MqValueError('Please pick a factor name from the following: ["Total", "Factor", "Specific"]')
-        factor = Factor.get(risk_model_id, factor_name)
+        model = FactorRiskModel.get(report.get_risk_model_id())
+        factor = model.get_factor(factor_name)
         factor_name = factor.name
 
     # Extract relevant data for each date
@@ -249,8 +247,7 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) ->
         end_date=DataContext.current.end_time,
         return_format=ReturnFormat.JSON
     )
-    factor_exposures = [{'date': data['date'], col_name: data[data_type]} for data in factor_data
-                        if data.get(data_type)]
+    factor_exposures = [{'date': d['date'], col_name: d[data_type]} for d in factor_data if d.get(data_type)]
 
     # Create and return timeseries
     df = pd.DataFrame(factor_exposures)

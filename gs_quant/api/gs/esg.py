@@ -23,7 +23,7 @@ from gs_quant.session import GsSession
 _logger = logging.getLogger(__name__)
 
 
-class Card(Enum):
+class ESGCard(Enum):
     """
     ESG Cards
     """
@@ -40,7 +40,7 @@ class Card(Enum):
         return self.value
 
 
-class Measure(Enum):
+class ESGMeasure(Enum):
     """
     ESG Measures
     """
@@ -62,8 +62,8 @@ class GsEsgApi:
                 entity_id: str,
                 benchmark_id: str = None,
                 pricing_date: dt.date = dt.date.today(),
-                measures: List[Measure] = [],
-                cards: List[Card] = []) -> Dict:
+                measures: List[ESGMeasure] = [],
+                cards: List[ESGCard] = []) -> Dict:
         url = f'/esg/{entity_id}?'
         if pricing_date:
             url += f'&date={pricing_date.strftime("%Y-%m-%d")}'

@@ -67,6 +67,7 @@ Interpolate = _create_enum('Interpolate', ['intersect', 'step', 'nan', 'zero', '
 Returns = _create_enum('Returns', ['simple', 'logarithmic', 'absolute'])
 SeriesType = _create_enum('SeriesType', ['prices', 'returns'])
 CurveType = _create_enum('CurveType', ['prices', 'excess_returns'])
+Operator = _create_enum('Operator', ['greater', 'less', 'greater_equal', 'less_equal', 'equal', 'not_equal'])
 
 
 class Window:

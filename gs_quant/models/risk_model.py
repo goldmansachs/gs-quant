@@ -14,19 +14,22 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from enum import Enum, auto
-from typing import List, Dict, Union
+from enum import auto, Enum
+from typing import List, Dict, Tuple, Union
+
 import pandas as pd
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
+from gs_quant.errors import MqValueError, MqRequestError
+from gs_quant.markets.factor import Factor
 from gs_quant.models.factor_risk_model_utils import build_asset_data_map, build_factor_data_map, \
     build_factor_data_dataframe, build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, \
     get_closest_date_index, divide_request, batch_and_upload_partial_data, risk_model_data_to_json, get_universe_size
-
 from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModelEventType
 from gs_quant.target.risk_models import RiskModelData, RiskModelCalendar, RiskModelFactor, \
-    DataAssetsRequest, Measure, CoverageType, UniverseIdentifier, Entitlements, Term, RiskModelUniverseIdentifierRequest
+    DataAssetsRequest, Measure, CoverageType, UniverseIdentifier, Entitlements, Term, \
+    RiskModelUniverseIdentifierRequest, FactorType
 
 
 class ReturnFormat(Enum):
@@ -39,11 +42,11 @@ class RiskModel:
     """ Risk Model Class """
 
     def __init__(self,
-                 model_id: str,
+                 id_: str,
                  name: str,
                  entitlements: Union[Dict, Entitlements] = None,
                  description: str = None):
-        self.__id: str = model_id
+        self.__id: str = id_
         self.__name: str = name
         self.__description: str = description
         self.__entitlements: Entitlements = entitlements if entitlements and isinstance(entitlements, Entitlements) \
@@ -88,7 +91,7 @@ class RiskModel:
         """ Delete existing risk model object from Marquee """
         return GsRiskModelApi.delete_risk_model(self.id)
 
-    def get_dates(self, start_date: dt.date = None, end_date: dt.date = None, event_type: RiskModelEventType = None)\
+    def get_dates(self, start_date: dt.date = None, end_date: dt.date = None, event_type: RiskModelEventType = None) \
             -> List[dt.date]:
         """ Get risk model dates for existing risk model
 
@@ -149,23 +152,36 @@ class RiskModel:
         calendar = self.get_calendar(end_date=yesterday).business_dates
         return dt.datetime.strptime(calendar[len(calendar) - 1], '%Y-%m-%d').date()
 
+    def __str__(self):
+        return self.id
+
+    def __repr__(self):
+        s = "{}('{}','{}'".format(self.__class__.__name__, self.id, self.name)
+        if self.entitlements is not None:
+            s += ", entitlements={}".format(self)
+        if self.description is not None:
+            s += ", description={}".format(self)
+
+        s += ")"
+        return s
+
 
 class FactorRiskModel(RiskModel):
     """ Factor Risk Model used for calculating asset level factor risk"""
 
     def __init__(self,
-                 model_id: str,
+                 id_: str,
                  name: str,
-                 coverage: Union[CoverageType, str],
-                 term: Union[Term, str],
-                 universe_identifier: Union[UniverseIdentifier, str],
+                 coverage: CoverageType,
+                 term: Term,
+                 universe_identifier: UniverseIdentifier,
                  vendor: str,
                  version: float,
                  entitlements: Union[Dict, Entitlements] = None,
                  description: str = None):
         """ Create new factor risk model object
 
-        :param model_id: risk model id (cannot be changed)
+        :param id_: risk model id (cannot be changed)
         :param name: risk model name
         :param coverage: coverage of risk model asset universe
         :param term: horizon term
@@ -177,12 +193,10 @@ class FactorRiskModel(RiskModel):
 
         :return: FactorRiskModel object
         """
-        super().__init__(model_id, name, entitlements=entitlements, description=description)
-        self.__coverage = coverage if isinstance(coverage, CoverageType) else CoverageType(coverage)
-        self.__term = term if isinstance(term, Term) else Term(term)
-        self.__universe_identifier = universe_identifier if universe_identifier and \
-            isinstance(universe_identifier, UniverseIdentifier) else UniverseIdentifier(universe_identifier) if\
-            universe_identifier else None
+        super().__init__(id_, name, entitlements=entitlements, description=description)
+        self.__coverage = coverage
+        self.__term = term
+        self.__universe_identifier = universe_identifier
         self.__vendor = vendor
         self.__version = version
 
@@ -197,17 +211,17 @@ class FactorRiskModel(RiskModel):
         self.__vendor = vendor
 
     @property
-    def universe_identifier(self) -> str:
+    def universe_identifier(self) -> UniverseIdentifier:
         """ Get risk model universe identifier """
         return self.__universe_identifier
 
     @property
-    def term(self) -> str:
+    def term(self) -> Term:
         """ Get risk model term """
         return self.__term
 
     @term.setter
-    def term(self, term: Union[Term, str]):
+    def term(self, term: Term):
         """ Set risk model term """
         self.__term = term
 
@@ -222,33 +236,41 @@ class FactorRiskModel(RiskModel):
         self.__version = version
 
     @property
-    def coverage(self) -> str:
+    def coverage(self) -> CoverageType:
         """ Get risk model coverage """
         return self.__coverage
 
     @coverage.setter
-    def coverage(self, coverage: Union[CoverageType, str]):
+    def coverage(self, coverage: CoverageType):
         """ Set risk model coverage """
         self.__coverage = coverage
 
     @classmethod
+    def from_target(cls, model: RiskModelBuilder):
+        uid = model.universe_identifier
+        return FactorRiskModel(
+            model.id,
+            model.name,
+            model.coverage if isinstance(model.coverage, CoverageType) else CoverageType(model.coverage),
+            model.term if isinstance(model.term, Term) else Term(model.term),
+            uid if isinstance(uid, UniverseIdentifier) else UniverseIdentifier(uid) if uid else None,
+            model.vendor,
+            model.version,
+            entitlements=model.entitlements,
+            description=model.description
+        )
+
+    @classmethod
+    def from_many_targets(cls, models: Tuple[RiskModelBuilder, ...]):
+        return [cls.from_target(model) for model in models]
+
+    @classmethod
     def get(cls, model_id: str):
         """ Get a factor risk model from Marquee
-
-        :param model_id: risk model id corresponding to Marquee Factor Risk Model
-
-        :return: Factor Risk Model object
-        """
+            :param model_id: risk model id corresponding to Marquee Factor Risk Model
+            :return: Factor Risk Model object  """
         model = GsRiskModelApi.get_risk_model(model_id)
-        return FactorRiskModel(model_id,
-                               model.name,
-                               model.coverage,
-                               model.term,
-                               model.universe_identifier,
-                               model.vendor,
-                               model.version,
-                               entitlements=model.entitlements,
-                               description=model.description)
+        return cls.from_target(model)
 
     @classmethod
     def get_many(cls,
@@ -256,7 +278,8 @@ class FactorRiskModel(RiskModel):
                  terms: List[str] = None,
                  vendors: List[str] = None,
                  names: List[str] = None,
-                 coverages: List[str] = None):
+                 coverages: List[str] = None,
+                 limit: int = None):
         """ Get a factor risk model from Marquee
 
         :param ids: list of model identifiers in Marquee
@@ -264,6 +287,7 @@ class FactorRiskModel(RiskModel):
         :param vendors: list of model vendors
         :param names: list of model names
         :param coverages: list of model coverages
+        :param limit: limit of number of models in response
 
         :return: Factor Risk Model object
         """
@@ -271,16 +295,9 @@ class FactorRiskModel(RiskModel):
                                                 terms=terms,
                                                 vendors=vendors,
                                                 names=names,
-                                                coverages=coverages)
-        return [FactorRiskModel(model.id,
-                                model.name,
-                                model.coverage,
-                                model.term,
-                                model.universe_identifier,
-                                model.vendor,
-                                model.version,
-                                entitlements=model.entitlements,
-                                description=model.description) for model in models]
+                                                coverages=coverages,
+                                                limit=limit)
+        return cls.from_many_targets(models)
 
     def save(self):
         """ Upload current Factor Risk Model object to Marquee """
@@ -291,48 +308,71 @@ class FactorRiskModel(RiskModel):
                                      self.universe_identifier,
                                      self.vendor,
                                      self.version,
-                                     entitlements=self.entitlements,
-                                     description=self.description)
+                                     description=self.description,
+                                     entitlements=self.entitlements)
         GsRiskModelApi.create_risk_model(new_model)
 
     def update(self):
         """ Update factor risk model object on Marquee """
-        updated_model = RiskModelBuilder(self.coverage, self.id, self.name, self.term, self.universe_identifier,
-                                         self.vendor, self.version, description=self.description,
+        updated_model = RiskModelBuilder(self.coverage,
+                                         self.id,
+                                         self.name,
+                                         self.term,
+                                         self.universe_identifier,
+                                         self.vendor,
+                                         self.version,
+                                         description=self.description,
                                          entitlements=self.entitlements)
         GsRiskModelApi.update_risk_model(updated_model)
 
-    def get_factor(self, factor_id: str) -> RiskModelFactor:
-        """ Get risk model factor from model and factor ids
+    def get_factor(self, name: str) -> Factor:
+        """ Get risk model factor from its name
 
-        :param factor_id: factor identifier associated with risk model
+        :param name: factor name associated with risk model
 
-        :return: Risk Model Factor object
+        :return: Factor object
         """
-        return GsFactorRiskModelApi.get_risk_model_factor(self.id, factor_id)
+        name_matches = [f for f in self.get_factor_data(format=ReturnFormat.JSON) if f['name'] == name]
 
-    def create_factor(self, factor: RiskModelFactor) -> RiskModelFactor:
-        """ Create a new risk model factor
+        if not name_matches:
+            raise MqValueError(f'Factor with name {name} does not in exist in risk model {self.id}')
 
-        :param factor: factor object
-        :return: Risk Model Factor object
+        factor = name_matches.pop()
+        return Factor(risk_model_id=self.id,
+                      id_=factor['identifier'],
+                      type_=factor['type'],
+                      name=factor.get('name'),
+                      category=factor.get('factorCategory'),
+                      tooltip=factor.get('tooltip'),
+                      description=factor.get('description'),
+                      glossary_description=factor.get('glossaryDescription'))
+
+    def get_many_factors(self):
+        factors = self.get_factor_data(format=ReturnFormat.JSON)
+        return [Factor(risk_model_id=self.id,
+                       id_=f['identifier'],
+                       type_=f['type'],
+                       name=f.get('name'),
+                       category=f.get('factorCategory'),
+                       tooltip=f.get('tooltip'),
+                       description=f.get('description'),
+                       glossary_description=f.get('glossaryDescription')) for f in factors]
+
+    def save_factor_metadata(self, factor_metadata: RiskModelFactor):
+        """ Add metadata to a factor in a risk model
+
+        :param factor_metadata: factor metadata object
         """
-        return GsFactorRiskModelApi.create_risk_model_factor(self.id, factor)
+        try:
+            GsFactorRiskModelApi.get_risk_model_factor(self.id, factor_id=factor_metadata.identifier)
+        except MqRequestError:
+            GsFactorRiskModelApi.create_risk_model_factor(self.id, factor_metadata)
+        GsFactorRiskModelApi.update_risk_model_factor(self.id, factor_metadata)
 
-    def update_factor(self, factor_id: str, factor: RiskModelFactor) -> RiskModelFactor:
-        """ Update existing risk model factor
+    def delete_factor_metadata(self, factor_id: str):
+        """ Delete a factor's metadata from a risk model
 
-        :param factor_id: factor identifier associated with risk model to update
-        :param factor: factor object associated with risk model
-
-        :return: Risk Model Factor object
-        """
-        return GsFactorRiskModelApi.update_risk_model_factor(self.id, factor_id, factor)
-
-    def delete_factor(self, factor_id: str):
-        """ Delete a risk model factor
-
-        :param factor_id: factor identifier associated with risk model to delete
+        :param factor_id: factor id associated with risk model's factor
         """
         GsFactorRiskModelApi.delete_risk_model_factor(self.id, factor_id)
 
@@ -341,6 +381,8 @@ class FactorRiskModel(RiskModel):
                         end_date: dt.date = None,
                         identifiers: List[str] = None,
                         include_performance_curve: bool = False,
+                        category_filter: List[str] = None,
+                        factor_type: FactorType = None,
                         format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get factor data for existing risk model
 
@@ -348,6 +390,9 @@ class FactorRiskModel(RiskModel):
         :param end_date: end date for data request
         :param identifiers: list of factor ids associated with risk model
         :param include_performance_curve: request to include the performance curve of the factors
+        :param category_filter: filter the results to those having one of the specified categories. \
+            Default is to return all results
+        :param factor_type:
         :param format: which format to return the results in
 
         :return: risk model factor data
@@ -359,6 +404,13 @@ class FactorRiskModel(RiskModel):
             identifiers,
             include_performance_curve
         )
+        if factor_type:
+            factor_data = [factor for factor in factor_data if factor['type'] == factor_type.value]
+        if category_filter:
+            if factor_type == FactorType.Category:
+                print('Category Filter is not applicable for the Category FactorType')
+            else:
+                factor_data = [factor for factor in factor_data if factor['factorCategory'] in category_filter]
         if format == ReturnFormat.DATA_FRAME:
             factor_data = pd.DataFrame(factor_data)
         return factor_data
@@ -747,3 +799,22 @@ class FactorRiskModel(RiskModel):
         list_of_requests = list(divide_request(request_array, 1000))
         for request_set in list_of_requests:
             print(GsDataApi.upload_data('RISK_MODEL_ASSET_COVERAGE', request_set))
+
+    def __repr__(self):
+        s = "{}('{}','{}','{}','{}','{}','{}','{}'".format(
+            self.__class__.__name__,
+            self.id,
+            self.name,
+            self.coverage,
+            self.term,
+            self.universe_identifier,
+            self.vendor,
+            self.version
+        )
+        if self.entitlements is not None:
+            s += ", entitlements={}".format(self)
+        if self.description is not None:
+            s += ", description={}".format(self)
+
+        s += ")"
+        return s
