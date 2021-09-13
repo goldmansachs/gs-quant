@@ -1381,11 +1381,13 @@ def test_vol_smile():
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
     actual = tm.vol_smile(mock_spx, '1m', tm.VolSmileReference.FORWARD, '5d')
-    assert_series_equal(pd.Series([5, 1, 2], index=[0.75, 0.25, 0.5]), pd.Series(actual))
+    assert_series_equal(pd.Series([5, 1, 2], index=[0.75, 0.25, 0.5], name='vol_smile'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
+    assert actual.name == 'vol_smile'
     actual = tm.vol_smile(mock_spx, '1m', tm.VolSmileReference.SPOT, '5d')
-    assert_series_equal(pd.Series([5, 1, 2], index=[0.75, 0.25, 0.5]), pd.Series(actual))
+    assert_series_equal(pd.Series([5, 1, 2], index=[0.75, 0.25, 0.5], name='vol_smile'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
+    assert actual.name == 'vol_smile'
 
     market_mock = replace('gs_quant.timeseries.measures.get_df_with_retries', Mock())
     market_mock.return_value = mock_empty_market_data_response()

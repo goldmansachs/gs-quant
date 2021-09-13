@@ -267,7 +267,11 @@ class DataGrid:
         """
         if self.id_ is None:
             raise MqValueError('DataGrid must be created or saved before opening.')
-        webbrowser.open(f'{GsSession.current.domain.replace(".web", "")}/s/markets/grids/{self.id_}')
+        domain = GsSession.current.domain.replace(".web", "")
+        if domain == 'https://api.gs.com':
+            domain = 'https://marquee.gs.com'
+        url = f'{domain}/s/markets/grids/{self.id_}'
+        webbrowser.open(url)
 
     @property
     def polling_time(self):

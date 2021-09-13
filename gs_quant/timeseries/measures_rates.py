@@ -22,7 +22,6 @@ from enum import Enum
 from typing import Optional, Union, Dict
 
 import pandas as pd
-from gs_quant.target.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation
 from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
@@ -31,6 +30,7 @@ from gs_quant.data import DataContext
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset
+from gs_quant.target.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation
 from gs_quant.timeseries import ASSET_SPEC, BenchmarkType, plot_measure, MeasureDependency, GENERIC_DATE
 from gs_quant.timeseries.helper import _to_offset
 from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _range_from_pricing_date, \
@@ -134,7 +134,11 @@ CURRENCY_TO_SWAP_RATE_BENCHMARK = {
     'CNY': {'REPO': 'CNY-REPO RATE'},
     'SGD': {'SOR': 'SGD-SOR-VWAP'},
     'HKD': {'HIBOR': 'HKD-HIBOR-HKAB'},
-    'INR': {'MIBOR': 'INR-MIBOR-OIS-COMPOUND'}
+    'INR': {'MIBOR': 'INR-MIBOR-OIS-COMPOUND'},
+    'BRL': {'CDI': 'BRR-CDI-COMPOUNDED'},
+    'CLP': {'TNA': 'CLP-ICP-CAMARA'},
+    'COP': {'IBR': 'COP-IBR-ON'},
+    'MXN': {'TIIE': 'MXN-TIIE-FX'}
 }
 # TODO Join into single object.
 BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS = {
@@ -166,6 +170,10 @@ BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS = {
     'SGD-SOR-VWAP': '6m',
     'HKD-HIBOR-HKAB': '3m',
     'INR-MIBOR-OIS-COMPOUND': '6m',
+    'BRR-CDI-COMPOUNDED': '1b',
+    'CLP-ICP-CAMARA': '1b',
+    'COP-IBR-ON': '1b',
+    'MXN-TIIE-FX': '28d'
 
 }
 CURRENCY_TO_PRICING_LOCATION = {
@@ -173,9 +181,10 @@ CURRENCY_TO_PRICING_LOCATION = {
     CurrencyEnum.USD: PricingLocation.NYC,
     CurrencyEnum.AUD: PricingLocation.TKO,
     CurrencyEnum.NZD: PricingLocation.TKO,
+    CurrencyEnum.CNY: PricingLocation.HKG,
+    CurrencyEnum.HKD: PricingLocation.HKG,
     CurrencyEnum.INR: PricingLocation.HKG,
     CurrencyEnum.KRW: PricingLocation.HKG,
-    CurrencyEnum.HKD: PricingLocation.HKG,
     CurrencyEnum.SGD: PricingLocation.HKG,
     CurrencyEnum.CAD: PricingLocation.NYC,
     CurrencyEnum.EUR: PricingLocation.LDN,
@@ -184,6 +193,10 @@ CURRENCY_TO_PRICING_LOCATION = {
     CurrencyEnum.DKK: PricingLocation.LDN,
     CurrencyEnum.NOK: PricingLocation.LDN,
     CurrencyEnum.SEK: PricingLocation.LDN,
+    CurrencyEnum.BRL: PricingLocation.NYC,
+    CurrencyEnum.COP: PricingLocation.NYC,
+    CurrencyEnum.CLP: PricingLocation.NYC,
+    CurrencyEnum.MXN: PricingLocation.NYC,
 }
 
 CURRENCY_TO_DUMMY_SWAP_BBID = {
@@ -202,7 +215,11 @@ CURRENCY_TO_DUMMY_SWAP_BBID = {
     'CAD': 'MANJ8SS88WJ6N28Q',
     'KRW': 'MAP55AXG5SQVS6C5',
     'INR': 'MA20JHJXN1PD5HGE',
-    'SGD': 'MA5CQFHYBPH9E5BS'
+    'SGD': 'MA5CQFHYBPH9E5BS',
+    'BRL': 'MATPPVN02HJ4M9NS',
+    'COP': 'MADA0AGFQ65CTMWF',
+    'CLP': 'MAP8A0SHH9Q86SXC',
+    'MXN': 'MAAJ9RAHYBAXGYD2'
 }
 
 # FXFwd XCCYSwap rates Defaults

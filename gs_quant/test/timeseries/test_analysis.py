@@ -101,59 +101,25 @@ def test_compare():
     x = pd.Series([1.0, 2.0, 2.0, 4.0], index=dates1)
     y = pd.Series([2.0, 1.0, 2.0], index=dates2)
 
-    result = analysis.compare(x, y, Operator.GREATER, Interpolate.INTERSECT)
-    expected = pd.Series([0.0, 1.0, 0.0], index=dates2)
-    assert_series_equal(result, expected, obj="Compare series greater intersect")
+    expected = pd.Series([-1.0, 1.0, 0.0], index=dates2)
+    result = compare(x, y, method=Interpolate.INTERSECT)
+    assert_series_equal(expected, result, obj="Compare series intersect")
 
-    result = analysis.compare(x, y, Operator.LESS, Interpolate.INTERSECT)
-    expected = pd.Series([1.0, 0.0, 0.0], index=dates2)
-    assert_series_equal(result, expected, obj="Compare series less intersect")
+    expected = pd.Series([1.0, -1.0, 0], index=dates2)
+    result = compare(y, x, method=Interpolate.INTERSECT)
+    assert_series_equal(expected, result, obj="Compare series intersect 2")
 
-    result = analysis.compare(x, y, Operator.EQUAL, Interpolate.INTERSECT)
-    expected = pd.Series([0.0, 0.0, 1.0], index=dates2)
-    assert_series_equal(result, expected, obj="Compare series equal intersect")
+    expected = pd.Series([-1.0, 1.0, 0, 0], index=dates1)
+    result = compare(x, y, method=Interpolate.NAN)
+    assert_series_equal(expected, result, obj="Compare series nan")
 
-    result = analysis.compare(x, y, Operator.NOT_EQUAL, Interpolate.INTERSECT)
-    expected = pd.Series([1.0, 1.0, 0.0], index=dates2)
-    assert_series_equal(result, expected, obj="Compare series notequal intersect")
+    expected = pd.Series([-1.0, 1.0, 0, 1.0], index=dates1)
+    result = compare(x, y, method=Interpolate.ZERO)
+    assert_series_equal(expected, result, obj="Compare series zero")
 
-    result = analysis.compare(x, y, Operator.GREATER_EQUAL, Interpolate.INTERSECT)
-    expected = pd.Series([0.0, 1.0, 1.0], index=dates2)
-    assert_series_equal(result, expected, obj="Compare series greater_equal intersect")
-
-    result = analysis.compare(x, y, Operator.LESS_EQUAL, Interpolate.INTERSECT)
-    expected = pd.Series([1.0, 0.0, 1.0], index=dates2)
-    assert_series_equal(result, expected, obj="Compare series less_equal intersect")
-
-    result = analysis.compare(y, x, Operator.GREATER, Interpolate.NAN)
-    expected = pd.Series([1.0, 0.0, 0.0, 0.0], index=dates1)
-    assert_series_equal(result, expected, obj="Compare series greater nan")
-
-    result = analysis.compare(y, x, Operator.EQUAL, Interpolate.ZERO)
-    expected = pd.Series([0.0, 0.0, 1.0, 0.0], index=dates1)
-    assert_series_equal(result, expected, obj="Compare series equal zero")
-
-    result = analysis.compare(y, x, Operator.NOT_EQUAL, Interpolate.STEP)
-    expected = pd.Series([1.0, 1.0, 0.0, 1.0], index=dates1)
-    assert_series_equal(result, expected, obj="Compare series notequal step")
-
-    result = analysis.compare(x, 2, Operator.EQUAL)
-    expected = pd.Series([0.0, 1.0, 1.0, 0.0], index=dates1)
-    assert_series_equal(result, expected, obj="Compare series/real equal step")
-
-    assert analysis.compare(3, 2, Operator.EQUAL, Interpolate.STEP) == 0.0
-
-    with pytest.raises(MqValueError):
-        compare(x, y, "FAKE_OPERATOR")
-
-    # Test Interpolate.TIME
-    dates1 = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 5),
-    ]
+    expected = pd.Series([-1.0, 1.0, 0, 1.0], index=dates1)
+    result = compare(x, y, method=Interpolate.STEP)
+    assert_series_equal(expected, result, obj="Compare series step")
 
     dates2 = [
         date(2019, 1, 2),
@@ -161,9 +127,10 @@ def test_compare():
         date(2019, 1, 6),
     ]
 
+    dates1.append(date(2019, 1, 5))
     xp = pd.Series([1, 2, 3, 4, 5], index=pd.to_datetime(dates1))
     yp = pd.Series([1, 4, 0], index=pd.to_datetime(dates2))
-    result = analysis.compare(xp, yp, Operator.GREATER, Interpolate.TIME)
+    result = compare(xp, yp, Interpolate.TIME)
     dates1.append(date(2019, 1, 6))
     expected = pd.Series([0.0, 1.0, 1.0, 0.0, 1.0, 0.0], index=pd.to_datetime(dates1))
     assert_series_equal(result, expected, obj="Compare series greater time")

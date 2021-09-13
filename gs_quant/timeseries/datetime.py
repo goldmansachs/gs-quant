@@ -516,6 +516,42 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
 
 
 @plot_function
+def append(series: List[pd.Series]) -> pd.Series:
+    """
+    Append data series
+
+    :param series: an array of timeseries
+    :return: concatenated timeseries
+
+    **Usage**
+
+    For input series [:math:`x_1`, :math:`x_2`, ... , :math:`x_n`], takes data from series :math:`x_i` until
+    that series runs out, then appends data from `x_{i+1}` until that series runs out.
+
+    **Examples**
+
+    Append two series:
+
+    >>> x = generate_series(100)
+    >>> y = generate_series(100)
+    >>> append([x, y])
+
+    **See also**
+
+    :func:`prepend`
+
+    """
+    if not len(series):
+        return pd.Series(dtype='float64')
+    res = series[0].copy()
+    for i in range(1, len(series)):
+        cur = series[i]
+        start = res.index[-1]
+        res = res.append(cur.loc[cur.index > start])
+    return res
+
+
+@plot_function
 def prepend(x: List[pd.Series]) -> pd.Series:
     """
     Prepend data series

@@ -191,36 +191,24 @@ def diff(x: pd.Series, obs: int = 1) -> pd.Series:
 
 
 @plot_function
-def compare(x: Union[pd.Series, Real], y: Union[pd.Series, Real], relation: Operator,
-            method: Interpolate = Interpolate.STEP) \
+def compare(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
         -> Union[pd.Series, Real]:
     """
     Compare two series or scalars against each other
 
     :param x: timeseries or scalar
     :param y: timeseries or scalar
-    :param relation: comparison operator (greater, less, greater_equal, less_equal, equal, or not_equal).
     :param method: interpolation method (default: step). Only used when both x and y are timeseries
     :return: binary timeseries with the result of x relation y or the comparison of the given real numbers
 
     **Usage**
 
-    Compare two series or scalar variables applying the given interpolation method
+    Compare two series or scalar variables applying the given interpolation method in case indices of :math:`x`
+    and :math:`y` differ. Returns a signal with values of 1, 0, or -1.
 
-    :math:`R_t =  X_t ? Y_t`
-
-    Comparison operators:
-
-    ==============  ========================================================================
-    Relation        Behavior
-    ==============  ========================================================================
-    greater         :math:`x > y`
-    less            :math:`x < y`
-    equal           :math:`x = y`
-    not_equal       :math:`x \\neq y`
-    greater_equal   :math:`x \\geq y`
-    less_equal      :math:`x \\leq y`
-    ==============  ========================================================================
+    If :math:`X_t > Y_t`, then :math:`R_t = 1`.
+    If :math:`X_t = Y_t`, then :math:`R_t = 0`.
+    If :math:`X_t < Y_t`, then :math:`R_t = -1`.
 
     Alignment operators:
 
@@ -245,20 +233,7 @@ def compare(x: Union[pd.Series, Real], y: Union[pd.Series, Real], relation: Oper
     """
     x, y = align(x, y, method)
 
-    if relation == Operator.EQUAL:
-        return (x == y) * 1.0
-    elif relation == Operator.NOT_EQUAL:
-        return (x != y) * 1.0
-    elif relation == Operator.GREATER:
-        return (x > y) * 1.0
-    elif relation == Operator.LESS:
-        return (x < y) * 1.0
-    elif relation == Operator.GREATER_EQUAL:
-        return (x >= y) * 1.0
-    elif relation == Operator.LESS_EQUAL:
-        return (x <= y) * 1.0
-    else:
-        raise MqValueError('Unknown operator type: ' + relation)
+    return (x > y) * 1.0 + (x < y) * -1.0
 
 
 class LagMode(Enum):

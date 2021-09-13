@@ -388,6 +388,26 @@ def test_date_range():
         date_range(pd.Series([1]), 0, 0, 'string')
 
 
+def test_append():
+    x = pd.Series([3.1, 4.1, 5.1], index=pd.date_range('2019-01-03', '2019-01-05'))
+    y = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 7.0], index=pd.date_range('2019-01-01', "2019-01-06"))
+
+    assert_series_equal(append([]), pd.Series(dtype='float64'), obj='append empty')
+
+    assert_series_equal(append([x]), x, obj='append one series')
+
+    actual = append([x, y])
+    expected = pd.Series([3.1, 4.1, 5.1, 7.0], index=pd.date_range('2019-01-03', '2019-01-06'))
+    assert_series_equal(actual, expected, obj='append two series')
+
+    x = pd.Series([3.1, 4.1, 5.1], index=pd.date_range('2019-01-01 02:00', periods=3, freq='H'))
+    y = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 7.0], index=pd.date_range('2019-01-01', periods=6, freq='H'))
+
+    actual = append([x, y])
+    expected = pd.Series([3.1, 4.1, 5.1, 7.0], index=pd.date_range('2019-01-01 02:00', periods=4, freq='H'))
+    assert_series_equal(actual, expected, obj='prepend two real-time series')
+
+
 def test_prepend():
     x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 7.0], index=pd.date_range('2019-01-01', "2019-01-06"))
     y = pd.Series([3.1, 4.1, 5.1], index=pd.date_range('2019-01-03', '2019-01-05'))

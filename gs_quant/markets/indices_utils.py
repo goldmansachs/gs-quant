@@ -453,13 +453,13 @@ def get_flagships_constituents(fields: [str] = [],
             start_date = dt.datetime.strptime(b['historyStartDate'], '%Y-%m-%d').date()
             start_date = start_date if start < start_date else start
             if _type == BasketType.CUSTOM_BASKET.value:
-                data = GsDataApi.query_data(query=DataQuery(where=dict(assetId=_id),
+                data = GsDataApi.query_data(query=DataQuery(where=dict(assetId=_id, fields=fields),
                                             startDate=start_date, endDate=end),
                                             dataset_id=IndicesDatasets.GSBASKETCONSTITUENTS.value)
                 basket_map[_id].update(constituents=data)
                 cbs.append(basket_map[_id])
             elif _type == BasketType.RESEARCH_BASKET.value:
-                data = GsDataApi.query_data(query=DataQuery(where=dict(assetId=_id),
+                data = GsDataApi.query_data(query=DataQuery(where=dict(assetId=_id, fields=fields),
                                             startDate=start_date, endDate=end),
                                             dataset_id=IndicesDatasets.GIRBASKETCONSTITUENTS.value)
                 basket_map[_id].update(constituents=data)
