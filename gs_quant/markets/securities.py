@@ -13,8 +13,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import calendar
 import datetime
-import datetime as dt
 import functools
 import json
 import logging
@@ -22,21 +22,23 @@ import threading
 import time
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from enum import Enum, auto
-from typing import Dict, Optional, Tuple, Union
+from enum import auto
+from functools import partial
+from typing import Dict, Tuple
 
 import cachetools
-import pandas as pd
 import pytz
-from pydash import get
+from dateutil.relativedelta import relativedelta
 
-from gs_quant.api.gs.assets import GsAssetApi, GsAsset, AssetClass, AssetParameters, \
+from gs_quant.api.gs.assets import GsAsset, AssetParameters, \
     AssetType as GsAssetType, Currency
+from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import get_enum_value
 from gs_quant.common import DateLimit
 from gs_quant.data import DataMeasure, DataFrequency
 from gs_quant.data.coordinate import DataDimensions
 from gs_quant.data.coordinate import DateOrDatetime
+from gs_quant.data.core import IntervalFrequency, DataAggregationOperator
 from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, PositionedEntity
 from gs_quant.errors import MqValueError, MqTypeError
 from gs_quant.json_encoder import JSONEncoder
@@ -104,6 +106,9 @@ class AssetType(Enum):
 
     #: Swap
     SWAP = "Swap"
+
+    #: Swaption
+    SWAPTION = "Swaption"
 
     #: Option
     OPTION = "Option"
@@ -339,7 +344,9 @@ class Asset(Entity, metaclass=ABCMeta):
                         dimensions: Optional[DataDimensions] = None,
                         frequency: Optional[DataFrequency] = None,
                         start: Optional[DateOrDatetime] = None,
-                        end: Optional[DateOrDatetime] = None) -> pd.Series:
+                        end: Optional[DateOrDatetime] = None,
+                        dates: List[dt.date] = None,
+                        operator: DataAggregationOperator = None) -> pd.Series:
         """
         Get asset series
 
@@ -372,8 +379,8 @@ class Asset(Entity, metaclass=ABCMeta):
 
         coordinate = self.get_data_coordinate(measure, dimensions, frequency)
         if coordinate is None:
-            raise MqValueError(f"No data co-ordinate found for these parameters: {measure, dimensions, frequency}")
-        return coordinate.get_series(start=start, end=end)
+            raise MqValueError(f"No data coordinate found for parameters: {measure, dimensions, frequency}")
+        return coordinate.get_series(start=start, end=end, dates=dates, operator=operator)
 
     def get_latest_close_price(self) -> float:
         coordinate = self.get_data_coordinate(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY)
@@ -412,6 +419,64 @@ class Asset(Entity, metaclass=ABCMeta):
         :func:`get_data_series`
         """
         return self.get_data_series(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY, start, end)
+
+    def get_hloc_prices(self,
+                        start: dt.date = DateLimit.LOW_LIMIT.value,
+                        end: dt.date = dt.date.today(),
+                        interval_frequency: IntervalFrequency = IntervalFrequency.DAILY) -> pd.DataFrame:
+        """
+        Get high, low, open, close (hloc) prices
+
+        :return: dataframe indexed by datetimes bucketed by the given interval_frequency with High, Low, Open, and Close
+        columns
+
+        **Usage**
+
+        Get high, low, open, and close prices for an asset for the given interval frequency.
+
+        **Examples**
+
+        Get hloc price series:
+
+        >>> from gs_quant.markets.securities import SecurityMaster
+        >>>
+        >>> gs = SecurityMaster.get_asset("GS", AssetIdentifier.TICKER)
+        >>> gs.get_hloc_prices()
+
+        **See also**
+
+        :class:`DataMeasure`
+        :func:`get_close_prices`
+        """
+        if interval_frequency == IntervalFrequency.DAILY:
+            dates = None
+            use_field = False
+        elif interval_frequency == IntervalFrequency.MONTHLY:
+            d = dt.date(start.year, start.month, 1)
+            dates = [d, dt.date(d.year, d.month, calendar.monthrange(d.year, d.month)[-1])]
+            d += relativedelta(months=1)
+            while d < end:
+                dates.append(dt.date(d.year, d.month, calendar.monthrange(d.year, d.month)[-1]))
+                d += relativedelta(months=1)
+            dates.append(end)
+            use_field = True
+        else:
+            raise MqValueError(f'Unsupported IntervalFrequency {interval_frequency.value} for get_hloc_prices')
+
+        tasks = [
+            partial(self.get_data_series, DataMeasure.ADJUSTED_HIGH_PRICE, None, DataFrequency.DAILY, start, end,
+                    dates=dates, operator=DataAggregationOperator.MAX if use_field else None),
+            partial(self.get_data_series, DataMeasure.ADJUSTED_LOW_PRICE, None, DataFrequency.DAILY, start, end,
+                    dates=dates, operator=DataAggregationOperator.MIN if use_field else None),
+            partial(self.get_data_series, DataMeasure.ADJUSTED_OPEN_PRICE, None, DataFrequency.DAILY, start, end,
+                    dates=dates, operator=DataAggregationOperator.FIRST if use_field else None),
+            partial(self.get_data_series, DataMeasure.ADJUSTED_CLOSE_PRICE, None, DataFrequency.DAILY, start, end,
+                    dates=dates, operator=DataAggregationOperator.LAST if use_field else None)
+        ]
+
+        results = ThreadPoolManager.run_async(tasks)
+        df = pd.DataFrame({'High': results[0], 'Low': results[1], 'Open': results[2], 'Close': results[3]})
+        return df.dropna()
 
     @abstractmethod
     def get_type(self) -> AssetType:
@@ -854,6 +919,23 @@ class ETF(Asset, PositionedEntity):
         return self.currency
 
 
+class Swaption(Asset):
+    """Swaption
+
+    Represents a swaption.
+
+    """
+
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Rates, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.SWAPTION
+
+
 class DefaultSwap(Asset):
     """DefaultSwap
 
@@ -907,7 +989,7 @@ class SecurityMaster:
      """
     _source = SecurityMasterSource.ASSET_SERVICE
     _page_size = 1000
-    _result_limit = 10000
+    _result_limit = 100000
 
     @classmethod
     def __gs_asset_to_asset(cls, gs_asset: GsAsset) -> Asset:
@@ -999,7 +1081,10 @@ class SecurityMaster:
             return Fund(gs_asset.id, gs_asset.name, gs_asset.assetClass, entity=asset_entity)
 
         if asset_type == GsAssetType.Default_Swap.value:
-            return DefaultSwap(gs_asset.id, gs_asset.name, entity=asset_entity)
+            return DefaultSwap(gs_asset.id, gs_asset.asset_class, entity=asset_entity)
+
+        if asset_type == GsAssetType.Swaption.value:
+            return Swaption(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

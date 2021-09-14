@@ -135,6 +135,7 @@ class Dataset:
             end: Optional[Union[dt.date, dt.datetime]] = None,
             as_of: Optional[dt.datetime] = None,
             since: Optional[dt.datetime] = None,
+            dates: List[dt.date] = None,
             **kwargs
     ) -> pd.Series:
         """
@@ -166,6 +167,7 @@ class Dataset:
             as_of=as_of,
             since=since,
             fields=(field_value,),
+            dates=dates,
             **kwargs
         )
 
@@ -186,6 +188,9 @@ class Dataset:
 
         if df.empty:
             return pd.Series()
+        if '(' in field_value:
+            field_value = field_value.replace('(', '_')
+            field_value = field_value.replace(')', '')
         return pd.Series(index=df.index, data=df.loc[:, field_value].values)
 
     def get_data_last(

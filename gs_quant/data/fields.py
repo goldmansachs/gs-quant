@@ -39,7 +39,7 @@ class DataMeasure(Enum):
     ADJUSTED_BID_PRICE = 'adjustedBidPrice'
     ADJUSTED_HIGH_PRICE = 'adjustedHighPrice'
     ADJUSTED_LOW_PRICE = 'adjustedLowPrice'
-    ADJUSTED_OPEN_PRICE = 'adjustedBidPrice'
+    ADJUSTED_OPEN_PRICE = 'adjustedOpenPrice'
     ADJUSTED_CLOSE_PRICE = 'adjustedClosePrice'
     ADJUSTED_TRADE_PRICE = 'adjustedTradePrice'
     ADJUSTED_VOLUME = 'adjustedVolume'

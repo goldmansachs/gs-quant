@@ -132,6 +132,10 @@ class BenchmarkType(Enum):
     HIBOR = 'HIBOR'
     MIBOR = 'MIBOR'
     CDOR = 'CDOR'
+    CDI = 'CDI'
+    TNA = 'TNA'
+    IBR = 'IBR'
+    TIIE = 'TIIE'
 
 
 class FundamentalMetricPeriodDirection(Enum):
@@ -1720,6 +1724,7 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
         strikes = df['relativeStrike'].values
         series = ExtendedSeries(vols, index=strikes)
     series.dataset_ids = dataset_ids
+    series.name = 'vol_smile'  # used to indicate returned series has a float index
     return series
 
 

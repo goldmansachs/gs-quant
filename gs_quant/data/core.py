@@ -42,6 +42,20 @@ class DataFrequency(Enum):
     ANY = 'any'
 
 
+class DataAggregationOperator:
+    MIN = 'min'
+    MAX = 'max'
+    FIRST = 'first'
+    LAST = 'last'
+
+
+class IntervalFrequency(Enum):
+    DAILY = 'daily'
+    WEEKLY = 'weekly'
+    MONTHLY = 'monthly'
+    YEARLY = 'yearly'
+
+
 class DataContext(ContextBaseWithDefault):
     def __init__(self, start=None, end=None, interval=None):
         super().__init__()

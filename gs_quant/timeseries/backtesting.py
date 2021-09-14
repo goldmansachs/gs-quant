@@ -195,7 +195,7 @@ class Basket:
 
     def get_marquee_ids(self):
         if self._marquee_ids is None:
-            assets = GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', ))
+            assets = GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', ), limit=len(self.bbids))
             self._marquee_ids = [a['id'] for a in assets]
 
             if len(self._marquee_ids) != len(self.bbids):

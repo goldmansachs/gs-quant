@@ -19,6 +19,7 @@ from typing import Tuple, Union
 import numpy as np
 
 from gs_quant.data import Dataset
+from gs_quant.common import PricingLocation
 
 
 class GsCalendar:
@@ -30,7 +31,7 @@ class GsCalendar:
     DEFAULT_WEEK_MASK = '1111100'  # Default to Sat, Sun weekend days
 
     def __init__(self, calendars: Union[str, Tuple[str, ...]] = ()):
-        if isinstance(calendars, str):
+        if isinstance(calendars, (str, PricingLocation)):
             calendars = (calendars,)
 
         self.__calendars = calendars

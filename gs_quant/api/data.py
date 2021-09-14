@@ -16,7 +16,7 @@ under the License.
 import datetime as dt
 import logging
 from abc import ABCMeta
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 import inflection
 import pandas as pd
@@ -58,6 +58,7 @@ class DataApi(metaclass=ABCMeta):
             since: Optional[dt.datetime] = None,
             restrict_fields: bool = False,
             format: str = 'MessagePack',
+            dates: List[dt.date] = None,
             **kwargs
     ):
         end_is_time = isinstance(end, dt.datetime)
@@ -88,7 +89,8 @@ class DataApi(metaclass=ABCMeta):
                 end_time=end if end_is_time else None,
                 as_of_time=as_of,
                 since=since,
-                format=format
+                format=format,
+                dates=dates
             )
 
         query_properties = query.properties()

@@ -18,6 +18,7 @@
 
 import math
 from functools import reduce
+import warnings
 
 from gs_quant.errors import MqTypeError
 from .datetime import *
@@ -636,6 +637,11 @@ def smooth_spikes(x: pd.Series, threshold: float) -> pd.Series:
 
     :func:`exponential_moving_average`
     """
+    # Deprecation warning
+    warnings.simplefilter('once')
+    message = "This function will be moved to timeseries.analysis.smooth_spikes on October 1, 2021."
+    warnings.warn(message, DeprecationWarning)
+    warnings.simplefilter('ignore')
 
     if len(x) < 3:
         return pd.Series()
@@ -669,6 +675,12 @@ def repeat(x: pd.Series, n: int = 1) -> pd.Series:
 
     Fill missing values with last seen value e.g. to combine daily with weekly or monthly data.
     """
+    # Deprecation warning
+    message = "This function will be moved to timeseries.analysis.smooth_spikes on October 1, 2021."
+    warnings.simplefilter('once')
+    warnings.warn(message, DeprecationWarning)
+    warnings.simplefilter('ignore')
+
     if not 0 < n < 367:
         raise MqValueError('n must be between 0 and 367')
     index = pd.date_range(freq=f'{n}D', start=x.index[0], end=x.index[-1])

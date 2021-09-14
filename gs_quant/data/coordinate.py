@@ -17,11 +17,11 @@ import json
 from abc import ABCMeta
 from datetime import date, datetime
 from enum import Enum
-from typing import Union, Dict, Tuple, Optional
+from typing import Union, Dict, Tuple, Optional, List
 
 import pandas as pd
 
-from .core import DataContext, DataFrequency
+from .core import DataContext, DataFrequency, DataAggregationOperator
 from .dataset import Dataset
 from .fields import DataMeasure, DataDimension
 
@@ -152,7 +152,9 @@ class DataCoordinate(BaseDataCoordinate):
 
     def get_series(self,
                    start: Optional[DateOrDatetime] = None,
-                   end: Optional[DateOrDatetime] = None) -> Union[pd.Series, None]:
+                   end: Optional[DateOrDatetime] = None,
+                   dates: List[date] = None,
+                   operator: DataAggregationOperator = None) -> Union[pd.Series, None]:
         """Get timeseries of coordinate"""
 
         if not self.dataset_id:
@@ -161,7 +163,11 @@ class DataCoordinate(BaseDataCoordinate):
         dataset = Dataset(self.dataset_id)
         start, end = self.get_range(start, end)
 
-        return dataset.get_data_series(self.measure, start=start, end=end, **self.dimensions)
+        measure = self.measure
+        if operator:
+            measure = f'{operator}({measure})'
+
+        return dataset.get_data_series(measure, start=start, end=end, dates=dates, **self.dimensions)
 
     def last_value(self,
                    before: Optional[DateOrDatetime] = None) -> Union[float, None]:
