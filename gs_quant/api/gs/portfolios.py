@@ -193,16 +193,23 @@ class GsPortfolioApi:
     @classmethod
     def schedule_reports(cls,
                          portfolio_id: str,
-                         start_date: dt.date,
+                         start_date: dt.date = None,
                          end_date: dt.date = None,
                          backcast: bool = False) -> dict:
-        if end_date is None:
-            payload = {'startDate': start_date.isoformat()}
-        else:
-            payload = {'startDate': start_date.isoformat(), 'endDate': end_date.isoformat()}
-        if backcast:
-            payload['parameters'] = {'backcast': True}
+        payload = {'parameters': {'backcast': backcast}}
+        if start_date is not None:
+            payload['startDate'] = start_date.isoformat()
+        if end_date is not None:
+            payload['endDate'] = end_date.isoformat()
         return GsSession.current._post('/portfolios/{id}/schedule'.format(id=portfolio_id), payload)
+
+    @classmethod
+    def get_schedule_dates(cls,
+                           portfolio_id: str,
+                           backcast: bool = False) -> List[dt.date]:
+        results = GsSession.current._get(f'/portfolios/{portfolio_id}/schedule/dates?backcast={backcast}')
+        return [dt.datetime.strptime(results['startDate'], '%Y-%m-%d').date(),
+                dt.datetime.strptime(results['endDate'], '%Y-%m-%d').date()]
 
     @classmethod
     def get_custom_aum(cls,

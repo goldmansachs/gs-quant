@@ -457,6 +457,7 @@ class GsDataApi(DataApi):
                 df.index = pd.to_datetime(df.index)
                 parts.append(df)
 
+        log_debug(request_id, _logger, f'fetched data from {ids}')
         df = pd.concat(parts) if len(parts) > 0 else MarketDataResponseFrame()
         df.dataset_ids = tuple(ids)
         return df

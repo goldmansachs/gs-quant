@@ -22,7 +22,7 @@ from itertools import chain
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 
 import pandas as pd
-from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase
+from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_instance_or_iterable, is_iterable
 from gs_quant.config import DisplayOptions
 from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, RiskMeasure, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
@@ -204,7 +204,7 @@ class MultipleRiskMeasureResult(dict):
         self.__instrument = instrument
 
     def __getitem__(self, item):
-        if isinstance(item, dt.date) or (isinstance(item, Iterable) and all([isinstance(it, dt.date) for it in item])):
+        if is_instance_or_iterable(item, dt.date):
             if all(isinstance(v, (DataFrameWithInfo, SeriesWithInfo)) for v in self.values()):
                 return MultipleRiskMeasureResult(self.__instrument, ((k, _value_for_date(v, item))
                                                                      for k, v in self.items()))
@@ -401,11 +401,15 @@ class PortfolioPath:
             if isinstance(target, PricingFuture) and path:
                 target = target.result()
 
-        if rename_to_parent and parent and getattr(parent, 'name', None):
+        if rename_to_parent and parent and getattr(parent, 'name', None) and not isinstance(target, InstrumentBase):
             target = copy.copy(target)
             target.name = parent.name
 
         return target
+
+    @property
+    def path(self):
+        return self.__path
 
 
 class PortfolioRiskResult(CompositeResultFuture):
@@ -421,11 +425,10 @@ class PortfolioRiskResult(CompositeResultFuture):
     def __getitem__(self, item):
         futures = []
 
-        if isinstance(item, RiskMeasure) or (
-                isinstance(item, Iterable) and all([isinstance(it, RiskMeasure) for it in item])):
+        if is_instance_or_iterable(item, RiskMeasure):
             '''Slicing a list of risk measures'''
             if isinstance(item, Iterable):
-                if any([it not in self.risk_measures for it in item]):
+                if any(it not in self.risk_measures for it in item):
                     raise ValueError('{} not computed'.format(item))
             else:
                 if item not in self.risk_measures:
@@ -434,29 +437,30 @@ class PortfolioRiskResult(CompositeResultFuture):
             if len(self.risk_measures) == 1:
                 return self
             else:
-                for priceable in self.portfolio:
-                    if isinstance(self[priceable], PortfolioRiskResult):
-                        futures.append(self[priceable][item])
+                for idx, priceable in enumerate(self.portfolio):
+                    result = self.__result(PortfolioPath(idx))
+                    if isinstance(result, PortfolioRiskResult):
+                        futures.append(result[item])
                     else:
-                        futures.append(MultipleRiskMeasureFuture(priceable, {k: PricingFuture(v) for k, v in
-                                                                             _value_for_risk_measure(
-                                                                                 self[priceable], item).items()}))
+                        futures.append(MultipleRiskMeasureFuture(priceable,
+                                                                 {k: PricingFuture(v) for k, v in
+                                                                  _value_for_risk_measure(result, item).items()}))
+
                 risk_measure = tuple(item) if isinstance(item, Iterable) else (item,)
                 return PortfolioRiskResult(self.__portfolio, risk_measure, futures)
 
-        elif isinstance(item, dt.date) or (
-                isinstance(item, Iterable) and all([isinstance(it, dt.date) for it in item])):
-            for priceable in self.portfolio:
-                if isinstance(self[priceable], (MultipleRiskMeasureResult, PortfolioRiskResult)):
-                    futures.append(PricingFuture(self[priceable][item]))
-                elif isinstance(self[priceable], (DataFrameWithInfo, SeriesWithInfo)):
-                    futures.append(PricingFuture(_value_for_date(self[priceable], item)))
+        elif is_instance_or_iterable(item, dt.date):
+            for idx, _ in enumerate(self.portfolio):
+                result = self.__result(PortfolioPath(idx))
+                if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
+                    futures.append(PricingFuture(result[item]))
+                elif isinstance(result, (DataFrameWithInfo, SeriesWithInfo)):
+                    futures.append(PricingFuture(_value_for_date(result, item)))
                 else:
                     raise RuntimeError('Can only index by date on historical results')
             return PortfolioRiskResult(self.__portfolio, self.risk_measures, futures)
 
-        elif (isinstance(item, list) or isinstance(item, tuple)) and all(
-                [isinstance(it, InstrumentBase) for it in item]):
+        elif is_iterable(item, InstrumentBase):
             '''Slicing a list/tuple of instruments (not an Portfolio iterable)'''
             return self.subset(item)
 
@@ -605,7 +609,7 @@ class PortfolioRiskResult(CompositeResultFuture):
 
     def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
                  display_options: DisplayOptions = None):
-        def get_df(priceable, port_info=None, inst_idx=0):
+        def get_df(priceable, port_info=None, path_to_inst=None):
             if port_info is None:
                 port_info = {}
             if not isinstance(priceable, InstrumentBase):  # for nested portfolio or portfolio of portfolios+instruments
@@ -615,16 +619,18 @@ class PortfolioRiskResult(CompositeResultFuture):
                     if not isinstance(p, InstrumentBase):
                         curr_port_info.update(
                             {f'portfolio_name_{len(port_info)}': f'Portfolio_{p_idx}' if p.name is None else p.name})
-                    list_sub_dfs.append(get_df(p, curr_port_info, p_idx))
+                    temp_path = PortfolioPath(p_idx) if path_to_inst is None else path_to_inst + PortfolioPath(p_idx)
+                    list_sub_dfs.append(get_df(p, curr_port_info, temp_path))
                 list_sub_dfs = list(filter(lambda x: x is not None, list_sub_dfs))
                 if len(list_sub_dfs) > 0:
                     final_df = pd.concat(list_sub_dfs, ignore_index=True)
                     return final_df.reindex(columns=max([x.columns.values for x in list_sub_dfs], key=len))
             else:
+                inst_idx = path_to_inst.path[-1]
                 port_info.update({
                     'instrument_name': f'{priceable.type.name}_{inst_idx}' if priceable.name is None else priceable.name
                 })
-                sub_df = self[priceable]._get_raw_df(display_options)
+                sub_df = self.__result(path_to_inst)._get_raw_df(display_options)
                 if sub_df is not None:
                     for port_idx, (key, value) in enumerate(port_info.items()):
                         sub_df.insert(port_idx, key, value)

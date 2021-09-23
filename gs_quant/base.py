@@ -25,7 +25,7 @@ from enum import EnumMeta
 from functools import wraps
 from inspect import signature, Parameter
 import re
-from typing import Optional, Union, get_type_hints
+from typing import Iterable, Optional, Union, get_type_hints
 
 import inflection
 from dateutil.parser import isoparse
@@ -45,6 +45,14 @@ __iskeyword = keyword.iskeyword
 __getattribute__ = object.__getattribute__
 __setattr__ = object.__setattr__
 _underscore = inflection.underscore
+
+
+def is_iterable(o, t):
+    return isinstance(o, Iterable) and all(isinstance(it, t) for it in o)
+
+
+def is_instance_or_iterable(o, t):
+    return isinstance(o, t) or is_iterable(o, t)
 
 
 def camel_case_translate(f):

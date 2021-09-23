@@ -19,10 +19,8 @@ from time import sleep
 from typing import List, Union
 
 import pandas as pd
-from dateutil.relativedelta import relativedelta
 
 from gs_quant.api.gs.portfolios import GsPortfolioApi
-from gs_quant.datetime import business_day_offset
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.entities.entity import PositionedEntity, EntityType
 from gs_quant.errors import MqValueError
@@ -90,10 +88,6 @@ class PortfolioManager(PositionedEntity):
                          start_date: dt.date = None,
                          end_date: dt.date = None,
                          backcast: bool = False):
-        if None in [start_date, end_date]:
-            suggested_schedule_dates = self.get_schedule_dates(backcast)
-            start_date = start_date if start_date else suggested_schedule_dates[0]
-            end_date = end_date if end_date else suggested_schedule_dates[1]
         GsPortfolioApi.schedule_reports(self.__portfolio_id, start_date, end_date, backcast=backcast)
 
     def run_reports(self,
@@ -137,22 +131,13 @@ class PortfolioManager(PositionedEntity):
         GsPortfolioApi.update_portfolio(portfolio_as_target)
 
     def get_schedule_dates(self,
-                           backcast: bool) -> List[dt.date]:
+                           backcast: bool = False) -> List[dt.date]:
         """
         Get recommended start and end dates for a portfolio report scheduling job
         :param backcast: true if reports should be backcasted
         :return: a list of two dates, the first is the suggested start date and the second is the suggested end date
         """
-        position_dates = GsPortfolioApi.get_position_dates(self.__portfolio_id)
-        if len(position_dates) == 0:
-            raise MqValueError('Cannot schedule reports for a portfolio with no positions.')
-        if backcast:
-            start_date = business_day_offset(min(position_dates) - relativedelta(years=1), -1, roll='forward')
-            end_date = min(position_dates)
-        else:
-            start_date = min(position_dates)
-            end_date = business_day_offset(dt.date.today(), -1, roll='forward')
-        return [start_date, end_date]
+        return GsPortfolioApi.get_schedule_dates(self.id, backcast)
 
     def get_aum_source(self) -> RiskAumSource:
         """
