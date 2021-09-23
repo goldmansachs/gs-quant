@@ -3627,7 +3627,7 @@ class DataSetEntity(Base):
         self,
         id_: str,
         name: str,
-        org_id: str = None,
+        organization_id: str = None,
         description: str = None,
         short_description: str = None,
         mappings: Tuple[MarketDataMapping, ...] = None,
@@ -3649,7 +3649,7 @@ class DataSetEntity(Base):
         tags: Tuple[str, ...] = None
     ):        
         super().__init__()
-        self.org_id = org_id
+        self.organization_id = organization_id
         self.__id = id_
         self.name = name
         self.description = description
@@ -3673,14 +3673,14 @@ class DataSetEntity(Base):
         self.tags = tags
 
     @property
-    def org_id(self) -> str:
+    def organization_id(self) -> str:
         """Marquee unique identifier for organization that is associated with the object."""
-        return self.__org_id
+        return self.__organization_id
 
-    @org_id.setter
-    def org_id(self, value: str):
-        self._property_changed('org_id')
-        self.__org_id = value        
+    @organization_id.setter
+    def organization_id(self, value: str):
+        self._property_changed('organization_id')
+        self.__organization_id = value        
 
     @property
     def id(self) -> str:

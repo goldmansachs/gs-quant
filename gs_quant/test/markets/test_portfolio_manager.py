@@ -24,6 +24,7 @@ from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.entities.entitlements import Entitlements, User, EntitlementBlock
 from gs_quant.markets.portfolio_manager import PortfolioManager
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport
+from gs_quant.session import GsSession, Environment
 from gs_quant.target.portfolios import Portfolio as TargetPortfolio
 from gs_quant.target.reports import Report
 
@@ -240,21 +241,20 @@ def test_get_reports(mocker):
 
 
 def test_get_schedule_dates(mocker):
-    mock_portfolio = TargetPortfolio(id='MP', currency='USD', name='Example Port')
-
-    mocker.patch.object(GsPortfolioApi, 'get_portfolio',
-                        return_value=mock_portfolio)
-    mocker.patch.object(GsPortfolioApi, 'get_position_dates',
-                        return_value=[dt.date(2020, 1, 2), dt.date(2020, 2, 1), dt.date(2020, 3, 1)])
-    mocker.patch.object(GsPortfolioApi, 'get_positions_for_date',
-                        return_value=None)
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value={'startDate': '2019-01-01', 'endDate': '2020-01-02'})
 
     # run test
     pm = PortfolioManager('MP')
-    dates = pm.get_schedule_dates(backcast=True)
-    assert dates[0] == dt.date(2019, 1, 1)
-    dates = pm.get_schedule_dates(backcast=False)
-    assert dates[0] == dt.date(2020, 1, 2)
+    dates = pm.get_schedule_dates()
+    assert dates[1] == dt.date(2020, 1, 2)
 
 
 def test_set_entitlements(mocker):
@@ -264,7 +264,7 @@ def test_set_entitlements(mocker):
                                                                   email='fake@gs.com',
                                                                   company='Goldman Sachs')]))
 
-    mocker.patch.object(GsPortfolioApi, 'get_portfolio',
+    mocker.patch.object(GsSession, '_get',
                         return_value=mock_portfolio)
     mocker.patch.object(GsPortfolioApi, 'get_position_dates',
                         return_value=[dt.date(2020, 1, 2), dt.date(2020, 2, 1), dt.date(2020, 3, 1)])

@@ -195,11 +195,12 @@ class Basket:
 
     def get_marquee_ids(self):
         if self._marquee_ids is None:
-            assets = GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', ), limit=len(self.bbids))
-            self._marquee_ids = [a['id'] for a in assets]
-
-            if len(self._marquee_ids) != len(self.bbids):
+            assets = GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', 'bbid'), limit=len(self.bbids))
+            assets_dict = {entry['bbid']: entry['id'] for entry in assets}
+            if len(assets_dict) != len(set(self.bbids)):
                 raise MqValueError('Unable to find all stocks')
+
+            self._marquee_ids = [assets_dict[bbid] for bbid in self.bbids]
 
         return self._marquee_ids
 
@@ -263,7 +264,8 @@ class Basket:
     @requires_session
     @plot_method
     def average_implied_volatility(self, tenor: str, strike_reference: EdrDataReference, relative_strike: Real, *,
-                                   real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+                                   real_time: bool = False, request_id: Optional[str] = None,
+                                   source: Optional[str] = None) -> pd.Series:
         """
         Weighted average implied volatility
 
@@ -272,6 +274,7 @@ class Basket:
         :param relative_strike: strike relative to reference
         :param real_time: whether to retrieve intraday data instead of EOD
         :param request_id: service request id, if any
+        :param source: name of function caller
         :return: time series of the average implied volatility
         """
 
@@ -288,6 +291,7 @@ class Basket:
             self.get_marquee_ids(),
             QueryType.IMPLIED_VOLATILITY,
             where=where,
+            source=source,
             real_time=real_time
         )
         log_debug(request_id, _logger, 'q %s', query)
@@ -321,6 +325,6 @@ class Basket:
 
         vols = [volatility(spot_df[asset_id], Window(tenor, tenor), returns_type) for asset_id in spot_df]
         vols = pd.concat(vols, axis=1)
-        vols.columns = self.get_marquee_ids()
+        vols.columns = list(spot_df)
 
-        return actual_weights.mul(vols).sum(axis=1, skipna=False)
+        return actual_weights.mul(vols, axis=1).sum(axis=1, skipna=False)

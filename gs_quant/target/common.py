@@ -170,6 +170,7 @@ class AssetType(EnumBase, Enum):
     Roll = 'Roll'
     Securities_Lending_Loan = 'Securities Lending Loan'
     Share_Class = 'Share Class'
+    ShiftingBermForward = 'ShiftingBermForward'
     Single_Stock = 'Single Stock'
     Swap = 'Swap'
     SwapLeg = 'SwapLeg'
@@ -907,6 +908,7 @@ class Field(EnumBase, Enum):
 
     investmentRate = 'investmentRate'
     startingEmmaLegalEntityId = 'startingEmmaLegalEntityId'
+    bvalMidPrice = 'bvalMidPrice'
     mdapiClass = 'mdapiClass'
     totalNotionalUSD = 'totalNotionalUSD'
     bidUnadjusted = 'bidUnadjusted'
@@ -1115,6 +1117,7 @@ class Field(EnumBase, Enum):
     leg2IndexLocation = 'leg2IndexLocation'
     twapUnrealizedBps = 'twapUnrealizedBps'
     fwdEbookPointSpreadAllInMultBid = 'fwdEbookPointSpreadAllInMultBid'
+    quoteConvention = 'quoteConvention'
     quantityUnitOfMeasure = 'quantityUnitOfMeasure'
     lastUpdatedMessage = 'lastUpdatedMessage'
     loanValue = 'loanValue'
@@ -1334,6 +1337,7 @@ class Field(EnumBase, Enum):
     bidSize = 'bidSize'
     coordinateId = 'coordinateId'
     arrivalMid = 'arrivalMid'
+    marginalContributionToRiskPercent = 'marginalContributionToRiskPercent'
     assetParametersExchangeCurrency = 'assetParametersExchangeCurrency'
     candidateName = 'candidateName'
     positionDate = 'positionDate'
@@ -1441,6 +1445,7 @@ class Field(EnumBase, Enum):
     tdapi = 'tdapi'
     floatingRateResetFrequencyPeriod1 = 'floatingRateResetFrequencyPeriod1'
     locationCode = 'locationCode'
+    yieldToConvention = 'yieldToConvention'
     rcic = 'rcic'
     nameRaw = 'nameRaw'
     simonAssetTags = 'simonAssetTags'
@@ -1480,6 +1485,7 @@ class Field(EnumBase, Enum):
     priceRangeInTicksDescription = 'priceRangeInTicksDescription'
     tradeVolume = 'tradeVolume'
     primaryCountryRic = 'primaryCountryRic'
+    chargeInBps = 'chargeInBps'
     optionExpirationFrequency = 'optionExpirationFrequency'
     assetParametersIndexVersion = 'assetParametersIndexVersion'
     assetParametersCommodityReferencePrice = 'assetParametersCommodityReferencePrice'
@@ -2054,6 +2060,7 @@ class Field(EnumBase, Enum):
     contractType = 'contractType'
     momentumType = 'momentumType'
     specificRisk = 'specificRisk'
+    chargeInQuoteConventionTwo = 'chargeInQuoteConventionTwo'
     assetParametersIndex = 'assetParametersIndex'
     freeFloatMarketCap = 'freeFloatMarketCap'
     mdapi = 'mdapi'
@@ -2112,6 +2119,7 @@ class Field(EnumBase, Enum):
     totalOnVent = 'totalOnVent'
     twapUnrealizedCash = 'twapUnrealizedCash'
     stsCreditMarket = 'stsCreditMarket'
+    weightOfMarketValue = 'weightOfMarketValue'
     onsCode = 'onsCode'
     passiveTouchFillsPercentage = 'passiveTouchFillsPercentage'
     seniority = 'seniority'
@@ -2205,6 +2213,7 @@ class Field(EnumBase, Enum):
     availableInventory = 'availableInventory'
     est1DayCompletePct = 'est1DayCompletePct'
     relativeHitRateYtd = 'relativeHitRateYtd'
+    gSpread = 'gSpread'
     rai = 'rai'
     impliedRetailBuyPctNotional = 'impliedRetailBuyPctNotional'
     createdById = 'createdById'
@@ -2949,6 +2958,7 @@ class Field(EnumBase, Enum):
     inflationSwapRate = 'inflationSwapRate'
     activeQueries = 'activeQueries'
     sell45bps = 'sell45bps'
+    gsLiquidityScore = 'gsLiquidityScore'
     embededOption = 'embededOption'
     eventSource = 'eventSource'
     qisPermNo = 'qisPermNo'
@@ -3158,6 +3168,7 @@ class Field(EnumBase, Enum):
     tradeType = 'tradeType'
     settlementType = 'settlementType'
     netChange = 'netChange'
+    percentOfIssueOutstanding = 'percentOfIssueOutstanding'
     numberOfUnderliers = 'numberOfUnderliers'
     swapType = 'swapType'
     forecastType = 'forecastType'
@@ -3218,6 +3229,7 @@ class Field(EnumBase, Enum):
     historicalClose = 'historicalClose'
     fipsCode = 'fipsCode'
     _160 = '160'
+    chargeInQuoteConvention = 'chargeInQuoteConvention'
     _161 = '161'
     buy32bps = 'buy32bps'
     _162 = '162'
@@ -3240,6 +3252,7 @@ class Field(EnumBase, Enum):
     temperatureHour = 'temperatureHour'
     upperBound = 'upperBound'
     sell55cents = 'sell55cents'
+    spreadToBenchmark = 'spreadToBenchmark'
     _170 = '170'
     _171 = '171'
     numPediIcuBeds = 'numPediIcuBeds'
@@ -3353,6 +3366,7 @@ class Field(EnumBase, Enum):
     sell2point5bps = 'sell2point5bps'
     capacity = 'capacity'
     sectorsRaw = 'sectorsRaw'
+    chargeInDollars = 'chargeInDollars'
     primaryVwapInLimit = 'primaryVwapInLimit'
     shareclassPrice = 'shareclassPrice'
     fwdEbookRiskDirClientBuyUnder = 'fwdEbookRiskDirClientBuyUnder'
@@ -3629,7 +3643,8 @@ class MarketDataVendor(EnumBase, Enum):
     Coin_Metrics = 'Coin Metrics'
     MSCI = 'MSCI'
     MuniNet = 'MuniNet'
-    Rearc_via_AWS_Data_Exchange = 'Rearc via AWS Data Exchange'    
+    Rearc_via_AWS_Data_Exchange = 'Rearc via AWS Data Exchange'
+    Bank_of_Japan = 'Bank of Japan'    
 
 
 class OptionExpiryType(EnumBase, Enum):    
@@ -3865,6 +3880,7 @@ class RiskMeasureType(EnumBase, Enum):
     CRIF_IRCurve = 'CRIF IRCurve'
     Cashflows = 'Cashflows'
     Compounded_Fixed_Rate = 'Compounded Fixed Rate'
+    Cross_Multiplier = 'Cross Multiplier'
     Daily_Implied_Volatility = 'Daily Implied Volatility'
     Delta = 'Delta'
     DeltaLocalCcy = 'DeltaLocalCcy'
@@ -3877,6 +3893,7 @@ class RiskMeasureType(EnumBase, Enum):
     FinalCPI = 'FinalCPI'
     Forward_Price = 'Forward Price'
     Forward_Rate = 'Forward Rate'
+    Forward_Spread = 'Forward Spread'
     FX_Calculated_Delta = 'FX Calculated Delta'
     FX_Calculated_Delta_No_Premium_Adjustment = 'FX Calculated Delta No Premium Adjustment'
     FX_Premium = 'FX Premium'
@@ -3885,6 +3902,7 @@ class RiskMeasureType(EnumBase, Enum):
     Price = 'Price'
     Gamma = 'Gamma'
     GammaLocalCcy = 'GammaLocalCcy'
+    Implied_Volatility = 'Implied Volatility'
     InflationDelta = 'InflationDelta'
     Inflation_Compounding_Period = 'Inflation Compounding Period'
     Inflation_Delta_in_Bps = 'Inflation Delta in Bps'
@@ -3943,7 +3961,8 @@ class RiskMeasureUnit(EnumBase, Enum):
 
     Percent = 'Percent'
     Dollar = 'Dollar'
-    BPS = 'BPS'    
+    BPS = 'BPS'
+    Pips = 'Pips'    
 
 
 class ScenarioType(EnumBase, Enum):    
@@ -4726,50 +4745,6 @@ class ISelectNewWeight(Base):
     def new_weight(self, value: float):
         self._property_changed('new_weight')
         self.__new_weight = value        
-
-
-class ISelectTime(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        hour: float = None,
-        min_: float = None,
-        sec: float = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.hour = hour
-        self.__min = min_
-        self.sec = sec
-        self.name = name
-
-    @property
-    def hour(self) -> float:
-        return self.__hour
-
-    @hour.setter
-    def hour(self, value: float):
-        self._property_changed('hour')
-        self.__hour = value        
-
-    @property
-    def min(self) -> float:
-        return self.__min
-
-    @min.setter
-    def min(self, value: float):
-        self._property_changed('min')
-        self.__min = value        
-
-    @property
-    def sec(self) -> float:
-        return self.__sec
-
-    @sec.setter
-    def sec(self, value: float):
-        self._property_changed('sec')
-        self.__sec = value        
 
 
 class Identifier(Base):
@@ -6021,6 +5996,77 @@ class TimeFilter(Base):
     def time_zone(self, value: str):
         self._property_changed('time_zone')
         self.__time_zone = value        
+
+
+class UserCoverage(Base):
+        
+    """Sales coverage for user"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        name: str,
+        email: str,
+        app: str = None,
+        phone: str = None,
+        guid: str = None
+    ):        
+        super().__init__()
+        self.app = app
+        self.phone = phone
+        self.name = name
+        self.email = email
+        self.guid = guid
+
+    @property
+    def app(self) -> str:
+        """Marquee application covered by sales person"""
+        return self.__app
+
+    @app.setter
+    def app(self, value: str):
+        self._property_changed('app')
+        self.__app = value        
+
+    @property
+    def phone(self) -> str:
+        """Coverage phone number"""
+        return self.__phone
+
+    @phone.setter
+    def phone(self, value: str):
+        self._property_changed('phone')
+        self.__phone = value        
+
+    @property
+    def name(self) -> str:
+        """Coverage name"""
+        return self.__name
+
+    @name.setter
+    def name(self, value: str):
+        self._property_changed('name')
+        self.__name = value        
+
+    @property
+    def email(self) -> str:
+        """Coverage email"""
+        return self.__email
+
+    @email.setter
+    def email(self, value: str):
+        self._property_changed('email')
+        self.__email = value        
+
+    @property
+    def guid(self) -> str:
+        """Coverage guid"""
+        return self.__guid
+
+    @guid.setter
+    def guid(self, value: str):
+        self._property_changed('guid')
+        self.__guid = value        
 
 
 class UserTag(Base):
@@ -8815,14 +8861,14 @@ class ISelectNewParameter(Base):
         option_expiry: Union[OptionExpiryType, str] = None,
         bloomberg_id: str = None,
         stock_id: str = None,
+        future_id: str = None,
         ric: str = None,
         new_weight: float = None,
         execution_participation_rate: float = None,
         new_shares: float = None,
-        future_id: str = None,
         new_lots: float = None,
-        execution_start_time: ISelectTime = None,
-        execution_end_time: ISelectTime = None,
+        execution_start_time: dict = None,
+        execution_end_time: dict = None,
         execution_style: str = None,
         execution_timezone: str = None,
         notional: float = None,
@@ -8878,11 +8924,11 @@ class ISelectNewParameter(Base):
         self.option_expiry = option_expiry
         self.bloomberg_id = bloomberg_id
         self.stock_id = stock_id
+        self.future_id = future_id
         self.ric = ric
         self.new_weight = new_weight
         self.execution_participation_rate = execution_participation_rate
         self.new_shares = new_shares
-        self.future_id = future_id
         self.new_lots = new_lots
         self.execution_start_time = execution_start_time
         self.execution_end_time = execution_end_time
@@ -9107,6 +9153,15 @@ class ISelectNewParameter(Base):
         self.__stock_id = value        
 
     @property
+    def future_id(self) -> str:
+        return self.__future_id
+
+    @future_id.setter
+    def future_id(self, value: str):
+        self._property_changed('future_id')
+        self.__future_id = value        
+
+    @property
     def ric(self) -> str:
         return self.__ric
 
@@ -9144,15 +9199,6 @@ class ISelectNewParameter(Base):
         self.__new_shares = value        
 
     @property
-    def future_id(self) -> str:
-        return self.__future_id
-
-    @future_id.setter
-    def future_id(self, value: str):
-        self._property_changed('future_id')
-        self.__future_id = value        
-
-    @property
     def new_lots(self) -> float:
         return self.__new_lots
 
@@ -9162,22 +9208,22 @@ class ISelectNewParameter(Base):
         self.__new_lots = value        
 
     @property
-    def execution_start_time(self) -> ISelectTime:
+    def execution_start_time(self) -> dict:
         """When to start executing"""
         return self.__execution_start_time
 
     @execution_start_time.setter
-    def execution_start_time(self, value: ISelectTime):
+    def execution_start_time(self, value: dict):
         self._property_changed('execution_start_time')
         self.__execution_start_time = value        
 
     @property
-    def execution_end_time(self) -> ISelectTime:
+    def execution_end_time(self) -> dict:
         """When to stop executing"""
         return self.__execution_end_time
 
     @execution_end_time.setter
-    def execution_end_time(self, value: ISelectTime):
+    def execution_end_time(self, value: dict):
         self._property_changed('execution_end_time')
         self.__execution_end_time = value        
 
@@ -16118,6 +16164,7 @@ class ReportParameters(Base):
         risk_request: RiskRequest = None,
         participation_rate: float = None,
         approve_rebalance: bool = None,
+        auto_approved_rebalance: bool = None,
         use_risk_request_batch_mode: bool = False,
         limited_access_assets: Tuple[str, ...] = None,
         corporate_action_restricted_assets: Tuple[str, ...] = None,
@@ -16180,6 +16227,7 @@ class ReportParameters(Base):
         self.risk_request = risk_request
         self.participation_rate = participation_rate
         self.approve_rebalance = approve_rebalance
+        self.auto_approved_rebalance = auto_approved_rebalance
         self.use_risk_request_batch_mode = use_risk_request_batch_mode
         self.limited_access_assets = limited_access_assets
         self.corporate_action_restricted_assets = corporate_action_restricted_assets
@@ -16532,6 +16580,16 @@ class ReportParameters(Base):
     def approve_rebalance(self, value: bool):
         self._property_changed('approve_rebalance')
         self.__approve_rebalance = value        
+
+    @property
+    def auto_approved_rebalance(self) -> bool:
+        """Indicates whether the rebalance was auto approved by the system"""
+        return self.__auto_approved_rebalance
+
+    @auto_approved_rebalance.setter
+    def auto_approved_rebalance(self, value: bool):
+        self._property_changed('auto_approved_rebalance')
+        self.__auto_approved_rebalance = value        
 
     @property
     def use_risk_request_batch_mode(self) -> bool:

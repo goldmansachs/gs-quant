@@ -157,6 +157,11 @@ class MeetingType(Enum):
     SPOT = 'Spot'
 
 
+class LevelType(Enum):
+    ABSOLUTE = 'absolute'
+    RELATIVE = 'relative'
+
+
 class EsgMetric(Enum):
     ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE = 'es_score'
     ENVIRONMENTAL_SOCIAL_AGGREGATE_PERCENTILE = 'es_percentile'
@@ -357,6 +362,15 @@ def currency_to_default_benchmark_rate(asset_spec: ASSET_SPEC) -> str:
         result = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
     except TypeError:
         result = asset_id
+    return result
+
+
+def currency_to_default_ois_asset(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
+    try:
+        result = convert_asset_for_rates_data_set(asset, RatesConversionType.OIS_BENCHMARK_RATE)
+    except TypeError:
+        result = asset.get_marquee_id()
     return result
 
 
@@ -2620,10 +2634,10 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
+              [MeasureDependency(id_provider=currency_to_default_ois_asset,
                                  query_type=QueryType.CENTRAL_BANK_SWAP_RATE)])
 def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.MEETING_FORWARD,
-                           level_type: str = 'absolute',
+                           level_type: LevelType = LevelType.ABSOLUTE,
                            valuation_date: GENERIC_DATE = datetime.date.today() - datetime.timedelta(days=1), *,
                            source: str = None, real_time: bool = False) -> pd.Series:
     """'
@@ -2643,9 +2657,9 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
         raise NotImplementedError('real-time central bank swap rate not implemented')
     if not isinstance(valuation_date, (dt.date, str)):
         raise MqValueError('valuation_date must be of type datetime.date or string YYYY-MM-DD')
-    if rate_type not in MeetingType:
+    if not isinstance(rate_type, MeetingType):
         raise MqValueError('rate_type must be one of Spot, Meeting Forward and EOY Forward')
-    if level_type not in ['relative', 'absolute']:
+    if not isinstance(level_type, LevelType):
         raise MqValueError('level_type must be either absolute or relative')
 
     if isinstance(valuation_date, str):
@@ -2660,7 +2674,7 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
 
     ds = Dataset('CENTRAL_BANK_WATCH')
     if rate_type == MeetingType.SPOT:
-        if level_type == 'relative':
+        if level_type == LevelType.RELATIVE:
             raise MqValueError('level_type must be absolute for rate_type = Spot')
         else:
             df = ds.get_data(assetId=[mqid], rateType=rate_type, start=CENTRAL_BANK_WATCH_START_DATE)
@@ -2668,7 +2682,7 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
         df = ds.get_data(assetId=[mqid], rateType=rate_type, valuationDate=valuation_date,
                          start=CENTRAL_BANK_WATCH_START_DATE)
 
-    if level_type == 'relative':
+    if level_type == LevelType.RELATIVE:
         # df = remove_dates_with_null_entries(df)
         spot = df[df['meetingNumber'] == 0]['value'][0]
         df['value'] = df['value'] - spot
@@ -2680,10 +2694,10 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
+              [MeasureDependency(id_provider=currency_to_default_ois_asset,
                                  query_type=QueryType.POLICY_RATE_EXPECTATION)])
 def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.MEETING_FORWARD,
-                            level_type: str = 'absolute',
+                            level_type: LevelType = LevelType.ABSOLUTE,
                             meeting_date: Union[datetime.date, int, str] = 0,
                             *, source: str = None, real_time: bool = False) -> pd.Series:
     """'
@@ -2702,8 +2716,8 @@ def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.M
     if real_time:
         raise NotImplementedError('real-time central bank swap rate not implemented')
     if rate_type not in [MeetingType.MEETING_FORWARD, MeetingType.EOY_FORWARD]:
-        raise MqValueError('invalid rate_type specified, \'Meeting Forward\' or \'EOY Forward\' allowed')
-    if level_type not in ['relative', 'absolute']:
+        raise MqValueError('invalid rate_type specified, Meeting Forward or EOY Forward allowed')
+    if not isinstance(level_type, LevelType):
         raise MqValueError('level_type must be either absolute or relative')
     if not isinstance(meeting_date, (dt.date, str, int)):
         raise MqValueError('valuation_date must be of type datetime.date or string YYYY-MM-DD or integer')
@@ -2735,7 +2749,7 @@ def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.M
     if cbw_df.empty:
         raise MqValueError('meeting date specified returned no data')
 
-    if level_type == 'relative':
+    if level_type == LevelType.RELATIVE:
         spot_df = ds.get_data(assetId=[mqid], rateType=rate_type, meetingNumber=0,
                               start=CENTRAL_BANK_WATCH_START_DATE).rename(columns={'value': 'spotValue'})
         if spot_df.empty:
@@ -3917,3 +3931,20 @@ def settlement_price(asset: Asset, contract: str = 'F22', *, source: str = None,
 
     result.dataset_ids = ds.id
     return result
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.Single_Stock), [QueryType.SPOT])
+def hloc_prices(asset: Asset, interval_frequency: IntervalFrequency = IntervalFrequency.DAILY, *,
+                source: str = None, real_time: bool = False) -> pd.DataFrame:
+    """
+    Get the hloc (high, low, open, and close) prices of the given asset.
+    :param asset: asset object loaded from security master
+    :param interval_frequency: frequency of the hloc
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
+    :return: DataFrame with high, low, open, close columns
+    """
+    if real_time:
+        raise MqValueError('Use daily frequency instead of intraday.')
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    return asset.get_hloc_prices(start, end, interval_frequency)

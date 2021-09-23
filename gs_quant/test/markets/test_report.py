@@ -256,7 +256,7 @@ def test_get_daily_risk(mocker):
     assert len(response) == 3
 
 
-def test_get_pta_measures(mocker):
+def test_get_measures(mocker):
     # mock GsSession
     mocker.patch.object(
         GsSession.__class__,
@@ -268,7 +268,7 @@ def test_get_pta_measures(mocker):
     mocker.patch.object(GsDataApi, 'query_data', return_value=thematic_results)
 
     # run test
-    response = fake_pta._get_pta_measures(["grossExposure", "thematicExposure"])
+    response = fake_pta._get_measures(["grossExposure", "thematicExposure"])
     assert len(response) == 4
 
 

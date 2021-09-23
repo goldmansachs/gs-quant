@@ -26,6 +26,7 @@ from enum import auto
 from functools import partial
 from typing import Dict, Tuple
 
+import backoff
 import cachetools
 import pytz
 from dateutil.relativedelta import relativedelta
@@ -40,7 +41,7 @@ from gs_quant.data.coordinate import DataDimensions
 from gs_quant.data.coordinate import DateOrDatetime
 from gs_quant.data.core import IntervalFrequency, DataAggregationOperator
 from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, PositionedEntity
-from gs_quant.errors import MqValueError, MqTypeError
+from gs_quant.errors import MqValueError, MqTypeError, MqRequestError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
 from gs_quant.markets.indices_utils import *
@@ -113,6 +114,9 @@ class AssetType(Enum):
     #: Option
     OPTION = "Option"
 
+    #: Binary
+    BINARY = "Binary"
+
     #: Commodity Reference Price
     COMMODITY_REFERENCE_PRICE = "Commodity Reference Price"
 
@@ -163,6 +167,34 @@ class AssetType(Enum):
 
     #: Multi Asset Allocation
     MULTI_ASSET_ALLOCATION = 'Multi-Asset Allocation'
+
+    # Sec Master types
+
+    ADR = 'ADR'
+    GDR = 'GDR'
+    DUTCH_CERT = 'Dutch Cert'
+    NYRS = 'NY Reg Shrs'
+    RECEIPT = 'Receipt'
+    UNIT = 'Unit'
+    MUTUAL_FUND = 'Mutual Fund'
+    RIGHT = 'Right'
+    PREFERRED = 'Preferred'
+    MISC = 'Misc.'
+    REIT = 'REIT'
+    PRIVATE_COMP = 'Private Comp'
+    PREFERENCE = 'Preference'
+    LIMITED_PARTNERSHIP = 'Ltd Part'
+    TRACKING_STOCK = 'Tracking Stk'
+    ROYALTY_TRUST = 'Royalty Trst'
+    CLOSED_END_FUND = 'Closed-End Fund'
+    OPEN_END_FUND = 'Open-End Fund'
+    FUND_OF_FUNDS = 'Fund of Funds'
+    MLP = 'MLP'
+    STAPLED_SECURITY = 'Stapled Security'
+    SAVINGS_SHARE = 'Savings Share'
+    EQUITY_WRT = 'Equity WRT'
+    # ETF already defined
+    SAVINGS_PLAN = 'Savings Plan'
 
 
 class AssetIdentifier(EntityIdentifier):
@@ -475,7 +507,7 @@ class Asset(Entity, metaclass=ABCMeta):
         ]
 
         results = ThreadPoolManager.run_async(tasks)
-        df = pd.DataFrame({'High': results[0], 'Low': results[1], 'Open': results[2], 'Close': results[3]})
+        df = pd.DataFrame({'high': results[0], 'low': results[1], 'open': results[2], 'close': results[3]})
         return df.dropna()
 
     @abstractmethod
@@ -936,6 +968,22 @@ class Swaption(Asset):
         return AssetType.SWAPTION
 
 
+class Binary(Asset):
+    """Binary
+    Represents a binary.
+    """
+
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 asset_class: AssetClass,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.BINARY
+
+
 class DefaultSwap(Asset):
     """DefaultSwap
 
@@ -971,6 +1019,11 @@ class Security:
 
     def get_identifiers(self):
         return deepcopy(self._ids)
+
+
+@backoff.on_exception(backoff.expo, MqRequestError, giveup=lambda e: e.status != 429)
+def _get_with_retries(url, payload):
+    return GsSession.current._get(url, payload=payload)
 
 
 class SecurityMaster:
@@ -1085,6 +1138,9 @@ class SecurityMaster:
 
         if asset_type == GsAssetType.Swaption.value:
             return Swaption(gs_asset.id, gs_asset.name, entity=asset_entity)
+
+        if asset_type == GsAssetType.Binary.value:
+            return Binary(gs_asset.id, gs_asset.name, gs_asset.assetClass, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 
@@ -1267,15 +1323,14 @@ class SecurityMaster:
     def asset_type_to_str(asset_class: AssetClass, asset_type: AssetType):
         if asset_type == AssetType.STOCK:
             return "Common Stock"
-        if asset_type == AssetType.ETF:
-            return "ETF"
         if asset_type == AssetType.INDEX and asset_class == AssetClass.Equity:
             return "Equity Index"
-        raise MqValueError(f"{asset_class.value}: {asset_type.value} is not supported")
+        return asset_type.value
 
     @classmethod
     def get_all_identifiers(cls, class_: AssetClass = None, types: List[AssetType] = None,
-                            as_of: datetime.datetime = None, limit: int = 0, id_type: SecurityIdentifier = None):
+                            as_of: datetime.datetime = None, limit: int = 0, id_type: SecurityIdentifier = None,
+                            use_offset_key=False, sleep=0.5):
         """
         Get identifiers for all matching assets.
 
@@ -1284,6 +1339,8 @@ class SecurityMaster:
         :param as_of: point in time for which identifiers are fetched
         :param limit: maximum number of assets to fetch
         :param id_type: identifier type to use for keys of result dict
+        :param use_offset_key: whether to use offset keys for pagination (faster, but experimental)
+        :param sleep: seconds to sleep between API calls (to avoid server-side throttling)
         :return: dict from ID (of the id_type) to available identifiers
         """
         if cls._source != SecurityMasterSource.SECURITY_MASTER:
@@ -1299,13 +1356,12 @@ class SecurityMaster:
         params = {
             'fields': ['id', 'identifiers', 'assetClass', 'type'],
             'asOfDate': as_of.date(),
-            'limit': cls._page_size,
-            'offset': 0
+            'limit': cls._page_size
         }
 
         output = {}
-        while params['offset'] < cls._result_limit:
-            r = GsSession.current._get('/markets/securities', payload=params)
+        while len(output) < cls._result_limit:
+            r = _get_with_retries('/markets/securities', params)
             for e in r['results']:
                 if (class_ is None or e['assetClass'] == class_.value) and (types is None or e['type'] in types):
                     box = e['identifiers']
@@ -1315,8 +1371,13 @@ class SecurityMaster:
             if r['totalResults'] == 0 or len(output) >= limit:
                 break
 
-            params['offset'] += cls._page_size
-            time.sleep(0.5)
+            if use_offset_key:
+                if 'offsetKey' not in r:
+                    break
+                params['offsetKey'] = r['offsetKey']
+            else:
+                params['offset'] = params.get('offset', 0) + cls._page_size
+            time.sleep(sleep)
         else:
             _logger.warning('too many rows; results have been truncated')
 

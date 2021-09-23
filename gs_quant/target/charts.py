@@ -70,6 +70,8 @@ class ChartAnnotationType(EnumBase, Enum):
     arrow = 'arrow'
     circle = 'circle'
     line = 'line'
+    oval = 'oval'
+    range = 'range'
     rect = 'rect'
     text = 'text'    
 
@@ -517,6 +519,7 @@ class ChartAnnotation(Base):
         start_value: str = None,
         end_value: str = None,
         color: str = None,
+        is_proportional: bool = False,
         fill_color: str = None,
         font_size: float = None,
         font_style: Union[ChartAnnotationFontStyle, str] = None,
@@ -540,6 +543,7 @@ class ChartAnnotation(Base):
         self.start_value = start_value
         self.end_value = end_value
         self.color = color
+        self.is_proportional = is_proportional
         self.fill_color = fill_color
         self.font_size = font_size
         self.font_style = font_style
@@ -624,6 +628,16 @@ class ChartAnnotation(Base):
     def color(self, value: str):
         self._property_changed('color')
         self.__color = value        
+
+    @property
+    def is_proportional(self) -> bool:
+        """The proportional relationship of the width and height"""
+        return self.__is_proportional
+
+    @is_proportional.setter
+    def is_proportional(self, value: bool):
+        self._property_changed('is_proportional')
+        self.__is_proportional = value        
 
     @property
     def fill_color(self) -> str:

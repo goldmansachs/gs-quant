@@ -104,7 +104,8 @@ def test_basket_price():
     mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}, {'id': 'MA4B66MW5E27UAL9SUX'}]
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.MONTHLY)
     expected = pd.Series([100.0, 100.1, 100.302, 100.09596, 100.09596, 100.297879], index=dates)
@@ -118,7 +119,7 @@ def test_basket_price():
     assert_series_equal(actual, expected)
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}]
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'}]
     with pytest.raises(MqValueError):
         Basket(['AAPL UW', 'ABC'], [0.1, 0.9], RebalFreq.MONTHLY).price()
 
@@ -145,7 +146,8 @@ def test_basket_average_implied_vol():
     mock_data.side_effect = [implied_vol, _mock_spot_data()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}, {'id': 'MA4B66MW5E27UAL9SUX'}]
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
     expected = pd.Series([21.0, 21.2, 21.25, 21.6, 22.0, 21.0], index=dates)
@@ -170,7 +172,8 @@ def test_basket_average_realized_vol():
     mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94'}, {'id': 'MA4B66MW5E27UAL9SUX'}]
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
 
@@ -192,6 +195,44 @@ def test_basket_average_realized_vol():
 
     with pytest.raises(NotImplementedError):
         a_basket.average_realized_volatility('2d', real_time=True)
+
+    replace.restore()
+
+
+def _mock_vol_simple():
+    return pd.Series([1 for i in range(5)], index=pd.date_range('2021-09-01', '2021-09-05'))
+
+
+def _mock_data_simple():
+    a = pd.Series([1 for i in range(5)], index=pd.date_range('2021-09-01', '2021-09-05'))
+    x = pd.DataFrame({'spot': a.tolist()}, index=a.index)
+    x['assetId'] = 'XLC_MOCK_MQID'
+    y = pd.DataFrame({'spot': a.tolist()}, index=a.index)
+    y['assetId'] = 'XLB_MOCK_MQID'
+    z = pd.DataFrame({'spot': (a ** 3).tolist()}, index=a.index)
+    z['assetId'] = 'SPX_MOCK_MQID'
+    return x.append(y).append(z)
+
+
+def test_basket_average_realized_vol_wts():
+    _mock_vol_simple()
+
+    replace = Replacer()
+
+    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data.side_effect = [_mock_data_simple()]
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [{'id': 'XLB_MOCK_MQID', 'bbid': 'XLP UP'},
+                               {'id': 'XLC_MOCK_MQID', 'bbid': 'XLC UP'}, {'id': 'SPX_MOCK_MQID', 'bbid': 'SPX'}]
+
+    mock_vol = replace('gs_quant.timeseries.backtesting.volatility', Mock())
+    mock_vol.side_effect = [_mock_vol_simple(), _mock_vol_simple() * 2, _mock_vol_simple() * 3, _mock_vol_simple() * 4]
+
+    a_basket = Basket(['XLC UP', 'XLP UP', 'SPX'], [0.2, 0.3, 0.5], RebalFreq.DAILY)
+
+    av_realized_vol = a_basket.average_realized_volatility('2d')
+    np.testing.assert_approx_equal(av_realized_vol.iloc[0], 1.7)
 
     replace.restore()
 

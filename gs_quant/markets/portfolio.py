@@ -188,7 +188,12 @@ class Portfolio(PriceableImpl):
         return tuple(unique_everseen(portfolios))
 
     def subset(self, paths: Iterable[PortfolioPath], name=None):
-        return Portfolio(tuple(self[p] for p in paths), name=name)
+        # Do our paths represent a single portfolio?
+        paths_tuple = tuple(paths)
+        if len(paths_tuple) == 1 and isinstance(self[paths_tuple[0]], Portfolio):
+            return self[paths_tuple[0]]
+        else:
+            return Portfolio(tuple(self[p] for p in paths_tuple), name=name)
 
     @staticmethod
     def __from_internal_positions(id_type: str, positions_id):

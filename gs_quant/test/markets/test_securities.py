@@ -393,6 +393,14 @@ def test_get_all_identifiers(mocker):
         "results": [],
         "totalResults": 0
     }
+
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=[p1, p2, p3])
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers()
@@ -406,6 +414,89 @@ def test_get_all_identifiers(mocker):
     assert len(output) == 2
     assert output['GS UN'] == p1['results'][0]['identifiers']
     assert output['AAPL UW'] == p2['results'][0]['identifiers']
+
+
+def test_offset_key(mocker):
+    p1 = {
+        "results": [
+            {
+                "type": "Common Stock",
+                "id": "GSPD901026E154",
+                "assetClass": "Equity",
+                "identifiers": {
+                    "gsid": 901026,
+                    "ric": "GS.N",
+                    "id": "GSPD901026E154",
+                    "bbid": "GS UN"
+                }
+            }
+        ],
+        "offsetKey": "qwerty",
+        "totalResults": 1
+    }
+    p2 = {
+        "results": [
+            {
+                "type": "Common Stock",
+                "id": "GSPD14593E459",
+                "assetClass": "Equity",
+                "identifiers": {
+                    "gsid": 14593,
+                    "ric": "AAPL.OQ",
+                    "id": "GSPD14593E459",
+                    "bbid": "AAPL UW",
+                }
+            }
+        ],
+        "offsetKey": "azerty",
+        "totalResults": 1
+    }
+    p3 = {
+        "results": [],
+        "totalResults": 0
+    }
+
+    limited = False
+    hits = [0] * 3
+
+    def fetch(*args, **kwargs):
+        nonlocal limited
+        if not limited:
+            limited = True
+            raise MqRequestError(429, 'too many requests')
+        offset_key = kwargs['payload'].get('offsetKey')
+        if offset_key is None:
+            hits[0] += 1
+            return p1
+        if offset_key == "qwerty":
+            hits[1] += 1
+            return p2
+        if offset_key == "azerty":
+            hits[2] += 1
+            return p3
+
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', side_effect=fetch)
+    with SecMasterContext():
+        output = SecurityMaster.get_all_identifiers(use_offset_key=True, sleep=0)
+    assert len(output) == 2
+    assert output['GSPD901026E154'] == p1['results'][0]['identifiers']
+    assert output['GSPD14593E459'] == p2['results'][0]['identifiers']
+    assert all(map(lambda x: x == 1, hits))
+
+    mocker.patch.object(GsSession.current, '_get', side_effect=fetch)
+    with SecMasterContext():
+        output = SecurityMaster.get_all_identifiers(id_type=SecurityIdentifier.BBID, use_offset_key=True, sleep=0)
+    assert len(output) == 2
+    assert output['GS UN'] == p1['results'][0]['identifiers']
+    assert output['AAPL UW'] == p2['results'][0]['identifiers']
+    assert all(map(lambda x: x == 2, hits))
 
 
 if __name__ == "__main__":

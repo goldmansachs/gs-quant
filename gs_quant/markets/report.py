@@ -38,6 +38,8 @@ class ReportDataset(Enum):
     PPA_DATASET = "PPA"
     PFR_DATASET = "PFR"
     AFR_DATASET = "AFR"
+    ATA_DATASET = "ATA"
+    ATAA_DATASET = "ATAA"
     PTA_DATASET = "PTA"
     PTAA_DATASET = "PTAA"
     PORTFOLIO_CONSTITUENTS = "PORTFOLIO_CONSTITUENTS"
@@ -647,14 +649,16 @@ class ThematicReport(Report):
                  name: str = None,
                  position_source_id: str = None,
                  parameters: ReportParameters = None,
+                 position_source_type: Union[str, PositionSourceType] = None,
+                 report_type: Union[str, ReportType] = None,
                  earliest_start_date: dt.date = None,
                  latest_end_date: dt.date = None,
                  latest_execution_time: dt.datetime = None,
                  status: Union[str, ReportStatus] = ReportStatus.new,
                  percentage_complete: float = None,
                  **kwargs):
-        super().__init__(report_id, name, position_source_id, PositionSourceType.Portfolio,
-                         ReportType.Portfolio_Thematic_Analytics, parameters, earliest_start_date, latest_end_date,
+        super().__init__(report_id, name, position_source_id, position_source_type,
+                         report_type, parameters, earliest_start_date, latest_end_date,
                          latest_execution_time, status, percentage_complete)
 
     @classmethod
@@ -666,12 +670,14 @@ class ThematicReport(Report):
     @classmethod
     def from_target(cls,
                     report: TargetReport):
-        if report.type != ReportType.Portfolio_Thematic_Analytics:
-            raise MqValueError('This report is not a portfolio thematic report.')
+        if report.type not in [ReportType.Portfolio_Thematic_Analytics, ReportType.Asset_Thematic_Analytics]:
+            raise MqValueError('This report is not a thematic report.')
         return ThematicReport(report_id=report.id,
                               name=report.name,
                               position_source_id=report.position_source_id,
                               parameters=report.parameters,
+                              position_source_type=report.position_source_type,
+                              report_type=report.type,
                               earliest_start_date=report.earliest_start_date,
                               latest_end_date=report.latest_end_date,
                               latest_execution_time=report.latest_execution_time,
@@ -682,39 +688,41 @@ class ThematicReport(Report):
                           start_date: dt.date = None,
                           end_date: dt.date = None,
                           basket_ids: List[str] = None) -> pd.DataFrame:
-        pta_results = self._get_pta_measures(["thematicExposure", "grossExposure"], start_date, end_date, basket_ids,
-                                             ReturnFormat.JSON)
-        for result in pta_results:
+        results = self._get_measures(["thematicExposure", "grossExposure"], start_date, end_date, basket_ids,
+                                     ReturnFormat.JSON)
+        for result in results:
             result['thematicBeta'] = result['thematicExposure'] / result['grossExposure']
-        return pd.DataFrame(pta_results).filter(items=['date', 'thematicExposure', 'thematicBeta'])
+        return pd.DataFrame(results).filter(items=['date', 'thematicExposure', 'thematicBeta'])
 
     def get_thematic_exposure(self,
                               start_date: dt.date = None,
                               end_date: dt.date = None,
                               basket_ids: List[str] = None) -> pd.DataFrame:
-        return self._get_pta_measures(["thematicExposure"], start_date, end_date, basket_ids)
+        return self._get_measures(["thematicExposure"], start_date, end_date, basket_ids)
 
     def get_thematic_betas(self,
                            start_date: dt.date = None,
                            end_date: dt.date = None,
                            basket_ids: List[str] = None) -> pd.DataFrame:
-        pta_results = self._get_pta_measures(["thematicExposure", "grossExposure"], start_date, end_date, basket_ids,
-                                             ReturnFormat.JSON)
-        for result in pta_results:
+        results = self._get_measures(["thematicExposure", "grossExposure"], start_date, end_date, basket_ids,
+                                     ReturnFormat.JSON)
+        for result in results:
             result['thematicBeta'] = result['thematicExposure'] / result['grossExposure']
             result.pop('thematicExposure')
             result.pop('grossExposure')
-        return pd.DataFrame(pta_results)
+        return pd.DataFrame(results)
 
-    def _get_pta_measures(self,
-                          fields: List,
-                          start_date: dt.date = None,
-                          end_date: dt.date = None,
-                          basket_ids: List[str] = None,
-                          return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+    def _get_measures(self,
+                      fields: List,
+                      start_date: dt.date = None,
+                      end_date: dt.date = None,
+                      basket_ids: List[str] = None,
+                      return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         where = {'reportId': self.id}
         if basket_ids:
             where['basketId'] = basket_ids
+        dataset = ReportDataset.PTA_DATASET.value if self.position_source_type == PositionSourceType.Portfolio \
+            else ReportDataset.ATA_DATASET.value
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
-        results = GsDataApi.query_data(query=query, dataset_id=ReportDataset.PTA_DATASET.value)
+        results = GsDataApi.query_data(query=query, dataset_id=dataset)
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results

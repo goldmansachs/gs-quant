@@ -171,7 +171,14 @@ class RiskMeasureWithFiniteDifferenceParameter(ParameterisedRiskMeasure):
 DollarPrice = __risk_measure_with_doc_string('DollarPrice', 'Present value in USD', RiskMeasureType.Dollar_Price)
 Price = __risk_measure_with_doc_string('Price', 'Present value in local currency', RiskMeasureType.PV,
                                        parameter_type="Currency")
+PricePips = __risk_measure_with_doc_string('Price', 'Present value in pips', RiskMeasureType.Price,
+                                           unit=RiskMeasureUnit.Pips,
+                                           parameter_type="Currency")
+Annuity = __risk_measure_with_doc_string('Annuity', 'Annuity', RiskMeasureType.AnnuityLocalCcy,
+                                         asset_class=AssetClass.Rates, parameter_type='Currency')
 
+CrossMultiplier = __risk_measure_with_doc_string('CrossMultiplier', 'Cross Multiplier',
+                                                 RiskMeasureType.Cross_Multiplier)
 ForwardPrice = __risk_measure_with_doc_string(
     'ForwardPrice',
     'Forward price',
@@ -390,3 +397,19 @@ ParSpread = __risk_measure_with_doc_string(
     'Par Spread',
     RiskMeasureType.Spread,
     asset_class=AssetClass.Rates)
+ATMSpread = __risk_measure_with_doc_string(
+    'ATMSpread',
+    'ATM Spread',
+    RiskMeasureType.Spread,
+    asset_class=AssetClass.Credit)
+FwdSpread = __risk_measure_with_doc_string(
+    'FwdSpread',
+    'Fwd Spread',
+    RiskMeasureType.Spread,
+    asset_class=AssetClass.Credit)
+ImpliedVolatility = __risk_measure_with_doc_string(
+    'ImpliedVolatility',
+    'Implied Volatility',
+    RiskMeasureType.Annual_Implied_Volatility,
+    unit=RiskMeasureUnit.Percent,
+    asset_class=AssetClass.Credit)
