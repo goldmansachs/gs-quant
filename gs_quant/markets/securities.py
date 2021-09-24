@@ -24,7 +24,7 @@ from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from enum import auto
 from functools import partial
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Generator
 
 import backoff
 import cachetools
@@ -1042,7 +1042,6 @@ class SecurityMaster:
      """
     _source = SecurityMasterSource.ASSET_SERVICE
     _page_size = 1000
-    _result_limit = 100000
 
     @classmethod
     def __gs_asset_to_asset(cls, gs_asset: GsAsset) -> Asset:
@@ -1273,7 +1272,7 @@ class SecurityMaster:
     def get_identifiers(cls, id_values: List[str], id_type: SecurityIdentifier, as_of: datetime.datetime = None,
                         start: datetime.datetime = None, end: datetime.datetime = None) -> dict:
         """
-        Get identifiers for assets.
+        Get identifiers for given assets.
 
         :param id_values: identifier values e.g. ['GS UN']
         :param id_type: identifier type e.g. BBID
@@ -1328,27 +1327,25 @@ class SecurityMaster:
         return asset_type.value
 
     @classmethod
-    def get_all_identifiers(cls, class_: AssetClass = None, types: List[AssetType] = None,
-                            as_of: datetime.datetime = None, limit: int = 0, id_type: SecurityIdentifier = None,
-                            use_offset_key=False, sleep=0.5):
+    def get_all_identifiers_gen(cls, class_: AssetClass = None, types: Optional[List[AssetType]] = None,
+                                as_of: datetime.datetime = None, *, id_type: SecurityIdentifier = SecurityIdentifier.ID,
+                                use_offset_key=True, sleep=0.5) -> Generator[dict, None, None]:
         """
-        Get identifiers for all matching assets.
+        Get identifiers for all matching assets. Returns a generator iterator so that the caller can load each page of
+        results using next().
 
-        :param class_: class of assets e.g. Equity
-        :param types: types of assets (within the class) e.g. Stock
+        :param class_: if not None, restrict results to assets of given class e.g. Equity
+        :param types: if not None, restrict results to given types e.g. Stock
         :param as_of: point in time for which identifiers are fetched
-        :param limit: maximum number of assets to fetch
-        :param id_type: identifier type to use for keys of result dict
-        :param use_offset_key: whether to use offset keys for pagination (faster, but experimental)
+        :param id_type: identifier type to use for keys of results
+        :param use_offset_key: whether to use offset keys for pagination (required for large result sets)
         :param sleep: seconds to sleep between API calls (to avoid server-side throttling)
-        :return: dict from ID (of the id_type) to available identifiers
+        :return: a generator iterator that yields dicts from id (of the id_type) to available identifiers
         """
         if cls._source != SecurityMasterSource.SECURITY_MASTER:
             raise NotImplementedError("method not available when using Asset Service")
 
         as_of = as_of or datetime.datetime.now()
-        limit = limit or cls._result_limit
-        id_type = id_type or SecurityIdentifier.ID
         if types is not None:
             p = functools.partial(cls.asset_type_to_str, class_)
             types = set(map(p, types))
@@ -1359,26 +1356,53 @@ class SecurityMaster:
             'limit': cls._page_size
         }
 
-        output = {}
-        while len(output) < cls._result_limit:
+        while True:
             r = _get_with_retries('/markets/securities', params)
+            if r['totalResults'] == 0:
+                return
+
+            output = {}
             for e in r['results']:
+                # TODO: perform filtering on server side
                 if (class_ is None or e['assetClass'] == class_.value) and (types is None or e['type'] in types):
                     box = e['identifiers']
-                    output[box[id_type.value]] = box
-                    if len(output) >= limit:
-                        break
-            if r['totalResults'] == 0 or len(output) >= limit:
-                break
+                    key = box[id_type.value]
+                    if key in box:
+                        _logger.debug(f'encountered duplicate key {key}')
+                    output[key] = box
 
+            yield output
             if use_offset_key:
                 if 'offsetKey' not in r:
-                    break
+                    return
                 params['offsetKey'] = r['offsetKey']
             else:
                 params['offset'] = params.get('offset', 0) + cls._page_size
+                if params['offset'] + params['limit'] > 10000:
+                    _logger.warning('reached result size limit; enable use of offset keys to retrieve all results')
+                    return
             time.sleep(sleep)
-        else:
-            _logger.warning('too many rows; results have been truncated')
 
-        return output
+    @classmethod
+    def get_all_identifiers(cls, class_: AssetClass = None, types: Optional[List[AssetType]] = None,
+                            as_of: datetime.datetime = None, *, id_type: SecurityIdentifier = SecurityIdentifier.ID,
+                            use_offset_key=True, sleep=0.5) -> Dict[str, dict]:
+        """
+        Get identifiers for all matching assets.
+
+        :param class_: if not None, restrict results to assets of given class e.g. Equity
+        :param types: if not None, restrict results to given types e.g. Stock
+        :param as_of: point in time for which identifiers are fetched
+        :param id_type: identifier type to use for keys of results
+        :param use_offset_key: whether to use offset keys for pagination (required for large result sets)
+        :param sleep: seconds to sleep between API calls (to avoid server-side throttling)
+        :return: dict from id (of the id_type) to available identifiers
+        """
+        gen = cls.get_all_identifiers_gen(class_, types, as_of, id_type=id_type, use_offset_key=use_offset_key,
+                                          sleep=sleep)
+        accumulator = dict()
+        while True:
+            try:
+                accumulator.update(next(gen))
+            except StopIteration:
+                return accumulator

@@ -214,6 +214,23 @@ def _mock_data_simple():
     return x.append(y).append(z)
 
 
+def _mock_spot_data_identical():
+    dates = pd.date_range(start='2021-01-01', periods=6)
+    x = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
+    x['assetId'] = 'MA4B66MW5E27U9VBB94'
+    y = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
+    y['assetId'] = 'MA4B66MW5E27UAL9SUX'
+    return x.append(y)
+
+
+def _mock_spot_data_corr():
+    dates = pd.date_range(start='2021-01-01', periods=6)
+    x = pd.DataFrame({'spot': [78, 9, 1003, 17, -12, 5], 'assetId': 'MA4B66MW5E27U9VBB94'}, index=dates)
+    y = pd.DataFrame({'spot': [-33, 33, 15, 21, -3, 2], 'assetId': 'MA4B66MW5E27UAL9SUX'}, index=dates)
+    z = pd.DataFrame({'spot': [86, 86, 56, 86, 86, 9], 'assetId': 'MA4B66MW5E27UANZH2M'}, index=dates)
+    return x.append(y).append(z)
+
+
 def test_basket_average_realized_vol_wts():
     _mock_vol_simple()
 
@@ -234,6 +251,56 @@ def test_basket_average_realized_vol_wts():
     av_realized_vol = a_basket.average_realized_volatility('2d')
     np.testing.assert_approx_equal(av_realized_vol.iloc[0], 1.7)
 
+    replace.restore()
+
+
+def test_basket_average_realized_corr():
+    replace = Replacer()
+
+    dates = pd.DatetimeIndex([date(2021, 1, 1), date(2021, 1, 2), date(2021, 1, 3), date(2021, 1, 4), date(2021, 1, 5),
+                              date(2021, 1, 6)])
+
+    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data.side_effect = [_mock_spot_data_identical(), _mock_spot_data_corr(),
+                             _mock_spot_data_identical()]
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [
+        {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
+
+    a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
+
+    # Equal series have correlation of 1
+    with DataContext('2021-01-01', '2021-01-06'):
+        expected = pd.Series([np.nan, np.nan, 1.0, 1.0, 1.0, 1.0], index=dates)
+        result = a_basket.average_realized_correlation('2d')
+        assert_series_equal(result, expected)
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [
+        {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
+        {'id': 'MA4B66MW5E27UANZH2M', 'bbid': 'XLP UP'}]
+
+    b_basket = Basket(['AAPL UW', 'MSFT UW', 'XLP UP'], [0.2, 0.3, 0.5], RebalFreq.DAILY)
+
+    # Test with two different series
+    with DataContext('2021-01-01', '2021-01-06'):
+        result = b_basket.average_realized_correlation('5d')
+        expected = pd.Series([np.nan, np.nan, np.nan, np.nan, np.nan, 0.26872959922887607], index=dates)
+        assert_series_equal(result, expected)
+
+    # Test correct error being thrown
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [
+        {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
+        {'id': 'MA4B66MW5E27UANZH2M', 'bbid': 'XLP UP'}]
+
+    with pytest.raises(NotImplementedError):
+        with DataContext('2021-01-01', '2021-01-09'):
+            result = b_basket.average_realized_correlation('5d', real_time=True)
     replace.restore()
 
 

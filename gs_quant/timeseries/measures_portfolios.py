@@ -56,3 +56,20 @@ def portfolio_pnl(portfolio_id: str, start_date: dt.date = None, end_date: dt.da
         df.set_index(pd.DatetimeIndex(df['date']), inplace=True)
         df.drop(columns=['date'])
         return _extract_series_from_df(df, QueryType.PNL, True)
+
+
+@plot_measure_entity(EntityType.PORTFOLIO, [QueryType.AUM])
+def aum(portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None, *,
+        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    Returns the Custom AUM uploaded for the portfolio
+    :param portfolio_id: id of portfolio
+    :param start_date: start date for getting aum
+    :param end_date: end date for getting aum
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio aum values
+    """
+    return _extract_series_from_df(pd.DataFrame(
+        GsPortfolioApi.get_custom_aum(portfolio_id, start_date, end_date)), QueryType.AUM, True)

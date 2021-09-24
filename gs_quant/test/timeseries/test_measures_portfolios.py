@@ -71,5 +71,32 @@ def test_financial_conditions_index():
     replace.restore()
 
 
+def test_custom_aum():
+    data = {
+        'aum': [
+            101,
+            102,
+            103
+        ],
+        'date': [
+            '2020-01-01',
+            '2020-01-02',
+            '2020-01-03'
+        ]
+    }
+    idx = pd.date_range('2020-01-01', freq='D', periods=3)
+    df = MarketDataResponseFrame(data=data, index=idx)
+    df.dataset_ids = ('AUM',)
+    replace = Replacer()
+
+    # mock GsPortfolioApi.get_reports()
+    mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_custom_aum', Mock())
+    mock.return_value = df
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+        actual = mp.aum('MP1')
+        assert actual.index.equals(idx)
+        assert all(actual.values == data['aum'])
+
+
 if __name__ == '__main__':
     pytest.main(args=[__file__])

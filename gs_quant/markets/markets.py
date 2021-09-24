@@ -94,6 +94,7 @@ class MarketDataCoordinateValue(__MarketDataCoordinateValue):
         return f'{self.coordinate} --> {self.value}'
 
 
+Coordinates = Tuple[MarketDataCoordinate, ...]
 MarketDataMap = Mapping[MarketDataCoordinate, float]
 
 
@@ -186,9 +187,15 @@ class OverlayMarket(_OverlayMarket, Market):
         self.__redacted_coordinates = tuple(key for (key, value) in market_data.items() if value == 'redacted')
 
     def __getitem__(self, item):
+        if isinstance(item, str):
+            item = MarketDataCoordinate.from_string(item)
+
         return self.__market_data[item]
 
     def __setitem__(self, key, value):
+        if isinstance(key, str):
+            key = MarketDataCoordinate.from_string(key)
+
         self.__market_data[key] = value
         Market._property_changed(self, 'market_data')
 
@@ -199,6 +206,10 @@ class OverlayMarket(_OverlayMarket, Market):
     def market_data(self) -> Tuple[MarketDataCoordinateValue, ...]:
         return tuple(MarketDataCoordinateValue(coordinate=c, value=v) for c, v in self.__market_data.items())
 
+    @property
+    def market_data_dict(self) -> MarketDataMap:
+        return {p.coordinate: p.value for p in self.market_data}
+
     @Market.location.getter
     @do_not_serialise
     def location(self) -> PricingLocation:
@@ -206,12 +217,12 @@ class OverlayMarket(_OverlayMarket, Market):
 
     @property
     @do_not_serialise
-    def coordinates(self) -> Tuple[MarketDataCoordinate, ...]:
+    def coordinates(self) -> Coordinates:
         return tuple(self.__market_data.keys())
 
     @property
     @do_not_serialise
-    def redacted_coordinates(self) -> str:
+    def redacted_coordinates(self) -> Coordinates:
         return self.__redacted_coordinates
 
 

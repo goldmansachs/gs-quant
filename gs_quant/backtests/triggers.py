@@ -75,6 +75,7 @@ class AggregateTriggerRequirements(TriggerRequirements):
 
 class DateTriggerRequirements(TriggerRequirements):
     def __init__(self, dates: Iterable[dt.date]):
+        super().__init__()
         """
         :param dates: the list of dates on which to trigger
         """
@@ -179,6 +180,10 @@ class PeriodicTrigger(Trigger):
                               freq=self._trigger_requirements.frequency).date.tolist()
         return self._trigger_dates
 
+    def get_trigger_times(self) -> [dt.datetime]:
+        return [d if isinstance(d, dt.datetime) else dt.datetime.combine(d, dt.datetime.min.time())
+                for d in self.get_trigger_dates()]
+
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         if not self._trigger_dates:
             self.get_trigger_dates()
@@ -273,6 +278,10 @@ class AggregateTrigger(Trigger):
 class DateTrigger(Trigger):
     def __init__(self, trigger_requirements: DateTriggerRequirements, actions: Iterable[Action]):
         super().__init__(trigger_requirements, actions)
+
+    def get_trigger_times(self) -> [dt.datetime]:
+        return [d if isinstance(d, dt.datetime) else dt.datetime.combine(d, dt.datetime.min.time())
+                for d in self._trigger_requirements.dates]
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         return TriggerInfo(state in self._trigger_requirements.dates)

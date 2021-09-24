@@ -122,20 +122,28 @@ class PredefinedAssetEngine(BacktestBaseEngine):
         else:
             return dt.time(23)
 
-    def _timer(self, strategy, start, end, frequency):
-        dates = bdate_range(start=start, end=end, freq=frequency)
+    def _timer(self, strategy, start, end, frequency, states=None):
+        dates = bdate_range(start=start, end=end, freq=frequency) if states is None else states
+        all_times = []
         times = list()
         for trigger in strategy.triggers:
             if hasattr(trigger, 'get_trigger_times'):
-                times.extend(trigger.get_trigger_times())
+                for t in trigger.get_trigger_times():
+                    # allow user to define their trigger times as a time, in which case add that time to every date
+                    # or as a datetime itself in which case just add it to the timer
+                    if isinstance(t, dt.datetime):
+                        all_times.append(t)
+                    else:
+                        times.append(t)
         times.append(self._eod_valuation_time())
         times = list(dict.fromkeys(times))
 
-        all_times = []
         for d in dates:
             if self.calendars == 'Weekend' or is_business_day(d.date(), self.calendars):
                 for t in times:
                     all_times.append(dt.datetime.combine(d, t))
+        all_times = list(set(all_times))
+        all_times.sort()
         return all_times
 
     def _adjust_date(self, date):
@@ -145,23 +153,26 @@ class PredefinedAssetEngine(BacktestBaseEngine):
         else:
             return prev_business_date(date, self.calendars)
 
-    def run_backtest(self, strategy, start, end, frequency="B", initial_value=100):
+    def run_backtest(self, strategy, start, end, frequency="B", states=None, initial_value=100):
         # initialize backtest object
         self.data_handler.reset_clock()
         backtest = PredefinedAssetBacktest(self.data_handler, initial_value)
 
-        # if start is a holiday, go back to the previous day on the backtest calendar
-        adjusted_start = self._adjust_date(start)
-        backtest.set_start_date(adjusted_start)
-
         # initialize execution engine
         self.execution_engine = SimulatedExecutionEngine(self.data_handler)
 
-        # create timer
-        timer_start = (adjusted_start + BDay(1)).date() if self.calendars == 'Weekend' \
-            else business_day_offset(adjusted_start, 1, roll='forward', calendars=self.calendars)
-        timer_end = self._adjust_date(end)
-        timer = self._timer(strategy, timer_start, timer_end, frequency)
+        if states is not None:
+            timer = self._timer(strategy, start, end, frequency, states)
+        else:
+            # if start is a holiday, go back to the previous day on the backtest calendar
+            adjusted_start = self._adjust_date(start)
+            backtest.set_start_date(adjusted_start)
+
+            # create timer
+            timer_start = (adjusted_start + BDay(1)).date() if self.calendars == 'Weekend' \
+                else business_day_offset(adjusted_start, 1, roll='forward', calendars=self.calendars)
+            timer_end = self._adjust_date(end)
+            timer = self._timer(strategy, timer_start, timer_end, frequency)
         self._run(strategy, timer, backtest)
         return backtest
 
