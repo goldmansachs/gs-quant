@@ -15,11 +15,10 @@ under the License.
 """
 
 from dateutil.relativedelta import relativedelta as rdelta
-from functools import reduce
 
 from gs_quant.timeseries.helper import _create_enum
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
-from gs_quant.timeseries.econometrics import volatility
+from gs_quant.timeseries.econometrics import volatility, correlation
 from .statistics import *
 from ..api.gs.assets import GsAssetApi
 from ..api.gs.data import GsDataApi, MarketDataResponseFrame
@@ -328,3 +327,38 @@ class Basket:
         vols.columns = list(spot_df)
 
         return actual_weights.mul(vols, axis=1).sum(axis=1, skipna=False)
+
+    @requires_session
+    @plot_method
+    def average_realized_correlation(self, w: Union[Window, int, str] = Window(None, 0),
+                                     *, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+        """
+        Weighted average realized correlation. Computes the correlation between each of the basket's constituents and
+        returns their average, weighted by their representation in the basket.
+
+        :param w: Window, int, or str: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window
+            size and 10 the ramp up value. If w is a string, it should be a relative date like '1m', '1d', etc.
+            Window size defaults to length of series.
+        :param real_time: whether to retrieve intraday data instead of EOD
+        :param request_id: service request ID, if any
+        :return: time series of the average realized correlation
+        """
+        # Calculated using method (a) from here: http://www.nematrian.com/MeasuringAverageStockCorrelation
+        # Could be sped-up by using another estimate method, such as (b)
+        if real_time:
+            raise NotImplementedError('real-time basket realized corr not implemented')
+
+        spot_df = self.get_spot_data(request_id=request_id)
+        actual_weights = self.get_actual_weights(request_id=request_id)
+
+        tot = pd.Series(np.zeros_like(spot_df.iloc[:, 0]), index=spot_df.index)
+        tot_wt = pd.Series(np.zeros_like(spot_df.iloc[:, 0]), index=spot_df.index)
+        # Iterate through and compute pairwise correlation between spot price series,
+        # averaging at the end.
+        for i in range(len(spot_df.columns)):
+            for j in range(i + 1, len(spot_df.columns)):
+                corr = correlation(spot_df.iloc[:, i], spot_df.iloc[:, j], w)
+                wt = actual_weights.iloc[:, i] * actual_weights.iloc[:, j]
+                tot += corr * wt
+                tot_wt += wt
+        return pd.to_numeric(tot / tot_wt, errors='coerce')

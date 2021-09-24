@@ -98,10 +98,6 @@ class ResultInfo(metaclass=ABCMeta):
 
         return dates, values, errors, risk_key, unit
 
-    @abstractmethod
-    def _get_raw_df(self, display_options: DisplayOptions = None):
-        ...
-
 
 class ErrorValue(ResultInfo):
 
@@ -111,12 +107,12 @@ class ErrorValue(ResultInfo):
     def __repr__(self):
         return self.error
 
-    def _get_raw_df(self, display_options: DisplayOptions = None):
-        return pd.DataFrame(self, index=[0], columns=['value'])
-
     @property
     def raw_value(self):
         return None
+
+    def _to_records(self, extra_dict, display_options: DisplayOptions = None):
+        return [{**extra_dict, 'value': self}]
 
 
 class UnsupportedValue(ResultInfo):
@@ -127,21 +123,18 @@ class UnsupportedValue(ResultInfo):
     def __repr__(self):
         return 'Unsupported Value'
 
-    def _get_raw_df(self, display_options: DisplayOptions = None):
+    @property
+    def raw_value(self):
+        return 'Unsupported Value'
+
+    def _to_records(self, extra_dict, display_options: DisplayOptions = None):
         if display_options is not None and not isinstance(display_options, DisplayOptions):
             raise TypeError("display_options must be of type DisplayOptions")
 
         options = display_options if display_options is not None else gs_quant.config.display_options
         show_na = options.show_na
 
-        if show_na:
-            return pd.DataFrame(None, index=[0], columns=['value'])
-        else:
-            return None
-
-    @property
-    def raw_value(self):
-        return 'Unsupported Value'
+        return [{**extra_dict, 'value': self}] if show_na else [None]
 
 
 class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
@@ -168,8 +161,8 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
                               unit=unit,
                               error=errors)
 
-    def _get_raw_df(self, display_options: DisplayOptions = None):
-        return pd.DataFrame(self, index=[0], columns=['value'])
+    def _to_records(self, extra_dict, display_options: DisplayOptions = None):
+        return [{**extra_dict, 'value': self}]
 
 
 class FloatWithInfo(ScalarWithInfo, float):
@@ -262,10 +255,12 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     def raw_value(self) -> pd.Series:
         return pd.Series(self)
 
-    def _get_raw_df(self, display_options: DisplayOptions = None):
+    def _to_records(self, extra_dict, display_options: DisplayOptions = None):
         df = pd.DataFrame(self).reset_index()
         df.columns = ['dates', 'value']
-        return df
+        records = df.to_dict('records')
+        records = [dict(item, **{**extra_dict}) for item in records]
+        return records
 
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
@@ -318,7 +313,8 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     def to_frame(self):
         return self
 
-    def _get_raw_df(self, display_options: DisplayOptions = None):
+    def _to_records(self, extra_dict, display_options: DisplayOptions = None):
+
         if self.empty:
             if display_options is not None and not isinstance(display_options, DisplayOptions):
                 raise TypeError("display_options must be of type DisplayOptions")
@@ -326,11 +322,9 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             options = display_options if display_options is not None else gs_quant.config.display_options
             show_na = options.show_na
 
-            if show_na:
-                return pd.DataFrame(None, index=[0], columns=['value'])
-            else:
-                return None
-        return self.raw_value
+            return [{**extra_dict, 'value': None}] if show_na else [None]
+
+        return [dict(item, **{**extra_dict}) for item in self.raw_value.to_dict('records')]
 
 
 def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None) \

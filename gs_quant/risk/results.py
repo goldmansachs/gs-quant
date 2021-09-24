@@ -26,6 +26,7 @@ from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_insta
 from gs_quant.config import DisplayOptions
 from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, RiskMeasure, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
+from more_itertools import unique_everseen
 
 _logger = logging.getLogger(__name__)
 
@@ -286,12 +287,12 @@ class MultipleRiskMeasureResult(dict):
 
     def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique,
                  display_options: DisplayOptions = None):
-        df = self._get_raw_df(display_options)
+        df = pd.DataFrame.from_records(self._to_records({}, display_options=display_options))
         if values is None and index is None and columns is None:
             return df
         elif values == 'default' and index == 'default' and columns == 'default':
             if 'mkt_type' in df.columns:
-                return df.set_index(df.columns[0])
+                return df.set_index('risk_measure')
             values = 'value'
             columns = 'risk_measure'
             index = 'dates' if 'dates' in df.columns else None
@@ -308,22 +309,10 @@ class MultipleRiskMeasureResult(dict):
             pivot_df = pivot_df.reindex(columns=cols)
         return pivot_df
 
-    def _get_raw_df(self, display_options: DisplayOptions = None):
-        list_df = []
-        cols = []
-        for rm in list(self):
-            curr_raw_df = self[rm]._get_raw_df(display_options)
-            if curr_raw_df is not None:
-                curr_raw_df.insert(0, 'risk_measure', rm)
-                if 'mkt_type' in curr_raw_df.columns.values:
-                    cols = list(curr_raw_df.columns.values)
-                list_df.append(curr_raw_df)
-        concat_df = pd.concat(list_df, ignore_index=True, sort=False)
-
-        # if calc scalar before bucketed risk. eg: port.calc((Price, IRDelta))
-        if concat_df.columns.values[-1] != 'value':
-            return concat_df[cols]
-        return concat_df
+    def _to_records(self, extra_dict, display_options: DisplayOptions = None):
+        return list(chain.from_iterable(
+            [dict(item, **{'risk_measure': rm}) for item in self[rm]._to_records(extra_dict, display_options)] for rm in
+            self))
 
 
 class MultipleRiskMeasureFuture(CompositeResultFuture):
@@ -609,34 +598,45 @@ class PortfolioRiskResult(CompositeResultFuture):
 
     def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
                  display_options: DisplayOptions = None):
-        def get_df(priceable, port_info=None, path_to_inst=None):
-            if port_info is None:
-                port_info = {}
-            if not isinstance(priceable, InstrumentBase):  # for nested portfolio or portfolio of portfolios+instruments
-                list_sub_dfs = []
-                for p_idx, p in enumerate(priceable.priceables):
-                    curr_port_info = port_info.copy()
-                    if not isinstance(p, InstrumentBase):
-                        curr_port_info.update(
-                            {f'portfolio_name_{len(port_info)}': f'Portfolio_{p_idx}' if p.name is None else p.name})
-                    temp_path = PortfolioPath(p_idx) if path_to_inst is None else path_to_inst + PortfolioPath(p_idx)
-                    list_sub_dfs.append(get_df(p, curr_port_info, temp_path))
-                list_sub_dfs = list(filter(lambda x: x is not None, list_sub_dfs))
-                if len(list_sub_dfs) > 0:
-                    final_df = pd.concat(list_sub_dfs, ignore_index=True)
-                    return final_df.reindex(columns=max([x.columns.values for x in list_sub_dfs], key=len))
-            else:
-                inst_idx = path_to_inst.path[-1]
-                port_info.update({
-                    'instrument_name': f'{priceable.type.name}_{inst_idx}' if priceable.name is None else priceable.name
-                })
-                sub_df = self.__result(path_to_inst)._get_raw_df(display_options)
-                if sub_df is not None:
-                    for port_idx, (key, value) in enumerate(port_info.items()):
-                        sub_df.insert(port_idx, key, value)
-                    if 'risk_measure' not in sub_df.columns.values:
-                        sub_df.insert(len(port_info), 'risk_measure', self.risk_measures[0])
-                    return sub_df
+        def get_name(obj, idx):
+            new_name = f'{obj.type.name}_{idx}' if isinstance(obj, InstrumentBase) else f'Portfolio_{idx}'
+            return new_name if obj.name is None else obj.name
+
+        def get_df(priceable):
+            portfolio_paths = list(unique_everseen(p.path[:-1] for p in priceable.all_paths if len(p.path) > 1))
+            inst_paths = [p.path for p in priceable.all_paths if len(p.path) == 1]
+            final_records = []
+            if len(portfolio_paths):
+                for portfolio_path in portfolio_paths:
+                    curr_res = self.__result(PortfolioPath(portfolio_path))
+                    portfolio_info = {}
+                    for p_idx, p in enumerate(portfolio_path):
+                        portfolio = self.__result(PortfolioPath(portfolio_path[:p_idx + 1])).__portfolio
+                        portfolio_info[f'portfolio_name_{p_idx}'] = get_name(portfolio, p)
+
+                    records = list(chain.from_iterable((i._to_records(
+                        {**portfolio_info, 'instrument_name': get_name(curr_res.__portfolio[slice_idx], slice_idx)},
+                        display_options) for slice_idx, i in enumerate(curr_res))))
+
+                    records = list(filter(lambda x: x is not None, records))
+                    for rec_idx, rec in enumerate(records):
+                        if 'risk_measure' not in rec:
+                            records[rec_idx]['risk_measure'] = curr_res.risk_measures[0]
+
+                    final_records.extend(records)
+
+            if len(inst_paths):
+                for path in inst_paths:
+                    final_records.extend(self.__result(PortfolioPath(path))._to_records(
+                        {'instrument_name': get_name(priceable[path[0]], path[0])}, display_options))
+
+            final_records = list(filter(lambda x: x is not None, final_records))
+
+            if len(final_records) > 0:
+                final_df = pd.DataFrame.from_records(final_records)
+                if 'risk_measure' not in final_df.columns.values:
+                    final_df['risk_measure'] = self.risk_measures[0]
+                return final_df
 
         def get_default_pivots(ori_cols, has_dates: bool, multi_measures: bool, simple_port: bool) -> tuple:
             portfolio_names = list(filter(lambda x: 'portfolio_name_' in x, ori_cols))
@@ -667,27 +667,32 @@ class PortfolioRiskResult(CompositeResultFuture):
             return None, None, None
 
         ori_df = get_df(self.portfolio)
+
         if ori_df is None:
             return
-        else:
-            # fill n/a values for different sub-portfolio depths
-            df_cols = list(ori_df.columns.values)
-            cols_except_value = [c for c in df_cols if c != 'value']
-            ori_df[cols_except_value] = ori_df[cols_except_value].fillna("N/A")
+        df_cols = list(ori_df.columns.values)
+        # fill n/a values for different sub-portfolio depths
+        cols_except_value = [c for c in df_cols if c != 'value']
+        ori_df[cols_except_value] = ori_df[cols_except_value].fillna("N/A")
+
+        has_dt = True if 'dates' in df_cols else False
+        other_cols = sorted([p for p in df_cols if 'portfolio' in p]) + ['instrument_name', 'risk_measure']
+        other_cols = other_cols + ['dates'] if has_dt else other_cols
+        val_cols = [col for col in df_cols if col not in other_cols]
+        if 'value' in val_cols and val_cols[-1] != 'value':
+            val_cols = [col for col in val_cols if col != 'value'] + ['value']
+        sorted_col = other_cols + val_cols
+        ori_df = ori_df[sorted_col]
 
         if values is None and index is None and columns is None:  # to_frame(None, None, None)
             return ori_df
         elif values == 'default' and index == 'default' and columns == 'default':  # to_frame()
             has_bucketed = True if 'mkt_type' in df_cols else False
-            has_dt = True if 'dates' in df_cols else False
             has_cashflows = True if 'payment_amount' in df_cols else False
             multi_rm = True if len(self.risk_measures) > 1 else False
             port_depth_one = True if len(max(self.portfolio.all_paths, key=len)) == 1 else False
             if has_bucketed or has_cashflows:
-                res_list = list(filter(None.__ne__, [i._get_raw_df() for i in list(self)]))
-                res_df_cols = max([i.columns.values for i in res_list], key=len)
-                res_df_cols = list(filter(lambda x: x not in ['dates', 'risk_measure'], res_df_cols))
-                return ori_df.set_index([p for p in df_cols if p not in res_df_cols])
+                return ori_df.set_index(other_cols)
             else:
                 values, index, columns = get_default_pivots(df_cols, has_dt, multi_rm, port_depth_one)
         else:  # user defined pivoting

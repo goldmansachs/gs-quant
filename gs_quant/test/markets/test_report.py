@@ -188,7 +188,7 @@ def test_get_factor_pnl(mocker):
     mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
 
     # run test
-    response = fake_pfr.get_factor_pnl('factor1')
+    response = fake_pfr.get_factor_pnl(factor_names=['factor1'])
     assert len(response) == 3
 
 
@@ -204,7 +204,7 @@ def test_get_factor_proportion_of_risk(mocker):
     mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
 
     # run test
-    response = fake_pfr.get_factor_proportion_of_risk('factor1')
+    response = fake_pfr.get_factor_proportion_of_risk(factor_names=['factor1'])
     assert len(response) == 3
 
 
@@ -220,7 +220,7 @@ def test_get_factor_exposure(mocker):
     mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
 
     # run test
-    response = fake_pfr.get_factor_exposure('factor1')
+    response = fake_pfr.get_factor_exposure(factor_names=['factor1'])
     assert len(response) == 3
 
 

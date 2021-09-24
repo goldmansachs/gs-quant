@@ -69,13 +69,23 @@ class ReportJobFuture:
         self.__end_date = end_date
 
     def status(self) -> ReportStatus:
+        """
+        :return: the status of the report job
+        """
         job = GsReportApi.get_report_job(self.__job_id)
         return ReportStatus(job.get('status'))
 
     def done(self) -> bool:
+        """
+        :return: true if the report job is in the following states: "done", "error", or "cancelled". Returns
+        false otherwise
+        """
         return self.status() in [ReportStatus.done, ReportStatus.error, ReportStatus.cancelled]
 
     def result(self):
+        """
+        :return: a Pandas DataFrame containing the results of the report job
+        """
         status = self.status()
         if status == ReportStatus.cancelled:
             raise MqValueError('This report job in status "cancelled". Cannot retrieve results.')
@@ -209,7 +219,7 @@ class Report:
                       percentage_complete=report.percentage_complete)
 
     def save(self):
-        """ Create a report using GsReportApi if it doesn't exist. Update the report if it does. """
+        """ Create a report in Marquee if it doesn't exist. Update the report if it does. """
         target_report = TargetReport(name=self.name,
                                      position_source_id=self.position_source_id,
                                      position_source_type=self.position_source_type,
@@ -223,7 +233,7 @@ class Report:
             self.__id = report.id
 
     def delete(self):
-        """ Hits GsReportsApi to delete a report """
+        """ Delete a report from Marquee"""
         GsReportApi.delete_report(self.id)
 
     def set_position_source(self, entity_id: str):
@@ -319,6 +329,11 @@ class PerformanceReport(Report):
     def get(cls,
             report_id: str,
             **kwargs):
+        """
+        Get a performance report from the unique report identifier
+        :param report_id: Marquee report ID
+        :return: returns a PerfomanceReport object that correlates to the Marquee report
+        """
         return cls.from_target(GsReportApi.get_report(report_id))
 
     @classmethod
@@ -341,72 +356,156 @@ class PerformanceReport(Report):
     def get_pnl(self,
                 start_date: dt.date = None,
                 end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio PnL
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("pnl", start_date, end_date)
 
     def get_long_exposure(self,
                           start_date: dt.date = None,
                           end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio long exposure
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("longExposure", start_date, end_date)
 
     def get_short_exposure(self,
                            start_date: dt.date = None,
                            end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio short exposure
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("shortExposure", start_date, end_date)
 
     def get_asset_count(self,
                         start_date: dt.date = None,
                         end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio asset count
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("assetCount", start_date, end_date)
 
     def get_turnover(self,
                      start_date: dt.date = None,
                      end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio turnover
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("turnover", start_date, end_date)
 
     def get_asset_count_long(self,
                              start_date: dt.date = None,
                              end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio long asset count
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("assetCountLong", start_date, end_date)
 
     def get_asset_count_short(self,
                               start_date: dt.date = None,
                               end_date: dt.date = None) \
             -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        """
+        Get historical portfolio short asset count
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("assetCountShort", start_date, end_date)
 
     def get_net_exposure(self,
                          start_date: dt.date = None,
                          end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio net exposure
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("netExposure", start_date, end_date)
 
     def get_gross_exposure(self,
                            start_date: dt.date = None,
                            end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio gross exposure
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("grossExposure", start_date, end_date)
 
     def get_trading_pnl(self,
                         start_date: dt.date = None,
                         end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio trading PnL
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("tradingPnl", start_date, end_date)
 
     def get_trading_cost_pnl(self,
                              start_date: dt.date = None,
                              end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio trading cost PnL
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("tradingCostPnl", start_date, end_date)
 
     def get_servicing_cost_long_pnl(self,
                                     start_date: dt.date = None,
                                     end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio servicing cost long PnL
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("servicingCostLongPnl", start_date, end_date)
 
     def get_servicing_cost_short_pnl(self,
                                      start_date: dt.date = None,
                                      end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio servicing cost short PnL
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("servicingCostShortPnl", start_date, end_date)
 
     def get_asset_count_priced(self,
                                start_date: dt.date = None,
                                end_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get historical portfolio asset count priced
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         return self.get_measure("assetCountPriced", start_date, end_date)
 
     def get_measure(self,
@@ -425,7 +524,13 @@ class PerformanceReport(Report):
                           start_date: dt.date = None,
                           end_date: dt.date = None,
                           return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
-
+        """
+        Get many historical portfolio metrics
+        :param measures: a list of metrics
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         if measures is None:
             measures = []
         fields = tuple(measure for measure in measures)
@@ -439,6 +544,15 @@ class PerformanceReport(Report):
                                    start_date: dt.date = None,
                                    end_date: dt.date = None,
                                    return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """
+        Get historical portfolio constituents
+        :param fields: list of fields to include in the results
+        :param start_date: start date
+        :param end_date: end date
+        :param return_format: return format; defaults to a Pandas DataFrame, but can be manually
+        set to ReturnFormat.JSON
+        :return: Portfolio constituent data for each day in the requested date range
+        """
         where = {'reportId': self.id}
         date_batches = _get_ppaa_batches(self.get_asset_count(start_date, end_date), 3000000)
         queries = [DataQuery(where=where, fields=fields, start_date=dates_batch[0], end_date=dates_batch[1]) for
@@ -474,6 +588,11 @@ class FactorRiskReport(Report):
     def get(cls,
             report_id: str,
             **kwargs):
+        """
+        Get a performance report from the unique report identifier
+        :param report_id: Marquee report ID
+        :return: returns a PerfomanceReport object that correlates to the Marquee report
+        """
         return cls.from_target(GsReportApi.get_report(report_id))
 
     @classmethod
@@ -493,6 +612,9 @@ class FactorRiskReport(Report):
                                 percentage_complete=report.percentage_complete)
 
     def get_risk_model_id(self) -> str:
+        """
+        :return: the ID of the risk model associated with the factor risk report
+        """
         return self.parameters.risk_model
 
     def get_results(self,
@@ -503,6 +625,18 @@ class FactorRiskReport(Report):
                     end_date: dt.date = None,
                     currency: Currency = None,
                     return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """
+        Get the raw results associated with the factor risk report
+        :param mode: results mode; defaults to the portfolio level
+        :param factors: optional list of factors; defaults to all of them
+        :param factor_categories: optional list of factor categories; defaults to all of them
+        :param start_date: start date
+        :param end_date: end date
+        :param currency: currency
+        :param return_format: return format; defaults to a Pandas DataFrame, but can be manually
+        set to ReturnFormat.JSON
+        :return: risk report results
+        """
         results = GsReportApi.get_factor_risk_report_results(risk_report_id=self.id,
                                                              view=mode.value,
                                                              factors=factors,
@@ -519,6 +653,16 @@ class FactorRiskReport(Report):
                  start_date: dt.date = None,
                  end_date: dt.date = None,
                  currency: Currency = None) -> Dict:
+        """
+        Get the results associated with the factor risk report as seen on the Marquee user interface
+        :param mode: views mode
+        :param factor: optional factor name
+        :param factor_category: optional factor category
+        :param start_date: start date
+        :param end_date: end date
+        :param currency: currency
+        :return: risk report results
+        """
         return GsReportApi.get_factor_risk_report_view(
             risk_report_id=self.id,
             view=mode.value,
@@ -560,12 +704,22 @@ class FactorRiskReport(Report):
         return table
 
     def get_factor_pnl(self,
-                       factor_name: Union[str, List[str]],
+                       factor_names: List[str] = None,
+                       factor_categories: List[str] = None,
                        start_date: dt.date = None,
                        end_date: dt.date = None,
                        currency: Currency = None) -> pd.DataFrame:
-        factors = [factor_name] if isinstance(factor_name, str) else factor_name
-        factor_data = self.get_results(factors=factors,
+        """
+        Get historical factor PnL
+        :param factor_names: optional list of factor names; defaults to all of them
+        :param factor_categories: optional list of factor categories; defaults to all of them
+        :param start_date: start date
+        :param end_date: end date
+        :param currency: currency
+        :return: a Pandas DataFrame with the results
+        """
+        factor_data = self.get_results(factors=factor_names,
+                                       factor_categories=factor_categories,
                                        start_date=start_date,
                                        end_date=end_date,
                                        currency=currency,
@@ -574,12 +728,22 @@ class FactorRiskReport(Report):
         return _format_multiple_factor_table(factor_data, 'pnl')
 
     def get_factor_exposure(self,
-                            factor_name: Union[str, List[str]],
+                            factor_names: List[str] = None,
+                            factor_categories: List[str] = None,
                             start_date: dt.date = None,
                             end_date: dt.date = None,
                             currency: Currency = None) -> pd.DataFrame:
-        factors = [factor_name] if isinstance(factor_name, str) else factor_name
-        factor_data = self.get_results(factors=factors,
+        """
+        Get historical factor exposure
+        :param factor_names: optional list of factor names; defaults to all of them
+        :param factor_categories: optional list of factor categories; defaults to all of them
+        :param start_date: start date
+        :param end_date: end date
+        :param currency: currency
+        :return: a Pandas DataFrame with the results
+        """
+        factor_data = self.get_results(factors=factor_names,
+                                       factor_categories=factor_categories,
                                        start_date=start_date,
                                        end_date=end_date,
                                        currency=currency,
@@ -587,12 +751,22 @@ class FactorRiskReport(Report):
         return _format_multiple_factor_table(factor_data, 'exposure')
 
     def get_factor_proportion_of_risk(self,
-                                      factor_name: Union[str, List[str]],
+                                      factor_names: List[str] = None,
+                                      factor_categories: List[str] = None,
                                       start_date: dt.date = None,
                                       end_date: dt.date = None,
                                       currency: Currency = None) -> pd.DataFrame:
-        factors = [factor_name] if isinstance(factor_name, str) else factor_name
-        factor_data = self.get_results(factors=factors,
+        """
+        Get historical factor proportion of risk
+        :param factor_names: optional list of factor names; defaults to all of them
+        :param factor_categories: optional list of factor categories; defaults to all of them
+        :param start_date: start date
+        :param end_date: end date
+        :param currency: currency
+        :return: a Pandas DataFrame with the results
+        """
+        factor_data = self.get_results(factors=factor_names,
+                                       factor_categories=factor_categories,
                                        start_date=start_date,
                                        end_date=end_date,
                                        currency=currency,
@@ -600,12 +774,19 @@ class FactorRiskReport(Report):
         return _format_multiple_factor_table(factor_data, 'proportionOfRisk')
 
     def get_annual_risk(self,
-                        factor_name: Union[str, List[str]],
+                        factor_names: List[str] = None,
                         start_date: dt.date = None,
                         end_date: dt.date = None,
                         currency: Currency = None) -> pd.DataFrame:
-        factors = [factor_name] if isinstance(factor_name, str) else factor_name
-        factor_data = self.get_results(factors=factors,
+        """
+        Get historical annual risk
+        :param factor_names: optional list of factor names; must be from the following: "Factor", "Specific", "Total
+        :param start_date: start date
+        :param end_date: end date
+        :param currency: currency
+        :return: a Pandas DataFrame with the results
+        """
+        factor_data = self.get_results(factors=factor_names,
                                        start_date=start_date,
                                        end_date=end_date,
                                        currency=currency,
@@ -613,12 +794,19 @@ class FactorRiskReport(Report):
         return _format_multiple_factor_table(factor_data, 'annualRisk')
 
     def get_daily_risk(self,
-                       factor_name: Union[str, List[str]],
+                       factor_names: List[str] = None,
                        start_date: dt.date = None,
                        end_date: dt.date = None,
                        currency: Currency = None) -> pd.DataFrame:
-        factors = [factor_name] if isinstance(factor_name, str) else factor_name
-        factor_data = self.get_results(factors=factors,
+        """
+        Get historical daily risk
+        :param factor_names: optional list of factor names; must be from the following: "Factor", "Specific", "Total
+        :param start_date: start date
+        :param end_date: end date
+        :param currency: currency
+        :return: a Pandas DataFrame with the results
+        """
+        factor_data = self.get_results(factors=factor_names,
                                        start_date=start_date,
                                        end_date=end_date,
                                        currency=currency,
@@ -665,6 +853,11 @@ class ThematicReport(Report):
     def get(cls,
             report_id: str,
             **kwargs):
+        """
+        Get a thematic report from the unique report identifier
+        :param report_id: Marquee report ID
+        :return: returns a ThematicReport object that correlates to the Marquee report
+        """
         return cls.from_target(GsReportApi.get_report(report_id))
 
     @classmethod
@@ -688,6 +881,14 @@ class ThematicReport(Report):
                           start_date: dt.date = None,
                           end_date: dt.date = None,
                           basket_ids: List[str] = None) -> pd.DataFrame:
+        """
+        Get all results from the thematic report for a date range
+        :param start_date: start date
+        :param end_date: end date
+        :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
+        :return: a Pandas DataFrame with results
+        """
+
         results = self._get_measures(["thematicExposure", "grossExposure"], start_date, end_date, basket_ids,
                                      ReturnFormat.JSON)
         for result in results:
@@ -698,12 +899,26 @@ class ThematicReport(Report):
                               start_date: dt.date = None,
                               end_date: dt.date = None,
                               basket_ids: List[str] = None) -> pd.DataFrame:
+        """
+        Get portfolio historical exposure to GS Flagship Thematic baskets
+        :param start_date: start date
+        :param end_date: end date
+        :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
+        :return: a Pandas DataFrame with results
+        """
         return self._get_measures(["thematicExposure"], start_date, end_date, basket_ids)
 
     def get_thematic_betas(self,
                            start_date: dt.date = None,
                            end_date: dt.date = None,
                            basket_ids: List[str] = None) -> pd.DataFrame:
+        """
+        Get portfolio historical beta to GS Flagship Thematic baskets
+        :param start_date: start date
+        :param end_date: end date
+        :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
+        :return: a Pandas DataFrame with results
+        """
         results = self._get_measures(["thematicExposure", "grossExposure"], start_date, end_date, basket_ids,
                                      ReturnFormat.JSON)
         for result in results:

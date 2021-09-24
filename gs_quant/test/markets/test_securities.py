@@ -403,14 +403,14 @@ def test_get_all_identifiers(mocker):
             'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=[p1, p2, p3])
     with SecMasterContext():
-        output = SecurityMaster.get_all_identifiers()
+        output = SecurityMaster.get_all_identifiers(use_offset_key=False)
     assert len(output) == 2
     assert output['GSPD901026E154'] == p1['results'][0]['identifiers']
     assert output['GSPD14593E459'] == p2['results'][0]['identifiers']
 
     mocker.patch.object(GsSession.current, '_get', side_effect=[p1, p2, p3])
     with SecMasterContext():
-        output = SecurityMaster.get_all_identifiers(id_type=SecurityIdentifier.BBID)
+        output = SecurityMaster.get_all_identifiers(id_type=SecurityIdentifier.BBID, use_offset_key=False)
     assert len(output) == 2
     assert output['GS UN'] == p1['results'][0]['identifiers']
     assert output['AAPL UW'] == p2['results'][0]['identifiers']
@@ -484,7 +484,7 @@ def test_offset_key(mocker):
             'secret'))
     mocker.patch.object(GsSession.current, '_get', side_effect=fetch)
     with SecMasterContext():
-        output = SecurityMaster.get_all_identifiers(use_offset_key=True, sleep=0)
+        output = SecurityMaster.get_all_identifiers(sleep=0)
     assert len(output) == 2
     assert output['GSPD901026E154'] == p1['results'][0]['identifiers']
     assert output['GSPD14593E459'] == p2['results'][0]['identifiers']
@@ -492,11 +492,26 @@ def test_offset_key(mocker):
 
     mocker.patch.object(GsSession.current, '_get', side_effect=fetch)
     with SecMasterContext():
-        output = SecurityMaster.get_all_identifiers(id_type=SecurityIdentifier.BBID, use_offset_key=True, sleep=0)
+        output = SecurityMaster.get_all_identifiers(id_type=SecurityIdentifier.BBID, sleep=0)
     assert len(output) == 2
     assert output['GS UN'] == p1['results'][0]['identifiers']
     assert output['AAPL UW'] == p2['results'][0]['identifiers']
     assert all(map(lambda x: x == 2, hits))
+
+    mocker.patch.object(GsSession.current, '_get', side_effect=fetch)
+    with SecMasterContext():
+        gen = SecurityMaster.get_all_identifiers_gen(id_type=SecurityIdentifier.BBID, sleep=0)
+        page = next(gen)
+        assert len(page) == 1
+        assert page['GS UN'] == p1['results'][0]['identifiers']
+        page = next(gen)
+        assert len(page) == 1
+        assert page['AAPL UW'] == p2['results'][0]['identifiers']
+
+        with pytest.raises(StopIteration):
+            next(gen)
+
+    assert all(map(lambda x: x == 3, hits))
 
 
 if __name__ == "__main__":
