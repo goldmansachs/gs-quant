@@ -418,10 +418,12 @@ class PCOPortfolioParameters(Base):
         show_exposure: bool = None,
         enable_rfq: bool = None,
         fixing_descriptions: Tuple[str, ...] = None,
-        pco_origin: str = None,
+        pco_origin: Union[PCOOrigin, str] = None,
         version: str = None,
         trades: Tuple[PCOTrade, ...] = None,
         investment_ratio: str = None,
+        roll_currency: Tuple[PCOParameterValues, ...] = None,
+        param_version: str = None,
         name: str = None
     ):        
         super().__init__()
@@ -449,6 +451,8 @@ class PCOPortfolioParameters(Base):
         self.version = version
         self.trades = trades
         self.investment_ratio = investment_ratio
+        self.roll_currency = roll_currency
+        self.param_version = param_version
         self.name = name
 
     @property
@@ -652,14 +656,14 @@ class PCOPortfolioParameters(Base):
         self.__fixing_descriptions = value        
 
     @property
-    def pco_origin(self) -> str:
+    def pco_origin(self) -> Union[PCOOrigin, str]:
         """Origin of PCO Report"""
         return self.__pco_origin
 
     @pco_origin.setter
-    def pco_origin(self, value: str):
+    def pco_origin(self, value: Union[PCOOrigin, str]):
         self._property_changed('pco_origin')
-        self.__pco_origin = value        
+        self.__pco_origin = get_enum_value(PCOOrigin, value)        
 
     @property
     def version(self) -> str:
@@ -690,6 +694,26 @@ class PCOPortfolioParameters(Base):
     def investment_ratio(self, value: str):
         self._property_changed('investment_ratio')
         self.__investment_ratio = value        
+
+    @property
+    def roll_currency(self) -> Tuple[PCOParameterValues, ...]:
+        """One of Local and Base"""
+        return self.__roll_currency
+
+    @roll_currency.setter
+    def roll_currency(self, value: Tuple[PCOParameterValues, ...]):
+        self._property_changed('roll_currency')
+        self.__roll_currency = value        
+
+    @property
+    def param_version(self) -> str:
+        """Parameter Version"""
+        return self.__param_version
+
+    @param_version.setter
+    def param_version(self, value: str):
+        self._property_changed('param_version')
+        self.__param_version = value        
 
 
 class Portfolio(Base):

@@ -29,7 +29,7 @@ from tqdm import tqdm
 
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
 from gs_quant.common import PricingLocation
-from gs_quant.context_base import ContextBaseWithDefault
+from gs_quant.context_base import ContextBaseWithDefault, nullcontext
 from gs_quant.datetime.date import business_day_offset
 from gs_quant.risk import CompositeScenario, DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
     RiskMeasure, StringWithInfo
@@ -84,7 +84,8 @@ class PricingContext(ContextBaseWithDefault):
                  csa_term: Optional[str] = None,
                  timeout: Optional[int] = None,
                  market: Optional[Market] = None,
-                 show_progress: Optional[bool] = False):
+                 show_progress: Optional[bool] = False,
+                 use_server_cache: Optional[bool] = False):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
         as per the examples
@@ -97,6 +98,10 @@ class PricingContext(ContextBaseWithDefault):
         :param use_cache: store results in the pricing cache (defaults to False)
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
         :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
+        :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG' (defaults to LDN)
+        :param timeout: the timeout for batch operations
+        :param show_progress: add a progress bar (tqdm)
+        :param use_server_cache: cache query results on the GS servers
 
         **Examples**
 
@@ -177,6 +182,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__pending = {}
         self.__show_progress = show_progress
         self._max_concurrent = 1000
+        self.__use_server_cache = use_server_cache
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
         if exc_val:
@@ -254,7 +260,8 @@ class PricingContext(ContextBaseWithDefault):
                                 pricing_and_market_data_as_of=tuple(
                                     PricingDateAndMarketDataAsOf(pricing_date=d, market=m)
                                     for d, m in dates_chunk),
-                                request_visible_to_gs=request_visible_to_gs
+                                request_visible_to_gs=request_visible_to_gs,
+                                use_cache=self.__use_server_cache
                             ))
 
                 requests_for_provider[provider] = requests
@@ -365,9 +372,6 @@ class PricingContext(ContextBaseWithDefault):
                 future.set_result(cached_result)
             else:
                 pending[(risk_key, instrument)] = future
-
-        if not (self.is_entered or self.is_async):
-            self.__calc()
 
         return future
 

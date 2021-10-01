@@ -559,6 +559,34 @@ class FactorRiskModel(RiskModel):
             residual_variance = pd.DataFrame(residual_variance)
         return residual_variance
 
+    def get_specific_return(self,
+                            start_date: dt.date,
+                            end_date: dt.date = None,
+                            assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                            format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get specific return data for existing risk model
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: which format to return the results in
+
+        :return: specific returns for assets requested
+        """
+        results = GsFactorRiskModelApi.get_risk_model_data(
+            model_id=self.id,
+            start_date=start_date,
+            end_date=end_date,
+            assets=assets,
+            measures=[Measure.Specific_Return, Measure.Asset_Universe],
+            limit_factors=False
+        ).get('results')
+        universe = assets.universe if assets.universe else results[0].get('assetData').get('universe')
+        specific_return = build_asset_data_map(results, universe, 'specificReturn')
+        if format == ReturnFormat.DATA_FRAME:
+            specific_return = pd.DataFrame(specific_return)
+        return specific_return
+
     def get_universe_factor_exposure(self,
                                      start_date: dt.date,
                                      end_date: dt.date = None,

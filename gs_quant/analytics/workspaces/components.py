@@ -262,6 +262,25 @@ class PlotComponent(Component):
         return dict_
 
 
+class DataVizComponent(Component):
+    def __init__(self,
+                 height: int,
+                 id_: str,
+                 *,
+                 width: int = None):
+        """
+        Data Visualization Component
+        :param id_: identifier of the Visualization
+        :param height: height of the componentTYPE_TO_COMPONENT
+        :param width: width of the component integers 1-12
+        """
+        super().__init__(id_=id_, height=height, width=width)
+        self._type = 'dataviz'
+
+    def as_dict(self) -> Dict:
+        return super().as_dict()
+
+
 class DataGridComponent(Component):
     def __init__(self,
                  height: int,
@@ -368,19 +387,17 @@ class CommentaryComponent(Component):
 
 class ContainerComponent(Component):
     def __init__(self,
-                 height: Optional[int] = None,
                  id_: Optional[str] = None,
                  *,
                  width: int = None,
                  component_id: str = None):
         """
         Container Component which acts as a placeholder for components used with selectors
-        :param height: height of the component
         :param id_: unique identifier of the component
         :param width: width of the component integers 1-12
         :param component_id: default component id to use in the container
         """
-        super().__init__(id_=id_, height=height, width=width, selections=None)
+        super().__init__(id_=id_, width=width, selections=None)
         self._type = 'container'
         self.component_id = component_id
 
@@ -388,7 +405,7 @@ class ContainerComponent(Component):
         dict_ = super().as_dict()
         if self.component_id:
             dict_['parameters']['componentId'] = self.component_id
-
+        del dict_['parameters']['height']
         return dict_
 
 
@@ -658,6 +675,7 @@ TYPE_TO_COMPONENT = {
     'article': ArticleComponent,
     'container': ContainerComponent,
     'datagrid': DataGridComponent,
+    'dataviz': DataVizComponent,
     'legend': LegendComponent,
     'monitor': MonitorComponent,
     'plot': PlotComponent,

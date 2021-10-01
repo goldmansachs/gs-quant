@@ -17,9 +17,11 @@ import datetime as dt
 import logging
 from typing import Iterable, Optional, Union
 
-from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, StringWithInfo, sort_values
-from .measures import EqDelta, EqGamma, EqVega
 from gs_quant.base import InstrumentBase, RiskKey
+
+from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
+    sort_values
+from .measures import EqDelta, EqGamma, EqVega
 
 _logger = logging.getLogger(__name__)
 __scalar_risk_measures = (EqDelta, EqGamma, EqVega)
@@ -185,6 +187,19 @@ def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
     return __dataframe_handler(result['points'], mappings, risk_key, request_id=request_id)
 
 
+def fixing_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                         request_id: Optional[str] = None) -> SeriesWithInfo:
+    rows = result['fixingTableRows']
+
+    dates = []
+    values = []
+    for row in rows:
+        dates.append(dt.date.fromisoformat(row["fixingDate"]))
+        values.append(row["fixing"])
+
+    return SeriesWithInfo(values, index=dates, risk_key=risk_key, request_id=request_id)
+
+
 def risk_float_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                        request_id: Optional[str] = None) -> FloatWithInfo:
     return FloatWithInfo(risk_key, result['values'][0], request_id=request_id)
@@ -232,6 +247,7 @@ result_handlers = {
     'Risk': risk_handler,
     'RiskByClass': risk_by_class_handler,
     'RiskVector': risk_vector_handler,
+    'FixingTable': fixing_table_handler,
     'RiskSecondOrderVector': risk_float_handler,
     'RiskTheta': risk_float_handler,
     'Market': market_handler,

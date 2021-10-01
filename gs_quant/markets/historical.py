@@ -43,7 +43,8 @@ class HistoricalPricingContext(PricingContext):
             csa_term: str = None,
             market_data_location: Optional[str] = None,
             timeout: Optional[int] = None,
-            show_progress: Optional[bool] = False):
+            show_progress: Optional[bool] = False,
+            use_server_cache: Optional[bool] = False):
         """
         A context for producing valuations over multiple dates
 
@@ -58,6 +59,9 @@ class HistoricalPricingContext(PricingContext):
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
         :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
         :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG' (defaults to LDN)
+        :param timeout: the timeout for batch operations
+        :param show_progress: add a progress bar (tqdm)
+        :param use_server_cache: cache query results on the GS servers
 
         **Examples**
 
@@ -71,7 +75,7 @@ class HistoricalPricingContext(PricingContext):
         """
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
                          csa_term=csa_term, market_data_location=market_data_location,
-                         timeout=timeout, show_progress=show_progress)
+                         timeout=timeout, show_progress=show_progress, use_server_cache=use_server_cache)
 
         if start is not None:
             if dates is not None:

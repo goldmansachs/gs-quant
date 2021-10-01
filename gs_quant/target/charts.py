@@ -514,6 +514,7 @@ class ChartAnnotation(Base):
         self,
         id_: str,
         type_: Union[ChartAnnotationType, str] = None,
+        chart_type: Union[ChartType, str] = None,
         start_time: datetime.datetime = None,
         end_time: datetime.datetime = None,
         start_value: str = None,
@@ -538,6 +539,7 @@ class ChartAnnotation(Base):
         super().__init__()
         self.__id = id_
         self.__type = get_enum_value(ChartAnnotationType, type_)
+        self.chart_type = chart_type
         self.start_time = start_time
         self.end_time = end_time
         self.start_value = start_value
@@ -578,6 +580,16 @@ class ChartAnnotation(Base):
     def type(self, value: Union[ChartAnnotationType, str]):
         self._property_changed('type')
         self.__type = get_enum_value(ChartAnnotationType, value)        
+
+    @property
+    def chart_type(self) -> Union[ChartType, str]:
+        """Chart Type"""
+        return self.__chart_type
+
+    @chart_type.setter
+    def chart_type(self, value: Union[ChartType, str]):
+        self._property_changed('chart_type')
+        self.__chart_type = get_enum_value(ChartType, value)        
 
     @property
     def start_time(self) -> datetime.datetime:
