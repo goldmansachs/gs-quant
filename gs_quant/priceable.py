@@ -18,6 +18,7 @@ from abc import ABCMeta
 from typing import Union, Optional
 
 from gs_quant.base import Priceable
+from gs_quant.context_base import nullcontext
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext, CloseMarket, OverlayMarket
 from gs_quant.risk import DataFrameWithInfo, DollarPrice, FloatWithInfo, Price, SeriesWithInfo, \
     MarketData
@@ -28,6 +29,17 @@ _logger = logging.getLogger(__name__)
 
 
 class PriceableImpl(Priceable, metaclass=ABCMeta):
+
+    @property
+    def _pricing_context(self) -> PricingContext:
+        pricing_context = PricingContext.current
+        return pricing_context if not (pricing_context.is_entered or pricing_context.is_async) else nullcontext()
+
+    @property
+    def _return_future(self) -> bool:
+        pricing_context = self._pricing_context
+        return not isinstance(pricing_context, PricingContext) or (pricing_context.is_async or
+                                                                   pricing_context.is_entered)
 
     def dollar_price(self) -> Union[FloatWithInfo, PortfolioRiskResult, PricingFuture, SeriesWithInfo]:
         """

@@ -97,6 +97,7 @@ class Measure(EnumBase, Enum):
     Total_Risk = 'Total Risk'
     Specific_Risk = 'Specific Risk'
     Residual_Variance = 'Residual Variance'
+    Specific_Return = 'Specific Return'
     Universe_Factor_Exposure = 'Universe Factor Exposure'
     Factor_Id = 'Factor Id'
     Factor_Name = 'Factor Name'
@@ -130,7 +131,8 @@ class AssetData(Base):
             specific_risk: List[float],
             factor_exposure: List,
             historical_beta: List[float] = None,
-            total_risk: List[float] = None
+            total_risk: List[float] = None,
+            specific_return: List[float] = None
     ):
         super().__init__()
         self.universe = universe
@@ -138,6 +140,7 @@ class AssetData(Base):
         self.factor_exposure = factor_exposure
         self.historical_beta = historical_beta
         self.total_risk = total_risk
+        self.specific_return = specific_return
 
     @property
     def universe(self) -> List[str]:
@@ -188,6 +191,16 @@ class AssetData(Base):
     def total_risk(self, value: List[float]):
         self._property_changed('total_risk')
         self.__total_risk = value
+
+    @property
+    def specific_return(self) -> List[float]:
+        """Asset specific return"""
+        return self.__specific_return
+
+    @specific_return.setter
+    def specific_return(self, value: List[float]):
+        self._property_changed('specific_return')
+        self.__specific_return = value
 
 
 class FactorData(Base):

@@ -14,11 +14,16 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from dateutil.relativedelta import relativedelta as rdelta
+from functools import partial
 
+from dateutil.relativedelta import relativedelta as rdelta
+from pydash import chunk
+
+from gs_quant.api.utils import ThreadPoolManager
+from gs_quant.timeseries.econometrics import volatility, correlation
 from gs_quant.timeseries.helper import _create_enum
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
-from gs_quant.timeseries.econometrics import volatility, correlation
+from gs_quant import timeseries as ts
 from .statistics import *
 from ..api.gs.assets import GsAssetApi
 from ..api.gs.data import GsDataApi, MarketDataResponseFrame
@@ -169,6 +174,7 @@ class Basket:
     :param rebal_freq: rebalancing frequency - Daily or Monthly
 
     """
+
     def __init__(self, stocks: list, weights: list, rebal_freq: RebalFreq = RebalFreq.DAILY):
         if len(stocks) != len(weights):
             raise MqValueError("stocks and weights must have the same length")
@@ -286,20 +292,35 @@ class Basket:
         log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
                   relative_strike)
         where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
-        query = GsDataApi.build_market_data_query(
-            self.get_marquee_ids(),
-            QueryType.IMPLIED_VOLATILITY,
-            where=where,
-            source=source,
-            real_time=real_time
-        )
-        log_debug(request_id, _logger, 'q %s', query)
-        vol_data = GsDataApi.get_market_data(query, request_id=request_id)
+        tasks = []
+        for i, chunked_assets in enumerate(chunk(self.get_marquee_ids(), 3)):
+            query = GsDataApi.build_market_data_query(
+                chunked_assets,
+                QueryType.IMPLIED_VOLATILITY,
+                where=where,
+                source=source,
+                real_time=real_time)
+
+            tasks.append(partial(GsDataApi.get_market_data, query, request_id))
+
+        results = ThreadPoolManager.run_async(tasks)
+        vol_data = pd.concat(results)
+
+        actual_weights = self.get_actual_weights(request_id)
+
+        # Add in today's data
+        if not real_time and DataContext.current.end_date >= datetime.date.today():
+            vol_data = ts.append_last_for_measure(vol_data, self.get_marquee_ids(), QueryType.IMPLIED_VOLATILITY, where,
+                                                  source=source, request_id=request_id)
+            vol_data.index.rename('date', inplace=True)
 
         vols = vol_data.pivot_table('impliedVolatility', ['date'], 'assetId')
         vols.reindex(self.get_marquee_ids(), axis=1)
+        vols.index.name = None
 
-        actual_weights = self.get_actual_weights(request_id)
+        # Necessary when current values appended - set weights index to match vols index
+        actual_weights = actual_weights.reindex(vols.index).fillna(method='pad')
+
         return actual_weights.mul(vols).sum(axis=1, skipna=False)
 
     @requires_session

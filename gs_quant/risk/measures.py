@@ -13,55 +13,17 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import copy
-from typing import Optional, Union
+from typing import Optional
 
-import pandas as pd
-from gs_quant.base import Market, EnumBase
-from gs_quant.common import AssetClass, CurrencyParameter, FiniteDifferenceParameter, AggregationLevel
-from gs_quant.context_base import do_not_serialise
-from gs_quant.target.risk import RiskMeasure as __RiskMeasure, RiskMeasureType, RiskMeasureUnit
+from gs_quant.risk.base_measures import *
+from gs_quant.risk.base_measures import __RelativeRiskMeasure
+from gs_quant.target.risk import RiskMeasureType, RiskMeasureUnit
 
 DEPRECATED_MEASURES = {'IRDeltaParallelLocalCcy': 'IRDelta',
                        'InflationDeltaParallelLocalCcy': 'InflationDelta',
                        'IRXccyDeltaParallelLocalCurrency': 'IRXccyDelta',
                        'IRVegaParallelLocalCcy': 'IRVega',
                        }
-
-
-class RiskMeasure(__RiskMeasure):
-
-    def __lt__(self, other):
-        return self.name < other.name
-
-    def __repr__(self):
-        return self.name or self.measure_type.name
-
-    @property
-    @do_not_serialise
-    def pricing_context(self):
-        from gs_quant.markets import PricingContext
-        return PricingContext.current
-
-
-class __RelativeRiskMeasure(RiskMeasure):
-
-    def __init__(self,
-                 to_market: Market,
-                 asset_class: Union[AssetClass, str] = None,
-                 measure_type: Union[RiskMeasureType, str] = None,
-                 unit: Union[RiskMeasureUnit, str] = None,
-                 value: Union[float, str] = None,
-                 name: str = None):
-        super().__init__(asset_class=asset_class, measure_type=measure_type, unit=unit, value=value, name=name)
-        self.__to_market = to_market
-
-    @property
-    @do_not_serialise
-    def pricing_context(self):
-        from gs_quant.markets import PricingContext, RelativeMarket
-        current = PricingContext.current
-        return current.clone(market=RelativeMarket(from_market=current.market, to_market=self.__to_market))
 
 
 class PnlExplain(__RelativeRiskMeasure):
@@ -106,66 +68,22 @@ def __risk_measure_with_doc_string(name: str,
     elif parameter_type == "FiniteDifference":
         measure = RiskMeasureWithFiniteDifferenceParameter(measure_type=measure_type, asset_class=asset_class,
                                                            unit=unit, name=name)
+    elif parameter_type == "String":
+        measure = RiskMeasureWithStringParameter(measure_type=measure_type, asset_class=asset_class,
+                                                 unit=unit, name=name)
+    elif parameter_type == "ListOfString":
+        measure = RiskMeasureWithListOfStringParameter(measure_type=measure_type, asset_class=asset_class,
+                                                       unit=unit, name=name)
+    elif parameter_type == "ListOfNumber":
+        measure = RiskMeasureWithListOfNumberParameter(measure_type=measure_type, asset_class=asset_class,
+                                                       unit=unit, name=name)
+    elif parameter_type == "Map":
+        measure = RiskMeasureWithMapParameter(measure_type=measure_type, asset_class=asset_class,
+                                              unit=unit, name=name)
     else:
         measure = RiskMeasure(measure_type=measure_type, asset_class=asset_class, unit=unit, name=name)
     measure.__doc__ = doc
     return measure
-
-
-class ParameterisedRiskMeasure(RiskMeasure):
-    def __init__(self, name: str = None, asset_class: Union[AssetClass, str] = None,
-                 measure_type: Union[RiskMeasureType, str] = None, unit: Union[RiskMeasureUnit, str] = None,
-                 value: Union[float, str] = None, parameter_type: str = None):
-        super().__init__(asset_class=asset_class, measure_type=measure_type, unit=unit, value=value, name=name)
-        self.parameter_type = parameter_type
-
-    def __repr__(self):
-        name = self.name or self.measure_type.name
-        params = None
-        if self.parameters:
-            params = self.parameters.as_dict()
-            params.pop('parameter_type', None)
-            sorted_keys = sorted(params.keys(), key=lambda x: x.lower())
-            params = ', '.join(
-                [f'{k}:{params[k].value if isinstance(params[k], EnumBase) else params[k]}' for k in sorted_keys])
-        return name + '(' + params + ')' if params else name
-
-    def parameter_is_empty(self):
-        return self.parameters is None
-
-
-class RiskMeasureWithCurrencyParameter(ParameterisedRiskMeasure):
-    def __call__(self, currency: str = None):
-        # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
-        # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
-        if isinstance(currency, pd.DataFrame):
-            return self
-
-        clone = copy.copy(self)
-        parameter = CurrencyParameter(value=currency)
-        clone.parameters = parameter
-        return clone
-
-
-class RiskMeasureWithFiniteDifferenceParameter(ParameterisedRiskMeasure):
-    def __call__(self, currency: str = None,
-                 aggregation_level: Union[AggregationLevel, str] = None, local_curve: bool = None,
-                 finite_difference_method: Union[FiniteDifferenceParameter, str] = None,
-                 mkt_marking_mode: str = None, bump_size: float = None, scale_factor: float = None, name: str = None):
-        # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
-        # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
-        if isinstance(currency, pd.DataFrame):
-            return self
-
-        clone = copy.copy(self)
-        if name:
-            clone.name = name
-        parameter = FiniteDifferenceParameter(aggregation_level=aggregation_level, currency=currency,
-                                              local_curve=local_curve, bump_size=bump_size,
-                                              finite_difference_method=finite_difference_method,
-                                              scale_factor=scale_factor, mkt_marking_mode=mkt_marking_mode)
-        clone.parameters = parameter
-        return clone
 
 
 DollarPrice = __risk_measure_with_doc_string('DollarPrice', 'Present value in USD', RiskMeasureType.Dollar_Price)
@@ -400,16 +318,15 @@ ParSpread = __risk_measure_with_doc_string(
 ATMSpread = __risk_measure_with_doc_string(
     'ATMSpread',
     'ATM Spread',
-    RiskMeasureType.Spread,
+    RiskMeasureType.ATM_Spread,
     asset_class=AssetClass.Credit)
 FwdSpread = __risk_measure_with_doc_string(
     'FwdSpread',
     'Fwd Spread',
-    RiskMeasureType.Spread,
+    RiskMeasureType.Forward_Spread,
     asset_class=AssetClass.Credit)
 ImpliedVolatility = __risk_measure_with_doc_string(
     'ImpliedVolatility',
     'Implied Volatility',
-    RiskMeasureType.Annual_Implied_Volatility,
-    unit=RiskMeasureUnit.Percent,
+    RiskMeasureType.Implied_Volatility,
     asset_class=AssetClass.Credit)

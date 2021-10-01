@@ -170,8 +170,8 @@ class AssetType(EnumBase, Enum):
     Roll = 'Roll'
     Securities_Lending_Loan = 'Securities Lending Loan'
     Share_Class = 'Share Class'
-    ShiftingBermForward = 'ShiftingBermForward'
     Single_Stock = 'Single Stock'
+    ShiftingBermForward = 'ShiftingBermForward'
     Swap = 'Swap'
     SwapLeg = 'SwapLeg'
     SwapStrategy = 'SwapStrategy'
@@ -1117,7 +1117,6 @@ class Field(EnumBase, Enum):
     leg2IndexLocation = 'leg2IndexLocation'
     twapUnrealizedBps = 'twapUnrealizedBps'
     fwdEbookPointSpreadAllInMultBid = 'fwdEbookPointSpreadAllInMultBid'
-    quoteConvention = 'quoteConvention'
     quantityUnitOfMeasure = 'quantityUnitOfMeasure'
     lastUpdatedMessage = 'lastUpdatedMessage'
     loanValue = 'loanValue'
@@ -1248,6 +1247,7 @@ class Field(EnumBase, Enum):
     _222 = '222'
     buy9point5bps = 'buy9point5bps'
     _223 = '223'
+    specificReturn = 'specificReturn'
     _224 = '224'
     _225 = '225'
     optionLockPeriod = 'optionLockPeriod'
@@ -3710,6 +3710,14 @@ class PCOCurrencyType(EnumBase, Enum):
     Local = 'Local'    
 
 
+class PCOOrigin(EnumBase, Enum):    
+    
+    """Origin of PCO Report"""
+
+    PCOGui = 'PCOGui'
+    PCOBackend = 'PCOBackend'    
+
+
 class PayReceive(EnumBase, Enum):    
     
     """Pay or receive fixed"""
@@ -4897,6 +4905,93 @@ class LiquidityReportParameters(Base):
         self.__trading_desk = value        
 
 
+class ListOfNumberParameter(Base):
+        
+    """Extra parameters for List of Number"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        values: Tuple[float, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.values = values
+        self.name = name
+
+    @property
+    def parameter_type(self) -> str:
+        """ListOfNumber"""
+        return 'ListOfNumber'        
+
+    @property
+    def values(self) -> Tuple[float, ...]:
+        return self.__values
+
+    @values.setter
+    def values(self, value: Tuple[float, ...]):
+        self._property_changed('values')
+        self.__values = value        
+
+
+class ListOfStringParameter(Base):
+        
+    """Extra parameters for List of Strings"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        values: Tuple[str, ...] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.values = values
+        self.name = name
+
+    @property
+    def parameter_type(self) -> str:
+        """ListOfString"""
+        return 'ListOfString'        
+
+    @property
+    def values(self) -> Tuple[str, ...]:
+        return self.__values
+
+    @values.setter
+    def values(self, value: Tuple[str, ...]):
+        self._property_changed('values')
+        self.__values = value        
+
+
+class MapParameter(Base):
+        
+    """Extra parameters for Map of String type"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        value: dict = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.value = value
+        self.name = name
+
+    @property
+    def parameter_type(self) -> str:
+        """Map"""
+        return 'Map'        
+
+    @property
+    def value(self) -> dict:
+        return self.__value
+
+    @value.setter
+    def value(self, value: dict):
+        self._property_changed('value')
+        self.__value = value        
+
+
 class MarketDataCoordinate(Base):
         
     """Object representation of a market data coordinate"""
@@ -5946,6 +6041,35 @@ class SocialDomain(Base):
         self.__auto_approve_connections = value        
 
 
+class StringParameter(Base):
+        
+    """Extra parameters for String"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        value: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.value = value
+        self.name = name
+
+    @property
+    def parameter_type(self) -> str:
+        """String"""
+        return 'String'        
+
+    @property
+    def value(self) -> str:
+        return self.__value
+
+    @value.setter
+    def value(self, value: str):
+        self._property_changed('value')
+        self.__value = value        
+
+
 class TimeFilter(Base):
         
     """Filter to restrict data to a range of hours per day."""
@@ -6067,113 +6191,6 @@ class UserCoverage(Base):
     def guid(self, value: str):
         self._property_changed('guid')
         self.__guid = value        
-
-
-class UserTag(Base):
-        
-    """Marquee User Tag Attribute"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str,
-        added_on: datetime.datetime = None,
-        added_by_id: str = None,
-        removed: bool = None,
-        removed_on: datetime.datetime = None,
-        removed_by_id: str = None,
-        removal_reason: str = None,
-        category: str = None
-    ):        
-        super().__init__()
-        self.added_on = added_on
-        self.added_by_id = added_by_id
-        self.removed = removed
-        self.removed_on = removed_on
-        self.removed_by_id = removed_by_id
-        self.removal_reason = removal_reason
-        self.category = category
-        self.name = name
-
-    @property
-    def added_on(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__added_on
-
-    @added_on.setter
-    def added_on(self, value: datetime.datetime):
-        self._property_changed('added_on')
-        self.__added_on = value        
-
-    @property
-    def added_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__added_by_id
-
-    @added_by_id.setter
-    def added_by_id(self, value: str):
-        self._property_changed('added_by_id')
-        self.__added_by_id = value        
-
-    @property
-    def removed(self) -> bool:
-        """Flag to indicate if tag has been removed"""
-        return self.__removed
-
-    @removed.setter
-    def removed(self, value: bool):
-        self._property_changed('removed')
-        self.__removed = value        
-
-    @property
-    def removed_on(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__removed_on
-
-    @removed_on.setter
-    def removed_on(self, value: datetime.datetime):
-        self._property_changed('removed_on')
-        self.__removed_on = value        
-
-    @property
-    def removed_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__removed_by_id
-
-    @removed_by_id.setter
-    def removed_by_id(self, value: str):
-        self._property_changed('removed_by_id')
-        self.__removed_by_id = value        
-
-    @property
-    def removal_reason(self) -> str:
-        """Reason tag was removed"""
-        return self.__removal_reason
-
-    @removal_reason.setter
-    def removal_reason(self, value: str):
-        self._property_changed('removal_reason')
-        self.__removal_reason = value        
-
-    @property
-    def category(self) -> str:
-        """Category of the tag"""
-        return self.__category
-
-    @category.setter
-    def category(self, value: str):
-        self._property_changed('category')
-        self.__category = value        
-
-    @property
-    def name(self) -> str:
-        """Name of the tag"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
 
 
 class WeightedPosition(Base):
@@ -10448,8 +10465,8 @@ class TimestampedMarket(Base):
     @camel_case_translate
     def __init__(
         self,
+        timestamp: datetime.datetime,
         location: Union[PricingLocation, str],
-        timestamp: datetime.datetime = None,
         name: str = None
     ):        
         super().__init__()
@@ -11034,8 +11051,8 @@ class FieldFilterMap(Base):
         self.last_updated_message = kwargs.get('last_updated_message')
         self.rcic = kwargs.get('rcic')
         self.trading_restriction = kwargs.get('trading_restriction')
-        self.status = kwargs.get('status')
         self.name_raw = kwargs.get('name_raw')
+        self.status = kwargs.get('status')
         self.asset_parameters_pay_or_receive = kwargs.get('asset_parameters_pay_or_receive')
         self.client_name = kwargs.get('client_name')
         self.asset_parameters_index_series = kwargs.get('asset_parameters_index_series')
@@ -12823,15 +12840,6 @@ class FieldFilterMap(Base):
         self.__trading_restriction = value        
 
     @property
-    def status(self) -> dict:
-        return self.__status
-
-    @status.setter
-    def status(self, value: dict):
-        self._property_changed('status')
-        self.__status = value        
-
-    @property
     def name_raw(self) -> dict:
         return self.__name_raw
 
@@ -12839,6 +12847,15 @@ class FieldFilterMap(Base):
     def name_raw(self, value: dict):
         self._property_changed('name_raw')
         self.__name_raw = value        
+
+    @property
+    def status(self) -> dict:
+        return self.__status
+
+    @status.setter
+    def status(self, value: dict):
+        self._property_changed('status')
+        self.__status = value        
 
     @property
     def asset_parameters_pay_or_receive(self) -> dict:
@@ -15249,7 +15266,7 @@ class RiskMeasure(Base):
         asset_class: Union[AssetClass, str] = None,
         measure_type: Union[RiskMeasureType, str] = None,
         unit: Union[RiskMeasureUnit, str] = None,
-        parameters: Union[CurrencyParameter, FiniteDifferenceParameter] = None,
+        parameters: Union[CurrencyParameter, FiniteDifferenceParameter, ListOfNumberParameter, ListOfStringParameter, MapParameter, StringParameter] = None,
         value: Union[float, str] = None,
         name: str = None
     ):        
@@ -15294,12 +15311,12 @@ class RiskMeasure(Base):
         self.__unit = get_enum_value(RiskMeasureUnit, value)        
 
     @property
-    def parameters(self) -> Union[CurrencyParameter, FiniteDifferenceParameter]:
+    def parameters(self) -> Union[CurrencyParameter, FiniteDifferenceParameter, ListOfNumberParameter, ListOfStringParameter, MapParameter, StringParameter]:
         """Extra Params for Parameterised Risk Measures"""
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: Union[CurrencyParameter, FiniteDifferenceParameter]):
+    def parameters(self, value: Union[CurrencyParameter, FiniteDifferenceParameter, ListOfNumberParameter, ListOfStringParameter, MapParameter, StringParameter]):
         self._property_changed('parameters')
         self.__parameters = value        
 
@@ -16027,6 +16044,7 @@ class RiskRequest(Base):
         scenario: MarketDataScenario = None,
         parameters: RiskRequestParameters = None,
         request_visible_to_gs: bool = False,
+        use_cache: bool = False,
         name: str = None
     ):        
         super().__init__()
@@ -16038,6 +16056,7 @@ class RiskRequest(Base):
         self.scenario = scenario
         self.parameters = parameters
         self.request_visible_to_gs = request_visible_to_gs
+        self.use_cache = use_cache
         self.name = name
 
     @property
@@ -16115,12 +16134,23 @@ class RiskRequest(Base):
 
     @property
     def request_visible_to_gs(self) -> bool:
+        """Is the request visible to GS logging?"""
         return self.__request_visible_to_gs
 
     @request_visible_to_gs.setter
     def request_visible_to_gs(self, value: bool):
         self._property_changed('request_visible_to_gs')
         self.__request_visible_to_gs = value        
+
+    @property
+    def use_cache(self) -> bool:
+        """Should results be cached in the risk service?"""
+        return self.__use_cache
+
+    @use_cache.setter
+    def use_cache(self, value: bool):
+        self._property_changed('use_cache')
+        self.__use_cache = value        
 
 
 class ReportParameters(Base):
@@ -16189,9 +16219,10 @@ class ReportParameters(Base):
         show_exposure: bool = None,
         enable_rfq: bool = None,
         fixing_descriptions: Tuple[str, ...] = None,
-        pco_origin: str = None,
+        pco_origin: Union[PCOOrigin, str] = None,
         pco_action_type: Union[PCOActionType, str] = None,
         version: str = None,
+        roll_currency: Tuple[PCOParameterValues, ...] = None,
         name: str = None
     ):        
         super().__init__()
@@ -16255,6 +16286,7 @@ class ReportParameters(Base):
         self.pco_origin = pco_origin
         self.pco_action_type = pco_action_type
         self.version = version
+        self.roll_currency = roll_currency
         self.name = name
 
     @property
@@ -16833,14 +16865,14 @@ class ReportParameters(Base):
         self.__fixing_descriptions = value        
 
     @property
-    def pco_origin(self) -> str:
+    def pco_origin(self) -> Union[PCOOrigin, str]:
         """Origin of PCO Report"""
         return self.__pco_origin
 
     @pco_origin.setter
-    def pco_origin(self, value: str):
+    def pco_origin(self, value: Union[PCOOrigin, str]):
         self._property_changed('pco_origin')
-        self.__pco_origin = value        
+        self.__pco_origin = get_enum_value(PCOOrigin, value)        
 
     @property
     def pco_action_type(self) -> Union[PCOActionType, str]:
@@ -16861,6 +16893,16 @@ class ReportParameters(Base):
     def version(self, value: str):
         self._property_changed('version')
         self.__version = value        
+
+    @property
+    def roll_currency(self) -> Tuple[PCOParameterValues, ...]:
+        """One of Local and Base"""
+        return self.__roll_currency
+
+    @roll_currency.setter
+    def roll_currency(self, value: Tuple[PCOParameterValues, ...]):
+        self._property_changed('roll_currency')
+        self.__roll_currency = value        
 
 
 class ReportScheduleRequest(Base):

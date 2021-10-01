@@ -170,16 +170,16 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
 
         usd_delta_f and eur_delta_f are futures, usd_delta and eur_delta are dataframes
         """
-        futures = {r: r.pricing_context.calc(self, r)
-                   for r in ((risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure)}
-        future = MultipleRiskMeasureFuture(self, futures) if len(futures) > 1 else futures[
-            risk_measure if isinstance(risk_measure, RiskMeasure) else risk_measure[0]]
+        single_measure = isinstance(risk_measure, RiskMeasure)
+        with self._pricing_context:
+            future = risk_measure.pricing_context.calc(self, risk_measure) if single_measure else \
+                MultipleRiskMeasureFuture(self, {r: r.pricing_context.calc(self, r) for r in risk_measure})
 
-        # throw warning upon usage of deprecated measures
-        def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
-            return '%s:%s' % (category.__name__, message)
+        # Warn on use of deprecated measures
+        def warning_on_one_line(msg, category, _filename, _lineno, _file=None, _line=None):
+            return f'{category.__name__}:{msg}'
 
-        for measure in futures.keys():
+        for measure in (risk_measure,) if single_measure else risk_measure:
             if measure.name in DEPRECATED_MEASURES.keys():
                 message = '{0} risk measure is deprecated. Please use {1} instead and pass in arguments to describe ' \
                           'risk measure specifics.\n'.format(measure.name, DEPRECATED_MEASURES[measure.name])
@@ -200,7 +200,7 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
             future.add_done_callback(cb)
             future = ret
 
-        return future.result() if not (PricingContext.current.is_entered or PricingContext.current.is_async) else future
+        return future if self._return_future else future.result()
 
     @classmethod
     def from_dict(cls, values: dict):

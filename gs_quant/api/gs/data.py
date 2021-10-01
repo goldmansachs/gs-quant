@@ -137,6 +137,9 @@ class QueryType(Enum):
     SETTLEMENT_PRICE = "Settlement Price"
     THEMATIC_EXPOSURE = "Thematic Exposure"
     THEMATIC_BETA = "Thematic Beta"
+    CDS_SPREAD_100 = "Spread At100"
+    CDS_SPREAD_250 = "Spread At250"
+    CDS_SPREAD_500 = "Spread At500"
 
 
 class GsDataApi(DataApi):

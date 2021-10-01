@@ -26,7 +26,6 @@ from more_itertools import unique_everseen
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
-from gs_quant.context_base import nullcontext
 from gs_quant.instrument import Instrument
 from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext, PositionContext
 from gs_quant.priceable import PriceableImpl
@@ -119,10 +118,6 @@ class Portfolio(PriceableImpl):
             raise ValueError('Can only add instances of Portfolio')
 
         return Portfolio(self.__priceables + other.__priceables)
-
-    @property
-    def __pricing_context(self) -> PricingContext:
-        return PricingContext.current if not PricingContext.current.is_entered else nullcontext()
 
     @property
     def __position_context(self) -> PositionContext:
@@ -282,7 +277,7 @@ class Portfolio(PriceableImpl):
         if self.portfolios:
             raise ValueError('Cannot save portfolios with nested portfolios')
 
-        pricing_context = self.__pricing_context
+        pricing_context = self._pricing_context
 
         request = RiskRequest(
             tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
@@ -305,7 +300,7 @@ class Portfolio(PriceableImpl):
         if self.portfolios:
             raise ValueError('Cannot save portfolios with nested portfolios')
 
-        pricing_context = self.__pricing_context
+        pricing_context = self._pricing_context
 
         request = RiskRequest(
             tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
@@ -449,14 +444,13 @@ class Portfolio(PriceableImpl):
 
     def resolve(self, in_place: bool = True) -> Optional[Union[PricingFuture, PriceableImpl, dict]]:
         priceables = self._get_instruments(self.__position_context.position_date, in_place, True)
-        pricing_context = self.__pricing_context
+        pricing_context = self._pricing_context
         with pricing_context:
             futures = [p.resolve(in_place) for p in priceables]
 
         if not in_place:
             ret = {} if isinstance(PricingContext.current, HistoricalPricingContext) else Portfolio(name=self.name)
-            result_future = PricingFuture() if not isinstance(
-                pricing_context, PricingContext) or pricing_context.is_async or pricing_context.is_entered else None
+            result_future = PricingFuture() if self._return_future else None
 
             def cb(future: CompositeResultFuture):
                 if isinstance(ret, Portfolio):
@@ -491,14 +485,12 @@ class Portfolio(PriceableImpl):
         >>> market = portfolio.market()
 
         """
-        pricing_context = self.__pricing_context
+        pricing_context = self._pricing_context
         instruments = self._get_instruments(self.__position_context.position_date, False, False)
         with pricing_context:
             futures = [i.market() for i in instruments]
 
         result_future = PricingFuture()
-        return_future = not isinstance(pricing_context,
-                                       PricingContext) or pricing_context.is_async or pricing_context.is_entered
 
         def cb(future: CompositeResultFuture):
             def update_market_data(all_market_data, this_market_data):
@@ -530,11 +522,11 @@ class Portfolio(PriceableImpl):
                 result_future.set_result(ret)
 
         CompositeResultFuture(futures).add_done_callback(cb)
-        return result_future if return_future else result_future.result()
+        return result_future if self._return_future else result_future.result()
 
     def calc(self, risk_measure: Union[RiskMeasure, Iterable[RiskMeasure]], fn=None) -> PortfolioRiskResult:
         priceables = self._get_instruments(self.__position_context.position_date, False, True)
-        with self.__pricing_context:
+        with self._pricing_context:
             # PortfolioRiskResult should hold a copy of the portfolio instead of a reference to the portfolio
             # this is to prevent the portfolio object within portfolioriskresult to hold a reference to the portfolio
             # object should it later be modified in place (eg: resolution)

@@ -349,7 +349,12 @@ class Workspace:
     def open(self):
         if self.__id is None:
             raise MqValueError('Workspace must be created or saved before opening.')
-        webbrowser.open(f'{GsSession.current.domain.replace(".web", "")}/s/markets/{self.__alias or self.__id}')
+
+        domain = GsSession.current.domain.replace(".web", "")
+        if domain == 'https://api.gs.com':
+            domain = 'https://marquee.gs.com'
+        url = f'{domain}/s/markets/{self.__alias or self.__id}'
+        webbrowser.open(url)
 
     def create(self):
         resp = GsSession.current._post(f'{API}', self.as_dict(), request_headers=HEADERS)

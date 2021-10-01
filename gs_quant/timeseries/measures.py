@@ -640,6 +640,49 @@ def implied_volatility_credit(asset: Asset, expiry: str, strike_reference: CdsVo
     return _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE)
 
 
+@plot_measure((AssetClass.Credit,), (AssetType.Default_Swap,), [QueryType.CDS_SPREAD_100],
+              display_name='spread')
+def cds_spread(asset: Asset, spread: int, location: str, *, source: str = None, real_time: bool = False,
+               request_id: Optional[str] = None) -> Series:
+    """
+    CDS Spread levels.
+
+    :param asset: asset object loaded from security master
+    :param spread: in bps 100, 250, 500
+    :param location: pricing location
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: spread curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime spread not implemented for cds spreads')
+
+    _logger.debug('where spread=%s, location=%s', spread, location)
+
+    if spread == 100:
+        qt = QueryType.CDS_SPREAD_100
+    elif spread == 250:
+        qt = QueryType.CDS_SPREAD_250
+    elif spread == 500:
+        qt = QueryType.CDS_SPREAD_500
+    else:
+        raise NotImplementedError("Spread {} not implemented".format(spread))
+
+    q = GsDataApi.build_market_data_query(
+        [asset.get_marquee_id()],
+        qt,
+        where=dict(
+            pricingLocation=location
+        ),
+        source=source,
+        real_time=real_time
+    )
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
+    return _extract_series_from_df(df, qt)
+
+
 @plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX,), None,
               [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
                                  query_type=QueryType.IMPLIED_VOLATILITY)],
@@ -3340,6 +3383,8 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
+    if not real_time and DataContext.current.end_date >= datetime.date.today():
+        df = append_last_for_measure(df, [asset.get_marquee_id()], QueryType.SPOT, {})
     series = ExtendedSeries() if df.empty else ExtendedSeries(volatility(df['spot'], w, returns_type))
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
