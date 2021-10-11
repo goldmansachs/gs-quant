@@ -218,6 +218,7 @@ class AssetIdentifier(EntityIdentifier):
 
 class SecurityIdentifier(EntityIdentifier):
     GSID = "gsid"
+    RCIC = "rcic"
     RIC = "ric"
     ID = "id"
     CUSIP = "cusip"

@@ -242,6 +242,8 @@ class Report:
         self.position_source_id = entity_id
         if isinstance(self, FactorRiskReport):
             self.type = ReportType.Portfolio_Factor_Risk if is_portfolio else ReportType.Asset_Factor_Risk
+        if isinstance(self, ThematicReport):
+            self.type = ReportType.Portfolio_Thematic_Analytics if is_portfolio else ReportType.Asset_Thematic_Analytics
 
     def get_most_recent_job(self):
         jobs = GsReportApi.get_report_jobs(self.id)

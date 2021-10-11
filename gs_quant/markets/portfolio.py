@@ -288,7 +288,7 @@ class Portfolio(PriceableImpl):
 
         if self.__id:
             if not overwrite:
-                raise ValueError(f'Portfolio with id {id} already exists. Use overwrite=True to overwrite')
+                raise ValueError(f'Quote with id {id} already exists. Use overwrite=True to overwrite')
             else:
                 GsPortfolioApi.update_quote(self.__id, request)
                 _logger.info(f'Updated Structuring with id {self.__id}')

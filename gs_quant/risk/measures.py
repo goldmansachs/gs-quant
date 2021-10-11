@@ -276,11 +276,6 @@ CDTheta = __risk_measure_with_doc_string(
     'Credit Theta',
     RiskMeasureType.Theta,
     asset_class=AssetClass.Credit)
-CDATMSpread = __risk_measure_with_doc_string(
-    'CDATMSpread',
-    'Credit ATM Spread',
-    RiskMeasureType.ATM_Spread,
-    asset_class=AssetClass.Credit)
 CRIFIRCurve = __risk_measure_with_doc_string(
     'CRIFIRCurve',
     'CRIF IR Curve',
@@ -315,17 +310,17 @@ ParSpread = __risk_measure_with_doc_string(
     'Par Spread',
     RiskMeasureType.Spread,
     asset_class=AssetClass.Rates)
-ATMSpread = __risk_measure_with_doc_string(
+CDATMSpread = __risk_measure_with_doc_string(
     'ATMSpread',
     'ATM Spread',
     RiskMeasureType.ATM_Spread,
     asset_class=AssetClass.Credit)
-FwdSpread = __risk_measure_with_doc_string(
+CDFwdSpread = __risk_measure_with_doc_string(
     'FwdSpread',
     'Fwd Spread',
     RiskMeasureType.Forward_Spread,
     asset_class=AssetClass.Credit)
-ImpliedVolatility = __risk_measure_with_doc_string(
+CDImpliedVolatility = __risk_measure_with_doc_string(
     'ImpliedVolatility',
     'Implied Volatility',
     RiskMeasureType.Implied_Volatility,

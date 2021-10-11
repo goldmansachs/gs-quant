@@ -166,7 +166,7 @@ def test_basket_average_realized_vol():
     dates = pd.DatetimeIndex([date(2021, 1, 1), date(2021, 1, 2), date(2021, 1, 3), date(2021, 1, 4), date(2021, 1, 5),
                               date(2021, 1, 6)])
     dates_feb = pd.DatetimeIndex([date(2021, 2, 1), date(2021, 2, 2), date(2021, 2, 3), date(2021, 2, 4),
-                                 date(2021, 2, 5), date(2021, 2, 6)])
+                                  date(2021, 2, 5), date(2021, 2, 6)])
 
     mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb()]
@@ -177,18 +177,18 @@ def test_basket_average_realized_vol():
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
 
-    expected = pd.Series([np.nan, np.nan, 1.1225, 4.49, 2.245, 2.245], index=dates)
+    expected = pd.Series([1.1225, 4.49, 2.245, 2.245], index=dates[2:])
     with DataContext('2021-01-01', '2021-01-06'):
         actual = a_basket.average_realized_volatility('2d')
     assert_series_equal(actual, expected)
 
-    expected = pd.Series([np.nan, np.nan, np.nan, 3.304542, 3.174902, 3.174902], index=dates)
+    expected = pd.Series([3.304542, 3.174902, 3.174902], index=dates[3:])
     with DataContext('2021-01-01', '2021-01-06'):
         actual = a_basket.average_realized_volatility('3d')
     assert_series_equal(actual, expected)
     mock_data.assert_called_once()
 
-    expected = pd.Series([np.nan, np.nan, np.nan, 34.698082, 19.719302, 18.860533], index=dates_feb)
+    expected = pd.Series([34.698082, 19.719302, 18.860533], index=dates_feb[3:])
     with DataContext('2021-02-01', '2021-02-06'):
         actual = a_basket.average_realized_volatility('3d')
     assert_series_equal(actual, expected)
@@ -232,8 +232,6 @@ def _mock_spot_data_corr():
 
 
 def test_basket_average_realized_vol_wts():
-    _mock_vol_simple()
-
     replace = Replacer()
 
     mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
@@ -248,8 +246,38 @@ def test_basket_average_realized_vol_wts():
 
     a_basket = Basket(['XLC UP', 'XLP UP', 'SPX'], [0.2, 0.3, 0.5], RebalFreq.DAILY)
 
-    av_realized_vol = a_basket.average_realized_volatility('2d')
-    np.testing.assert_approx_equal(av_realized_vol.iloc[0], 1.7)
+    with DataContext(start=date(2021, 9, 1), end=date(2021, 9, 25)):
+        av_realized_vol = a_basket.average_realized_volatility('2d')
+        np.testing.assert_approx_equal(av_realized_vol.iloc[0], 1.7)
+
+    replace.restore()
+
+
+def test_basket_average_realized_vol_intraday():
+    replace = Replacer()
+
+    end_date = date.today() - datetime.timedelta(days=1)
+    start_date = end_date - datetime.timedelta(days=4)
+
+    a = pd.Series([1 for i in range(5)], index=pd.date_range(start_date, end_date))
+    z = pd.DataFrame({'spot': (a ** 3).tolist()}, index=a.index)
+    z['assetId'] = 'SPX_MOCK_MQID'
+
+    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data.side_effect = [z]
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [{'id': 'SPX_MOCK_MQID', 'bbid': 'SPX'}]
+
+    mock_today = replace('gs_quant.timeseries.get_last_for_measure', Mock())
+    mock_today.side_effect = [pd.DataFrame({'assetId': 'SPX_MOCK_MQID', 'spot': 5001.0},
+                                           index=[datetime.datetime.now()])]
+
+    a_basket = Basket(['SPX'], [1], RebalFreq.DAILY)
+
+    with DataContext(start=start_date, end=date.today()):
+        avg_vol = a_basket.average_realized_volatility('2d')
+        assert avg_vol.index[-1].date() == date.today()
 
     replace.restore()
 

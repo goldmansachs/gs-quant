@@ -171,8 +171,8 @@ class GsPortfolioApi:
         return GsSession.current._get(url)['results']
 
     @classmethod
-    def update_quote(cls, portfolio_id: str, request: RiskRequest):
-        return GsSession.current._put('/risk-internal/quote/save/{id}'.format(id=portfolio_id), request)
+    def update_quote(cls, quote_id: str, request: RiskRequest):
+        return GsSession.current._put('/risk-internal/quote/save/{id}'.format(id=quote_id), request)
 
     @classmethod
     def save_quote(cls, request: RiskRequest) -> str:

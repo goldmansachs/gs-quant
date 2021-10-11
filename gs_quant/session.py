@@ -291,7 +291,8 @@ class GsSession(ContextBase):
             scopes: Optional[Union[Iterable[Union[Scopes, str]], str]] = (),
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION,
-            http_adapter: requests.adapters.HTTPAdapter = None
+            http_adapter: requests.adapters.HTTPAdapter = None,
+            use_mds: bool = False
     ) -> None:
         environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain,
                                                                          Environment) else environment_or_domain
@@ -302,7 +303,8 @@ class GsSession(ContextBase):
             scopes=scopes,
             api_version=api_version,
             application=application,
-            http_adapter=http_adapter
+            http_adapter=http_adapter,
+            use_mds=use_mds
         )
 
         session.init()
@@ -321,6 +323,7 @@ class GsSession(ContextBase):
             application: str = DEFAULT_APPLICATION,
             http_adapter: requests.adapters.HTTPAdapter = None,
             application_version: str = APP_VERSION,
+            use_mds: bool = False
     ) -> 'GsSession':
         """ Return an instance of the appropriate session type for the given credentials"""
 
@@ -335,7 +338,7 @@ class GsSession(ContextBase):
             scopes = tuple(set(itertools.chain(scopes, cls.Scopes.get_default())))
 
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
-                                 application=application, http_adapter=http_adapter)
+                                 application=application, http_adapter=http_adapter, use_mds=use_mds)
         elif token:
             if is_gssso:
                 try:
@@ -360,14 +363,14 @@ class GsSession(ContextBase):
 class OAuth2Session(GsSession):
 
     def __init__(self, environment, client_id, client_secret, scopes, api_version=API_VERSION,
-                 application=DEFAULT_APPLICATION, http_adapter=None):
+                 application=DEFAULT_APPLICATION, http_adapter=None, use_mds=False):
 
         if environment not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
             env_config = self._config_for_environment(Environment.DEV.name)
             url = environment
         else:
             env_config = self._config_for_environment(environment)
-            url = env_config['AppDomain']
+            url = env_config['MdsDomain'] if use_mds else ['AppDomain']
 
         super().__init__(url, api_version=api_version, application=application, http_adapter=http_adapter)
         self.auth_url = env_config['AuthURL']
@@ -375,7 +378,7 @@ class OAuth2Session(GsSession):
         self.client_secret = client_secret
         self.scopes = scopes
 
-        if environment == Environment.DEV.name or url != env_config['AppDomain']:
+        if environment == Environment.DEV.name or (url != env_config['AppDomain'] and not use_mds):
             import urllib3
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             self.verify = False

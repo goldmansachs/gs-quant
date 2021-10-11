@@ -576,6 +576,10 @@ class Scenario(Base, ContextBase, metaclass=__ScenarioMeta):
     pass
 
 
+class RiskMeasureParameter(Base):
+    pass
+
+
 class InstrumentBase(Base):
 
     def __init__(self, quantity: Optional[float] = 1):
@@ -650,12 +654,19 @@ class QuotableBuilder(TypeMixin):
     def valuation_overrides(self, value: dict):
         self.__valuation_overrides = value
 
+    def as_dict(self, as_camel_case: bool = False):
+        ret = super().as_dict(as_camel_case)
+        if self.__valuation_overrides:
+            ret['overrides'] = copy.copy(self.__valuation_overrides)
+        return ret
+
     def to_json(self):
         ret = {'properties': TypeMixin.to_json(self)}
         ret['$type'] = ret['properties'].pop('$type')
 
+        # Per as_dict if there are valuation overrides they will have been put here
         if self.__valuation_overrides:
-            ret['valuationOverrides'] = self.__valuation_overrides
+            ret['valuationOverrides'] = ret['properties'].pop('overrides')
 
         return ret
 

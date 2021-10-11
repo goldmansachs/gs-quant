@@ -17,7 +17,7 @@ import copy
 from typing import Union, Iterable
 
 import pandas as pd
-from gs_quant.base import Market, EnumBase, Base
+from gs_quant.base import Market, EnumBase, RiskMeasureParameter
 from gs_quant.common import AssetClass, CurrencyParameter, FiniteDifferenceParameter, AggregationLevel, \
     StringParameter, ListOfStringParameter, ListOfNumberParameter, MapParameter
 from gs_quant.context_base import do_not_serialise
@@ -62,10 +62,10 @@ class __RelativeRiskMeasure(RiskMeasure):
 class ParameterisedRiskMeasure(RiskMeasure):
     def __init__(self, name: str = None, asset_class: Union[AssetClass, str] = None,
                  measure_type: Union[RiskMeasureType, str] = None, unit: Union[RiskMeasureUnit, str] = None,
-                 value: Union[float, str] = None, parameters: Base = None):
+                 value: Union[float, str] = None, parameters: RiskMeasureParameter = None):
         super().__init__(asset_class=asset_class, measure_type=measure_type, unit=unit, value=value, name=name)
         if parameters:
-            if getattr(parameters, "parameter_type", None):
+            if isinstance(parameters, RiskMeasureParameter):
                 self.parameters = parameters
             else:
                 raise TypeError(f"Unsupported parameter {parameters}")

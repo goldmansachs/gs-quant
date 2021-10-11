@@ -37,7 +37,7 @@ from gs_quant.datetime import business_day_offset
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError
 from gs_quant.markets.position_set import PositionSet
-from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report
+from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import GsSession
 from gs_quant.target.reports import ReportStatus, ReportType
@@ -470,6 +470,18 @@ class PositionedEntity(metaclass=ABCMeta):
                           'your parameters. Please specify the risk model ID and fxHedged value in the '
                           'function parameters.')
         return reports[0]
+
+    def get_thematic_report(self) -> List[ThematicReport]:
+        if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
+            position_source_type = self.positioned_entity_type.value.capitalize()
+            reports = GsReportApi.get_reports(limit=100,
+                                              position_source_type=position_source_type,
+                                              position_source_id=self.id,
+                                              report_type=f'{position_source_type} Thematic Analytics')
+            if len(reports) == 0:
+                raise MqError(f'This {position_source_type} has no thematic analytics report.')
+            return ThematicReport.from_target(reports[0])
+        raise NotImplementedError
 
     def poll_report(self, report_id: str, timeout: int = 600, step: int = 30) -> ReportStatus:
         poll = True

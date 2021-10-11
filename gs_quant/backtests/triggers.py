@@ -19,6 +19,7 @@ from typing import Optional
 from gs_quant.backtests.actions import Action, AddTradeAction, AddTradeActionInfo
 from gs_quant.backtests.backtest_objects import BackTest, PredefinedAssetBacktest
 from gs_quant.backtests.backtest_utils import make_list, CalcType
+from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.backtests.data_sources import *
 
 
@@ -175,9 +176,10 @@ class PeriodicTrigger(Trigger):
         if not self._trigger_dates:
             self._trigger_dates = self._trigger_requirements.dates if \
                 hasattr(self._trigger_requirements, 'dates') else \
-                pd.date_range(start=self._trigger_requirements.start_date,
-                              end=self._trigger_requirements.end_date,
-                              freq=self._trigger_requirements.frequency).date.tolist()
+                RelativeDateSchedule(self._trigger_requirements.frequency,
+                                     self._trigger_requirements.start_date,
+                                     self._trigger_requirements.end_date).apply_rule(
+                    holiday_calendar=self.trigger_requirements.calendar)
         return self._trigger_dates
 
     def get_trigger_times(self) -> [dt.datetime]:

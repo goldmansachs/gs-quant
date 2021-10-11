@@ -102,7 +102,8 @@ class GenericDataSource(DataSource):
                 self._data_set = self._data_set.ffill()
             else:
                 raise RuntimeError(f'unrecognised missing data strategy: {str(self._missing_data_strategy)}')
-            return self._data_set[state]
+            return self._data_set[pd.to_datetime(state)] if isinstance(self._data_set.index,
+                                                                       pd.DatetimeIndex) else self._data_set[state]
 
     def get_data_range(self, start: Union[datetime.date, datetime.datetime],
                        end: Union[datetime.date, datetime.datetime, int]):
