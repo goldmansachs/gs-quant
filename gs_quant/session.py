@@ -370,7 +370,7 @@ class OAuth2Session(GsSession):
             url = environment
         else:
             env_config = self._config_for_environment(environment)
-            url = env_config['MdsDomain'] if use_mds else ['AppDomain']
+            url = env_config['MdsDomain'] if use_mds else env_config['AppDomain']
 
         super().__init__(url, api_version=api_version, application=application, http_adapter=http_adapter)
         self.auth_url = env_config['AuthURL']
