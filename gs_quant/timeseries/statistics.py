@@ -919,13 +919,13 @@ class LinearRegression:
     Fit an Ordinary least squares (OLS) linear regression model.
 
     :param X: observations of the explanatory variable(s)
-    :param y: observations of the dependant variable
+    :param y: observations of the dependent variable
     :param fit_intercept: whether to calculate intercept in the model
 
     **Usage**
 
     Fit `OLS Model <https://en.wikipedia.org/wiki/Ordinary_least_squares>`_ based on observations of the explanatory
-    variables(s) X and the dependant variable y. If X and y are not aligned, only use the intersection of dates/times
+    variables(s) X and the dependent variable y. If X and y are not aligned, only use the intersection of dates/times.
 
     **Examples**
 
@@ -957,9 +957,9 @@ class LinearRegression:
     @plot_method
     def coefficient(self, i: int) -> float:
         """
-        Estimated coefficient
+        Estimated coefficient.
 
-        :param i: coefficient of which predictor to get. If intercept is used, start from 0, else start from 1
+        :param i: 0 for intercept (available if intercept is used), 1 for regression slope
         :return: estimated coefficient of the i-th predictor
         """
         return self._res.params[i]
@@ -976,7 +976,7 @@ class LinearRegression:
     @plot_method
     def fitted_values(self) -> pd.Series:
         """
-        Fitted values
+        Fitted values computed by evaluating the regression model on the original input X.
 
         :return: fitted values
         """
@@ -985,7 +985,7 @@ class LinearRegression:
     @plot_method
     def predict(self, X_predict: Union[pd.Series, List[pd.Series]]) -> pd.Series:
         """
-        Use the model for prediction
+        Use the model for prediction.
 
         :param X_predict: the values for which to predict
         :return: predicted values
@@ -996,7 +996,7 @@ class LinearRegression:
     @plot_method
     def standard_deviation_of_errors(self) -> float:
         """
-        Standard deviation of the error term
+        Standard deviation of the error term.
 
         :return: standard deviation of the error term
         """
@@ -1018,7 +1018,7 @@ class RollingLinearRegression:
     Fit `OLS Model <https://en.wikipedia.org/wiki/Ordinary_least_squares>`_ based on observations of the explanatory
     variables(s) X and the dependant variable y across a rolling window with fixed number of observations.
     The parameters of each rolling window are stored at the end of each window.
-    If X and y are not aligned, only use the intersection of dates/times
+    If X and y are not aligned, only use the intersection of dates/times.
 
     **Examples**
 
@@ -1052,9 +1052,9 @@ class RollingLinearRegression:
     @plot_method
     def coefficient(self, i: int) -> pd.Series:
         """
-        Estimated coefficients
+        Estimated coefficients.
 
-        :param i: coefficients of which predictor to get. If intercept is used, start from 0, else start from 1
+        :param i: 0 for intercept (available if intercept is used), 1 for regression slope.
         :return: estimated coefficients of the i-th predictor
         """
         return self._res.params[i]
@@ -1062,7 +1062,7 @@ class RollingLinearRegression:
     @plot_method
     def r_squared(self) -> pd.Series:
         """
-        Coefficients of determination (R Squared) of rolling regressions
+        Coefficients of determination (R Squared) of rolling regressions.
 
         :return: R Squared
         """
@@ -1071,7 +1071,7 @@ class RollingLinearRegression:
     @plot_method
     def fitted_values(self) -> pd.Series:
         """
-        Fitted values at the end of each rolling window
+        Fitted values at the end of each rolling window.
 
         :return: fitted values
         """
@@ -1081,7 +1081,7 @@ class RollingLinearRegression:
     @plot_method
     def standard_deviation_of_errors(self) -> pd.Series:
         """
-        Standard deviations of the error terms
+        Standard deviations of the error terms.
 
         :return: standard deviations of the error terms
         """

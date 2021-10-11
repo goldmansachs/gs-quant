@@ -57,6 +57,67 @@ class AssetScreenerRequestStringOptions(Base):
         self.__options = value        
 
 
+class AssetScreenerCarbonRequestFilter(Base):
+        
+    """Carbon emissions filters on asset screener."""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        science_based_target: AssetScreenerRequestStringOptions = None,
+        net_zero_emissions_target: AssetScreenerRequestStringOptions = None,
+        emissions_intensity_enterprise_value: AssetScreenerRequestFilterLimits = None,
+        emissions_intensity_revenue: AssetScreenerRequestFilterLimits = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.science_based_target = science_based_target
+        self.net_zero_emissions_target = net_zero_emissions_target
+        self.emissions_intensity_enterprise_value = emissions_intensity_enterprise_value
+        self.emissions_intensity_revenue = emissions_intensity_revenue
+        self.name = name
+
+    @property
+    def science_based_target(self) -> AssetScreenerRequestStringOptions:
+        """Science Based Target initiative set for a Company or not."""
+        return self.__science_based_target
+
+    @science_based_target.setter
+    def science_based_target(self, value: AssetScreenerRequestStringOptions):
+        self._property_changed('science_based_target')
+        self.__science_based_target = value        
+
+    @property
+    def net_zero_emissions_target(self) -> AssetScreenerRequestStringOptions:
+        """Net Zero Emissions Target set for a Company or not."""
+        return self.__net_zero_emissions_target
+
+    @net_zero_emissions_target.setter
+    def net_zero_emissions_target(self, value: AssetScreenerRequestStringOptions):
+        self._property_changed('net_zero_emissions_target')
+        self.__net_zero_emissions_target = value        
+
+    @property
+    def emissions_intensity_enterprise_value(self) -> AssetScreenerRequestFilterLimits:
+        """Emissions Intensity Enterprise Value for Total GHG emissions"""
+        return self.__emissions_intensity_enterprise_value
+
+    @emissions_intensity_enterprise_value.setter
+    def emissions_intensity_enterprise_value(self, value: AssetScreenerRequestFilterLimits):
+        self._property_changed('emissions_intensity_enterprise_value')
+        self.__emissions_intensity_enterprise_value = value        
+
+    @property
+    def emissions_intensity_revenue(self) -> AssetScreenerRequestFilterLimits:
+        """Emissions Intensity Revenue Value for Total GHG emissions"""
+        return self.__emissions_intensity_revenue
+
+    @emissions_intensity_revenue.setter
+    def emissions_intensity_revenue(self, value: AssetScreenerRequestFilterLimits):
+        self._property_changed('emissions_intensity_revenue')
+        self.__emissions_intensity_revenue = value        
+
+
 class AssetScreenerCreditRequestFilters(Base):
         
     """Filters for credit asset screener request object."""
@@ -70,6 +131,7 @@ class AssetScreenerCreditRequestFilters(Base):
         gs_charge_bps: AssetScreenerRequestFilterLimits = None,
         gs_charge_dollars: AssetScreenerRequestFilterLimits = None,
         duration: AssetScreenerRequestFilterLimits = None,
+        carbon_data: AssetScreenerCarbonRequestFilter = None,
         issue_date: AssetScreenerRequestFilterDateLimits = None,
         yield_: AssetScreenerRequestFilterLimits = None,
         spread: AssetScreenerRequestFilterLimits = None,
@@ -92,6 +154,7 @@ class AssetScreenerCreditRequestFilters(Base):
         self.gs_charge_bps = gs_charge_bps
         self.gs_charge_dollars = gs_charge_dollars
         self.duration = duration
+        self.carbon_data = carbon_data
         self.issue_date = issue_date
         self.__yield = yield_
         self.spread = spread
@@ -166,6 +229,16 @@ class AssetScreenerCreditRequestFilters(Base):
     def duration(self, value: AssetScreenerRequestFilterLimits):
         self._property_changed('duration')
         self.__duration = value        
+
+    @property
+    def carbon_data(self) -> AssetScreenerCarbonRequestFilter:
+        """Carbon emissions data for individual bonds."""
+        return self.__carbon_data
+
+    @carbon_data.setter
+    def carbon_data(self, value: AssetScreenerCarbonRequestFilter):
+        self._property_changed('carbon_data')
+        self.__carbon_data = value        
 
     @property
     def issue_date(self) -> AssetScreenerRequestFilterDateLimits:
@@ -330,6 +403,10 @@ class AssetScreenerCreditResponseItem(Base):
         z_spread: float = None,
         charge_in_dollars: str = None,
         charge_in_bps: str = None,
+        science_based_target: str = None,
+        net_zero_emissions_target: str = None,
+        emissions_intensity_enterprise_value: float = None,
+        emissions_intensity_revenue: float = None,
         direction: str = None,
         face_value: float = None
     ):        
@@ -356,6 +433,10 @@ class AssetScreenerCreditResponseItem(Base):
         self.z_spread = z_spread
         self.charge_in_dollars = charge_in_dollars
         self.charge_in_bps = charge_in_bps
+        self.science_based_target = science_based_target
+        self.net_zero_emissions_target = net_zero_emissions_target
+        self.emissions_intensity_enterprise_value = emissions_intensity_enterprise_value
+        self.emissions_intensity_revenue = emissions_intensity_revenue
         self.direction = direction
         self.face_value = face_value
 
@@ -581,6 +662,46 @@ class AssetScreenerCreditResponseItem(Base):
         self.__charge_in_bps = value        
 
     @property
+    def science_based_target(self) -> str:
+        """Science Based Target initiative set for a Company or not."""
+        return self.__science_based_target
+
+    @science_based_target.setter
+    def science_based_target(self, value: str):
+        self._property_changed('science_based_target')
+        self.__science_based_target = value        
+
+    @property
+    def net_zero_emissions_target(self) -> str:
+        """Net Zero Emissions Target set for a Company or not."""
+        return self.__net_zero_emissions_target
+
+    @net_zero_emissions_target.setter
+    def net_zero_emissions_target(self, value: str):
+        self._property_changed('net_zero_emissions_target')
+        self.__net_zero_emissions_target = value        
+
+    @property
+    def emissions_intensity_enterprise_value(self) -> float:
+        """Emissions Intensity Enterprise Value for Total GHG emissions"""
+        return self.__emissions_intensity_enterprise_value
+
+    @emissions_intensity_enterprise_value.setter
+    def emissions_intensity_enterprise_value(self, value: float):
+        self._property_changed('emissions_intensity_enterprise_value')
+        self.__emissions_intensity_enterprise_value = value        
+
+    @property
+    def emissions_intensity_revenue(self) -> float:
+        """Emissions Intensity Revenue Value for Total GHG emissions"""
+        return self.__emissions_intensity_revenue
+
+    @emissions_intensity_revenue.setter
+    def emissions_intensity_revenue(self, value: float):
+        self._property_changed('emissions_intensity_revenue')
+        self.__emissions_intensity_revenue = value        
+
+    @property
     def direction(self) -> str:
         """Whether the position is a buy or sell."""
         return self.__direction
@@ -599,6 +720,53 @@ class AssetScreenerCreditResponseItem(Base):
     def face_value(self, value: float):
         self._property_changed('face_value')
         self.__face_value = value        
+
+
+class AssetScreenerCreditResponse(Base):
+        
+    @camel_case_translate
+    def __init__(
+        self,
+        total_results: int,
+        results: Tuple[AssetScreenerCreditResponseItem, ...] = None,
+        scroll_id: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.total_results = total_results
+        self.results = results
+        self.scroll_id = scroll_id
+        self.name = name
+
+    @property
+    def total_results(self) -> int:
+        """Total number of results that match the query."""
+        return self.__total_results
+
+    @total_results.setter
+    def total_results(self, value: int):
+        self._property_changed('total_results')
+        self.__total_results = value        
+
+    @property
+    def results(self) -> Tuple[AssetScreenerCreditResponseItem, ...]:
+        """Array of Asset Screener Credit Response Item objects"""
+        return self.__results
+
+    @results.setter
+    def results(self, value: Tuple[AssetScreenerCreditResponseItem, ...]):
+        self._property_changed('results')
+        self.__results = value        
+
+    @property
+    def scroll_id(self) -> str:
+        """Scroll identifier to be used to retrieve the next batch of results"""
+        return self.__scroll_id
+
+    @scroll_id.setter
+    def scroll_id(self, value: str):
+        self._property_changed('scroll_id')
+        self.__scroll_id = value        
 
 
 class AssetScreenerRequest(Base):
@@ -703,50 +871,3 @@ class AssetScreenerRequest(Base):
     def filters(self, value: AssetScreenerCreditRequestFilters):
         self._property_changed('filters')
         self.__filters = value        
-
-
-class AssetScreenerCreditResponse(Base):
-        
-    @camel_case_translate
-    def __init__(
-        self,
-        total_results: int,
-        results: Tuple[AssetScreenerCreditResponseItem, ...] = None,
-        scroll_id: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.total_results = total_results
-        self.results = results
-        self.scroll_id = scroll_id
-        self.name = name
-
-    @property
-    def total_results(self) -> int:
-        """Total number of results that match the query."""
-        return self.__total_results
-
-    @total_results.setter
-    def total_results(self, value: int):
-        self._property_changed('total_results')
-        self.__total_results = value        
-
-    @property
-    def results(self) -> Tuple[AssetScreenerCreditResponseItem, ...]:
-        """Array of Asset Screener Credit Response Item objects"""
-        return self.__results
-
-    @results.setter
-    def results(self, value: Tuple[AssetScreenerCreditResponseItem, ...]):
-        self._property_changed('results')
-        self.__results = value        
-
-    @property
-    def scroll_id(self) -> str:
-        """Scroll identifier to be used to retrieve the next batch of results"""
-        return self.__scroll_id
-
-    @scroll_id.setter
-    def scroll_id(self, value: str):
-        self._property_changed('scroll_id')
-        self.__scroll_id = value        

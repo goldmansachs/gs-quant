@@ -343,9 +343,17 @@ class Basket:
         spot_df = self.get_spot_data(request_id=request_id)
         actual_weights = self.get_actual_weights(request_id=request_id)
 
+        # Add in today's data
+        if not real_time and DataContext.current.end_date >= datetime.date.today():
+            recent_spot = ts.get_last_for_measure(self.get_marquee_ids(), QueryType.SPOT, {}, request_id=request_id)
+            recent_spot.index.rename('date', inplace=True)
+            spot_df = spot_df.append(recent_spot.pivot_table('spot', ['date'], 'assetId'))
+
         vols = [volatility(spot_df[asset_id], Window(tenor, tenor), returns_type) for asset_id in spot_df]
         vols = pd.concat(vols, axis=1)
         vols.columns = list(spot_df)
+        # Necessary when current values appended - set weights index to match vols index
+        actual_weights = actual_weights.reindex(vols.index).fillna(method='pad')
 
         return actual_weights.mul(vols, axis=1).sum(axis=1, skipna=False)
 

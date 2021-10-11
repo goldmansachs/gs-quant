@@ -16,8 +16,7 @@ under the License.
 
 import datetime as dt
 from enum import Enum
-from dateutil.relativedelta import relativedelta
-from gs_quant.datetime.date import business_day_offset
+from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.instrument import Instrument
 
 
@@ -41,22 +40,27 @@ def make_list(thing):
             return list(thing)
 
 
-def get_final_date(inst, create_date, duration):
+final_date_cache = {}
+
+
+def get_final_date(inst, create_date, duration, holiday_calendar=[]):
+    global final_date_cache
+    cache_key = (inst, create_date, duration, holiday_calendar)
+    if cache_key in final_date_cache:
+        return final_date_cache[cache_key]
+
     if duration is None:
+        final_date_cache[cache_key] = dt.date.max
         return dt.date.max
     if isinstance(duration, (dt.datetime, dt.date)):
+        final_date_cache[cache_key] = duration
         return duration
     if hasattr(inst, str(duration)):
+        final_date_cache[cache_key] = getattr(inst, str(duration))
         return getattr(inst, str(duration))
-    if duration[-1].lower() in ['d', 'b']:
-        return business_day_offset(create_date, int(duration[:-1]))
-    if duration[-1].lower() == 'w':
-        return business_day_offset(create_date + relativedelta(weeks=int(duration[:-1])), 0, roll='forward')
-    if duration[-1].lower() == 'm':
-        return business_day_offset(create_date + relativedelta(months=int(duration[:-1])), 0, roll='forward')
-    if duration[-1].lower() == 'y':
-        return business_day_offset(create_date + relativedelta(years=int(duration[:-1])), 0, roll='forward')
-    raise RuntimeError(f'Unable to get final date for {duration}')
+
+    final_date_cache[cache_key] = RelativeDate(duration, create_date).apply_rule(holiday_calendar=holiday_calendar)
+    return final_date_cache[cache_key]
 
 
 def scale_trade(inst, ratio):

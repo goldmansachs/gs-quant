@@ -72,7 +72,7 @@ setuptools.setup(
         "scipy>=1.2.0,<=1.6.0;python_version<'3.7'",
         "scipy>=1.2.0;python_version>'3.6'",
         "six",
-        "statsmodels>=0.11.1",
+        "statsmodels>=0.11.1,<0.13.0",
         "typing;python_version<'3.7'",
         "websockets",
         "pydash",
@@ -81,7 +81,7 @@ setuptools.setup(
         "deprecation"
     ],
     extras_require={
-        "internal": ["gs_quant_internal>=1.1.30", "requests_kerberos"],
+        "internal": ["gs_quant_internal<=1.1.43", "requests_kerberos"],
         "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib~=3.1.0", "seaborn", "treelib"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],

@@ -68,111 +68,75 @@ class UpdateGroupMembershipRequest(Base):
         self.__user_ids = value        
 
 
-class UserTag(Base):
+class UserCoverage(Base):
         
-    """Marquee User Tag Attribute"""
+    """Sales coverage for user"""
 
     @camel_case_translate
     def __init__(
         self,
         name: str,
-        added_on: datetime.datetime = None,
-        added_by_id: str = None,
-        removed: bool = None,
-        removed_on: datetime.datetime = None,
-        removed_by_id: str = None,
-        removal_reason: str = None,
-        category: str = None
+        email: str,
+        app: str = None,
+        phone: str = None,
+        guid: str = None
     ):        
         super().__init__()
-        self.added_on = added_on
-        self.added_by_id = added_by_id
-        self.removed = removed
-        self.removed_on = removed_on
-        self.removed_by_id = removed_by_id
-        self.removal_reason = removal_reason
-        self.category = category
+        self.app = app
+        self.phone = phone
         self.name = name
+        self.email = email
+        self.guid = guid
 
     @property
-    def added_on(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__added_on
+    def app(self) -> str:
+        """Marquee application covered by sales person"""
+        return self.__app
 
-    @added_on.setter
-    def added_on(self, value: datetime.datetime):
-        self._property_changed('added_on')
-        self.__added_on = value        
-
-    @property
-    def added_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__added_by_id
-
-    @added_by_id.setter
-    def added_by_id(self, value: str):
-        self._property_changed('added_by_id')
-        self.__added_by_id = value        
+    @app.setter
+    def app(self, value: str):
+        self._property_changed('app')
+        self.__app = value        
 
     @property
-    def removed(self) -> bool:
-        """Flag to indicate if tag has been removed"""
-        return self.__removed
+    def phone(self) -> str:
+        """Coverage phone number"""
+        return self.__phone
 
-    @removed.setter
-    def removed(self, value: bool):
-        self._property_changed('removed')
-        self.__removed = value        
-
-    @property
-    def removed_on(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__removed_on
-
-    @removed_on.setter
-    def removed_on(self, value: datetime.datetime):
-        self._property_changed('removed_on')
-        self.__removed_on = value        
-
-    @property
-    def removed_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__removed_by_id
-
-    @removed_by_id.setter
-    def removed_by_id(self, value: str):
-        self._property_changed('removed_by_id')
-        self.__removed_by_id = value        
-
-    @property
-    def removal_reason(self) -> str:
-        """Reason tag was removed"""
-        return self.__removal_reason
-
-    @removal_reason.setter
-    def removal_reason(self, value: str):
-        self._property_changed('removal_reason')
-        self.__removal_reason = value        
-
-    @property
-    def category(self) -> str:
-        """Category of the tag"""
-        return self.__category
-
-    @category.setter
-    def category(self, value: str):
-        self._property_changed('category')
-        self.__category = value        
+    @phone.setter
+    def phone(self, value: str):
+        self._property_changed('phone')
+        self.__phone = value        
 
     @property
     def name(self) -> str:
-        """Name of the tag"""
+        """Coverage name"""
         return self.__name
 
     @name.setter
     def name(self, value: str):
         self._property_changed('name')
         self.__name = value        
+
+    @property
+    def email(self) -> str:
+        """Coverage email"""
+        return self.__email
+
+    @email.setter
+    def email(self, value: str):
+        self._property_changed('email')
+        self.__email = value        
+
+    @property
+    def guid(self) -> str:
+        """Coverage guid"""
+        return self.__guid
+
+    @guid.setter
+    def guid(self, value: str):
+        self._property_changed('guid')
+        self.__guid = value        
 
 
 class GroupResponse(Base):

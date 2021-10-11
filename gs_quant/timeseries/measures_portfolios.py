@@ -71,5 +71,7 @@ def aum(portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None,
     :param request_id: server request id
     :return: portfolio aum values
     """
-    return _extract_series_from_df(pd.DataFrame(
-        GsPortfolioApi.get_custom_aum(portfolio_id, start_date, end_date)), QueryType.AUM, True)
+    data = GsPortfolioApi.get_custom_aum(portfolio_id, start_date, end_date)
+    df = pd.DataFrame.from_records(data)
+    df.set_index(pd.DatetimeIndex(df['date']), inplace=True)
+    return _extract_series_from_df(df, QueryType.AUM, True)

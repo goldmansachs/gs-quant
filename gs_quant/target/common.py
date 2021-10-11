@@ -18,7 +18,7 @@ import deprecation
 import datetime
 from typing import Mapping, Tuple, Union, Optional
 from enum import Enum
-from gs_quant.base import Base, EnumBase, InstrumentBase, Priceable, Scenario, camel_case_translate, get_enum_value
+from gs_quant.base import Base, EnumBase, InstrumentBase, Priceable, RiskMeasureParameter, Scenario, camel_case_translate, get_enum_value
 
 
 class AggregationLevel(EnumBase, Enum):    
@@ -178,6 +178,8 @@ class AssetType(EnumBase, Enum):
     Swaption = 'Swaption'
     Synthetic = 'Synthetic'
     Systematic_Hedging = 'Systematic Hedging'
+    Tarf = 'Tarf'
+    TarfScheduleLeg = 'TarfScheduleLeg'
     VarianceSwap = 'VarianceSwap'
     VolatilitySwap = 'VolatilitySwap'
     VolVarSwap = 'VolVarSwap'
@@ -3585,6 +3587,14 @@ class LiquidityMeasure(EnumBase, Enum):
     Time_Series_Data = 'Time Series Data'    
 
 
+class LongShort(EnumBase, Enum):    
+    
+    """Client long or short on tarf"""
+
+    Long = 'Long'
+    Short = 'Short'    
+
+
 class MarketDataShockType(EnumBase, Enum):    
     
     """Market data shock type"""
@@ -3647,6 +3657,14 @@ class MarketDataVendor(EnumBase, Enum):
     Bank_of_Japan = 'Bank of Japan'    
 
 
+class NewOrUnwind(EnumBase, Enum):    
+    
+    """New or unwnd of product"""
+
+    New = 'New'
+    Unwind = 'Unwind'    
+
+
 class OptionExpiryType(EnumBase, Enum):    
     
     _1m = '1m'
@@ -3662,7 +3680,10 @@ class OptionSettlementMethod(EnumBase, Enum):
     """How the option is settled (e.g. Cash, Physical)"""
 
     Cash = 'Cash'
-    Physical = 'Physical'    
+    Physical = 'Physical'
+    ElectDfltCash = 'ElectDfltCash'
+    ElectDfltPhys = 'ElectDfltPhys'
+    NetShares = 'NetShares'    
 
 
 class OptionStrikeType(EnumBase, Enum):    
@@ -4096,6 +4117,15 @@ class SwapSettlement(EnumBase, Enum):
     Cash_PYU = 'Cash.PYU'    
 
 
+class TargetType(EnumBase, Enum):    
+    
+    """Target type for accural redemption forward"""
+
+    Big_Figures = 'Big Figures'
+    Amount = 'Amount'
+    Num_Of_ITM_Fixes = 'Num Of ITM Fixes'    
+
+
 class TouchNoTouch(EnumBase, Enum):    
     
     """Indicates Touch or NoTouch"""
@@ -4518,7 +4548,7 @@ class CSLSymCaseNamedParam(Base):
         self.__name = value        
 
 
-class CurrencyParameter(Base):
+class CurrencyParameter(RiskMeasureParameter):
         
     """Extra parameters for Currency"""
 
@@ -4905,7 +4935,7 @@ class LiquidityReportParameters(Base):
         self.__trading_desk = value        
 
 
-class ListOfNumberParameter(Base):
+class ListOfNumberParameter(RiskMeasureParameter):
         
     """Extra parameters for List of Number"""
 
@@ -4934,7 +4964,7 @@ class ListOfNumberParameter(Base):
         self.__values = value        
 
 
-class ListOfStringParameter(Base):
+class ListOfStringParameter(RiskMeasureParameter):
         
     """Extra parameters for List of Strings"""
 
@@ -4963,7 +4993,7 @@ class ListOfStringParameter(Base):
         self.__values = value        
 
 
-class MapParameter(Base):
+class MapParameter(RiskMeasureParameter):
         
     """Extra parameters for Map of String type"""
 
@@ -6041,7 +6071,7 @@ class SocialDomain(Base):
         self.__auto_approve_connections = value        
 
 
-class StringParameter(Base):
+class StringParameter(RiskMeasureParameter):
         
     """Extra parameters for String"""
 
@@ -6122,75 +6152,111 @@ class TimeFilter(Base):
         self.__time_zone = value        
 
 
-class UserCoverage(Base):
+class UserTag(Base):
         
-    """Sales coverage for user"""
+    """Marquee User Tag Attribute"""
 
     @camel_case_translate
     def __init__(
         self,
         name: str,
-        email: str,
-        app: str = None,
-        phone: str = None,
-        guid: str = None
+        added_on: datetime.datetime = None,
+        added_by_id: str = None,
+        removed: bool = None,
+        removed_on: datetime.datetime = None,
+        removed_by_id: str = None,
+        removal_reason: str = None,
+        category: str = None
     ):        
         super().__init__()
-        self.app = app
-        self.phone = phone
+        self.added_on = added_on
+        self.added_by_id = added_by_id
+        self.removed = removed
+        self.removed_on = removed_on
+        self.removed_by_id = removed_by_id
+        self.removal_reason = removal_reason
+        self.category = category
         self.name = name
-        self.email = email
-        self.guid = guid
 
     @property
-    def app(self) -> str:
-        """Marquee application covered by sales person"""
-        return self.__app
+    def added_on(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__added_on
 
-    @app.setter
-    def app(self, value: str):
-        self._property_changed('app')
-        self.__app = value        
+    @added_on.setter
+    def added_on(self, value: datetime.datetime):
+        self._property_changed('added_on')
+        self.__added_on = value        
 
     @property
-    def phone(self) -> str:
-        """Coverage phone number"""
-        return self.__phone
+    def added_by_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__added_by_id
 
-    @phone.setter
-    def phone(self, value: str):
-        self._property_changed('phone')
-        self.__phone = value        
+    @added_by_id.setter
+    def added_by_id(self, value: str):
+        self._property_changed('added_by_id')
+        self.__added_by_id = value        
+
+    @property
+    def removed(self) -> bool:
+        """Flag to indicate if tag has been removed"""
+        return self.__removed
+
+    @removed.setter
+    def removed(self, value: bool):
+        self._property_changed('removed')
+        self.__removed = value        
+
+    @property
+    def removed_on(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__removed_on
+
+    @removed_on.setter
+    def removed_on(self, value: datetime.datetime):
+        self._property_changed('removed_on')
+        self.__removed_on = value        
+
+    @property
+    def removed_by_id(self) -> str:
+        """Marquee unique identifier"""
+        return self.__removed_by_id
+
+    @removed_by_id.setter
+    def removed_by_id(self, value: str):
+        self._property_changed('removed_by_id')
+        self.__removed_by_id = value        
+
+    @property
+    def removal_reason(self) -> str:
+        """Reason tag was removed"""
+        return self.__removal_reason
+
+    @removal_reason.setter
+    def removal_reason(self, value: str):
+        self._property_changed('removal_reason')
+        self.__removal_reason = value        
+
+    @property
+    def category(self) -> str:
+        """Category of the tag"""
+        return self.__category
+
+    @category.setter
+    def category(self, value: str):
+        self._property_changed('category')
+        self.__category = value        
 
     @property
     def name(self) -> str:
-        """Coverage name"""
+        """Name of the tag"""
         return self.__name
 
     @name.setter
     def name(self, value: str):
         self._property_changed('name')
         self.__name = value        
-
-    @property
-    def email(self) -> str:
-        """Coverage email"""
-        return self.__email
-
-    @email.setter
-    def email(self, value: str):
-        self._property_changed('email')
-        self.__email = value        
-
-    @property
-    def guid(self) -> str:
-        """Coverage guid"""
-        return self.__guid
-
-    @guid.setter
-    def guid(self, value: str):
-        self._property_changed('guid')
-        self.__guid = value        
 
 
 class WeightedPosition(Base):
@@ -8754,7 +8820,7 @@ class FieldValueMap(Base):
         self.name = name
 
 
-class FiniteDifferenceParameter(Base):
+class FiniteDifferenceParameter(RiskMeasureParameter):
         
     """Extra parameters for griffin reports"""
 
@@ -15266,7 +15332,7 @@ class RiskMeasure(Base):
         asset_class: Union[AssetClass, str] = None,
         measure_type: Union[RiskMeasureType, str] = None,
         unit: Union[RiskMeasureUnit, str] = None,
-        parameters: Union[CurrencyParameter, FiniteDifferenceParameter, ListOfNumberParameter, ListOfStringParameter, MapParameter, StringParameter] = None,
+        parameters: RiskMeasureParameter = None,
         value: Union[float, str] = None,
         name: str = None
     ):        
@@ -15311,12 +15377,12 @@ class RiskMeasure(Base):
         self.__unit = get_enum_value(RiskMeasureUnit, value)        
 
     @property
-    def parameters(self) -> Union[CurrencyParameter, FiniteDifferenceParameter, ListOfNumberParameter, ListOfStringParameter, MapParameter, StringParameter]:
+    def parameters(self) -> RiskMeasureParameter:
         """Extra Params for Parameterised Risk Measures"""
         return self.__parameters
 
     @parameters.setter
-    def parameters(self, value: Union[CurrencyParameter, FiniteDifferenceParameter, ListOfNumberParameter, ListOfStringParameter, MapParameter, StringParameter]):
+    def parameters(self, value: RiskMeasureParameter):
         self._property_changed('parameters')
         self.__parameters = value        
 

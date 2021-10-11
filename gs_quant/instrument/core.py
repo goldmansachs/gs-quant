@@ -215,6 +215,8 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                     values = values['builder']
                 elif 'defn' in values:
                     values = values['defn']
+                elif 'overrides' in values:
+                    valuation_overrides = values.pop('overrides')
 
                 if 'properties' in values:
                     values.update(values.pop('properties'))

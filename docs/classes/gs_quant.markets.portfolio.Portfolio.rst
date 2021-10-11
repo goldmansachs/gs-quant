@@ -31,6 +31,7 @@
       ~Portfolio.from_portfolio_id
       ~Portfolio.from_portfolio_name
       ~Portfolio.from_quote
+      ~Portfolio.get
       ~Portfolio.market
       ~Portfolio.paths
       ~Portfolio.pop
@@ -41,6 +42,7 @@
       ~Portfolio.resolve
       ~Portfolio.save
       ~Portfolio.save_as_quote
+      ~Portfolio.save_to_shadowbook
       ~Portfolio.scale
       ~Portfolio.subset
       ~Portfolio.to_csv

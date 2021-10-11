@@ -41,7 +41,8 @@ from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError, MqTypeError
 from gs_quant.markets.index import Index
 from gs_quant.markets.securities import AssetClass, Cross, Currency, SecurityMaster, Stock, \
-    Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub, AssetIdentifier, CommodityPowerAggregatedNodes, FutureMarket
+    Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub, AssetIdentifier, CommodityPowerAggregatedNodes, \
+    FutureMarket, DefaultSwap
 from gs_quant.session import GsSession, Environment, OAuth2Session
 from gs_quant.target.common import XRef, PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
@@ -49,6 +50,7 @@ from gs_quant.timeseries import Returns, ExtendedSeries
 from gs_quant.timeseries.measures import BenchmarkType
 
 _index = [pd.Timestamp('2019-01-01')]
+_index2 = [pd.Timestamp('2019-08-02')]
 _test_datasets = ('TEST_DATASET',)
 _test_datasets2 = ('TEST_DATASET2',)
 _test_datasets_rt = ('TEST_DATASET_RT',)
@@ -1247,6 +1249,16 @@ def mock_commodity_forecast(_cls, _q):
     return df
 
 
+def mock_cds_spread(_cls, _q):
+    d = {
+        "spreadAt100": [0.000836],
+        "spreadAt250": [0.000436],
+        "spreadAt500": [0.00036],
+    }
+    df = MarketDataResponseFrame(d, index=_index2)
+    return df
+
+
 def test_skew():
     replace = Replacer()
 
@@ -1700,6 +1712,23 @@ def test_implied_vol_credit():
         tm.implied_volatility_credit(..., '1m', tm.CdsVolReference.DELTA_PUT, 75, real_time=True)
     with pytest.raises(NotImplementedError):
         tm.implied_volatility_credit(..., '1m', "", 75)
+    replace.restore()
+
+
+def test_cds_spreads():
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_cds_spread)
+    cds_asset = DefaultSwap('MAD6V3NP8ZB7HZTY', 'Lockheed_C_PFA_2y_USD')
+    actual = tm.cds_spread(cds_asset, 100, "NYC")
+    assert_series_equal(pd.Series([0.000836], index=_index2, name='spreadAt100'), pd.Series(actual))
+    actual = tm.cds_spread(cds_asset, 250, "NYC")
+    assert_series_equal(pd.Series([0.000436], index=_index2, name='spreadAt250'), pd.Series(actual))
+    actual = tm.cds_spread(cds_asset, 500, "NYC")
+    assert_series_equal(pd.Series([0.00036], index=_index2, name='spreadAt500'), pd.Series(actual))
+    with pytest.raises(NotImplementedError):
+        tm.cds_spread(cds_asset, 200, "NYC")
+    with pytest.raises(NotImplementedError):
+        tm.cds_spread(cds_asset, 200, "NYC", real_time=True)
     replace.restore()
 
 
@@ -4192,14 +4221,21 @@ def test_realized_volatility():
 
     replace = Replacer()
     market_data = replace('gs_quant.timeseries.measures._market_data_timed', Mock())
-    return_value = MarketDataResponseFrame(random)
+    return_value = MarketDataResponseFrame(random[:-1])
     return_value.dataset_ids = _test_datasets
     market_data.return_value = return_value
+
+    current_market_data = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    return_value = MarketDataResponseFrame(random[-1:])
+    return_value.dataset_ids = _test_datasets
+    current_market_data.return_value = return_value
 
     expected = volatility(random, window, type_)
     actual = tm.realized_volatility(Cross('MA123', 'ABCXYZ'), window, type_)
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
+    market_data.assert_called_once()
+    current_market_data.assert_called_once()
     replace.restore()
 
 
