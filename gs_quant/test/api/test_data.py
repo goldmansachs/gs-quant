@@ -164,7 +164,8 @@ def test_coordinates_data(mocker):
                                                                            start_time=start,
                                                                            end_time=end,
                                                                            vendor=MarketDataVendor.Goldman_Sachs,
-                                                                           format="MessagePack")
+                                                                           format="MessagePack"),
+                                                    request_headers={'Accept': 'application/msgpack'}
                                                     )
 
 
@@ -206,7 +207,8 @@ def test_coordinate_data_series(mocker):
                                                                       start_time=start,
                                                                       end_time=end,
                                                                       vendor=MarketDataVendor.Goldman_Sachs,
-                                                                      format="MessagePack")
+                                                                      format="MessagePack"),
+                                               request_headers={'Accept': 'application/msgpack'}
                                                )
 
 

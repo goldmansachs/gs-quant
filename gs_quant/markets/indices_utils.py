@@ -18,12 +18,15 @@ import datetime as dt
 import pandas as pd
 
 from enum import Enum
+from functools import partial
 from pydash import get
-from typing import List, Optional, Union
+from time import sleep
+from typing import Dict, List, Optional, Union
 
 from gs_quant.api.gs.assets import AssetClass, GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.monitors import GsMonitorsApi
+from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import EnumBase
 from gs_quant.datetime.date import prev_business_date
 from gs_quant.session import GsSession
@@ -98,6 +101,7 @@ class CustomBasketStyles(EnumBase, Enum):
 class IndicesDatasets(EnumBase, Enum):
     """ Indices Datasets """
     BASKET_FUNDAMENTALS = 'BASKET_FUNDAMENTALS'
+    COMPOSITE_THEMATIC_BETAS = 'COMPOSITE_THEMATIC_BETAS'
     CORPORATE_ACTIONS = 'CA'
     GIRBASKETCONSTITUENTS = 'GIRBASKETCONSTITUENTS'
     GSBASKETCONSTITUENTS = 'GSBASKETCONSTITUENTS'
@@ -434,34 +438,58 @@ def get_flagships_constituents(fields: [str] = [],
     """
     start = start or prev_business_date()
     end = end or prev_business_date()
-    fields = list(set(fields).union(set(['id', 'name', 'ticker', 'region', 'type',
-                                         'styles', 'liveDate', 'assetClass'])))
-    query = dict(fields=fields, type=basket_type, asset_class=asset_class, is_pair_basket=[False], flagship=[True])
+    basket_fields = list(set(fields).union(set(['id', 'name', 'ticker', 'region', 'type', 'styles',
+                                                'liveDate', 'assetClass'])))
+    fields = list(set(fields).union(set(['id', 'name'])))
+    query = dict(fields=basket_fields, type=basket_type, asset_class=asset_class,
+                 is_pair_basket=[False], flagship=[True])
     if region is not None:
         query.update(region=region)
     if styles is not None:
         query.update(styles=styles)
-    basket_data = GsAssetApi.get_many_assets_data_scroll(**query, limit=2000, scroll='1m')
+
+    coverage_results = ThreadPoolManager.run_async([
+        partial(GsAssetApi.get_many_assets_data_scroll, **query, limit=2000, scroll='1m'),
+        partial(GsDataApi.get_coverage, dataset_id=IndicesDatasets.GSCB_FLAGSHIP.value, fields=['type', 'bbid'],
+                include_history=True)
+    ])
+    basket_data, coverage = coverage_results[0], coverage_results[1]
     basket_map = {get(basket, 'id'): basket for basket in basket_data}
-    coverage = GsDataApi.get_coverage(dataset_id=IndicesDatasets.GSCB_FLAGSHIP.value, fields=['type', 'bbid'],
-                                      include_history=True)
-    cbs, rbs = [], []
+
+    tasks, results = [], []
     for b in coverage:
-        _id = get(b, 'assetId')
-        _type = get(b, 'type')
-        if _id in list(basket_map.keys()):
-            start_date = dt.datetime.strptime(b['historyStartDate'], '%Y-%m-%d').date()
-            start_date = start_date if start < start_date else start
-            if _type == BasketType.CUSTOM_BASKET.value:
-                data = GsDataApi.query_data(query=DataQuery(where=dict(assetId=_id, fields=fields),
-                                            startDate=start_date, endDate=end),
-                                            dataset_id=IndicesDatasets.GSBASKETCONSTITUENTS.value)
-                basket_map[_id].update(constituents=data)
-                cbs.append(basket_map[_id])
-            elif _type == BasketType.RESEARCH_BASKET.value:
-                data = GsDataApi.query_data(query=DataQuery(where=dict(assetId=_id, fields=fields),
-                                            startDate=start_date, endDate=end),
-                                            dataset_id=IndicesDatasets.GIRBASKETCONSTITUENTS.value)
-                basket_map[_id].update(constituents=data)
-                rbs.append(basket_map[_id])
-    return pd.DataFrame(cbs + rbs)
+        tasks.append(partial(__get_constituents_data, basket=b, basket_map=basket_map, start=start,
+                             end=end, fields=fields))
+    tasks = [tasks[i * 50:(i + 1) * 50] for i in range((len(tasks) + 50 - 1) // 50)]
+    for task in tasks:
+        results += ThreadPoolManager.run_async(task)
+        sleep(1)
+
+    return pd.DataFrame([r for r in results if r is not None])
+
+
+def __get_constituents_data(basket: Dict, basket_map: Dict, start: dt.date,
+                            end: dt.date, fields: List[str]) -> List:
+    _id, _type = get(basket, 'assetId'), get(basket, 'type')
+    if _id not in list(basket_map.keys()):
+        return
+    start_date = dt.datetime.strptime(basket['historyStartDate'], '%Y-%m-%d').date()
+    start_date = start_date if start < start_date else start
+
+    dataset_id = IndicesDatasets.GSBASKETCONSTITUENTS.value if _type == BasketType.CUSTOM_BASKET.value\
+        else IndicesDatasets.GIRBASKETCONSTITUENTS.value
+    data = GsDataApi.query_data(query=DataQuery(where=dict(assetId=_id), startDate=start_date,
+                                                endDate=end), dataset_id=dataset_id)
+
+    asset_ids = list(set([d['underlyingAssetId'] for d in data]))
+    asset_data = GsAssetApi.get_many_assets_data_scroll(id=asset_ids, fields=fields,
+                                                        limit=2000, scroll='1m')
+    asset_data_map = {get(asset, 'id'): asset for asset in asset_data}
+
+    for d in data:
+        asset_id = get(d, 'underlyingAssetId', '')
+        asset_id_map = get(asset_data_map, asset_id, {})
+        for f in fields:
+            d[f] = get(asset_id_map, f)
+    basket_map[_id].update(constituents=data)
+    return basket_map[_id]

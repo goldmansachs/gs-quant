@@ -39,6 +39,7 @@ from gs_quant.data.core import DataContext
 from gs_quant.data.dataset import Dataset
 from gs_quant.data.fields import Fields
 from gs_quant.errors import MqError, MqValueError, MqTypeError
+from gs_quant.markets.baskets import Basket as CustomBasket
 from gs_quant.markets.index import Index
 from gs_quant.markets.securities import AssetClass, Cross, Currency, SecurityMaster, Stock, \
     Swap, CommodityNaturalGasHub, CommodityEUNaturalGasHub, AssetIdentifier, CommodityPowerAggregatedNodes, \
@@ -4810,6 +4811,34 @@ def test_hloc_prices():
     empty_df.return_value = pd.DataFrame()
     with DataContext(datetime.date(2021, 6, 2), datetime.date(2021, 6, 2)):
         tm.hloc_prices(mock_spx, real_time=False)
+
+    replace.restore()
+
+
+def test_thematic_exposure():
+    mock_asset = GsAsset(asset_class='Equity', id='MA1234567890', type_='Custom Basket', name='test')
+    mock_basket = CustomBasket(gs_asset=mock_asset, _finish_init=False)
+
+    replace = Replacer()
+
+    empty_df = replace('gs_quant.timeseries.measures.Asset.get_thematic_exposure', Mock())
+    empty_df.return_value = pd.DataFrame()
+    with DataContext(datetime.date(2021, 6, 2), datetime.date(2021, 6, 2)):
+        tm.thematic_exposure(mock_basket, 'TICKER')
+
+    replace.restore()
+
+
+def test_thematic_beta():
+    mock_asset = GsAsset(asset_class='Equity', id='MA1234567890', type_='Custom Basket', name='test')
+    mock_basket = CustomBasket(gs_asset=mock_asset, _finish_init=False)
+
+    replace = Replacer()
+
+    empty_df = replace('gs_quant.timeseries.measures.Asset.get_thematic_beta', Mock())
+    empty_df.return_value = pd.DataFrame()
+    with DataContext(datetime.date(2021, 6, 2), datetime.date(2021, 6, 2)):
+        tm.thematic_beta(mock_basket, 'TICKER')
 
     replace.restore()
 

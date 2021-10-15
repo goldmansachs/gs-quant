@@ -514,5 +514,33 @@ def test_offset_key(mocker):
     assert all(map(lambda x: x == 3, hits))
 
 
+def test_map_identifiers(mocker):
+    json = {
+        "results": {
+            "2021-10-11": {
+                "GS UN": {
+                    "ric": [
+                        "GS.N"
+                    ],
+                    "gsid": 901026
+                }
+            },
+            "2021-10-12": {
+                "GS UN": {
+                    "ric": [
+                        "GS.N"
+                    ],
+                    "gsid": 901026
+                }
+            }
+        }
+    }
+    mocker.patch.object(GsSession.current, '_get', side_effect=[json])
+    with SecMasterContext():
+        actual = SecurityMaster.map_identifiers(['GS UN', 'AAPL UN'], [SecurityIdentifier.RIC],
+                                                dt.date(2021, 10, 11), dt.date(2021, 10, 12))
+    assert actual == json['results']
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

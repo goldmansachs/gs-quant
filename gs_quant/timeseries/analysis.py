@@ -27,6 +27,69 @@ autocorrelation, co-integration and other operations
 
 
 @plot_function
+def smooth_spikes(x: pd.Series, threshold: float) -> pd.Series:
+    """
+    Smooth out the spikes of a series. If a point is larger/smaller than (1 +/- threshold) times both neighbors, replace
+    it with the average of those neighbours. Note: the first and last points in the input series are dropped.
+
+    :param x: timeseries
+    :param threshold: minimum increment to trigger filter
+    :return: smoothed timeseries
+
+    **Usage**
+
+    Returns series where values that exceed the threshold relative to both neighbors are replaced.
+
+    **Examples**
+
+    Generate price series and smooth spikes over a threshold of 0.5.
+
+    >>> prices = generate_series(100)
+    >>> smooth_spikes(prices, 0.5)
+
+    **See also**
+
+    :func:`exponential_moving_average`
+    """
+    if len(x) < 3:
+        return pd.Series()
+
+    result = x.copy()
+    multiplier = (1 + threshold)
+    current, next_ = x.iloc[0:2]
+    for i in range(1, len(x) - 1):
+        previous = current
+        current = next_
+        next_ = x.iloc[i + 1]
+
+        scaled = current * multiplier
+        if (current > previous * multiplier and current > next_ * multiplier) or (previous > scaled and next_ > scaled):
+            result.iloc[i] = (previous + next_) / 2
+
+    return result[1:-1]
+
+
+@plot_function
+def repeat(x: pd.Series, n: int = 1) -> pd.Series:
+    """
+    Repeats values for days where data is missing. For any date with missing data, the last recorded value is used.
+    Optionally downsamples the result such that there are data points every n days.
+
+    :param x: date-based timeseries
+    :param n: desired frequency of output
+    :return: a timeseries that has been forward-filled, and optionally downsampled
+
+    **Usage**
+
+    Fill missing values with last seen value e.g. to combine daily with weekly or monthly data.
+    """
+    if not 0 < n < 367:
+        raise MqValueError('n must be between 0 and 367')
+    index = pd.date_range(freq=f'{n}D', start=x.index[0], end=x.index[-1])
+    return x.reindex(index, method='ffill')
+
+
+@plot_function
 def first(x: pd.Series) -> pd.Series:
     """
     First value of series

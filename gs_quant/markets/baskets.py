@@ -275,7 +275,7 @@ class Basket(Asset, PositionedEntity):
         for position_set in position_sets:
             positions = [IndicesPositionInput(p.asset_id, p.weight) for p in position_set.positions]
             historical_position_sets.append(IndicesPositionSet(tuple(positions), position_set.date))
-        response = GsIndexApi.backcast(CustomBasketsBackcastInputs(tuple(historical_position_sets)))
+        response = GsIndexApi.backcast(self.id, CustomBasketsBackcastInputs(tuple(historical_position_sets)))
         return response.as_dict()
 
     @_validate(ErrorMessage.UNINITIALIZED)

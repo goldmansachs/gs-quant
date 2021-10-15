@@ -19,7 +19,7 @@ from typing import Union, Iterable
 import pandas as pd
 from gs_quant.base import Market, EnumBase, RiskMeasureParameter
 from gs_quant.common import AssetClass, CurrencyParameter, FiniteDifferenceParameter, AggregationLevel, \
-    StringParameter, ListOfStringParameter, ListOfNumberParameter, MapParameter
+    StringParameter, ListOfStringParameter, ListOfNumberParameter, MapParameter, MktMarkingOptions
 from gs_quant.context_base import do_not_serialise
 from gs_quant.target.risk import RiskMeasure as __RiskMeasure, RiskMeasureType, RiskMeasureUnit
 
@@ -189,8 +189,8 @@ class RiskMeasureWithFiniteDifferenceParameter(ParameterisedRiskMeasure):
         return self.parameters.finite_difference_method if self.parameters else None
 
     @property
-    def mkt_marking_mode(self):
-        return self.parameters.mkt_marking_mode if self.parameters else None
+    def mkt_marking_options(self):
+        return self.parameters.mkt_marking_options if self.parameters else None
 
     @property
     def bump_size(self):
@@ -203,7 +203,8 @@ class RiskMeasureWithFiniteDifferenceParameter(ParameterisedRiskMeasure):
     def __call__(self, currency: str = None,
                  aggregation_level: Union[AggregationLevel, str] = None, local_curve: bool = None,
                  finite_difference_method: Union[FiniteDifferenceParameter, str] = None,
-                 mkt_marking_mode: str = None, bump_size: float = None, scale_factor: float = None, name: str = None):
+                 mkt_marking_options: MktMarkingOptions = None, bump_size: float = None, scale_factor: float = None,
+                 name: str = None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
         if isinstance(currency, pd.DataFrame):
@@ -220,11 +221,11 @@ class RiskMeasureWithFiniteDifferenceParameter(ParameterisedRiskMeasure):
         finite_difference_method = clone.finite_difference_method if finite_difference_method is None \
             else finite_difference_method
         scale_factor = clone.scale_factor if scale_factor is None else scale_factor
-        mkt_marking_mode = clone.mkt_marking_mode if mkt_marking_mode is None else mkt_marking_mode
+        mkt_marking_options = clone.mkt_marking_options if mkt_marking_options is None else mkt_marking_options
 
         parameter = FiniteDifferenceParameter(aggregation_level=aggregation_level, currency=currency,
                                               local_curve=local_curve, bump_size=bump_size,
                                               finite_difference_method=finite_difference_method,
-                                              scale_factor=scale_factor, mkt_marking_mode=mkt_marking_mode)
+                                              scale_factor=scale_factor, mkt_marking_options=mkt_marking_options)
         clone.parameters = parameter
         return clone

@@ -32,7 +32,7 @@ from gs_quant.data.log import log_debug
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
-from gs_quant.target.common import MarketDataVendor, PricingLocation
+from gs_quant.target.common import MarketDataVendor, PricingLocation, Format
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataQuery, DataQueryResponse, DataSetCatalogEntry
 from gs_quant.target.data import DataSetEntity, DataSetFieldEntity
@@ -165,7 +165,10 @@ class GsDataApi(DataApi):
 
     @staticmethod
     def execute_query(dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
-        return GsSession.current._post('/data/{}/query'.format(dataset_id), payload=query)
+        kwargs = {'payload': query}
+        if getattr(query, 'format', None) in (Format.MessagePack, 'MessagePack'):
+            kwargs['request_headers'] = {'Accept': 'application/msgpack'}
+        return GsSession.current._post('/data/{}/query'.format(dataset_id), **kwargs)
 
     @staticmethod
     def get_results(dataset_id: str, response: Union[DataQueryResponse, dict], query: DataQuery) -> list:

@@ -5142,6 +5142,30 @@ class MarketDataVolSlice(Base):
         self.__levels = value        
 
 
+class MktMarkingOptions(Base):
+        
+    """Market marking options for vector parameter in finite difference parameter"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        mode: str = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.mode = mode
+        self.name = name
+
+    @property
+    def mode(self) -> str:
+        return self.__mode
+
+    @mode.setter
+    def mode(self, value: str):
+        self._property_changed('mode')
+        self.__mode = value        
+
+
 class Op(Base):
         
     """Operations for searches."""
@@ -8833,7 +8857,7 @@ class FiniteDifferenceParameter(RiskMeasureParameter):
         bump_size: float = None,
         finite_difference_method: Union[FiniteDifferenceMethod, str] = None,
         scale_factor: float = None,
-        mkt_marking_mode: str = None,
+        mkt_marking_options: MktMarkingOptions = None,
         name: str = None
     ):        
         super().__init__()
@@ -8843,7 +8867,7 @@ class FiniteDifferenceParameter(RiskMeasureParameter):
         self.bump_size = bump_size
         self.finite_difference_method = finite_difference_method
         self.scale_factor = scale_factor
-        self.mkt_marking_mode = mkt_marking_mode
+        self.mkt_marking_options = mkt_marking_options
         self.name = name
 
     @property
@@ -8908,13 +8932,14 @@ class FiniteDifferenceParameter(RiskMeasureParameter):
         self.__scale_factor = value        
 
     @property
-    def mkt_marking_mode(self) -> str:
-        return self.__mkt_marking_mode
+    def mkt_marking_options(self) -> MktMarkingOptions:
+        """Market marking options for vector parameter in finite difference parameter"""
+        return self.__mkt_marking_options
 
-    @mkt_marking_mode.setter
-    def mkt_marking_mode(self, value: str):
-        self._property_changed('mkt_marking_mode')
-        self.__mkt_marking_mode = value        
+    @mkt_marking_options.setter
+    def mkt_marking_options(self, value: MktMarkingOptions):
+        self._property_changed('mkt_marking_options')
+        self.__mkt_marking_options = value        
 
 
 class ISelectNewParameter(Base):

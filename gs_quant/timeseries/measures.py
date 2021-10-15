@@ -3993,3 +3993,34 @@ def hloc_prices(asset: Asset, interval_frequency: IntervalFrequency = IntervalFr
         raise MqValueError('Use daily frequency instead of intraday.')
     start, end = DataContext.current.start_date, DataContext.current.end_date
     return asset.get_hloc_prices(start, end, interval_frequency)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
+                                     AssetType.ETF), [QueryType.THEMATIC_EXPOSURE])
+def thematic_exposure(asset: Asset, basket_identifier: str, notional: int = None) -> pd.Series:
+    """
+    Thematic exposure of an asset to a requested GS thematic flagship basket
+
+    :param asset: asset object loaded from security master
+    :param basket_identifier: identifer of the requested basket (ticker, bbid, etc.)
+    :param notional: Optional basket notional, will default to $10mm for if not entered
+    :return: Timeseries of daily thematic exposure of asset to requested flagship basket
+    """
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    thematic_exposures = asset.get_thematic_exposure(basket_identifier, notional, start, end)
+    return _extract_series_from_df(thematic_exposures, QueryType.THEMATIC_EXPOSURE)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
+                                     AssetType.ETF), [QueryType.THEMATIC_BETA])
+def thematic_beta(asset: Asset, basket_identifier: str) -> pd.Series:
+    """
+    Thematic beta values of an asset to a requested GS thematic flagship basket
+
+    :param asset: asset object loaded from security master
+    :param basket_identifier: identifer of the requested basket (ticker, bbid, etc.)
+    :return: Timeseries of daily thematic beta of asset to requested flagship basket
+    """
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    thematic_betas = asset.get_thematic_beta(basket_identifier, start, end)
+    return _extract_series_from_df(thematic_betas, QueryType.THEMATIC_BETA)
