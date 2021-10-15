@@ -26,20 +26,24 @@ import pandas as pd
 from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
+from gs_quant.api.gs.carbon import CarbonCard, GsCarbonApi, CarbonTargetCoverageCategory, CarbonScope, \
+    CarbonEmissionsAllocationCategory, CarbonEmissionsIntensityType, CarbonCoverageCategory, CarbonEntityType
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.esg import ESGMeasure, GsEsgApi, ESGCard
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
-from gs_quant.common import DateLimit, PositionType
+from gs_quant.common import DateLimit, PositionType, Currency
 from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
 from gs_quant.datetime import business_day_offset
 from gs_quant.entities.entitlements import Entitlements
-from gs_quant.errors import MqError
+from gs_quant.errors import MqError, MqValueError
+from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import GsSession
+from gs_quant.target.data import DataQuery
 from gs_quant.target.reports import ReportStatus, ReportType
 
 _logger = logging.getLogger(__name__)
@@ -590,3 +594,151 @@ class PositionedEntity(metaclass=ABCMeta):
                                        measures=[measure]).get(card.value)[0].get('results')
         df = pd.DataFrame(sector_data)
         return df.set_index('name')
+
+    def get_carbon_analytics(self,
+                             benchmark_id: str = None,
+                             reporting_year: str = 'Latest',
+                             currency: Currency = None,
+                             include_estimates: bool = False,
+                             use_historical_data: bool = False,
+                             normalize_emissions: bool = False,
+                             cards: List[CarbonCard] = [c for c in CarbonCard]) -> Dict:
+        return GsCarbonApi.get_carbon_analytics(entity_id=self.id,
+                                                benchmark_id=benchmark_id,
+                                                reporting_year=reporting_year,
+                                                currency=currency,
+                                                include_estimates=include_estimates,
+                                                use_historical_data=use_historical_data,
+                                                normalize_emissions=normalize_emissions,
+                                                cards=cards)
+
+    def get_carbon_coverage(self,
+                            reporting_year: str = 'Latest',
+                            include_estimates: bool = False,
+                            use_historical_data: bool = False,
+                            coverage_type: CarbonCoverageCategory =
+                            CarbonCoverageCategory.WEIGHTS) -> pd.DataFrame:
+        coverage = self.get_carbon_analytics(reporting_year=reporting_year,
+                                             include_estimates=include_estimates,
+                                             use_historical_data=use_historical_data,
+                                             cards=[CarbonCard.COVERAGE]).get(CarbonCard.COVERAGE.value).get(
+            coverage_type.value, {}).get(CarbonEntityType.PORTFOLIO.value, {})
+        return pd.DataFrame(coverage)
+
+    def get_carbon_sbti_netzero_coverage(self,
+                                         reporting_year: str = 'Latest',
+                                         include_estimates: bool = False,
+                                         use_historical_data: bool = False,
+                                         coverage_type: CarbonTargetCoverageCategory =
+                                         CarbonTargetCoverageCategory.PORTFOLIO_EMISSIONS) -> pd.DataFrame:
+        coverage = self.get_carbon_analytics(reporting_year=reporting_year,
+                                             include_estimates=include_estimates,
+                                             use_historical_data=use_historical_data,
+                                             cards=[CarbonCard.SBTI_AND_NET_ZERO_TARGETS]).get(
+            CarbonCard.SBTI_AND_NET_ZERO_TARGETS.value).get(coverage_type.value, {})
+        coverage = {target: target_coverage.get(CarbonEntityType.PORTFOLIO.value, {}) for target, target_coverage in
+                    coverage.items()}
+        return pd.DataFrame(coverage)
+
+    def get_carbon_emissions(self,
+                             currency: Currency = None,
+                             include_estimates: bool = False,
+                             use_historical_data: bool = False,
+                             normalize_emissions: bool = False,
+                             scope: CarbonScope = CarbonScope.TOTAL_GHG) -> pd.DataFrame:
+        emissions = self.get_carbon_analytics(currency=currency,
+                                              include_estimates=include_estimates,
+                                              use_historical_data=use_historical_data,
+                                              normalize_emissions=normalize_emissions,
+                                              cards=[CarbonCard.EMISSIONS]).get(CarbonCard.EMISSIONS.value).get(
+            scope.value, {}).get(CarbonEntityType.PORTFOLIO.value, [])
+        return pd.DataFrame(emissions)
+
+    def get_carbon_emissions_allocation(self,
+                                        reporting_year: str = 'Latest',
+                                        currency: Currency = None,
+                                        include_estimates: bool = False,
+                                        use_historical_data: bool = False,
+                                        normalize_emissions: bool = False,
+                                        scope: CarbonScope = CarbonScope.TOTAL_GHG,
+                                        classification: CarbonEmissionsAllocationCategory =
+                                        CarbonEmissionsAllocationCategory.GICS_SECTOR) -> pd.DataFrame:
+        allocation = self.get_carbon_analytics(reporting_year=reporting_year,
+                                               currency=currency,
+                                               include_estimates=include_estimates,
+                                               use_historical_data=use_historical_data,
+                                               normalize_emissions=normalize_emissions,
+                                               cards=[CarbonCard.ALLOCATIONS]).get(CarbonCard.ALLOCATIONS.value).get(
+            scope.value, {}).get(CarbonEntityType.PORTFOLIO.value, {}).get(classification.value)
+        return pd.DataFrame(allocation).rename(columns={'name': classification.value})
+
+    def get_carbon_attribution_table(self,
+                                     benchmark_id: str,
+                                     reporting_year: str = 'Latest',
+                                     currency: Currency = None,
+                                     include_estimates: bool = False,
+                                     use_historical_data: bool = False,
+                                     scope: CarbonScope = CarbonScope.TOTAL_GHG,
+                                     intensity_metric: CarbonEmissionsIntensityType =
+                                     CarbonEmissionsIntensityType.EI_ENTERPRISE_VALUE) -> pd.DataFrame:
+        attribution = self.get_carbon_analytics(benchmark_id=benchmark_id,
+                                                reporting_year=reporting_year,
+                                                currency=currency,
+                                                include_estimates=include_estimates,
+                                                use_historical_data=use_historical_data,
+                                                cards=[CarbonCard.ATTRIBUTION]).get(CarbonCard.ATTRIBUTION.value).get(
+            scope.value, [])
+        attribution_table = []
+        for entry in attribution:
+            new_entry = {
+                'sector': entry.get('sector'),
+                'weightPortfolio': entry.get('weightPortfolio'),
+                'weightBenchmark': entry.get('weightBenchmark'),
+                'weightComparison': entry.get('weightComparison')
+            }
+            new_entry.update(entry.get(intensity_metric.value, {}))
+            attribution_table.append(new_entry)
+        return pd.DataFrame(attribution_table)
+
+    def get_thematic_exposure(self,
+                              basket_identifier: str,
+                              notional: int = 10000000,
+                              start: dt.date = DateLimit.LOW_LIMIT.value,
+                              end: dt.date = dt.date.today()) -> pd.DataFrame:
+        if not self.positioned_entity_type == EntityType.ASSET:
+            raise NotImplementedError
+        response = GsAssetApi.resolve_assets(identifier=[basket_identifier],
+                                             fields=['id', 'type'], limit=1)[basket_identifier]
+        _id, _type = get(response, '0.id'), get(response, '0.type')
+        if len(response) == 0 or _id is None:
+            raise MqValueError(f'Basket could not be found using identifier {basket_identifier}.')
+        if _type not in BasketType.to_list():
+            raise MqValueError(f'Asset {basket_identifier} of type {_type} is not a Custom or Research Basket.')
+        query = DataQuery(where={'assetId': self.id, 'basketId': _id}, start_date=start, end_date=end)
+        response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.COMPOSITE_THEMATIC_BETAS.value)
+        df = []
+        for r in response:
+            df.append({'date': r['date'], 'assetId': r['assetId'], 'basketId': r['basketId'],
+                       'thematicExposure': r['beta'] * notional})
+        return pd.DataFrame(df)
+
+    def get_thematic_beta(self,
+                          basket_identifier: str,
+                          start: dt.date = DateLimit.LOW_LIMIT.value,
+                          end: dt.date = dt.date.today()) -> pd.DataFrame:
+        if not self.positioned_entity_type == EntityType.ASSET:
+            raise NotImplementedError
+        response = GsAssetApi.resolve_assets(identifier=[basket_identifier],
+                                             fields=['id', 'type'], limit=1)[basket_identifier]
+        _id, _type = get(response, '0.id'), get(response, '0.type')
+        if len(response) == 0 or _id is None:
+            raise MqValueError(f'Basket could not be found using identifier {basket_identifier}.')
+        if _type not in BasketType.to_list():
+            raise MqValueError(f'Asset {basket_identifier} of type {_type} is not a Custom or Research Basket.')
+        query = DataQuery(where={'assetId': self.id, 'basketId': _id}, start_date=start, end_date=end)
+        response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.COMPOSITE_THEMATIC_BETAS.value)
+        df = []
+        for r in response:
+            df.append({'date': r['date'], 'assetId': r['assetId'], 'basketId': r['basketId'],
+                       'thematicBeta': r['beta']})
+        return pd.DataFrame(df)

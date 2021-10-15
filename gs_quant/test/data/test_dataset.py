@@ -22,7 +22,8 @@ import pytest
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data import Dataset
-
+from gs_quant.session import GsSession, Environment
+from gs_quant.target.data import Format
 
 test_types = {
     'date': 'date',
@@ -146,7 +147,6 @@ test_data = [
     }
 ]
 
-
 test_coverage_data = {'results': [{'gsid': 'gsid1'}]}
 
 
@@ -209,6 +209,44 @@ def test_construct_dataframe_with_types(mocker):
     assert df['adjustedBidPrice'].dtype == float64
     assert df['assetId'].dtype == object  # https://pbpython.com/pandas_dtypes.html python str == dtype object
     assert np.issubdtype(df['updateTime'].dtype, datetime64)
+
+
+def test_data_series_format(mocker):
+    start = dt.date(2019, 1, 2)
+    end = dt.datetime(2019, 1, 9)
+    df = pd.DataFrame(test_data)
+    index = pd.to_datetime(df.loc[:, 'date'].values)
+    expected = pd.Series(index=index, data=df.loc[:, 'tradePrice'].values)
+    expected = expected.rename_axis('date')
+
+    # mock GsSession and data response
+    mocker.patch.object(GsSession.__class__, 'default_value',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mock_response = {
+        'requestId': 'qwerty',
+        'data': test_data
+    }
+    mocker.patch.object(GsSession.current, '_post', side_effect=lambda *args, **kwargs: mock_response)
+    mocker.patch.object(GsDataApi, 'symbol_dimensions', return_value=('assetId',))
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
+
+    actual = Dataset('TREOD').get_data_series(field='tradePrice', start=start, end=end, assetId='MA4B66MW5E27U8P32SB')
+    pd.testing.assert_series_equal(actual, expected)
+    assert len(GsSession.current._post.mock_calls) == 1
+    name, args, kwargs = GsSession.current._post.mock_calls[0]
+    assert kwargs['payload'].format == Format.MessagePack
+    assert kwargs['request_headers'] == {'Accept': 'application/msgpack'}
+    assert args[0] == '/data/TREOD/query'
+
+    GsSession.current._post.reset_mock()
+    actual = Dataset('TREOD').get_data_series(field='tradePrice', start=start, end=end, assetId='MA4B66MW5E27U8P32SB',
+                                              format=Format.Json)
+    pd.testing.assert_series_equal(actual, expected)
+    assert len(GsSession.current._post.mock_calls) == 1
+    name, args, kwargs = GsSession.current._post.mock_calls[0]
+    assert kwargs['payload'].format == Format.Json
+    assert 'request_headers' not in kwargs
+    assert args[0] == '/data/TREOD/query'
 
 
 if __name__ == "__main__":

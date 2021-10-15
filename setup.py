@@ -62,7 +62,7 @@ setuptools.setup(
         "funcsigs",
         "future",
         "inflection",
-        "lmfit",
+        "lmfit<=1.0.2",  # version 1.0.3 requires a newer version of pip (21.3 works, but 18.1 doesn't)
         "msgpack",
         "more_itertools",
         "nest-asyncio",

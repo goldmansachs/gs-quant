@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from typing import Optional
+from typing import Optional, Callable
 
 from gs_quant.risk.base_measures import *
 from gs_quant.risk.base_measures import __RelativeRiskMeasure
@@ -60,40 +60,23 @@ def __risk_measure_with_doc_string(name: str,
                                    measure_type: RiskMeasureType,
                                    asset_class: Optional[AssetClass] = None,
                                    unit: Optional[RiskMeasureUnit] = None,
-                                   parameter_type: str = None
+                                   risk_measure_class: Callable = RiskMeasure
                                    ) -> RiskMeasure:
-    if parameter_type == "Currency":
-        measure = RiskMeasureWithCurrencyParameter(measure_type=measure_type, asset_class=asset_class, unit=unit,
-                                                   name=name)
-    elif parameter_type == "FiniteDifference":
-        measure = RiskMeasureWithFiniteDifferenceParameter(measure_type=measure_type, asset_class=asset_class,
-                                                           unit=unit, name=name)
-    elif parameter_type == "String":
-        measure = RiskMeasureWithStringParameter(measure_type=measure_type, asset_class=asset_class,
-                                                 unit=unit, name=name)
-    elif parameter_type == "ListOfString":
-        measure = RiskMeasureWithListOfStringParameter(measure_type=measure_type, asset_class=asset_class,
-                                                       unit=unit, name=name)
-    elif parameter_type == "ListOfNumber":
-        measure = RiskMeasureWithListOfNumberParameter(measure_type=measure_type, asset_class=asset_class,
-                                                       unit=unit, name=name)
-    elif parameter_type == "Map":
-        measure = RiskMeasureWithMapParameter(measure_type=measure_type, asset_class=asset_class,
-                                              unit=unit, name=name)
-    else:
-        measure = RiskMeasure(measure_type=measure_type, asset_class=asset_class, unit=unit, name=name)
-    measure.__doc__ = doc
-    return measure
+    if issubclass(risk_measure_class, RiskMeasure):
+        measure = risk_measure_class(measure_type=measure_type, asset_class=asset_class, unit=unit, name=name)
+        measure.__doc__ = doc
+        return measure
 
 
 DollarPrice = __risk_measure_with_doc_string('DollarPrice', 'Present value in USD', RiskMeasureType.Dollar_Price)
 Price = __risk_measure_with_doc_string('Price', 'Present value in local currency', RiskMeasureType.PV,
-                                       parameter_type="Currency")
+                                       risk_measure_class=RiskMeasureWithCurrencyParameter)
 PricePips = __risk_measure_with_doc_string('Price', 'Present value in pips', RiskMeasureType.Price,
                                            unit=RiskMeasureUnit.Pips,
-                                           parameter_type="Currency")
+                                           risk_measure_class=RiskMeasureWithCurrencyParameter)
 Annuity = __risk_measure_with_doc_string('Annuity', 'Annuity', RiskMeasureType.AnnuityLocalCcy,
-                                         asset_class=AssetClass.Rates, parameter_type='Currency')
+                                         asset_class=AssetClass.Rates,
+                                         risk_measure_class=RiskMeasureWithCurrencyParameter)
 
 CrossMultiplier = __risk_measure_with_doc_string('CrossMultiplier', 'Cross Multiplier',
                                                  RiskMeasureType.Cross_Multiplier)
@@ -149,10 +132,10 @@ FairVarStrike = __risk_measure_with_doc_string(
     'Fair Variance Strike Value of a Variance Swap',
     RiskMeasureType.FairVarStrike)
 FXDelta = __risk_measure_with_doc_string('FXDelta', 'FX Delta', RiskMeasureType.Delta, asset_class=AssetClass.FX,
-                                         parameter_type="FiniteDifference")
+                                         risk_measure_class=RiskMeasureWithFiniteDifferenceParameter)
 FXGamma = __risk_measure_with_doc_string('FXGamma', 'FX Gamma', RiskMeasureType.Gamma, asset_class=AssetClass.FX)
 FXVega = __risk_measure_with_doc_string('FXVega', 'FX Vega', RiskMeasureType.Vega, asset_class=AssetClass.FX,
-                                        parameter_type="FiniteDifference")
+                                        risk_measure_class=RiskMeasureWithFiniteDifferenceParameter)
 FXSpot = __risk_measure_with_doc_string('FXSpot', 'FX Spot Rate', RiskMeasureType.Spot, asset_class=AssetClass.FX)
 FXAnnualATMImpliedVol = __risk_measure_with_doc_string(
     'FXAnnualATMImpliedVol',
@@ -170,13 +153,13 @@ IRBasis = __risk_measure_with_doc_string(
     'IRBasis',
     'Interest Rate Basis',
     RiskMeasureType.Basis,
-    asset_class=AssetClass.Rates, parameter_type="FiniteDifference")
+    asset_class=AssetClass.Rates, risk_measure_class=RiskMeasureWithFiniteDifferenceParameter)
 IRBasisParallel = IRBasis(aggregation_level=AggregationLevel.Asset, name='IRBasisParallel')
 InflationDelta = __risk_measure_with_doc_string(
     'InflationDelta',
     'Inflation Delta',
     RiskMeasureType.InflationDelta,
-    asset_class=AssetClass.Rates, parameter_type='FiniteDifference')
+    asset_class=AssetClass.Rates, risk_measure_class=RiskMeasureWithFiniteDifferenceParameter)
 InflationDeltaParallel = InflationDelta(aggregation_level=AggregationLevel.Type, name='InflationDeltaParallel')
 InflationDeltaParallelLocalCcy = InflationDelta(aggregation_level=AggregationLevel.Type, currency='local',
                                                 name='InflationDeltaParallelLocalCcy')
@@ -184,7 +167,7 @@ IRDelta = __risk_measure_with_doc_string(
     'IRDelta',
     'Interest Rate Delta',
     RiskMeasureType.Delta,
-    asset_class=AssetClass.Rates, parameter_type="FiniteDifference")
+    asset_class=AssetClass.Rates, risk_measure_class=RiskMeasureWithFiniteDifferenceParameter)
 IRDeltaParallel = IRDelta(aggregation_level=AggregationLevel.Asset, name='IRDeltaParallel')
 IRDeltaLocalCcy = IRDelta(currency='local', name='IRDeltaLocalCcy')
 IRDeltaParallelLocalCcy = IRDelta(aggregation_level=AggregationLevel.Type, currency='local',
@@ -203,7 +186,7 @@ IRXccyDelta = __risk_measure_with_doc_string(
     'IRXccyDelta',
     'Cross-ccy Delta',
     RiskMeasureType.XccyDelta,
-    asset_class=AssetClass.Rates, parameter_type='FiniteDifference')
+    asset_class=AssetClass.Rates, risk_measure_class=RiskMeasureWithFiniteDifferenceParameter)
 IRXccyDeltaParallel = IRXccyDelta(aggregation_level=AggregationLevel.Type, name='IRXccyDeltaParallel')
 IRXccyDeltaParallelLocalCurrency = IRXccyDelta(aggregation_level=AggregationLevel.Type, currency='local',
                                                name='IRXccyDeltaParallelLocalCurrency')
@@ -221,7 +204,7 @@ IRVega = __risk_measure_with_doc_string(
     'IRVega',
     'Interest Rate Vega',
     RiskMeasureType.Vega,
-    asset_class=AssetClass.Rates, parameter_type="FiniteDifference")
+    asset_class=AssetClass.Rates, risk_measure_class=RiskMeasureWithFiniteDifferenceParameter)
 IRVegaParallel = IRVega(aggregation_level=AggregationLevel.Asset, name='IRVegaParallel')
 IRVegaLocalCcy = IRVega(currency='local', name='IRVegaLocalCcy')
 IRVegaParallelLocalCcy = IRVega(aggregation_level=AggregationLevel.Type, currency='local',

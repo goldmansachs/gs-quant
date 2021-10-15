@@ -24,7 +24,7 @@ from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from enum import auto
 from functools import partial
-from typing import Dict, Tuple, Generator
+from typing import Dict, Tuple, Generator, Iterable
 
 import backoff
 import cachetools
@@ -510,6 +510,21 @@ class Asset(Entity, metaclass=ABCMeta):
         results = ThreadPoolManager.run_async(tasks)
         df = pd.DataFrame({'high': results[0], 'low': results[1], 'open': results[2], 'close': results[3]})
         return df.dropna()
+
+    def get_thematic_exposure(self,
+                              basket_identifier: str,
+                              notional: int = None,
+                              start: dt.date = DateLimit.LOW_LIMIT.value,
+                              end: dt.date = dt.date.today()) -> pd.DataFrame:
+        """Timeseries of daily thematic exposure of asset to requested flagship basket (only composites currently)"""
+        pass
+
+    def get_thematic_beta(self,
+                          basket_identifier: str,
+                          start: dt.date = DateLimit.LOW_LIMIT.value,
+                          end: dt.date = dt.date.today()) -> pd.DataFrame:
+        """Timeseries of daily thematic beta of asset to requested flagship basket (only composites currently)"""
+        pass
 
     @abstractmethod
     def get_type(self) -> AssetType:
@@ -1407,3 +1422,42 @@ class SecurityMaster:
                 accumulator.update(next(gen))
             except StopIteration:
                 return accumulator
+
+    @classmethod
+    def map_identifiers(cls, ids: Iterable[str],
+                        to_identifiers: Iterable[SecurityIdentifier] = frozenset([SecurityIdentifier.GSID]),
+                        start_date: datetime.date = None, end_date: datetime.date = None) -> Dict[datetime.date, dict]:
+        """
+        Map to (other) identifiers from given IDs.
+
+        :param ids: security IDs e.g. GSIDs or BBIDs
+        :param to_identifiers: types of IDs to map to
+        :param start_date: start of date range
+        :param end_date: end of date range
+        :return: dict containing mappings for each date in range
+
+        **Examples**
+
+        Get CUSIP for GS UN:
+        >>> result = SecurityMaster.map_identifiers(["GS UN"], [SecurityIdentifier.CUSIP])
+
+        Get Bloomberg ticker for 104563 over a range of dates:
+        >>> result = SecurityMaster.map_identifiers(["104563"], [SecurityIdentifier.BBG],
+        ...                                         datetime.date(2021, 4, 16), datetime.date(2021, 4, 19))
+        """
+        if cls._source != SecurityMasterSource.SECURITY_MASTER:
+            raise NotImplementedError("method not available when using Asset Service")
+
+        if isinstance(ids, str):
+            raise MqTypeError("expected an iterable of strings e.g. a list of strings")
+
+        params = {
+            'identifiers': list(ids),
+            'toIdentifiers': [identifier.value for identifier in to_identifiers]
+        }
+        if start_date is not None:
+            params['startDate'] = start_date
+        if end_date is not None:
+            params['endDate'] = end_date
+        r = _get_with_retries('/markets/securities/map', params)
+        return r['results']
