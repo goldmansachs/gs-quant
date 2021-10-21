@@ -599,7 +599,8 @@ class PortfolioRiskResult(CompositeResultFuture):
     def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
                  display_options: DisplayOptions = None):
         def get_name(obj, idx):
-            new_name = f'{obj.type.name}_{idx}' if isinstance(obj, InstrumentBase) else f'Portfolio_{idx}'
+            new_name = f'{obj.type.name}_{idx}' \
+                if isinstance(obj, InstrumentBase) and hasattr(obj, 'type') else f'Portfolio_{idx}'
             return new_name if obj.name is None else obj.name
 
         def get_df(priceable):

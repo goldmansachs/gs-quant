@@ -94,21 +94,26 @@ class GsPortfolioApi:
         return position_sets[0] if len(position_sets) > 0 else None
 
     @classmethod
-    def get_instruments_by_position_type(cls, positions_type: str,
-                                         positions_id: str) -> Tuple[Instrument, ...]:
+    def get_position_set_by_position_type(cls, positions_type: str, positions_id: str) -> Tuple[Instrument, ...]:
         root = 'deals' if positions_type == 'ETI' else 'books/' + positions_type
         url = '/risk-internal/{}/{}/positions'.format(root, positions_id)
         results = GsSession.current._get(url, timeout=181)
+        return [PositionSet.from_dict(res) for res in results['positionSets']]
+
+    @classmethod
+    def get_instruments_by_position_type(cls, positions_type: str,
+                                         positions_id: str) -> Tuple[Instrument, ...]:
+        position_sets = cls.get_position_set_by_position_type(positions_type=positions_type, positions_id=positions_id)
 
         instruments = []
-        for position in results.get('positionSets', ({'positions': ()},))[0]['positions']:
-            instrument_values = position['instrument']
-            instrument = Instrument.from_dict(instrument_values)
-            name = instrument_values.get('name')
-            if name:
-                instrument.name = name
-
-            instruments.append(instrument)
+        for position_set in position_sets:
+            for positions in position_set.positions:
+                instrument = positions.instrument
+                instrument.metadata = {
+                    'trade_date': position_set.position_date, 'tags': positions.tags,
+                    'external_ids': {id['idType']: id['idValue'] for id in positions.external_ids},
+                    'party_from': positions.party_from, 'party_to': positions.party_to}
+                instruments.append(instrument)
 
         return tuple(instruments)
 

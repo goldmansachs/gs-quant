@@ -42,6 +42,7 @@ from gs_quant.data.fields import Fields
 from gs_quant.data.log import log_debug, log_warning
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.datetime.point import relative_date_add
+from gs_quant.entities.entity import PositionedEntity
 from gs_quant.errors import MqTypeError
 from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, AssetType as SecAssetType
@@ -3997,30 +3998,40 @@ def hloc_prices(asset: Asset, interval_frequency: IntervalFrequency = IntervalFr
 
 @plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
                                      AssetType.ETF), [QueryType.THEMATIC_EXPOSURE])
-def thematic_exposure(asset: Asset, basket_identifier: str, notional: int = None) -> pd.Series:
+def thematic_model_exposure(asset: Asset, basket_identifier: str, notional: int = 10000000,
+                            *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     Thematic exposure of an asset to a requested GS thematic flagship basket
 
     :param asset: asset object loaded from security master
     :param basket_identifier: identifer of the requested basket (ticker, bbid, etc.)
-    :param notional: Optional basket notional, will default to $10mm for if not entered
+    :param notional: Optional notional, will default to $10mm for if not entered
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
     :return: Timeseries of daily thematic exposure of asset to requested flagship basket
     """
+    if real_time:
+        raise MqValueError('Use daily frequency instead of intraday.')
     start, end = DataContext.current.start_date, DataContext.current.end_date
-    thematic_exposures = asset.get_thematic_exposure(basket_identifier, notional, start, end)
+    thematic_exposures = PositionedEntity.get_thematic_exposure(asset, basket_identifier, notional, start, end)
     return _extract_series_from_df(thematic_exposures, QueryType.THEMATIC_EXPOSURE)
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
                                      AssetType.ETF), [QueryType.THEMATIC_BETA])
-def thematic_beta(asset: Asset, basket_identifier: str) -> pd.Series:
+def thematic_model_beta(asset: Asset, basket_identifier: str, *, source: str = None,
+                        real_time: bool = False) -> pd.Series:
     """
     Thematic beta values of an asset to a requested GS thematic flagship basket
 
     :param asset: asset object loaded from security master
     :param basket_identifier: identifer of the requested basket (ticker, bbid, etc.)
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
     :return: Timeseries of daily thematic beta of asset to requested flagship basket
     """
+    if real_time:
+        raise MqValueError('Use daily frequency instead of intraday.')
     start, end = DataContext.current.start_date, DataContext.current.end_date
-    thematic_betas = asset.get_thematic_beta(basket_identifier, start, end)
+    thematic_betas = PositionedEntity.get_thematic_beta(asset, basket_identifier, start, end)
     return _extract_series_from_df(thematic_betas, QueryType.THEMATIC_BETA)

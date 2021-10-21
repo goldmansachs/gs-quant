@@ -511,21 +511,6 @@ class Asset(Entity, metaclass=ABCMeta):
         df = pd.DataFrame({'high': results[0], 'low': results[1], 'open': results[2], 'close': results[3]})
         return df.dropna()
 
-    def get_thematic_exposure(self,
-                              basket_identifier: str,
-                              notional: int = None,
-                              start: dt.date = DateLimit.LOW_LIMIT.value,
-                              end: dt.date = dt.date.today()) -> pd.DataFrame:
-        """Timeseries of daily thematic exposure of asset to requested flagship basket (only composites currently)"""
-        pass
-
-    def get_thematic_beta(self,
-                          basket_identifier: str,
-                          start: dt.date = DateLimit.LOW_LIMIT.value,
-                          end: dt.date = dt.date.today()) -> pd.DataFrame:
-        """Timeseries of daily thematic beta of asset to requested flagship basket (only composites currently)"""
-        pass
-
     @abstractmethod
     def get_type(self) -> AssetType:
         """Overridden by sub-classes to return security type"""
@@ -1017,6 +1002,23 @@ class DefaultSwap(Asset):
         return AssetType.DEFAULT_SWAP
 
 
+class XccySwapMTM(Asset):
+    """XccySwapMTM
+
+    Represents a cross-currency mark-to-market swap.
+
+    """
+
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, AssetClass.Rates, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.XccySwapMTM
+
+
 class SecurityMasterSource(Enum):
     ASSET_SERVICE = auto()
     SECURITY_MASTER = auto()
@@ -1156,6 +1158,9 @@ class SecurityMaster:
 
         if asset_type == GsAssetType.Binary.value:
             return Binary(gs_asset.id, gs_asset.name, gs_asset.assetClass, entity=asset_entity)
+
+        if asset_type == GsAssetType.XccySwapMTM.value:
+            return XccySwapMTM(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 

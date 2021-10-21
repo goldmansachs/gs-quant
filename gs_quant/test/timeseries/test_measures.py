@@ -4815,30 +4815,34 @@ def test_hloc_prices():
     replace.restore()
 
 
-def test_thematic_exposure():
+def test_thematic_model_exposure():
     mock_asset = GsAsset(asset_class='Equity', id='MA1234567890', type_='Custom Basket', name='test')
     mock_basket = CustomBasket(gs_asset=mock_asset, _finish_init=False)
+    with pytest.raises(MqValueError):
+        tm.thematic_model_exposure(mock_basket, 'TICKER', real_time=True)
 
     replace = Replacer()
 
-    empty_df = replace('gs_quant.timeseries.measures.Asset.get_thematic_exposure', Mock())
+    empty_df = replace('gs_quant.timeseries.measures.PositionedEntity.get_thematic_exposure', Mock())
     empty_df.return_value = pd.DataFrame()
     with DataContext(datetime.date(2021, 6, 2), datetime.date(2021, 6, 2)):
-        tm.thematic_exposure(mock_basket, 'TICKER')
+        tm.thematic_model_exposure(mock_basket, 'TICKER')
 
     replace.restore()
 
 
-def test_thematic_beta():
+def test_thematic_model_beta():
     mock_asset = GsAsset(asset_class='Equity', id='MA1234567890', type_='Custom Basket', name='test')
     mock_basket = CustomBasket(gs_asset=mock_asset, _finish_init=False)
+    with pytest.raises(MqValueError):
+        tm.thematic_model_beta(mock_basket, 'TICKER', real_time=True)
 
     replace = Replacer()
 
-    empty_df = replace('gs_quant.timeseries.measures.Asset.get_thematic_beta', Mock())
+    empty_df = replace('gs_quant.timeseries.measures.PositionedEntity.get_thematic_beta', Mock())
     empty_df.return_value = pd.DataFrame()
     with DataContext(datetime.date(2021, 6, 2), datetime.date(2021, 6, 2)):
-        tm.thematic_beta(mock_basket, 'TICKER')
+        tm.thematic_model_beta(mock_basket, 'TICKER')
 
     replace.restore()
 

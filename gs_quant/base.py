@@ -587,6 +587,7 @@ class InstrumentBase(Base):
         self.__instrument_quantity = quantity
         self.__resolution_key: Optional[RiskKey] = None
         self.__unresolved: Optional[InstrumentBase] = None
+        self.__metadata: dict = None
 
     @property
     @abstractmethod
@@ -608,6 +609,15 @@ class InstrumentBase(Base):
     @do_not_serialise
     def unresolved(self):
         return self.__unresolved
+
+    @property
+    @do_not_serialise
+    def metadata(self):
+        return self.__metadata
+
+    @metadata.setter
+    def metadata(self, value):
+        self.__metadata = value
 
     def _property_changed(self, prop: str):
         if self.__resolution_key:

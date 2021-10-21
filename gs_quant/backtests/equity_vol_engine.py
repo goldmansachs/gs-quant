@@ -57,42 +57,46 @@ class BacktestResult(object):
 class EquityVolEngine(object):
 
     @classmethod
-    def supports_strategy(cls, strategy):
+    def check_strategy(cls, strategy):
+        check_results = []
         if len(strategy.initial_portfolio) > 0:
-            return False
+            check_results.append('Error: initial_portfolio must be empty or None')
 
         # Validate Triggers
 
         if len(strategy.triggers) > 3:
-            return False
+            check_results.append('Error: Maximum of 3 triggers')
 
         if not all(isinstance(x, (t.AggregateTrigger, t.PeriodicTrigger)) for x in strategy.triggers):
-            return False
+            check_results.append('Error: Only AggregateTrigger and PeriodTrigger supported')
 
         # aggregate triggers composed of a dated and portfolio trigger define a signal
         aggregate_triggers = [x for x in strategy.triggers if isinstance(x, t.AggregateTrigger)]
         for at in aggregate_triggers:
             if not len(at.triggers) == 2:
-                return False
+                check_results.append('Error: AggregateTrigger must be composed of 2 triggers')
             if not len([x for x in at.triggers if isinstance(x, t.DateTrigger)]) == 1:
-                return False
+                check_results.append('Error: AggregateTrigger must be contain 1 DateTrigger')
             portfolio_triggers = [x for x in at.triggers if isinstance(x, t.PortfolioTrigger)]
             if not len(portfolio_triggers) == 1:
-                return False
+                check_results.append('Error: AggregateTrigger must be contain 1 PortfolioTrigger')
             if not (portfolio_triggers[0].trigger_requirements.data_source == 'len' and
                     portfolio_triggers[0].trigger_requirements.trigger_level == 0):
-                return False
+                check_results.append(
+                    'Error: PortfolioTrigger.trigger_requirements must have data_source = \'len\' \
+                    and trigger_level = 0')
 
         # Validate Actions
 
         all_actions = reduce(lambda acc, x: acc + x, (map(lambda x: x.actions, strategy.triggers)), [])
         if not all(isinstance(x, (a.EnterPositionQuantityScaledAction, a.HedgeAction, a.ExitPositionAction))
                    for x in all_actions):
-            return False
+            check_results.append(
+                'Error: actions must be one of EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction')
 
         # no duplicate actions
         if not len(set(map(lambda x: type(x), all_actions))) == len(all_actions):
-            return False
+            check_results.append('Error: There are multiple actions of the same type')
 
         all_child_triggers = reduce(lambda acc, x: acc + x,
                                     map(lambda x: x.triggers if isinstance(x, t.AggregateTrigger) else [x],
@@ -104,36 +108,51 @@ class EquityVolEngine(object):
 
             # action one of enter position, exit position, hedge
             if len(trigger.actions) != 1:
-                return False
+                check_results.append('Error: All triggers must contain only 1 action')
 
-            action = trigger.actions[0]
-            if isinstance(action, a.EnterPositionQuantityScaledAction):
-                if isinstance(trigger, t.PeriodicTrigger) and \
-                        not trigger.trigger_requirements.frequency == action.trade_duration:
-                    return False
-                if not all((isinstance(p, EqOption) | isinstance(p, EqVarianceSwap))
-                           for p in action.priceables):
-                    return False
-                if action.trade_quantity is None or action.trade_quantity_type is None:
-                    return False
-            elif isinstance(action, a.HedgeAction):
-                if not trigger.trigger_requirements.frequency == action.trade_duration:
-                    return False
-                if not action.risk == EqDelta:
-                    return False
-                if not trigger.trigger_requirements.frequency == 'B':
-                    return False
-            elif isinstance(action, a.ExitPositionAction):
-                continue
-            else:
-                return False
+            for action in trigger.actions:
+                if isinstance(action, a.EnterPositionQuantityScaledAction):
+                    if isinstance(trigger, t.PeriodicTrigger) and \
+                            not trigger.trigger_requirements.frequency == action.trade_duration:
+                        check_results.append(
+                            'Error: EnterPositionQuantityScaledAction: PeriodicTrigger frequency must be the same \
+                            as trade_duration')
+                    if not all((isinstance(p, EqOption) | isinstance(p, EqVarianceSwap))
+                               for p in action.priceables):
+                        check_results.append(
+                            'Error: EnterPositionQuantityScaledAction: Only EqOption or EqVarianceSwap supported')
+                    if action.trade_quantity is None or action.trade_quantity_type is None:
+                        check_results.append(
+                            'Error: EnterPositionQuantityScaledAction trade_quantity or trade_quantity_type is None')
+                elif isinstance(action, a.HedgeAction):
+                    if not trigger.trigger_requirements.frequency == action.trade_duration:
+                        check_results.append(
+                            'Error: HedgeAction: PeriodicTrigger frequency must be the same as trade_duration')
+                    if not action.risk == EqDelta:
+                        check_results.append('Error: HedgeAction: risk type must be EqDelta')
+                    if not trigger.trigger_requirements.frequency == 'B':
+                        check_results.append('Error: HedgeAction: frequency must be \'B\'')
+                elif isinstance(action, a.ExitPositionAction):
+                    continue
+                else:
+                    check_results.append('Error: Unsupported action type \'{}\''.format(type(action)))
+
+        return check_results
+
+    @classmethod
+    def supports_strategy(cls, strategy):
+        check_result = cls.check_strategy(strategy)
+        if len(check_result):
+            return False
 
         return True
 
     @classmethod
     def run_backtest(cls, strategy, start, end):
-        if not EquityVolEngine.supports_strategy(strategy):
-            raise RuntimeError('unsupported strategy')
+        check_result = cls.check_strategy(strategy)
+        if len(check_result):
+            raise RuntimeError(check_result)
+
         underlier_list = None
         roll_frequency = None
         trade_quantity = None
