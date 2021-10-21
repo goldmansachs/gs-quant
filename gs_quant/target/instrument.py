@@ -1146,6 +1146,8 @@ class EqBinary(Instrument):
         strike_price: Union[float, str] = None,
         notional_amount: Union[float, str] = None,
         currency: str = None,
+        premium: Union[float, str] = None,
+        premium_settlement_date: Union[datetime.date, str] = None,
         name: str = None
     ):        
         super().__init__()
@@ -1157,6 +1159,8 @@ class EqBinary(Instrument):
         self.strike_price = strike_price
         self.notional_amount = notional_amount
         self.currency = currency
+        self.premium = premium
+        self.premium_settlement_date = premium_settlement_date
         self.name = name
 
     @property
@@ -1248,6 +1252,26 @@ class EqBinary(Instrument):
     def currency(self, value: str):
         self._property_changed('currency')
         self.__currency = value        
+
+    @property
+    def premium(self) -> Union[float, str]:
+        """Premium i.e. 1.3b, -1.5, 1000"""
+        return self.__premium
+
+    @premium.setter
+    def premium(self, value: Union[float, str]):
+        self._property_changed('premium')
+        self.__premium = value        
+
+    @property
+    def premium_settlement_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
+        return self.__premium_settlement_date
+
+    @premium_settlement_date.setter
+    def premium_settlement_date(self, value: Union[datetime.date, str]):
+        self._property_changed('premium_settlement_date')
+        self.__premium_settlement_date = value        
 
 
 class EqCliquet(Instrument):

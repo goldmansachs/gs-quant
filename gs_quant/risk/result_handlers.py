@@ -200,6 +200,37 @@ def fixing_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrumen
     return SeriesWithInfo(values, index=dates, risk_key=risk_key, request_id=request_id)
 
 
+def canonical_projection_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                                       request_id: Optional[str] = None) -> DataFrameWithInfo:
+    mappings = (
+        ('asset_class', 'assetClass'),
+        ('asset', 'asset'),
+        ('asset_family', 'assetFamily'),
+        ('asset_sub_family', 'assetSubFamily'),
+        ('product', 'product'),
+        ('product_family', 'productFamily'),
+        ('product_sub_family', 'productSubFamily'),
+        ('side', 'side'),
+        ('size', 'size'),
+        ('size_unit', 'sizeUnit'),
+        ('quote_level', 'quoteLevel'),
+        ('quote_unit', 'quoteUnit'),
+        ('start_date', 'startDate'),
+        ('end_date', 'endDate'),
+        ('expiration_date', 'expiryDate'),
+        ('strike', 'strike'),
+        ('strike_unit', 'strikeUnit'),
+        ('option_type', 'optionType'),
+        ('option_style', 'optionStyle'),
+        ('tenor', 'tenor'),
+        ('tenor_unit', 'tenorUnit'),
+        ('premium_currency', 'premiumCcy'),
+        ('currency', 'currency')
+    )
+
+    return __dataframe_handler(result['rows'], mappings, risk_key, request_id=request_id)
+
+
 def risk_float_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                        request_id: Optional[str] = None) -> FloatWithInfo:
     return FloatWithInfo(risk_key, result['values'][0], request_id=request_id)
@@ -248,6 +279,7 @@ result_handlers = {
     'RiskByClass': risk_by_class_handler,
     'RiskVector': risk_vector_handler,
     'FixingTable': fixing_table_handler,
+    'CanonicalProjection': canonical_projection_table_handler,
     'RiskSecondOrderVector': risk_float_handler,
     'RiskTheta': risk_float_handler,
     'Market': market_handler,

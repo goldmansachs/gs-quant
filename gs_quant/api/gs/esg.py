@@ -61,7 +61,7 @@ class GsEsgApi:
     def get_esg(cls,
                 entity_id: str,
                 benchmark_id: str = None,
-                pricing_date: dt.date = dt.date.today(),
+                pricing_date: dt.date = None,
                 measures: List[ESGMeasure] = [],
                 cards: List[ESGCard] = []) -> Dict:
         url = f'/esg/{entity_id}?'

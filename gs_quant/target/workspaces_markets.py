@@ -34,6 +34,7 @@ class ComponentType(EnumBase, Enum):
     container = 'container'
     datagrid = 'datagrid'
     dataviz = 'dataviz'
+    empty = 'empty'
     legend = 'legend'
     market = 'market'
     monitor = 'monitor'

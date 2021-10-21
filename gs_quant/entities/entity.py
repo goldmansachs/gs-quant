@@ -35,7 +35,6 @@ from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.common import DateLimit, PositionType, Currency
 from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
-from gs_quant.datetime import business_day_offset
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
@@ -520,8 +519,16 @@ class PositionedEntity(metaclass=ABCMeta):
     def get_all_esg_data(self,
                          measures: List[ESGMeasure] = None,
                          cards: List[ESGCard] = None,
-                         pricing_date: dt.date = business_day_offset(dt.date.today(), -1, roll='forward'),
+                         pricing_date: dt.date = None,
                          benchmark_id: str = None) -> Dict:
+        """
+        Get all ESG Data
+        :param measures: list of ESG Measures to include in results
+        :param cards: list of ESG Cards to include in results
+        :param pricing_date: optional pricing date; defaults to last previous business day
+        :param benchmark_id: optional benchmark asset ID to include in results
+        :return: a dictionary of results
+        """
         return GsEsgApi.get_esg(entity_id=self.id,
                                 pricing_date=pricing_date,
                                 cards=cards if cards else [c for c in ESGCard],
@@ -529,8 +536,7 @@ class PositionedEntity(metaclass=ABCMeta):
                                 benchmark_id=benchmark_id)
 
     def get_esg_summary(self,
-                        pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
-                                                                    roll='forward')) -> pd.DataFrame:
+                        pricing_date: dt.date = None) -> pd.DataFrame:
         summary_data = GsEsgApi.get_esg(entity_id=self.id,
                                         pricing_date=pricing_date,
                                         cards=[ESGCard.SUMMARY]).get('summary')
@@ -538,8 +544,13 @@ class PositionedEntity(metaclass=ABCMeta):
 
     def get_esg_quintiles(self,
                           measure: ESGMeasure,
-                          pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
-                                                                      roll='forward')) -> pd.DataFrame:
+                          pricing_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get breakdown of entity by weight in each percentile quintile for requested ESG measure
+        :param measure: ESG Measure
+        :param pricing_date: optional pricing date; defaults to last previous business day
+        :return: a Pandas DataFrame with results
+        """
         quintile_data = GsEsgApi.get_esg(entity_id=self.id,
                                          pricing_date=pricing_date,
                                          cards=[ESGCard.QUINTILES],
@@ -550,32 +561,52 @@ class PositionedEntity(metaclass=ABCMeta):
 
     def get_esg_by_sector(self,
                           measure: ESGMeasure,
-                          pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
-                                                                      roll='forward')) -> pd.DataFrame:
+                          pricing_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get breakdown of entity by sector, along with the weighted average score of the compositions in each sector
+        :param measure: ESG Measure
+        :param pricing_date: optional pricing date; defaults to last previous business day
+        :return: a Pandas DataFrame with results
+        """
         return self._get_esg_breakdown(ESGCard.MEASURES_BY_SECTOR, measure, pricing_date)
 
     def get_esg_by_region(self,
                           measure: ESGMeasure,
-                          pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
-                                                                      roll='forward')) -> pd.DataFrame:
+                          pricing_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get breakdown of entity by region, along with the weighted average score of the compositions in each region
+        :param measure: ESG Measure
+        :param pricing_date: optional pricing date; defaults to last previous business day
+        :return: a Pandas DataFrame with results
+        """
         return self._get_esg_breakdown(ESGCard.MEASURES_BY_REGION, measure, pricing_date)
 
     def get_esg_top_ten(self,
                         measure: ESGMeasure,
-                        pricing_date: dt.date = business_day_offset(dt.date.today(), -1, roll='forward')):
+                        pricing_date: dt.date = None):
+        """
+        Get entity constituents with the ten highest ESG percentile values
+        :param measure: ESG Measure
+        :param pricing_date: optional pricing date; defaults to last previous business day
+        :return: a Pandas DataFrame with results
+        """
         return self._get_esg_ranked_card(ESGCard.TOP_TEN_RANKED, measure, pricing_date)
 
     def get_esg_bottom_ten(self,
                            measure: ESGMeasure,
-                           pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
-                                                                       roll='forward')) -> pd.DataFrame:
+                           pricing_date: dt.date = None) -> pd.DataFrame:
+        """
+        Get entity constituents with the ten lowest ESG percentile values
+        :param measure: ESG Measure
+        :param pricing_date: optional pricing date; defaults to last previous business day
+        :return: a Pandas DataFrame with results
+        """
         return self._get_esg_ranked_card(ESGCard.BOTTOM_TEN_RANKED, measure, pricing_date)
 
     def _get_esg_ranked_card(self,
                              card: ESGCard,
                              measure: ESGMeasure,
-                             pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
-                                                                         roll='forward')) -> pd.DataFrame:
+                             pricing_date: dt.date = None) -> pd.DataFrame:
         data = GsEsgApi.get_esg(entity_id=self.id,
                                 pricing_date=pricing_date,
                                 cards=[card],
@@ -586,8 +617,7 @@ class PositionedEntity(metaclass=ABCMeta):
     def _get_esg_breakdown(self,
                            card: ESGCard,
                            measure: ESGMeasure,
-                           pricing_date: dt.date = business_day_offset(dt.date.today(), -1,
-                                                                       roll='forward')) -> pd.DataFrame:
+                           pricing_date: dt.date = None) -> pd.DataFrame:
         sector_data = GsEsgApi.get_esg(entity_id=self.id,
                                        pricing_date=pricing_date,
                                        cards=[card],
