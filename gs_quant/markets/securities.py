@@ -230,6 +230,7 @@ class SecurityIdentifier(EntityIdentifier):
     GSS = "gss"
     PRIMEID = "primeId"
     BBG = "bbg"
+    ASSET_ID = "assetId"
 
 
 class ReturnType(Enum):
