@@ -2443,6 +2443,11 @@ class Asset(Base):
 
     @property
     def rank(self) -> float:
+        """Rank is a field we use to score assets. There are a few inputs depending on
+           asset class, but it is heavily weighted by Average Daily Volume (ADV)
+           for listed equities. Largely, we use it to boost assets in searches.
+           Rank can serve as a tiebreaker on searches in some cases.  Typically
+           it's used to tie-break on a non-unique or composite level identifier"""
         return self.__rank
 
     @rank.setter

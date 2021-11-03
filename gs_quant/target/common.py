@@ -47,6 +47,7 @@ class AssetClass(EnumBase, Enum):
     FX = 'FX'
     Mortgage = 'Mortgage'
     Rates = 'Rates'
+    Repo = 'Repo'
     Loan = 'Loan'
     Social = 'Social'
     Cryptocurrency = 'Cryptocurrency'    
@@ -116,6 +117,7 @@ class AssetType(EnumBase, Enum):
     Custom_Basket = 'Custom Basket'
     Cryptocurrency = 'Cryptocurrency'
     Default_Swap = 'Default Swap'
+    DiscreteLock = 'DiscreteLock'
     DoubleKnockout = 'DoubleKnockout'
     DoubleTouch = 'DoubleTouch'
     Economic = 'Economic'
@@ -240,17 +242,6 @@ class BuySell(EnumBase, Enum):
 
     Buy = 'Buy'
     Sell = 'Sell'    
-
-
-class BvalValuationTime(EnumBase, Enum):    
-    
-    """The snapshot of bond price used for basket pricing"""
-
-    _12PM_LDN = '12PM LDN'
-    _3PM_LDN = '3PM LDN'
-    _4_15PM_LDN = '4:15PM LDN'
-    _3PM_NYC = '3PM NYC'
-    _4PM_NYC = '4PM NYC'    
 
 
 class CommodMeanRule(EnumBase, Enum):    
@@ -1679,6 +1670,7 @@ class Field(EnumBase, Enum):
     controversyScore = 'controversyScore'
     proceedAssetSwapSpread = 'proceedAssetSwapSpread'
     concentrationLevel = 'concentrationLevel'
+    weightOfFaceValue = 'weightOfFaceValue'
     importance = 'importance'
     assetClassificationsGicsSector = 'assetClassificationsGicsSector'
     stsAssetName = 'stsAssetName'
@@ -2783,6 +2775,7 @@ class Field(EnumBase, Enum):
     variance = 'variance'
     wtdDegreeDaysDailyForecast = 'wtdDegreeDaysDailyForecast'
     swaptionAnnuity = 'swaptionAnnuity'
+    latestEndDate = 'latestEndDate'
     buy6bps = 'buy6bps'
     g10Currency = 'g10Currency'
     humidityForecast = 'humidityForecast'
@@ -3600,6 +3593,7 @@ class LiquidityMeasure(EnumBase, Enum):
     Country_Buckets = 'Country Buckets'
     Sector_Buckets = 'Sector Buckets'
     Industry_Buckets = 'Industry Buckets'
+    Currency_Buckets = 'Currency Buckets'
     Risk_Buckets = 'Risk Buckets'
     Factor_Risk_Buckets = 'Factor Risk Buckets'
     Exposure_Buckets = 'Exposure Buckets'
@@ -3679,7 +3673,10 @@ class MarketDataVendor(EnumBase, Enum):
     MSCI = 'MSCI'
     MuniNet = 'MuniNet'
     Rearc_via_AWS_Data_Exchange = 'Rearc via AWS Data Exchange'
-    Bank_of_Japan = 'Bank of Japan'    
+    Bank_of_Japan = 'Bank of Japan'
+    Wolfe_Research = 'Wolfe Research'
+    Qontigo = 'Qontigo'
+    Quant_Insight = 'Quant Insight'    
 
 
 class NewOrUnwind(EnumBase, Enum):    
@@ -3688,6 +3685,14 @@ class NewOrUnwind(EnumBase, Enum):
 
     New = 'New'
     Unwind = 'Unwind'    
+
+
+class NotionalOrStrike(EnumBase, Enum):    
+    
+    """Notional or Strke on target adjustment"""
+
+    Notional = 'Notional'
+    Strike = 'Strike'    
 
 
 class OptionExpiryType(EnumBase, Enum):    
@@ -4140,6 +4145,13 @@ class SwapSettlement(EnumBase, Enum):
     Physical = 'Physical'
     Cash_CollatCash = 'Cash.CollatCash'
     Cash_PYU = 'Cash.PYU'    
+
+
+class TargetPaymentType(EnumBase, Enum):    
+    
+    Capped = 'Capped'
+    Full = 'Full'
+    _None = 'None'    
 
 
 class TargetType(EnumBase, Enum):    
@@ -6201,184 +6213,6 @@ class TimeFilter(Base):
         self.__time_zone = value        
 
 
-class UserCoverage(Base):
-        
-    """Sales coverage for user"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str,
-        email: str,
-        app: str = None,
-        phone: str = None,
-        guid: str = None
-    ):        
-        super().__init__()
-        self.app = app
-        self.phone = phone
-        self.name = name
-        self.email = email
-        self.guid = guid
-
-    @property
-    def app(self) -> str:
-        """Marquee application covered by sales person"""
-        return self.__app
-
-    @app.setter
-    def app(self, value: str):
-        self._property_changed('app')
-        self.__app = value        
-
-    @property
-    def phone(self) -> str:
-        """Coverage phone number"""
-        return self.__phone
-
-    @phone.setter
-    def phone(self, value: str):
-        self._property_changed('phone')
-        self.__phone = value        
-
-    @property
-    def name(self) -> str:
-        """Coverage name"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def email(self) -> str:
-        """Coverage email"""
-        return self.__email
-
-    @email.setter
-    def email(self, value: str):
-        self._property_changed('email')
-        self.__email = value        
-
-    @property
-    def guid(self) -> str:
-        """Coverage guid"""
-        return self.__guid
-
-    @guid.setter
-    def guid(self, value: str):
-        self._property_changed('guid')
-        self.__guid = value        
-
-
-class UserTag(Base):
-        
-    """Marquee User Tag Attribute"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str,
-        added_on: datetime.datetime = None,
-        added_by_id: str = None,
-        removed: bool = None,
-        removed_on: datetime.datetime = None,
-        removed_by_id: str = None,
-        removal_reason: str = None,
-        category: str = None
-    ):        
-        super().__init__()
-        self.added_on = added_on
-        self.added_by_id = added_by_id
-        self.removed = removed
-        self.removed_on = removed_on
-        self.removed_by_id = removed_by_id
-        self.removal_reason = removal_reason
-        self.category = category
-        self.name = name
-
-    @property
-    def added_on(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__added_on
-
-    @added_on.setter
-    def added_on(self, value: datetime.datetime):
-        self._property_changed('added_on')
-        self.__added_on = value        
-
-    @property
-    def added_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__added_by_id
-
-    @added_by_id.setter
-    def added_by_id(self, value: str):
-        self._property_changed('added_by_id')
-        self.__added_by_id = value        
-
-    @property
-    def removed(self) -> bool:
-        """Flag to indicate if tag has been removed"""
-        return self.__removed
-
-    @removed.setter
-    def removed(self, value: bool):
-        self._property_changed('removed')
-        self.__removed = value        
-
-    @property
-    def removed_on(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__removed_on
-
-    @removed_on.setter
-    def removed_on(self, value: datetime.datetime):
-        self._property_changed('removed_on')
-        self.__removed_on = value        
-
-    @property
-    def removed_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__removed_by_id
-
-    @removed_by_id.setter
-    def removed_by_id(self, value: str):
-        self._property_changed('removed_by_id')
-        self.__removed_by_id = value        
-
-    @property
-    def removal_reason(self) -> str:
-        """Reason tag was removed"""
-        return self.__removal_reason
-
-    @removal_reason.setter
-    def removal_reason(self, value: str):
-        self._property_changed('removal_reason')
-        self.__removal_reason = value        
-
-    @property
-    def category(self) -> str:
-        """Category of the tag"""
-        return self.__category
-
-    @category.setter
-    def category(self, value: str):
-        self._property_changed('category')
-        self.__category = value        
-
-    @property
-    def name(self) -> str:
-        """Name of the tag"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-
 class WeightedPosition(Base):
         
     @camel_case_translate
@@ -7076,7 +6910,6 @@ class AssetParameters(Base):
         index_precision: float = None,
         official_side: Union[Side, str] = None,
         valuation_source: Union[BasketValuationSource, str] = None,
-        valuation_time: Union[BvalValuationTime, str] = None,
         close_time: datetime.datetime = None,
         credit_index_series: str = None,
         reference_entity: str = None,
@@ -7190,7 +7023,6 @@ class AssetParameters(Base):
         self.index_precision = index_precision
         self.official_side = official_side
         self.valuation_source = valuation_source
-        self.valuation_time = valuation_time
         self.close_time = close_time
         self.credit_index_series = credit_index_series
         self.reference_entity = reference_entity
@@ -8240,16 +8072,6 @@ class AssetParameters(Base):
     def valuation_source(self, value: Union[BasketValuationSource, str]):
         self._property_changed('valuation_source')
         self.__valuation_source = get_enum_value(BasketValuationSource, value)        
-
-    @property
-    def valuation_time(self) -> Union[BvalValuationTime, str]:
-        """The snapshot of bond price used for basket pricing"""
-        return self.__valuation_time
-
-    @valuation_time.setter
-    def valuation_time(self, value: Union[BvalValuationTime, str]):
-        self._property_changed('valuation_time')
-        self.__valuation_time = get_enum_value(BvalValuationTime, value)        
 
     @property
     def close_time(self) -> datetime.datetime:
@@ -11185,8 +11007,8 @@ class FieldFilterMap(Base):
         self.portfolio_type = kwargs.get('portfolio_type')
         self.vendor = kwargs.get('vendor')
         self.popularity = kwargs.get('popularity')
-        self.currency = kwargs.get('currency')
         self.term = kwargs.get('term')
+        self.currency = kwargs.get('currency')
         self.real_time_restriction_status = kwargs.get('real_time_restriction_status')
         self.asset_parameters_clearing_house = kwargs.get('asset_parameters_clearing_house')
         self.rating_fitch = kwargs.get('rating_fitch')
@@ -11324,8 +11146,8 @@ class FieldFilterMap(Base):
         self.last_updated_message = kwargs.get('last_updated_message')
         self.rcic = kwargs.get('rcic')
         self.trading_restriction = kwargs.get('trading_restriction')
-        self.status = kwargs.get('status')
         self.name_raw = kwargs.get('name_raw')
+        self.status = kwargs.get('status')
         self.asset_parameters_pay_or_receive = kwargs.get('asset_parameters_pay_or_receive')
         self.client_name = kwargs.get('client_name')
         self.asset_parameters_index_series = kwargs.get('asset_parameters_index_series')
@@ -11441,6 +11263,7 @@ class FieldFilterMap(Base):
         self.position_source = kwargs.get('position_source')
         self.listed = kwargs.get('listed')
         self.non_owner_id = kwargs.get('non_owner_id')
+        self.latest_end_date = kwargs.get('latest_end_date')
         self.shock_style = kwargs.get('shock_style')
         self.g10_currency = kwargs.get('g10_currency')
         self.strategy = kwargs.get('strategy')
@@ -11917,15 +11740,6 @@ class FieldFilterMap(Base):
         self.__popularity = value        
 
     @property
-    def currency(self) -> dict:
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: dict):
-        self._property_changed('currency')
-        self.__currency = value        
-
-    @property
     def term(self) -> dict:
         return self.__term
 
@@ -11933,6 +11747,15 @@ class FieldFilterMap(Base):
     def term(self, value: dict):
         self._property_changed('term')
         self.__term = value        
+
+    @property
+    def currency(self) -> dict:
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: dict):
+        self._property_changed('currency')
+        self.__currency = value        
 
     @property
     def real_time_restriction_status(self) -> dict:
@@ -13132,15 +12955,6 @@ class FieldFilterMap(Base):
         self.__trading_restriction = value        
 
     @property
-    def status(self) -> dict:
-        return self.__status
-
-    @status.setter
-    def status(self, value: dict):
-        self._property_changed('status')
-        self.__status = value        
-
-    @property
     def name_raw(self) -> dict:
         return self.__name_raw
 
@@ -13148,6 +12962,15 @@ class FieldFilterMap(Base):
     def name_raw(self, value: dict):
         self._property_changed('name_raw')
         self.__name_raw = value        
+
+    @property
+    def status(self) -> dict:
+        return self.__status
+
+    @status.setter
+    def status(self, value: dict):
+        self._property_changed('status')
+        self.__status = value        
 
     @property
     def asset_parameters_pay_or_receive(self) -> dict:
@@ -14174,6 +13997,15 @@ class FieldFilterMap(Base):
     def non_owner_id(self, value: dict):
         self._property_changed('non_owner_id')
         self.__non_owner_id = value        
+
+    @property
+    def latest_end_date(self) -> dict:
+        return self.__latest_end_date
+
+    @latest_end_date.setter
+    def latest_end_date(self, value: dict):
+        self._property_changed('latest_end_date')
+        self.__latest_end_date = value        
 
     @property
     def shock_style(self) -> dict:
@@ -17216,6 +17048,8 @@ class ReportScheduleRequest(Base):
         parameters: ReportParameters = None,
         end_date: datetime.date = None,
         start_date: datetime.date = None,
+        time: datetime.datetime = None,
+        use_close_date: datetime.date = None,
         priority: Union[ReportJobPriority, str] = None,
         name: str = None
     ):        
@@ -17223,6 +17057,8 @@ class ReportScheduleRequest(Base):
         self.parameters = parameters
         self.end_date = end_date
         self.start_date = start_date
+        self.time = time
+        self.use_close_date = use_close_date
         self.priority = priority
         self.name = name
 
@@ -17255,6 +17091,26 @@ class ReportScheduleRequest(Base):
     def start_date(self, value: datetime.date):
         self._property_changed('start_date')
         self.__start_date = value        
+
+    @property
+    def time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__time
+
+    @time.setter
+    def time(self, value: datetime.datetime):
+        self._property_changed('time')
+        self.__time = value        
+
+    @property
+    def use_close_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__use_close_date
+
+    @use_close_date.setter
+    def use_close_date(self, value: datetime.date):
+        self._property_changed('use_close_date')
+        self.__use_close_date = value        
 
     @property
     def priority(self) -> Union[ReportJobPriority, str]:

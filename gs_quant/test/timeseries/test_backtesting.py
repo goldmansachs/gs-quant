@@ -295,7 +295,9 @@ def test_basket_average_realized_corr():
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
     mock_asset.return_value = [
         {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
-        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
+        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
+        {'id': 'ID of a dUpLiCaTe AAPL', 'bbid': 'AAPL UW'}
+    ]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
 
@@ -309,7 +311,9 @@ def test_basket_average_realized_corr():
     mock_asset.return_value = [
         {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
         {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
-        {'id': 'MA4B66MW5E27UANZH2M', 'bbid': 'XLP UP'}]
+        {'id': 'MA4B66MW5E27UANZH2M', 'bbid': 'XLP UP'},
+        {'id': 'ID of a dUpLiCaTe XLP UP', 'bbid': 'XLP UP'}
+    ]
 
     b_basket = Basket(['AAPL UW', 'MSFT UW', 'XLP UP'], [0.2, 0.3, 0.5], RebalFreq.DAILY)
 
@@ -324,7 +328,9 @@ def test_basket_average_realized_corr():
     mock_asset.return_value = [
         {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
         {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
-        {'id': 'MA4B66MW5E27UANZH2M', 'bbid': 'XLP UP'}]
+        {'id': 'MA4B66MW5E27UANZH2M', 'bbid': 'XLP UP'},
+        {'id': 'ID of a DuPlIcAtE MSFT UW', 'bbid': 'MSFT UW'}
+    ]
 
     with pytest.raises(NotImplementedError):
         with DataContext('2021-01-01', '2021-01-09'):

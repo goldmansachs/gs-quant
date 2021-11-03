@@ -1459,11 +1459,52 @@ class SecurityMaster:
 
         params = {
             'identifiers': list(ids),
-            'toIdentifiers': [identifier.value for identifier in to_identifiers]
+            'toIdentifiers': [identifier.value for identifier in to_identifiers],
+            'compact': True
         }
         if start_date is not None:
             params['startDate'] = start_date
         if end_date is not None:
             params['endDate'] = end_date
         r = _get_with_retries('/markets/securities/map', params)
-        return r['results']
+
+        results = r['results']
+        if isinstance(results, dict):
+            return results
+
+        output = dict()
+        date_format = '%Y-%m-%d'
+        date_delta = datetime.timedelta(days=1)
+        for row in results:
+            current = datetime.datetime.strptime(row['startDate'], date_format)
+            end = datetime.datetime.strptime(row['endDate'], date_format)
+            while current <= end:
+                outer = output.setdefault(current, dict())
+                inner = outer.setdefault(row["input"], dict())
+                output_type = row["outputType"]
+                output_value = row["outputValue"]
+                if output_type == "ric":
+                    if SecurityIdentifier.RIC in to_identifiers:
+                        values = inner.setdefault('ric', [])
+                        if output_value not in values:
+                            values.append(output_value)
+                    if SecurityIdentifier.ASSET_ID in to_identifiers and "assetId" in row:
+                        values = inner.setdefault('assetId', [])
+                        asset_id = row['assetId']
+                        if asset_id not in values:
+                            values.append(asset_id)
+                elif output_type == "bbg":
+                    if SecurityIdentifier.BBG in to_identifiers:
+                        inner[output_type] = output_value
+                    if SecurityIdentifier.BBID in to_identifiers:
+                        inner[SecurityIdentifier.BBID.value] = f"{output_value} {row.get('exchange', '??')}"
+                    if SecurityIdentifier.BCID in to_identifiers:
+                        inner[SecurityIdentifier.BCID.value] = f"{output_value} {row.get('compositeExchange', '??')}"
+                else:
+                    if SecurityIdentifier(output_type) in to_identifiers:
+                        inner[output_type] = output_value
+
+                current += date_delta
+
+        # much faster to run strftime (once for each date) at the end
+        return {k.strftime(date_format): v for k, v in output.items()}

@@ -145,8 +145,8 @@ def normalized_performance(report_id: str, aum_source: str = None, *, source: st
 
 
     """
-    start_date = DataContext.current.start_time
-    end_date = DataContext.current.end_time
+    start_date = DataContext.current.start_date
+    end_date = DataContext.current.end_date
 
     ppa_report = PerformanceReport.get(report_id)
     if not aum_source:
@@ -193,8 +193,8 @@ def thematic_exposure(report_id: str, basket_ticker: str, *, source: str = None,
     """
     thematic_report = ThematicReport.get(report_id)
     asset = SecurityMaster.get_asset(basket_ticker, AssetIdentifier.TICKER)
-    df = thematic_report.get_thematic_exposure(start_date=DataContext.current.start_time,
-                                               end_date=DataContext.current.end_time,
+    df = thematic_report.get_thematic_exposure(start_date=DataContext.current.start_date,
+                                               end_date=DataContext.current.end_date,
                                                basket_ids=[asset.get_marquee_id()])
     if not df.empty:
         df.set_index('date', inplace=True)
@@ -217,8 +217,8 @@ def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
     """
     thematic_report = ThematicReport.get(report_id)
     asset = SecurityMaster.get_asset(basket_ticker, AssetIdentifier.TICKER)
-    df = thematic_report.get_thematic_betas(start_date=DataContext.current.start_time,
-                                            end_date=DataContext.current.end_time,
+    df = thematic_report.get_thematic_betas(start_date=DataContext.current.start_date,
+                                            end_date=DataContext.current.end_date,
                                             basket_ids=[asset.get_marquee_id()])
     if not df.empty:
         df.set_index('date', inplace=True)
@@ -243,8 +243,8 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) ->
 
     factor_data = report.get_results(
         factors=[factor_name],
-        start_date=DataContext.current.start_time,
-        end_date=DataContext.current.end_time,
+        start_date=DataContext.current.start_date,
+        end_date=DataContext.current.end_date,
         return_format=ReturnFormat.JSON
     )
     factor_exposures = [{'date': d['date'], col_name: d[data_type]} for d in factor_data if d.get(data_type)]

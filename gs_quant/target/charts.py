@@ -533,6 +533,7 @@ class ChartAnnotation(Base):
         text_align: Union[ChartAnnotationTextAlign, str] = None,
         text_decoration: Union[ChartAnnotationTextDecoration, str] = None,
         text_width: float = None,
+        text_height: float = None,
         y_axis_index: float = None,
         name: str = None
     ):        
@@ -558,6 +559,7 @@ class ChartAnnotation(Base):
         self.text_align = text_align
         self.text_decoration = text_decoration
         self.text_width = text_width
+        self.text_height = text_height
         self.y_axis_index = y_axis_index
         self.name = name
 
@@ -770,6 +772,16 @@ class ChartAnnotation(Base):
     def text_width(self, value: float):
         self._property_changed('text_width')
         self.__text_width = value        
+
+    @property
+    def text_height(self) -> float:
+        """Height of the text annotation container."""
+        return self.__text_height
+
+    @text_height.setter
+    def text_height(self, value: float):
+        self._property_changed('text_height')
+        self.__text_height = value        
 
     @property
     def y_axis_index(self) -> float:

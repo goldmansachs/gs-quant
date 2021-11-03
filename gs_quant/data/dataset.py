@@ -45,6 +45,9 @@ class Dataset:
         # STS
         STSLEVELS = 'STSLEVELS'
 
+        # Central Bank Watch
+        CENTRAL_BANK_WATCH = 'CENTRAL_BANK_WATCH_PREMIUM'
+
         # Test Datasets
         WEATHER = 'WEATHER'
 

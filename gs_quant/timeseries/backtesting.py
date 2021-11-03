@@ -200,7 +200,8 @@ class Basket:
 
     def get_marquee_ids(self):
         if self._marquee_ids is None:
-            assets = GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', 'bbid'), limit=len(self.bbids))
+            assets = GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', 'bbid'),
+                                                     limit=2 * len(self.bbids), order_by=['<rank'])
             assets_dict = {entry['bbid']: entry['id'] for entry in assets}
             if len(assets_dict) != len(set(self.bbids)):
                 raise MqValueError('Unable to find all stocks')

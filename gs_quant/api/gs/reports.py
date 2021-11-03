@@ -66,7 +66,7 @@ class GsReportApi:
         if status is not None:
             url += '&status={status}'.format(status=status)
         if report_type is not None:
-            url += '&reportType={report_type}'.format(report_type=report_type)
+            url += '&reportType={report_type}'.format(report_type=urllib.parse.quote(report_type))
         if order_by is not None:
             url += '&orderBy={order_by}'.format(order_by=order_by)
         return GsSession.current._get(url, cls=Report)['results']

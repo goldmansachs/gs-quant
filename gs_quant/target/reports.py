@@ -592,7 +592,9 @@ class ReportBatchScheduleRequest(Base):
         self,
         reports: Tuple[str, ...] = None,
         reports_with_parameters_overrides: Tuple[ReportWithParametersOverrides, ...] = None,
+        time: datetime.datetime = None,
         end_date: datetime.date = None,
+        use_close_date: datetime.date = None,
         start_date: datetime.date = None,
         parameters: ReportParameters = None,
         priority: Union[ReportJobPriority, str] = None,
@@ -601,7 +603,9 @@ class ReportBatchScheduleRequest(Base):
         super().__init__()
         self.reports = reports
         self.reports_with_parameters_overrides = reports_with_parameters_overrides
+        self.time = time
         self.end_date = end_date
+        self.use_close_date = use_close_date
         self.start_date = start_date
         self.parameters = parameters
         self.priority = priority
@@ -628,6 +632,16 @@ class ReportBatchScheduleRequest(Base):
         self.__reports_with_parameters_overrides = value        
 
     @property
+    def time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__time
+
+    @time.setter
+    def time(self, value: datetime.datetime):
+        self._property_changed('time')
+        self.__time = value        
+
+    @property
     def end_date(self) -> datetime.date:
         """ISO 8601-formatted date"""
         return self.__end_date
@@ -636,6 +650,16 @@ class ReportBatchScheduleRequest(Base):
     def end_date(self, value: datetime.date):
         self._property_changed('end_date')
         self.__end_date = value        
+
+    @property
+    def use_close_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__use_close_date
+
+    @use_close_date.setter
+    def use_close_date(self, value: datetime.date):
+        self._property_changed('use_close_date')
+        self.__use_close_date = value        
 
     @property
     def start_date(self) -> datetime.date:
@@ -675,6 +699,8 @@ class ReportJob(Base):
         self,
         start_date: datetime.date = None,
         end_date: datetime.date = None,
+        time: datetime.datetime = None,
+        use_close_date: datetime.date = None,
         elapsed_time: float = None,
         percentage_complete: float = None,
         execution_time: datetime.datetime = None,
@@ -698,6 +724,8 @@ class ReportJob(Base):
         super().__init__()
         self.start_date = start_date
         self.end_date = end_date
+        self.time = time
+        self.use_close_date = use_close_date
         self.elapsed_time = elapsed_time
         self.percentage_complete = percentage_complete
         self.execution_time = execution_time
@@ -737,6 +765,26 @@ class ReportJob(Base):
     def end_date(self, value: datetime.date):
         self._property_changed('end_date')
         self.__end_date = value        
+
+    @property
+    def time(self) -> datetime.datetime:
+        """ISO 8601-formatted timestamp"""
+        return self.__time
+
+    @time.setter
+    def time(self, value: datetime.datetime):
+        self._property_changed('time')
+        self.__time = value        
+
+    @property
+    def use_close_date(self) -> datetime.date:
+        """Force fixed close date for intraday risk calculations."""
+        return self.__use_close_date
+
+    @use_close_date.setter
+    def use_close_date(self, value: datetime.date):
+        self._property_changed('use_close_date')
+        self.__use_close_date = value        
 
     @property
     def elapsed_time(self) -> float:

@@ -21,10 +21,14 @@ from typing import List, Union
 import pandas as pd
 
 from gs_quant.api.gs.portfolios import GsPortfolioApi
+from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.entities.entity import PositionedEntity, EntityType
+from gs_quant.errors import MqError
 from gs_quant.errors import MqValueError
+from gs_quant.markets.report import PerformanceReport
 from gs_quant.markets.report import ReportJobFuture
+from gs_quant.target.common import Currency
 from gs_quant.target.portfolios import RiskAumSource
 
 _logger = logging.getLogger(__name__)
@@ -83,6 +87,15 @@ class PortfolioManager(PositionedEntity):
     @portfolio_id.setter
     def portfolio_id(self, value: str):
         self.__portfolio_id = value
+
+    def get_performance_report(self) -> PerformanceReport:
+        reports = GsReportApi.get_reports(limit=100,
+                                          position_source_type='Portfolio',
+                                          position_source_id=self.id,
+                                          report_type='Portfolio Performance Analytics')
+        if len(reports) == 0:
+            raise MqError('This portfolio has no performance report.')
+        return PerformanceReport.from_target(reports[0])
 
     def schedule_reports(self,
                          start_date: dt.date = None,
@@ -183,3 +196,16 @@ class PortfolioManager(PositionedEntity):
         """
         formatted_aum_data = [{'date': data.date.strftime('%Y-%m-%d'), 'aum': data.aum} for data in aum_data]
         GsPortfolioApi.upload_custom_aum(self.portfolio_id, formatted_aum_data, clear_existing_data)
+
+    def get_pnl_contribution(self,
+                             start_date: dt.date = None,
+                             end_date: dt.date = None,
+                             currency: Currency = None) -> pd.DataFrame:
+        """
+        Get PnL Contribution of your portfolio broken down by constituents
+        :param start_date: optional start date
+        :param end_date: optional end date
+        :param currency: optional currency; defaults to your portfolio's currency
+        :return: a Pandas DataFrame of results
+        """
+        return pd.DataFrame(GsPortfolioApi.get_attribution(self.portfolio_id, start_date, end_date, currency))

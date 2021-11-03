@@ -4105,18 +4105,18 @@ def test_central_bank_swap_rate(mocker):
         actual_abs = tm.central_bank_swap_rate(mock_eur, tm.MeetingType.MEETING_FORWARD, tm.LevelType.ABSOLUTE,
                                                dt.date(2019, 12, 6))
         assert (target['meeting_absolute'] == actual_abs.loc[dt.date(2020, 1, 23)])
-        assert actual_abs.dataset_ids == ('CENTRAL_BANK_WATCH',)
+        assert actual_abs.dataset_ids == (Dataset.GS.CENTRAL_BANK_WATCH,)
 
         actual_rel = tm.central_bank_swap_rate(mock_eur, tm.MeetingType.MEETING_FORWARD, tm.LevelType.RELATIVE,
                                                dt.date(2019, 12, 6))
         assert (target['meeting_relative'] == actual_rel.loc[dt.date(2020, 1, 23)])
-        assert actual_rel.dataset_ids == ('CENTRAL_BANK_WATCH',)
+        assert actual_rel.dataset_ids == (Dataset.GS.CENTRAL_BANK_WATCH,)
 
         mock_get_data.return_value = mock_ois_spot()
         actual_spot = tm.central_bank_swap_rate(mock_eur, tm.MeetingType.SPOT, tm.LevelType.ABSOLUTE,
                                                 dt.date(2019, 12, 6))
         assert (target['spot'] == actual_spot.loc[dt.date(2019, 12, 6)])
-        assert actual_spot.dataset_ids == ('CENTRAL_BANK_WATCH',)
+        assert actual_spot.dataset_ids == (Dataset.GS.CENTRAL_BANK_WATCH,)
 
         with pytest.raises(MqError):
             tm.central_bank_swap_rate(mock_eur, 'meeting_forward')
@@ -4157,26 +4157,26 @@ def test_policy_rate_expectation(mocker):
 
         actual_num = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, tm.LevelType.ABSOLUTE, 2)
         assert (target['meeting_number_absolute'] == actual_num.loc[dt.date(2019, 12, 6)])
-        assert actual_num.dataset_ids == ('CENTRAL_BANK_WATCH',)
+        assert actual_num.dataset_ids == (Dataset.GS.CENTRAL_BANK_WATCH,)
 
         actual_date = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, tm.LevelType.ABSOLUTE,
                                                  dt.date(2020, 1, 23))
         assert (target['meeting_number_absolute'] == actual_date.loc[dt.date(2019, 12, 6)])
-        assert actual_date.dataset_ids == ('CENTRAL_BANK_WATCH',)
+        assert actual_date.dataset_ids == (Dataset.GS.CENTRAL_BANK_WATCH,)
 
         actual_num = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, tm.LevelType.RELATIVE, 2)
         assert_allclose([target['meeting_number_relative']], [actual_num.loc[dt.date(2019, 12, 6)]],
                         rtol=1e-9, atol=1e-15)
-        assert actual_num.dataset_ids == ('CENTRAL_BANK_WATCH',)
+        assert actual_num.dataset_ids == (Dataset.GS.CENTRAL_BANK_WATCH,)
 
         actual_num = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, tm.LevelType.ABSOLUTE, 0)
         assert (target['meeting_number_spot'] == actual_num.loc[dt.date(2019, 12, 6)])
-        assert actual_num.dataset_ids == ('CENTRAL_BANK_WATCH',)
+        assert actual_num.dataset_ids == (Dataset.GS.CENTRAL_BANK_WATCH,)
 
         actual_date = tm.policy_rate_expectation(mock_eur, tm.MeetingType.MEETING_FORWARD, tm.LevelType.ABSOLUTE,
                                                  '2019-10-24')
         assert (target['meeting_number_spot'] == actual_date.loc[dt.date(2019, 12, 6)])
-        assert actual_date.dataset_ids == ('CENTRAL_BANK_WATCH',)
+        assert actual_date.dataset_ids == (Dataset.GS.CENTRAL_BANK_WATCH,)
 
         mocker.patch.object(Dataset, 'get_data', side_effect=[mock_meeting_expectation(),
                                                               mock_empty_market_data_response()])

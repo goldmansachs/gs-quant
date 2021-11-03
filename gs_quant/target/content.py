@@ -100,8 +100,7 @@ class Author(Base):
         name: str = None,
         division=None,
         email: str = None,
-        title: str = None,
-        kerberos: str = None
+        title: str = None
     ):        
         super().__init__()
         self.__id = id_
@@ -109,7 +108,6 @@ class Author(Base):
         self.division = division
         self.email = email
         self.title = title
-        self.kerberos = kerberos
 
     @property
     def id(self) -> str:
@@ -157,16 +155,6 @@ class Author(Base):
     def title(self, value: str):
         self._property_changed('title')
         self.__title = value        
-
-    @property
-    def kerberos(self) -> str:
-        """Kerberos"""
-        return self.__kerberos
-
-    @kerberos.setter
-    def kerberos(self, value: str):
-        self._property_changed('kerberos')
-        self.__kerberos = value        
 
 
 class BulkDeleteContentResponse(Base):
@@ -499,8 +487,7 @@ class ContentResponse(Base):
         created_time: datetime.datetime = None,
         last_updated_time: datetime.datetime = None,
         channels: Tuple[str, ...] = None,
-        content: Content = None,
-        language=None
+        content: Content = None
     ):        
         super().__init__()
         self.__id = id_
@@ -513,7 +500,6 @@ class ContentResponse(Base):
         self.last_updated_time = last_updated_time
         self.channels = channels
         self.content = content
-        self.language = language
 
     @property
     def id(self) -> str:
@@ -614,16 +600,6 @@ class ContentResponse(Base):
     def content(self, value: Content):
         self._property_changed('content')
         self.__content = value        
-
-    @property
-    def language(self):
-        """ISO 639-1 language code for the content piece"""
-        return self.__language
-
-    @language.setter
-    def language(self, value):
-        self._property_changed('language')
-        self.__language = value        
 
 
 class ContentUpdateRequest(Base):
