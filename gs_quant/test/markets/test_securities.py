@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import copy
 
 import pytest
 
@@ -515,31 +516,273 @@ def test_offset_key(mocker):
 
 
 def test_map_identifiers(mocker):
-    json = {
-        "results": {
-            "2021-10-11": {
-                "GS UN": {
-                    "ric": [
-                        "GS.N"
-                    ],
-                    "gsid": 901026
-                }
+    mock1 = {
+        "results": [
+            {
+                "assetId": "MA4B66MW5E27U9VBB93",
+                "outputType": "rcic",
+                "outputValue": "AAPL.O",
+                "startDate": "2021-10-11",
+                "endDate": "2021-10-12",
+                "input": "AAPL UN"
             },
-            "2021-10-12": {
-                "GS UN": {
-                    "ric": [
-                        "GS.N"
-                    ],
-                    "gsid": 901026
-                }
+            {
+                "assetId": "MARCRZHY163GQ4H3",
+                "outputType": "ric",
+                "outputValue": "AAPL.N",
+                "startDate": "2021-10-11",
+                "endDate": "2021-10-12",
+                "input": "AAPL UN"
+            },
+            {
+                "assetId": "MA4B66MW5E27UAHKG34",
+                "outputType": "ric",
+                "outputValue": "GS.N",
+                "startDate": "2021-10-11",
+                "endDate": "2021-10-12",
+                "input": "GS UN"
+            },
+            {
+                "outputType": "rcic",
+                "outputValue": "GS",
+                "startDate": "2021-10-11",
+                "endDate": "2021-10-12",
+                "input": "GS UN"
+            },
+            {
+                "outputType": "gsid",
+                "outputValue": 14593,
+                "startDate": "2021-10-11",
+                "endDate": "2021-10-12",
+                "input": "AAPL UN"
+            },
+            {
+                "outputType": "gsid",
+                "outputValue": 901026,
+                "startDate": "2021-10-11",
+                "endDate": "2021-10-12",
+                "input": "GS UN"
+            }
+        ]
+    }
+    mock2 = copy.deepcopy(mock1)
+    mock2["results"].extend([
+        {
+            "outputType": "bbg",
+            "outputValue": "AAPL",
+            "exchange": "UN",
+            "compositeExchange": "US",
+            "startDate": "2021-10-11",
+            "endDate": "2021-10-12",
+            "input": "AAPL UN"
+        },
+        {
+            "outputType": "bbg",
+            "outputValue": "GS",
+            "exchange": "UN",
+            "compositeExchange": "US",
+            "startDate": "2021-10-11",
+            "endDate": "2021-10-12",
+            "input": "GS UN"
+        }
+    ])
+
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock2, mock2])
+    start = dt.date(2021, 10, 11)
+    end = dt.date(2021, 10, 12)
+
+    expected = {
+        "2021-10-11": {
+            "AAPL UN": {
+                "ric": [
+                    "AAPL.N"
+                ],
+                "gsid": 14593
+            },
+            "GS UN": {
+                "ric": [
+                    "GS.N"
+                ],
+                "gsid": 901026
+            }
+        },
+        "2021-10-12": {
+            "AAPL UN": {
+                "ric": [
+                    "AAPL.N"
+                ],
+                "gsid": 14593
+            },
+            "GS UN": {
+                "ric": [
+                    "GS.N"
+                ],
+                "gsid": 901026
             }
         }
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[json])
     with SecMasterContext():
-        actual = SecurityMaster.map_identifiers(['GS UN', 'AAPL UN'], [SecurityIdentifier.RIC],
-                                                dt.date(2021, 10, 11), dt.date(2021, 10, 12))
-    assert actual == json['results']
+        actual = SecurityMaster.map_identifiers(['GS UN', 'AAPL UN'],
+                                                [SecurityIdentifier.RIC, SecurityIdentifier.GSID],
+                                                start, end)
+    assert actual == expected
+
+    expected = {
+        "2021-10-11": {
+            "AAPL UN": {
+                "assetId": [
+                    "MARCRZHY163GQ4H3"
+                ],
+                "gsid": 14593,
+                "bbid": "AAPL UN"
+            },
+            "GS UN": {
+                "assetId": [
+                    "MA4B66MW5E27UAHKG34"
+                ],
+                "gsid": 901026,
+                "bbid": "GS UN"
+            }
+        },
+        "2021-10-12": {
+            "AAPL UN": {
+                "assetId": [
+                    "MARCRZHY163GQ4H3"
+                ],
+                "gsid": 14593,
+                "bbid": "AAPL UN"
+            },
+            "GS UN": {
+                "assetId": [
+                    "MA4B66MW5E27UAHKG34"
+                ],
+                "gsid": 901026,
+                "bbid": "GS UN"
+            }
+        }
+    }
+    targets = [SecurityIdentifier.ASSET_ID, SecurityIdentifier.GSID, SecurityIdentifier.BBID]
+    with SecMasterContext():
+        actual = SecurityMaster.map_identifiers(['GS UN', 'AAPL UN'], targets, start, end)
+    assert actual == expected
+
+
+def test_map_identifiers_change(mocker):
+    mock = {
+        "results": [
+            {
+                "outputType": "bbg",
+                "outputValue": "USAT",
+                "exchange": "UW",
+                "compositeExchange": "US",
+                "startDate": "2021-01-01",
+                "endDate": "2021-04-18",
+                "input": "104563"
+            },
+            {
+                "outputType": "bbg",
+                "outputValue": "CTLP",
+                "exchange": "UW",
+                "compositeExchange": "US",
+                "startDate": "2021-04-19",
+                "endDate": "2021-11-01",
+                "input": "104563"
+            },
+            {
+                "assetId": "MAY8Z19T2WE6RVHG",
+                "outputType": "rcic",
+                "outputValue": "USAT.O",
+                "startDate": "2021-01-01",
+                "endDate": "2021-04-17",
+                "input": "104563"
+            },
+            {
+                "assetId": "MA4B66MW5E27UANLYDS",
+                "outputType": "ric",
+                "outputValue": "USAT.OQ",
+                "startDate": "2021-01-01",
+                "endDate": "2021-04-17",
+                "input": "104563"
+            },
+            {
+                "assetId": "MA2640YQADTHYZ4M",
+                "outputType": "rcic",
+                "outputValue": "CTLP.O",
+                "startDate": "2021-04-19",
+                "endDate": "2021-11-01",
+                "input": "104563"
+            },
+            {
+                "assetId": "MAR754Z5RQYZ3V8E",
+                "outputType": "ric",
+                "outputValue": "CTLP.OQ",
+                "startDate": "2021-04-19",
+                "endDate": "2021-11-01",
+                "input": "104563"
+            },
+            # additional RICs omitted from test
+            {
+                "outputType": "gsid",
+                "outputValue": 104563,
+                "startDate": "2021-01-01",
+                "endDate": "2021-04-18",
+                "input": "104563"
+            },
+            {
+                "outputType": "gsid",
+                "outputValue": 104563,
+                "startDate": "2021-04-19",
+                "endDate": "2021-11-01",
+                "input": "104563"
+            },
+            {
+                "outputType": "isin",
+                "outputValue": "US90328S5001",
+                "startDate": "2021-01-01",
+                "endDate": "2021-04-18",
+                "input": "104563"
+            },
+            {
+                "outputType": "isin",
+                "outputValue": "US1381031061",
+                "startDate": "2021-04-19",
+                "endDate": "2021-11-01",
+                "input": "104563"
+            }
+        ]
+    }
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
+    start = dt.date(2021, 1, 1)
+    end = dt.date(2021, 11, 1)
+
+    expected = {
+        "2021-04-16": {
+            "104563": {
+                "ric": [
+                    "USAT.OQ"
+                ],
+                "gsid": 104563,
+                "isin": "US90328S5001",
+                "bcid": "USAT US"
+
+            }
+        },
+        "2021-04-19": {
+            "104563": {
+                "ric": [
+                    "CTLP.OQ"
+                ],
+                "gsid": 104563,
+                "isin": "US1381031061",
+                "bcid": "CTLP US"
+            }
+        }
+    }
+    targets = [SecurityIdentifier.RIC, SecurityIdentifier.GSID, SecurityIdentifier.ISIN, SecurityIdentifier.BCID]
+    with SecMasterContext():
+        actual = SecurityMaster.map_identifiers(['104563'], targets, start, end)
+    for k, v in expected.items():
+        assert actual[k] == v
 
 
 if __name__ == "__main__":

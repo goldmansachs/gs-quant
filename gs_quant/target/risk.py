@@ -3615,6 +3615,7 @@ class LiquidityResponse(Base):
         sector_buckets: Tuple[LiquidityBucket, ...] = None,
         industry_buckets: Tuple[LiquidityBucket, ...] = None,
         market_cap_buckets: Tuple[LiquidityBucket, ...] = None,
+        currency_buckets: Tuple[LiquidityBucket, ...] = None,
         execution_costs_with_different_time_horizons: Tuple[ExecutionCostForHorizon, ...] = None,
         time_to_trade_with_different_participation_rates: Tuple[PRateForHorizon, ...] = None,
         risk_over_time: Tuple[RiskAtHorizon, ...] = None,
@@ -3648,6 +3649,7 @@ class LiquidityResponse(Base):
         self.sector_buckets = sector_buckets
         self.industry_buckets = industry_buckets
         self.market_cap_buckets = market_cap_buckets
+        self.currency_buckets = currency_buckets
         self.execution_costs_with_different_time_horizons = execution_costs_with_different_time_horizons
         self.time_to_trade_with_different_participation_rates = time_to_trade_with_different_participation_rates
         self.risk_over_time = risk_over_time
@@ -3823,6 +3825,16 @@ class LiquidityResponse(Base):
     def market_cap_buckets(self, value: Tuple[LiquidityBucket, ...]):
         self._property_changed('market_cap_buckets')
         self.__market_cap_buckets = value        
+
+    @property
+    def currency_buckets(self) -> Tuple[LiquidityBucket, ...]:
+        """Positions data bucketed by common characteristic."""
+        return self.__currency_buckets
+
+    @currency_buckets.setter
+    def currency_buckets(self, value: Tuple[LiquidityBucket, ...]):
+        self._property_changed('currency_buckets')
+        self.__currency_buckets = value        
 
     @property
     def execution_costs_with_different_time_horizons(self) -> Tuple[ExecutionCostForHorizon, ...]:

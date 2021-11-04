@@ -55,7 +55,7 @@ def test_market_data_object():
             'mkt_quoting_style': 'ATMRate'}, 'value': 'redacted'},
     ]
     coordinates = {MarketDataCoordinate.from_dict(dic['coordinate']): dic['value'] for dic in coord_val_pair}
-    overlay_market = OverlayMarket(market_data=coordinates)
+    overlay_market = OverlayMarket(base_market=CloseMarket(market_data=coordinates))
 
-    assert overlay_market.market_data[0].coordinate == MarketDataCoordinate.from_dict(coord_val_pair[0]['coordinate'])
+    assert overlay_market.coordinates[0] == MarketDataCoordinate.from_dict(coord_val_pair[0]['coordinate'])
     assert overlay_market.redacted_coordinates[0] == MarketDataCoordinate.from_dict(coord_val_pair[1]['coordinate'])

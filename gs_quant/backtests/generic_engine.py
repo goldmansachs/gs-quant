@@ -221,10 +221,11 @@ class GenericEngine(BacktestBaseEngine):
         logging.info('Pricing Simple and Semi-deterministic triggers and actions')
         with PricingContext(is_batch=True, show_progress=show_progress, csa_term=csa_term, visible_to_gs=visible_to_gs):
             for day, portfolio in backtest.portfolio_dict.items():
-                with PricingContext(day):
-                    backtest.calc_calls += 1
-                    backtest.calculations += len(portfolio) * len(risks)
-                    backtest.add_results(day, portfolio.calc(tuple(risks)))
+                if isinstance(day, dt.date):
+                    with PricingContext(day):
+                        backtest.calc_calls += 1
+                        backtest.calculations += len(portfolio) * len(risks)
+                        backtest.add_results(day, portfolio.calc(tuple(risks)))
 
             # semi path dependent initial calc
             for _, scaling_list in backtest.scaling_portfolios.items():
@@ -281,35 +282,38 @@ class GenericEngine(BacktestBaseEngine):
 
         cash_results = {}
         for day, risk_results in cash_calcs.items():
-            cash_results[day] = risk_results[0]
-            if len(risk_results) > 1:
-                for i in range(1, len(risk_results)):
-                    cash_results[day] += risk_results[i]
+            if day <= end:
+                cash_results[day] = risk_results[0]
+                if len(risk_results) > 1:
+                    for i in range(1, len(risk_results)):
+                        cash_results[day] += risk_results[i]
 
         # handle cash
         current_value = initial_value
         for d in sorted(set(dates + list(backtest.cash_payments.keys()))):
-            backtest.cash_dict[d] = current_value
-            if d in backtest.cash_payments and d <= end:
-                for cp in backtest.cash_payments[d]:
-                    value = cash_results.get(cp.effective_date, {}).get(price_risk, {}).get(cp.trade.name, {})
-                    try:
-                        value = backtest.results[cp.effective_date][price_risk][cp.trade.name] if value == {} else value
-                    except ValueError:
-                        raise RuntimeError(f'failed to get cash value for {cp.trade.name} on '
-                                           f'{cp.effective_date} received value of {value}')
-                    if not isinstance(value, float):
-                        raise RuntimeError(f'failed to get cash value for {cp.trade.name} on '
-                                           f'{cp.effective_date} received value of {value}')
-                    if cp.scale_date:
-                        scale_notional = backtest.portfolio_dict[cp.scale_date][cp.trade.name].notional_amount
-                        scale_date_adj = scale_notional / cp.trade.notional_amount
-                        cp.cash_paid = value * scale_date_adj * cp.direction
-                        backtest.cash_dict[d] += cp.cash_paid
-                    else:
-                        cp.cash_paid = value * cp.direction
-                        backtest.cash_dict[d] += cp.cash_paid
-                current_value = backtest.cash_dict[d]
+            if d <= end:
+                backtest.cash_dict[d] = current_value
+                if d in backtest.cash_payments:
+                    for cp in backtest.cash_payments[d]:
+                        value = cash_results.get(cp.effective_date, {}).get(price_risk, {}).get(cp.trade.name, {})
+                        try:
+                            value = backtest.results[cp.effective_date][price_risk][cp.trade.name] \
+                                if value == {} else value
+                        except ValueError:
+                            raise RuntimeError(f'failed to get cash value for {cp.trade.name} on '
+                                               f'{cp.effective_date} received value of {value}')
+                        if not isinstance(value, float):
+                            raise RuntimeError(f'failed to get cash value for {cp.trade.name} on '
+                                               f'{cp.effective_date} received value of {value}')
+                        if cp.scale_date:
+                            scale_notional = backtest.portfolio_dict[cp.scale_date][cp.trade.name].notional_amount
+                            scale_date_adj = scale_notional / cp.trade.notional_amount
+                            cp.cash_paid = value * scale_date_adj * cp.direction
+                            backtest.cash_dict[d] += cp.cash_paid
+                        else:
+                            cp.cash_paid = value * cp.direction
+                            backtest.cash_dict[d] += cp.cash_paid
+                    current_value = backtest.cash_dict[d]
 
         logging.info(f'Finished Backtest:- {dt.datetime.now()}')
         return backtest

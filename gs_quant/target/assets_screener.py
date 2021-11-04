@@ -142,6 +142,7 @@ class AssetScreenerCreditRequestFilters(Base):
         amount_outstanding: AssetScreenerRequestFilterLimits = None,
         rating: AssetScreenerCreditStandardAndPoorsRatingOptions = None,
         seniority: AssetScreenerRequestStringOptions = None,
+        ticker: AssetScreenerRequestStringOptions = None,
         currency: AssetScreenerRequestStringOptions = None,
         region: AssetScreenerRequestStringOptions = None,
         sector: AssetScreenerRequestStringOptions = None,
@@ -165,6 +166,7 @@ class AssetScreenerCreditRequestFilters(Base):
         self.amount_outstanding = amount_outstanding
         self.rating = rating
         self.seniority = seniority
+        self.ticker = ticker
         self.currency = currency
         self.region = region
         self.sector = sector
@@ -344,6 +346,16 @@ class AssetScreenerCreditRequestFilters(Base):
         self.__seniority = value        
 
     @property
+    def ticker(self) -> AssetScreenerRequestStringOptions:
+        """Ticker of the bond."""
+        return self.__ticker
+
+    @ticker.setter
+    def ticker(self, value: AssetScreenerRequestStringOptions):
+        self._property_changed('ticker')
+        self.__ticker = value        
+
+    @property
     def currency(self) -> AssetScreenerRequestStringOptions:
         """Currency of the bond."""
         return self.__currency
@@ -391,6 +403,7 @@ class AssetScreenerCreditResponseItem(Base):
         currency: Union[Currency, str] = None,
         region: Union[Region, str] = None,
         seniority: str = None,
+        ticker: str = None,
         rating_standard_and_poors: str = None,
         gs_liquidity_score: float = None,
         amount_outstanding: float = None,
@@ -421,6 +434,7 @@ class AssetScreenerCreditResponseItem(Base):
         self.currency = currency
         self.region = region
         self.seniority = seniority
+        self.ticker = ticker
         self.rating_standard_and_poors = rating_standard_and_poors
         self.gs_liquidity_score = gs_liquidity_score
         self.amount_outstanding = amount_outstanding
@@ -539,6 +553,16 @@ class AssetScreenerCreditResponseItem(Base):
     def seniority(self, value: str):
         self._property_changed('seniority')
         self.__seniority = value        
+
+    @property
+    def ticker(self) -> str:
+        """Ticker identifier of the bond."""
+        return self.__ticker
+
+    @ticker.setter
+    def ticker(self, value: str):
+        self._property_changed('ticker')
+        self.__ticker = value        
 
     @property
     def rating_standard_and_poors(self) -> str:

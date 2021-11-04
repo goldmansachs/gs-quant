@@ -272,7 +272,7 @@ class Report:
                 start_date = business_day_offset(min(position_dates) - relativedelta(years=1), -1, roll='forward') \
                     if backcast else min(position_dates)
             if end_date is None:
-                end_date = min(position_dates) if backcast else max(position_dates)
+                end_date = min(position_dates) if backcast else business_day_offset(dt.date.today(), -1, roll='forward')
         GsReportApi.schedule_report(report_id=self.id,
                                     start_date=start_date,
                                     end_date=end_date,

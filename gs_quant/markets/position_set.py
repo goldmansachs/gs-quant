@@ -126,10 +126,12 @@ class PositionSet:
     def __init__(self,
                  positions: List[Position],
                  date: datetime.date = datetime.date.today(),
-                 divisor: float = None):
+                 divisor: float = None,
+                 reference_notional: float = None):
         self.__positions = positions
         self.__date = date
         self.__divisor = divisor
+        self.__reference_notional = reference_notional
 
     @property
     def positions(self) -> List[Position]:
@@ -150,6 +152,14 @@ class PositionSet:
     @property
     def divisor(self) -> float:
         return self.__divisor
+
+    @property
+    def reference_notional(self) -> float:
+        return self.__reference_notional
+
+    @reference_notional.setter
+    def reference_notional(self, value: float):
+        self.__reference_notional = value
 
     def get_positions(self) -> pd.DataFrame:
         """ Retrieve formatted positions """
@@ -212,13 +222,17 @@ class PositionSet:
         return cls(converted_positions, date)
 
     @classmethod
-    def from_dicts(cls, positions: List[Dict], date: datetime.date = datetime.date.today()):
+    def from_dicts(cls, positions: List[Dict],
+                   date: datetime.date = datetime.date.today(),
+                   reference_notional: float = None):
         """ Create PostionSet instance from a list of position-object-like dictionaries """
         positions_df = pd.DataFrame(positions)
-        return cls.from_frame(positions_df, date)
+        return cls.from_frame(positions_df, date, reference_notional)
 
     @classmethod
-    def from_frame(cls, positions: pd.DataFrame, date: datetime.date = datetime.date.today()):
+    def from_frame(cls, positions: pd.DataFrame,
+                   date: datetime.date = datetime.date.today(),
+                   reference_notional: float = None):
         """ Create PostionSet instance from a list of position-object-like dataframes """
         positions.columns = positions.columns.str.lower()
         positions = positions[~positions['identifier'].isnull()]
@@ -235,7 +249,7 @@ class PositionSet:
             position = Position(identifier=identifier, asset_id=get(asset, 'id'), name=get(asset, 'name'),
                                 weight=weight, quantity=quantity)
             converted_positions.append(position)
-        return cls(converted_positions, date)
+        return cls(converted_positions, date, reference_notional=reference_notional)
 
     @staticmethod
     def __resolve_identifiers(identifiers: List[str], date: datetime.date) -> Dict:

@@ -122,10 +122,12 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
 
             if is_historical:
                 return {date: OverlayMarket(
-                    base_market=CloseMarket(date=date, location=location),
-                    market_data=extract_market_data(result.loc[date])
+                    base_market=CloseMarket(date=date,
+                                            location=location,
+                                            market_data=extract_market_data(result.loc[date])),
                 ) for date in set(result.index)}
             else:
-                return OverlayMarket(base_market=result.risk_key.market, market_data=extract_market_data(result))
+                return OverlayMarket(base_market=result.risk_key.market.clone_with_market_data(
+                    extract_market_data(result)))
 
         return self.calc(MarketData, fn=handle_result)

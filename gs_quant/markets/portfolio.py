@@ -494,11 +494,10 @@ class Portfolio(PriceableImpl):
 
         def cb(future: CompositeResultFuture):
             def update_market_data(all_market_data, this_market_data):
-                for item in this_market_data:
-                    existing_value = all_market_data.setdefault(item.coordinate, item.value)
-                    if abs(existing_value - item.value) > 1e-6:
-                        raise ValueError(
-                            f'Conflicting values for {item.coordinate}: {existing_value} vs {item.value}')
+                for coordinate, value in this_market_data.items():
+                    existing_value = all_market_data.setdefault(coordinate, value)
+                    if abs(existing_value - value) > 1e-6:
+                        raise ValueError(f'Conflicting values for {coordinate}: {existing_value} vs {value}')
 
             results = [f.result() for f in future.futures]
             is_historical = isinstance(results[0], dict)
@@ -507,15 +506,15 @@ class Portfolio(PriceableImpl):
 
             for result in results:
                 if market_data is not None:
-                    update_market_data(market_data, result.market_data)
+                    update_market_data(market_data, result.base_market.market_data_dict)
                 else:
                     for market in result.values():
                         update_market_data(overlay_markets.setdefault(market.base_market, {}), market.market_data)
 
             if market_data:
-                ret = OverlayMarket(base_market=results[0].base_market, market_data=market_data)
+                ret = OverlayMarket(base_market=results[0].base_market.clone_with_market_data(market_data))
             else:
-                ret = {base_market.date: OverlayMarket(base_market=base_market, market_data=market_data)
+                ret = {base_market.date: OverlayMarket(base_market=base_market.clone_with_market_data(market_data))
                        for base_market, market_data in overlay_markets.items()}
 
             if result_future:

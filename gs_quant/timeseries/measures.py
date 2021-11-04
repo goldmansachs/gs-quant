@@ -2716,7 +2716,7 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
     _logger.debug('where assetId=%s, metric=Central Bank Swap Rate, rate_type=%s, level_type=%s, valuation date=%s',
                   mqid, rate_type, level_type, str(valuation_date))
 
-    ds = Dataset('CENTRAL_BANK_WATCH')
+    ds = Dataset(Dataset.GS.CENTRAL_BANK_WATCH)
     if rate_type == MeetingType.SPOT:
         if level_type == LevelType.RELATIVE:
             raise MqValueError('level_type must be absolute for rate_type = Spot')
@@ -2733,7 +2733,7 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
     df = df.reset_index()
     df = df.set_index('meetingDate')
     series = ExtendedSeries(df['value'])
-    series.dataset_ids = ('CENTRAL_BANK_WATCH',)
+    series.dataset_ids = (Dataset.GS.CENTRAL_BANK_WATCH,)
     return series
 
 
@@ -2771,7 +2771,7 @@ def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.M
     _logger.debug('where assetId=%s, metric=Policy Rate Expectation, meeting_date=%s, level_type=%s',
                   mqid, str(meeting_date), level_type)
 
-    ds = Dataset('CENTRAL_BANK_WATCH')
+    ds = Dataset(Dataset.GS.CENTRAL_BANK_WATCH)
     if isinstance(meeting_date, int):
         meeting_number = meeting_date
         if meeting_number < 0 or meeting_number > 20:
@@ -2805,7 +2805,7 @@ def policy_rate_expectation(asset: Asset, rate_type: MeetingType = MeetingType.M
     else:
         cbw_df = cbw_df.set_index('valuationDate')
         series = ExtendedSeries(cbw_df['value'])
-    series.dataset_ids = ('CENTRAL_BANK_WATCH',)
+    series.dataset_ids = (Dataset.GS.CENTRAL_BANK_WATCH,)
     return series
 
 
@@ -3997,7 +3997,7 @@ def hloc_prices(asset: Asset, interval_frequency: IntervalFrequency = IntervalFr
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
-                                     AssetType.ETF), [QueryType.THEMATIC_EXPOSURE])
+                                     AssetType.ETF), [QueryType.THEMATIC_MODEL_BETA])
 def thematic_model_exposure(asset: Asset, basket_identifier: str, notional: int = 10000000,
                             *, source: str = None, real_time: bool = False) -> pd.Series:
     """
@@ -4018,7 +4018,7 @@ def thematic_model_exposure(asset: Asset, basket_identifier: str, notional: int 
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
-                                     AssetType.ETF), [QueryType.THEMATIC_BETA])
+                                     AssetType.ETF), [QueryType.THEMATIC_MODEL_BETA])
 def thematic_model_beta(asset: Asset, basket_identifier: str, *, source: str = None,
                         real_time: bool = False) -> pd.Series:
     """

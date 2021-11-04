@@ -38,7 +38,7 @@ from gs_quant.data.coordinate import DataDimensions
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
-from gs_quant.markets.position_set import PositionSet
+from gs_quant.markets.position_set import PositionSet, Position
 from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import GsSession
@@ -338,6 +338,15 @@ class PositionedEntity(metaclass=ABCMeta):
     def positioned_entity_type(self) -> EntityType:
         return self.__entity_type
 
+    def get_entitlements(self) -> Entitlements:
+        if self.positioned_entity_type == EntityType.PORTFOLIO:
+            response = GsPortfolioApi.get_portfolio(self.id)
+        elif self.positioned_entity_type == EntityType.ASSET:
+            response = GsAssetApi.get_asset(self.id)
+        else:
+            raise NotImplementedError
+        return Entitlements.from_target(response.entitlements)
+
     def get_latest_position_set(self,
                                 position_type: PositionType = PositionType.CLOSE) -> PositionSet:
         if self.positioned_entity_type == EntityType.ASSET:
@@ -381,10 +390,56 @@ class PositionedEntity(metaclass=ABCMeta):
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             if not position_sets:
                 return
-            GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in position_sets])
+            currency = GsPortfolioApi.get_portfolio(self.id).currency
+            new_sets = []
+            for pos_set in position_sets:
+                if pos_set.reference_notional is None:
+                    incorrect_set = any([pos.quantity is None or pos.weight is not None for pos in pos_set.positions])
+                    if incorrect_set:
+                        raise MqValueError('If you would like to upload position sets without notionals, '
+                                           'every position must have a quantity and cannot have a weight.')
+                    new_sets.append(pos_set)
+                else:
+                    new_sets.append(self._convert_pos_set_with_weights(pos_set, currency))
+            GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in new_sets])
             time.sleep(3)
         else:
             raise NotImplementedError
+
+    @staticmethod
+    def _convert_pos_set_with_weights(position_set: PositionSet, currency: Currency) -> PositionSet:
+        positions_to_price = []
+        for position in position_set.positions:
+            if position.weight is None:
+                raise MqValueError('If you are uploading a position set with a notional value, every position in that '
+                                   'set must have a weight')
+            if position.quantity is not None:
+                raise MqValueError('If you are uploading a position set with a notional value, no position in that '
+                                   'set can have a quantity')
+            positions_to_price.append({
+                'assetId': position.asset_id,
+                'weight': position.weight
+            })
+        payload = {
+            'positions': positions_to_price,
+            'parameters': {
+                'targetNotional': position_set.reference_notional,
+                'currency': currency.value,
+                'pricingDate': position_set.date.strftime('%Y-%m-%d'),
+                'assetDataSetId': 'GSEOD',
+                'notionalType': 'Gross'
+            }
+        }
+        try:
+            price_results = GsSession.current._post('/price/positions', payload)
+        except Exception as e:
+            raise MqValueError('There was an error pricing your positions. Please try uploading your positions as '
+                               f'quantities instead: {e}')
+        positions = [Position(identifier=p['assetId'],
+                              asset_id=p['assetId'],
+                              quantity=p['quantity']) for p in price_results['positions']]
+        return PositionSet(date=position_set.date,
+                           positions=positions)
 
     def get_positions_data(self,
                            start: dt.date = DateLimit.LOW_LIMIT.value,
@@ -474,7 +529,7 @@ class PositionedEntity(metaclass=ABCMeta):
                           'function parameters.')
         return reports[0]
 
-    def get_thematic_report(self) -> List[ThematicReport]:
+    def get_thematic_report(self) -> ThematicReport:
         if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
             position_source_type = self.positioned_entity_type.value.capitalize()
             reports = GsReportApi.get_reports(limit=100,
@@ -750,7 +805,8 @@ class PositionedEntity(metaclass=ABCMeta):
         for r in response:
             df.append({'date': r['date'], 'assetId': r['assetId'], 'basketId': r['basketId'],
                        'thematicExposure': r['beta'] * notional})
-        return pd.DataFrame(df)
+        df = pd.DataFrame(df)
+        return df.set_index('date')
 
     def get_thematic_beta(self,
                           basket_identifier: str,
@@ -771,4 +827,5 @@ class PositionedEntity(metaclass=ABCMeta):
         for r in response:
             df.append({'date': r['date'], 'assetId': r['assetId'], 'basketId': r['basketId'],
                        'thematicBeta': r['beta']})
-        return pd.DataFrame(df)
+        df = pd.DataFrame(df)
+        return df.set_index('date')

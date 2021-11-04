@@ -20,7 +20,7 @@ from typing import Tuple, Union, List, Dict
 from gs_quant.common import PositionType
 from gs_quant.instrument import Instrument
 from gs_quant.session import GsSession
-from gs_quant.target.common import RiskRequest
+from gs_quant.target.common import RiskRequest, Currency
 from gs_quant.target.portfolios import Portfolio, Position, PositionSet
 from gs_quant.target.reports import Report
 from gs_quant.target.risk_models import Term
@@ -238,3 +238,18 @@ class GsPortfolioApi:
         if clear_existing_data:
             url += '?clearExistingData=true'
         return GsSession.current._post(url, payload)
+
+    @classmethod
+    def get_attribution(cls,
+                        portfolio_id: str,
+                        start_date: dt.date = None,
+                        end_date: dt.date = None,
+                        currency: Currency = None) -> Dict:
+        url = f'/attribution/{portfolio_id}?'
+        if start_date:
+            url += f"&startDate={start_date.strftime('%Y-%m-%d')}"
+        if end_date:
+            url += f"&endDate={end_date.strftime('%Y-%m-%d')}"
+        if currency:
+            url += f"currency={currency.value}"
+        return GsSession.current._get(url)['results']
