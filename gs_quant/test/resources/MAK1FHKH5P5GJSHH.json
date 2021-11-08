@@ -1,0 +1,54 @@
+{
+  "assetClass": "Cash",
+  "classifications": {},
+  "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "createdTime": "2017-05-25T20:31:37.107Z",
+  "currency": "JPY",
+  "description": "Yen (JPY)",
+  "domains": {},
+  "exchange": "",
+  "id": "MAK1FHKH5P5GJSHH",
+  "identifiers": [
+    {
+      "type": "DOLLARCROSS",
+      "value": "JPY/USD"
+    },
+    {
+      "type": "RIC",
+      "value": "JPY"
+    },
+    {
+      "type": "SECNAME",
+      "value": "JPY"
+    },
+    {
+      "type": "MDAPI",
+      "value": "JPY"
+    },
+    {
+      "type": "BID",
+      "value": "JPY"
+    }
+  ],
+  "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "lastUpdatedTime": "2019-08-12T14:00:45.84Z",
+  "listed": true,
+  "name": "JPY",
+  "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "parameters": {
+    "g10Currency": true
+  },
+  "rank": 1.0,
+  "region": "Asia",
+  "shortName": "JPY",
+  "styles": [],
+  "tags": [],
+  "type": "Currency",
+  "xref": {
+    "ric": "JPY",
+    "bbid": "JPY",
+    "secName": "JPY",
+    "mdapi": "JPY",
+    "dollarCross": "JPY/USD"
+  }
+}

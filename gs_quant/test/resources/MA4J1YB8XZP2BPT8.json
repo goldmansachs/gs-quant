@@ -1,0 +1,52 @@
+{
+  "assetClass": "Cash",
+  "classifications": {},
+  "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "createdTime": "2017-05-25T20:31:31.349Z",
+  "currency": "COP",
+  "description": "Peso (COP)",
+  "domains": {},
+  "exchange": "",
+  "id": "MA4J1YB8XZP2BPT8",
+  "identifiers": [
+    {
+      "type": "RIC",
+      "value": "COP"
+    },
+    {
+      "type": "BID",
+      "value": "COP"
+    },
+    {
+      "type": "SECNAME",
+      "value": "COP"
+    },
+    {
+      "type": "MDAPI",
+      "value": "COP"
+    },
+    {
+      "type": "DOLLARCROSS",
+      "value": "COP/USD"
+    }
+  ],
+  "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "lastUpdatedTime": "2019-08-12T14:00:40.909Z",
+  "listed": true,
+  "name": "COP",
+  "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "parameters": {},
+  "rank": 0.9,
+  "region": "Americas",
+  "shortName": "COP",
+  "styles": [],
+  "tags": [],
+  "type": "Currency",
+  "xref": {
+    "ric": "COP",
+    "bbid": "COP",
+    "secName": "COP",
+    "mdapi": "COP",
+    "dollarCross": "COP/USD"
+  }
+}

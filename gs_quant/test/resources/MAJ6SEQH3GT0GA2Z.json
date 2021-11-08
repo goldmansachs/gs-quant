@@ -1,0 +1,51 @@
+{
+  "assetClass": "Cash",
+  "classifications": { },
+  "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "createdTime": "2017-05-25T20:31:38.17Z",
+  "currency": "KRW",
+  "description": "Won (KRW)",
+  "exchange": "",
+  "id": "MAJ6SEQH3GT0GA2Z",
+  "identifiers": [
+    {
+      "type": "SECNAME",
+      "value": "KRW"
+    },
+    {
+      "type": "MDAPI",
+      "value": "KRW"
+    },
+    {
+      "type": "RIC",
+      "value": "KRW"
+    },
+    {
+      "type": "BID",
+      "value": "KRW"
+    },
+    {
+      "type": "DOLLARCROSS",
+      "value": "KRW/USD"
+    }
+  ],
+  "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "lastUpdatedTime": "2019-12-04T15:00:56.848Z",
+  "listed": true,
+  "name": "KRW",
+  "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "parameters": { },
+  "rank": 0.9,
+  "region": "Asia",
+  "shortName": "KRW",
+  "styles": [ ],
+  "tags": [ ],
+  "type": "Currency",
+  "xref": {
+    "ric": "KRW",
+    "bbid": "KRW",
+    "secName": "KRW",
+    "mdapi": "KRW",
+    "dollarCross": "KRW/USD"
+  }
+}

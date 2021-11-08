@@ -1,0 +1,15 @@
+{
+  "xrefs": [
+    {
+      "startDate": "1952-01-01",
+      "endDate": "2952-12-31",
+      "identifiers": {
+        "ric": "EUR",
+        "bbid": "EUR",
+        "secName": "EUR",
+        "mdapi": "EUR",
+        "dollarCross": "USD/EUR"
+      }
+    }
+  ]
+}

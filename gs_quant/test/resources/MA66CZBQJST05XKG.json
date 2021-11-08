@@ -1,0 +1,54 @@
+{
+  "assetClass": "Cash",
+  "classifications": {},
+  "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "createdTime": "2017-05-25T20:31:33.511Z",
+  "currency": "GBP",
+  "description": "Pound Sterling (GBP)",
+  "domains": {},
+  "exchange": "",
+  "id": "MA66CZBQJST05XKG",
+  "identifiers": [
+    {
+      "type": "RIC",
+      "value": "GBP"
+    },
+    {
+      "type": "DOLLARCROSS",
+      "value": "USD/GBP"
+    },
+    {
+      "type": "BID",
+      "value": "GBP"
+    },
+    {
+      "type": "SECNAME",
+      "value": "GBP"
+    },
+    {
+      "type": "MDAPI",
+      "value": "GBP"
+    }
+  ],
+  "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "lastUpdatedTime": "2019-08-12T14:00:42.532Z",
+  "listed": true,
+  "name": "GBP",
+  "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "parameters": {
+    "g10Currency": true
+  },
+  "rank": 1.0,
+  "region": "Europe",
+  "shortName": "GBP",
+  "styles": [],
+  "tags": [],
+  "type": "Currency",
+  "xref": {
+    "ric": "GBP",
+    "bbid": "GBP",
+    "secName": "GBP",
+    "mdapi": "GBP",
+    "dollarCross": "USD/GBP"
+  }
+}

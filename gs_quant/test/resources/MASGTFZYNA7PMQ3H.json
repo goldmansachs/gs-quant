@@ -1,0 +1,124 @@
+{
+  "assetClass": "Equity",
+  "classifications": {
+    "riskCountryName": "United States",
+    "riskCountryCode": "US",
+    "countryName": "United States",
+    "countryCode": "US",
+    "isPrimary": false,
+    "isCountryPrimary": false
+  },
+  "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "createdTime": "2019-06-28T10:44:12.133Z",
+  "currency": "USD",
+  "description": "",
+  "domains": {},
+  "entitlements": {
+    "admin": [
+      "guid:3549cd2c46c3468bae0d90b1f2b9e609"
+    ],
+    "view": [
+      "internal",
+      "guid:3549cd2c46c3468bae0d90b1f2b9e609",
+      "external"
+    ],
+    "edit": [
+      "guid:3549cd2c46c3468bae0d90b1f2b9e609"
+    ]
+  },
+  "exchange": "NYSE",
+  "id": "MASGTFZYNA7PMQ3H",
+  "identifiers": [
+    {
+      "type": "GSID",
+      "value": "84788"
+    },
+    {
+      "type": "PRIMARY_COUNTRY_RIC",
+      "value": "AMZN.OQ"
+    },
+    {
+      "type": "SECNAME",
+      "value": "AMZN.N"
+    },
+    {
+      "type": "BID",
+      "value": "AMZN UN"
+    },
+    {
+      "type": "RIC",
+      "value": "AMZN.N"
+    },
+    {
+      "type": "SED",
+      "value": "2000019"
+    },
+    {
+      "type": "MDAPI",
+      "value": "AMZN.N"
+    },
+    {
+      "type": "RCIC",
+      "value": "AMZN.O"
+    },
+    {
+      "type": "BCID",
+      "value": "AMZN US"
+    },
+    {
+      "type": "DELISTED",
+      "value": "no"
+    },
+    {
+      "type": "EID",
+      "value": "154"
+    },
+    {
+      "type": "TKR",
+      "value": "AMZN"
+    }
+  ],
+  "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "lastUpdatedTime": "2021-01-27T01:33:52.43Z",
+  "listed": true,
+  "name": "Amazon.com Inc",
+  "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "parameters": {
+    "exchangeCurrency": "USD",
+    "pricingLocation": "NYC"
+  },
+  "rank": 0.54598986364,
+  "region": "Americas",
+  "shortName": "AMZN",
+  "styles": [],
+  "tags": [
+    "Americas",
+    "Equity",
+    "Equity Option::OTC",
+    "New York Stock Exchange",
+    "NYC",
+    "NYSE",
+    "Single Stock",
+    "United States",
+    "US"
+  ],
+  "type": "Single Stock",
+  "underliers": [],
+  "underlyingAssetIds": [],
+  "xref": {
+    "ric": "AMZN.N",
+    "rcic": "AMZN.O",
+    "eid": "154",
+    "gsid": "84788",
+    "bbid": "AMZN UN",
+    "bcid": "AMZN US",
+    "delisted": "no",
+    "cusip": "023135106",
+    "isin": "US0231351067",
+    "sedol": "2000019",
+    "ticker": "AMZN",
+    "secName": "AMZN.N",
+    "mdapi": "AMZN.N",
+    "primaryCountryRic": "AMZN.OQ"
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "xrefs": [
+    {
+      "startDate": "1952-01-01",
+      "endDate": "2012-08-24",
+      "identifiers": {
+        "ric": ".SPX",
+        "eid": "0",
+        "gsid": "100",
+        "cid": "10756",
+        "bbid": "SPX",
+        "ticker": "SPX",
+        "secName": ".SPX"
+      }
+    },
+    {
+      "startDate": "2012-08-25",
+      "endDate": "2012-08-25",
+      "identifiers": {
+        "ric": ".SPX",
+        "eid": "0",
+        "gsid": "100",
+        "cid": "10756",
+        "ticker": "SPX",
+        "secName": ".SPX"
+      }
+    },
+    {
+      "startDate": "2012-08-26",
+      "endDate": "2019-03-03",
+      "identifiers": {
+        "ric": ".SPX",
+        "eid": "0",
+        "gsid": "100",
+        "cid": "10756",
+        "bbid": "SPX",
+        "cusip": "648815108",
+        "gss": "SPX",
+        "isin": "US78378X1072",
+        "primeId": "1000043264",
+        "ticker": "SPX",
+        "wpk": "969003",
+        "gsn": "152850",
+        "secName": ".SPX",
+        "mdapi": ".SPX"
+      }
+    },
+    {
+      "startDate": "2019-03-04",
+      "endDate": "2019-03-04",
+      "identifiers": {
+        "ric": ".SPX",
+        "rcic": ".SPX",
+        "eid": "0",
+        "gsid": "100",
+        "bbid": "SPX",
+        "cusip": "648815108",
+        "gss": "SPX",
+        "isin": "US78378X1072",
+        "primeId": "1000043264",
+        "ticker": "SPX",
+        "wpk": "969003",
+        "gsn": "152850",
+        "secName": ".SPX",
+        "mdapi": ".SPX"
+      }
+    },
+    {
+      "startDate": "2019-03-05",
+      "endDate": "2019-05-16",
+      "identifiers": {
+        "ric": ".SPX",
+        "rcic": ".SPX",
+        "eid": "0",
+        "gsid": "100",
+        "bbid": "SPX",
+        "delisted": "no",
+        "cusip": "648815108",
+        "gss": "SPX",
+        "isin": "US78378X1072",
+        "primeId": "1000043264",
+        "ticker": "SPX",
+        "wpk": "969003",
+        "gsn": "152850",
+        "secName": ".SPX",
+        "mdapi": ".SPX"
+      }
+    },
+    {
+      "startDate": "2019-05-17",
+      "endDate": "2952-12-31",
+      "identifiers": {
+        "ric": ".SPX",
+        "rcic": ".SPX",
+        "eid": "0",
+        "gsid": "100",
+        "bbid": "SPX",
+        "delisted": "no",
+        "cusip": "648815108",
+        "gss": "SPX",
+        "isin": "US6488151084",
+        "primeId": "1000043264",
+        "ticker": "SPX",
+        "wpk": "969003",
+        "gsn": "152850",
+        "secName": ".SPX",
+        "mdapi": ".SPX"
+      }
+    }
+  ]
+}
