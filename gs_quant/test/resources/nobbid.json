@@ -1,0 +1,44 @@
+{
+  "assetClass": "FX",
+  "classifications": {},
+  "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "createdTime": "2018-03-22T14:09:20.124Z",
+  "currency": "USD",
+  "description": "United States Dollar / Japan Yen",
+  "exchange": "",
+  "id": "nobbid",
+  "identifiers": [
+    {
+      "type": "SECNAME",
+      "value": "USD/JPY"
+    },
+    {
+      "type": "MDAPI",
+      "value": "USD/JPY"
+    },
+    {
+      "type": "CROSS",
+      "value": "USD/JPY"
+    }
+  ],
+  "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "lastUpdatedTime": "2019-08-15T14:09:53.942Z",
+  "listed": true,
+  "name": "USD/JPY",
+  "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "parameters": {},
+  "rank": 1,
+  "region": "Global",
+  "shortName": "USD/JPY",
+  "styles": [],
+  "tags": [
+    "USDJPY",
+    "JPYUSD"
+  ],
+  "type": "Cross",
+  "xref": {
+    "secName": "USD/JPY",
+    "cross": "USD/JPY",
+    "mdapi": "USD/JPY"
+  }
+}

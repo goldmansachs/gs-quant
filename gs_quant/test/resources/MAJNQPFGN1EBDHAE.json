@@ -1,0 +1,54 @@
+{
+  "assetClass": "Cash",
+  "classifications": {},
+  "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "createdTime": "2017-05-25T20:31:33.229Z",
+  "currency": "EUR",
+  "description": "Euro (EUR)",
+  "domains": {},
+  "exchange": "",
+  "id": "MAJNQPFGN1EBDHAE",
+  "identifiers": [
+    {
+      "type": "SECNAME",
+      "value": "EUR"
+    },
+    {
+      "type": "RIC",
+      "value": "EUR"
+    },
+    {
+      "type": "DOLLARCROSS",
+      "value": "USD/EUR"
+    },
+    {
+      "type": "BID",
+      "value": "EUR"
+    },
+    {
+      "type": "MDAPI",
+      "value": "EUR"
+    }
+  ],
+  "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "lastUpdatedTime": "2019-08-12T14:00:42.312Z",
+  "listed": true,
+  "name": "EUR",
+  "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "parameters": {
+    "g10Currency": true
+  },
+  "rank": 1.0,
+  "region": "Europe",
+  "shortName": "EUR",
+  "styles": [],
+  "tags": [],
+  "type": "Currency",
+  "xref": {
+    "ric": "EUR",
+    "bbid": "EUR",
+    "secName": "EUR",
+    "mdapi": "EUR",
+    "dollarCross": "USD/EUR"
+  }
+}

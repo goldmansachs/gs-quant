@@ -1,0 +1,55 @@
+{
+  "totalResults": 1,
+  "results": [
+    {
+      "assetClass": "FX",
+      "classifications": {},
+      "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+      "createdTime": "2017-06-16T13:54:38.452Z",
+      "currency": "JPY",
+      "description": "Japan Yen / United States Dollar",
+      "exchange": "",
+      "id": "MATGYV0J9MPX534Z",
+      "identifiers": [
+        {
+          "type": "CROSS",
+          "value": "JPY/USD"
+        },
+        {
+          "type": "SECNAME",
+          "value": "JPY/USD"
+        },
+        {
+          "type": "BID",
+          "value": "USDJPY"
+        },
+        {
+          "type": "MDAPI",
+          "value": "JPY/USD"
+        }
+      ],
+      "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+      "lastUpdatedTime": "2019-08-20T14:07:02.45Z",
+      "listed": true,
+      "name": "JPY/USD",
+      "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+      "parameters": {},
+      "rank": 1,
+      "region": "Global",
+      "shortName": "JPY/USD",
+      "styles": [],
+      "tags": [
+        "JPYUSD",
+        "USDJPY",
+        "Execution"
+      ],
+      "type": "Cross",
+      "xref": {
+        "bbid": "USDJPY",
+        "secName": "JPY/USD",
+        "cross": "JPY/USD",
+        "mdapi": "JPY/USD"
+      }
+    }
+  ]
+}

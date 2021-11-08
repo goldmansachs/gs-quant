@@ -1,0 +1,124 @@
+{
+  "assetClass": "Equity",
+  "classifications": {
+    "riskCountryName": "United States",
+    "riskCountryCode": "US",
+    "countryName": "United States",
+    "countryCode": "US",
+    "isPrimary": false,
+    "isCountryPrimary": false
+  },
+  "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "createdTime": "2018-10-11T17:38:54.725Z",
+  "currency": "USD",
+  "description": "",
+  "domains": {},
+  "entitlements": {
+    "edit": [
+      "guid:3549cd2c46c3468bae0d90b1f2b9e609"
+    ],
+    "view": [
+      "internal",
+      "guid:3549cd2c46c3468bae0d90b1f2b9e609",
+      "external"
+    ],
+    "admin": [
+      "guid:3549cd2c46c3468bae0d90b1f2b9e609"
+    ]
+  },
+  "exchange": "NYSE",
+  "id": "MARCRZHY163GQ4H3",
+  "identifiers": [
+    {
+      "type": "MDAPI",
+      "value": "AAPL.N"
+    },
+    {
+      "type": "TKR",
+      "value": "AAPL"
+    },
+    {
+      "type": "RCIC",
+      "value": "AAPL.O"
+    },
+    {
+      "type": "BCID",
+      "value": "AAPL US"
+    },
+    {
+      "type": "RIC",
+      "value": "AAPL.N"
+    },
+    {
+      "type": "SECNAME",
+      "value": "AAPL.N"
+    },
+    {
+      "type": "SED",
+      "value": "2046251"
+    },
+    {
+      "type": "PRIMARY_COUNTRY_RIC",
+      "value": "AAPL.OQ"
+    },
+    {
+      "type": "BID",
+      "value": "AAPL UN"
+    },
+    {
+      "type": "GSID",
+      "value": "14593"
+    },
+    {
+      "type": "DELISTED",
+      "value": "no"
+    },
+    {
+      "type": "EID",
+      "value": "154"
+    }
+  ],
+  "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "lastUpdatedTime": "2021-01-27T08:16:59.862Z",
+  "listed": true,
+  "name": "Apple Inc",
+  "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "parameters": {
+    "exchangeCurrency": "USD",
+    "pricingLocation": "NYC"
+  },
+  "rank": 0.555613884804,
+  "region": "Americas",
+  "shortName": "AAPL",
+  "styles": [],
+  "tags": [
+    "Americas",
+    "Equity",
+    "Equity Option::OTC",
+    "New York Stock Exchange",
+    "NYC",
+    "NYSE",
+    "Single Stock",
+    "United States",
+    "US"
+  ],
+  "type": "Single Stock",
+  "underliers": [],
+  "underlyingAssetIds": [],
+  "xref": {
+    "ric": "AAPL.N",
+    "rcic": "AAPL.O",
+    "eid": "154",
+    "gsid": "14593",
+    "bbid": "AAPL UN",
+    "bcid": "AAPL US",
+    "delisted": "no",
+    "cusip": "037833100",
+    "isin": "US0378331005",
+    "sedol": "2046251",
+    "ticker": "AAPL",
+    "secName": "AAPL.N",
+    "mdapi": "AAPL.N",
+    "primaryCountryRic": "AAPL.OQ"
+  }
+}

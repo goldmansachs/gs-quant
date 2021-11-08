@@ -1,0 +1,14 @@
+{
+  "xrefs": [
+    {
+      "startDate": "1952-01-01",
+      "endDate": "2952-12-31",
+      "identifiers": {
+        "bbid": "USDJPY",
+        "secName": "JPY/USD",
+        "cross": "JPY/USD",
+        "mdapi": "JPY/USD"
+      }
+    }
+  ]
+}

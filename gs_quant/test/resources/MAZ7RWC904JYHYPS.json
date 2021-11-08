@@ -1,0 +1,54 @@
+{
+  "assetClass": "Cash",
+  "classifications": {},
+  "createdById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "createdTime": "2017-05-25T20:31:53.586Z",
+  "currency": "USD",
+  "description": "Dollar (USD)",
+  "domains": {},
+  "exchange": "",
+  "id": "MAZ7RWC904JYHYPS",
+  "identifiers": [
+    {
+      "type": "RIC",
+      "value": "USD"
+    },
+    {
+      "type": "DOLLARCROSS",
+      "value": "USD/USD"
+    },
+    {
+      "type": "BID",
+      "value": "USD"
+    },
+    {
+      "type": "SECNAME",
+      "value": "USD"
+    },
+    {
+      "type": "MDAPI",
+      "value": "USD"
+    }
+  ],
+  "lastUpdatedById": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "lastUpdatedTime": "2019-08-12T14:00:56.881Z",
+  "listed": true,
+  "name": "USD",
+  "ownerId": "3549cd2c46c3468bae0d90b1f2b9e609",
+  "parameters": {
+    "g10Currency": true
+  },
+  "rank": 1.0,
+  "region": "Americas",
+  "shortName": "USD",
+  "styles": [],
+  "tags": [],
+  "type": "Currency",
+  "xref": {
+    "ric": "USD",
+    "bbid": "USD",
+    "secName": "USD",
+    "mdapi": "USD",
+    "dollarCross": "USD/USD"
+  }
+}
