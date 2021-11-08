@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 from typing import Optional
-
 import pandas as pd
 from pydash import decapitalize
+from dateutil.relativedelta import relativedelta
 
 from gs_quant.api.gs.data import QueryType
 from gs_quant.api.gs.portfolios import GsPortfolioApi
@@ -134,48 +134,69 @@ def normalized_performance(report_id: str, aum_source: str = None, *, source: st
     If :math:`aum_source` is one of: Long, Short, RiskAumSource.Net,
         AumSource.Gross, we take these exposures from the calculated exposures based on daily positions
 
-    :math:`NP_{t} = SUM( PNL_{t}/ ( AUM_{t} ) - cPNL_{t-1) ) if ( AUM_{t} ) - cPNL_{t-1) ) > 0 else:
-            1/ SUM( PNL_{t}/ ( AUM_{t} ) - cPNL_{t-1) )`
+    :math:`NP(L/S)_{t} = SUM( PNL(L/S)_{t}/ ( EXP(L/S)_{t} ) - cPNL(L/S)_{t-1) )
+        if ( EXP(L/S)_{t} ) - cPNL(L/S)_{t-1)) > 0
+        else:
+            1/ SUM( PNL(L/S)_{t}/ ( EXP(L/S)_{t} ) - cPNL(L/S)_{t-1) )`
+    For each leg, short and long, then:
+    :math:`NP_{t} = NP(L)_{t} * (EXP(L)_{t} / AUM_{t}) + NP(S)_{t} * (EXP(S)_{t} / AUM_{t}) + 1`
 
     This takes into account varying AUM and adjusts for exposure change due to PNL
 
-    where :math:`cPNL_{t-1}` is your performance reports cumulative PNL at date t-1
-    where :math:`PNL_{t}` is your performance reports pnl at date t
+    where :math:`cPNL(L/S)_{t-1}` is your performance reports cumulative long or short PNL at date t-1
+    where :math:`PNL(L/S)_{t}` is your performance reports long or short pnl at date t
     where :math:`AUM_{t}` is portfolio exposure on date t
-
+    where :math:`EXP(L/S)_{t}` is the long or short exposure on date t
 
     """
-    start_date = DataContext.current.start_date
-    end_date = DataContext.current.end_date
+    start_date = DataContext.current.start_time - relativedelta(1)
+    end_date = DataContext.current.end_time
 
-    ppa_report = PerformanceReport.get(report_id)
+    start_date = start_date.date()
+    end_date = end_date.date()
+
+    performance_report = PerformanceReport.get(report_id)
     if not aum_source:
-        port = GsPortfolioApi.get_portfolio(ppa_report.position_source_id)
-        aum_source = port.aum_source if port.aum_source else RiskAumSource.Net
+        port = GsPortfolioApi.get_portfolio(performance_report.position_source_id)
+        aum_source = port.aum_source if port.aum_source else RiskAumSource.Gross
     else:
         aum_source = RiskAumSource(aum_source)
 
+    constituent_data = performance_report.get_portfolio_constituents(
+        fields=['assetId', 'pnl', 'quantity', 'netExposure'], start_date=start_date, end_date=end_date).set_index(
+        'date')
+
     aum_col_name = aum_source.value.lower()
     aum_col_name = f'{aum_col_name}Exposure' if aum_col_name != 'custom aum' else 'aum'
-    measures = [aum_col_name, 'pnl'] if aum_source != RiskAumSource.Custom_AUM else ['pnl']
-    data = ppa_report.get_many_measures(measures, start_date, end_date)
-    data.loc[0, 'pnl'] = 0
-    data['cumulativePnlT-1'] = data['pnl'].cumsum(axis=0)
-    data = pd.DataFrame.from_records(data).set_index(['date'])
+
+    # Split into long and short and aggregate across dates
+    long_side = _return_metrics(constituent_data[constituent_data['quantity'] > 0],
+                                list(constituent_data.index.unique()), "long")
+    short_side = _return_metrics(constituent_data[constituent_data['quantity'] < 0],
+                                 list(constituent_data.index.unique()), "short")
+    # Get aum source data
     if aum_source == RiskAumSource.Custom_AUM:
-        custom_aum = pd.DataFrame(GsPortfolioApi.get_custom_aum(ppa_report.position_source_id, start_date, end_date))
+        custom_aum = pd.DataFrame(
+            GsPortfolioApi.get_custom_aum(performance_report.position_source_id, start_date, end_date))
         if custom_aum.empty:
-            raise MqError(f'No custom AUM for portfolio {ppa_report.position_source_id} between dates {start_date},'
-                          f' {end_date}')
-        custom_aum = pd.DataFrame.from_records(custom_aum).set_index(['date'])
-        data = data.join(custom_aum.loc[:, aum_col_name], how='inner')
-    if aum_source == RiskAumSource.Short:
-        data[f'{aum_col_name}'] = -1 * data[f'{aum_col_name}']
-    data['normalizedExposure'] = data[f'{aum_col_name}'] - data['cumulativePnlT-1']
-    data['pnlOverNormalizedExposure'] = data['pnl'] / data['normalizedExposure']
-    data['normalizedPerformance'] = data['pnlOverNormalizedExposure'].cumsum(axis=0) + 1
-    data.loc[data.normalizedExposure < 0, 'normalizedPerformance'] = 1 / data.loc[:, 'normalizedPerformance']
-    return pd.Series(data['normalizedPerformance'], name="normalizedPerformance").dropna()
+            raise MqError(
+                f'No custom AUM for portfolio {performance_report.position_source_id} between dates {start_date},'
+                f' {end_date}')
+        data = pd.DataFrame.from_records(custom_aum).set_index(['date'])
+    else:
+        data = performance_report.get_many_measures([aum_col_name], start_date, end_date).set_index(['date'])
+
+    long_side = long_side.join(data[[f'{aum_col_name}']], how='inner')
+    short_side = short_side.join(data[[f'{aum_col_name}']], how='inner')
+
+    long_side['longRetWeighted'] = (long_side['longMetrics'] - 1) * long_side['exposure'] * \
+                                   (1 / long_side[f'{aum_col_name}'])
+    short_side['shortRetWeighted'] = (short_side['shortMetrics'] - 1) * short_side['exposure'] *\
+                                     (1 / short_side[f'{aum_col_name}'])
+
+    combined = long_side[['longRetWeighted']].join(short_side[['shortRetWeighted']], how='inner')
+    combined['normalizedPerformance'] = combined['longRetWeighted'] + combined['shortRetWeighted'] + 1
+    return pd.Series(combined['normalizedPerformance'], name="normalizedPerformance").dropna()
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.THEMATIC_EXPOSURE])
@@ -255,3 +276,20 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) ->
         df.set_index('date', inplace=True)
         df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, query_type)
+
+
+def _return_metrics(one_leg, dates, name):
+    if one_leg.empty:
+        return pd.DataFrame(index=dates, data={f'{name}Metrics': [0 for d in dates], "exposure": [0 for d in dates]})
+    one_leg = one_leg.groupby(one_leg.index).agg(pnl=('pnl', 'sum'), exposure=('netExposure', 'sum'))
+    one_leg['exposure'] = one_leg['exposure'].apply(lambda x: abs(x))
+    one_leg['cumulativePnlT-1'] = one_leg['pnl'].cumsum(axis=0)
+
+    one_leg[f'{name}Metrics'] = one_leg['pnl'] / (one_leg['exposure'] - one_leg['cumulativePnlT-1'])
+
+    one_leg[f'{name}Metrics'].iloc[0] = 0
+    one_leg[f'{name}Metrics'] = one_leg[f'{name}Metrics'].cumsum(axis=0) + 1
+
+    one_leg[f'{name}Metrics'] = 1 / one_leg[f'{name}Metrics'] if one_leg[f'{name}Metrics'].iloc[-1] < 0 else one_leg[
+        f'{name}Metrics']
+    return one_leg

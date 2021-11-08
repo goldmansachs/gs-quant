@@ -18,6 +18,7 @@ import datetime as dt
 import logging
 from itertools import chain
 from typing import Iterable, Optional, Tuple, Union
+from urllib.parse import quote
 
 import deprecation
 import numpy as np
@@ -66,6 +67,7 @@ class Portfolio(PriceableImpl):
 
         self.__name = name
         self.__id = None
+        self.__quote_id = None
 
     def __getitem__(self, item):
         if isinstance(item, (int, slice)):
@@ -191,17 +193,17 @@ class Portfolio(PriceableImpl):
             return Portfolio(tuple(self[p] for p in paths_tuple), name=name)
 
     @staticmethod
-    def __from_internal_positions(id_type: str, positions_id):
-        instruments = GsPortfolioApi.get_instruments_by_position_type(id_type, positions_id)
+    def __from_internal_positions(id_type: str, positions_id, activity_type: str):
+        instruments = GsPortfolioApi.get_instruments_by_position_type(id_type, positions_id, activity_type)
         return Portfolio(instruments, name=positions_id)
 
     @staticmethod
     def from_eti(eti: str):
-        return Portfolio.__from_internal_positions('ETI', eti.replace(',', '%2C'))
+        return Portfolio.__from_internal_positions('ETI', quote(eti, safe=''), 'ETI')
 
     @staticmethod
-    def from_book(book: str, book_type: str = 'risk'):
-        return Portfolio.__from_internal_positions(book_type, book)
+    def from_book(book: str, book_type: str = 'risk', activity_type: str = 'position'):
+        return Portfolio.__from_internal_positions(book_type, book, activity_type)
 
     @staticmethod
     def from_asset_id(asset_id: str, date=None):
@@ -251,7 +253,9 @@ class Portfolio(PriceableImpl):
     @staticmethod
     def from_quote(quote_id: str):
         instruments = GsPortfolioApi.get_instruments_by_workflow_id(quote_id)
-        return Portfolio(instruments, name=quote_id)
+        ret = Portfolio(instruments, name=quote_id)
+        ret.__quote_id = quote_id
+        return ret
 
     def save(self, overwrite: Optional[bool] = False):
         if self.portfolios:
@@ -277,36 +281,30 @@ class Portfolio(PriceableImpl):
         if self.portfolios:
             raise ValueError('Cannot save portfolios with nested portfolios')
 
-        pricing_context = self._pricing_context
-
         request = RiskRequest(
             tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
             (ResolvedInstrumentValues,),
-            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=pricing_context.pricing_date,
-                                                                        market=pricing_context.market),)
+            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(market=self._pricing_context.market),)
         )
 
-        if self.__id:
+        if self.__quote_id:
             if not overwrite:
-                raise ValueError(f'Quote with id {id} already exists. Use overwrite=True to overwrite')
+                raise ValueError(f'Quote with id {self.__quote_id} already exists. Use overwrite=True to overwrite')
             else:
-                GsPortfolioApi.update_quote(self.__id, request)
-                _logger.info(f'Updated Structuring with id {self.__id}')
+                GsPortfolioApi.update_quote(self.__quote_id, request)
+                _logger.info(f'Updated quote with id {self.__quote_id}')
         else:
-            self.__id = GsPortfolioApi.save_quote(request)
-            _logger.info(f'Created Structuring with id {self.__id}')
+            self.__quote_id = GsPortfolioApi.save_quote(request)
+            _logger.info(f'Created quote with id {self.__quote_id}')
 
     def save_to_shadowbook(self, name: str):
         if self.portfolios:
             raise ValueError('Cannot save portfolios with nested portfolios')
 
-        pricing_context = self._pricing_context
-
         request = RiskRequest(
             tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
             (ResolvedInstrumentValues,),
-            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=pricing_context.pricing_date,
-                                                                        market=pricing_context.market),)
+            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(market=self._pricing_context.market),)
         )
         status = GsPortfolioApi.save_to_shadowbook(request, name)
         print(f'Save to shadowbook status - {status}')

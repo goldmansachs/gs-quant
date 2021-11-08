@@ -52,6 +52,21 @@ def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey, re
     return df
 
 
+def __dataframe_handler_unsorted(result: Iterable, mappings: tuple, date_cols: tuple, risk_key: RiskKey,
+                                 request_id: Optional[str] = None) -> DataFrameWithInfo:
+    first_row = next(iter(result), None)
+    if first_row is None:
+        return DataFrameWithInfo(risk_key=risk_key, request_id=request_id)
+
+    records = ([row.get(field_from) for field_to, field_from in mappings] for row in result)
+    df = DataFrameWithInfo(records, risk_key=risk_key, request_id=request_id)
+    df.columns = [m[0] for m in mappings]
+    for dt_col in date_cols:
+        df[dt_col] = df[dt_col].map(lambda x: dt.datetime.strptime(x, '%Y-%m-%d').date() if isinstance(x, str) else x)
+
+    return df
+
+
 def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
         -> DataFrameWithInfo:
     mappings = (
@@ -69,14 +84,8 @@ def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBa
         ('rate', 'rate'),
         ('discount_factor', 'discountFactor')
     )
-
-    for cashflow in result['cashflows']:
-        for field in ('payDate', 'setDate', 'accStart', 'accEnd'):
-            value = cashflow.get(field)
-            date = dt.datetime.strptime(value, '%Y-%m-%d').date() if value else dt.date.max
-            cashflow[field] = date
-
-    return __dataframe_handler(result['cashflows'], mappings, risk_key, request_id=request_id)
+    date_cols = ('payment_date', 'set_date', 'accrual_start_date', 'accrual_end_date')
+    return __dataframe_handler_unsorted(result['cashflows'], mappings, date_cols, risk_key, request_id=request_id)
 
 
 def error_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase, request_id: Optional[str] = None) \
@@ -95,8 +104,12 @@ def leg_definition_handler(result: dict, risk_key: RiskKey, instrument: Instrume
 
 
 def message_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
-        -> StringWithInfo:
-    return StringWithInfo(risk_key, result.get('message'), request_id=request_id)
+        -> Union[StringWithInfo, ErrorValue]:
+    message = result.get('message')
+    if message is None:
+        return ErrorValue(risk_key, "No result returned", request_id=request_id)
+    else:
+        return StringWithInfo(risk_key, message, request_id=request_id)
 
 
 def number_and_unit_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
@@ -227,8 +240,8 @@ def canonical_projection_table_handler(result: dict, risk_key: RiskKey, _instrum
         ('premium_currency', 'premiumCcy'),
         ('currency', 'currency')
     )
-
-    return __dataframe_handler(result['rows'], mappings, risk_key, request_id=request_id)
+    date_cols = ('start_date', 'end_date', 'expiration_date')
+    return __dataframe_handler_unsorted(result['rows'], mappings, date_cols, risk_key, request_id)
 
 
 def risk_float_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
@@ -279,7 +292,7 @@ result_handlers = {
     'RiskByClass': risk_by_class_handler,
     'RiskVector': risk_vector_handler,
     'FixingTable': fixing_table_handler,
-    'CanonicalProjection': canonical_projection_table_handler,
+    'CanonicalProjectionTable': canonical_projection_table_handler,
     'RiskSecondOrderVector': risk_float_handler,
     'RiskTheta': risk_float_handler,
     'Market': market_handler,

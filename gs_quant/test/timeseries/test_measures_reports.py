@@ -51,6 +51,7 @@ ppa_report = Report(position_source_id='position source id',
                     parameters=ReportParameters(risk_model='risk_model_id'),
                     status='new')
 
+
 factor_data = [
     {
         'date': '2020-11-23',
@@ -119,29 +120,52 @@ aggregate_factor_data = [
 
 ppa_data = {
     'netExposure': [
-        -1,
-        -0.8,
-        -0.6
+        1,
+        4,
+        6
     ],
     'grossExposure': [
         1,
         1.2,
-        1.4
+        1.3
     ],
     'longExposure': [
         1,
         1.2,
-        1.4
+        1.3
     ],
     'shortExposure': [
         1,
-        0.8,
-        0.6
+        1.2,
+        1.3
+    ],
+    'date': [
+        '2020-01-02',
+        '2020-01-03',
+        '2020-01-04'
+    ]
+}
+
+constituents_data = {
+    'netExposure': [
+        1,
+        2,
+        3
+    ],
+    'assetId': [
+        "MA",
+        "MA",
+        "MA"
+    ],
+    'quantity': [
+        1,
+        1,
+        1
     ],
     'pnl': [
-        0.1,
-        0.2,
-        0.2
+        0,
+        1,
+        1
     ],
     'date': [
         '2020-01-02',
@@ -420,15 +444,15 @@ def test_aggregate_factor_support():
 
 def test_normalized_performance():
     idx = pd.date_range('2020-01-02', freq='D', periods=3)
-    expected = {RiskAumSource.Net: pd.Series(data=[1, 1 / 0.8, 1 / 0.6], index=idx,
+    expected = {RiskAumSource.Net: pd.Series(data=[1, 1 + 2 / 4, 1 + 6 / 6], index=idx,
                                              name='normalizedPerformance', dtype='float64'),
-                RiskAumSource.Gross: pd.Series(data=[1, 1.2, 1.4], index=idx,
+                RiskAumSource.Gross: pd.Series(data=[1, 1 + 2 / 1.2, 1 + 6 / 1.3], index=idx,
                                                name='normalizedPerformance', dtype='float64'),
-                RiskAumSource.Long: pd.Series(data=[1, 1.2, 1.4], index=idx,
+                RiskAumSource.Long: pd.Series(data=[1, 1 + 2 / 1.2, 1 + 6 / 1.3], index=idx,
                                               name='normalizedPerformance', dtype='float64'),
-                RiskAumSource.Short: pd.Series(data=[1, 1 / 0.8, 1 / 0.6], index=idx,
+                RiskAumSource.Short: pd.Series(data=[1, 1 + 2 / 1.2, 1 + 6 / 1.3], index=idx,
                                                name='normalizedPerformance', dtype='float64'),
-                RiskAumSource.Custom_AUM: pd.Series(data=[1, 1.1, 1.2], index=idx,
+                RiskAumSource.Custom_AUM: pd.Series(data=[1, 1 + 2 / 2.2, 1 + 6 / 2.4], index=idx,
                                                     name='normalizedPerformance', dtype='float64')}
 
     with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
@@ -442,6 +466,9 @@ def test_normalized_performance():
                 Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
                                   'type': 'Portfolio Performance Analytics',
                                   'parameters': {'transactionCostModel': 'FIXED'}})]
+            # mock PerformanceReport.get_portfolio_constituents()
+            mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
+            mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
 
             # mock PerformanceReport.get_many_measures()
             mock = replace('gs_quant.markets.report.PerformanceReport.get_many_measures', Mock())
@@ -465,13 +492,12 @@ def test_normalized_performance():
 
 
 def test_normalized_performance_default_aum():
+    replace = Replacer()
     idx = pd.date_range('2020-01-02', freq='D', periods=3)
-    expected = pd.Series(data=[1, 1 / 0.8, 1 / 0.6], index=idx, name='normalizedPerformance', dtype='float64')
+    expected = pd.Series(data=[1, 1 + 2 / 1.2, 1 + 6 / 1.3], index=idx, name='normalizedPerformance', dtype='float64')
 
     with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
-
         df = MarketDataResponseFrame(data=ppa_data, dtype="float64")
-        replace = Replacer()
 
         # mock GsPortfolioApi.get_reports()
         mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
@@ -479,6 +505,10 @@ def test_normalized_performance_default_aum():
             Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
                               'type': 'Portfolio Performance Analytics',
                               'parameters': {'transactionCostModel': 'FIXED'}})]
+
+        # mock PerformanceReport.get_portfolio_constituents()
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
+        mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
 
         # mock PerformanceReport.get_many_measures()
         mock = replace('gs_quant.markets.report.PerformanceReport.get_many_measures', Mock())
@@ -500,8 +530,9 @@ def test_normalized_performance_default_aum():
         mock.return_value = Portfolio('USD', 'P1', id_='MP1')
 
         actual = mr.normalized_performance('MP1', None)
+        print(actual)
         assert all(actual.values == expected.values)
-        replace.restore()
+    replace.restore()
 
 
 def test_normalized_performance_no_custom_aum():
@@ -519,6 +550,10 @@ def test_normalized_performance_no_custom_aum():
         # mock PerformanceReport.get_many_measures()
         mock = replace('gs_quant.markets.report.PerformanceReport.get_many_measures', Mock())
         mock.return_value = df
+
+        # mock PerformanceReport.get_portfolio_constituents()
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
+        mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
 
         # mock PerformanceReport.get_custom_aum()
         mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_custom_aum', Mock())

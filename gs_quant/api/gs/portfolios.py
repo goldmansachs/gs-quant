@@ -94,16 +94,23 @@ class GsPortfolioApi:
         return position_sets[0] if len(position_sets) > 0 else None
 
     @classmethod
-    def get_position_set_by_position_type(cls, positions_type: str, positions_id: str) -> Tuple[Instrument, ...]:
+    def get_position_set_by_position_type(cls, positions_type: str, positions_id: str,
+                                          activity_type: str = 'position') -> Tuple[Instrument, ...]:
         root = 'deals' if positions_type == 'ETI' else 'books/' + positions_type
-        url = '/risk-internal/{}/{}/positions'.format(root, positions_id)
+        if activity_type != 'position':
+            url = '/risk-internal/{}/{}/positions?activityType={}'.format(root, positions_id, activity_type)
+        else:
+            url = '/risk-internal/{}/{}/positions'.format(root, positions_id)
         results = GsSession.current._get(url, timeout=181)
-        return [PositionSet.from_dict(res) for res in results['positionSets']]
+        return tuple(PositionSet.from_dict(res) for res in results['positionSets'])
 
     @classmethod
     def get_instruments_by_position_type(cls, positions_type: str,
-                                         positions_id: str) -> Tuple[Instrument, ...]:
-        position_sets = cls.get_position_set_by_position_type(positions_type=positions_type, positions_id=positions_id)
+                                         positions_id: str,
+                                         activity_type: str) -> Tuple[Instrument, ...]:
+        position_sets = cls.get_position_set_by_position_type(positions_type=positions_type,
+                                                              positions_id=positions_id,
+                                                              activity_type=activity_type)
 
         instruments = []
         for position_set in position_sets:
