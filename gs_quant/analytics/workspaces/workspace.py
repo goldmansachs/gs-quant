@@ -311,7 +311,8 @@ class Workspace:
                  selector_components: List[Component] = None,
                  disclaimer: str = None,
                  maintainers: List[str] = None,
-                 call_to_action: Union[WorkspaceCallToAction, Dict] = None):
+                 call_to_action: Union[WorkspaceCallToAction, Dict] = None,
+                 tags: List[str] = None):
         self.__id = None
         self.__name = name
         self.__rows = rows or []
@@ -323,6 +324,7 @@ class Workspace:
         self.__maintainers = maintainers or []
         self.__tabs = tabs or []
         self.__call_to_action = call_to_action
+        self.__tags = tags or []
 
     @classmethod
     def get_by_id(cls, workspace_id: str) -> 'Workspace':
@@ -460,6 +462,14 @@ class Workspace:
     def call_to_action(self, value):
         self.__call_to_action = value
 
+    @property
+    def tags(self):
+        return self.__tags
+
+    @tags.setter
+    def tags(self, value):
+        self.__tags = value
+
     @classmethod
     def _parse(cls, layout: str, workspace_components: List[Dict]):
         current_str = ''
@@ -564,8 +574,6 @@ class Workspace:
             parameters['tabs'] = [tab.as_dict() for tab in self.__tabs]
         if self.__disclaimer:
             parameters['disclaimer'] = self.__disclaimer
-        if self.__description:
-            parameters['description'] = self.__description
 
         dict_ = {
             'name': self.__name,
@@ -581,6 +589,10 @@ class Workspace:
                 dict_['entitlements'] = self.__entitlements.to_dict()
             else:
                 dict_['entitlements'] = self.__entitlements
+        if len(self.__tags):
+            dict_['tags'] = self.__tags
+        if self.__description:
+            dict_['description'] = self.__description
 
         return dict_
 
