@@ -43,7 +43,7 @@
   {# JAVASCRIPTS #}
   {%- block scripts %}
   {%- if not embedded %}
-  {# XXX Sphinx 1.8.0 made this an external js-file, quick fix until we refactor the template to inherert more blocks directly from sphinx #}
+  {# XXX Sphinx 1.8.0 made this an external js-file, quick fix until we refactor the template to inherit more blocks directly from sphinx #}
     {% if sphinx_version >= "1.8.0" %}
       <script type="text/javascript" id="documentation_options" data-url_root="{{ pathto('', 1) }}" src="{{ pathto('_static/documentation_options.js', 1) }}"></script>
     {% else %}

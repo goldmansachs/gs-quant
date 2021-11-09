@@ -138,7 +138,7 @@ class BaseProcessor(metaclass=ABCMeta):
                      query_info: Union[DataQueryInfo, MeasureQueryInfo] = None):
         """ Handle the update of a single coordinate and recalculate the value
 
-        :param attribute: Attribute alinging to data coordinate in the processor
+        :param attribute: Attribute aligning to data coordinate in the processor
         :param result: Processor result including success and series from data query
         """
         if not self.measure_processor:
@@ -237,7 +237,7 @@ class BaseProcessor(metaclass=ABCMeta):
                         query_info: Union[DataQueryInfo, MeasureQueryInfo] = None):
         """ Sets the result on the processor and recursively calls parent to set and calculate value
 
-            :param attribute: Attribute alinging to data coordinate in the processor
+            :param attribute: Attribute aligning to data coordinate in the processor
             :param result: Processor result including success and series from data query
         """
         # update the result

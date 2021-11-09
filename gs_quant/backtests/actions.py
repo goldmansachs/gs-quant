@@ -53,7 +53,7 @@ class AddTradeAction(Action):
         """
         create an action which adds a trade when triggered.  The trades are resolved on the trigger date (state) and
         last until the trade_duration if specified or for all future dates if not.
-        :param priceables: a priceable or a list of pricables.
+        :param priceables: a priceable or a list of priceables.
         :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor or timedelta
                                if left as None the
                                trade will be added for all future dates
@@ -96,7 +96,7 @@ class EnterPositionQuantityScaledAction(Action):
         """
         create an action which enters trades when triggered.  The trades are executed with specified quantity and
         last until the trade_duration if specified, or for all future dates if not.
-        :param priceables: a priceable or a list of pricables.
+        :param priceables: a priceable or a list of priceables.
         :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor if left as None the
                                trade will be added for all future dates
         :param name: optional additional name to the priceable name

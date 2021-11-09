@@ -220,7 +220,7 @@
         "title": "gs_quant models epidemiology SIR"
     },
     {
-        "body": "gs_quant timeseries datetime Window class Window w None r None source Create a Window with size and ramp up to use Parameters w Union int str None window size r Union int str None ramp up value Defaults to the window size Returns new window object Usage The window size and ramp up value can either the number of observations or a string representation of the time period Examples Window size is 22 obversations and the ramp up value is 10 Window 22 10 Window size is one month and the ramp up size is one week Window 1m 1w Methods",
+        "body": "gs_quant timeseries datetime Window class Window w None r None source Create a Window with size and ramp up to use Parameters w Union int str None window size r Union int str None ramp up value Defaults to the window size Returns new window object Usage The window size and ramp up value can either the number of observations or a string representation of the time period Examples Window size is 22 observations and the ramp up value is 10 Window 22 10 Window size is one month and the ramp up size is one week Window 1m 1w Methods",
         "key": "classes/gs_quant.timeseries.datetime.Window",
         "title": "gs_quant timeseries datetime Window"
     },

@@ -840,7 +840,7 @@ class Basket(Asset, PositionedEntity):
         if report_status != ReportStatus.done:
             raise MqError(f'The basket edit report\'s status is {status}. The current rebalance request will \
                             not be submitted in the meantime.')
-        _logger.info('Your basket edits have completed successfuly. Submitting rebalance request now...')
+        _logger.info('Your basket edits have completed successfully. Submitting rebalance request now...')
         response = GsIndexApi.rebalance(self.id, rebal_inputs)
         return response
 

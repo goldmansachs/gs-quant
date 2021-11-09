@@ -53,7 +53,7 @@ setuptools.setup(
     include_package_data=True,
     # TODO: remove compatibility packages (configparser, future, six) now that we only support 3.6+
     install_requires=[
-        "asteval<0.9.24",  # temporary, until interal PyPI mirror catches up
+        "asteval<0.9.24",  # temporary, until internal PyPI mirror catches up
         "backoff",
         "aenum",
         "cachetools",
