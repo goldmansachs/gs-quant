@@ -135,11 +135,10 @@ class PricingContext(ContextBaseWithDefault):
                 get_enum_value(PricingLocation, market_data_location):
             raise ValueError('market.location and market_data_location cannot be different')
 
-        if pricing_date:
-            if pricing_date > dt.date.today():
-                raise ValueError(
-                    'The PricingContext does not support a pricing_date in the future. Please use the RollFwd Scenario '
-                    'to roll the pricing_date to a future date')
+        if not market and pricing_date and pricing_date > dt.date.today():
+            raise ValueError(
+                'The PricingContext does not support a pricing_date in the future. Please use the RollFwd Scenario '
+                'to roll the pricing_date to a future date')
 
         if market:
             market_date = None

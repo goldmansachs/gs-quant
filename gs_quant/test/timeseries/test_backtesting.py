@@ -169,7 +169,7 @@ def test_basket_average_realized_vol():
                                   date(2021, 2, 5), date(2021, 2, 6)])
 
     mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb()]
+    mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb(), _mock_spot_data_feb()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
     mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
@@ -195,6 +195,12 @@ def test_basket_average_realized_vol():
 
     with pytest.raises(NotImplementedError):
         a_basket.average_realized_volatility('2d', real_time=True)
+
+    mock_get_last = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    mock_get_last.return_value = None
+    # Test case where ts.get_last_for_measure returns none
+    with DataContext('2021-02-01', datetime.date.today() + datetime.timedelta(days=2)):
+        a_basket.average_realized_volatility('2d')
 
     replace.restore()
 

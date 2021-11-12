@@ -595,6 +595,98 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
     return _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE)
 
 
+@plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.OPTION_PREMIUM],
+              display_name='option_premium')
+def option_premium_credit(asset: Asset, expiry: str, strike_reference: CdsVolReference,
+                          relative_strike: Real, *, source: str = None, real_time: bool = False,
+                          request_id: Optional[str] = None) -> Series:
+    """
+    Option premium of a cds index for a given expiry and delta strike.
+
+    :param asset: asset object loaded from security master
+    :param expiry: relative date representation of expiration date on the option e.g. 3m
+    :param strike_reference: reference for strike level
+    :param relative_strike: strike relative to reference
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: option premium curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime option premium not implemented in credit options')
+
+    if strike_reference is CdsVolReference.FORWARD:
+        delta_strike = 'ATMF'
+    elif strike_reference is CdsVolReference.DELTA_CALL:
+        delta_strike = "{}DC".format(relative_strike)
+    elif strike_reference is CdsVolReference.DELTA_PUT:
+        delta_strike = "{}DP".format(relative_strike)
+    else:
+        raise NotImplementedError('Option Type: {} not implemented in credit', strike_reference)
+
+    _logger.debug('where expiry=%s, deltaStrike=%s', expiry, delta_strike)
+
+    q = GsDataApi.build_market_data_query(
+        [asset.get_marquee_id()],
+        QueryType.OPTION_PREMIUM,
+        where=dict(
+            expiry=expiry,
+            deltaStrike=delta_strike,
+        ),
+        source=source,
+        real_time=real_time
+    )
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
+    return _extract_series_from_df(df, QueryType.OPTION_PREMIUM)
+
+
+@plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.ABSOLUTE_STRIKE],
+              display_name='absolute_strike')
+def absolute_strike_credit(asset: Asset, expiry: str, strike_reference: CdsVolReference,
+                           relative_strike: Real, *, source: str = None, real_time: bool = False,
+                           request_id: Optional[str] = None) -> Series:
+    """
+    Absolute strike of a cds index for a given expiry and delta strike.
+
+    :param asset: asset object loaded from security master
+    :param expiry: relative date representation of expiration date on the option e.g. 3m
+    :param strike_reference: reference for strike level
+    :param relative_strike: strike relative to reference
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: absolute strike curve
+    """
+    if real_time:
+        raise NotImplementedError('realtime absolute strike not implemented in credit options')
+
+    if strike_reference is CdsVolReference.FORWARD:
+        delta_strike = 'ATMF'
+    elif strike_reference is CdsVolReference.DELTA_CALL:
+        delta_strike = "{}DC".format(relative_strike)
+    elif strike_reference is CdsVolReference.DELTA_PUT:
+        delta_strike = "{}DP".format(relative_strike)
+    else:
+        raise NotImplementedError('Option Type: {} not implemented in credit', strike_reference)
+
+    _logger.debug('where expiry=%s, deltaStrike=%s', expiry, delta_strike)
+
+    q = GsDataApi.build_market_data_query(
+        [asset.get_marquee_id()],
+        QueryType.ABSOLUTE_STRIKE,
+        where=dict(
+            expiry=expiry,
+            deltaStrike=delta_strike,
+        ),
+        source=source,
+        real_time=real_time
+    )
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
+    return _extract_series_from_df(df, QueryType.ABSOLUTE_STRIKE)
+
+
 @plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE],
               display_name='implied_volatility')
 def implied_volatility_credit(asset: Asset, expiry: str, strike_reference: CdsVolReference,

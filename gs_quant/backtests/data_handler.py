@@ -26,16 +26,23 @@ class Clock(object):
         self.reset()
 
     def update(self, time: dt.datetime):
-        if time < self._time:
-            raise RuntimeError(f'current time is {self._time}, cannot run backwards to {time}')
+
+        compare_time = self._time.replace(tzinfo=None) \
+            if time.tzinfo is None or time.tzinfo.utcoffset(time) is None else self._time
+
+        if time < compare_time:
+            raise RuntimeError(f'current time is {compare_time}, cannot run backwards to {time}')
         self._time = time
 
     def reset(self):
-        self._time = dt.datetime(1900, 1, 1)
+        self._time = dt.datetime(1900, 1, 1).replace(tzinfo=utc)
 
     def time_check(self, state: Union[dt.date, dt.datetime]):
         if isinstance(state, dt.datetime):
-            lookahead = state > self._time
+            if state.tzinfo is None or state.tzinfo.utcoffset(state) is None:  # timezone naive
+                lookahead = state > self._time.replace(tzinfo=None)
+            else:
+                lookahead = state > self._time
         else:
             lookahead = state > self._time.date()
 
@@ -56,7 +63,8 @@ class DataHandler(object):
         self._clock.update(state)
 
     def _utc_time(self, state: Union[dt.date, dt.datetime]):
-        if isinstance(state, dt.datetime):
+        # only switch to utc time if the datetime you've been sent is timezone naive
+        if isinstance(state, dt.datetime) and (state.tzinfo is None or state.tzinfo.utcoffset(state) is None):
             return self._tz.localize(state).astimezone(utc).replace(tzinfo=None)
         else:
             return state

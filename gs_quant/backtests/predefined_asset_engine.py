@@ -24,7 +24,7 @@ from gs_quant.backtests.core import ValuationMethod
 from gs_quant.backtests.data_sources import DataManager
 from gs_quant.backtests.order import *
 from gs_quant.datetime import is_business_day, prev_business_date, business_day_offset
-from pandas import bdate_range
+from pandas import bdate_range, to_datetime
 from pandas.tseries.offsets import BDay
 from collections import deque
 from pytz import timezone
@@ -123,7 +123,9 @@ class PredefinedAssetEngine(BacktestBaseEngine):
             return dt.time(23)
 
     def _timer(self, strategy, start, end, frequency, states=None):
-        dates = bdate_range(start=start, end=end, freq=frequency) if states is None else states
+        dates = list(map(lambda x: x.date(), to_datetime(bdate_range(start=start, end=end, freq=frequency)))) \
+            if states is None else states
+
         all_times = []
         times = list()
         for trigger in strategy.triggers:
@@ -139,9 +141,16 @@ class PredefinedAssetEngine(BacktestBaseEngine):
         times = list(dict.fromkeys(times))
 
         for d in dates:
-            if self.calendars == 'Weekend' or is_business_day(d.date(), self.calendars):
-                for t in times:
-                    all_times.append(dt.datetime.combine(d, t))
+            if isinstance(d, dt.datetime):
+                if self.calendars == 'Weekend' or is_business_day(d.date(), self.calendars):
+                    all_times.append(d)
+                    for t in times:
+                        if d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None:
+                            all_times.append(d.tzinfo.localize(dt.datetime.combine(d.date(), t)))
+            else:
+                if self.calendars == 'Weekend' or is_business_day(d, self.calendars):
+                    for t in times:
+                        all_times.append(dt.datetime.combine(d, t))
         all_times = list(set(all_times))
         all_times.sort()
         return all_times

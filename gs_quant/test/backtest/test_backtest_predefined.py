@@ -16,15 +16,18 @@ under the License.
 
 import gs_quant.backtests.predefined_asset_engine
 import datetime as dt
+from gs_quant.session import GsSession, Environment
+from gs_quant.backtests.actions import AddTradeAction
 from gs_quant.backtests.strategy import Strategy
-from gs_quant.backtests.triggers import OrdersGeneratorTrigger
+from gs_quant.backtests.triggers import OrdersGeneratorTrigger, DateTriggerRequirements, DateTrigger
 from gs_quant.backtests.backtest_objects import PredefinedAssetBacktest
 from gs_quant.backtests.predefined_asset_engine import PredefinedAssetEngine
 from gs_quant.backtests.data_sources import DataManager
 import pandas as pd
+import numpy as np
 from gs_quant.data.core import DataFrequency
 from gs_quant.backtests.core import ValuationFixingType
-from gs_quant.instrument import Security
+from gs_quant.instrument import Security, IRBondFuture
 from gs_quant.backtests.order import OrderMarketOnClose, OrderTWAP, TimeWindow
 from unittest import mock
 import gs_quant.datetime
@@ -84,6 +87,39 @@ class FuturesExample(OrdersGeneratorTrigger):
                                 window=TimeWindow(start=twap_start, end=twap_end),
                                 source=str(self.__class__)))
         return orders
+
+
+def test_backtest_predefined_timezone_aware():
+    GsSession.use(Environment.PROD)
+    tz = 'Europe/London'
+    start_dt = '2021-01-01T08:00'
+    end_dt = '2021-12-31T17:00'
+
+    states = pd.bdate_range(start_dt, end_dt, freq='1H', tz=tz).to_series().between_time('08:00',
+                                                                                         '17:00').index.tolist()
+    trigger_dates = pd.bdate_range(start_dt, end_dt, freq='1H', tz=tz).to_series().at_time('17:00').index.tolist()
+    data = np.random.randn(len(states))
+    s_rt = pd.Series(index=states, data=data)
+    s_eod = s_rt.at_time('17:00')
+    s_eod.index = s_eod.index.date
+
+    generic_bond_future = IRBondFuture(currency='EUR')
+    add_trade_action = AddTradeAction(generic_bond_future)
+    simple_date_trigger_requirement = DateTriggerRequirements(dates=trigger_dates)
+    simple_date_trigger = DateTrigger(trigger_requirements=simple_date_trigger_requirement, actions=[add_trade_action])
+
+    data_manager = DataManager()
+    data_manager.add_data_source(pd.Series(index=states, data=data), DataFrequency.REAL_TIME, generic_bond_future,
+                                 ValuationFixingType.PRICE)
+    data_manager.add_data_source(s_eod, DataFrequency.DAILY, generic_bond_future,
+                                 ValuationFixingType.PRICE)
+
+    # instantiate a new strategy
+    strategy = Strategy(None, triggers=simple_date_trigger)
+
+    engine = PredefinedAssetEngine(data_mgr=data_manager, tz=timezone(tz), calendars='LDN')
+    backtest = engine.run_backtest(strategy=strategy, start=states[0], end=states[-1], states=states)
+    assert len(backtest.trade_ledger()) == 252
 
 
 def test_backtest_predefined():

@@ -158,7 +158,8 @@ def test_get_carbon_data(mocker):
                                                 cards=[CarbonCard.COVERAGE, CarbonCard.EMISSIONS])
     GsSession.current._get.assert_called_with(
         '/carbon/MPRE78YG4J918ERD?benchmark=MA4B66MW5E27U8P32SB&reportingYear=Latest&currency=GBP'
-        '&includeEstimates=true&useHistoricalData=false&normalizeEmissions=false&card=coverage&card=emissions')
+        '&includeEstimates=true&useHistoricalData=false&normalizeEmissions=false&card=coverage&card=emissions'
+        '&analyticsView=Long')
     assert response == mock_response
 
 

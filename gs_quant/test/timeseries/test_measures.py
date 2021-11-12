@@ -1005,6 +1005,8 @@ def mock_eq(_cls, _q):
         'averageImpliedVariance': [5, 1, 2],
         'averageRealizedVolatility': [5, 1, 2],
         'impliedVolatilityByDeltaStrike': [5, 1, 2],
+        'optionPremium': [5, 1, 2],
+        'absoluteStrike': [5, 1, 2],
         'fundamentalMetric': [5, 1, 2]
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
@@ -1713,6 +1715,52 @@ def test_implied_vol_credit():
         tm.implied_volatility_credit(..., '1m', tm.CdsVolReference.DELTA_PUT, 75, real_time=True)
     with pytest.raises(NotImplementedError):
         tm.implied_volatility_credit(..., '1m', "", 75)
+    replace.restore()
+
+
+def test_absolute_strike_credit():
+    replace = Replacer()
+    mock_cds = Index('MA890', AssetClass.Equity, 'CDS')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    actual = tm.absolute_strike_credit(mock_cds, '1m', tm.CdsVolReference.DELTA_CALL, 10)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='absoluteStrike'),
+                        pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    actual = tm.absolute_strike_credit(mock_cds, '1m', tm.CdsVolReference.DELTA_PUT, 10)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='absoluteStrike'),
+                        pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    actual = tm.absolute_strike_credit(mock_cds, '1m', tm.CdsVolReference.FORWARD, 100)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='absoluteStrike'),
+                        pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.absolute_strike_credit(..., '1m', tm.CdsVolReference.DELTA_PUT, 75, real_time=True)
+    with pytest.raises(NotImplementedError):
+        tm.absolute_strike_credit(..., '1m', "", 75)
+    replace.restore()
+
+
+def test_option_premium_credit():
+    replace = Replacer()
+    mock_cds = Index('MA890', AssetClass.Equity, 'CDS')
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    actual = tm.option_premium_credit(mock_cds, '1m', tm.CdsVolReference.DELTA_CALL, 10)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='optionPremium'),
+                        pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    actual = tm.option_premium_credit(mock_cds, '1m', tm.CdsVolReference.DELTA_PUT, 10)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='optionPremium'),
+                        pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    actual = tm.option_premium_credit(mock_cds, '1m', tm.CdsVolReference.FORWARD, 100)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='optionPremium'),
+                        pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.option_premium_credit(..., '1m', tm.CdsVolReference.DELTA_PUT, 75, real_time=True)
+    with pytest.raises(NotImplementedError):
+        tm.option_premium_credit(..., '1m', "", 75)
     replace.restore()
 
 
