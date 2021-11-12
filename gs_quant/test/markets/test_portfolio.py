@@ -84,6 +84,15 @@ def test_portfolio(mocker):
         portfolio = Portfolio(swap_dict)
         assert len(portfolio) == 3
 
+        # extend a portfolio with a portfolio
+        new_portfolio = Portfolio([IRSwap(termination_date=x, name=x) for x in ['4y', '5y']])
+        portfolio.extend(new_portfolio)
+        assert len(portfolio) == 5
+
+        # extend a portfolio with a list of trades
+        portfolio.extend([IRSwap(termination_date=x, name=x) for x in ['6y', '7y']])
+        assert len(portfolio) == 7
+
 
 def test_construction():
     swap1 = IRSwap('Pay', '10y', 'USD')

@@ -347,8 +347,9 @@ class Basket:
         # Add in today's data
         if not real_time and DataContext.current.end_date >= datetime.date.today():
             recent_spot = ts.get_last_for_measure(self.get_marquee_ids(), QueryType.SPOT, {}, request_id=request_id)
-            recent_spot.index.rename('date', inplace=True)
-            spot_df = spot_df.append(recent_spot.pivot_table('spot', ['date'], 'assetId'))
+            if recent_spot is not None and len(recent_spot):
+                recent_spot.index.rename('date', inplace=True)
+                spot_df = spot_df.append(recent_spot.pivot_table('spot', ['date'], 'assetId'))
 
         vols = [volatility(spot_df[asset_id], Window(tenor, tenor), returns_type) for asset_id in spot_df]
         vols = pd.concat(vols, axis=1)

@@ -27,7 +27,8 @@ from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.carbon import CarbonCard, GsCarbonApi, CarbonTargetCoverageCategory, CarbonScope, \
-    CarbonEmissionsAllocationCategory, CarbonEmissionsIntensityType, CarbonCoverageCategory, CarbonEntityType
+    CarbonEmissionsAllocationCategory, CarbonEmissionsIntensityType, CarbonCoverageCategory, CarbonEntityType, \
+    CarbonAnalyticsView
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.esg import ESGMeasure, GsEsgApi, ESGCard
 from gs_quant.api.gs.portfolios import GsPortfolioApi
@@ -687,7 +688,8 @@ class PositionedEntity(metaclass=ABCMeta):
                              include_estimates: bool = False,
                              use_historical_data: bool = False,
                              normalize_emissions: bool = False,
-                             cards: List[CarbonCard] = [c for c in CarbonCard]) -> Dict:
+                             cards: List[CarbonCard] = [c for c in CarbonCard],
+                             analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> Dict:
         return GsCarbonApi.get_carbon_analytics(entity_id=self.id,
                                                 benchmark_id=benchmark_id,
                                                 reporting_year=reporting_year,
@@ -695,32 +697,37 @@ class PositionedEntity(metaclass=ABCMeta):
                                                 include_estimates=include_estimates,
                                                 use_historical_data=use_historical_data,
                                                 normalize_emissions=normalize_emissions,
-                                                cards=cards)
+                                                cards=cards,
+                                                analytics_view=analytics_view)
 
     def get_carbon_coverage(self,
                             reporting_year: str = 'Latest',
                             include_estimates: bool = False,
                             use_historical_data: bool = False,
-                            coverage_type: CarbonCoverageCategory =
-                            CarbonCoverageCategory.WEIGHTS) -> pd.DataFrame:
+                            coverage_category: CarbonCoverageCategory = CarbonCoverageCategory.WEIGHTS,
+                            analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> pd.DataFrame:
         coverage = self.get_carbon_analytics(reporting_year=reporting_year,
                                              include_estimates=include_estimates,
                                              use_historical_data=use_historical_data,
-                                             cards=[CarbonCard.COVERAGE]).get(CarbonCard.COVERAGE.value).get(
-            coverage_type.value, {}).get(CarbonEntityType.PORTFOLIO.value, {})
+                                             cards=[CarbonCard.COVERAGE],
+                                             analytics_view=analytics_view).get(CarbonCard.COVERAGE.value).get(
+            coverage_category.value, {}).get(CarbonEntityType.PORTFOLIO.value, {})
         return pd.DataFrame(coverage)
 
     def get_carbon_sbti_netzero_coverage(self,
                                          reporting_year: str = 'Latest',
                                          include_estimates: bool = False,
                                          use_historical_data: bool = False,
-                                         coverage_type: CarbonTargetCoverageCategory =
-                                         CarbonTargetCoverageCategory.PORTFOLIO_EMISSIONS) -> pd.DataFrame:
+                                         target_coverage_category: CarbonTargetCoverageCategory =
+                                         CarbonTargetCoverageCategory.PORTFOLIO_EMISSIONS,
+                                         analytics_view: CarbonAnalyticsView =
+                                         CarbonAnalyticsView.LONG) -> pd.DataFrame:
         coverage = self.get_carbon_analytics(reporting_year=reporting_year,
                                              include_estimates=include_estimates,
                                              use_historical_data=use_historical_data,
-                                             cards=[CarbonCard.SBTI_AND_NET_ZERO_TARGETS]).get(
-            CarbonCard.SBTI_AND_NET_ZERO_TARGETS.value).get(coverage_type.value, {})
+                                             cards=[CarbonCard.SBTI_AND_NET_ZERO_TARGETS],
+                                             analytics_view=analytics_view).get(
+            CarbonCard.SBTI_AND_NET_ZERO_TARGETS.value).get(target_coverage_category.value, {})
         coverage = {target: target_coverage.get(CarbonEntityType.PORTFOLIO.value, {}) for target, target_coverage in
                     coverage.items()}
         return pd.DataFrame(coverage)
@@ -730,12 +737,14 @@ class PositionedEntity(metaclass=ABCMeta):
                              include_estimates: bool = False,
                              use_historical_data: bool = False,
                              normalize_emissions: bool = False,
-                             scope: CarbonScope = CarbonScope.TOTAL_GHG) -> pd.DataFrame:
+                             scope: CarbonScope = CarbonScope.TOTAL_GHG,
+                             analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> pd.DataFrame:
         emissions = self.get_carbon_analytics(currency=currency,
                                               include_estimates=include_estimates,
                                               use_historical_data=use_historical_data,
                                               normalize_emissions=normalize_emissions,
-                                              cards=[CarbonCard.EMISSIONS]).get(CarbonCard.EMISSIONS.value).get(
+                                              cards=[CarbonCard.EMISSIONS],
+                                              analytics_view=analytics_view).get(CarbonCard.EMISSIONS.value).get(
             scope.value, {}).get(CarbonEntityType.PORTFOLIO.value, [])
         return pd.DataFrame(emissions)
 
@@ -747,13 +756,15 @@ class PositionedEntity(metaclass=ABCMeta):
                                         normalize_emissions: bool = False,
                                         scope: CarbonScope = CarbonScope.TOTAL_GHG,
                                         classification: CarbonEmissionsAllocationCategory =
-                                        CarbonEmissionsAllocationCategory.GICS_SECTOR) -> pd.DataFrame:
+                                        CarbonEmissionsAllocationCategory.GICS_SECTOR,
+                                        analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> pd.DataFrame:
         allocation = self.get_carbon_analytics(reporting_year=reporting_year,
                                                currency=currency,
                                                include_estimates=include_estimates,
                                                use_historical_data=use_historical_data,
                                                normalize_emissions=normalize_emissions,
-                                               cards=[CarbonCard.ALLOCATIONS]).get(CarbonCard.ALLOCATIONS.value).get(
+                                               cards=[CarbonCard.ALLOCATIONS],
+                                               analytics_view=analytics_view).get(CarbonCard.ALLOCATIONS.value).get(
             scope.value, {}).get(CarbonEntityType.PORTFOLIO.value, {}).get(classification.value)
         return pd.DataFrame(allocation).rename(columns={'name': classification.value})
 
@@ -765,13 +776,15 @@ class PositionedEntity(metaclass=ABCMeta):
                                      use_historical_data: bool = False,
                                      scope: CarbonScope = CarbonScope.TOTAL_GHG,
                                      intensity_metric: CarbonEmissionsIntensityType =
-                                     CarbonEmissionsIntensityType.EI_ENTERPRISE_VALUE) -> pd.DataFrame:
+                                     CarbonEmissionsIntensityType.EI_ENTERPRISE_VALUE,
+                                     analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> pd.DataFrame:
         attribution = self.get_carbon_analytics(benchmark_id=benchmark_id,
                                                 reporting_year=reporting_year,
                                                 currency=currency,
                                                 include_estimates=include_estimates,
                                                 use_historical_data=use_historical_data,
-                                                cards=[CarbonCard.ATTRIBUTION]).get(CarbonCard.ATTRIBUTION.value).get(
+                                                cards=[CarbonCard.ATTRIBUTION],
+                                                analytics_view=analytics_view).get(CarbonCard.ATTRIBUTION.value).get(
             scope.value, [])
         attribution_table = []
         for entry in attribution:

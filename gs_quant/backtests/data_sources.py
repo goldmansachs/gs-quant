@@ -83,7 +83,7 @@ class GenericDataSource(DataSource):
         if isinstance(state, Iterable):
             return [self.get_data(i) for i in state]
 
-        if self._tz_aware:
+        if self._tz_aware and (state.tzinfo is None or state.tzinfo.utcoffset(state) is None):
             state = pytz.utc.localize(state)
         if pd.Timestamp(state) in self._data_set:
             return self._data_set[pd.Timestamp(state)]

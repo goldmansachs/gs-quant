@@ -29,6 +29,11 @@ class TriggerDirection(Enum):
     EQUAL = 3
 
 
+class AggType(Enum):
+    ALL_OF = 1
+    ANY_OF = 2
+
+
 class TriggerRequirements(object):
     def __init__(self):
         pass
@@ -69,13 +74,14 @@ class RiskTriggerRequirements(TriggerRequirements):
 
 
 class AggregateTriggerRequirements(TriggerRequirements):
-    def __init__(self, triggers: Iterable[object]):
+    def __init__(self, triggers: Iterable[object], aggregate_type: AggType = AggType.ALL_OF):
         super().__init__()
         self.triggers = triggers
+        self.aggregate_type = aggregate_type
 
 
 class DateTriggerRequirements(TriggerRequirements):
-    def __init__(self, dates: Iterable[dt.date]):
+    def __init__(self, dates: Iterable[Union[dt.datetime, dt.date]]):
         super().__init__()
         """
         :param dates: the list of dates on which to trigger
@@ -182,10 +188,6 @@ class PeriodicTrigger(Trigger):
                     holiday_calendar=self.trigger_requirements.calendar)
         return self._trigger_dates
 
-    def get_trigger_times(self) -> [dt.datetime]:
-        return [d if isinstance(d, dt.datetime) else dt.datetime.combine(d, dt.datetime.min.time())
-                for d in self.get_trigger_dates()]
-
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         if not self._trigger_dates:
             self.get_trigger_dates()
@@ -267,10 +269,16 @@ class AggregateTrigger(Trigger):
         self._triggers = triggers
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
-        for trigger in self._trigger_requirements.triggers:
-            if not trigger.has_triggered(state, backtest):
-                return TriggerInfo(False)
-        return TriggerInfo(True)
+        if self._trigger_requirements.agg_type == AggType.ALL_OF:
+            for trigger in self._trigger_requirements.triggers:
+                if not trigger.has_triggered(state, backtest):
+                    return TriggerInfo(False)
+            return TriggerInfo(True)
+        else:
+            for trigger in self._trigger_requirements.triggers:
+                if trigger.has_triggered(state, backtest):
+                    return TriggerInfo(True)
+            return TriggerInfo(False)
 
     @property
     def triggers(self) -> Iterable[Trigger]:
@@ -280,10 +288,6 @@ class AggregateTrigger(Trigger):
 class DateTrigger(Trigger):
     def __init__(self, trigger_requirements: DateTriggerRequirements, actions: Iterable[Action]):
         super().__init__(trigger_requirements, actions)
-
-    def get_trigger_times(self) -> [dt.datetime]:
-        return [d if isinstance(d, dt.datetime) else dt.datetime.combine(d, dt.datetime.min.time())
-                for d in self._trigger_requirements.dates]
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         return TriggerInfo(state in self._trigger_requirements.dates)

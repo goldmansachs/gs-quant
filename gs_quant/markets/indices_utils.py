@@ -241,7 +241,7 @@ def get_my_baskets(user_id: str = None) -> Optional[pd.DataFrame]:
         return pd.DataFrame(my_baskets)
 
 
-def get_flagship_baskets(fields: [str] = [],
+def get_flagship_baskets(fields: List[str] = [],
                          basket_type: List[BasketType] = BasketType.to_list(),
                          asset_class: List[AssetClass] = [AssetClass.Equity],
                          region: List[Region] = None,
@@ -287,7 +287,7 @@ def get_flagship_baskets(fields: [str] = [],
 
 
 def get_flagships_with_assets(identifiers: List[str],
-                              fields: [str] = [],
+                              fields: List[str] = [],
                               basket_type: List[BasketType] = BasketType.to_list(),
                               asset_class: List[AssetClass] = [AssetClass.Equity],
                               region: List[Region] = None,
@@ -336,7 +336,7 @@ def get_flagships_with_assets(identifiers: List[str],
     return pd.DataFrame(response)
 
 
-def get_flagships_performance(fields: [str] = [],
+def get_flagships_performance(fields: List[str] = [],
                               basket_type: List[BasketType] = BasketType.to_list(),
                               asset_class: List[AssetClass] = [AssetClass.Equity],
                               region: List[Region] = None,
@@ -400,7 +400,7 @@ def get_flagships_performance(fields: [str] = [],
     return pd.DataFrame(performance)
 
 
-def get_flagships_constituents(fields: [str] = [],
+def get_flagships_constituents(fields: List[str] = [],
                                basket_type: List[BasketType] = BasketType.to_list(),
                                asset_class: List[AssetClass] = [AssetClass.Equity],
                                region: List[Region] = None,
@@ -474,12 +474,15 @@ def __get_constituents_data(basket: Dict, basket_map: Dict, start: dt.date,
     if _id not in list(basket_map.keys()):
         return
     start_date = dt.datetime.strptime(basket['historyStartDate'], '%Y-%m-%d').date()
+    # only query for dates after/on first date with availability
     start_date = start_date if start < start_date else start
+    # make sure start date is not greater than end date
+    end_date = start_date if start_date > end else end
 
     dataset_id = IndicesDatasets.GSBASKETCONSTITUENTS.value if _type == BasketType.CUSTOM_BASKET.value\
         else IndicesDatasets.GIRBASKETCONSTITUENTS.value
     data = GsDataApi.query_data(query=DataQuery(where=dict(assetId=_id), startDate=start_date,
-                                                endDate=end), dataset_id=dataset_id)
+                                                endDate=end_date), dataset_id=dataset_id)
 
     asset_ids = list(set([d['underlyingAssetId'] for d in data]))
     asset_data = GsAssetApi.get_many_assets_data_scroll(id=asset_ids, fields=fields,

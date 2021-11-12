@@ -914,11 +914,12 @@ class EqAutoroll(Instrument):
         buffer_level: float = None,
         local_return_cap: float = None,
         upside_leverage: float = None,
+        initial_fixing_override: float = None,
+        notional: Union[float, str] = None,
         business_day_calendar: str = None,
         payment_currency: Union[Currency, str] = None,
         settlement_delay: str = None,
         underlier_type: Union[UnderlierType, str] = None,
-        notional: Union[float, str] = None,
         buy_sell: Union[BuySell, str] = None,
         premium: float = None,
         premium_payment_date: Union[datetime.date, str] = None,
@@ -935,11 +936,12 @@ class EqAutoroll(Instrument):
         self.buffer_level = buffer_level
         self.local_return_cap = local_return_cap
         self.upside_leverage = upside_leverage
+        self.initial_fixing_override = initial_fixing_override
+        self.notional = notional
         self.business_day_calendar = business_day_calendar
         self.payment_currency = payment_currency
         self.settlement_delay = settlement_delay
         self.underlier_type = underlier_type
-        self.notional = notional
         self.buy_sell = buy_sell
         self.premium = premium
         self.premium_payment_date = premium_payment_date
@@ -1043,6 +1045,25 @@ class EqAutoroll(Instrument):
         self.__upside_leverage = value        
 
     @property
+    def initial_fixing_override(self) -> float:
+        return self.__initial_fixing_override
+
+    @initial_fixing_override.setter
+    def initial_fixing_override(self, value: float):
+        self._property_changed('initial_fixing_override')
+        self.__initial_fixing_override = value        
+
+    @property
+    def notional(self) -> Union[float, str]:
+        """Size of some value, i.e. notional like 1.3b, 1.5, 1000"""
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: Union[float, str]):
+        self._property_changed('notional')
+        self.__notional = value        
+
+    @property
     def business_day_calendar(self) -> str:
         return self.__business_day_calendar
 
@@ -1080,16 +1101,6 @@ class EqAutoroll(Instrument):
     def underlier_type(self, value: Union[UnderlierType, str]):
         self._property_changed('underlier_type')
         self.__underlier_type = get_enum_value(UnderlierType, value)        
-
-    @property
-    def notional(self) -> Union[float, str]:
-        """Size of some value, i.e. notional like 1.3b, 1.5, 1000"""
-        return self.__notional
-
-    @notional.setter
-    def notional(self, value: Union[float, str]):
-        self._property_changed('notional')
-        self.__notional = value        
 
     @property
     def buy_sell(self) -> Union[BuySell, str]:

@@ -109,6 +109,17 @@ class CarbonEntityType(Enum):
         return self.value
 
 
+class CarbonAnalyticsView(Enum):
+    """
+    Carbon analytics at Long or Short component of
+    """
+    LONG = 'Long'
+    SHORT = 'Short'
+
+    def __str__(self):
+        return self.value
+
+
 class GsCarbonApi:
     """GS Carbon API client implementation"""
 
@@ -121,7 +132,8 @@ class GsCarbonApi:
                              include_estimates: bool = False,
                              use_historical_data: bool = False,
                              normalize_emissions: bool = False,
-                             cards: List[CarbonCard] = []) -> Dict:
+                             cards: List[CarbonCard] = [],
+                             analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> Dict:
         url = f'/carbon/{entity_id}?'
         url += urlencode(
             dict(filter(lambda item: item[1] is not None,
@@ -131,7 +143,8 @@ class GsCarbonApi:
                              includeEstimates=str(include_estimates).lower(),
                              useHistoricalData=str(use_historical_data).lower(),
                              normalizeEmissions=str(normalize_emissions).lower(),
-                             card=cards).items())), True)
+                             card=cards,
+                             analyticsView=analytics_view.value).items())), True)
 
         # TODO: Add scope as API parameter
         return GsSession.current._get(url)

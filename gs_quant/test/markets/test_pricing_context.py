@@ -45,6 +45,16 @@ def test_pricing_context(mocker):
             _ = swap1.calc(risk.Price)
 
 
+def test_pricing_dates():
+    # May be on weekend but doesn't matter for basic test
+    future_date = dt.date.today() + dt.timedelta(2)
+    yesterday = dt.date.today() - dt.timedelta(1)
+    pc = PricingContext(pricing_date=future_date, market=CloseMarket(yesterday))
+    assert pc is not None
+    with pytest.raises(ValueError, match="pricing_date in the future"):
+        PricingContext(pricing_date=future_date)
+
+
 def test_market_data_object():
     coord_val_pair = [
         {'coordinate': {

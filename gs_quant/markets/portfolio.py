@@ -360,6 +360,9 @@ class Portfolio(PriceableImpl):
         self.priceables = [inst for inst in self.instruments if inst != priceable]
         return priceable
 
+    def extend(self, portfolio: Iterable):
+        self.priceables += tuple([p for p in portfolio])
+
     def to_frame(self, mappings: Optional[dict] = None) -> pd.DataFrame:
         def to_records(portfolio: Portfolio) -> list:
             records = []

@@ -1232,7 +1232,7 @@ def test_carbon_coverage(mocker):
     mocker.patch.object(GsCarbonApi, 'get_carbon_analytics', return_value=carbon_data)
 
     pm = PortfolioManager('MP')
-    coverage = pm.get_carbon_coverage(coverage_type=CarbonCoverageCategory.NUMBER_OF_COMPANIES)
+    coverage = pm.get_carbon_coverage(coverage_category=CarbonCoverageCategory.NUMBER_OF_COMPANIES)
     assert coverage.to_dict() == carbon_data.get(CarbonCard.COVERAGE.value).get(
         CarbonCoverageCategory.NUMBER_OF_COMPANIES.value).get(CarbonEntityType.PORTFOLIO.value)
 
@@ -1241,7 +1241,8 @@ def test_carbon_sbti_netzero_coverage(mocker):
     mocker.patch.object(GsCarbonApi, 'get_carbon_analytics', return_value=carbon_data)
 
     pm = PortfolioManager('MP')
-    coverage = pm.get_carbon_sbti_netzero_coverage(coverage_type=CarbonTargetCoverageCategory.CAPITAL_ALLOCATED)
+    coverage = pm.get_carbon_sbti_netzero_coverage(
+        target_coverage_category=CarbonTargetCoverageCategory.CAPITAL_ALLOCATED)
     assert coverage.to_dict().get('scienceBasedTarget') == carbon_data.get(
         CarbonCard.SBTI_AND_NET_ZERO_TARGETS.value).get(CarbonTargetCoverageCategory.CAPITAL_ALLOCATED.value).get(
         'scienceBasedTarget').get(CarbonEntityType.PORTFOLIO.value)
