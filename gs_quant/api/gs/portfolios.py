@@ -161,8 +161,12 @@ class GsPortfolioApi:
         return tuple(dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates)
 
     @classmethod
-    def update_positions(cls, portfolio_id: str, position_sets: List[PositionSet]) -> float:
-        return GsSession.current._put('/portfolios/{id}/positions'.format(id=portfolio_id), position_sets)
+    def update_positions(cls,
+                         portfolio_id: str,
+                         position_sets: List[PositionSet],
+                         net_positions: bool = True) -> float:
+        url = f'/portfolios/{portfolio_id}/positions?netPositions={str(net_positions).lower()}'
+        return GsSession.current._put(url, position_sets)
 
     @classmethod
     def get_positions_data(cls,

@@ -267,6 +267,32 @@ class Dataset:
 
         return pd.DataFrame(coverage)
 
+    def delete(self) -> Dict:
+        """
+        Delete dataset definition.
+
+        Needs 'modify_profuct_data' to execute operation.
+
+        >>> from gs_quant.data import Dataset
+        >>>
+        >>> test_dataset = Dataset('TEST')
+        >>> test_dataset.delete()
+        """
+        return self.provider.delete_dataset(self.id)
+
+    def undelete(self) -> Dict:
+        """
+        Un-delete dataset definition.
+
+        Needs 'modify_profuct_data' to execute operation.
+
+        >>> from gs_quant.data import Dataset
+        >>>
+        >>> test_dataset = Dataset('TEST')
+        >>> test_dataset.undelete()
+        """
+        return self.provider.undelete_dataset(self.id)
+
     def upload_data(self, data: Union[pd.DataFrame, list, tuple]) -> Dict:
         """
         Upload data to this DataSet

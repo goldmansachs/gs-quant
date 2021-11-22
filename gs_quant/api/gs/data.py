@@ -261,6 +261,16 @@ class GsDataApi(DataApi):
         return result
 
     @classmethod
+    def delete_dataset(cls, dataset_id: str) -> dict:
+        result = GsSession.current._delete(f'/data/datasets/{dataset_id}')
+        return result
+
+    @classmethod
+    def undelete_dataset(cls, dataset_id: str) -> dict:
+        result = GsSession.current._put(f'/data/datasets/{dataset_id}/undelete')
+        return result
+
+    @classmethod
     def update_definition(cls, dataset_id: str, definition: Union[DataSetEntity, dict]) -> DataSetEntity:
         result = GsSession.current._put('/data/datasets/{}'.format(dataset_id), payload=definition, cls=DataSetEntity)
         return result
@@ -269,7 +279,7 @@ class GsDataApi(DataApi):
     def upload_data(cls, dataset_id: str, data: Union[pd.DataFrame, list, tuple]) -> dict:
         if isinstance(data, pd.DataFrame):
             # We require the Dataframe to return a list in the 'records' format:
-            # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_json.html
+            #  https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_json.html
             data = data.to_json(orient='records')
         result = GsSession.current._post('/data/{}'.format(dataset_id), payload=data)
         return result

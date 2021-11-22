@@ -16,6 +16,7 @@ under the License.
 
 
 from typing import Optional
+import warnings
 from gs_quant.backtests.actions import Action, AddTradeAction, AddTradeActionInfo
 from gs_quant.backtests.backtest_objects import BackTest, PredefinedAssetBacktest
 from gs_quant.backtests.backtest_utils import make_list, CalcType
@@ -80,13 +81,21 @@ class AggregateTriggerRequirements(TriggerRequirements):
         self.aggregate_type = aggregate_type
 
 
+class NotTriggerRequirements(TriggerRequirements):
+    def __init__(self, trigger: object):
+        super().__init__()
+        self.trigger = trigger
+
+
 class DateTriggerRequirements(TriggerRequirements):
-    def __init__(self, dates: Iterable[Union[dt.datetime, dt.date]]):
+    def __init__(self, dates: Iterable[Union[dt.datetime, dt.date]], entire_day: bool = False):
         super().__init__()
         """
         :param dates: the list of dates on which to trigger
+        :param entire_day: flag that indicates whether to check against dates instead of datetimes
         """
         self.dates = dates
+        self.entire_day = entire_day
 
 
 class PortfolioTriggerRequirements(TriggerRequirements):
@@ -261,35 +270,79 @@ class StrategyRiskTrigger(Trigger):
 
 
 class AggregateTrigger(Trigger):
-    def __init__(self, triggers: Iterable[Trigger]):
-        actions = []
-        for t in triggers:
+    def __init__(self,
+                 trigger_requirements: Optional[AggregateTriggerRequirements] = None,
+                 actions: Optional[Union[Action, Iterable[Action]]] = None,
+                 triggers: Optional[Iterable[Trigger]] = None):
+        # support previous behaviour where a list of triggers was passed.
+        if not trigger_requirements and triggers is not None:
+            warnings.warn('triggers is deprecated; trigger_requirements', DeprecationWarning, 2)
+            trigger_requirements = AggregateTriggerRequirements(triggers)
+        actions = [] if not actions else actions
+        for t in trigger_requirements.triggers:
             actions += [action for action in t.actions]
-        super().__init__(AggregateTriggerRequirements(triggers), actions)
-        self._triggers = triggers
+        super().__init__(trigger_requirements, actions)
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
-        if self._trigger_requirements.agg_type == AggType.ALL_OF:
+        self._actions = []
+        info_dict = {}
+        if self._trigger_requirements.aggregate_type == AggType.ALL_OF:
             for trigger in self._trigger_requirements.triggers:
-                if not trigger.has_triggered(state, backtest):
+                t_info = trigger.has_triggered(state, backtest)
+                if not t_info:
                     return TriggerInfo(False)
-            return TriggerInfo(True)
-        else:
+                else:
+                    if t_info.info_dict:
+                        info_dict.update(t_info.info_dict)
+                    self._actions.extend(trigger.actions)
+            return TriggerInfo(True, info_dict)
+        elif self._trigger_requirements.aggregate_type == AggType.ANY_OF:
+            triggered = False
             for trigger in self._trigger_requirements.triggers:
-                if trigger.has_triggered(state, backtest):
-                    return TriggerInfo(True)
-            return TriggerInfo(False)
+                t_info = trigger.has_triggered(state, backtest)
+                if t_info:
+                    triggered = True
+                    if t_info.info_dict:
+                        info_dict.update(t_info.info_dict)
+                    self._actions.extend(trigger.actions)
+            return TriggerInfo(True, info_dict) if triggered else TriggerInfo(False)
+        else:
+            raise RuntimeError(f'Unrecognised aggregation type: {self._trigger_requirements.aggregate_type}')
 
     @property
     def triggers(self) -> Iterable[Trigger]:
-        return self._triggers
+        return self._trigger_requirements.triggers
+
+
+class NotTrigger(Trigger):
+    def __init__(self, trigger_requirements: NotTriggerRequirements, actions: Optional[Iterable[Action]] = None):
+        super().__init__(trigger_requirements, actions)
+
+    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
+        t_info = self.trigger_requirements.trigger.has_triggered(state, backtest)
+        if t_info:
+            return TriggerInfo(False)
+        else:
+            self._actions.extend(self.trigger_requirements.trigger.actions)
+            return TriggerInfo(True)
 
 
 class DateTrigger(Trigger):
     def __init__(self, trigger_requirements: DateTriggerRequirements, actions: Iterable[Action]):
         super().__init__(trigger_requirements, actions)
+        self._dates_from_datetimes = [d.date() if isinstance(d, dt.datetime) else d
+                                      for d in self.trigger_requirements.dates] \
+            if self.trigger_requirements.entire_day else None
 
-    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
+    def has_triggered(self, state: Union[dt.date, dt.datetime], backtest: BackTest = None) -> TriggerInfo:
+        assert isinstance(state, dt.datetime) or isinstance(state, dt.date)
+
+        if self.trigger_requirements.entire_day:
+            if isinstance(state, dt.datetime):
+                return TriggerInfo(state.date() in self._dates_from_datetimes)
+            elif isinstance(state, dt.date):
+                return TriggerInfo(state in self._dates_from_datetimes)
+
         return TriggerInfo(state in self._trigger_requirements.dates)
 
 

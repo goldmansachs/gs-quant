@@ -387,7 +387,8 @@ class PositionedEntity(metaclass=ABCMeta):
         raise NotImplementedError
 
     def update_positions(self,
-                         position_sets: List[PositionSet]):
+                         position_sets: List[PositionSet],
+                         net_positions: bool = True):
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             if not position_sets:
                 return
