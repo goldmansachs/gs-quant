@@ -284,7 +284,8 @@ class Portfolio(PriceableImpl):
         request = RiskRequest(
             tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
             (ResolvedInstrumentValues,),
-            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(market=self._pricing_context.market),)
+            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=self._pricing_context.pricing_date,
+                                                                        market=self._pricing_context.market),)
         )
 
         if self.__quote_id:
@@ -304,7 +305,8 @@ class Portfolio(PriceableImpl):
         request = RiskRequest(
             tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
             (ResolvedInstrumentValues,),
-            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(market=self._pricing_context.market),)
+            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=self._pricing_context.pricing_date,
+                                                                        market=self._pricing_context.market),)
         )
         status = GsPortfolioApi.save_to_shadowbook(request, name)
         print(f'Save to shadowbook status - {status}')

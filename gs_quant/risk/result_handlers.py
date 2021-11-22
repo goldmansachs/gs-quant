@@ -253,7 +253,8 @@ def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
                         request_id: Optional[str] = None) -> DataFrameWithInfo:
     coordinates = []
     for r in result['rows']:
-        point = ';'.join(r['coordinate']['point']) if isinstance(r['coordinate']['point'], list) else ""
+        raw_point = r['coordinate'].get('point', '')
+        point = ';'.join(raw_point) if isinstance(raw_point, list) else raw_point
         r['coordinate'].update({'point': point})
         r['coordinate'].update({'value': r['value']})
         r['coordinate'].update({'permissions': r['permissions']})

@@ -109,9 +109,10 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
             def extract_market_data(this_result: DataFrameWithInfo):
                 market_data = {}
 
-                for _, row in result.iterrows():
+                for _, row in this_result.iterrows():
                     coordinate_values = {p: row.get(p) for p in properties}
-                    if 'mkt_point' in coordinate_values:
+                    mkt_point = coordinate_values.get('mkt_point')
+                    if mkt_point is not None:
                         coordinate_values['mkt_point'] = tuple(coordinate_values['mkt_point'].split(';'))
 
                     # return 'redacted' as coordinate value if its a redacted coordinate

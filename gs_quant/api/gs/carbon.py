@@ -143,7 +143,7 @@ class GsCarbonApi:
                              includeEstimates=str(include_estimates).lower(),
                              useHistoricalData=str(use_historical_data).lower(),
                              normalizeEmissions=str(normalize_emissions).lower(),
-                             card=cards,
+                             card=[c for c in CarbonCard] if len(cards) == 0 else cards,
                              analyticsView=analytics_view.value).items())), True)
 
         # TODO: Add scope as API parameter

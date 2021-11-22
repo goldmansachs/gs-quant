@@ -16,6 +16,7 @@ under the License.
 import datetime
 import pandas as pd
 import pytest
+from gs_quant.timeseries import USE_DISPLAY_NAME
 from pandas.testing import assert_series_equal
 from testfixtures import Replacer
 
@@ -28,6 +29,7 @@ from gs_quant import timeseries as tm
 _test_datasets = ('TEST_DATASET',)
 
 
+@pytest.mark.skipif(not USE_DISPLAY_NAME, reason="requires certain evnvar to run")
 def test_forward_price():
     # Tests for US NG assets
     def mock_natgas_forward_price(_cls, _q):

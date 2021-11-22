@@ -22,7 +22,7 @@ from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.errors import MqValueError
-from gs_quant.target.common import Position as CommonPosition
+from gs_quant.target.common import Position as CommonPosition, PositionTag
 from gs_quant.target.common import PositionSet as CommonPositionSet
 from gs_quant.target.indices import PositionPriceInput
 
@@ -35,12 +35,14 @@ class Position:
                  weight: float = None,
                  quantity: float = None,
                  name: str = None,
-                 asset_id: str = None):
+                 asset_id: str = None,
+                 tags: Dict = None):
         self.__identifier = identifier
         self.__weight = weight
         self.__quantity = quantity
         self.__name = name
         self.__asset_id = asset_id
+        self.__tags = tags
         if asset_id is None:
             self.__resolve_identifier(identifier)
 
@@ -97,15 +99,25 @@ class Position:
     def asset_id(self, value: str):
         self.__asset_id = value
 
+    @property
+    def tags(self) -> Dict:
+        return self.__tags
+
+    @tags.setter
+    def tags(self, value: Dict):
+        self.__tags = value
+
     def as_dict(self) -> Dict:
         position_dict = dict(identifier=self.identifier, weight=self.weight,
-                             quantity=self.quantity, name=self.name, asset_id=self.asset_id)
+                             quantity=self.quantity, name=self.name, asset_id=self.asset_id, tags=self.tags)
         return {k: v for k, v in position_dict.items() if v is not None}
 
     def to_target(self, common: bool = True) -> Union[CommonPosition, PositionPriceInput]:
         """ Returns Postion type defined in target file for API payloads """
         if common:
-            return CommonPosition(self.asset_id, quantity=self.quantity)
+            tags_as_target = tuple(PositionTag(name=key, value=self.tags[key]) for key in self.tags) if self.tags \
+                else None
+            return CommonPosition(self.asset_id, quantity=self.quantity, tags=tags_as_target)
         return PositionPriceInput(self.asset_id, quantity=self.quantity, weight=self.weight)
 
     def __resolve_identifier(self, identifier: str) -> Dict:
@@ -201,8 +213,9 @@ class PositionSet:
         converted_positions = []
         for p in positions:
             asset = get(position_data, p.asset_id)
+            tags = {t.name: t.value for t in p.tags} if p.tags else None
             position = Position(identifier=get(asset, 'bbid'), name=get(asset, 'name'),
-                                asset_id=p.asset_id, quantity=p.quantity)
+                                asset_id=p.asset_id, quantity=p.quantity, tags=tags)
             converted_positions.append(position)
         return cls(converted_positions, position_set.position_date, position_set.divisor)
 
@@ -243,11 +256,12 @@ class PositionSet:
 
         for i, row in positions.iterrows():
             identifier = get(row, 'identifier')
+            tags = get(row, 'tags') if isinstance(get(row, 'tags'), dict) else None
             asset = get(id_map, identifier)
             weight = get(row, 'weight') if not equalize else equal_weight
             quantity = get(row, 'quantity') if not equalize else None
             position = Position(identifier=identifier, asset_id=get(asset, 'id'), name=get(asset, 'name'),
-                                weight=weight, quantity=quantity)
+                                weight=weight, quantity=quantity, tags=tags)
             converted_positions.append(position)
         return cls(converted_positions, date, reference_notional=reference_notional)
 
