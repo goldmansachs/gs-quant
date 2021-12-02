@@ -141,6 +141,7 @@ class QueryType(Enum):
     CDS_SPREAD_100 = "Spread At100"
     CDS_SPREAD_250 = "Spread At250"
     CDS_SPREAD_500 = "Spread At500"
+    STRIKE_VOL = "Strike Vol"
     OPTION_PREMIUM = "Option Premium"
     ABSOLUTE_STRIKE = "Absolute Strike"
 

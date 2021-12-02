@@ -16,7 +16,6 @@ under the License.
 
 import gs_quant.backtests.predefined_asset_engine
 import datetime as dt
-from gs_quant.session import GsSession, Environment
 from gs_quant.backtests.actions import AddTradeAction
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.triggers import OrdersGeneratorTrigger, DateTriggerRequirements, DateTrigger
@@ -90,7 +89,6 @@ class FuturesExample(OrdersGeneratorTrigger):
 
 
 def test_backtest_predefined_timezone_aware():
-    GsSession.use(Environment.PROD)
     tz = 'Europe/London'
     start_dt = '2021-01-01T08:00'
     end_dt = '2021-12-31T17:00'
@@ -117,9 +115,9 @@ def test_backtest_predefined_timezone_aware():
     # instantiate a new strategy
     strategy = Strategy(None, triggers=simple_date_trigger)
 
-    engine = PredefinedAssetEngine(data_mgr=data_manager, tz=timezone(tz), calendars='LDN')
+    engine = PredefinedAssetEngine(data_mgr=data_manager, tz=timezone(tz), calendars='Weekend')
     backtest = engine.run_backtest(strategy=strategy, start=states[0], end=states[-1], states=states)
-    assert len(backtest.trade_ledger()) == 252
+    assert len(backtest.trade_ledger()) == 364
 
 
 def test_backtest_predefined():

@@ -380,6 +380,9 @@ def index(x: pd.Series, initial: int = 1) -> pd.Series:
 
     """
     i = x.first_valid_index()
+    if not x[i]:
+        raise MqValueError('Divide by zero error. Ensure that the first value of series passed to index(...) '
+                           'is non-zero')
     return pd.Series() if i is None else initial * x / x[i]
 
 

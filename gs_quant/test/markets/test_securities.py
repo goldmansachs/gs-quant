@@ -417,6 +417,81 @@ def test_get_all_identifiers(mocker):
     assert output['AAPL UW'] == p2['results'][0]['identifiers']
 
 
+def test_get_all_identifiers_with_assetTypes_not_none(mocker):
+    mock_etf = {
+        "results": [
+            {
+                "type": "ETF",
+                "id": "GSPD_mock_ETF",
+                "assetClass": "Equity",
+                "identifiers": {
+                    "gsid": 1111111,
+                    "ric": "mock_ETF_ric",
+                    "id": "mock_ETF_id",
+                    "bbid": "mock_ETF_bbid"
+                }
+            }
+        ],
+        "totalResults": 1
+    }
+    mock_stock = {
+        "results": [
+            {
+                "type": "Common Stock",
+                "id": "GSPD_mock_stock",
+                "assetClass": "Equity",
+                "identifiers": {
+                    "gsid": 222222,
+                    "ric": "mock_stock_ric",
+                    "id": "mock_stock_id",
+                    "bbid": "mock_stock_bbid"
+                }
+            }
+        ],
+        "totalResults": 1
+    }
+    mock_etf_and_stock = {
+        "results": mock_stock['results'] + mock_etf['results'],
+        "totalResults": 2
+    }
+
+    def get_identifiers_byte(*args, **kwargs):
+        types = kwargs['payload']['type']
+        stock_str = SecurityMaster.asset_type_to_str(asset_class=AssetClass.Equity, asset_type=AssetType.STOCK)
+        if len(types) == 1 and AssetType.ETF.value in types:
+            return mock_etf
+        elif len(types) == 1 and stock_str in types:
+            return mock_stock
+        elif len(types) == 2 and stock_str in types and AssetType.ETF.value in types:
+            return mock_etf_and_stock
+
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+
+    mocker.patch.object(GsSession.current, '_get', side_effect=get_identifiers_byte)
+    with SecMasterContext():
+        output = SecurityMaster.get_all_identifiers(AssetClass.Equity, types=[AssetType.ETF])
+    assert len(output) == 1
+    assert output['mock_ETF_id'] == mock_etf['results'][0]['identifiers']
+
+    mocker.patch.object(GsSession.current, '_get', side_effect=get_identifiers_byte)
+    with SecMasterContext():
+        output = SecurityMaster.get_all_identifiers(AssetClass.Equity, types=[AssetType.STOCK])
+    assert len(output) == 1
+    assert output['mock_stock_id'] == mock_stock['results'][0]['identifiers']
+
+    with SecMasterContext():
+        output = SecurityMaster.get_all_identifiers(AssetClass.Equity, types=[AssetType.STOCK, AssetType.ETF])
+    assert len(output) == 2
+    assert output['mock_ETF_id'] == mock_etf['results'][0]['identifiers']
+    assert output['mock_stock_id'] == mock_stock['results'][0]['identifiers']
+
+
 def test_offset_key(mocker):
     p1 = {
         "results": [

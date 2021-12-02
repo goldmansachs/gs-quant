@@ -21,6 +21,8 @@ from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.risk import EqDelta
 from gs_quant.target.backtests import FlowVolBacktestMeasure, BacktestSignalSeriesItem, BacktestTradingQuantityType
 import pandas as pd
+import re
+import copy
 from functools import reduce
 
 
@@ -83,8 +85,8 @@ class EquityVolEngine(object):
             if not (portfolio_triggers[0].trigger_requirements.data_source == 'len' and
                     portfolio_triggers[0].trigger_requirements.trigger_level == 0):
                 check_results.append(
-                    'Error: PortfolioTrigger.trigger_requirements must have data_source = \'len\' \
-                    and trigger_level = 0')
+                    'Error: PortfolioTrigger.trigger_requirements must have data_source = \'len\' '
+                    'and trigger_level = 0')
 
         # Validate Actions
 
@@ -115,8 +117,8 @@ class EquityVolEngine(object):
                     if isinstance(trigger, t.PeriodicTrigger) and \
                             not trigger.trigger_requirements.frequency == action.trade_duration:
                         check_results.append(
-                            'Error: EnterPositionQuantityScaledAction: PeriodicTrigger frequency must be the same \
-                            as trade_duration')
+                            'Error: EnterPositionQuantityScaledAction: PeriodicTrigger frequency must be the same '
+                            'as trade_duration')
                     if not all((isinstance(p, EqOption) | isinstance(p, EqVarianceSwap))
                                for p in action.priceables):
                         check_results.append(
@@ -124,6 +126,16 @@ class EquityVolEngine(object):
                     if action.trade_quantity is None or action.trade_quantity_type is None:
                         check_results.append(
                             'Error: EnterPositionQuantityScaledAction trade_quantity or trade_quantity_type is None')
+                    expiry_date_modes = list(map(lambda x: ExpirationDateParser(x.expirationDate).get_mode(),
+                                                 action.priceables))
+                    if len(expiry_date_modes) > 1:
+                        check_results.append(
+                            'Error: EnterPositionQuantityScaledAction all priceable expiration_date modifiers must '
+                            'be the same. Found [' + ', '.join(expiry_date_modes) + ']')
+                    if expiry_date_modes[0] not in ['otc', 'listed']:
+                        check_results.append(
+                            'Error: EnterPositionQuantityScaledAction invalid expiration_date '
+                            'modifier ' + expiry_date_modes[0])
                 elif isinstance(action, a.HedgeAction):
                     if not trigger.trigger_requirements.frequency == action.trade_duration:
                         check_results.append(
@@ -184,12 +196,13 @@ class EquityVolEngine(object):
 
             action = trigger.actions[0]
             if isinstance(action, a.EnterPositionQuantityScaledAction):
-                underlier_list = action.priceables
+                underlier_list = cls.__get_underlier_list(action.priceables)
                 roll_frequency = action.trade_duration
                 trade_quantity = action.trade_quantity
                 trade_quantity_type = action.trade_quantity_type
                 if trade_quantity_type is BacktestTradingQuantityType.NAV:
                     index_initial_value = trade_quantity
+                expiry_date_mode = ExpirationDateParser(action.priceables[0].expiration_date).get_mode()
             elif isinstance(action, a.HedgeAction):
                 if trigger.trigger_requirements.frequency == 'B':
                     frequency = 'Daily'
@@ -206,8 +219,40 @@ class EquityVolEngine(object):
                                       trade_in_method=TradeInMethod.FixedRoll,
                                       roll_frequency=roll_frequency,
                                       trade_in_signals=trade_in_signals,
-                                      trade_out_signals=trade_out_signals
+                                      trade_out_signals=trade_out_signals,
+                                      expiry_date_mode=expiry_date_mode
                                       )
 
         result = strategy.backtest(start, end)
         return BacktestResult(result)
+
+    @classmethod
+    def __get_underlier_list(cls, pricables):
+        pricables_copy = copy.deepcopy(pricables)
+        for pricable in pricables_copy:
+            edp = ExpirationDateParser(pricable.expiration_date)
+            pricable.expiration_date = edp.get_date()
+        return pricables_copy
+
+
+class ExpirationDateParser(object):
+
+    # match expiration dates expressed as 3m@listed
+    expiry_regex = '(.*)@(.*)'
+
+    def __init__(self, expiry: str):
+        self.expiry = expiry
+
+    def get_date(self):
+        parts = re.search(self.expiry_regex, self.expiry)
+        if parts:
+            return parts.group(1)
+        else:
+            return self.expiry
+
+    def get_mode(self):
+        parts = re.search(self.expiry_regex, self.expiry)
+        if parts:
+            return parts.group(2)
+        else:
+            return 'otc'

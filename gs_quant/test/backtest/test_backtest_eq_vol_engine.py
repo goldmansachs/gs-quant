@@ -130,7 +130,8 @@ def test_engine_mapping_basic(mocker):
             instrument=option,
             notional_percentage=100,
             hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
-            market_model='SFK')
+            market_model='SFK',
+            expiry_date_mode='otc')
         ],
         'index_initial_value': 0.0,
         "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
@@ -191,7 +192,8 @@ def test_engine_mapping_trade_quantity(mocker):
             instrument=option,
             notional_percentage=100,
             hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
-            market_model='SFK')
+            market_model='SFK',
+            expiry_date_mode='otc')
         ],
         'index_initial_value': 0.0,
         "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
@@ -270,6 +272,7 @@ def test_engine_mapping_with_signals(mocker):
                 notional_percentage=100,
                 hedge=BacktestStrategyUnderlierHedge(),
                 market_model='SFK',
+                expiry_date_mode='otc'
             )
         ],
         'index_initial_value': 0.0,
@@ -331,9 +334,72 @@ def test_engine_mapping_trade_quantity_nav(mocker):
             instrument=option,
             notional_percentage=100,
             hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
-            market_model='SFK')
+            market_model='SFK',
+            expiry_date_mode='otc')
         ],
         'index_initial_value': 12345,
+        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
+    }
+    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+
+    backtest = Backtest(name="Flow Vol Backtest",
+                        mq_symbol="Flow Vol Backtest",
+                        parameters=backtest_parameters,
+                        start_date=start_date,
+                        end_date=end_date,
+                        type='Volatility Flow',
+                        asset_class=AssetClass.Equity,
+                        currency=Currency.USD,
+                        cost_netting=False)
+
+    mocker.assert_called_with(backtest, None)
+
+
+@mock.patch.object(GsBacktestApi, 'run_backtest')
+def test_engine_mapping_listed(mocker):
+    # 1. setup strategy
+
+    start_date = dt.date(2019, 2, 18)
+    end_date = dt.date(2019, 2, 20)
+
+    option = EqOption('.STOXX50E', expirationDate='3m@listed', strikePrice='ATM', optionType=OptionType.Call,
+                      optionStyle=OptionStyle.European)
+
+    action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m')
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=action)
+    hedgetrigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='B'),
+        actions=HedgeAction(EqDelta, priceables=option, trade_duration='B'))
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedgetrigger])
+
+    # 2. setup mock api response
+
+    mock_api_response(mocker, api_mock_data())
+
+    # 3. when run backtest
+
+    set_session()
+    EquityVolEngine.run_backtest(strategy, start_date, end_date)
+
+    # 4. assert API call
+
+    option.expiration_date = '3m'
+    backtest_parameter_args = {
+        'trading_parameters': BacktestTradingParameters(
+            quantity=1,
+            quantity_type=BacktestTradingQuantityType.quantity.value,
+            trade_in_method=TradeInMethod.FixedRoll.value,
+            roll_frequency='1m'),
+        'underliers': [BacktestStrategyUnderlier(
+            instrument=option,
+            notional_percentage=100,
+            hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
+            market_model='SFK',
+            expiry_date_mode='listed')
+        ],
+        'index_initial_value': 0.0,
         "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
     }
     backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
@@ -400,7 +466,7 @@ def test_supports_strategy():
 
     # 5. Invalid - mismatch trade duration and trigger period
 
-    action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='2m', trade_quantity_type=None)
+    action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='2m')
     trigger = PeriodicTrigger(
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
@@ -409,7 +475,7 @@ def test_supports_strategy():
 
     # 6. Invalid - mismatch hedge trade duration and trigger period
 
-    action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m', trade_quantity_type=None)
+    action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m')
     trigger = PeriodicTrigger(
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
@@ -421,7 +487,7 @@ def test_supports_strategy():
 
     # 6. Invalid - non-daily hedge trade
 
-    action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m', trade_quantity_type=None)
+    action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m')
     trigger = PeriodicTrigger(
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
@@ -429,4 +495,29 @@ def test_supports_strategy():
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='M'),
         actions=HedgeAction(EqDelta, priceables=option, trade_duration='M'))
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedge_trigger])
+    assert not EquityVolEngine.supports_strategy(strategy)
+
+    # 7. Invalid - expiration date modifiers must be the same
+
+    option_listed = EqOption('.STOXX50E', expirationDate='3m@listed', strikePrice='ATM', optionType=OptionType.Call,
+                             optionStyle=OptionStyle.European)
+
+    action = EnterPositionQuantityScaledAction(priceables=[option, option_listed], trade_duration='1m')
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=action)
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger])
+    assert not EquityVolEngine.supports_strategy(strategy)
+
+    option_listed = EqOption('.STOXX50E', expirationDate='3m@listed', strikePrice='ATM', optionType=OptionType.Call,
+                             optionStyle=OptionStyle.European)
+
+    # 8. Invalid - expiration date modifier not in [otc, listed]
+
+    option_invalid = EqOption('.STOXX50E', expirationDate='3m@invalid', strikePrice='ATM', optionType=OptionType.Call)
+    action = EnterPositionQuantityScaledAction(priceables=[option_invalid], trade_duration='1m')
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=action)
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger])
     assert not EquityVolEngine.supports_strategy(strategy)
