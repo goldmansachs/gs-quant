@@ -776,7 +776,7 @@ def cds_spread(asset: Asset, spread: int, location: str, *, source: str = None, 
     return _extract_series_from_df(df, qt)
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX,), None,
+@plot_measure((AssetClass.Equity, AssetClass.Commod,), None,
               [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
                                  query_type=QueryType.IMPLIED_VOLATILITY)],
               asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
@@ -2774,7 +2774,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
                                  query_type=QueryType.CENTRAL_BANK_SWAP_RATE)])
 def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.MEETING_FORWARD,
                            level_type: LevelType = LevelType.ABSOLUTE,
-                           valuation_date: GENERIC_DATE = datetime.date.today() - datetime.timedelta(days=1), *,
+                           valuation_date: GENERIC_DATE = None, *,
                            source: str = None, real_time: bool = False) -> pd.Series:
     """'
     OIS Swap rate for a swap structured between consecutive Central Bank meeting dates or End Of Year Dates.
@@ -2788,6 +2788,8 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
     :return: OIS Swap rate for swap structured between consecutive CB meeting dates
     """
+    if valuation_date is None:
+        valuation_date = datetime.date.today() - datetime.timedelta(days=1)
 
     if real_time:
         raise NotImplementedError('real-time central bank swap rate not implemented')
@@ -2822,10 +2824,13 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
         # df = remove_dates_with_null_entries(df)
         spot = df[df['meetingNumber'] == 0]['value'][0]
         df['value'] = df['value'] - spot
-    df = df.reset_index()
-    df = df.set_index('meetingDate')
-    series = ExtendedSeries(df['value'])
-    series.dataset_ids = (Dataset.GS.CENTRAL_BANK_WATCH,)
+    try:
+        df = df.reset_index()
+        df = df.set_index('meetingDate')
+        series = ExtendedSeries(df['value'])
+        series.dataset_ids = (Dataset.GS.CENTRAL_BANK_WATCH,)
+    except KeyError:  # No data returned from ds.get_data
+        series = pd.Series(name='value')
     return series
 
 

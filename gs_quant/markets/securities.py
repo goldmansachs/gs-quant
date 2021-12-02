@@ -1375,7 +1375,8 @@ class SecurityMaster:
         params = {
             'fields': ['id', 'identifiers', 'assetClass', 'type'],
             'asOfDate': as_of.date(),
-            'limit': cls._page_size
+            'limit': cls._page_size,
+            'type': types
         }
 
         while True:
@@ -1384,9 +1385,11 @@ class SecurityMaster:
                 return
 
             output = {}
+
             for e in r['results']:
-                # TODO: perform filtering on server side
-                if (class_ is None or e['assetClass'] == class_.value) and (types is None or e['type'] in types):
+                # TODO: perform assetClass filtering on server side once assetClass is supported (just Equties is
+                #  supported for now)
+                if class_ is None or e['assetClass'] == class_.value:
                     box = e['identifiers']
                     key = box[id_type.value]
                     if key in box:

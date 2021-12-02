@@ -131,6 +131,10 @@ def test_index():
     expected = pd.Series([1.000, 1.010, 1.005, 1.015, 1.010, 1.005], index=dates)
     assert_series_equal(result, expected, obj="Index series")
 
+    with pytest.raises(MqValueError):
+        x = pd.Series(range(6), index=dates)
+        result = index(x)
+
 
 def test_change():
     dates = [

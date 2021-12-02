@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import copy
 import datetime as dt
 import logging
 from itertools import chain
@@ -23,10 +22,9 @@ from urllib.parse import quote
 import deprecation
 import numpy as np
 import pandas as pd
-from more_itertools import unique_everseen
-
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
+from gs_quant.base import InstrumentBase
 from gs_quant.instrument import Instrument
 from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext, PositionContext
 from gs_quant.priceable import PriceableImpl
@@ -35,6 +33,7 @@ from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, Po
 from gs_quant.target.common import RiskPosition
 from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
 from gs_quant.target.portfolios import Position, PositionSet, RiskRequest, PricingDateAndMarketDataAsOf
+from more_itertools import unique_everseen
 
 _logger = logging.getLogger(__name__)
 
@@ -199,7 +198,7 @@ class Portfolio(PriceableImpl):
 
     @staticmethod
     def from_eti(eti: str):
-        return Portfolio.__from_internal_positions('ETI', quote(eti, safe=''), 'ETI')
+        return Portfolio.__from_internal_positions('ETI', quote(eti, safe=''), 'trade')
 
     @staticmethod
     def from_book(book: str, book_type: str = 'risk', activity_type: str = 'position'):
@@ -532,7 +531,7 @@ class Portfolio(PriceableImpl):
             # PortfolioRiskResult should hold a copy of the portfolio instead of a reference to the portfolio
             # this is to prevent the portfolio object within portfolioriskresult to hold a reference to the portfolio
             # object should it later be modified in place (eg: resolution)
-            return PortfolioRiskResult(copy.deepcopy(self),
+            return PortfolioRiskResult(self.clone(),
                                        (risk_measure,) if isinstance(risk_measure, RiskMeasure) else risk_measure,
                                        [p.calc(risk_measure, fn=fn) for p in priceables])
 
@@ -550,3 +549,10 @@ class Portfolio(PriceableImpl):
                 self.__priceables = instruments
             return instruments
         return self.__priceables if return_priceables else self.all_instruments
+
+    def clone(self):
+        portfolio_clone = Portfolio([p if isinstance(p, InstrumentBase) else p.clone() for p in self.__priceables],
+                                    name=self.name)
+        portfolio_clone.__id = self.__id
+        portfolio_clone.__quote_id = self.__quote_id
+        return portfolio_clone

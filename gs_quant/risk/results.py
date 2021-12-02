@@ -26,6 +26,7 @@ from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_insta
 from gs_quant.config import DisplayOptions
 from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, RiskMeasure, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
+from gs_quant.target.common import AssetType
 from more_itertools import unique_everseen
 
 _logger = logging.getLogger(__name__)
@@ -599,9 +600,11 @@ class PortfolioRiskResult(CompositeResultFuture):
     def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
                  display_options: DisplayOptions = None):
         def get_name(obj, idx):
-            new_name = f'{obj.type.name}_{idx}' \
-                if isinstance(obj, InstrumentBase) and hasattr(obj, 'type') else f'Portfolio_{idx}'
-            return new_name if obj.name is None else obj.name
+            if isinstance(obj, InstrumentBase) and hasattr(obj, 'type'):
+                type_name = obj.type.name if isinstance(obj.type, AssetType) else obj._type
+            else:
+                type_name = 'Portfolio'
+            return f'{type_name}_{idx}' if obj.name is None else obj.name
 
         def get_df(priceable):
             portfolio_paths = list(unique_everseen(p.path[:-1] for p in priceable.all_paths if len(p.path) > 1))

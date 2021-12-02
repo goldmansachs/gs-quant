@@ -16,10 +16,9 @@ under the License.
 import datetime as dt
 from unittest import mock
 
+import gs_quant.risk as risk
 import numpy as np
 import pandas as pd
-
-import gs_quant.risk as risk
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.datetime import business_day_offset
@@ -379,3 +378,11 @@ def test_get_instruments(mocker):
     port = Portfolio.get(portfolio_id='id')
     port._get_instruments(dt.date(2021, 5, 14), False)
     GsPortfolioApi.get_positions_for_date.assert_called_with('id', dt.date(2021, 5, 6))
+
+
+def test_clone():
+    old_p = Portfolio((IRSwap(name='c'), Portfolio((IRSwap(name='a'), IRSwap(name='b')))))
+    old_p.priceables[1].instruments[0].name = 'changed_name'
+    new_p = old_p.clone()
+    assert old_p['changed_name'] == ()
+    assert new_p['changed_name'] == IRSwap(name='changed_name')

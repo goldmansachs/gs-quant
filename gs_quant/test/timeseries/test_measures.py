@@ -4184,6 +4184,12 @@ def test_central_bank_swap_rate(mocker):
         with pytest.raises(NotImplementedError):
             tm.central_bank_swap_rate(mock_eur, tm.MeetingType.SPOT, tm.LevelType.ABSOLUTE, real_time=True)
 
+        mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        mock_get_data.return_value = pd.DataFrame()
+
+        assert_series_equal(tm.central_bank_swap_rate(mock_eur, tm.MeetingType.MEETING_FORWARD, tm.LevelType.ABSOLUTE),
+                            pd.Series(name='value'))
+
     replace.restore()
 
 
