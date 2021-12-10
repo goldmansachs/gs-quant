@@ -31,5 +31,6 @@ from .measures_inflation import *
 from .measures_xccy import *
 from .measures_fx_vol import *
 from .helper import *
+from .kats import *
 
 __name__ = 'timeseries'
