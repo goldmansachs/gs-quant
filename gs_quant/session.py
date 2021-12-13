@@ -152,7 +152,7 @@ class GsSession(ContextBase):
             self,
             method: str,
             path: str,
-            payload: Optional[Union[dict, str, Base, pd.DataFrame]] = None,
+            payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]] = None,
             request_headers: Optional[dict] = None,
             cls: Optional[type] = None,
             try_auth: Optional[bool] = True,
@@ -184,7 +184,7 @@ class GsSession(ContextBase):
             kwargs['headers'] = headers
 
             if is_dataframe or payload:
-                kwargs['data'] = payload if isinstance(payload, str) else \
+                kwargs['data'] = payload if isinstance(payload, (str, bytes)) else \
                     msgpack.dumps(payload, default=default) if use_msgpack else json.dumps(payload, cls=JSONEncoder)
         else:
             raise MqError('not implemented')
@@ -237,7 +237,7 @@ class GsSession(ContextBase):
                               cls=cls, include_version=include_version, timeout=timeout,
                               return_request_id=return_request_id)
 
-    def _post(self, path: str, payload: Optional[Union[dict, Base, pd.DataFrame]] = None,
+    def _post(self, path: str, payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
               request_headers: Optional[dict] = None, cls: Optional[type] = None,
               include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
               return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:

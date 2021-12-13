@@ -96,6 +96,7 @@ def test_custom_aum():
         actual = mp.aum('MP1')
         assert actual.index.equals(idx)
         assert all(actual.values == data['aum'])
+    replace.restore()
 
 
 if __name__ == '__main__':

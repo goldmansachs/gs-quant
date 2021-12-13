@@ -401,7 +401,7 @@ class DataGrid:
                             query_info.data = queried_df[measure if isinstance(measure, str) else measure.value]
                     else:
                         for query_info in query_infos:
-                            query_info.data = Series()
+                            query_info.data = Series(dtype=float)
 
         for query_info in self._data_queries:
             if isinstance(query_info, MeasureQueryInfo):

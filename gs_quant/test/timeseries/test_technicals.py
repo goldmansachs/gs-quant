@@ -78,7 +78,7 @@ def test_smoothed_moving_average():
     assert_series_equal(result, expected, obj="Smoothed moving average window strdate")
 
     result = smoothed_moving_average(x, "1m")
-    expected = pd.Series()
+    expected = pd.Series(dtype=float)
     assert_series_equal(result, expected, obj="Smoothed moving average with wider window than series")
 
 
@@ -102,8 +102,8 @@ def test_bollinger_bands():
     low = result[0].squeeze()
     high = result[1].squeeze()
 
-    assert_series_equal(low, expected_low, check_names=False, check_less_precise=True, obj="Bollinger bands low")
-    assert_series_equal(high, expected_high, check_names=False, check_less_precise=True, obj="Bollinger bands high")
+    assert_series_equal(low, expected_low, check_names=False, obj="Bollinger bands low")
+    assert_series_equal(high, expected_high, check_names=False, obj="Bollinger bands high")
 
     result = bollinger_bands(x, "2d")
     print(result)
@@ -168,12 +168,12 @@ def test_relative_strength_index():
     SPX = pd.Series(data=SPX_values, index=dates)
     expected = pd.Series(data=target_vals, index=dates[w + 1:])
     result = relative_strength_index(SPX, w)
-    assert_series_equal(result, expected, check_names=False, check_less_precise=True, obj="Relative Strength Index")
+    assert_series_equal(result, expected, check_names=False, obj="Relative Strength Index")
 
     increasing_series = pd.Series(np.arange(1, 23, 1), index=dates)
     expected = pd.Series(data=np.ones(7) * 100, index=dates[15:])
     result = relative_strength_index(increasing_series, w)
-    assert_series_equal(result, expected, check_names=False, check_less_precise=True, obj="Relative Strength Index")
+    assert_series_equal(result, expected, check_names=False, obj="Relative Strength Index")
 
     result = relative_strength_index(SPX, "2w")
     print(result)
@@ -227,6 +227,44 @@ def test_exponential_spread_volatility():
     result = exponential_spread_volatility(x)
     expected = pd.Series([np.nan, np.nan, 22.4499, 20.5757, 28.6067, 34.2183], index=dates)
     assert_series_equal(result, expected, obj="Exponential spread volatility")
+
+
+def test_trend():
+    short_dates = pd.date_range('2021-01-01', '2021-01-05', freq='D')
+    short_x = pd.Series(range(len(short_dates)), index=short_dates)
+    with pytest.raises(MqValueError):
+        trend(short_x)  # Too few datapoints
+    long_dates = pd.date_range('2017-01-01', '2021-01-01', freq='D')
+    long_x = pd.Series(range(len(long_dates)), index=long_dates)
+    res = trend(long_x)  # Should not be all NaN, make sure it's correct length
+    assert len(res) == len(long_x)
+    assert np.isclose(res[int(len(res) / 2)], long_x[int(len(res) / 2)], 0.1)
+    assert res.notnull().any()
+    with pytest.raises(ValueError):
+        trend(long_x, SeasonalModel.MULTIPLICATIVE)  # Should not be all NaN, make sure it's correct length
+    res = trend(long_x + 1, SeasonalModel.MULTIPLICATIVE)  # Should not be all NaN, make sure it's correct length
+    assert len(res) == len(long_x)
+    assert np.isclose((res[int(len(res) / 2)] - 1), long_x[int(len(res) / 2)], 0.1)
+    assert res.notnull().any()
+    with pytest.raises(MqValueError):
+        x = pd.Series(range(10))
+        trend(x)
+
+
+def test_seasonality_adjusted():
+    # Test that correctly runs with different frequencies
+    for pfreq in ['B', 'D', 'W', 'M', 'Q', 'Y']:
+        for freq in [Frequency.YEARLY, Frequency.QUARTERLY, Frequency.MONTHLY, Frequency.WEEKLY]:
+            dates = pd.date_range('2019-01-01', '2021-01-05', freq=pfreq)
+            series = pd.Series(range(len(dates)), index=dates) + 1
+            try:
+                seasonally_adjusted(series, SeasonalModel.ADDITIVE, freq)
+                seasonally_adjusted(series, SeasonalModel.MULTIPLICATIVE, freq)
+            except MqValueError:
+                pass
+    with pytest.raises(MqValueError):
+        x = pd.Series(range(10))
+        seasonally_adjusted(x)
 
 
 if __name__ == "__main__":

@@ -212,7 +212,7 @@ def test_interpolate():
         interpolate(x, x, "None")
 
     with pytest.raises(MqValueError, match="Cannot perform step interpolation on an empty series"):
-        interpolate(pd.Series(), select_dates, Interpolate.STEP)
+        interpolate(pd.Series(dtype=float), select_dates, Interpolate.STEP)
 
 
 def test_value():
@@ -335,7 +335,7 @@ def test_day_count_fractions():
         date(2019, 1, 6),
     ]
 
-    x = pd.Series([])
+    x = pd.Series(dtype=float)
     assert_series_equal(x, day_count_fractions(x))
 
     x = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=dates)

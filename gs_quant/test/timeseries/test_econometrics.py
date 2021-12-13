@@ -17,7 +17,7 @@ import os
 from unittest.mock import Mock
 
 import pytest
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 from testfixtures import Replacer
 from pandas import Timestamp
 from math import isclose
@@ -35,7 +35,7 @@ def test_returns():
         date(2019, 1, 6),
     ]
 
-    x = pd.Series([])
+    x = pd.Series(dtype=float)
     assert_series_equal(x, returns(x))
 
     x = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=dates)
@@ -46,27 +46,27 @@ def test_returns():
 
     result = returns(x, 1, Returns.SIMPLE)
     expected = pd.Series([np.nan, 0.01, 0.02, -0.02, 0.0, 0.02], index=dates)
-    assert_series_equal(result, expected, obj="Simple returns", check_less_precise=True)
+    assert_series_equal(result, expected, obj="Simple returns")
 
     result = returns(x, 2, Returns.SIMPLE)
     expected = pd.Series([np.nan, np.nan, 0.0302, -0.0004, -0.0200, 0.0200], index=dates)
-    assert_series_equal(result, expected, obj="Simple returns", check_less_precise=True)
+    assert_series_equal(result, expected, obj="Simple returns")
 
     result = returns(x, 1, Returns.LOGARITHMIC)
     expected = pd.Series([np.nan, 0.009950, 0.019803, -0.020203, 0.0, 0.019803], index=dates)
-    assert_series_equal(result, expected, obj="Logarithmic returns", check_less_precise=True)
+    assert_series_equal(result, expected, obj="Logarithmic returns", atol=1e-5)
 
     result = returns(x, 2, Returns.LOGARITHMIC)
     expected = pd.Series([np.nan, np.nan, 0.029753, -0.0004, -0.020203, 0.019803], index=dates)
-    assert_series_equal(result, expected, obj="Logarithmic returns", check_less_precise=True)
+    assert_series_equal(result, expected, obj="Logarithmic returns", atol=1e-5)
 
     result = returns(x, 1, Returns.ABSOLUTE)
     expected = pd.Series([np.nan, 1.0, 2.02, -2.0604, 0.0, 2.019192], index=dates)
-    assert_series_equal(result, expected, obj="Absolute returns", check_less_precise=True)
+    assert_series_equal(result, expected, obj="Absolute returns", atol=1e-5)
 
     result = returns(x, 2, Returns.ABSOLUTE)
     expected = pd.Series([np.nan, np.nan, 3.02, -0.0404, -2.0604, 2.019192], index=dates)
-    assert_series_equal(result, expected, obj="Absolute returns", check_less_precise=True)
+    assert_series_equal(result, expected, obj="Absolute returns", atol=1e-5)
 
     with pytest.raises(MqValueError):
         returns(x, 1, "None")
@@ -82,7 +82,7 @@ def test_prices():
         date(2019, 1, 6),
     ]
 
-    r = pd.Series([])
+    r = pd.Series(dtype=float)
     assert_series_equal(r, prices(r))
 
     r = pd.Series([np.nan, 0.01, 0.02, -0.02, 0.0, 0.02], index=dates)
@@ -97,19 +97,19 @@ def test_prices():
 
     result = prices(r, 100, Returns.SIMPLE)
     expected = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=dates)
-    assert_series_equal(result, expected, obj="Simple price series", check_less_precise=True)
+    assert_series_equal(result, expected, obj="Simple price series")
 
     r = pd.Series([np.nan, 0.009950, 0.019803, -0.020203, 0.0, 0.019803], index=dates)
 
     result = prices(r, 100, Returns.LOGARITHMIC)
     expected = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=dates)
-    assert_series_equal(result, expected, obj="Logarithmic prices series", check_less_precise=True)
+    assert_series_equal(result, expected, obj="Logarithmic prices series")
 
     r = pd.Series([np.nan, 1.0, 2.02, -2.0604, 0.0, 2.019192], index=dates)
 
     result = prices(r, 100, Returns.ABSOLUTE)
     expected = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=dates)
-    assert_series_equal(result, expected, obj="Absolute prices series", check_less_precise=True)
+    assert_series_equal(result, expected, obj="Absolute prices series")
 
     with pytest.raises(MqValueError):
         prices(r, 1, "None")
@@ -265,7 +265,7 @@ def test_annualize():
 
 
 def test_volatility():
-    x = pd.Series([])
+    x = pd.Series(dtype=float)
     assert_series_equal(x, volatility(x))
 
     daily_dates = [
@@ -290,14 +290,14 @@ def test_volatility():
     assert_series_equal(result, expected, obj="Volatility strdate")
 
     result = volatility(x, w="3m")
-    expected = pd.Series()
-    assert_series_equal(pd.Series(), expected, obj="Volatility strdate too large for series")
+    expected = pd.Series(dtype=float)
+    assert_series_equal(pd.Series(dtype=float), expected, obj="Volatility strdate too large for series")
 
 
 def test_correlation():
-    x = pd.Series([])
-    assert_series_equal(pd.Series([]), correlation(x, x))
-    assert_series_equal(pd.Series([]), correlation(x, x, 1))
+    x = pd.Series(dtype=float)
+    assert_series_equal(pd.Series(dtype=float), correlation(x, x))
+    assert_series_equal(pd.Series(dtype=float), correlation(x, x, 1))
 
     daily_dates = [
         date(2019, 1, 1),
@@ -314,20 +314,20 @@ def test_correlation():
     result = correlation(x, y)
     expected = pd.Series([np.nan, np.nan, 1.0, 1.0, 1.0, 1.0], index=daily_dates)
 
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     y = pd.Series([100.0, 102.0, 104.0, 101.0, 100.95, 100.0], index=daily_dates)
 
     result = correlation(x, y)
     expected = pd.Series([np.nan, np.nan, -1.0, 0.969025, 0.969254, 0.706042], index=daily_dates)
 
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     result = correlation(x, y, Window(2, 0))
     expected = pd.Series([np.nan, np.nan, -1.0000000000000435, 1.0, 0.9999999999999994, -1.0000000000000007],
                          index=daily_dates)
 
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     ret_x = returns(x)
     ret_y = returns(y)
@@ -343,25 +343,25 @@ def test_correlation():
     ]
     expected = pd.Series(values, index=daily_dates)
 
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     result = correlation(x, y, Window('2d', 0))
     expected = pd.Series([np.nan, np.nan, -1.0, 1.0, np.nan, -1.0], index=daily_dates)
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     result = correlation(x, y, "2d")
     expected = pd.Series([-1, 1, np.nan, -1], index=daily_dates[2:])
     assert_series_equal(result, expected, obj="Correlation strdate as window")
 
     result = correlation(x, y, "3m")
-    expected = pd.Series()
+    expected = pd.Series(dtype=float)
     assert_series_equal(result, expected, obj="Correlation strdate as window with too large of window")
 
 
 def test_beta():
-    x = pd.Series([])
-    assert_series_equal(pd.Series([]), beta(x, x))
-    assert_series_equal(pd.Series([]), beta(x, x, 1))
+    x = pd.Series(dtype=float)
+    assert_series_equal(pd.Series(dtype=float), beta(x, x))
+    assert_series_equal(pd.Series(dtype=float), beta(x, x, 1))
 
     daily_dates = [
         date(2019, 1, 1),
@@ -377,18 +377,18 @@ def test_beta():
 
     result = beta(x, y)
     expected = pd.Series([np.nan, np.nan, np.nan, 1.0, 1.0, 1.0], index=daily_dates)
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     y = pd.Series([100.0, 102.0, 104.0, 101.0, 100.95, 100.0], index=daily_dates)
 
     result = beta(x, y)
     expected = pd.Series([np.nan, np.nan, np.nan, 0.718146, 0.718919, 0.572201], index=daily_dates)
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     result = beta(x, y, Window(2, 0))
     expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
                           0.7054398925453326, -2.24327163719368], index=daily_dates)
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     ret_x = returns(x)
     ret_y = returns(y)
@@ -396,12 +396,12 @@ def test_beta():
     result = beta(ret_x, ret_y, Window(2, 0), False)
     expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
                           0.7054398925453326, -2.24327163719368], index=daily_dates)
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     result = beta(x, y, Window('2d', 0))
     expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
                           np.nan, -2.24327163719368], index=daily_dates)
-    assert_series_equal(result, expected, check_less_precise=True)
+    assert_series_equal(result, expected)
 
     result = beta(x, y, '2d')
     expected = pd.Series([np.nan, 0.8255252918287954, np.nan, -2.24327163719368], index=daily_dates[2:])

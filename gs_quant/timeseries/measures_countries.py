@@ -70,7 +70,7 @@ def fci(country_id: str, measure: _FCI_MEASURE = _FCI_MEASURE.FCI, *, source: st
             measure = 'realFCI'
         else:
             measure = 'realTWIContribution'
-        series = ExtendedSeries() if (measure not in df.columns) else ExtendedSeries(df[measure])
+        series = ExtendedSeries(dtype=float) if (measure not in df.columns) else ExtendedSeries(df[measure])
         series.dataset_ids = ('FCI',)
         return series
 

@@ -140,6 +140,12 @@ class PositionSet:
                  date: datetime.date = datetime.date.today(),
                  divisor: float = None,
                  reference_notional: float = None):
+        if reference_notional is not None:
+            for p in positions:
+                if p.weight is None:
+                    raise MqValueError('Position set with reference notionals must have weights for every position.')
+                if p.quantity is not None:
+                    raise MqValueError('Position sets with reference notionals cannot have positions with quantities.')
         self.__positions = positions
         self.__date = date
         self.__divisor = divisor

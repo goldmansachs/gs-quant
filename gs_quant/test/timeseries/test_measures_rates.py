@@ -161,6 +161,7 @@ def test_currency_to_tdapi_swaption_rate_asset_retuns_throws():
     asset = Currency("MA1", "ZAR")
 
     assert _currency_to_tdapi_swaption_rate_asset(asset) == "MA1"
+    replace.restore()
 
 
 def test_currency_to_tdapi_swaption_rate_asset_retuns_asset_id(mocker):
@@ -289,7 +290,7 @@ def test_swaption_swaption_vol_term2_returns_data():
 
 def test_swaption_swaption_vol_term2_returns_empty():
     replace = Replacer()
-    df = ExtendedSeries()
+    df = ExtendedSeries(dtype=float)
     replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock()).return_value = "GBP"
     replace('gs_quant.timeseries.measures_rates._get_tdapi_rates_assets', Mock(), Mock()).return_value = [
         "MADWG3WHCKNE1DJA", "MAH6JK3TZJJGFQ65"]
@@ -300,7 +301,7 @@ def test_swaption_swaption_vol_term2_returns_empty():
     with DataContext('2019-01-01', '2025-01-01'):
         actual = tm_rates.swaption_vol_term(Currency("GBP", name="GBP"), tm.SwaptionTenorType.SWAP_MATURITY, '5y', 0)
 
-    assert_series_equal(ExtendedSeries(), actual, check_names=False)
+    assert_series_equal(ExtendedSeries(dtype=float), actual, check_names=False)
     replace.restore()
 
 
@@ -330,7 +331,7 @@ def test_swaption_vol_smile2_returns_data():
 
 def test_swaption_vol_smile2_returns_no_data():
     replace = Replacer()
-    df = ExtendedSeries()
+    df = ExtendedSeries(dtype=float)
     replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock()).return_value = "GBP"
     replace('gs_quant.timeseries.measures_rates._get_tdapi_rates_assets', Mock(), Mock()).return_value = [
         "MADWG3WHCKNE1DJA", "MAH6JK3TZJJGFQ65"]
@@ -340,7 +341,7 @@ def test_swaption_vol_smile2_returns_no_data():
 
     with DataContext('2019-01-01', '2025-01-01'):
         actual = tm_rates.swaption_vol_smile(Currency("GBP", name="GBP"), '3m', '10y')
-    assert_series_equal(ExtendedSeries(), actual)
+    assert_series_equal(ExtendedSeries(dtype=float), actual)
     replace.restore()
 
 
@@ -370,7 +371,7 @@ def test_swaption_vol2_return_data():
 
 def test_swaption_vol2_return__empty_data():
     replace = Replacer()
-    df = ExtendedSeries()
+    df = ExtendedSeries(dtype=float)
 
     replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock()).return_value = "GBP"
     replace('gs_quant.timeseries.measures_rates._get_tdapi_rates_assets', Mock(), Mock()).return_value = [
@@ -380,7 +381,7 @@ def test_swaption_vol2_return__empty_data():
     replace('gs_quant.timeseries.measures_rates._market_data_timed', Mock()).return_value = df
 
     actual = tm_rates.swaption_vol(Currency("GBP", name="GBP"))
-    assert_series_equal(ExtendedSeries(), actual)
+    assert_series_equal(ExtendedSeries(dtype=float), actual)
     replace.restore()
 
 
@@ -434,8 +435,11 @@ def test__check_forward_tenor_returns_0b():
 
 
 def test_swaption_premium_throws_for_unsupported_ccy():
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock()).return_value = "ZAR"
     with pytest.raises(NotImplementedError):
         tm_rates.swaption_premium(Currency("KRW", name="KRW"))
+    replace.restore()
 
 
 def test_swaption_atmFwdRate_return_data():

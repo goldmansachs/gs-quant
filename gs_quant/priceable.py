@@ -102,6 +102,9 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
 
         def handle_result(result: Optional[Union[DataFrameWithInfo, ErrorValue, PricingFuture]]) -> \
                 [OverlayMarket, dict]:
+            if isinstance(result, ErrorValue):
+                return result
+
             properties = MarketDataCoordinate.properties()
             is_historical = isinstance(PricingContext.current, HistoricalPricingContext)
             location = PricingContext.current.market_data_location

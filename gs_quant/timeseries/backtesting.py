@@ -200,12 +200,13 @@ class Basket:
 
     def get_marquee_ids(self):
         if self._marquee_ids is None:
-            assets = GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', 'bbid'),
-                                                     limit=2 * len(self.bbids), order_by=['<rank'])
+            # Assets sorted by decreasing rank
+            assets = reversed(GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', 'bbid', 'rank'),
+                                                              limit=2 * len(self.bbids), order_by=['<rank']))
+            # If duplicate assets exist, asset_dict will contain a entry for the one with the lower rank (more relevant)
             assets_dict = {entry['bbid']: entry['id'] for entry in assets}
             if len(assets_dict) != len(set(self.bbids)):
                 raise MqValueError('Unable to find all stocks')
-
             self._marquee_ids = [assets_dict[bbid] for bbid in self.bbids]
 
         return self._marquee_ids
@@ -222,6 +223,7 @@ class Basket:
 
             df = spot_data.set_index([spot_data.index, 'assetId'])
             df = df[~df.index.duplicated(keep='last')].spot.unstack()
+            df = df[self._marquee_ids]
             self._spot_data = MarketDataResponseFrame(df)
             self._spot_data.dataset_ids = dataset_ids
 

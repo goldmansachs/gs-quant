@@ -449,7 +449,7 @@ def day_count_fractions(
         date_list = dates
 
     if len(date_list) < 2:
-        return pd.Series([])
+        return pd.Series(dtype=float)
 
     start_dates = date_list[0:-1]
     end_dates = date_list[1:len(date_list)]

@@ -157,6 +157,7 @@ class AssetType(EnumBase, Enum):
     OneTouch = 'OneTouch'
     Option = 'Option'
     OptionLeg = 'OptionLeg'
+    OptionPeriod = 'OptionPeriod'
     OptionStrategy = 'OptionStrategy'
     Peer_Group = 'Peer Group'
     Pension_Fund = 'Pension Fund'
@@ -1972,6 +1973,7 @@ class Field(EnumBase, Enum):
     isOrderInLimit = 'isOrderInLimit'
     _52 = '52'
     _53 = '53'
+    assetParametersLastFixingDate = 'assetParametersLastFixingDate'
     _54 = '54'
     fundamentalMetric = 'fundamentalMetric'
     _55 = '55'
@@ -3676,7 +3678,10 @@ class MarketDataVendor(EnumBase, Enum):
     Bank_of_Japan = 'Bank of Japan'
     Wolfe_Research = 'Wolfe Research'
     Qontigo = 'Qontigo'
-    Quant_Insight = 'Quant Insight'    
+    Quant_Insight = 'Quant Insight'
+    FactSet_via_AWS_Data_Exchange = 'FactSet via AWS Data Exchange'
+    Rearc = 'Rearc'
+    FactSet = 'FactSet'    
 
 
 class NewOrUnwind(EnumBase, Enum):    
@@ -3968,6 +3973,7 @@ class RiskMeasureType(EnumBase, Enum):
     Local_Currency_Accrual_in_Cents = 'Local Currency Accrual in Cents'
     Local_Currency_Annuity = 'Local Currency Annuity'
     Market_Data = 'Market Data'
+    Market = 'Market'
     Market_Data_Assets = 'Market Data Assets'
     MV = 'MV'
     NonUSDOisDomesticRate = 'NonUSDOisDomesticRate'
@@ -6213,111 +6219,75 @@ class TimeFilter(Base):
         self.__time_zone = value        
 
 
-class UserTag(Base):
+class UserCoverage(Base):
         
-    """Marquee User Tag Attribute"""
+    """Sales coverage for user"""
 
     @camel_case_translate
     def __init__(
         self,
         name: str,
-        added_on: datetime.datetime = None,
-        added_by_id: str = None,
-        removed: bool = None,
-        removed_on: datetime.datetime = None,
-        removed_by_id: str = None,
-        removal_reason: str = None,
-        category: str = None
+        email: str,
+        app: str = None,
+        phone: str = None,
+        guid: str = None
     ):        
         super().__init__()
-        self.added_on = added_on
-        self.added_by_id = added_by_id
-        self.removed = removed
-        self.removed_on = removed_on
-        self.removed_by_id = removed_by_id
-        self.removal_reason = removal_reason
-        self.category = category
+        self.app = app
+        self.phone = phone
         self.name = name
+        self.email = email
+        self.guid = guid
 
     @property
-    def added_on(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__added_on
+    def app(self) -> str:
+        """Marquee application covered by sales person"""
+        return self.__app
 
-    @added_on.setter
-    def added_on(self, value: datetime.datetime):
-        self._property_changed('added_on')
-        self.__added_on = value        
-
-    @property
-    def added_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__added_by_id
-
-    @added_by_id.setter
-    def added_by_id(self, value: str):
-        self._property_changed('added_by_id')
-        self.__added_by_id = value        
+    @app.setter
+    def app(self, value: str):
+        self._property_changed('app')
+        self.__app = value        
 
     @property
-    def removed(self) -> bool:
-        """Flag to indicate if tag has been removed"""
-        return self.__removed
+    def phone(self) -> str:
+        """Coverage phone number"""
+        return self.__phone
 
-    @removed.setter
-    def removed(self, value: bool):
-        self._property_changed('removed')
-        self.__removed = value        
-
-    @property
-    def removed_on(self) -> datetime.datetime:
-        """ISO 8601-formatted timestamp"""
-        return self.__removed_on
-
-    @removed_on.setter
-    def removed_on(self, value: datetime.datetime):
-        self._property_changed('removed_on')
-        self.__removed_on = value        
-
-    @property
-    def removed_by_id(self) -> str:
-        """Marquee unique identifier"""
-        return self.__removed_by_id
-
-    @removed_by_id.setter
-    def removed_by_id(self, value: str):
-        self._property_changed('removed_by_id')
-        self.__removed_by_id = value        
-
-    @property
-    def removal_reason(self) -> str:
-        """Reason tag was removed"""
-        return self.__removal_reason
-
-    @removal_reason.setter
-    def removal_reason(self, value: str):
-        self._property_changed('removal_reason')
-        self.__removal_reason = value        
-
-    @property
-    def category(self) -> str:
-        """Category of the tag"""
-        return self.__category
-
-    @category.setter
-    def category(self, value: str):
-        self._property_changed('category')
-        self.__category = value        
+    @phone.setter
+    def phone(self, value: str):
+        self._property_changed('phone')
+        self.__phone = value        
 
     @property
     def name(self) -> str:
-        """Name of the tag"""
+        """Coverage name"""
         return self.__name
 
     @name.setter
     def name(self, value: str):
         self._property_changed('name')
         self.__name = value        
+
+    @property
+    def email(self) -> str:
+        """Coverage email"""
+        return self.__email
+
+    @email.setter
+    def email(self, value: str):
+        self._property_changed('email')
+        self.__email = value        
+
+    @property
+    def guid(self) -> str:
+        """Coverage guid"""
+        return self.__guid
+
+    @guid.setter
+    def guid(self, value: str):
+        self._property_changed('guid')
+        self.__guid = value        
 
 
 class WeightedPosition(Base):
@@ -11114,8 +11084,8 @@ class FieldFilterMap(Base):
         self.portfolio_type = kwargs.get('portfolio_type')
         self.vendor = kwargs.get('vendor')
         self.popularity = kwargs.get('popularity')
-        self.term = kwargs.get('term')
         self.currency = kwargs.get('currency')
+        self.term = kwargs.get('term')
         self.real_time_restriction_status = kwargs.get('real_time_restriction_status')
         self.asset_parameters_clearing_house = kwargs.get('asset_parameters_clearing_house')
         self.rating_fitch = kwargs.get('rating_fitch')
@@ -11158,6 +11128,7 @@ class FieldFilterMap(Base):
         self.asset_parameters_pricing_location = kwargs.get('asset_parameters_pricing_location')
         self.plot_id = kwargs.get('plot_id')
         self.asset_parameters_coupon = kwargs.get('asset_parameters_coupon')
+        self.asset_parameters_last_fixing_date = kwargs.get('asset_parameters_last_fixing_date')
         self.data_product = kwargs.get('data_product')
         self.mq_symbol = kwargs.get('mq_symbol')
         self.sectors = kwargs.get('sectors')
@@ -11353,8 +11324,8 @@ class FieldFilterMap(Base):
         self.alias = kwargs.get('alias')
         self.ext_mkt_point1 = kwargs.get('ext_mkt_point1')
         self.product_type = kwargs.get('product_type')
-        self.ext_mkt_point2 = kwargs.get('ext_mkt_point2')
         self.sub_region_code = kwargs.get('sub_region_code')
+        self.ext_mkt_point2 = kwargs.get('ext_mkt_point2')
         self.asset_parameters_option_type = kwargs.get('asset_parameters_option_type')
         self.asset_parameters_fixed_rate = kwargs.get('asset_parameters_fixed_rate')
         self.last_returns_end_date = kwargs.get('last_returns_end_date')
@@ -11847,15 +11818,6 @@ class FieldFilterMap(Base):
         self.__popularity = value        
 
     @property
-    def term(self) -> dict:
-        return self.__term
-
-    @term.setter
-    def term(self, value: dict):
-        self._property_changed('term')
-        self.__term = value        
-
-    @property
     def currency(self) -> dict:
         return self.__currency
 
@@ -11863,6 +11825,15 @@ class FieldFilterMap(Base):
     def currency(self, value: dict):
         self._property_changed('currency')
         self.__currency = value        
+
+    @property
+    def term(self) -> dict:
+        return self.__term
+
+    @term.setter
+    def term(self, value: dict):
+        self._property_changed('term')
+        self.__term = value        
 
     @property
     def real_time_restriction_status(self) -> dict:
@@ -12232,6 +12203,15 @@ class FieldFilterMap(Base):
     def asset_parameters_coupon(self, value: dict):
         self._property_changed('asset_parameters_coupon')
         self.__asset_parameters_coupon = value        
+
+    @property
+    def asset_parameters_last_fixing_date(self) -> dict:
+        return self.__asset_parameters_last_fixing_date
+
+    @asset_parameters_last_fixing_date.setter
+    def asset_parameters_last_fixing_date(self, value: dict):
+        self._property_changed('asset_parameters_last_fixing_date')
+        self.__asset_parameters_last_fixing_date = value        
 
     @property
     def data_product(self) -> dict:
@@ -13953,15 +13933,6 @@ class FieldFilterMap(Base):
         self.__product_type = value        
 
     @property
-    def ext_mkt_point2(self) -> dict:
-        return self.__ext_mkt_point2
-
-    @ext_mkt_point2.setter
-    def ext_mkt_point2(self, value: dict):
-        self._property_changed('ext_mkt_point2')
-        self.__ext_mkt_point2 = value        
-
-    @property
     def sub_region_code(self) -> dict:
         return self.__sub_region_code
 
@@ -13969,6 +13940,15 @@ class FieldFilterMap(Base):
     def sub_region_code(self, value: dict):
         self._property_changed('sub_region_code')
         self.__sub_region_code = value        
+
+    @property
+    def ext_mkt_point2(self) -> dict:
+        return self.__ext_mkt_point2
+
+    @ext_mkt_point2.setter
+    def ext_mkt_point2(self, value: dict):
+        self._property_changed('ext_mkt_point2')
+        self.__ext_mkt_point2 = value        
 
     @property
     def asset_parameters_option_type(self) -> dict:
@@ -16237,11 +16217,13 @@ class RiskPosition(Base):
     def __init__(
         self,
         instrument: Priceable,
+        instrument_name: str = None,
         quantity: float = None,
         name: str = None
     ):        
         super().__init__()
         self.instrument = instrument
+        self.instrument_name = instrument_name
         self.quantity = quantity
         self.name = name
 
@@ -16257,6 +16239,15 @@ class RiskPosition(Base):
     def instrument(self, value: Priceable):
         self._property_changed('instrument')
         self.__instrument = value        
+
+    @property
+    def instrument_name(self) -> str:
+        return self.__instrument_name
+
+    @instrument_name.setter
+    def instrument_name(self, value: str):
+        self._property_changed('instrument_name')
+        self.__instrument_name = value        
 
     @property
     def quantity(self) -> float:
@@ -16463,6 +16454,7 @@ class ReportParameters(Base):
         pco_action_type: Union[PCOActionType, str] = None,
         version: str = None,
         roll_currency: Tuple[PCOParameterValues, ...] = None,
+        use_live_market: bool = None,
         name: str = None
     ):        
         super().__init__()
@@ -16527,6 +16519,7 @@ class ReportParameters(Base):
         self.pco_action_type = pco_action_type
         self.version = version
         self.roll_currency = roll_currency
+        self.use_live_market = use_live_market
         self.name = name
 
     @property
@@ -17143,6 +17136,16 @@ class ReportParameters(Base):
     def roll_currency(self, value: Tuple[PCOParameterValues, ...]):
         self._property_changed('roll_currency')
         self.__roll_currency = value        
+
+    @property
+    def use_live_market(self) -> bool:
+        """Use Live Market to calculate intraday risk."""
+        return self.__use_live_market
+
+    @use_live_market.setter
+    def use_live_market(self, value: bool):
+        self._property_changed('use_live_market')
+        self.__use_live_market = value        
 
 
 class ReportScheduleRequest(Base):

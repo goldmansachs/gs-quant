@@ -52,7 +52,7 @@ def smooth_spikes(x: pd.Series, threshold: float) -> pd.Series:
     :func:`exponential_moving_average`
     """
     if len(x) < 3:
-        return pd.Series()
+        return pd.Series(dtype=float)
 
     result = x.copy()
     multiplier = (1 + threshold)

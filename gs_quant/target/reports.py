@@ -103,31 +103,6 @@ class ReportType(EnumBase, Enum):
     PCO = 'PCO'    
 
 
-class ParametersOverrides(Base):
-        
-    """Overriding parameters specific to the report type"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        csa_term: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.csa_term = csa_term
-        self.name = name
-
-    @property
-    def csa_term(self) -> str:
-        """The CSA Term for CSA specific discounting, e.g. EUR-1"""
-        return self.__csa_term
-
-    @csa_term.setter
-    def csa_term(self, value: str):
-        self._property_changed('csa_term')
-        self.__csa_term = value        
-
-
 class Report(Base):
         
     @camel_case_translate
@@ -399,6 +374,43 @@ class Report(Base):
     def percentage_complete(self, value: float):
         self._property_changed('percentage_complete')
         self.__percentage_complete = value        
+
+
+class ParametersOverrides(Base):
+        
+    """Overriding parameters specific to the report type"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        csa_term: str = None,
+        pricing_location: Union[PricingLocation, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.csa_term = csa_term
+        self.pricing_location = pricing_location
+        self.name = name
+
+    @property
+    def csa_term(self) -> str:
+        """The CSA Term for CSA specific discounting, e.g. EUR-1"""
+        return self.__csa_term
+
+    @csa_term.setter
+    def csa_term(self, value: str):
+        self._property_changed('csa_term')
+        self.__csa_term = value        
+
+    @property
+    def pricing_location(self) -> Union[PricingLocation, str]:
+        """Based on the location of the exchange. Called 'Native Region' in SecDB"""
+        return self.__pricing_location
+
+    @pricing_location.setter
+    def pricing_location(self, value: Union[PricingLocation, str]):
+        self._property_changed('pricing_location')
+        self.__pricing_location = get_enum_value(PricingLocation, value)        
 
 
 class ReportGenerateRequest(Base):

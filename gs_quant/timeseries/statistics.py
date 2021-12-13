@@ -856,7 +856,7 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
         raise ValueError('Ramp value must be less than the length of the series y.')
 
     if isinstance(w.w, int) and w.w > len(x):
-        return pd.Series()
+        return pd.Series(dtype=float)
 
     res = pd.Series(dtype=np.dtype(float))
     for idx, val in y.iteritems():

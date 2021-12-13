@@ -16,7 +16,7 @@ under the License.
 import datetime as dt
 
 import numpy as np
-from numpy import int64, float64, object, datetime64
+from numpy import int64, float64, datetime64
 import pandas as pd
 import pytest
 

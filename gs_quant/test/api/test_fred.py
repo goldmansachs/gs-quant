@@ -20,7 +20,7 @@ available at https://research.stlouisfed.org/docs/api/terms_of_use.html
 
 import pandas as pd
 import pytest
-from pandas.util.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 from gs_quant.data import Dataset
 from gs_quant.api.fred.data import FredDataApi

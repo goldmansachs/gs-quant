@@ -190,7 +190,7 @@ class Dataset:
                 raise MqValueError('Not a series for a single {}'.format(symbol_dimension))
 
         if df.empty:
-            return pd.Series()
+            return pd.Series(dtype=float)
         if '(' in field_value:
             field_value = field_value.replace('(', '_')
             field_value = field_value.replace(')', '')

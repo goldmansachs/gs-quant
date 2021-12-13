@@ -2778,7 +2778,7 @@ def _var_term_fwd():
             series = tm.ExtendedSeries([3, 4], idx, name='varSwap')
             series.dataset_ids = _test_datasets
         else:
-            series = tm.ExtendedSeries()
+            series = tm.ExtendedSeries(dtype=float)
             series.dataset_ids = ()
         return series
 
@@ -3329,12 +3329,14 @@ def test_bucketize_price():
         actual = tm.bucketize_price(mock_pjm, 'LMP', bucket='2x16h')
         assert_series_equal(pd.Series(target['2x16h'],
                                       index=[],
+                                      dtype=float,
                                       name='price'),
                             pd.Series(actual))
 
         actual = tm.bucketize_price(mock_pjm, 'LMP', granularity='m', bucket='7X24')
         assert_series_equal(pd.Series(target['monthly'],
                                       index=[],
+                                      dtype=float,
                                       name='price'),
                             pd.Series(actual))
 
@@ -3511,7 +3513,7 @@ def test_forward_price():
                                   bucket='7x24'
                                   )
 
-        assert_series_equal(pd.Series(), pd.Series(actual), check_names=False)
+        assert_series_equal(pd.Series(dtype=float), pd.Series(actual), check_names=False)
 
         actual = tm.forward_price(mock_spp,
                                   price_method='LMP',
@@ -3719,7 +3721,7 @@ def test_implied_volatility_elec():
                                             bucket='7x24'
                                             )
 
-        assert_series_equal(pd.Series(), pd.Series(actual), check_names=False)
+        assert_series_equal(pd.Series(dtype=float), pd.Series(actual), check_names=False)
 
         actual = tm.implied_volatility_elec(mock_spp,
                                             price_method='LMP',
@@ -4188,7 +4190,7 @@ def test_central_bank_swap_rate(mocker):
         mock_get_data.return_value = pd.DataFrame()
 
         assert_series_equal(tm.central_bank_swap_rate(mock_eur, tm.MeetingType.MEETING_FORWARD, tm.LevelType.ABSOLUTE),
-                            pd.Series(name='value'))
+                            pd.Series(dtype=float, name='value'))
 
     replace.restore()
 
@@ -4767,6 +4769,7 @@ def test_eu_ng_hub_to_swap():
     assets.return_value = []
     actual = tm.eu_ng_hub_to_swap(mock_EU_asset)
     assert_equal(actual, 'MA001')
+    replace.restore()
 
 
 def test_settlement_price():
@@ -4821,7 +4824,7 @@ def test_settlement_price():
         # Test for empty  result
         CC_ds.return_value = pd.DataFrame()
         actual = pd.Series(tm.settlement_price(Asset_Mock, contract='K21'))
-        expected = pd.Series()
+        expected = pd.Series(dtype=float)
         assert_series_equal(expected, actual)
 
         # Test for asset with no exchange info

@@ -62,24 +62,22 @@ class RDateRule(ABC):
         """
         pass
 
-    def _get_holidays(self, use_usd: bool = True) -> List[date]:
-        holidays = Series()
+    def _get_holidays(self) -> List[date]:
         if self.holiday_calendar is not None:
             if self.usd_calendar is None:
                 return self.holiday_calendar
-            return holidays.append(Series(self.usd_calendar))
+            return list(set().union(self.holiday_calendar, self.usd_calendar))
         try:
-            currencies = self.currencies or []
-            if use_usd:
-                currencies.append('USD')
+            holidays = Series(dtype=object)
+            currencies = ['USD'] if self.currencies is None else self.currencies
+
+            cached_data = _cache.get(hashkey(str(currencies), str(self.exchanges)))
+            if cached_data:
+                return cached_data
             if self.exchanges:
-                cached_data = _cache.get(hashkey(use_usd, str(currencies), str(self.exchanges)))
-                if cached_data:
-                    return cached_data
-            if self.exchanges:
-                self.exchanges = [x.value if isinstance(x, ExchangeCode) else x.upper() for x in self.exchanges]
+                exchanges = [x.value if isinstance(x, ExchangeCode) else x.upper() for x in self.exchanges]
                 exchange_query = GsDataApi.build_query(start=DATE_LOW_LIMIT, end=DATE_HIGH_LIMIT,
-                                                       exchange=self.exchanges)
+                                                       exchange=exchanges)
                 data = GsDataApi.query_data(exchange_query, 'HOLIDAY')
                 holidays = holidays.append(Series(to_datetime(DataFrame(data)['date']).dt.date))
 
@@ -91,7 +89,7 @@ class RDateRule(ABC):
                 holidays = holidays.append(Series(to_datetime(DataFrame(data)['date']).dt.date))
 
             holidays = holidays.unique().tolist()
-            _cache[hashkey(use_usd, str(currencies), str(self.exchanges))] = holidays
+            _cache[hashkey(str(currencies), str(self.exchanges))] = holidays
             return holidays
         except Exception as e:
             _logger.warning('Unable to fetch holiday calendar. Try passing your own when applying a rule.', e)
@@ -155,7 +153,7 @@ class FRule(RDateRule):
 class gRule(RDateRule):
     def handle(self) -> date:
         self.result = self.result + relativedelta(weeks=self.number)
-        holidays = self._get_holidays(use_usd=False)
+        holidays = self._get_holidays()
         return self._apply_business_days_logic(holidays, offset=0)
 
 
@@ -184,7 +182,7 @@ class kRule(RDateRule):
         self.result = self.result + relativedelta(years=self.number)
         while self.week_mask[self.result.isoweekday() - 1] == '0':
             self.result += relativedelta(days=1)
-        holidays = self._get_holidays(use_usd=False)
+        holidays = self._get_holidays()
         return self._apply_business_days_logic(holidays, offset=0)
 
 
@@ -226,7 +224,7 @@ class TRule(RDateRule):
 
 class uRule(RDateRule):
     def handle(self) -> date:
-        holidays = self._get_holidays(use_usd=False)
+        holidays = self._get_holidays()
         roll = 'forward' if self.number <= 0 else 'preceding'
         return self._apply_business_days_logic(holidays, offset=self.number, roll=roll)
 
@@ -241,7 +239,7 @@ class vRule(RDateRule):
         self.result = self.result + relativedelta(months=self.number) if self.number else self.result
         month_range = calendar.monthrange(self.result.year, self.result.month)
         self.result = self.result.replace(day=month_range[1])
-        holidays = self._get_holidays(use_usd=False)
+        holidays = self._get_holidays()
         return self._apply_business_days_logic(holidays, offset=0, roll='backward')
 
 

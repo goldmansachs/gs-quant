@@ -27,14 +27,16 @@ class ESGCard(Enum):
     """
     ESG Cards
     """
-    QUINTILES = 'quintiles'
     SUMMARY = 'summary'
+    QUINTILES = 'quintiles'
     WEIGHTS_BY_SECTOR = 'weightsBySector'
     MEASURES_BY_SECTOR = 'measuresBySector'
     WEIGHTS_BY_REGION = 'weightsByRegion'
     MEASURES_BY_REGION = 'measuresByRegion'
     TOP_TEN_RANKED = 'topTenRanked'
     BOTTOM_TEN_RANKED = 'bottomTenRanked'
+    NO_ESG_DATA = 'noEsgData'
+    NO_PRICING_DATA = 'noPricingData'
 
     def __str__(self):
         return self.value
