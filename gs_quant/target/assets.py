@@ -111,6 +111,34 @@ class CommoditySubFamily(EnumBase, Enum):
     NG = 'NG'    
 
 
+class IndexCalculationType(EnumBase, Enum):    
+    
+    """Quote type that is used for the bond price"""
+
+    Price_Return = 'Price Return'    
+
+
+class QuoteType(EnumBase, Enum):    
+    
+    """Quote type that is used for the bond price"""
+
+    Dirty_Price = 'Dirty Price'
+    Clean_Price = 'Clean Price'
+    BM_Spread = 'BM Spread'
+    Yield = 'Yield'
+    Z_Spread = 'Z-Spread'
+    G_Spread = 'G-Spread'    
+
+
+class WeightingType(EnumBase, Enum):    
+    
+    """Weighting type that is used for the bond price"""
+
+    Notional = 'Notional'
+    Market_Value = 'Market Value'
+    Dollar_Duration = 'Dollar Duration'    
+
+
 class AssetMetadata(Base):
         
     """Asset Meta Data that holds information related to the source of the asset rather
@@ -1154,6 +1182,140 @@ class CommodConfigParameters(Base):
     def field_history(self, value: Tuple[dict, ...]):
         self._property_changed('field_history')
         self.__field_history = value        
+
+
+class CreditBasketParameters(Base):
+        
+    """Parameters specific to the credit basket asset type"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        index_calculation_type: Union[IndexCalculationType, str] = None,
+        currency: Union[Currency, str] = None,
+        initial_pricing_date: datetime.date = None,
+        index_notes: str = None,
+        on_behalf_of: str = None,
+        valuation_source: Union[BasketValuationSource, str] = None,
+        quote_time: str = None,
+        official_side: Union[Side, str] = None,
+        quoting_type: Union[QuoteType, str] = None,
+        weighting_type: Union[WeightingType, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.index_calculation_type = index_calculation_type
+        self.currency = currency
+        self.initial_pricing_date = initial_pricing_date
+        self.index_notes = index_notes
+        self.on_behalf_of = on_behalf_of
+        self.valuation_source = valuation_source
+        self.quote_time = quote_time
+        self.official_side = official_side
+        self.quoting_type = quoting_type
+        self.weighting_type = weighting_type
+        self.name = name
+
+    @property
+    def index_calculation_type(self) -> Union[IndexCalculationType, str]:
+        """Determines the return calculation type method with respect to cash accrual /
+           funding"""
+        return self.__index_calculation_type
+
+    @index_calculation_type.setter
+    def index_calculation_type(self, value: Union[IndexCalculationType, str]):
+        self._property_changed('index_calculation_type')
+        self.__index_calculation_type = get_enum_value(IndexCalculationType, value)        
+
+    @property
+    def currency(self) -> Union[Currency, str]:
+        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
+        return self.__currency
+
+    @currency.setter
+    def currency(self, value: Union[Currency, str]):
+        self._property_changed('currency')
+        self.__currency = get_enum_value(Currency, value)        
+
+    @property
+    def initial_pricing_date(self) -> datetime.date:
+        """ISO 8601-formatted date"""
+        return self.__initial_pricing_date
+
+    @initial_pricing_date.setter
+    def initial_pricing_date(self, value: datetime.date):
+        self._property_changed('initial_pricing_date')
+        self.__initial_pricing_date = value        
+
+    @property
+    def index_notes(self) -> str:
+        """Notes for the index"""
+        return self.__index_notes
+
+    @index_notes.setter
+    def index_notes(self, value: str):
+        self._property_changed('index_notes')
+        self.__index_notes = value        
+
+    @property
+    def on_behalf_of(self) -> str:
+        """Marquee unique identifier"""
+        return self.__on_behalf_of
+
+    @on_behalf_of.setter
+    def on_behalf_of(self, value: str):
+        self._property_changed('on_behalf_of')
+        self.__on_behalf_of = value        
+
+    @property
+    def valuation_source(self) -> Union[BasketValuationSource, str]:
+        """The source of basket pricing"""
+        return self.__valuation_source
+
+    @valuation_source.setter
+    def valuation_source(self, value: Union[BasketValuationSource, str]):
+        self._property_changed('valuation_source')
+        self.__valuation_source = get_enum_value(BasketValuationSource, value)        
+
+    @property
+    def quote_time(self) -> str:
+        """The snapshot of bond price used for basket pricing"""
+        return self.__quote_time
+
+    @quote_time.setter
+    def quote_time(self, value: str):
+        self._property_changed('quote_time')
+        self.__quote_time = value        
+
+    @property
+    def official_side(self) -> Union[Side, str]:
+        """Quote side of the bond used for basket pricing"""
+        return self.__official_side
+
+    @official_side.setter
+    def official_side(self, value: Union[Side, str]):
+        self._property_changed('official_side')
+        self.__official_side = get_enum_value(Side, value)        
+
+    @property
+    def quoting_type(self) -> Union[QuoteType, str]:
+        """Bond quote type used for basket pricing"""
+        return self.__quoting_type
+
+    @quoting_type.setter
+    def quoting_type(self, value: Union[QuoteType, str]):
+        self._property_changed('quoting_type')
+        self.__quoting_type = get_enum_value(QuoteType, value)        
+
+    @property
+    def weighting_type(self) -> Union[WeightingType, str]:
+        """The snapshot of bond price used for basket pricing"""
+        return self.__weighting_type
+
+    @weighting_type.setter
+    def weighting_type(self, value: Union[WeightingType, str]):
+        self._property_changed('weighting_type')
+        self.__weighting_type = get_enum_value(WeightingType, value)        
 
 
 class HedgeFundParameters(Base):

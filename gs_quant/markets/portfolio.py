@@ -129,6 +129,10 @@ class Portfolio(PriceableImpl):
         return self.__id
 
     @property
+    def quote_id(self) -> str:
+        return self.__quote_id
+
+    @property
     def name(self) -> str:
         return self.__name
 
@@ -276,7 +280,7 @@ class Portfolio(PriceableImpl):
         if len(position_set.positions) > 0:
             GsPortfolioApi.update_positions(self.__id, [position_set])
 
-    def save_as_quote(self, overwrite: Optional[bool] = False):
+    def save_as_quote(self, overwrite: Optional[bool] = False) -> str:
         if self.portfolios:
             raise ValueError('Cannot save portfolios with nested portfolios')
 
@@ -296,6 +300,7 @@ class Portfolio(PriceableImpl):
         else:
             self.__quote_id = GsPortfolioApi.save_quote(request)
             _logger.info(f'Created quote with id {self.__quote_id}')
+        return self.__quote_id
 
     def save_to_shadowbook(self, name: str):
         if self.portfolios:

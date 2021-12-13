@@ -32,6 +32,7 @@ class AssetRef(Instrument):
         product_code: Union[ProductCode, str] = None,
         size: float = None,
         asset_id: str = None,
+        number_of_options: float = None,
         name: str = None
     ):        
         super().__init__()
@@ -39,6 +40,7 @@ class AssetRef(Instrument):
         self.product_code = product_code
         self.size = size
         self.asset_id = asset_id
+        self.number_of_options = number_of_options
         self.name = name
 
     @property
@@ -88,6 +90,15 @@ class AssetRef(Instrument):
     def asset_id(self, value: str):
         self._property_changed('asset_id')
         self.__asset_id = value        
+
+    @property
+    def number_of_options(self) -> float:
+        return self.__number_of_options
+
+    @number_of_options.setter
+    def number_of_options(self, value: float):
+        self._property_changed('number_of_options')
+        self.__number_of_options = value        
 
 
 class Bond(Instrument):
@@ -240,6 +251,65 @@ class Cash(Instrument):
     def notional_amount(self, value: Union[float, str]):
         self._property_changed('notional_amount')
         self.__notional_amount = value        
+
+
+class CommodOTCOptionPeriod(Instrument):
+        
+    """Commod OTC Option Period"""
+
+    @camel_case_translate
+    def __init__(
+        self,
+        start: Union[datetime.date, str] = None,
+        end: Union[datetime.date, str] = None,
+        quantity: Union[float, str] = None,
+        name: str = None
+    ):        
+        super().__init__()
+        self.start = start
+        self.end = end
+        self.quantity = quantity
+        self.name = name
+
+    @property
+    def asset_class(self) -> AssetClass:
+        """Commod"""
+        return AssetClass.Commod        
+
+    @property
+    def type(self) -> AssetType:
+        """OptionPeriod"""
+        return AssetType.OptionPeriod        
+
+    @property
+    def start(self) -> Union[datetime.date, str]:
+        """Date or Contract Month"""
+        return self.__start
+
+    @start.setter
+    def start(self, value: Union[datetime.date, str]):
+        self._property_changed('start')
+        self.__start = value        
+
+    @property
+    def end(self) -> Union[datetime.date, str]:
+        """Date or Contract Month"""
+        return self.__end
+
+    @end.setter
+    def end(self, value: Union[datetime.date, str]):
+        self._property_changed('end')
+        self.__end = value        
+
+    @property
+    def quantity(self) -> Union[float, str]:
+        """Size of some value, i.e. notional like 1.3b, 1.5, 1000"""
+        return self.__quantity
+
+    @quantity.setter
+    def quantity(self, value: Union[float, str]):
+        self._property_changed('quantity')
+        self.__quantity = value        
 
 
 class CommodOTCSwapLeg(Instrument):
@@ -1153,7 +1223,7 @@ class EqBinary(Instrument):
         buy_sell: Union[BuySell, str] = None,
         option_type: Union[OptionType, str] = None,
         expiration_date: Union[datetime.date, str] = None,
-        settlement_date: str = None,
+        settlement_date: Union[datetime.date, str] = None,
         strike_price: Union[float, str] = None,
         notional_amount: Union[float, str] = None,
         currency: str = None,
@@ -1225,11 +1295,12 @@ class EqBinary(Instrument):
         self.__expiration_date = value        
 
     @property
-    def settlement_date(self) -> str:
+    def settlement_date(self) -> Union[datetime.date, str]:
+        """Date or tenor, e.g. 2018-09-03, 3m, Dec21, 7Mar"""
         return self.__settlement_date
 
     @settlement_date.setter
-    def settlement_date(self, value: str):
+    def settlement_date(self, value: Union[datetime.date, str]):
         self._property_changed('settlement_date')
         self.__settlement_date = value        
 
@@ -1792,7 +1863,7 @@ class EqOption(Instrument):
         strike_price: Union[float, str] = None,
         option_type: Union[OptionType, str] = None,
         option_style: Union[OptionStyle, str] = None,
-        number_of_options: float = None,
+        number_of_options: Union[float, str] = None,
         exchange: str = None,
         multiplier: float = None,
         settlement_date: Union[datetime.date, str] = None,
@@ -1890,12 +1961,12 @@ class EqOption(Instrument):
         self.__option_style = get_enum_value(OptionStyle, value)        
 
     @property
-    def number_of_options(self) -> float:
+    def number_of_options(self) -> Union[float, str]:
         """Number of options"""
         return self.__number_of_options
 
     @number_of_options.setter
-    def number_of_options(self, value: float):
+    def number_of_options(self, value: Union[float, str]):
         self._property_changed('number_of_options')
         self.__number_of_options = value        
 

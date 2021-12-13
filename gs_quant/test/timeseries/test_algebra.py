@@ -16,7 +16,7 @@ under the License.
 from datetime import date
 
 import pytest
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 
 from gs_quant.timeseries import *
 
@@ -488,44 +488,44 @@ def test_and():
     with pytest.raises(MqError):
         and_()
     with pytest.raises(MqError):
-        and_(pd.Series())
+        and_(pd.Series(dtype=float))
     with pytest.raises(MqError):
-        and_(pd.Series(), 1)
+        and_(pd.Series(dtype=float), 1)
     with pytest.raises(MqError):
-        and_(pd.Series([2]), pd.Series())
-    assert and_(pd.Series(), pd.Series()).shape[0] == 0
+        and_(pd.Series([2]), pd.Series(dtype=float))
+    assert and_(pd.Series(dtype=float), pd.Series(dtype=float)).shape[0] == 0
 
     a = pd.Series([0, 0, 0, 0, 1, 1, 1, 1])
     b = pd.Series([0, 0, 1, 1, 0, 0, 1, 1])
     c = pd.Series([0, 1, 0, 1, 0, 1, 0, 1])
     assert_series_equal(and_(a, b), pd.Series([0] * 6 + [1] * 2), check_dtype=False)
     assert_series_equal(and_(a, b, c), pd.Series([0] * 7 + [1]), check_dtype=False)
-    assert_series_equal(and_(pd.Series([0, 1]), pd.Series()), pd.Series([0] * 2), check_dtype=False)
+    assert_series_equal(and_(pd.Series([0, 1]), pd.Series(dtype=float)), pd.Series([0] * 2), check_dtype=False)
 
 
 def test_or():
     with pytest.raises(MqError):
         or_()
     with pytest.raises(MqError):
-        or_(pd.Series())
+        or_(pd.Series(dtype=float))
     with pytest.raises(MqError):
-        or_(pd.Series(), 1)
+        or_(pd.Series(dtype=float), 1)
     with pytest.raises(MqError):
-        or_(pd.Series([2]), pd.Series())
-    assert or_(pd.Series(), pd.Series()).shape[0] == 0
+        or_(pd.Series([2]), pd.Series(dtype=float))
+    assert or_(pd.Series(dtype=float), pd.Series(dtype=float)).shape[0] == 0
 
     a = pd.Series([0, 0, 0, 0, 1, 1, 1, 1])
     b = pd.Series([0, 0, 1, 1, 0, 0, 1, 1])
     c = pd.Series([0, 1, 0, 1, 0, 1, 0, 1])
     assert_series_equal(or_(a, b), pd.Series([0] * 2 + [1] * 6), check_dtype=False)
     assert_series_equal(or_(a, b, c), pd.Series([0] + [1] * 7), check_dtype=False)
-    assert_series_equal(or_(pd.Series([0, 1]), pd.Series()), pd.Series([0, 1]), check_dtype=False)
+    assert_series_equal(or_(pd.Series([0, 1]), pd.Series(dtype=float)), pd.Series([0, 1]), check_dtype=False)
 
 
 def test_not():
     with pytest.raises(MqError):
         not_(pd.Series([2]))
-    assert not_(pd.Series()).shape[0] == 0
+    assert not_(pd.Series(dtype=float)).shape[0] == 0
     assert_series_equal(not_(pd.Series([0, 1])), pd.Series([1, 0]), check_dtype=False)
 
 
@@ -545,7 +545,7 @@ def test_if():
 
 
 def test_weighted_average():
-    empty = pd.Series()
+    empty = pd.Series(dtype=float)
     with pytest.raises(MqError):
         weighted_sum([empty, 3], [.4, .6])
     with pytest.raises(MqError):

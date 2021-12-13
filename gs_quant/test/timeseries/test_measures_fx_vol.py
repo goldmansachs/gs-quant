@@ -367,6 +367,7 @@ def test_vol_swap_strike_unsupported_cross():
         xrefs.return_value = 'USDPLN'
 
         tm_fxo.vol_swap_strike(mock_asset_1, "none", "none", location=PricingLocation.LDN, real_time=False)
+    replace.restore()
 
 
 def test_vol_swap_strike_matches_multiple_assets():
@@ -379,6 +380,7 @@ def test_vol_swap_strike_matches_multiple_assets():
         assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
         assets.return_value = [mock_asset_1, mock_asset_1]
         tm_fxo.vol_swap_strike(base, None, location=PricingLocation.LDN, real_time=False)
+    replace.restore()
 
 
 def test_vol_swap_strike_matches_no_assets():
@@ -391,6 +393,7 @@ def test_vol_swap_strike_matches_no_assets():
         assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
         assets.return_value = []
         tm_fxo.vol_swap_strike(base, None, location=PricingLocation.LDN, real_time=False)
+    replace .restore()
 
 
 def test_vol_swap_strike_matches_no_assets_when_expiry_tenor_is_not_none():
@@ -410,6 +413,7 @@ def test_vol_swap_strike_matches_no_assets_when_expiry_tenor_is_not_none():
         assets.return_value = [mock_asset_1, mock_asset_2]
 
         tm_fxo.vol_swap_strike(base, "10m", location=PricingLocation.LDN, real_time=False)
+    replace.restore()
 
 
 def test_currencypair_to_tdapi_fx_vol_swap_asset():
@@ -420,6 +424,7 @@ def test_currencypair_to_tdapi_fx_vol_swap_asset():
 
     asset = tm_fxo._currencypair_to_tdapi_fx_vol_swap_asset(base)
     assert asset == "MA66A4X4PRTC3N7B"
+    replace.restore()
 
 
 def test_vol_swap_strike():
@@ -442,6 +447,7 @@ def test_vol_swap_strike():
 
     actual = tm_fxo.vol_swap_strike(base, "1y", None, real_time=False)
     assert_series_equal(tm_rates._extract_series_from_df(mock_df(), QueryType.STRIKE_VOL), actual)
+    replace.restore()
 
 
 if __name__ == '__main__':

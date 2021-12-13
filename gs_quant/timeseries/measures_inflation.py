@@ -289,6 +289,6 @@ def inflation_swap_rate(asset: Asset, swap_tenor: str, index_type: str = None,
                                   clearing_house=clearing_house, source=source,
                                   real_time=real_time, query_type=QueryType.SWAP_RATE, location=location)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['swapRate'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series

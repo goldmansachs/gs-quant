@@ -493,7 +493,7 @@ def implied_volatility_new(asset: Asset, expiry_tenor: str, strike: str, option_
                        premium_payment_date=premium_payment_date, source=source,
                        real_time=real_time, query_type=QueryType.IMPLIED_VOLATILITY)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['impliedVolatility'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['impliedVolatility'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -589,6 +589,6 @@ def vol_swap_strike(asset: Asset, expiry_tenor: str, strike_type: str = None,
                                real_time=real_time,
                                query_type=QueryType.STRIKE_VOL)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['strikeVol'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['strikeVol'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series

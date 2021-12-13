@@ -24,7 +24,7 @@ from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.instrument import Instrument
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets import PricingContext, HistoricalPricingContext
-from gs_quant.risk import Price
+from gs_quant.risk import Price, DollarPrice
 from gs_quant.risk.base_measures import ParameterisedRiskMeasure
 from functools import reduce
 from datetime import date
@@ -183,9 +183,11 @@ class GenericEngine(BacktestBaseEngine):
                                      end).apply_rule(holiday_calendar=holiday_calendar) if states is None else states
 
         risks = list(set(make_list(risks) + strategy.risks))
-        risks = [r(currency=result_ccy) if isinstance(r, ParameterisedRiskMeasure)
-                 else raiser(f'Unparameterised risk: {r}') for r in risks]
-        price_risk = Price(currency=result_ccy)
+        risks = [DollarPrice if r is Price and result_ccy == 'USD' else (r(currency=result_ccy)
+                                                                         if isinstance(r, ParameterisedRiskMeasure)
+                                                                         else raiser(f'Unparameterised risk: {r}'))
+                 for r in risks]
+        price_risk = Price(currency=result_ccy) if result_ccy != 'USD' else DollarPrice
 
         backtest = BackTest(strategy, dates, risks)
 

@@ -15,10 +15,11 @@ under the License.
 """
 
 from datetime import date as dt
+from unittest.mock import Mock
 
 import pytest
-
 from gs_quant.datetime.relative_date import RelativeDate
+from testfixtures import Replacer
 
 holiday_calendar = [dt(2021, 1, 18)]
 
@@ -214,6 +215,27 @@ def test_rule_y():
 def test_chaining():
     date: dt = RelativeDate('J+14d+0u+4u', base_date=dt(2021, 1, 19)).apply_rule(holiday_calendar=holiday_calendar)
     assert date == dt(2021, 1, 22)
+
+
+def mock_holiday_data(*args, **kwargs):
+    dq = args[1]
+    ccies = dq.as_dict()['where']['currency']
+    base_holidays = [{'date': '2021-12-27', 'currency': 'USD', 'description': "Xmas"}]
+    if 'USD' in ccies:
+        base_holidays.append({'date': '2022-04-11', 'currency': 'USD', 'description': "Birthday"})
+    return base_holidays
+
+
+# test holiday calendar logic
+def test_currency_holiday_calendars():
+    replace = Replacer()
+    replace('gs_quant.api.gs.data.GsDataApi.query_data', Mock(side_effect=mock_holiday_data))
+    rdate = RelativeDate('-1b', base_date=dt(2022, 4, 12))
+    assert dt(2022, 4, 11) == rdate.apply_rule(currencies=[])
+    assert dt(2022, 4, 11) == rdate.apply_rule(currencies=['GBP'])
+    assert dt(2022, 4, 8) == rdate.apply_rule(currencies=['USD'])
+    assert dt(2022, 4, 8) == rdate.apply_rule()
+    replace.restore()
 
 
 if __name__ == "__main__":

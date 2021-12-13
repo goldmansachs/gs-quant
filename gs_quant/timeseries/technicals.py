@@ -14,6 +14,9 @@
 # Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
+import pandas as pd
+import statsmodels.tsa.seasonal
+
 from gs_quant.timeseries import diff, annualize, returns
 from .statistics import *
 
@@ -22,6 +25,23 @@ Technicals library is for technical analysis functions on timeseries, including 
 volatility indicators and and other numerical operations which are finance-oriented for analyzing
 statistical properties of trading activity, such as price movement and volume changes
 """
+
+
+class Seasonality(Enum):
+    MONTH = 'month'
+    QUARTER = 'quarter'
+
+
+class SeasonalModel(Enum):
+    ADDITIVE = 'additive'
+    MULTIPLICATIVE = 'multiplicative'
+
+
+class Frequency(Enum):
+    WEEKLY = 'weekly'
+    MONTHLY = 'monthly'
+    QUARTERLY = 'quarterly'
+    YEARLY = 'yearly'
 
 
 @plot_function
@@ -153,7 +173,7 @@ def smoothed_moving_average(x: pd.Series, w: Union[Window, int, str] = Window(No
     ramp = w.r
     means = apply_ramp(mean(x, Window(window_size, 0)), w)
     if means.size < 1:
-        return pd.Series()
+        return pd.Series(dtype=float)
     initial_moving_average = means[0]
     if (isinstance(ramp, int) and ramp > 0) or isinstance(ramp, pd.DateOffset):
         x = apply_ramp(x, w)
@@ -328,3 +348,168 @@ def exponential_spread_volatility(x: pd.Series, beta: float = 0.75) -> pd.Series
 
     """
     return annualize(exponential_std(diff(x, 1), beta))
+
+
+def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEARLY):
+    """
+    Given input series x with a DateTimeIndex and a desired temporal frequency (period), returns x with all NaNs
+    forward-filled (according to x's index's DateTime frequency) and the number of data points in a period.
+
+    freq should be the length of time in which x's cycles repeat. For example: yearly retail sales cycle, yearly
+    temperature fluctuation cycle.
+
+    For example: 1) If x is a daily series and freq = YEARLY, then there are 365 data points in a period; 2) If x is
+    a monthly series and freq = QUARTERLY, then there are 3 data points in a period.
+
+    Freq parameter only applies when data frequency is:
+    'B' and frequency == Weekly --> period = 5
+    'B' and frequency == Monthly --> convert to 'D' and period = 30
+    'D' and frequency == Weekly --> period = 7
+    'D' and frequency == Monthly --> period = 30
+    'M' and frequency == Quarterly --> Period = 3
+    'W' and frequency == Quarterly --> period = 13
+    """
+    if not isinstance(x.index, pd.DatetimeIndex):
+        raise MqValueError("Series must have a pandas.DateTimeIndex.")
+    pfreq = getattr(getattr(x, 'index', None), 'inferred_freq', None)
+    try:
+        period = statsmodels.tsa.seasonal.freq_to_period(pfreq)
+    except (ValueError, AttributeError):
+        period = None
+    if period in [7, None]:  # daily
+        x = x.asfreq('D', method='ffill')
+        if freq == Frequency.YEARLY:
+            return x, 365
+        elif freq == Frequency.QUARTERLY:
+            return x, 91
+        elif freq == Frequency.MONTHLY:
+            return x, 30
+        else:
+            return x, 7
+    elif period == 5:  # business day
+        if freq == Frequency.YEARLY:
+            return x.asfreq('D', method='ffill'), 365
+        if freq == Frequency.QUARTERLY:
+            return x.asfreq('D', method='ffill'), 91
+        elif freq == Frequency.MONTHLY:
+            return x.asfreq('D', method='ffill'), 30
+        else:  # freq == Frequency.WEEKLY:
+            return x.asfreq('B', method='ffill'), 5
+    elif period == 52:  # weekly frequency
+        x = x.asfreq('W', method='ffill')
+        if freq == Frequency.YEARLY:
+            return x, period
+        elif freq == Frequency.QUARTERLY:
+            return x, 13
+        elif freq == Frequency.MONTHLY:
+            return x, 4
+        else:
+            raise MqValueError(f'Frequency {freq.value} not compatible with series with frequency {pfreq}.')
+    elif period == 12:  # monthly frequency
+        x = x.asfreq('M', method='ffill')
+        if freq == Frequency.YEARLY:
+            return x, period
+        elif freq == Frequency.QUARTERLY:
+            return x, 3
+        else:
+            raise MqValueError(f'Frequency {freq.value} not compatible with series with frequency {pfreq}.')
+    return x, period
+
+
+def _seasonal_decompose(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE,
+                        freq: Frequency = Frequency.YEARLY):
+    x, period = _freq_to_period(x, freq)
+    if x.shape[0] < 2 * period:
+        # Replace ValueError in seasonal_decompose with more descriptive error
+        raise MqValueError(f"Series must have two complete cycles to be analyzed. Series has only {x.shape[0]} dpts.")
+    decompose_obj = statsmodels.tsa.seasonal.seasonal_decompose(x, period=period, model=method.value)
+    return decompose_obj
+
+
+@plot_function
+def seasonally_adjusted(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE,
+                        freq: Frequency = Frequency.YEARLY) -> pd.Series:
+    """
+    Seasonally adjusted series
+
+    :param x: time series with at least two years worth of data.
+    :param method: 'additive' or 'multiplicative'. Type of seasonal model to use. 'multiplicative' is appropriate when
+        the magnitude of the series's values affect the magnitude of seasonal swings; 'additive' is appropriate
+        when seasonal swings' sizes are independent of the series's values.
+    :param freq: 'yearly', 'quarterly', 'monthly', or 'weekly'. Period in which full cycle occurs (i.e. the "period" of
+        a wave).
+    :return: date-based time series of seasonally-adjusted input `x`.
+
+    **Usage**
+
+    Uses a centered moving average and convolution to decompose the input series into seasonal, trend, and
+    residual components. This function returns the series with the seasonal component removed.
+
+    If using the default additive model:
+
+    :math: Y_t = X_t - S_t
+
+    If using the multiplicative model:
+
+    :math: Y_t = X_t / S_t
+
+    **Examples**
+
+    Generate price series and compute seasonally-adjusted series.
+
+    >>> prices = generate_series(1000)
+    >>> seasonally_adjusted(prices)
+
+    **See also**
+
+    :func:`trend`
+
+    """
+    decompose_obj = _seasonal_decompose(x, method, freq)
+    if method == SeasonalModel.ADDITIVE:
+        return decompose_obj.trend + decompose_obj.resid
+    else:
+        return decompose_obj.trend * decompose_obj.resid
+
+
+@plot_function
+def trend(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE, freq: Frequency = Frequency.YEARLY) -> \
+        pd.Series:
+    """
+    Trend of series with seasonality and residuals removed.
+
+    :param x: time series with at least two years worth of data.
+    :param method: 'additive' or 'multiplicative'. Type of seasonal model to use. 'multiplicative' is appropriate when
+        the magnitude of the series's values affect the magnitude of seasonal swings; 'additive' is appropriate
+        when seasonal swings' sizes are independent of the series's values.
+    :param freq: 'yearly', 'quarterly', 'monthly', or 'weekly'. Period in which full cycle occurs (i.e. the "period" of
+        a wave).
+    :return: date-based time series with trend of `x`.
+
+    **Usage**
+
+    Uses a centered moving average and convolution to decompose the input series into seasonal, trend, and
+    residual components. This function returns the trend component.
+
+    If using the default additive model:
+
+    :math: Y_t = X_t - S_t - R_t
+
+    If using the multiplicative model:
+
+    :math: Y_t = X_t / (S_t * R_t)
+
+    **Examples**
+
+    Generate price series and compute its trend.
+
+    >>> prices = generate_series(1000)
+    >>> trend(prices)
+
+    **See also**
+
+    :func:`seasonally_adjusted`
+
+    """
+    decompose_obj = _seasonal_decompose(x, method, freq)
+    return decompose_obj.trend

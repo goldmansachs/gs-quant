@@ -13,17 +13,72 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 import logging
 from datetime import datetime
-from typing import Tuple
-from gs_quant.target.hedge import PerformanceHedgeParameters, ClassificationConstraint, AssetConstraint, Target
+from typing import Tuple, List, Dict
+
 from gs_quant.session import GsSession
+from gs_quant.target.hedge import Hedge
+from gs_quant.target.hedge import PerformanceHedgeParameters, ClassificationConstraint, AssetConstraint, Target
 
 _logger = logging.getLogger(__name__)
 
 
 class GsHedgeApi:
     """GS Hedge API client implementation"""
+
+    @classmethod
+    def get_many_hedges(cls,
+                        ids: List[str] = None,
+                        names: List[str] = None,
+                        limit: int = 100):
+        url = f'/hedges?limit={limit}'
+        if ids:
+            url += f'&id={"&id=".join(ids)}'
+        if names:
+            url += f'&name={"&name=".join(names)}'
+        return GsSession.current._get(url, cls=Hedge)
+
+    @classmethod
+    def create_hedge(cls, hedge: Dict) -> Hedge:
+        return GsSession.current._post('/hedges', hedge, cls=Hedge)
+
+    @classmethod
+    def get_hedge(cls, hedge_id: str) -> Hedge:
+        return GsSession.current._get(f'/hedges/{hedge_id}', cls=Hedge)
+
+    @classmethod
+    def get_hedge_data(cls,
+                       ids: List[str] = None,
+                       names: List[str] = None,
+                       limit: int = 100) -> List[Dict]:
+        url = f'/hedges/data?limit={limit}'
+        if ids:
+            url += f'&id={"&id=".join(ids)}'
+        if names:
+            url += f'&name={"&name=".join(names)}'
+        return GsSession.current._get(url, cls=Hedge)['results']
+
+    @classmethod
+    def get_hedge_results(cls,
+                          hedge_id: str,
+                          start_date: dt.date = None,
+                          end_date: dt.date = None) -> Dict:
+        url = f'/hedges/results?id={hedge_id}'
+        if start_date is not None:
+            url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
+        if end_date is not None:
+            url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
+        return GsSession.current._get(url)['results'][0]
+
+    @classmethod
+    def update_hedge(cls, hedge_id: str, hedge: Hedge) -> Hedge:
+        return GsSession.current._put(f'/hedges/{hedge_id}', hedge, cls=Hedge)
+
+    @classmethod
+    def delete_hedge(cls, hedge_id: str):
+        return GsSession.current._delete(f'/hedges/{hedge_id}', cls=Hedge)
 
     @classmethod
     def construct_performance_hedge_query(cls, hedge_target: str, universe: Tuple[str, ...], notional: float,

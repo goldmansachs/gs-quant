@@ -421,6 +421,6 @@ def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str 
                                       real_time=real_time, query_type=QueryType.XCCY_SWAP_SPREAD,
                                       location=location)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['xccySwapSpread'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['xccySwapSpread'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series

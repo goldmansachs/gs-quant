@@ -173,11 +173,11 @@ class PredefinedAssetBacktest:
     """
     def __init__(self, data_handler: DataHandler, initial_value: float):
         self.data_handler = data_handler
-        self.performance = pd.Series()
+        self.performance = pd.Series(dtype=float)
         self.cash_asset = Cash('USD')
         self.holdings = defaultdict(float)
-        self.historical_holdings = pd.Series()
-        self.historical_weights = pd.Series()
+        self.historical_holdings = pd.Series(dtype=float)
+        self.historical_weights = pd.Series(dtype=float)
         self.orders = []
         self.initial_value = initial_value
         self.results = {}
@@ -274,7 +274,7 @@ class PredefinedAssetBacktest:
     def get_level(self, date: dt.date) -> float:
         return self.performance[date]
 
-    def get_costs(self) -> pd.Series():
+    def get_costs(self) -> pd.Series(dtype=float):
         costs = defaultdict(float)
         for order in self.orders:
             if isinstance(order, OrderCost):

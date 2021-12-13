@@ -578,7 +578,7 @@ def swap_annuity(asset: Asset, swap_tenor: str, benchmark_type: str = None, floa
                         clearing_house=clearing_house, source=source,
                         real_time=real_time, query_type=QueryType.SWAP_ANNUITY, location=location)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(abs(df['swapAnnuity'] * 1e4 / 1e8))
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(abs(df['swapAnnuity'] * 1e4 / 1e8))
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -999,7 +999,7 @@ def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: s
 
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         # convert string ATM+20 to numerical value 20
         df["strikeRelative"] = df["strikeRelative"].apply(lambda d: float(d.split("ATM")[1] if d != "ATM" else 0))
@@ -1069,7 +1069,7 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
 
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
@@ -1079,7 +1079,7 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
         df = df.set_index('expirationDate')
         df.sort_index(inplace=True)
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-        series = ExtendedSeries() if df.empty else ExtendedSeries(df['swaptionVol'])
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swaptionVol'])
     series.dataset_ids = dataset_ids
     return series
 
@@ -1111,7 +1111,7 @@ def swap_rate(asset: Asset, swap_tenor: str, benchmark_type: str = None, floatin
                         clearing_house=clearing_house, source=source,
                         real_time=real_time, query_type=QueryType.SWAP_RATE, location=location)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['swapRate'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -1214,7 +1214,7 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['basisSwapRate'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['basisSwapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -1293,7 +1293,7 @@ def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_
         df = _market_data_timed(q)
 
     if df.empty:
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
@@ -1311,7 +1311,7 @@ def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_
             df = df.set_index('expirationDate')
             df.sort_index(inplace=True)
             df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-            series = ExtendedSeries() if df.empty else ExtendedSeries(df['swapRate'])
+            series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -1380,7 +1380,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
         df = _market_data_timed(q)
 
     if df.empty:
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
@@ -1398,7 +1398,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
             df = df.set_index('expirationDate')
             df.sort_index(inplace=True)
             df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-            series = ExtendedSeries() if df.empty else ExtendedSeries(df['basisSwapRate'])
+            series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['basisSwapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -1446,7 +1446,7 @@ def ois_xccy(asset: Asset, tenor: str = None, *, source: str = None, real_time: 
     df = _get_fxfwd_xccy_swp_rates_data(asset=asset, tenor=tenor, query_type=QueryType.OIS_XCCY, source=source,
                                         real_time=real_time)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['oisXccy'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['oisXccy'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -1467,7 +1467,7 @@ def ois_xccy_ex_spike(asset: Asset, tenor: str = None, *, source: str = None, re
     df = _get_fxfwd_xccy_swp_rates_data(asset=asset, tenor=tenor, query_type=QueryType.OIS_XCCY_EX_SPIKE, source=source,
                                         real_time=real_time)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['oisXccyExSpike'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['oisXccyExSpike'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -1487,7 +1487,7 @@ def non_usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_tim
     df = _get_fxfwd_xccy_swp_rates_data(asset=asset, tenor=tenor, query_type=QueryType.NON_USD_OIS, source=source,
                                         real_time=real_time)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['nonUsdOis'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['nonUsdOis'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -1507,6 +1507,6 @@ def usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: b
     df = _get_fxfwd_xccy_swp_rates_data(asset=asset, tenor=tenor, query_type=QueryType.USD_OIS, source=source,
                                         real_time=real_time)
 
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df['usdOis'])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['usdOis'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series

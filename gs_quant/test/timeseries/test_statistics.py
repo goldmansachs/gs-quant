@@ -307,17 +307,17 @@ def test_std():
 
     result = std(x)
     expected = pd.Series([np.nan, 0.707106, 0.577350, 0.957427, 0.894427, 1.673320], index=dates)
-    assert_series_equal(result, expected, obj="std", check_less_precise=True)
+    assert_series_equal(result, expected, obj="std")
 
     result = std(x, Window(2, 0))
     expected = pd.Series([np.nan, 0.707106, 0.707106, 1.414214, 1.414214, 2.121320], index=dates)
-    assert_series_equal(result, expected, obj="std window 2", check_less_precise=True)
+    assert_series_equal(result, expected, obj="std window 2")
 
     result = std(x, Window('1w', 0))
     expected = pd.Series([np.nan, 0.707106, 0.577350, 0.957427, 0.894427, 1.870828], index=dates)
-    assert_series_equal(result, expected, obj="std window 1w", check_less_precise=True)
+    assert_series_equal(result, expected, obj="std window 1w")
 
-    assert std(pd.Series()).empty
+    assert std(pd.Series(dtype=float)).empty
 
 
 def test_exponential_std():
@@ -368,15 +368,15 @@ def test_var():
 
     result = var(x)
     expected = pd.Series([np.nan, 0.500000, 0.333333, 0.916667, 0.800000, 2.800000], index=dates)
-    assert_series_equal(result, expected, obj="var", check_less_precise=True)
+    assert_series_equal(result, expected, obj="var")
 
     result = var(x, Window(2, 0))
     expected = pd.Series([np.nan, 0.5, 0.5, 2.0, 2.0, 4.5], index=dates)
-    assert_series_equal(result, expected, obj="var window 2", check_less_precise=True)
+    assert_series_equal(result, expected, obj="var window 2")
 
     result = var(x, Window('1w', 0))
     expected = pd.Series([np.nan, 0.500000, 0.333333, 0.916666, 0.800000, 3.500000], index=dates)
-    assert_series_equal(result, expected, obj="var window 1w", check_less_precise=True)
+    assert_series_equal(result, expected, obj="var window 1w")
 
 
 def test_cov():
@@ -394,23 +394,23 @@ def test_cov():
 
     result = cov(x, y)
     expected = pd.Series([np.nan, 0.850000, 0.466667, 0.950000, 0.825000, 2.700000], index=dates)
-    assert_series_equal(result, expected, obj="cov", check_less_precise=True)
+    assert_series_equal(result, expected, obj="cov")
 
     result = cov(x, y, Window(2, 0))
     expected = pd.Series([np.nan, 0.850000, 0.549999, 1.7000000, 1.900000, 4.200000], index=dates)
-    assert_series_equal(result, expected, obj="cov window 2", check_less_precise=True)
+    assert_series_equal(result, expected, obj="cov window 2")
 
     result = cov(x, y, Window('1w', 0))
     expected = pd.Series([np.nan, 0.850000, 0.466667, 0.950000, 0.825000, 3.375000], index=dates)
-    assert_series_equal(result, expected, obj="cov window 1w", check_less_precise=True)
+    assert_series_equal(result, expected, obj="cov window 1w")
 
 
 def test_zscores():
     with pytest.raises(MqValueError):
         zscores(pd.Series(range(5)), "2d")
 
-    assert_series_equal(zscores(pd.Series()), pd.Series())
-    assert_series_equal(zscores(pd.Series(), 1), pd.Series())
+    assert_series_equal(zscores(pd.Series(dtype=float)), pd.Series(dtype=float))
+    assert_series_equal(zscores(pd.Series(dtype=float), 1), pd.Series(dtype=float))
 
     assert_series_equal(zscores(pd.Series([1])), pd.Series([0.0]))
     assert_series_equal(zscores(pd.Series([1]), Window(1, 0)), pd.Series([0.0]))
@@ -428,65 +428,50 @@ def test_zscores():
 
     result = zscores(x)
     expected = pd.Series([0.000000, -0.597614, 0.000000, -1.195229, 0.000000, 1.792843], index=dates)
-    assert_series_equal(result, expected, obj="z-score", check_less_precise=True)
+    assert_series_equal(result, expected, obj="z-score")
 
     assert_series_equal(result, (x - x.mean()) / x.std(), obj="full series zscore")
 
     result = zscores(x, Window(2, 0))
     expected = pd.Series([0.0, -0.707107, 0.707107, -0.707107, 0.707107, 0.707107], index=dates)
-    assert_series_equal(result, expected, obj="z-score window 2", check_less_precise=True)
+    assert_series_equal(result, expected, obj="z-score window 2")
     assert_series_equal(zscores(x, Window(5, 5)), zscores(x, 5))
 
     result = zscores(x, Window('1w', 0))
     expected = pd.Series([0.0, -0.707106, 0.577350, -1.305582, 0.670820, 1.603567], index=dates)
-    assert_series_equal(result, expected, obj="z-score window 1w", check_less_precise=True)
+    assert_series_equal(result, expected, obj="z-score window 1w")
 
     result = zscores(x, '1w')
     expected = pd.Series([1.603567], index=dates[-1:])
-    assert_series_equal(result, expected, obj='z-score window string 1w', check_less_precise=True)
+    assert_series_equal(result, expected, obj='z-score window string 1w')
 
     result = zscores(x, '1m')
-    expected = pd.Series()
-    assert_series_equal(result, expected, obj="z-score window too large", check_less_precise=True)
+    expected = pd.Series(dtype=float)
+    assert_series_equal(result, expected, obj="z-score window too large")
 
 
 def test_winsorize():
-    assert_series_equal(winsorize(pd.Series()), pd.Series())
+    assert_series_equal(winsorize(pd.Series(dtype=float)), pd.Series(dtype=float))
 
     x = generate_series(10000)
-    r = returns(x)
+    # You must use absolute returns here, generate_series uses random absolute returns and as such has a decent chance
+    # of going negative on a sample of 10k, if it goes negative the relative return will be garbage and test can fail
+    r = returns(x, type=Returns.ABSOLUTE)
 
-    limit = 1.0
+    for limit in [1.0, 2.0]:
+        mu = r.mean()
+        sigma = r.std()
 
-    mu = r.mean()
-    sigma = r.std()
+        b_upper = mu + sigma * limit * 1.001
+        b_lower = mu - sigma * limit * 1.001
 
-    b_upper = mu + sigma * limit * 1.001
-    b_lower = mu - sigma * limit * 1.001
+        assert (True in r.ge(b_upper).values)
+        assert (True in r.le(b_lower).values)
 
-    assert (True in r.ge(b_upper).values)
-    assert (True in r.le(b_lower).values)
+        wr = winsorize(r, limit)
 
-    wr = winsorize(r, limit)
-
-    assert (True not in wr.ge(b_upper).values)
-    assert (True not in wr.le(b_lower).values)
-
-    limit = 2.0
-
-    mu = r.mean()
-    sigma = r.std()
-
-    b_upper = mu + sigma * limit * 1.001
-    b_lower = mu - sigma * limit * 1.001
-
-    assert (True in r.ge(b_upper).values)
-    assert (True in r.le(b_lower).values)
-
-    wr = winsorize(r, limit)
-
-    assert (True not in wr.ge(b_upper).values)
-    assert (True not in wr.le(b_lower).values)
+        assert (True not in wr.ge(b_upper).values)
+        assert (True not in wr.le(b_lower).values)
 
 
 def test_percentiles():
@@ -502,9 +487,9 @@ def test_percentiles():
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     y = pd.Series([3.5, 1.8, 2.9, 1.2, 3.1, 6.0], index=dates)
 
-    assert_series_equal(percentiles(pd.Series([]), y), pd.Series([]))
-    assert_series_equal(percentiles(x, pd.Series([])), pd.Series())
-    assert_series_equal(percentiles(x, y, Window(7, 0)), pd.Series())
+    assert_series_equal(percentiles(pd.Series(dtype=float), y), pd.Series(dtype=float))
+    assert_series_equal(percentiles(x, pd.Series(dtype=float)), pd.Series(dtype=float))
+    assert_series_equal(percentiles(x, y, Window(7, 0)), pd.Series(dtype=float))
 
     result = percentiles(x, y, 2)
     expected = pd.Series([50.0, 50.0, 100.0, 75.0], index=dates[2:])
@@ -524,21 +509,21 @@ def test_percentiles():
 
     result = percentiles(x)
     expected = pd.Series([50.0, 25.0, 66.667, 12.500, 70.0, 91.667], index=dates)
-    assert_series_equal(result, expected, obj="percentiles over historical values", check_less_precise=True)
+    assert_series_equal(result, expected, obj="percentiles over historical values")
 
     result = percentiles(x, y)
     expected = pd.Series([100.0, 0.0, 33.333, 25.0, 100.0, 91.667], index=dates)
-    assert_series_equal(result, expected, obj="percentiles without window length", check_less_precise=True)
+    assert_series_equal(result, expected, obj="percentiles without window length")
 
     with pytest.raises(ValueError):
-        percentiles(x, pd.Series(), Window(6, 1))
+        percentiles(x, pd.Series(dtype=float), Window(6, 1))
 
 
 def test_percentile():
     with pytest.raises(MqError):
-        percentile(pd.Series(), -1)
+        percentile(pd.Series(dtype=float), -1)
     with pytest.raises(MqError):
-        percentile(pd.Series(), 100.1)
+        percentile(pd.Series(dtype=float), 100.1)
     with pytest.raises(MqTypeError):
         percentile(pd.Series(range(5), index=range(5)), 90, "2d")
 
@@ -548,8 +533,8 @@ def test_percentile():
     x = percentile(pd.Series(x for x in range(0, 5)), 50, 2)
     assert_series_equal(x, pd.Series([1.5, 2.5, 3.5], index=pd.RangeIndex(2, 5)))
 
-    x = percentile(pd.Series(), 90, "1d")
-    assert_series_equal(x, pd.Series(), obj="Percentile with empty series")
+    x = percentile(pd.Series(dtype=float), 90, "1d")
+    assert_series_equal(x, pd.Series(dtype=float), obj="Percentile with empty series")
 
 
 def test_percentile_str():
@@ -619,7 +604,7 @@ def test_rolling_linear_regression():
     assert_series_equal(regression.r_squared(), expected, check_names=False)
 
     expected = pd.Series([np.nan, np.nan, np.nan, 28.0, 28.5, 39.0], index=pd.date_range('2019-1-1', periods=6))
-    assert_series_equal(regression.fitted_values(), expected, check_names=False, check_less_precise=True)
+    assert_series_equal(regression.fitted_values(), expected, check_names=False)
 
     expected = pd.Series([np.nan, np.nan, np.nan, 0.0, 2.236068, 4.472136], index=pd.date_range('2019-1-1', periods=6))
     assert_series_equal(regression.standard_deviation_of_errors(), expected, check_names=False)

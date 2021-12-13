@@ -33,7 +33,7 @@ import gs_quant.datetime
 from pytz import timezone
 
 
-class TestTrigger(OrdersGeneratorTrigger):
+class ExampleTestTrigger(OrdersGeneratorTrigger):
     def __init__(self):
         super().__init__()
 
@@ -122,7 +122,7 @@ def test_backtest_predefined_timezone_aware():
 
 def test_backtest_predefined():
     # Test simple MOC order
-    trigger = TestTrigger()
+    trigger = ExampleTestTrigger()
     strategy = Strategy(initial_portfolio=None, triggers=[trigger])
     start = dt.date(2021, 1, 4)
     mid = dt.date(2021, 1, 5)
@@ -134,7 +134,7 @@ def test_backtest_predefined():
 
     data_mgr = DataManager()
     underlying = Security(ric='TestRic')
-    close_prices = pd.Series()
+    close_prices = pd.Series(dtype=float)
     close_prices[start] = 1
     close_prices[mid] = 1.5
     close_prices[end] = 2

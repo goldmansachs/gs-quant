@@ -472,7 +472,7 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
     col_name = query_type.value.replace(' ', '')
     col_name = col_name[0].lower() + col_name[1:]
     if df.empty or (handle_missing_column and col_name not in df.columns):
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         series = ExtendedSeries(df[col_name], index=df.index)
     series.dataset_ids = getattr(df, 'dataset_ids', ())
@@ -540,7 +540,7 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     dataset_ids = getattr(df, 'dataset_ids', ())
 
     if df.empty:
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         curves = {k: v for k, v in df.groupby(column)}
         if len(curves) < 3:
@@ -973,7 +973,7 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
                                              where=where, source=source, real_time=real_time, request_id=request_id)
 
     if df.empty:
-        return pd.Series()
+        return pd.Series(dtype=float)
 
     dataset_ids = getattr(df, 'dataset_ids', ())
     df = df[['assetId', 'impliedVolatility']]
@@ -1292,13 +1292,13 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         for underlying_id, weight in zip(constituents.index, constituents['netWeight']):
             filtered = grouped.get_group(underlying_id) if underlying_id in grouped.indices else pd.DataFrame()
             filtered = filtered.loc[~filtered.index.duplicated(keep='last')]
-            vol = ExtendedSeries() if filtered.empty else ExtendedSeries(volatility(filtered['spot'],
+            vol = ExtendedSeries(dtype=float) if filtered.empty else ExtendedSeries(volatility(filtered['spot'],
                                                                                     Window(tenor, tenor), returns_type))
             weighted_vols.append(vol * weight)
 
         vol_df = pd.concat(weighted_vols, axis=1).ffill()
         series = ExtendedSeries(vol_df.sum(1, min_count=top_n_of_index),
-                                name='averageRealizedVolatility') if len(weighted_vols) else ExtendedSeries()
+                                name='averageRealizedVolatility') if len(weighted_vols) else ExtendedSeries(dtype=float)
         series.dataset_ids = getattr(df, 'dataset_ids', ())
         return series
 
@@ -1652,7 +1652,7 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
                     df = pd.concat([df, df_l])
 
     if df.empty:
-        series = ExtendedSeries(name='forwardVol')
+        series = ExtendedSeries(dtype=float, name='forwardVol')
     else:
         grouped = df.groupby(Fields.TENOR.value)
         try:
@@ -1660,7 +1660,7 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
             lg = grouped.get_group(t2)['impliedVolatility']
         except KeyError:
             log_debug(request_id, _logger, 'no data for one or more tenors')
-            series = ExtendedSeries(name='forwardVol')
+            series = ExtendedSeries(dtype=float, name='forwardVol')
         else:
             series = ExtendedSeries(sqrt((t2_month * lg ** 2 - t1_month * sg ** 2) / _tenor_to_month(tenor)),
                                     name='forwardVol')
@@ -1864,7 +1864,7 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
     df = get_df_with_retries(fetcher, start_date=start, end_date=end, exchange=asset.exchange)
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
@@ -1905,7 +1905,7 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
 
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
@@ -1915,7 +1915,7 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
         df = df.set_index('expirationDate')
         df.sort_index(inplace=True)
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-        series = ExtendedSeries() if df.empty else ExtendedSeries(df['forward'])
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['forward'])
     series.dataset_ids = dataset_ids
     return series
 
@@ -2063,7 +2063,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
             dataset_ids.update(getattr(df, 'dataset_ids', ()))
 
     if df.empty:
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
@@ -2073,7 +2073,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
         df = df.set_index(Fields.EXPIRATION_DATE.value)
         df.sort_index(inplace=True)
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-        series = ExtendedSeries() if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
 
     series.dataset_ids = tuple(dataset_ids)
     return series
@@ -2149,7 +2149,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
         _logger.debug('where tenor=%s', tenor)
         where = dict(tenor=[tenor])
         df = _get_var_swap_df(asset, where, source, real_time)
-        series = ExtendedSeries() if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
         series.dataset_ids = getattr(df, 'dataset_ids', ())
         return series
     else:
@@ -2164,7 +2164,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
 
         tenors = _var_swap_tenors(asset)
         if yt not in tenors or zt not in tenors:
-            series = ExtendedSeries()
+            series = ExtendedSeries(dtype=float)
             series.dataset_ids = ()
             return series
 
@@ -2173,7 +2173,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
         df = _get_var_swap_df(asset, where, source, real_time)
         dataset_ids = getattr(df, 'dataset_ids', ())
         if df.empty:
-            series = ExtendedSeries()
+            series = ExtendedSeries(dtype=float)
         else:
             grouped = df.groupby(Fields.TENOR.value)
             try:
@@ -2181,7 +2181,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
                 zg = grouped.get_group(zt)[Fields.VAR_SWAP.value]
             except KeyError:
                 _logger.debug('no data for one or more tenors')
-                series = ExtendedSeries()
+                series = ExtendedSeries(dtype=float)
                 series.dataset_ids = ()
                 return series
             series = ExtendedSeries(sqrt((z * zg ** 2 - y * yg ** 2) / x))
@@ -2731,7 +2731,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     dataset_ids = getattr(df, 'dataset_ids', ())
 
     if df.empty:
-        series = ExtendedSeries()
+        series = ExtendedSeries(dtype=float)
     else:
         df = df.tz_convert(timezone)
 
@@ -2830,7 +2830,7 @@ def central_bank_swap_rate(asset: Asset, rate_type: MeetingType = MeetingType.ME
         series = ExtendedSeries(df['value'])
         series.dataset_ids = (Dataset.GS.CENTRAL_BANK_WATCH,)
     except KeyError:  # No data returned from ds.get_data
-        series = pd.Series(name='value')
+        series = pd.Series(dtype=float, name='value')
     return series
 
 
@@ -3483,7 +3483,7 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
     df = _market_data_timed(q, request_id)
     if not real_time and DataContext.current.end_date >= datetime.date.today():
         df = append_last_for_measure(df, [asset.get_marquee_id()], QueryType.SPOT, {})
-    series = ExtendedSeries() if df.empty else ExtendedSeries(volatility(df['spot'], w, returns_type))
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(volatility(df['spot'], w, returns_type))
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -3510,7 +3510,7 @@ def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONM
     q = GsDataApi.build_market_data_query([mqid], query_type, source=source, real_time=real_time)
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
-    series = ExtendedSeries() if df.empty else ExtendedSeries(df[query_metric])
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[query_metric])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -3692,7 +3692,7 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
             market_date -= datetime.timedelta(days=1)
     else:
         try:
-            market_date = pd.datetime.strptime(market_date, "%Y%m%d").date()
+            market_date = dt.datetime.strptime(market_date, "%Y%m%d").date()
         except ValueError:
             raise MqValueError('Market date should be of format as \'YYYYMMDD\'')
 
@@ -3732,7 +3732,7 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
 
     # If no data received
     if forward_price.empty:
-        return ExtendedSeries()
+        return ExtendedSeries(dtype=float)
 
     # Get plot dates for valid contract_months
     forward_dates_to_plot = dict()
@@ -3940,7 +3940,7 @@ def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: 
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id=request_id)
     if df.empty:
-        return pd.Series()
+        return pd.Series(dtype=float)
 
     df1 = df.loc[df['assetId'] == id_1]
     df2 = df.loc[df['assetId'] == id_2]

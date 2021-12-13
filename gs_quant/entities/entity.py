@@ -59,6 +59,7 @@ class EntityType(Enum):
     REPORT = 'report'
     RISK_MODEL = 'risk_model'
     SUBDIVISION = 'subdivision'
+    DATASET = 'dataset'
 
 
 @dataclass
@@ -79,7 +80,8 @@ class Entity(metaclass=ABCMeta):
         EntityType.SUBDIVISION: 'countries/subdivisions',
         EntityType.KPI: 'kpis',
         EntityType.PORTFOLIO: 'portfolios',
-        EntityType.RISK_MODEL: 'risk/models'
+        EntityType.RISK_MODEL: 'risk/models',
+        EntityType.DATASET: 'data/datasets'
     }
 
     def __init__(self,

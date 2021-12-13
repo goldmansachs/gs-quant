@@ -15,7 +15,7 @@ under the License.
 """
 import pandas as pd
 import pytest
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 
 from gs_quant.timeseries import *
 
@@ -57,7 +57,7 @@ def test_last():
 
 def test_last_value():
     with pytest.raises(MqValueError):
-        last_value(pd.Series())
+        last_value(pd.Series(dtype=float))
 
     x = pd.Series([1.0, 2.0, 3.0, 4.0], index=(pd.date_range("2020-01-01", periods=4, freq="D")))
     assert last_value(x) == 4.0
@@ -154,7 +154,7 @@ def test_diff():
     expected = pd.Series([np.nan, np.nan, 2.0, 2.0], index=dates)
     assert_series_equal(result, expected, obj="Diff")
 
-    empty = pd.Series([], index=[])
+    empty = pd.Series(dtype=float)
     result = diff(empty)
     assert (len(result) == 0)
 

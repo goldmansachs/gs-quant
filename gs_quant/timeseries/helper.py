@@ -120,7 +120,7 @@ def _check_window(series_length: int, window: Window):
 def apply_ramp(x: pd.Series, window: Window) -> pd.Series:
     _check_window(len(x), window)
     if isinstance(window.w, int) and window.w > len(x):  # does not restrict window size when it is a DataOffset
-        return pd.Series([])
+        return pd.Series(dtype=float)
     if isinstance(window.r, pd.DateOffset):
         return x.loc[x.index[0] + window.r:]
     else:

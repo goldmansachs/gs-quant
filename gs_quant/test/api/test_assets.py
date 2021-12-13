@@ -79,7 +79,7 @@ def test_get_many_assets(mocker, monkeypatch):
     GsSession.current._post.assert_called_with('/assets/query', cls=GsAsset, payload=inputs)
     assert response == expected_response
 
-    monkeypatch.setenv(ENABLE_ASSET_CACHING, 1)  # run 2x with cache on
+    monkeypatch.setenv(ENABLE_ASSET_CACHING, '1')  # run 2x with cache on
     response = GsAssetApi.get_many_assets(id=[marquee_id_1, marquee_id_2], as_of=as_of)
     assert response == expected_response
     response = GsAssetApi.get_many_assets(id=[marquee_id_1, marquee_id_2], as_of=as_of)

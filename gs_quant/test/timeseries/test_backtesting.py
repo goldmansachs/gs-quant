@@ -254,7 +254,7 @@ def test_basket_average_realized_vol_wts():
 
     with DataContext(start=date(2021, 9, 1), end=date(2021, 9, 25)):
         av_realized_vol = a_basket.average_realized_volatility('2d')
-        np.testing.assert_approx_equal(av_realized_vol.iloc[0], 1.7)
+        np.testing.assert_approx_equal(av_realized_vol.iloc[0], 2.3)
 
     replace.restore()
 
@@ -303,6 +303,7 @@ def test_basket_average_realized_corr():
         {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
         {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
         {'id': 'ID of a dUpLiCaTe AAPL', 'bbid': 'AAPL UW'}
+
     ]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)

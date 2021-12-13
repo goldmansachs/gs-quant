@@ -702,7 +702,8 @@ class GsDataApi(DataApi):
             **kwargs
         )
 
-        ret = tuple(pd.Series() if df.empty else pd.Series(index=df.index, data=df.value.values) for df in dfs)
+        ret = tuple(pd.Series(dtype=float) if df.empty else pd.Series(index=df.index, data=df.value.values)
+                    for df in dfs)
         if isinstance(coordinates, (MarketDataCoordinate, str)):
             return ret[0]
         else:
