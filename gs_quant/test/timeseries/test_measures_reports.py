@@ -24,12 +24,11 @@ import gs_quant.timeseries.measures_reports as mr
 from gs_quant.api.gs.assets import GsTemporalXRef
 from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.data.core import DataContext
-from gs_quant.errors import MqValueError, MqError
+from gs_quant.errors import MqValueError
 from gs_quant.markets.report import PerformanceReport, ThematicReport
 from gs_quant.markets.securities import Stock
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
 from gs_quant.target.common import ReportParameters, XRef
-from gs_quant.target.portfolios import RiskAumSource, Portfolio
 from gs_quant.target.reports import Report, PositionSourceType, ReportType
 from gs_quant.target.risk_models import RiskModel, CoverageType, Term, UniverseIdentifier
 
@@ -50,7 +49,6 @@ ppa_report = Report(position_source_id='position source id',
                     id_='report_id',
                     parameters=ReportParameters(risk_model='risk_model_id'),
                     status='new')
-
 
 factor_data = [
     {
@@ -118,28 +116,43 @@ aggregate_factor_data = [
     }
 ]
 
-ppa_data = {
+constituents_data_l_s = {
+    'assetId': [
+        "MA1",
+        "MA1",
+        "MA1",
+        "MA2",
+        "MA2",
+        "MA2"
+    ],
+    'quantity': [
+        -1,
+        -2,
+        -3,
+        1,
+        2,
+        3
+    ],
     'netExposure': [
+        -1,
+        -2,
+        -3,
         1,
-        4,
-        6
+        2,
+        3
     ],
-    'grossExposure': [
+    'pnl': [
+        0,
+        -1,
+        -1,
+        0,
         1,
-        1.2,
-        1.3
-    ],
-    'longExposure': [
-        1,
-        1.2,
-        1.3
-    ],
-    'shortExposure': [
-        1,
-        1.2,
-        1.3
+        1
     ],
     'date': [
+        '2020-01-02',
+        '2020-01-03',
+        '2020-01-04',
         '2020-01-02',
         '2020-01-03',
         '2020-01-04'
@@ -173,8 +186,6 @@ constituents_data = {
         '2020-01-04'
     ]
 }
-
-aum = [{'date': '2020-01-02', 'aum': 2}, {'date': '2020-01-03', 'aum': 2.2}, {'date': '2020-01-04', 'aum': 2.4}]
 
 thematic_data = [
     {
@@ -444,132 +455,68 @@ def test_aggregate_factor_support():
 
 def test_normalized_performance():
     idx = pd.date_range('2020-01-02', freq='D', periods=3)
-    expected = {RiskAumSource.Net: pd.Series(data=[1, 1 + 2 / 4, 1 + 6 / 6], index=idx,
-                                             name='normalizedPerformance', dtype='float64'),
-                RiskAumSource.Gross: pd.Series(data=[1, 1 + 2 / 1.2, 1 + 6 / 1.3], index=idx,
-                                               name='normalizedPerformance', dtype='float64'),
-                RiskAumSource.Long: pd.Series(data=[1, 1 + 2 / 1.2, 1 + 6 / 1.3], index=idx,
-                                              name='normalizedPerformance', dtype='float64'),
-                RiskAumSource.Short: pd.Series(data=[1, 1 + 2 / 1.2, 1 + 6 / 1.3], index=idx,
-                                               name='normalizedPerformance', dtype='float64'),
-                RiskAumSource.Custom_AUM: pd.Series(data=[1, 1 + 2 / 2.2, 1 + 6 / 2.4], index=idx,
-                                                    name='normalizedPerformance', dtype='float64')}
-
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
-        for k, v in expected.items():
-            df = MarketDataResponseFrame(data=ppa_data, dtype="float64")
-            replace = Replacer()
-
-            # mock GsPortfolioApi.get_reports()
-            mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
-            mock.return_value = [
-                Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                                  'type': 'Portfolio Performance Analytics',
-                                  'parameters': {'transactionCostModel': 'FIXED'}})]
-            # mock PerformanceReport.get_portfolio_constituents()
-            mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
-            mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
-
-            # mock PerformanceReport.get_many_measures()
-            mock = replace('gs_quant.markets.report.PerformanceReport.get_many_measures', Mock())
-            mock.return_value = df
-
-            # mock PerformanceReport.get_custom_aum()
-            mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_custom_aum', Mock())
-            mock.return_value = aum
-
-            # mock PerformanceReport.get()
-            mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-            mock.return_value = PerformanceReport(report_id='RP1',
-                                                  position_source_type='Portfolio',
-                                                  position_source_id='MP1',
-                                                  report_type='Portfolio Performance Analytics',
-                                                  parameters=ReportParameters(transaction_cost_model='FIXED'))
-
-            actual = mr.normalized_performance('MP1', k.value)
-            assert all(actual.values == v.values)
-            replace.restore()
-
-
-def test_normalized_performance_default_aum():
     replace = Replacer()
-    idx = pd.date_range('2020-01-02', freq='D', periods=3)
-    expected = pd.Series(data=[1, 1 + 2 / 1.2, 1 + 6 / 1.3], index=idx, name='normalizedPerformance', dtype='float64')
+    expected = {None: pd.Series(data=[1, 2, 3], index=idx,
+                                name='normalizedPerformance', dtype='float64'),
+                "Long": pd.Series(data=[1, 2, 3], index=idx,
+                                  name='normalizedPerformance', dtype='float64')}
 
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
-        df = MarketDataResponseFrame(data=ppa_data, dtype="float64")
+    mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
+    mock.return_value = [
+        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
+                          'type': 'Portfolio Performance Analytics',
+                          'parameters': {'transactionCostModel': 'FIXED'}})]
+    # mock PerformanceReport.get_portfolio_constituents()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
+    mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
 
-        # mock GsPortfolioApi.get_reports()
-        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
-        mock.return_value = [
-            Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                              'type': 'Portfolio Performance Analytics',
-                              'parameters': {'transactionCostModel': 'FIXED'}})]
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+    mock.return_value = PerformanceReport(report_id='RP1',
+                                          position_source_type='Portfolio',
+                                          position_source_id='MP1',
+                                          report_type='Portfolio Performance Analytics',
+                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
 
-        # mock PerformanceReport.get_portfolio_constituents()
-        mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
-        mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
-
-        # mock PerformanceReport.get_many_measures()
-        mock = replace('gs_quant.markets.report.PerformanceReport.get_many_measures', Mock())
-        mock.return_value = df
-
-        # mock PerformanceReport.get_custom_aum()
-        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_custom_aum', Mock())
-        mock.return_value = aum
-
-        # mock PerformanceReport.get()
-        mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-        mock.return_value = PerformanceReport(report_id='RP1',
-                                              position_source_type='Portfolio',
-                                              position_source_id='MP1',
-                                              report_type='Portfolio Performance Analytics',
-                                              parameters=ReportParameters(transaction_cost_model='FIXED'))
-
-        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_portfolio', Mock())
-        mock.return_value = Portfolio('USD', 'P1', id_='MP1')
-
-        actual = mr.normalized_performance('MP1', None)
-        print(actual)
-        assert all(actual.values == expected.values)
+    for k, v in expected.items():
+        with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+            actual = mr.normalized_performance('MP1', k)
+            assert all(actual.values == v.values)
     replace.restore()
 
 
-def test_normalized_performance_no_custom_aum():
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
-        df = MarketDataResponseFrame(data=ppa_data, dtype="float64")
-        replace = Replacer()
+def test_normalized_performance_short():
+    idx = pd.date_range('2020-01-02', freq='D', periods=3)
+    replace = Replacer()
+    expected = {"Short": pd.Series(data=[1, 1 / 2, 1 / 3], index=idx,
+                                   name='normalizedPerformance', dtype='float64'),
+                "Long": pd.Series(data=[1, 2, 3], index=idx,
+                                  name='normalizedPerformance', dtype='float64'),
+                None: pd.Series(data=[1, (2 + 1 / 2) / 2, (3 + 1 / 3) / 2], index=idx,
+                                name='normalizedPerformance', dtype='float64')}
 
-        # mock GsPortfolioApi.get_reports()
-        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
-        mock.return_value = [
-            Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                              'type': 'Portfolio Performance Analytics',
-                              'parameters': {'transactionCostModel': 'FIXED'}})]
+    mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
+    mock.return_value = [
+        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
+                          'type': 'Portfolio Performance Analytics',
+                          'parameters': {'transactionCostModel': 'FIXED'}})]
+    # mock PerformanceReport.get_portfolio_constituents()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
+    mock.return_value = MarketDataResponseFrame(data=constituents_data_l_s, dtype="float64")
 
-        # mock PerformanceReport.get_many_measures()
-        mock = replace('gs_quant.markets.report.PerformanceReport.get_many_measures', Mock())
-        mock.return_value = df
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+    mock.return_value = PerformanceReport(report_id='RP1',
+                                          position_source_type='Portfolio',
+                                          position_source_id='MP1',
+                                          report_type='Portfolio Performance Analytics',
+                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
 
-        # mock PerformanceReport.get_portfolio_constituents()
-        mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
-        mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
-
-        # mock PerformanceReport.get_custom_aum()
-        mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_custom_aum', Mock())
-        mock.return_value = pd.DataFrame({})
-
-        # mock PerformanceReport.get()
-        mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-        mock.return_value = PerformanceReport(report_id='RP1',
-                                              position_source_type='Portfolio',
-                                              position_source_id='MP1',
-                                              report_type='Portfolio Performance Analytics',
-                                              parameters=ReportParameters(transaction_cost_model='FIXED'))
-
-        with pytest.raises(MqError):
-            mr.normalized_performance('MP1', 'Custom AUM')
-        replace.restore()
+    for k, v in expected.items():
+        with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+            actual = mr.normalized_performance('MP1', k)
+            assert all((actual.values - v.values) < 0.01)
+    replace.restore()
 
 
 def test_thematic_exposure():

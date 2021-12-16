@@ -15,18 +15,16 @@ under the License.
 """
 from typing import Optional
 import pandas as pd
+from pandas.tseries.offsets import BDay
 from pydash import decapitalize
-from dateutil.relativedelta import relativedelta
 
 from gs_quant.api.gs.data import QueryType
-from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
-from gs_quant.errors import MqValueError, MqError
+from gs_quant.errors import MqValueError
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport
 from gs_quant.markets.report import ThematicReport
 from gs_quant.models.risk_model import ReturnFormat, FactorRiskModel
-from gs_quant.target.portfolios import RiskAumSource
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _extract_series_from_df, SecurityMaster, AssetIdentifier
 
@@ -112,13 +110,12 @@ def annual_risk(report_id: str, factor_name: str = 'Total', *, source: str = Non
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.PNL])
-def normalized_performance(report_id: str, aum_source: str = None, *, source: str = None,
+def normalized_performance(report_id: str, leg: str = None, *, source: str = None,
                            real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Returns the Normalized Performance of a performance report based on AUM source
     :param report_id: id of performance report
-    :param aum_source: source to normalize pnl from, default is the aum source on your portfolio,
-                if no aum source is set on your portfolio the default is gross
+    :param leg: short or long
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
@@ -126,73 +123,53 @@ def normalized_performance(report_id: str, aum_source: str = None, *, source: st
 
     **Usage**
 
-    Returns the normalized performance of the portfolio based on AUM source.
-
-    If :math:`aum_source` is "Custom AUM":
-    We read AUM from custom AUM uploaded to that portfolio and normalize performance based on that exposure
-
-    If :math:`aum_source` is one of: Long, Short, RiskAumSource.Net,
-        AumSource.Gross, we take these exposures from the calculated exposures based on daily positions
+    Returns the normalized performance of the portfolio.
 
     :math:`NP(L/S)_{t} = SUM( PNL(L/S)_{t}/ ( EXP(L/S)_{t} ) - cPNL(L/S)_{t-1) )
-        if ( EXP(L/S)_{t} ) - cPNL(L/S)_{t-1)) > 0
+        if ( EXP(L/S)_{t} ) > 0
         else:
             1/ SUM( PNL(L/S)_{t}/ ( EXP(L/S)_{t} ) - cPNL(L/S)_{t-1) )`
     For each leg, short and long, then:
-    :math:`NP_{t} = NP(L)_{t} * (EXP(L)_{t} / AUM_{t}) + NP(S)_{t} * (EXP(S)_{t} / AUM_{t}) + 1`
+    :math:`NP_{t} = NP(L)_{t} * SUM(EXP(L)) / SUM(GROSS_EXP) + NP(S)_{t} * SUM(EXP(S)) / SUM(GROSS_EXP) + 1`
 
-    This takes into account varying AUM and adjusts for exposure change due to PNL
+    If leg is short, set SUM(EXP(L)) to 0, if leg is long, set SUM(EXP(S)) to 0
 
     where :math:`cPNL(L/S)_{t-1}` is your performance reports cumulative long or short PNL at date t-1
     where :math:`PNL(L/S)_{t}` is your performance reports long or short pnl at date t
-    where :math:`AUM_{t}` is portfolio exposure on date t
+    where :math:`GROSS_EXP_{t}` is portfolio gross exposure on date t
     where :math:`EXP(L/S)_{t}` is the long or short exposure on date t
 
     """
-    start_date = DataContext.current.start_time - relativedelta(1)
+    start_date = DataContext.current.start_time
     end_date = DataContext.current.end_time
 
-    start_date = start_date.date()
+    start_date = (start_date - BDay(1)).date()
     end_date = end_date.date()
 
     performance_report = PerformanceReport.get(report_id)
-    if not aum_source:
-        port = GsPortfolioApi.get_portfolio(performance_report.position_source_id)
-        aum_source = port.aum_source if port.aum_source else RiskAumSource.Gross
-    else:
-        aum_source = RiskAumSource(aum_source)
 
     constituent_data = performance_report.get_portfolio_constituents(
         fields=['assetId', 'pnl', 'quantity', 'netExposure'], start_date=start_date, end_date=end_date).set_index(
         'date')
 
-    aum_col_name = aum_source.value.lower()
-    aum_col_name = f'{aum_col_name}Exposure' if aum_col_name != 'custom aum' else 'aum'
+    if leg:
+        if leg.lower() == "long":
+            constituent_data = constituent_data[constituent_data['quantity'] > 0]
+        if leg.lower() == "short":
+            constituent_data = constituent_data[constituent_data['quantity'] < 0]
 
     # Split into long and short and aggregate across dates
     long_side = _return_metrics(constituent_data[constituent_data['quantity'] > 0],
                                 list(constituent_data.index.unique()), "long")
     short_side = _return_metrics(constituent_data[constituent_data['quantity'] < 0],
                                  list(constituent_data.index.unique()), "short")
-    # Get aum source data
-    if aum_source == RiskAumSource.Custom_AUM:
-        custom_aum = pd.DataFrame(
-            GsPortfolioApi.get_custom_aum(performance_report.position_source_id, start_date, end_date))
-        if custom_aum.empty:
-            raise MqError(
-                f'No custom AUM for portfolio {performance_report.position_source_id} between dates {start_date},'
-                f' {end_date}')
-        data = pd.DataFrame.from_records(custom_aum).set_index(['date'])
-    else:
-        data = performance_report.get_many_measures([aum_col_name], start_date, end_date).set_index(['date'])
 
-    long_side = long_side.join(data[[f'{aum_col_name}']], how='inner')
-    short_side = short_side.join(data[[f'{aum_col_name}']], how='inner')
+    short_exposure = sum(abs(short_side['exposure']))
+    long_exposure = sum(long_side['exposure'])
+    gross_exposure = short_exposure + long_exposure
 
-    long_side['longRetWeighted'] = (long_side['longMetrics'] - 1) * long_side['exposure'] * \
-                                   (1 / long_side[f'{aum_col_name}'])
-    short_side['shortRetWeighted'] = (short_side['shortMetrics'] - 1) * short_side['exposure'] *\
-                                     (1 / short_side[f'{aum_col_name}'])
+    long_side['longRetWeighted'] = (long_side['longMetrics'] - 1) * (long_exposure / gross_exposure)
+    short_side['shortRetWeighted'] = (short_side['shortMetrics'] - 1) * (short_exposure / gross_exposure)
 
     combined = long_side[['longRetWeighted']].join(short_side[['shortRetWeighted']], how='inner')
     combined['normalizedPerformance'] = combined['longRetWeighted'] + combined['shortRetWeighted'] + 1
@@ -278,18 +255,17 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) ->
     return _extract_series_from_df(df, query_type)
 
 
-def _return_metrics(one_leg, dates, name):
+def _return_metrics(one_leg: pd.DataFrame, dates: list, name: str):
     if one_leg.empty:
         return pd.DataFrame(index=dates, data={f'{name}Metrics': [0 for d in dates], "exposure": [0 for d in dates]})
     one_leg = one_leg.groupby(one_leg.index).agg(pnl=('pnl', 'sum'), exposure=('netExposure', 'sum'))
-    one_leg['exposure'] = one_leg['exposure'].apply(lambda x: abs(x))
-    one_leg['cumulativePnlT-1'] = one_leg['pnl'].cumsum(axis=0)
 
-    one_leg[f'{name}Metrics'] = one_leg['pnl'] / (one_leg['exposure'] - one_leg['cumulativePnlT-1'])
+    one_leg['cumulativePnl'] = one_leg['pnl'].cumsum(axis=0)
 
-    one_leg[f'{name}Metrics'].iloc[0] = 0
-    one_leg[f'{name}Metrics'] = one_leg[f'{name}Metrics'].cumsum(axis=0) + 1
+    one_leg['normalizedExposure'] = (one_leg['exposure'] - one_leg['cumulativePnl'])
+    one_leg['cumulativePnl'].iloc[0] = 0
+    one_leg[f'{name}Metrics'] = one_leg['cumulativePnl'] / one_leg['normalizedExposure'] + 1
 
-    one_leg[f'{name}Metrics'] = 1 / one_leg[f'{name}Metrics'] if one_leg[f'{name}Metrics'].iloc[-1] < 0 else one_leg[
+    one_leg[f'{name}Metrics'] = 1 / one_leg[f'{name}Metrics'] if one_leg['exposure'].iloc[-1] < 0 else one_leg[
         f'{name}Metrics']
     return one_leg

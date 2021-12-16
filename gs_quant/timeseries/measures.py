@@ -776,7 +776,7 @@ def cds_spread(asset: Asset, spread: int, location: str, *, source: str = None, 
     return _extract_series_from_df(df, qt)
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod,), None,
+@plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX,), None,
               [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
                                  query_type=QueryType.IMPLIED_VOLATILITY)],
               asset_type_excluded=(AssetType.CommodityNaturalGasHub,))

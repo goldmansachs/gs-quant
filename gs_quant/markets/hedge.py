@@ -19,8 +19,6 @@ from collections import defaultdict
 from enum import Enum
 from typing import Union, List, Dict, Optional
 
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -839,54 +837,6 @@ class Hedge:
         return portfolio, weights, asset_numbers
 
     @staticmethod
-    def plot_weights_against_number_of_assets(hedge_query: dict, hyperparams: dict, figsize: tuple = (18, 9)) -> \
-            matplotlib.figure.Figure:
-        """
-        Function used to plot the effects that a particular hyperparameter (Concentration or Diversity) has
-        on the results of a new performance hedge done through the Marquee API.
-
-        :param hedge_query: dict, hedge data that is sent to the Marquee API as input to the new
-                                  performance hedger
-        :param hyperparams: dict, keys are hyperparameters (Concentration or Diversity) that map to lists of
-                                  the values to use for one of these hyperparameters when running
-                                  the new performance hedger. The hyperparameter not used will
-                                  have a 'None' value.
-        :param figsize: List, width and height of the plot in inches
-        :return: matplotlib.figure.Figure - the figure of the plot (the top level container for
-                                            all the plot elements)
-        """
-        lines = []
-        hyperparam_to_plot = 'Concentration' if hyperparams['Concentration'] else 'Diversity'
-        f, ax = plt.subplots(figsize=figsize)
-        try:
-            for i in range(len(hyperparams[hyperparam_to_plot])):
-                hedge_params = hedge_query['parameters']
-                if hyperparam_to_plot == 'Concentration':
-                    hedge_params.lasso_weight = hyperparams[hyperparam_to_plot][i]
-                else:
-                    hedge_params.lasso_weight = 0
-                if hyperparam_to_plot == 'Diversity':
-                    hedge_params.ridge_weight = hyperparams[hyperparam_to_plot][i]
-                else:
-                    hedge_params.ridge_weight = 0
-                hedge_query['parameters'] = hedge_params
-                results = GsHedgeApi.calculate_hedge(hedge_query)
-                portfolio, weights, asset_numbers = Hedge.construct_portfolio_weights_and_asset_numbers(results)
-                x_ind = np.arange(len(asset_numbers))
-                bar = ax.bar(x_ind, weights, align='center', alpha=0.6)
-                lines.append(bar)
-            plt.legend(lines, [hyperparam_to_plot + ' Percentage: ' + str(i) for i in
-                               hyperparams[hyperparam_to_plot]], prop={'size': 18})
-            plt.xlabel('Number of Assets', size=13)
-            plt.ylabel('Weights', size=13)
-            plt.title('Analyzing the effects of the ' + hyperparam_to_plot + ' hyperparameter on a hedge', size=22)
-            plt.show()
-        except Exception as err:
-            _logger.warning(f'Constructing portfolio, weights, or asset numbers failed with {err} ... \
-                      returning empty plot.')
-        return f
-
-    @staticmethod
     def asset_id_diffs(portfolio_asset_ids, thomson_reuters_asset_ids):
         """
         Function designed to find the assets that are contained in the portfolio but that we don't have
@@ -1022,27 +972,6 @@ class Hedge:
             tcosts_each_day.append(abs(tcost_today))
         cum_tcosts = pd.Series(np.cumsum(tcosts_each_day))
         return cum_tcosts
-
-    @staticmethod
-    def plot_transaction_costs_of_rebalancing(cumulative_transaction_costs, backtest_dates, figsize=(10, 6)):
-        """
-        Function used to plot the cumulative transaction costs associated with rebalancing a hedge. The plot axes
-        include the backtest dates on the x-axis and the cumulative transaction costs (USD) on the y-axis.
-
-        :param cumulative_transaction_costs: pd.Series, the cumulative transaction costs over the backtest period
-        :param backtest_dates: list, the dates that the portfolio is held for (that we want to compute rebalance costs
-                                     for)
-        :param figsize: List, width and height of the plot in inches
-        :return:
-        """
-        indices = [x for x in range(len(backtest_dates))]
-        ax_costs = cumulative_transaction_costs.plot(figsize=figsize, linewidth=3)
-        ax_costs.legend(['Weights-Based Performance Hedger'])
-        plt.ylabel('Cumulative Costs (USD)', size=13)
-        plt.xlabel('Backtest Period', size=13)
-        plt.xticks(indices, backtest_dates, rotation='vertical', size=13)
-        plt.title('Cumulative Costs to Rebalance Weights-Based Performance Hedger', size=22)
-        plt.legend(labels=['Weights-Based Performance Hedger'], prop={'size': 18})
 
 
 class PerformanceHedge(Hedge):
