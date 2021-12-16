@@ -498,10 +498,12 @@ def implied_volatility_new(asset: Asset, expiry_tenor: str, strike: str, option_
     return series
 
 
-@plot_measure((AssetClass.FX,), None,
-              [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
-                                 query_type=QueryType.IMPLIED_VOLATILITY)],
-              display_name="implied_volatility")
+#
+# @plot_measure((AssetClass.FX,), None,
+#              [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
+#                                 query_type=QueryType.IMPLIED_VOLATILITY)],
+#              display_name="implied_volatility")
+#
 def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolReference = None,
                              relative_strike: Real = None, location: Optional[PricingLocation] = None,
                              legacy_implementation: bool = True, *,

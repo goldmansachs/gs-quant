@@ -16,7 +16,6 @@ under the License.
 import asyncio
 import base64
 import datetime as dt
-from itertools import chain
 import json
 import logging
 import math
@@ -74,9 +73,7 @@ class GsRiskApi(RiskApi):
     @classmethod
     def __url(cls, request: Union[RiskRequest, Iterable[RiskRequest]]):
         is_bulk = not isinstance(request, RiskRequest)
-        is_internal = any(hasattr(p.instrument, '_type') for p in
-                          chain.from_iterable(r.positions for r in (request if is_bulk else (request,))))
-        return '/risk{}/calculate{}'.format('-internal' if is_internal else '', '/bulk' if is_bulk else '')
+        return '/risk/calculate{}'.format('/bulk' if is_bulk else '')
 
     @classmethod
     async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
