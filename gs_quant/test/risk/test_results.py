@@ -15,13 +15,15 @@ under the License.
 """
 from datetime import date
 
+import datetime as dt
 import gs_quant.risk as risk
 import numpy as np
 import pytest
 from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg
-from gs_quant.markets import HistoricalPricingContext, PricingContext
+from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMarket
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel
+from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel, PnlExplain
+from gs_quant.risk.core import aggregate_risk
 from gs_quant.test.utils.test_utils import MockCalc
 
 
@@ -544,3 +546,26 @@ def test_aggregation_with_diff_risk_keys(mocker):
         combined_result.aggregate()
 
     assert isinstance(combined_result.aggregate(allow_mismatch_risk_keys=True), float)
+
+
+def test_aggregation_with_empty_measures(mocker):
+    with MockCalc(mocker):
+        swaptions = (IRSwaption(notional_currency='EUR', termination_date='7y', expiration_date='1y',
+                                pay_or_receive='Receive', strike='ATM+35', name='EUR 1y7y'),
+                     IRSwaption(notional_currency='EUR', termination_date='10y', expiration_date='2w',
+                                pay_or_receive='Receive', strike='ATM+50', name='EUR 2w10y'))
+        portfolio = Portfolio(swaptions)
+
+        from_date = dt.date(2021, 11, 18)
+        to_date = dt.date(2021, 11, 19)
+        explain_2d = PnlExplain(CloseMarket(date=to_date))
+
+        with PricingContext(pricing_date=from_date, visible_to_gs=True):
+            portfolio.resolve()
+            result_explain = portfolio.calc(explain_2d)
+
+        total_risk = aggregate_risk(result_explain[explain_2d])['value'].sum()
+        risk_swaption_1 = result_explain[0]['value'].sum()
+        risk_swaption_2 = result_explain[1]['value'].sum()
+
+        assert total_risk == risk_swaption_1 + risk_swaption_2

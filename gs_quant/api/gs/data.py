@@ -144,6 +144,20 @@ class QueryType(Enum):
     STRIKE_VOL = "Strike Vol"
     OPTION_PREMIUM = "Option Premium"
     ABSOLUTE_STRIKE = "Absolute Strike"
+    RETAIL_PCT_SHARES = 'impliedRetailPctShares'
+    RETAIL_PCT_NOTIONAL = 'impliedRetailPctNotional'
+    RETAIL_SHARES = 'impliedRetailShares'
+    RETAIL_NOTIONAL = 'impliedRetailNotional'
+    SHARES = 'shares'
+    NOTIONAL = 'notional'
+    RETAIL_BUY_NOTIONAL = 'impliedRetailBuyNotional'
+    RETAIL_BUY_PCT_NOTIONAL = 'impliedRetailBuyPctNotional'
+    RETAIL_BUY_PCT_SHARES = 'impliedRetailBuyPctShares'
+    RETAIL_BUY_SHARES = 'impliedRetailBuyShares'
+    RETAIL_SELL_NOTIONAL = 'impliedRetailSellNotional'
+    RETAIL_SELL_PCT_NOTIONAL = 'impliedRetailSellPctNotional'
+    RETAIL_SELL_PCT_SHARES = 'impliedRetailSellPctShares'
+    RETAIL_SELL_SHARES = 'impliedRetailSellShares'
 
 
 class GsDataApi(DataApi):

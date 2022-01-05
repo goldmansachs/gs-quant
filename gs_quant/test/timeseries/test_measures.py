@@ -4904,5 +4904,73 @@ def test_thematic_model_beta():
     replace.restore()
 
 
+def test_retail_interest_agg():
+    mock_spx = Index('MA890', AssetClass.Equity, 'SPX', entity={'type': 'Index', 'underlying_asset_ids': []})
+
+    with pytest.raises(NotImplementedError):
+        tm.retail_interest_agg(..., data_source=tm.UnderlyingSourceCategory.ALL,
+                               sector=tm.GICSSector.ALL, real_time=True)
+    with pytest.raises(MqError):
+        tm.retail_interest_agg(mock_spx)
+
+    mock_spx.entity['underlying_asset_ids'] = ['MA4B66MW5E27U9VBB6A', 'MA4B66MW5E27U9VBB86', 'MA4B66MW5E27U9VBB8U']
+
+    replace = Replacer()
+    positions_df = replace('gs_quant.timeseries.measures.PositionedEntity.get_positions_data', Mock())
+    positions_df.return_value = {
+        'id': ['MA4B66MW5E27UALNBLL', 'MA4B66MW5E27UALNBLL'],
+        'assetClassificationsGicsSector': ['Energy', 'Health Care'],
+        'positionDate': ['2012-12-20', '2012-12-20']
+    }
+
+    retail_df = pd.DataFrame(
+        data={
+            'shares': [10.0, 10.0],
+            'notional': [100.0, 100.0],
+            'underlyingSourceCategory': ['All', 'All'],
+            'impliedRetailShares': [5.0, 3.0],
+            'impliedRetailNotional': [60.0, 30.0],
+            'impliedRetailPctShares': [50.0, 30.0],
+            'impliedRetailPctNotional': [60.0, 30.0],
+            'assetId': ['MA4B66MW5E27UALNBLL', 'MA4B66MW5E27UALNBLL'],
+        },
+        index=[pd.Timestamp('2021-12-20'), pd.Timestamp('2021-12-20')])
+    retail_df_energy = pd.DataFrame(
+        data={
+            'shares': [10.0],
+            'notional': [100.0],
+            'underlyingSourceCategory': ['All'],
+            'impliedRetailShares': [5.0],
+            'impliedRetailNotional': [60.0],
+            'impliedRetailPctShares': [50.0],
+            'impliedRetailPctNotional': [60.0],
+            'assetId': ['MA4B66MW5E27UALNBLL'],
+        },
+        index=[pd.Timestamp('2021-12-20')])
+    mock_retail = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+    mock_retail.return_value = retail_df
+    expected_df = pd.DataFrame(
+        data={'shares': [20.0], 'impliedRetailPctShares': [40.0], 'impliedRetailPctNotional': [60.0]},
+        index=[pd.Timestamp('2021-12-20')])
+
+    assert_series_equal(ExtendedSeries(expected_df['shares']),
+                        tm.retail_interest_agg(mock_spx,
+                                               tm.RetailMeasures.SHARES,
+                                               tm.UnderlyingSourceCategory.ALL,
+                                               tm.GICSSector.ALL))
+    assert_series_equal(ExtendedSeries(expected_df['impliedRetailPctShares']),
+                        tm.retail_interest_agg(mock_spx,
+                                               tm.RetailMeasures.RETAIL_PCT_SHARES,
+                                               tm.UnderlyingSourceCategory.ALL,
+                                               tm.GICSSector.ALL))
+    mock_retail.return_value = retail_df_energy
+    assert_series_equal(ExtendedSeries(expected_df['impliedRetailPctNotional']),
+                        tm.retail_interest_agg(mock_spx,
+                                               tm.RetailMeasures.RETAIL_PCT_NOTIONAL,
+                                               tm.UnderlyingSourceCategory.ALL,
+                                               tm.GICSSector.ENERGY))
+    replace.restore()
+
+
 if __name__ == '__main__':
     pytest.main(args=["test_measures.py"])

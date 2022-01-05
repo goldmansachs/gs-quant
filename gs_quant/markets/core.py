@@ -28,11 +28,11 @@ from typing import Optional, Union
 from tqdm import tqdm
 
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
-from gs_quant.common import PricingLocation
+from gs_quant.common import PricingLocation, RiskMeasure
 from gs_quant.context_base import ContextBaseWithDefault, nullcontext
 from gs_quant.datetime.date import business_day_offset
 from gs_quant.risk import CompositeScenario, DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
-    RiskMeasure, StringWithInfo
+    StringWithInfo
 from gs_quant.risk.results import PricingFuture
 from gs_quant.session import GsSession
 from gs_quant.target.common import PricingDateAndMarketDataAsOf
@@ -251,7 +251,8 @@ class PricingContext(ContextBaseWithDefault):
                                             zip_longest(*[iter(dates_markets)] * (
                                                     1 if self._max_concurrent == 1000 else self._max_concurrent))]:
                             requests.append(RiskRequest(
-                                tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in insts_chunk),
+                                tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity,
+                                                   instrument_name=i.name) for i in insts_chunk),
                                 risk_measures,
                                 parameters=params,
                                 wait_for_results=not self.__is_batch,

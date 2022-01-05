@@ -25,7 +25,7 @@ from gs_quant.instrument import Instrument
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets import PricingContext, HistoricalPricingContext
 from gs_quant.risk import Price, DollarPrice
-from gs_quant.risk.base_measures import ParameterisedRiskMeasure
+from gs_quant.common import ParameterisedRiskMeasure
 from functools import reduce
 from datetime import date
 from collections import defaultdict

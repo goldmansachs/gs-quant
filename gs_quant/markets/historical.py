@@ -18,9 +18,9 @@ from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.datetime.date import date_range, prev_business_date
-from gs_quant.risk import RiskMeasure, RollFwd, MarketDataScenario
+from gs_quant.risk import RollFwd, MarketDataScenario
 from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
-
+from gs_quant.common import RiskMeasure
 from .core import PricingContext
 from .markets import CloseMarket
 

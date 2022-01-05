@@ -17,8 +17,8 @@ under the License.
 from .core import *
 from .measures import *
 from .scenarios import MarketDataShockBasedScenario
-from .base_measures import ParameterisedRiskMeasure
 from gs_quant.target.portfolios import LiquidityRequest
 from gs_quant.target.risk import LiborFallbackScenario, CarryScenario, CompositeScenario, CurveScenario, IndexCurveShift,\
     LiquidityResponse, MarketDataPattern, MarketDataScenario, MarketDataShock, MarketDataShockType, RiskRequest, RollFwd,\
     CurveOverlay
+from gs_quant.target.measures import *

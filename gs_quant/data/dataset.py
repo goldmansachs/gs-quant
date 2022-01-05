@@ -47,7 +47,7 @@ class Dataset:
 
         # Central Bank Watch
         CENTRAL_BANK_WATCH = 'CENTRAL_BANK_WATCH_PREMIUM'
-
+        RETAIL_FLOW_DAILY_V2_PREMIUM = 'RETAIL_FLOW_DAILY_V2_PREMIUM'
         # Test Datasets
         WEATHER = 'WEATHER'
 

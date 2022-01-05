@@ -254,7 +254,7 @@ def test_trend():
 def test_seasonality_adjusted():
     # Test that correctly runs with different frequencies
     for pfreq in ['B', 'D', 'W', 'M', 'Q', 'Y']:
-        for freq in [Frequency.YEARLY, Frequency.QUARTERLY, Frequency.MONTHLY, Frequency.WEEKLY]:
+        for freq in [Frequency.YEAR, Frequency.QUARTER, Frequency.MONTH, Frequency.WEEK]:
             dates = pd.date_range('2019-01-01', '2021-01-05', freq=pfreq)
             series = pd.Series(range(len(dates)), index=dates) + 1
             try:

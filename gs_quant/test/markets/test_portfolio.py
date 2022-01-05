@@ -264,7 +264,7 @@ def test_results_with_resolution(mocker):
 
         assert portfolio.instruments[0].termination_date == dt.date(2030, 10, 16)
         assert portfolio.instruments[1].termination_date == dt.date(2030, 10, 14)
-        assert round(swap1.fixed_rate, 4) == 0.0075
+        assert round(swap1.fixed_rate, 4) == 0.0052
         assert round(swap2.fixed_rate, 4) == 0.0016
         assert round(swap3.fixed_rate, 4) == -0.0027
 
@@ -292,7 +292,7 @@ def test_results_with_resolution(mocker):
 
         assert portfolio.instruments[0].termination_date == dt.date(2030, 10, 16)
         assert portfolio.instruments[1].termination_date == dt.date(2030, 10, 14)
-        assert round(swap1.fixed_rate, 4) == 0.0075
+        assert round(swap1.fixed_rate, 4) == 0.0052
         assert round(swap2.fixed_rate, 4) == 0.0016
         assert round(swap3.fixed_rate, 4) == -0.0027
 

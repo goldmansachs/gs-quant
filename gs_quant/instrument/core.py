@@ -24,11 +24,11 @@ from typing import Iterable, Optional, Tuple, Union
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.base import get_enum_value, InstrumentBase, QuotableBuilder
-from gs_quant.common import AssetClass, AssetType, XRef
+from gs_quant.common import AssetClass, AssetType, XRef, RiskMeasure
 from gs_quant.context_base import do_not_serialise
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext
 from gs_quant.priceable import PriceableImpl
-from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, RiskMeasure, \
+from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, \
     DEPRECATED_MEASURES
 from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, PricingFuture
 from gs_quant.session import GsSession

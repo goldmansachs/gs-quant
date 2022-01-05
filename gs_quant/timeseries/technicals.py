@@ -38,10 +38,10 @@ class SeasonalModel(Enum):
 
 
 class Frequency(Enum):
-    WEEKLY = 'weekly'
-    MONTHLY = 'monthly'
-    QUARTERLY = 'quarterly'
-    YEARLY = 'yearly'
+    WEEK = 'week'
+    MONTH = 'month'
+    QUARTER = 'quarter'
+    YEAR = 'year'
 
 
 @plot_function
@@ -350,7 +350,7 @@ def exponential_spread_volatility(x: pd.Series, beta: float = 0.75) -> pd.Series
     return annualize(exponential_std(diff(x, 1), beta))
 
 
-def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEARLY):
+def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEAR):
     """
     Given input series x with a DateTimeIndex and a desired temporal frequency (period), returns x with all NaNs
     forward-filled (according to x's index's DateTime frequency) and the number of data points in a period.
@@ -378,38 +378,38 @@ def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEARLY):
         period = None
     if period in [7, None]:  # daily
         x = x.asfreq('D', method='ffill')
-        if freq == Frequency.YEARLY:
+        if freq == Frequency.YEAR:
             return x, 365
-        elif freq == Frequency.QUARTERLY:
+        elif freq == Frequency.QUARTER:
             return x, 91
-        elif freq == Frequency.MONTHLY:
+        elif freq == Frequency.MONTH:
             return x, 30
         else:
             return x, 7
     elif period == 5:  # business day
-        if freq == Frequency.YEARLY:
+        if freq == Frequency.YEAR:
             return x.asfreq('D', method='ffill'), 365
-        if freq == Frequency.QUARTERLY:
+        if freq == Frequency.QUARTER:
             return x.asfreq('D', method='ffill'), 91
-        elif freq == Frequency.MONTHLY:
+        elif freq == Frequency.MONTH:
             return x.asfreq('D', method='ffill'), 30
         else:  # freq == Frequency.WEEKLY:
             return x.asfreq('B', method='ffill'), 5
     elif period == 52:  # weekly frequency
         x = x.asfreq('W', method='ffill')
-        if freq == Frequency.YEARLY:
+        if freq == Frequency.YEAR:
             return x, period
-        elif freq == Frequency.QUARTERLY:
+        elif freq == Frequency.QUARTER:
             return x, 13
-        elif freq == Frequency.MONTHLY:
+        elif freq == Frequency.MONTH:
             return x, 4
         else:
             raise MqValueError(f'Frequency {freq.value} not compatible with series with frequency {pfreq}.')
     elif period == 12:  # monthly frequency
         x = x.asfreq('M', method='ffill')
-        if freq == Frequency.YEARLY:
+        if freq == Frequency.YEAR:
             return x, period
-        elif freq == Frequency.QUARTERLY:
+        elif freq == Frequency.QUARTER:
             return x, 3
         else:
             raise MqValueError(f'Frequency {freq.value} not compatible with series with frequency {pfreq}.')
@@ -417,7 +417,7 @@ def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEARLY):
 
 
 def _seasonal_decompose(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE,
-                        freq: Frequency = Frequency.YEARLY):
+                        freq: Frequency = Frequency.YEAR):
     x, period = _freq_to_period(x, freq)
     if x.shape[0] < 2 * period:
         # Replace ValueError in seasonal_decompose with more descriptive error
@@ -428,7 +428,7 @@ def _seasonal_decompose(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDI
 
 @plot_function
 def seasonally_adjusted(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE,
-                        freq: Frequency = Frequency.YEARLY) -> pd.Series:
+                        freq: Frequency = Frequency.YEAR) -> pd.Series:
     """
     Seasonally adjusted series
 
@@ -436,9 +436,9 @@ def seasonally_adjusted(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDI
     :param method: 'additive' or 'multiplicative'. Type of seasonal model to use. 'multiplicative' is appropriate when
         the magnitude of the series's values affect the magnitude of seasonal swings; 'additive' is appropriate
         when seasonal swings' sizes are independent of the series's values.
-    :param freq: 'yearly', 'quarterly', 'monthly', or 'weekly'. Period in which full cycle occurs (i.e. the "period" of
+    :param freq: 'year', 'quarter', 'month', or 'week'. Period in which full cycle occurs (i.e. the "period" of
         a wave).
-    :return: date-based time series of seasonally-adjusted input `x`.
+    :return: date-based time series of seasonally-adjusted input series.
 
     **Usage**
 
@@ -447,11 +447,11 @@ def seasonally_adjusted(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDI
 
     If using the default additive model:
 
-    :math: Y_t = X_t - S_t
+    :math:`Y_t = X_t - S_t`
 
     If using the multiplicative model:
 
-    :math: Y_t = X_t / S_t
+    :math:`Y_t = X_t / S_t`
 
     **Examples**
 
@@ -473,7 +473,7 @@ def seasonally_adjusted(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDI
 
 
 @plot_function
-def trend(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE, freq: Frequency = Frequency.YEARLY) -> \
+def trend(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE, freq: Frequency = Frequency.YEAR) -> \
         pd.Series:
     """
     Trend of series with seasonality and residuals removed.
@@ -482,9 +482,9 @@ def trend(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE, freq: Fr
     :param method: 'additive' or 'multiplicative'. Type of seasonal model to use. 'multiplicative' is appropriate when
         the magnitude of the series's values affect the magnitude of seasonal swings; 'additive' is appropriate
         when seasonal swings' sizes are independent of the series's values.
-    :param freq: 'yearly', 'quarterly', 'monthly', or 'weekly'. Period in which full cycle occurs (i.e. the "period" of
+    :param freq: 'year', 'quarter', 'month', or 'week'. Period in which full cycle occurs (i.e. the "period" of
         a wave).
-    :return: date-based time series with trend of `x`.
+    :return: date-based time series with trend of input series.
 
     **Usage**
 
@@ -493,11 +493,11 @@ def trend(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE, freq: Fr
 
     If using the default additive model:
 
-    :math: Y_t = X_t - S_t - R_t
+    :math:`Y_t = X_t - S_t - R_t`
 
     If using the multiplicative model:
 
-    :math: Y_t = X_t / (S_t * R_t)
+    :math:`Y_t = X_t / (S_t * R_t)`
 
     **Examples**
 

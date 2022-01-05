@@ -33,6 +33,7 @@ from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.esg import ESGMeasure, GsEsgApi, ESGCard
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
+from gs_quant.api.gs.thematics import ThematicMeasure, GsThematicApi, Region
 from gs_quant.common import DateLimit, PositionType, Currency
 from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
@@ -40,7 +41,8 @@ from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.markets.position_set import PositionSet, Position
-from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport
+from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport, \
+    flatten_results_into_df, get_thematic_breakdown_as_df
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
@@ -845,3 +847,62 @@ class PositionedEntity(metaclass=ABCMeta):
                        'thematicBeta': r['beta']})
         df = pd.DataFrame(df)
         return df.set_index('date')
+
+    def get_all_thematic_exposures(self,
+                                   start_date: dt.date = None,
+                                   end_date: dt.date = None,
+                                   basket_ids: List[str] = None,
+                                   regions: List[Region] = None) -> pd.DataFrame:
+        if self.positioned_entity_type == EntityType.PORTFOLIO:
+            raise NotImplementedError
+        results = GsThematicApi.get_thematics(entity_id=self.id,
+                                              start_date=start_date,
+                                              end_date=end_date,
+                                              basket_ids=basket_ids,
+                                              regions=regions,
+                                              measures=[ThematicMeasure.ALL_THEMATIC_EXPOSURES])
+        return flatten_results_into_df(results)
+
+    def get_top_five_thematic_exposures(self,
+                                        start_date: dt.date = None,
+                                        end_date: dt.date = None,
+                                        basket_ids: List[str] = None,
+                                        regions: List[Region] = None) -> pd.DataFrame:
+        if self.positioned_entity_type == EntityType.PORTFOLIO:
+            raise NotImplementedError
+        results = GsThematicApi.get_thematics(entity_id=self.id,
+                                              start_date=start_date,
+                                              end_date=end_date,
+                                              basket_ids=basket_ids,
+                                              regions=regions,
+                                              measures=[ThematicMeasure.TOP_FIVE_THEMATIC_EXPOSURES])
+        return flatten_results_into_df(results)
+
+    def get_bottom_five_thematic_exposures(self,
+                                           start_date: dt.date = None,
+                                           end_date: dt.date = None,
+                                           basket_ids: List[str] = None,
+                                           regions: List[Region] = None) -> pd.DataFrame:
+        if self.positioned_entity_type == EntityType.PORTFOLIO:
+            raise NotImplementedError
+        results = GsThematicApi.get_thematics(entity_id=self.id,
+                                              start_date=start_date,
+                                              end_date=end_date,
+                                              basket_ids=basket_ids,
+                                              regions=regions,
+                                              measures=[ThematicMeasure.BOTTOM_FIVE_THEMATIC_EXPOSURES])
+        return flatten_results_into_df(results)
+
+    def get_thematic_breakdown(self,
+                               date: dt.date,
+                               basket_id: str) -> pd.DataFrame:
+        """
+        Get a by-asset breakdown of a portfolio or basket's thematic exposure to a particular flagship basket on a
+        particular date
+        :param date: date
+        :param basket_id: GS flagship basket's unique Marquee ID
+        :return: a Pandas DataFrame with results
+        """
+        if self.positioned_entity_type == EntityType.PORTFOLIO:
+            raise NotImplementedError
+        return get_thematic_breakdown_as_df(entity_id=self.id, date=date, basket_id=basket_id)
