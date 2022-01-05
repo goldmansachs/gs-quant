@@ -24,9 +24,11 @@ from dateutil.relativedelta import relativedelta
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi, OrderType, FactorRiskTableMode
+from gs_quant.api.gs.thematics import Region, GsThematicApi, ThematicMeasure
 from gs_quant.datetime import business_day_offset
 from gs_quant.errors import MqValueError
 from gs_quant.markets.report_utils import _get_ppaa_batches
+from inflection import titleize
 from gs_quant.models.risk_model import ReturnFormat
 from gs_quant.target.common import ReportParameters, Currency
 from gs_quant.target.coordinates import MDAPIDataBatchResponse
@@ -943,3 +945,87 @@ class ThematicReport(Report):
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
         results = GsDataApi.query_data(query=query, dataset_id=dataset)
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
+
+    def get_all_thematic_exposures(self,
+                                   start_date: dt.date = None,
+                                   end_date: dt.date = None,
+                                   basket_ids: List[str] = None,
+                                   regions: List[Region] = None) -> pd.DataFrame:
+        results = GsThematicApi.get_thematics(entity_id=self.position_source_id,
+                                              start_date=start_date,
+                                              end_date=end_date,
+                                              basket_ids=basket_ids,
+                                              regions=regions,
+                                              measures=[ThematicMeasure.ALL_THEMATIC_EXPOSURES])
+        return flatten_results_into_df(results)
+
+    def get_top_five_thematic_exposures(self,
+                                        start_date: dt.date = None,
+                                        end_date: dt.date = None,
+                                        basket_ids: List[str] = None,
+                                        regions: List[Region] = None) -> pd.DataFrame:
+        results = GsThematicApi.get_thematics(entity_id=self.position_source_id,
+                                              start_date=start_date,
+                                              end_date=end_date,
+                                              basket_ids=basket_ids,
+                                              regions=regions,
+                                              measures=[ThematicMeasure.TOP_FIVE_THEMATIC_EXPOSURES])
+        return flatten_results_into_df(results)
+
+    def get_bottom_five_thematic_exposures(self,
+                                           start_date: dt.date = None,
+                                           end_date: dt.date = None,
+                                           basket_ids: List[str] = None,
+                                           regions: List[Region] = None) -> pd.DataFrame:
+        results = GsThematicApi.get_thematics(entity_id=self.position_source_id,
+                                              start_date=start_date,
+                                              end_date=end_date,
+                                              basket_ids=basket_ids,
+                                              regions=regions,
+                                              measures=[ThematicMeasure.BOTTOM_FIVE_THEMATIC_EXPOSURES])
+        return flatten_results_into_df(results)
+
+    def get_thematic_breakdown(self,
+                               date: dt.date,
+                               basket_id: str) -> pd.DataFrame:
+        """
+        Get a by-asset breakdown of a portfolio or basket's thematic exposure to a particular flagship basket on a
+        particular date
+        :param date: date
+        :param basket_id: GS flagship basket's unique Marquee ID
+        :return: a Pandas DataFrame with results
+        """
+        return get_thematic_breakdown_as_df(entity_id=self.position_source_id, date=date, basket_id=basket_id)
+
+
+def get_thematic_breakdown_as_df(entity_id: str,
+                                 date: dt.date,
+                                 basket_id: str) -> pd.DataFrame:
+    results = GsThematicApi.get_thematics(entity_id=entity_id,
+                                          start_date=date,
+                                          end_date=date,
+                                          basket_ids=[basket_id],
+                                          measures=[ThematicMeasure.THEMATIC_BREAKDOWN_BY_ASSET])
+    breakdown = results[0].get(
+        ThematicMeasure.THEMATIC_BREAKDOWN_BY_ASSET.value, [{}])[0].get(
+        ThematicMeasure.THEMATIC_BREAKDOWN_BY_ASSET.value, []
+    )
+    formatted_breakdown = []
+    for data in breakdown:
+        formatted_data = {titleize(k): data[k] for k in data}
+        formatted_breakdown.append(formatted_data)
+    return pd.DataFrame(formatted_breakdown)
+
+
+def flatten_results_into_df(results: List):
+    all_results = []
+    for result in results:
+        date = result['date']
+        for key in result:
+            if isinstance(result[key], list):
+                for thematic_data in result[key]:
+                    all_results.append({
+                        'Date': date,
+                        **{titleize(k): thematic_data[k] for k in thematic_data}
+                    })
+    return pd.DataFrame(all_results)

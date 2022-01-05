@@ -358,7 +358,7 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
     """
     dfs = [r.result().raw_value if isinstance(r, Future) else r.raw_value for r in results]
     result = pd.concat(dfs)
-    result = result.groupby([c for c in result.columns if c != 'value'], as_index=False).sum()
+    result = result.groupby([c for c in result.columns if c != 'value'], dropna=False, as_index=False).sum()
 
     if threshold is not None:
         result = result[result.value.abs() > threshold]

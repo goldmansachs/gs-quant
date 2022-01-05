@@ -44,9 +44,9 @@ class Term(EnumBase, Enum):
 class RiskModelEventType(EnumBase, Enum):
     """Indicates what type of risk model event to check for"""
 
-    risk_model = 'Risk Model'
-    risk_model_pfp_data = 'Risk Model PFP Data'
-    risk_model_isc_data = 'Risk Model ISC Data'
+    Risk_Model = 'Risk Model'
+    Risk_Model_PFP_Data = 'Risk Model PFP Data'
+    Risk_Model_ISC_Data = 'Risk Model ISC Data'
 
     def __repr__(self):
         return self.value

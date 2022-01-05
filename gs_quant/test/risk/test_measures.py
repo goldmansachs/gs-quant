@@ -63,7 +63,7 @@ def test_risk_measure_setters():
 
     local_usd_delta = usd_delta(local_curve=True)
 
-    assert local_usd_delta.local_curve
+    assert local_usd_delta.parameters.local_curve
     assert (usd_delta != local_usd_delta)
 
     assert (risk.IRDelta.parameters is None)

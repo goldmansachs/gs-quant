@@ -21,7 +21,8 @@ from gs_quant.base import InstrumentBase, RiskKey
 
 from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
     sort_values
-from .measures import EqDelta, EqGamma, EqVega
+from gs_quant.target.measures import EqDelta, EqGamma, EqVega
+from gs_quant.risk.measures import PnlExplain
 
 _logger = logging.getLogger(__name__)
 __scalar_risk_measures = (EqDelta, EqGamma, EqVega)
@@ -176,7 +177,10 @@ def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: Instrume
             ('value', 'value')
         )
 
-        return __dataframe_handler(classes, mappings, risk_key, request_id=request_id)
+        if isinstance(risk_key.risk_measure, PnlExplain):
+            return __dataframe_handler_unsorted(classes, mappings, (), risk_key, request_id=request_id)
+        else:
+            return __dataframe_handler(classes, mappings, risk_key, request_id=request_id)
 
 
 def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,

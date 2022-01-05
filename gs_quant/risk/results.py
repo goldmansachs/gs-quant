@@ -23,8 +23,9 @@ from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 
 import pandas as pd
 from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_instance_or_iterable, is_iterable
+from gs_quant.common import RiskMeasure
 from gs_quant.config import DisplayOptions
-from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, RiskMeasure, SeriesWithInfo, ResultInfo, \
+from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
 from gs_quant.target.common import AssetType
 from more_itertools import unique_everseen

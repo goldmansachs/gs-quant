@@ -47,7 +47,7 @@ from gs_quant.errors import MqTypeError
 from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, AssetType as SecAssetType
 from gs_quant.target.common import AssetClass, AssetType
-from gs_quant.timeseries import volatility, Window, Returns, sqrt, Basket
+from gs_quant.timeseries import volatility, Window, Returns, sqrt, Basket, RelativeDate
 from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset, check_forward_looking, get_df_with_retries
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
 
@@ -80,6 +80,44 @@ class NercCalendar(AbstractHolidayCalendar):
         USThanksgivingDay,
         Holiday('Christmas', month=12, day=25, observance=sunday_to_monday)
     ]
+
+
+class UnderlyingSourceCategory(Enum):
+    ALL = 'All'
+    EDGX = 'EDGX'
+    TRF = 'TRF'
+
+
+class GICSSector(Enum):
+    INFORMATION_TECHNOLOGY = 'Information Technology'
+    ENERGY = 'Energy'
+    MATERIALS = 'Materials'
+    INDUSTRIALS = 'Industrials'
+    CONSUMER_DISCRETIONARY = 'Consumer Discretionary'
+    CONSUMER_STAPLES = 'Consumer Staples'
+    HEALTH_CARE = 'Health Care'
+    FINANCIALS = 'Financials'
+    COMMUNICATION_SERVICES = 'Communication Services'
+    REAL_ESTATE = 'Real Estate'
+    UTILITIES = 'Utilities'
+    ALL = 'All'
+
+
+class RetailMeasures(Enum):
+    RETAIL_PCT_SHARES = 'impliedRetailPctShares'
+    RETAIL_PCT_NOTIONAL = 'impliedRetailPctNotional'
+    RETAIL_SHARES = 'impliedRetailShares'
+    RETAIL_NOTIONAL = 'impliedRetailNotional'
+    SHARES = 'shares'
+    NOTIONAL = 'notional'
+    RETAIL_BUY_NOTIONAL = 'impliedRetailBuyNotional'
+    RETAIL_BUY_PCT_NOTIONAL = 'impliedRetailBuyPctNotional'
+    RETAIL_BUY_PCT_SHARES = 'impliedRetailBuyPctShares'
+    RETAIL_BUY_SHARES = 'impliedRetailBuyShares'
+    RETAIL_SELL_NOTIONAL = 'impliedRetailSellNotional'
+    RETAIL_SELL_PCT_NOTIONAL = 'impliedRetailSellPctNotional'
+    RETAIL_SELL_PCT_SHARES = 'impliedRetailSellPctShares'
+    RETAIL_SELL_SHARES = 'impliedRetailSellShares'
 
 
 class SkewReference(Enum):
@@ -4132,3 +4170,55 @@ def thematic_model_beta(asset: Asset, basket_identifier: str, *, source: str = N
     start, end = DataContext.current.start_date, DataContext.current.end_date
     thematic_betas = PositionedEntity.get_thematic_beta(asset, basket_identifier, start, end)
     return _extract_series_from_df(thematic_betas, QueryType.THEMATIC_BETA)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
+                                     AssetType.ETF),
+              [QueryType.SPOT])
+def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.RETAIL_PCT_SHARES,
+                        data_source: UnderlyingSourceCategory = UnderlyingSourceCategory.ALL,
+                        sector: GICSSector = GICSSector.ALL, *,
+                        source: str = None, real_time: bool = False) -> Series:
+    """
+    Aggregates retail interest for specified Equity asset with underliers.
+    :param sector: Any valid GICSSector like Information Technology, Energy etc. or All
+    :param asset: Any index, basket, ETF with underliers.
+    :param measure: Measures listed on https://marquee.gs.com/s/developer/datasets/RETAIL_FLOW_DAILY_V2_PREMIUM.
+    :param data_source: One of EDGX (on Exchange), TRF (Off Exchange), ALL.
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
+    :return: historical retail interest
+    """
+
+    if real_time:
+        raise NotImplementedError('realtime retail_interest_agg not implemented')
+
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    underliers = asset.entity['underlying_asset_ids']
+    if len(underliers) == 0:
+        raise MqValueError('Specified asset does not have underliers, single names have separate retail measures')
+
+    if sector != GICSSector.ALL:
+        data = pd.DataFrame(PositionedEntity.get_positions_data(asset,
+                                                                RelativeDate('-2b', base_date=end).apply_rule(),
+                                                                end,
+                                                                fields=['assetClassificationsGicsSector']))
+        underliers = list(data[data['assetClassificationsGicsSector'] == sector.value]['id'].drop_duplicates().values)
+
+    ds = Dataset(Dataset.GS.RETAIL_FLOW_DAILY_V2_PREMIUM.value)
+    retail_data = ds.get_data(start=start, end=end, underlyingSourceCategory=data_source, assetId=underliers)
+    if 'Pct' in measure.value:
+        measures_to_sum = [measure.value.replace('Pct', '')]
+        if 'Shares' in measure.value:
+            measures_to_sum.append(RetailMeasures.SHARES.value)
+        else:
+            measures_to_sum.append(RetailMeasures.NOTIONAL.value)
+        category_sums = retail_data.groupby([retail_data.index])[measures_to_sum].agg(sum)
+        category_sums[measure.value] = 100 * category_sums[measures_to_sum[0]] / category_sums[
+            measures_to_sum[1]]
+        category_sums.drop(columns=measures_to_sum)
+    else:
+        category_sums = retail_data.groupby([retail_data.index])[[measure.value]].agg(sum)
+    series = ExtendedSeries(category_sums[measure.value], name=measure.value)
+    series.dataset_ids = ds.id
+    return series

@@ -223,7 +223,7 @@ def _batch_asset_input(input_data: dict, i: int, split_idx: int, split_num: int,
     asset_data_subset = {'universe': input_data.get('universe')[i * split_idx:end_idx],
                          'specificRisk': input_data.get('specificRisk')[i * split_idx:end_idx],
                          'factorExposure': input_data.get('factorExposure')[i * split_idx:end_idx]}
-    optional_asset_inputs = ['totalRisk', 'historicalBeta']
+    optional_asset_inputs = ['totalRisk', 'historicalBeta', 'specificReturn']
     for optional_input in optional_asset_inputs:
         if input_data.get(optional_input):
             asset_data_subset[optional_input] = input_data.get(optional_input)[i * split_idx:end_idx]

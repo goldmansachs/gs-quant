@@ -784,7 +784,6 @@ class FactorRiskModel(RiskModel):
 
         data = risk_model_data_to_json(data) if type(data) == RiskModelData else data
         target_universe_size = get_universe_size(data)
-        print(target_universe_size)
         if target_universe_size > max_asset_batch_size:
             print('Batching uploads due to universe size')
             batch_and_upload_partial_data(self.id, data, max_asset_batch_size)
