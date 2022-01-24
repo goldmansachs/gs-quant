@@ -142,8 +142,11 @@ def test_basket_average_implied_vol():
     implied_vol = x.append(y)
     implied_vol.index.name = 'date'
 
-    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
-    mock_data.side_effect = [implied_vol, _mock_spot_data()]
+    mock_spot = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_spot.side_effect = [implied_vol.rename(columns={'impliedVolatility': 'spot'})]
+
+    mock_data = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
+    mock_data.return_value = [implied_vol]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
     mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},

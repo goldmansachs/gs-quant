@@ -94,7 +94,7 @@ def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: Unio
         return FloatWithInfo(
             risk_key,
             raw_value,
-            unit=result.unit.get(date, '') if result.unit else None,
+            unit=result.unit.get(date, result.unit) if result.unit else None,
             error=result.error)
 
 

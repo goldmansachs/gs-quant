@@ -29,7 +29,7 @@ from tqdm import tqdm
 
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
 from gs_quant.common import PricingLocation, RiskMeasure
-from gs_quant.context_base import ContextBaseWithDefault, nullcontext
+from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset
 from gs_quant.risk import CompositeScenario, DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
     StringWithInfo
@@ -213,9 +213,11 @@ class PricingContext(ContextBaseWithDefault):
                         if self.__use_cache:
                             PricingCache.put(risk_key_, priceable_, result)
 
-            while self.__pending:
-                (risk_key_, _), future = self.__pending.popitem()
-                future.set_result(ErrorValue(risk_key_, 'No result returned'))
+            if not self.__is_async:
+                # In async mode we can't tell if we've completed, we could be re-used
+                while self.__pending:
+                    (risk_key_, _), future = self.__pending.popitem()
+                    future.set_result(ErrorValue(risk_key_, 'No result returned'))
 
         # Group requests optimally
         requests_by_provider = {}

@@ -223,7 +223,7 @@ class GsPortfolioApi:
     def get_schedule_dates(cls,
                            portfolio_id: str,
                            backcast: bool = False) -> List[dt.date]:
-        results = GsSession.current._get(f'/portfolios/{portfolio_id}/schedule/dates?backcast={backcast}')
+        results = GsSession.current._get(f'/portfolios/{portfolio_id}/schedule/dates?backcast={str(backcast).lower()}')
         return [dt.datetime.strptime(results['startDate'], '%Y-%m-%d').date(),
                 dt.datetime.strptime(results['endDate'], '%Y-%m-%d').date()]
 

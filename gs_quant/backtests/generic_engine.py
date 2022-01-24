@@ -24,7 +24,7 @@ from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.instrument import Instrument
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets import PricingContext, HistoricalPricingContext
-from gs_quant.risk import Price, DollarPrice
+from gs_quant.risk import Price
 from gs_quant.common import ParameterisedRiskMeasure
 from functools import reduce
 from datetime import date
@@ -58,9 +58,16 @@ class AddTradeActionImpl(ActionHandler):
                 active_portfolio = self.action.dated_priceables.get(s) or self.action.priceables
                 with PricingContext(pricing_date=s):
                     orders[s] = (Portfolio(active_portfolio).resolve(in_place=False), ti)
-        orders = {k: v[0].result().scale(None if v[1] is None else v[1].scaling, in_place=False) for k, v in
-                  orders.items()}
-        return orders
+        final_orders = {}
+        for d, p in orders.items():
+            new_port = []
+            for t in p[0].result():
+                t.name = f'{t.name}_{d}'
+                new_port.append(t)
+            new_port = Portfolio(new_port)
+            final_orders[d] = new_port.scale(None if p[1] is None else p[1].scaling, in_place=False)
+
+        return final_orders
 
     def apply_action(self,
                      state: Union[date, Iterable[date]],
@@ -72,7 +79,6 @@ class AddTradeActionImpl(ActionHandler):
         # record entry and unwind cashflows
         for create_date, portfolio in orders.items():
             for inst in portfolio.all_instruments:
-                inst.name = f'{inst.name}_{create_date}'
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
                 final_date = get_final_date(inst, create_date, self.action.trade_duration)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
@@ -103,12 +109,11 @@ class HedgeActionImpl(ActionHandler):
 
         for create_date, portfolio in f.result().items():
             hedge = portfolio.instruments[0]
+            hedge.name = f'{hedge.name}_{create_date.strftime("%Y-%m-%d")}'
             final_date = get_final_date(hedge, create_date, self.action.trade_duration)
             active_dates = [s for s in backtest.states if create_date <= s < final_date]
 
             if len(active_dates):
-                for t in portfolio:
-                    t.name = f'{t.name}_{create_date.strftime("%Y-%m-%d")}'
                 backtest.scaling_portfolios[create_date].append(
                     ScalingPortfolio(trade=hedge, dates=active_dates, risk=self.action.risk,
                                      csa_term=self.action.csa_term, scaling_parameter=self.action.scaling_parameter))
@@ -118,7 +123,7 @@ class HedgeActionImpl(ActionHandler):
                     CashPayment(trade=hedge, effective_date=create_date, direction=-1))
                 if final_date <= dt.date.today():
                     backtest.cash_payments[final_date].append(
-                        CashPayment(trade=hedge, effective_date=final_date, scale_date=active_dates[-1]))
+                        CashPayment(trade=hedge, effective_date=final_date, scale_date=create_date))
 
         return backtest
 
@@ -154,7 +159,7 @@ class GenericEngine(BacktestBaseEngine):
         return True
 
     def run_backtest(self, strategy, start=None, end=None, frequency='1m', states=None, risks=Price,
-                     show_progress=True, csa_term=None, visible_to_gs=False, initial_value=0, result_ccy='USD',
+                     show_progress=True, csa_term=None, visible_to_gs=False, initial_value=0, result_ccy=None,
                      holiday_calendar=None):
         """
         run the backtest following the triggers and actions defined in the strategy.  If states are entered run on
@@ -183,11 +188,10 @@ class GenericEngine(BacktestBaseEngine):
                                      end).apply_rule(holiday_calendar=holiday_calendar) if states is None else states
 
         risks = list(set(make_list(risks) + strategy.risks))
-        risks = [DollarPrice if r is Price and result_ccy == 'USD' else (r(currency=result_ccy)
-                                                                         if isinstance(r, ParameterisedRiskMeasure)
-                                                                         else raiser(f'Unparameterised risk: {r}'))
-                 for r in risks]
-        price_risk = Price(currency=result_ccy) if result_ccy != 'USD' else DollarPrice
+        if result_ccy is not None:
+            risks = [(r(currency=result_ccy) if isinstance(r, ParameterisedRiskMeasure)
+                      else raiser(f'Unparameterised risk: {r}')) for r in risks]
+        price_risk = Price(currency=result_ccy) if result_ccy is not None else Price
 
         backtest = BackTest(strategy, dates, risks)
 
@@ -222,10 +226,10 @@ class GenericEngine(BacktestBaseEngine):
 
         logging.info('Pricing Simple and Semi-deterministic triggers and actions')
         with PricingContext(is_batch=True, show_progress=show_progress, csa_term=csa_term, visible_to_gs=visible_to_gs):
+            backtest.calc_calls += 1
             for day, portfolio in backtest.portfolio_dict.items():
                 if isinstance(day, dt.date):
                     with PricingContext(day):
-                        backtest.calc_calls += 1
                         backtest.calculations += len(portfolio) * len(risks)
                         backtest.add_results(day, portfolio.calc(tuple(risks)))
 
@@ -233,27 +237,12 @@ class GenericEngine(BacktestBaseEngine):
             for _, scaling_list in backtest.scaling_portfolios.items():
                 for p in scaling_list:
                     with HistoricalPricingContext(dates=p.dates):
-                        backtest.calc_calls += 1
-                        backtest.calculations += len(p.dates) * len(risks)
+                        backtest.calculations += len(risks) * len(p.dates)
                         p.results = Portfolio([p.trade]).calc(tuple(risks))
 
         logging.info('Scaling Semi-deterministic Triggers and Actions and Calculating Path Dependent Triggers '
                      'and Actions')
         for d in dates:
-            # semi path dependent scaling
-            if d in backtest.scaling_portfolios:
-                for p in backtest.scaling_portfolios[d]:
-                    current_risk = backtest.results[d][p.risk].aggregate(allow_mismatch_risk_keys=True)
-                    hedge_risk = p.results[d][p.risk].aggregate()
-                    scaling_factor = current_risk / hedge_risk
-                    new_notional = getattr(p.trade, p.scaling_parameter) * -scaling_factor
-                    scaled_trade = p.trade.as_dict()
-                    scaled_trade[p.scaling_parameter] = new_notional
-                    scaled_trade = Instrument.from_dict(scaled_trade)
-                    scaled_trade.name = p.trade.name
-                    for day in p.dates:
-                        backtest.add_results(day, p.results[day] * -scaling_factor)
-                        backtest.portfolio_dict[day] += Portfolio(scaled_trade)
 
             # path dependent
             for trigger in strategy.triggers:
@@ -266,6 +255,39 @@ class GenericEngine(BacktestBaseEngine):
                         if action.calc_type == CalcType.path_dependent:
                             if trigger.has_triggered(d, backtest):
                                 self.get_action_handler(action).apply_action(d, backtest)
+            # test to see if new trades have been added and calc
+            port = []
+            for t in backtest.portfolio_dict[d]:
+                if t.name not in list(backtest.results[d].to_frame().index):
+                    port.append(t)
+
+            with PricingContext(csa_term=csa_term, show_progress=show_progress, visible_to_gs=visible_to_gs):
+                if len(port) > 0:
+                    with PricingContext(pricing_date=d):
+                        backtest.add_results(d, Portfolio(port).calc(tuple(risks)))
+
+                for sp in backtest.scaling_portfolios[d]:
+                    if sp.results is None:
+                        with HistoricalPricingContext(dates=sp.dates):
+                            backtest.calculations += len(risks) * len(sp.dates)
+                            sp.results = Portfolio([sp.trade]).calc(tuple(risks))
+
+            # semi path dependent scaling
+            if d in backtest.scaling_portfolios:
+                for p in backtest.scaling_portfolios[d]:
+                    current_risk = backtest.results[d][p.risk].aggregate(allow_mismatch_risk_keys=True)
+                    hedge_risk = p.results[d][p.risk].aggregate()
+                    if current_risk.unit != hedge_risk.unit:
+                        raise RuntimeError('cannot hedge in a different currency')
+                    scaling_factor = current_risk / hedge_risk
+                    new_notional = getattr(p.trade, p.scaling_parameter) * -scaling_factor
+                    scaled_trade = p.trade.as_dict()
+                    scaled_trade[p.scaling_parameter] = new_notional
+                    scaled_trade = Instrument.from_dict(scaled_trade)
+                    scaled_trade.name = p.trade.name
+                    for day in p.dates:
+                        backtest.add_results(day, p.results[day] * -scaling_factor)
+                        backtest.portfolio_dict[day] += Portfolio(scaled_trade)
 
         logging.info('Calculate Cash')
         # run any additional calcs to handle cash scaling (e.g. unwinds)
@@ -281,6 +303,8 @@ class GenericEngine(BacktestBaseEngine):
                             with PricingContext(cp.effective_date):
                                 backtest.calculations += len(risks)
                                 cash_calcs[cp.effective_date].append(Portfolio([cp.trade]).calc(price_risk))
+                        else:
+                            cp.scale_date = None
 
         cash_results = {}
         for day, risk_results in cash_calcs.items():
@@ -291,10 +315,11 @@ class GenericEngine(BacktestBaseEngine):
                         cash_results[day] += risk_results[i]
 
         # handle cash
-        current_value = initial_value
+        current_value = None
         for d in sorted(set(dates + list(backtest.cash_payments.keys()))):
             if d <= end:
-                backtest.cash_dict[d] = current_value
+                if current_value is not None:
+                    backtest.cash_dict[d] = current_value
                 if d in backtest.cash_payments:
                     for cp in backtest.cash_payments[d]:
                         value = cash_results.get(cp.effective_date, {}).get(price_risk, {}).get(cp.trade.name, {})
@@ -307,14 +332,19 @@ class GenericEngine(BacktestBaseEngine):
                         if not isinstance(value, float):
                             raise RuntimeError(f'failed to get cash value for {cp.trade.name} on '
                                                f'{cp.effective_date} received value of {value}')
+                        ccy = next(iter(value.unit))
+                        if d not in backtest.cash_dict:
+                            backtest.cash_dict[d] = {ccy: initial_value}
+                        if ccy not in backtest.cash_dict[d]:
+                            backtest.cash_dict[d][ccy] = 0
                         if cp.scale_date:
                             scale_notional = backtest.portfolio_dict[cp.scale_date][cp.trade.name].notional_amount
                             scale_date_adj = scale_notional / cp.trade.notional_amount
                             cp.cash_paid = value * scale_date_adj * cp.direction
-                            backtest.cash_dict[d] += cp.cash_paid
+                            backtest.cash_dict[d][ccy] += cp.cash_paid
                         else:
                             cp.cash_paid = value * cp.direction
-                            backtest.cash_dict[d] += cp.cash_paid
+                            backtest.cash_dict[d][ccy] += cp.cash_paid
                     current_value = backtest.cash_dict[d]
 
         logging.info(f'Finished Backtest:- {dt.datetime.now()}')

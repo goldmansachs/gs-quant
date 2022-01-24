@@ -13,26 +13,35 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-import pandas as pd
-from copy import deepcopy
-from collections import defaultdict
-from gs_quant.markets.portfolio import Portfolio
-from typing import Iterable
-from gs_quant.target.instrument import Cash
-from gs_quant.backtests.core import ValuationMethod
-from gs_quant.backtests.order import OrderBase, OrderCost
-from gs_quant.backtests.event import FillEvent
-from gs_quant.backtests.data_handler import DataHandler
-import numpy as np
 import datetime as dt
+from abc import ABC
+from collections import defaultdict
+from copy import deepcopy
 from queue import Queue as FifoQueue
+from typing import Iterable, TypeVar
+
+import numpy as np
+import pandas as pd
+
+from gs_quant.instrument import Cash
+from gs_quant.markets.portfolio import Portfolio
+from gs_quant.backtests.core import ValuationMethod
+from gs_quant.backtests.data_handler import DataHandler
+from gs_quant.backtests.event import FillEvent
+from gs_quant.backtests.order import OrderBase, OrderCost
 
 
-class BackTest:
+class BaseBacktest(ABC):
+    pass
+
+
+TBaseBacktest = TypeVar('TBaseBacktest', bound='BaseBacktest')
+
+
+class BackTest(BaseBacktest):
     def __init__(self, strategy, states, risks):
         self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
-        self._cash_dict = defaultdict(float)  # cash by state
+        self._cash_dict = {}  # cash by state
         self._scaling_portfolios = defaultdict(list)  # list of ScalingPortfolio
         self._cash_payments = defaultdict(list)  # list of cash payments (entry, unwind)
         self._strategy = deepcopy(strategy)  # the strategy definition
@@ -85,8 +94,8 @@ class BackTest:
     def risks(self):
         return self._risks
 
-    def add_results(self, date, results):
-        if date in self._results and len(self._results[date]):
+    def add_results(self, date, results, replace=False):
+        if date in self._results and len(self._results[date]) and not replace:
             self._results[date] += results
         else:
             self._results[date] = results
@@ -108,10 +117,24 @@ class BackTest:
         self._calculations = calculations
 
     @property
-    def result_summary(self, allow_mismatch_risk_keys=True):
-        summary = pd.DataFrame({date: {risk: results[risk].aggregate(allow_mismatch_risk_keys)
+    def result_summary(self):
+        """
+        Get a dataframe showing the PV and other risks and cash on each day in the backtest
+        :param show_units: choose to show the units in the column names
+        :type show_units: bool default False
+        :return: bool default False
+        :rtype: pandas.dataframe
+        """
+        summary = pd.DataFrame({date: {risk: results[risk].aggregate(True)
                                        for risk in results.risk_measures} for date, results in self._results.items()}).T
-        cash = pd.Series(self._cash_dict, name='Cash')
+        cash_summary = {}
+        for date, results in self._cash_dict.items():
+            for ccy, value in results.items():
+                cash_summary[f'Cumulative Cash {ccy}'] = {date: value}
+        if len(cash_summary) > 1:
+            raise RuntimeError('Cannot aggregate cash in multiple currencies')
+        cash = pd.concat([pd.Series(cash_dict, name='Cumulative Cash')
+                          for name, cash_dict in cash_summary.items()], axis=1, sort=True)
         return pd.concat([summary, cash], axis=1, sort=True).fillna(0)
 
     def trade_ledger(self):
@@ -120,14 +143,15 @@ class BackTest:
         # means the instrument is still live and therefore will show up in the PV
         ledger = {}
         names = []
-        for date, cash_list in self.cash_payments.items():
+        for date in sorted(self.cash_payments.keys()):
+            cash_list = self.cash_payments[date]
             for cash in cash_list:
                 if cash.trade.name in names:
-                    if cash.cash_paid:
+                    if cash.cash_paid is not None:
                         ledger[cash.trade.name]['Close'] = date
                         ledger[cash.trade.name]['Close Value'] += cash.cash_paid
                         open_value = ledger[cash.trade.name]['Open Value']
-                        ledger[cash.trade.name]['Trade PnL'] = ledger[cash.trade.name]['Close Value'] - open_value
+                        ledger[cash.trade.name]['Trade PnL'] = ledger[cash.trade.name]['Close Value'] + open_value
                         ledger[cash.trade.name]['Status'] = 'closed'
                 else:
                     names.append(cash.trade.name)
@@ -160,7 +184,7 @@ class CashPayment:
         self.cash_paid = None
 
 
-class PredefinedAssetBacktest:
+class PredefinedAssetBacktest(BaseBacktest):
     """
     :param data_handler: holds all the data required to run the backtest
     :param performance: backtest values
@@ -171,6 +195,7 @@ class PredefinedAssetBacktest:
     :param initial_value: the initial value of the index
     :param results: a dictionary which can be used to store intermediate results
     """
+
     def __init__(self, data_handler: DataHandler, initial_value: float):
         self.data_handler = data_handler
         self.performance = pd.Series(dtype=float)
@@ -212,7 +237,7 @@ class PredefinedAssetBacktest:
             open_close_order_pairs = []
             while not longs.empty() and not shorts.empty():
                 long, short = longs.get(), shorts.get()
-                open_order, close_order = (long, short) if long.execution_end_time() < short.execution_end_time()\
+                open_order, close_order = (long, short) if long.execution_end_time() < short.execution_end_time() \
                     else (short, long)
                 open_close_order_pairs.append((open_order, close_order))
 
