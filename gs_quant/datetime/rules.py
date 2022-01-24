@@ -69,7 +69,7 @@ class RDateRule(ABC):
             return list(set().union(self.holiday_calendar, self.usd_calendar))
         try:
             holidays = Series(dtype=object)
-            currencies = ['USD'] if self.currencies is None else self.currencies
+            currencies = [] if self.currencies is None else self.currencies
 
             cached_data = _cache.get(hashkey(str(currencies), str(self.exchanges)))
             if cached_data:

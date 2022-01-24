@@ -76,7 +76,8 @@ class SubmitOrderActionImpl(ActionHandler):
 
 
 class PredefinedAssetEngineActionFactory(ActionHandlerBaseFactory):
-    def __init__(self, action_impl_map={}):
+    def __init__(self, action_impl_map=None):
+        action_impl_map = action_impl_map or {}
         self.action_impl_map = action_impl_map
         self.action_impl_map[AddTradeAction] = AddTradeActionImpl
 

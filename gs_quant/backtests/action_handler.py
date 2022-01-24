@@ -13,35 +13,43 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-from gs_quant.backtests.actions import Action
-from gs_quant.backtests.backtest_objects import BackTest
-from typing import Union, Iterable
+from abc import abstractmethod
 from datetime import date
+from typing import Union, Iterable, Any, TypeVar
+
+from gs_quant.backtests.actions import TAction
+from gs_quant.backtests.backtest_objects import TBaseBacktest
 
 
-class ActionHandler(object):
-    def __init__(self, action: Action):
+class ActionHandler:
+
+    def __init__(
+            self,
+            action: TAction
+    ) -> None:
         self._action = action
 
     @property
-    def action(self) -> Action:
+    def action(self) -> TAction:
         return self._action
 
-    def apply_action(self, state: Union[date, Iterable[date]], backtest: BackTest):
-        """
-        Used by the Generic Engine
-        :param backtest:
-        :param state:
-        :return:
-        """
-        raise RuntimeError('apply_action must be implemented by subclass')
+    @abstractmethod
+    def apply_action(
+            self,
+            state: Union[date, Iterable[date]],
+            backtest: TBaseBacktest,
+    ) -> Any:
+        pass
 
 
-class ActionHandlerBaseFactory(object):
-    def get_action_handler(self, action: str) -> ActionHandler:
-        """
-        :param action: the source action object
-        :return: handler for action
-        """
-        raise RuntimeError('get_action_handler must be implemented by subclass')
+TActionHandler = TypeVar('TActionHandler', bound='ActionHandler')
+
+
+class ActionHandlerBaseFactory:
+
+    @abstractmethod
+    def get_action_handler(
+            self,
+            action: TAction
+    ) -> TActionHandler:
+        pass

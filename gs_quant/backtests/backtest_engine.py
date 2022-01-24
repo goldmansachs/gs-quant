@@ -14,11 +14,17 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.backtests.actions import Action
+from abc import abstractmethod
+
+from gs_quant.backtests.action_handler import TActionHandler
+from gs_quant.backtests.actions import TAction
 
 
-class BacktestBaseEngine(object):
+class BacktestBaseEngine:
 
-    @classmethod
-    def get_action_handler(self, action) -> Action:
-        raise RuntimeError('get_action_handler must be implemented by subclass')
+    @abstractmethod
+    def get_action_handler(
+            self,
+            action: TAction
+    ) -> TActionHandler:
+        pass

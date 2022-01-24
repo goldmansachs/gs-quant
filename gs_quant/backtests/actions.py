@@ -14,12 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from collections import namedtuple
+from typing import TypeVar
+
 from gs_quant.backtests.backtest_utils import *
 from gs_quant.base import Priceable
-from gs_quant.datetime.date import *
 from gs_quant.markets.securities import *
 from gs_quant.target.backtests import BacktestTradingQuantityType
-from collections import namedtuple
 
 action_count = 1
 
@@ -43,6 +44,9 @@ class Action(object):
     @property
     def risk(self):
         return self._risk
+
+
+TAction = TypeVar('TAction', bound='Action')
 
 
 class AddTradeAction(Action):
