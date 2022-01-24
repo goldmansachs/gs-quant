@@ -61,8 +61,7 @@ class TdapiRatesDefaultsProvider:
         self.defaults = defaults
         benchmark_mappings = {}
         for k, v in defaults.get("CURRENCIES").items():
-            for e in v:
-                benchmark_mappings[k] = {e.get("benchmarkType"): e.get('floatingRateOption')}
+            benchmark_mappings[k] = {e.get("benchmarkType"): e.get('floatingRateOption') for e in v}
         self.defaults['MAPPING'] = benchmark_mappings
 
     def is_supported(self, currency: CurrencyEnum):
@@ -95,10 +94,21 @@ SWAPTION_DEFAULTS = {
         "USD": [{"benchmarkType": "LIBOR", "floatingRateOption": "USD-LIBOR-BBA", "floatingRateTenor": ["3m", "6m"],
                  "assetIdForAvailabilityCheck": "MAY0X3KRD4AN77E2",
                  "strikeReference": ["ATM"],
-                 "pricingLocation": ["NYC"]}],
+                 "pricingLocation": ["NYC"]},
+                {"benchmarkType": "SOFR", "floatingRateOption": "USD-SOFR-COMPOUND",
+                 "floatingRateTenor": ["1y", "6m", "3m"],
+                 "assetIdForAvailabilityCheck": "MANYJ1AWNEX5C7FY",
+                 "strikeReference": ["ATM"],
+                 "pricingLocation": ["NYC"]}
+                ],
         "GBP": [{"benchmarkType": "LIBOR", "floatingRateOption": "GBP-LIBOR-BBA", "floatingRateTenor": ["6m", "3m"],
                  "assetIdForAvailabilityCheck": "MAX2SBXZRPYR3NTY",
-                 "pricingLocation": ["LDN"]}],
+                 "pricingLocation": ["LDN"]},
+                {"benchmarkType": "SONIA", "floatingRateOption": "GBP-SONIA-COMPOUND",
+                 "floatingRateTenor": ["1y", "6m", "3m"],
+                 "assetIdForAvailabilityCheck": "MAQC2E5J9X6WGGCJ",
+                 "pricingLocation": ["LDN"]}
+                ],
         "AUD": [{"benchmarkType": "BBR", "floatingRateOption": "AUD-BBR-BBSW", "floatingRateTenor": ["6m", "3m"],
                  "assetIdForAvailabilityCheck": "MAQHSC1PAF4X5H4B",
                  "pricingLocation": ["TKO"]}],

@@ -20,11 +20,14 @@ import pandas as pd
 from gs_quant.common import AssetClass, CurrencyParameter, FiniteDifferenceParameter, StringParameter, \
     ListOfStringParameter, ListOfNumberParameter, MapParameter
 from gs_quant.common import ParameterisedRiskMeasure, RiskMeasure
+from gs_quant.context_base import do_not_serialise
 from gs_quant.target.risk import RiskMeasureType, RiskMeasureUnit
 
 
 class RiskMeasureWithCurrencyParameter(ParameterisedRiskMeasure):
+
     @property
+    @do_not_serialise
     def currency(self):
         return self.parameters.value if self.parameters else None
 
@@ -47,7 +50,9 @@ class RiskMeasureWithCurrencyParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithListOfNumberParameter(ParameterisedRiskMeasure):
+
     @property
+    @do_not_serialise
     def list_of_number(self):
         return self.parameters.values if self.parameters else None
 
@@ -70,7 +75,9 @@ class RiskMeasureWithListOfNumberParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithListOfStringParameter(ParameterisedRiskMeasure):
+
     @property
+    @do_not_serialise
     def list_of_string(self):
         return self.parameters.values if self.parameters else None
 
@@ -93,7 +100,9 @@ class RiskMeasureWithListOfStringParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithMapParameter(ParameterisedRiskMeasure):
+
     @property
+    @do_not_serialise
     def map(self):
         return self.parameters.value if self.parameters else None
 
@@ -116,7 +125,9 @@ class RiskMeasureWithMapParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithStringParameter(ParameterisedRiskMeasure):
+
     @property
+    @do_not_serialise
     def string(self):
         return self.parameters.value if self.parameters else None
 
@@ -139,31 +150,39 @@ class RiskMeasureWithStringParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithFiniteDifferenceParameter(ParameterisedRiskMeasure):
+
     @property
+    @do_not_serialise
     def aggregation_level(self):
         return self.parameters.aggregation_level if self.parameters else None
 
     @property
+    @do_not_serialise
     def bump_size(self):
         return self.parameters.bump_size if self.parameters else None
 
     @property
+    @do_not_serialise
     def currency(self):
         return self.parameters.currency if self.parameters else None
 
     @property
+    @do_not_serialise
     def finite_difference_method(self):
         return self.parameters.finite_difference_method if self.parameters else None
 
     @property
+    @do_not_serialise
     def local_curve(self):
         return self.parameters.local_curve if self.parameters else None
 
     @property
+    @do_not_serialise
     def mkt_marking_options(self):
         return self.parameters.mkt_marking_options if self.parameters else None
 
     @property
+    @do_not_serialise
     def scale_factor(self):
         return self.parameters.scale_factor if self.parameters else None
 

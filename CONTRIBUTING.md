@@ -53,7 +53,6 @@ BSD-like
 
 
 # Coding Style
-We use [Flake8](https://flake8.pycqa.org/en/latest/) to check for styling. It looks for PEP8, [pyflakes](https://pypi.org/project/pyflakes/) and circular complexity.
 Please see [PEP 8 - Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/).
 
 

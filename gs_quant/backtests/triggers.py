@@ -66,9 +66,8 @@ class MktTriggerRequirements(TriggerRequirements):
 
 
 class RiskTriggerRequirements(TriggerRequirements):
-    def __init__(self, strategy_results, risk, trigger_level, direction):
+    def __init__(self, risk, trigger_level, direction):
         super().__init__()
-        self.strategy_results = strategy_results
         self.risk = risk
         self.trigger_level = trigger_level
         self.direction = direction
@@ -256,7 +255,7 @@ class StrategyRiskTrigger(Trigger):
         self._risks += [trigger_requirements.risk]
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
-        risk_value = backtest[state][self._trigger_requirements.risk]
+        risk_value = backtest.results[state][self._trigger_requirements.risk].aggregate()
         if self._trigger_requirements.direction == TriggerDirection.ABOVE:
             if risk_value > self._trigger_requirements.trigger_level:
                 return TriggerInfo(True)

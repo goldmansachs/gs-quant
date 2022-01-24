@@ -336,7 +336,7 @@ class PerformanceReport(Report):
         """
         Get a performance report from the unique report identifier
         :param report_id: Marquee report ID
-        :return: returns a PerfomanceReport object that correlates to the Marquee report
+        :return: returns a PerformanceReport object that correlates to the Marquee report
         """
         return cls.from_target(GsReportApi.get_report(report_id))
 

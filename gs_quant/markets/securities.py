@@ -32,7 +32,7 @@ import pytz
 from dateutil.relativedelta import relativedelta
 
 from gs_quant.api.gs.assets import GsAsset, AssetParameters, \
-    AssetType as GsAssetType, Currency
+    AssetType as GsAssetType, Currency, GsIdType
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import get_enum_value
 from gs_quant.common import DateLimit
@@ -1433,43 +1433,79 @@ class SecurityMaster:
                 return accumulator
 
     @classmethod
-    def map_identifiers(cls, ids: Iterable[str],
-                        to_identifiers: Iterable[SecurityIdentifier] = frozenset([SecurityIdentifier.GSID]),
-                        start_date: datetime.date = None, end_date: datetime.date = None) -> Dict[datetime.date, dict]:
+    def map_identifiers(
+            cls,
+            input_type: SecurityIdentifier,
+            ids: Iterable[str],
+            output_types: Iterable[SecurityIdentifier] = frozenset([SecurityIdentifier.GSID]),
+            start_date: datetime.date = None,
+            end_date: datetime.date = None,
+            as_of_date: datetime.date = None
+    ) -> Dict[datetime.date, dict]:
         """
-        Map to (other) identifiers from given IDs.
+        Map to other identifier types, from given IDs.
 
-        :param ids: security IDs e.g. GSIDs or BBIDs
-        :param to_identifiers: types of IDs to map to
-        :param start_date: start of date range
-        :param end_date: end of date range
-        :return: dict containing mappings for each date in range
+        :param input_type: type of input IDs
+        :param ids: security IDs
+        :param output_types: types of IDs to map to
+        :param start_date: first as-of date (defaults to current date)
+        :param end_date: last as-of date (defaults to current date)
+        :param as_of_date: an exact as-of date for mapping
+        :return: dict containing mappings for as-of date(s)
 
         **Examples**
 
         Get CUSIP for GS UN:
-        >>> result = SecurityMaster.map_identifiers(["GS UN"], [SecurityIdentifier.CUSIP])
+        >>> result = SecurityMaster.map_identifiers(SecurityIdentifier.BBID, ["GS UN"], [SecurityIdentifier.CUSIP])
 
-        Get Bloomberg ticker for 104563 over a range of dates:
-        >>> result = SecurityMaster.map_identifiers(["104563"], [SecurityIdentifier.BBG],
-        ...                                         datetime.date(2021, 4, 16), datetime.date(2021, 4, 19))
+        Get Bloomberg ticker for 104563 as-of a past date:
+        >>> result = SecurityMaster.map_identifiers(SecurityIdentifier.GSID, ["104563"], [SecurityIdentifier.BBG],
+        ...                                         as_of_date=datetime.date(2021, 4, 19))
         """
-        if cls._source != SecurityMasterSource.SECURITY_MASTER:
-            raise NotImplementedError("method not available when using Asset Service")
-
         if isinstance(ids, str):
-            raise MqTypeError("expected an iterable of strings e.g. a list of strings")
+            raise MqTypeError("expected an iterable of strings e.g. list of strings")
 
+        def get_asset_id_type(type_: SecurityIdentifier):
+            try:
+                return GsIdType[type_.value]
+            except KeyError:
+                raise MqValueError(f'unsupported type {type_.value}')
+
+        if cls._source == SecurityMasterSource.ASSET_SERVICE:
+            output_types = list(output_types)
+            if len(output_types) != 1:
+                raise MqValueError('provide exactly one output type')
+            if (start_date or end_date) is not None:
+                raise MqValueError('use as_of_date instead of start_date and/or end_date')
+
+            input_type = get_asset_id_type(input_type)
+            output_type = get_asset_id_type(output_types[0])
+            as_of = None if as_of_date is None else datetime.datetime.combine(as_of_date,
+                                                                              datetime.time(tzinfo=pytz.UTC))
+            result = GsAssetApi.map_identifiers(input_type, output_type, list(ids), as_of=as_of, multimap=True)
+            if len(result) == 0:
+                return result
+            inner = {k: {output_type.name: v} for k, v in result.items()}
+            return {as_of.strftime('%Y-%m-%d'): inner}
+
+        assert cls._source == SecurityMasterSource.SECURITY_MASTER
         params = {
             'identifiers': list(ids),
-            'toIdentifiers': [identifier.value for identifier in to_identifiers],
+            'toIdentifiers': [identifier.value for identifier in output_types],
             'compact': True
         }
+        if as_of_date is not None:
+            if (start_date or end_date) is not None:
+                raise MqValueError('provide (start date / end date) or as-of date, but not both')
+            params['startDate'] = as_of_date
+            params['endDate'] = as_of_date
+
         if start_date is not None:
             params['startDate'] = start_date
         if end_date is not None:
             params['endDate'] = end_date
         r = _get_with_retries('/markets/securities/map', params)
+        # TODO: pass input_type along (after updating endpoint implementation)
 
         results = r['results']
         if isinstance(results, dict):
@@ -1487,24 +1523,24 @@ class SecurityMaster:
                 output_type = row["outputType"]
                 output_value = row["outputValue"]
                 if output_type == "ric":
-                    if SecurityIdentifier.RIC in to_identifiers:
+                    if SecurityIdentifier.RIC in output_types:
                         values = inner.setdefault('ric', [])
                         if output_value not in values:
                             values.append(output_value)
-                    if SecurityIdentifier.ASSET_ID in to_identifiers and "assetId" in row:
+                    if SecurityIdentifier.ASSET_ID in output_types and "assetId" in row:
                         values = inner.setdefault('assetId', [])
                         asset_id = row['assetId']
                         if asset_id not in values:
                             values.append(asset_id)
                 elif output_type == "bbg":
-                    if SecurityIdentifier.BBG in to_identifiers:
+                    if SecurityIdentifier.BBG in output_types:
                         inner[output_type] = output_value
-                    if SecurityIdentifier.BBID in to_identifiers:
+                    if SecurityIdentifier.BBID in output_types:
                         inner[SecurityIdentifier.BBID.value] = f"{output_value} {row.get('exchange', '??')}"
-                    if SecurityIdentifier.BCID in to_identifiers:
+                    if SecurityIdentifier.BCID in output_types:
                         inner[SecurityIdentifier.BCID.value] = f"{output_value} {row.get('compositeExchange', '??')}"
                 else:
-                    if SecurityIdentifier(output_type) in to_identifiers:
+                    if SecurityIdentifier(output_type) in output_types:
                         inner[output_type] = output_value
 
                 current += date_delta

@@ -234,7 +234,7 @@ def test_currency_holiday_calendars():
     assert dt(2022, 4, 11) == rdate.apply_rule(currencies=[])
     assert dt(2022, 4, 11) == rdate.apply_rule(currencies=['GBP'])
     assert dt(2022, 4, 8) == rdate.apply_rule(currencies=['USD'])
-    assert dt(2022, 4, 8) == rdate.apply_rule()
+    assert dt(2022, 4, 11) == rdate.apply_rule()  # No longer using USD by default
     replace.restore()
 
 

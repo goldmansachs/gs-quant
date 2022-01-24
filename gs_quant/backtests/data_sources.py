@@ -123,10 +123,10 @@ class DataManager:
     def __init__(self):
         self._data_sources = {DataFrequency.DAILY: {}, DataFrequency.REAL_TIME: {}}
 
-    def add_data_source(self, series: pd.Series, data_freq: DataFrequency, *key):
-        if not len(series):
+    def add_data_source(self, series: Union[pd.Series, DataSource], data_freq: DataFrequency, *key):
+        if not isinstance(series, DataSource) and not len(series):
             return
-        self._data_sources[data_freq][key] = GenericDataSource(series)
+        self._data_sources[data_freq][key] = GenericDataSource(series) if isinstance(series, pd.Series) else series
 
     def get_data(self, state: Union[dt.date, dt.datetime], *key):
         if isinstance(state, dt.datetime):

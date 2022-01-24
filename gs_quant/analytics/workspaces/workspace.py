@@ -256,7 +256,8 @@ class WorkspaceRow:
             if width_sum == 12:
                 default_width = 0
             else:
-                default_width = int(12 - width_sum / sum(1 for component in self.components if component.width is None))
+                default_width = self.components[0].width if len(self.components) == 1 else \
+                    int(12 - width_sum / sum(1 for component in self.components if component.width is None))
             for i, component in enumerate(self.components):
                 if i == components_length - 1 and not component.width:
                     if isinstance(component, WorkspaceColumn):
@@ -344,7 +345,7 @@ class Workspace:
         elif self.__alias:
             id_ = get(GsSession.current._get(f'{API}?alias={self.__alias}'), 'results.0.id')
             if id_:
-                self.__id = GsSession.current._put(f'{API}/{id_}', self.as_dict(), request_headers=HEADERS)
+                self.__id = GsSession.current._put(f'{API}/{id_}', self.as_dict(), request_headers=HEADERS)['id']
             else:
                 self.__id = GsSession.current._post(API, self.as_dict(), request_headers=HEADERS)['id']
 
@@ -469,6 +470,10 @@ class Workspace:
     @tags.setter
     def tags(self, value):
         self.__tags = value
+
+    @property
+    def id(self):
+        return self.__id
 
     @classmethod
     def _parse(cls, layout: str, workspace_components: List[Dict]):

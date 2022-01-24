@@ -203,6 +203,15 @@ class SecMasterContext:
         SecurityMaster.set_source(SecurityMasterSource.ASSET_SERVICE)
 
 
+class AssetContext:
+    def __enter__(self):
+        self.previous = SecurityMaster._source
+        SecurityMaster.set_source(SecurityMasterSource.ASSET_SERVICE)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        SecurityMaster.set_source(self.previous)
+
+
 def test_get_security(mocker):
     mock_response = {
         "results": [
@@ -697,7 +706,8 @@ def test_map_identifiers(mocker):
         }
     }
     with SecMasterContext():
-        actual = SecurityMaster.map_identifiers(['GS UN', 'AAPL UN'],
+        actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
+                                                ['GS UN', 'AAPL UN'],
                                                 [SecurityIdentifier.RIC, SecurityIdentifier.GSID],
                                                 start, end)
     assert actual == expected
@@ -738,7 +748,7 @@ def test_map_identifiers(mocker):
     }
     targets = [SecurityIdentifier.ASSET_ID, SecurityIdentifier.GSID, SecurityIdentifier.BBID]
     with SecMasterContext():
-        actual = SecurityMaster.map_identifiers(['GS UN', 'AAPL UN'], targets, start, end)
+        actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID, ['GS UN', 'AAPL UN'], targets, start, end)
     assert actual == expected
 
 
@@ -855,9 +865,87 @@ def test_map_identifiers_change(mocker):
     }
     targets = [SecurityIdentifier.RIC, SecurityIdentifier.GSID, SecurityIdentifier.ISIN, SecurityIdentifier.BCID]
     with SecMasterContext():
-        actual = SecurityMaster.map_identifiers(['104563'], targets, start, end)
+        actual = SecurityMaster.map_identifiers(SecurityIdentifier.GSID, ['104563'], targets, start, end)
     for k, v in expected.items():
         assert actual[k] == v
+
+
+def test_map_identifiers_empty(mocker):
+    mock = {
+        "results": [
+        ]
+    }
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
+
+    with SecMasterContext():
+        actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID, ['invalid id'], [SecurityIdentifier.RIC])
+    assert actual == {}
+
+
+def test_map_identifiers_asset_service(mocker):
+    response = {'AAPL UN': ['AAPL.N'], 'GS UN': ['GS.N']}
+    mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=lambda *arg, **kwargs: response)
+    expected = {
+        "2021-10-11": {
+            "AAPL UN": {
+                "ric": [
+                    "AAPL.N"
+                ]
+            },
+            "GS UN": {
+                "ric": [
+                    "GS.N"
+                ]
+            }
+        }
+    }
+    with AssetContext():
+        actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
+                                                ['GS UN', 'AAPL UN'],
+                                                [SecurityIdentifier.RIC],
+                                                as_of_date=datetime.date(2021, 10, 11))
+    assert actual == expected
+
+    mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=lambda *arg, **kwargs: {})
+    with AssetContext():
+        actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
+                                                ['invalid id'],
+                                                [SecurityIdentifier.RIC],
+                                                as_of_date=datetime.date(2021, 10, 11))
+    assert actual == {}
+
+
+def test_map_identifiers_asset_service_exceptions():
+    with pytest.raises(MqValueError):
+        # multiple output types
+        with AssetContext():
+            SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
+                                           ['GS UN', 'AAPL UN'],
+                                           [SecurityIdentifier.RIC, SecurityIdentifier.GSID],
+                                           as_of_date=datetime.date(2021, 10, 11))
+
+    with pytest.raises(MqValueError):
+        # start date
+        with AssetContext():
+            SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
+                                           ['GS UN', 'AAPL UN'],
+                                           [SecurityIdentifier.RIC],
+                                           start_date=datetime.date(2021, 10, 11))
+
+    with pytest.raises(MqValueError):
+        # end date
+        with AssetContext():
+            SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
+                                           ['GS UN', 'AAPL UN'],
+                                           [SecurityIdentifier.RIC],
+                                           end_date=datetime.date(2021, 10, 11))
+
+    with pytest.raises(MqValueError):
+        # unsupported output type
+        with AssetContext():
+            SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
+                                           ['GS UN', 'AAPL UN'],
+                                           [SecurityIdentifier.BBG])
 
 
 if __name__ == "__main__":

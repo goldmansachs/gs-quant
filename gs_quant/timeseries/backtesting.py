@@ -200,10 +200,10 @@ class Basket:
 
     def get_marquee_ids(self):
         if self._marquee_ids is None:
-            # Assets sorted by decreasing rank
+            # Assets sorted by increasing rank
             assets = reversed(GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', 'bbid', 'rank'),
-                                                              limit=2 * len(self.bbids), order_by=['<rank']))
-            # If duplicate assets exist, asset_dict will contain a entry for the one with the lower rank (more relevant)
+                                                              limit=2 * len(self.bbids), order_by=['>rank']))
+            # If duplicate assets exist, asset_dict will contain a entry for the one with the higher rank (relevant)
             assets_dict = {entry['bbid']: entry['id'] for entry in assets}
             if len(assets_dict) != len(set(self.bbids)):
                 raise MqValueError('Unable to find all stocks')
