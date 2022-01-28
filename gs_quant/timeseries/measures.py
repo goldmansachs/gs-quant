@@ -25,6 +25,7 @@ from typing import List
 import cachetools.func
 import inflection
 import numpy as np
+import pandas as pd
 from dateutil import tz
 from dateutil.relativedelta import relativedelta
 from pandas import Series
@@ -33,7 +34,7 @@ from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialD
 from pydash import chunk, flatten
 
 from gs_quant.api.gs.assets import GsIdType
-from gs_quant.api.gs.data import GsDataApi
+from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
 from gs_quant.api.gs.data import QueryType
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.data import Dataset
@@ -1331,7 +1332,8 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
             filtered = grouped.get_group(underlying_id) if underlying_id in grouped.indices else pd.DataFrame()
             filtered = filtered.loc[~filtered.index.duplicated(keep='last')]
             vol = ExtendedSeries(dtype=float) if filtered.empty else ExtendedSeries(volatility(filtered['spot'],
-                                                                                    Window(tenor, tenor), returns_type))
+                                                                                               Window(tenor, tenor),
+                                                                                               returns_type))
             weighted_vols.append(vol * weight)
 
         vol_df = pd.concat(weighted_vols, axis=1).ffill()
@@ -1768,6 +1770,169 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
     series = _process_forward_vol_term(asset, df, "impliedVolatility")
     series = ExtendedSeries(series, name='forwardVolTerm')
     series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+def _get_skew_strikes(asset: Asset, strike_reference: SkewReference, distance: Real) -> Tuple[List, int]:
+    """
+    Calculates strike references necessary for calculating skew.
+
+    :param asset: asset object loaded from security master.
+    :param strike_reference: strike reference type.
+    :param distance: strike relative to reference.
+    :return: list of relative strikes for computation, in specific order.
+    """
+    if asset.asset_class == AssetClass.FX:
+        buffer = 1  # FX vol data is loaded later
+        if strike_reference == SkewReference.DELTA:
+            q_strikes = [0 - distance, distance, 0]
+        else:
+            raise MqValueError('strike_reference has to be delta to get skew for FX options')
+    else:
+        assert asset.asset_class in (AssetClass.Equity, AssetClass.Commod)
+        buffer = 0
+        if strike_reference == SkewReference.DELTA:
+            b = 50
+            q_strikes = [100 - distance, distance, b]
+        elif strike_reference == SkewReference.NORMALIZED:
+            b = 0
+            q_strikes = [b - distance, b + distance, b]
+        elif strike_reference:
+            b = 100
+            q_strikes = [b - distance, b + distance, b]
+        else:
+            raise MqTypeError("strike_reference required for equities")
+
+        if strike_reference != SkewReference.NORMALIZED:
+            q_strikes = [x / 100 for x in q_strikes]
+
+    return q_strikes, buffer
+
+
+def _skew(df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes) -> ExtendedSeries:
+    """
+    Calculates skew using the data in df and returns it as a series.
+
+    :param df: Dataframe with a column of relative strikes, a column of implied volatility, and a datetime index.
+    :param relative_strike_col: name of the column in df with relative strikes.
+    :param iv_col: name of the column in df with implied volatilities.
+    :param q_strikes: length-three array of floats returned by _get_skew_strikes
+    """
+    curves = {k: v for k, v in df.groupby(relative_strike_col)}
+    if len(curves) < 3:
+        raise MqValueError('Skew not available for given inputs')
+    series = [curves[qs][iv_col] for qs in q_strikes]
+    series = ExtendedSeries((series[0] - series[1]) / series[2])
+    series.index = pd.to_datetime(series.index)
+    return series
+
+
+def _skew_fetcher(asset_id, query_type, where, source, real_time, request_id=None, allow_exception=False):
+    """
+    Helper function to get skew data. Called by the skew function and placed here to be able to be tested to ensure
+    100% test coverage.
+    :param asset_id: Marquee asset ID
+    :param query_type: QueryType to be sent to measures service
+    :param where: dictionary containing query
+    :param source: string source
+    :param real_time: whether we want real time tdata
+    :param request_id: for debugging purposes
+    """
+    try:
+        q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source,
+                                              real_time=real_time)
+        log_debug(request_id, _logger, 'q %s', q)
+        return _market_data_timed(q, request_id)
+    except MqValueError as m:
+        if allow_exception:
+            log_warning(request_id, _logger, "Ignoring expiry data fetching since there's no data for the given"
+                                             "asset")
+            return MarketDataResponseFrame()
+        raise m
+
+
+@plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
+    id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
+    asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
+def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
+              pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
+              request_id: Optional[str] = None) -> ExtendedSeries:
+    """
+    Skew term structure. Uses most recent date available if pricing_date is not provided.
+
+    :param asset: asset object loaded from security master
+    :param strike_reference: reference for strike level
+    :param distance: strike relative to reference
+    :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: volatility term structure
+    """
+    # Validate params
+    if real_time:
+        raise NotImplementedError('realtime skew term not implemented')  # TODO
+    check_forward_looking(pricing_date, source, 'skew_term')
+
+    asset_id = cross_stored_direction_for_fx_vol(asset) if asset.asset_class == AssetClass.FX else \
+        asset.get_marquee_id()
+
+    q_strikes, buffer = _get_skew_strikes(asset, strike_reference, distance)
+
+    start, end = _range_from_pricing_date(asset.exchange, pricing_date, buffer=buffer)
+    df = df_expiry = pd.DataFrame()
+    dataset_ids = set()
+    where = {'strikeReference': strike_reference.value, 'relativeStrike': q_strikes}
+
+    if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= datetime.date.today()):  # intraday
+        data_requests = [
+            partial(_get_latest_term_structure_data, asset_id, QueryType.IMPLIED_VOLATILITY, where=where,
+                    groupby=['tenor', 'relativeStrike'], source=source, request_id=request_id),
+            partial(_get_latest_term_structure_data, asset_id, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION,
+                    where=where, groupby=['expirationDate', 'relativeStrike'], source=source,
+                    request_id=request_id)
+        ]
+        df, df_expiry = ThreadPoolManager.run_async(data_requests)
+        dataset_ids.update(getattr(df, 'dataset_ids', ()))
+        dataset_ids.update(getattr(df_expiry, 'dataset_ids', ()))
+
+    if df.empty and df_expiry.empty:  # historical
+        data_requests = [
+            partial(get_df_with_retries, partial(_skew_fetcher, asset_id, QueryType.IMPLIED_VOLATILITY, where, source,
+                    real_time, request_id), start_date=start, end_date=end, exchange=asset.exchange),
+            partial(_skew_fetcher, asset_id, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION,
+                    where, source, real_time, request_id, allow_exception=True)
+        ]
+        df, df_expiry = ThreadPoolManager.run_async(data_requests)
+
+        dataset_ids.update(getattr(df, 'dataset_ids', ()))
+        # only if df_expiry not empty
+        if not df_expiry.empty:
+            dataset_ids.update(getattr(df_expiry, 'dataset_ids', ()))
+
+    latest = df.index.union(df_expiry.index).max() if not df_expiry.empty else df.index.max()
+    cbd = _get_custom_bd(asset.exchange)
+    _logger.info('selected pricing date %s', latest)
+
+    # Handle tenor DF
+    if df.empty:
+        series = ExtendedSeries(dtype=float)
+    else:
+        df.index = df.index + df['tenor'].map(_to_offset) + cbd - cbd
+        series = _skew(df, 'relativeStrike', 'impliedVolatility', q_strikes)
+
+    # Add additional data from expiry DF
+    if not df_expiry.empty:
+        df_expiry = df_expiry.loc[latest]
+        df_expiry.index = df_expiry['expirationDate']
+        series_expiry = _skew(df_expiry, 'relativeStrike', 'impliedVolatilityByExpiration', q_strikes)
+        series_expiry = series_expiry[~series_expiry.index.isin(series.index)]
+        series = pd.concat([series, series_expiry])
+
+    series.name = "impliedVolatility"
+    series.sort_index(inplace=True)
+    series = ExtendedSeries(series.loc[DataContext.current.start_date: DataContext.current.end_date])
+    series.dataset_ids = tuple(dataset_ids)
     return series
 
 
@@ -3520,7 +3685,7 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     if not real_time and DataContext.current.end_date >= datetime.date.today():
-        df = append_last_for_measure(df, [asset.get_marquee_id()], QueryType.SPOT, {})
+        df = append_last_for_measure(df, [asset.get_marquee_id()], QueryType.SPOT, {}, source=source)
     series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(volatility(df['spot'], w, returns_type))
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series

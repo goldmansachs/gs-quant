@@ -22,7 +22,7 @@ from pandas.testing import assert_series_equal
 from testfixtures import Replacer
 from testfixtures.mock import Mock
 
-from gs_quant.timeseries import EdrDataReference
+from gs_quant.timeseries import VolReference
 from gs_quant.timeseries.backtesting import Basket, basket_series, MqValueError, MqTypeError, RebalFreq, date, \
     DataContext, np
 
@@ -154,11 +154,16 @@ def test_basket_average_implied_vol():
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
     expected = pd.Series([21.0, 21.2, 21.25, 21.6, 22.0, 21.0], index=dates)
-    actual = a_basket.average_implied_volatility('6m', EdrDataReference.DELTA_CALL, 50)
+    actual = a_basket.average_implied_volatility('6m', VolReference.DELTA_CALL, 50)
     assert_series_equal(actual, expected)
 
     with pytest.raises(NotImplementedError):
-        a_basket.average_implied_volatility('6m', EdrDataReference.DELTA_CALL, 50, real_time=True)
+        a_basket.average_implied_volatility('6m', VolReference.DELTA_CALL, 50, real_time=True)
+
+    mock_data.return_value = [pd.DataFrame(), pd.DataFrame()]
+    expected = pd.Series()
+    actual = a_basket.average_implied_volatility('3m', VolReference.FORWARD, 20)  # no data for this
+    assert_series_equal(expected, actual)
 
     replace.restore()
 
@@ -345,6 +350,34 @@ def test_basket_average_realized_corr():
     with pytest.raises(NotImplementedError):
         with DataContext('2021-01-01', '2021-01-09'):
             result = b_basket.average_realized_correlation('5d', real_time=True)
+    replace.restore()
+
+
+def test_basket_without_weights():
+    replace = Replacer()
+
+    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data.side_effect = [_mock_spot_data(), _mock_spot_data(), _mock_spot_data(), _mock_spot_data()]
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
+
+    a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.5, 0.5], RebalFreq.DAILY)
+    b_basket = Basket(['AAPL UW', 'MSFT UW'])
+
+    with DataContext('2021-01-01', '2021-01-06'):
+        a_price = a_basket.price()
+        b_price = b_basket.price()
+        a_vol = a_basket.average_realized_volatility('2d')
+        b_vol = b_basket.average_realized_volatility('2d')
+    assert_series_equal(a_price, b_price)
+    assert_series_equal(a_vol, b_vol)
+
+    with pytest.raises(MqValueError):
+        c_basket = Basket(['AAPL UW'], [])
+        c_basket.price()
+
     replace.restore()
 
 

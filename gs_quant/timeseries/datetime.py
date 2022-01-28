@@ -483,6 +483,10 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
     >>> series = generate_series(100)
     >>> sliced_series = date_range(series,7,7)
 
+    create time series with the absolute date:
+
+    >>> date_range(series, Date(2021,1,1), Date(2021,12,30))
+
     **See also**
 
     :func:`day` :func: `lag`

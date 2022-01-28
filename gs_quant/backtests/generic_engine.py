@@ -30,6 +30,7 @@ from functools import reduce
 from datetime import date
 from collections import defaultdict
 from itertools import zip_longest
+import copy
 import datetime as dt
 import logging
 
@@ -345,7 +346,7 @@ class GenericEngine(BacktestBaseEngine):
                         else:
                             cp.cash_paid = value * cp.direction
                             backtest.cash_dict[d][ccy] += cp.cash_paid
-                    current_value = backtest.cash_dict[d]
+                    current_value = copy.deepcopy(backtest.cash_dict[d])
 
         logging.info(f'Finished Backtest:- {dt.datetime.now()}')
         return backtest

@@ -3049,6 +3049,45 @@ def _vol_term_typical(reference, value):
     return actual
 
 
+def _skew_term_typical(reference, value):
+    assert DataContext.current_is_set
+    data = {
+        'tenor': ['10y', '10y', '10y', '13m', '13m', '13m'],
+        'impliedVolatility': [5, 10, 15, 50, 55, 60],
+        'relativeStrike': [0.25, 0.5, 0.75, 0.25, 0.5, 0.75]
+    }
+    out = MarketDataResponseFrame(data=data, index=pd.DatetimeIndex(['2022-01-11'] * 6))
+    out.dataset_ids = _test_datasets
+
+    data_expiry = {
+        'expirationDate': ['2022-01-12', '2022-01-12', '2022-01-12'],
+        'impliedVolatilityByExpiration': [1000, 1500, 2000],
+        'relativeStrike': [0.25, 0.5, 0.75]
+    }
+    out_expiry = MarketDataResponseFrame(data=data_expiry, index=pd.DatetimeIndex(['2022-01-11'] * 3))
+    out_expiry.dataset_ids = _test_datasets2
+
+    replace = Replacer()
+    gltsd_mock = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
+    gltsd_mock.side_effect = [[pd.DataFrame(), pd.DataFrame()], [out, out_expiry]]
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.side_effect = [out, out_expiry]
+
+    actual = tm.skew_term(Index('MA123', AssetClass.Equity, '123'), reference, value)
+    idx = pd.DatetimeIndex(['2022-01-12', '2023-02-10', '2032-01-09'])
+    expected = pd.Series([0.666667, 0.181818, 1], name='impliedVolatility', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+
+    if expected.empty:
+        assert actual.empty
+    else:
+        assert_series_equal(expected, pd.Series(actual))
+        assert set(actual.dataset_ids) == set(_test_datasets + _test_datasets2)
+
+    replace.restore()
+    return actual
+
+
 def _vol_term_empty():
     replace = Replacer()
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
@@ -3058,6 +3097,17 @@ def _vol_term_empty():
     mock.return_value = MarketDataResponseFrame()
 
     actual = tm.vol_term(Index('MAXYZ', AssetClass.Equity, 'XYZ'), tm.VolReference.DELTA_CALL, 777)
+    assert actual.empty
+    assert actual.dataset_ids == ()
+    replace.restore()
+
+
+def _skew_term_empty():
+    replace = Replacer()
+    market_mock = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
+    market_mock.side_effect = [[pd.DataFrame(), pd.DataFrame()], [pd.DataFrame(), pd.DataFrame()]]
+
+    actual = tm.skew_term(Index('MAXYZ', AssetClass.Equity, 'XYZ'), tm.SkewReference.DELTA, 777)
     assert actual.empty
     assert actual.dataset_ids == ()
     replace.restore()
@@ -3112,6 +3162,83 @@ def test_vol_term():
     with DataContext(datetime.date.today(), datetime.date.today()):
         with pytest.raises(MqError, match='forward looking date range'):
             tm.vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100, source='plottool')
+
+
+def test__get_skew_strikes():
+    # Test FX
+    asset = Index('MA123', AssetClass.FX, '123')
+    skew_strikes, buf = tm._get_skew_strikes(asset, tm.SkewReference.DELTA, 25)
+    assert skew_strikes == [-25, 25, 0] and buf == 1
+    with pytest.raises(MqValueError):
+        tm._get_skew_strikes(asset, tm.SkewReference.NORMALIZED, 50)
+
+    # Test skew reference types
+    asset = Index('MA123', AssetClass.Equity, '123')
+    skew_strikes, _ = tm._get_skew_strikes(asset, tm.SkewReference.DELTA, 25)
+    assert skew_strikes == [0.75, 0.25, 0.50]
+    skew_strikes, _ = tm._get_skew_strikes(asset, tm.SkewReference.NORMALIZED, 25)
+    assert skew_strikes == [-25, 25, 0]
+    skew_strikes, _ = tm._get_skew_strikes(asset, tm.SkewReference.SPOT, 25)
+    assert skew_strikes == [0.75, 1.25, 1.0]
+    with pytest.raises(MqTypeError):
+        tm._get_skew_strikes(asset, None, 50)
+
+
+def test__skew():
+    df = pd.DataFrame({'relativeStrike': [0.25, 0.5, 0.75, 0.25, 0.5, 0.75], 'iv': [5, 10, 15, 100, 150, 200]},
+                      index=['2021-01-01'] * 3 + ['2021-02-01'] * 3)
+    q_strikes = [0.75, 0.25, 0.5]
+    res = tm._skew(df, 'relativeStrike', 'iv', q_strikes)
+    expected = tm.ExtendedSeries(pd.Series([1.0, 0.66667], name='iv',
+                                           index=pd.to_datetime(['2021-01-01', '2021-02-01'])))
+    assert_series_equal(res, expected)
+    with pytest.raises(MqValueError):
+        tm._skew(df.loc[df['relativeStrike'].isin([0.25, 0.5])], 'relativeStrike', 'iv', q_strikes)
+
+
+def _skew_term_no_data():
+    replace = Replacer()
+    market_mock = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
+    market_mock.side_effect = [[pd.DataFrame(), pd.DataFrame()], [pd.DataFrame(), MarketDataResponseFrame()]]
+
+    actual = tm.skew_term(Index('MAXYZ', AssetClass.Equity, 'XYZ'), tm.SkewReference.DELTA, 777)
+    assert actual.empty
+    assert actual.dataset_ids == ()
+    replace.restore()
+
+
+def test__skew_term_fetcher():
+    replace = Replacer()
+    market_mock = replace('gs_quant.timeseries.measures._market_data_timed', Mock())
+    market_mock.side_effect = [MarketDataResponseFrame(), MqValueError(), MqValueError]
+    actual = tm._skew_fetcher('ABC123', tm.QueryType.IMPLIED_VOLATILITY, {}, 'any', True, allow_exception=False)
+    assert isinstance(actual, MarketDataResponseFrame) and actual.empty
+
+    actual = tm._skew_fetcher('ABC123', tm.QueryType.IMPLIED_VOLATILITY, {}, 'any', True, allow_exception=True)
+    assert isinstance(actual, MarketDataResponseFrame) and actual.empty
+
+    with pytest.raises(MqValueError):
+        tm._skew_fetcher('ABC123', tm.QueryType.IMPLIED_VOLATILITY, {}, 'any', True, allow_exception=False)
+    replace.restore()
+
+
+def test_skew_term():
+    with DataContext('2018-01-01', '2040-01-01'):
+        _skew_term_typical(tm.SkewReference.DELTA, 25)
+        _skew_term_empty()
+        _skew_term_no_data()
+    with DataContext('2018-01-16', '2018-12-31'):
+        out = _skew_term_typical(tm.SkewReference.DELTA, 25)
+        assert out.empty
+        assert set(out.dataset_ids) == set(_test_datasets + _test_datasets2)
+    with pytest.raises(NotImplementedError):
+        tm.skew_term(..., tm.SkewReference.SPOT, 100, real_time=True)
+    with DataContext('2020-01-01', '2021-01-01'):
+        with pytest.raises(MqError, match='forward looking date range'):
+            tm.skew_term(Index('MA123', AssetClass.Equity, '123'), tm.SkewReference.SPOT, 100, source='plottool')
+    with DataContext(datetime.date.today(), datetime.date.today()):
+        with pytest.raises(MqError, match='forward looking date range'):
+            tm.skew_term(Index('MA123', AssetClass.Equity, '123'), tm.SkewReference.SPOT, 100, source='plottool')
 
 
 def _vol_term_fx(reference, value):

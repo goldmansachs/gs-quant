@@ -127,10 +127,10 @@ class BackTest(BaseBacktest):
         """
         summary = pd.DataFrame({date: {risk: results[risk].aggregate(True)
                                        for risk in results.risk_measures} for date, results in self._results.items()}).T
-        cash_summary = {}
+        cash_summary = defaultdict(dict)
         for date, results in self._cash_dict.items():
             for ccy, value in results.items():
-                cash_summary[f'Cumulative Cash {ccy}'] = {date: value}
+                cash_summary[f'Cumulative Cash {ccy}'][date] = value
         if len(cash_summary) > 1:
             raise RuntimeError('Cannot aggregate cash in multiple currencies')
         cash = pd.concat([pd.Series(cash_dict, name='Cumulative Cash')
