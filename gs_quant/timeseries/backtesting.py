@@ -22,7 +22,7 @@ from pydash import chunk
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.timeseries.econometrics import volatility, correlation
 from gs_quant.timeseries.helper import _create_enum
-from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
+from gs_quant.timeseries.measures_helper import VolReference, preprocess_implied_vol_strikes_eq
 from gs_quant import timeseries as ts
 from .statistics import *
 from ..api.gs.assets import GsAssetApi
@@ -43,6 +43,7 @@ def backtest_basket(
 ):
     num_assets = len(series)
     costs = costs or [0] * num_assets
+    weights = weights or [1 / num_assets] * num_assets
 
     if not all(isinstance(x, pd.Series) for x in series):
         raise MqTypeError("expected a list of series")
@@ -129,7 +130,7 @@ def backtest_basket(
 @plot_function
 def basket_series(
         series: list,
-        weights: list,
+        weights: list = None,
         costs: list = None,
         rebal_freq: RebalFreq = RebalFreq.DAILY,
         return_type: ReturnType = ReturnType.EXCESS_RETURN,
@@ -138,9 +139,9 @@ def basket_series(
     Calculates a basket return series.
 
     :param series: list of time series of instrument prices
-    :param weights: list of weights
-    :param costs: list of execution costs in decimal; defaults to costs of 0
-    :param rebal_freq: rebalancing frequency - Daily or Monthly
+    :param weights: list of weights (defaults to evenly weight series)
+    :param costs: list of execution costs in decimal (defaults to costs of 0)
+    :param rebal_freq: rebalancing frequency - Daily or Monthly (defaults to Daily)
     :param return_type: return type of underlying instruments - only excess return is supported
     :return: time series of the resulting basket
 
@@ -170,14 +171,14 @@ class Basket:
     Construct a basket of stocks
 
     :param stocks: list of stock bloomberg ids
-    :param weights: list of weights
-    :param rebal_freq: rebalancing frequency - Daily or Monthly
+    :param weights: list of weights (defaults to evenly weight stocks)
+    :param rebal_freq: rebalancing frequency - Daily or Monthly (defaults to daily)
 
     """
 
-    def __init__(self, stocks: list, weights: list, rebal_freq: RebalFreq = RebalFreq.DAILY):
-        if len(stocks) != len(weights):
-            raise MqValueError("stocks and weights must have the same length")
+    def __init__(self, stocks: list, weights: list = None, rebal_freq: RebalFreq = RebalFreq.DAILY):
+        if weights and len(weights) and len(stocks) != len(weights):  # make sure that they passed in an array for weig
+            raise MqValueError("Stocks and weights must have the same length if both specified.")
 
         self.bbids = stocks
         self.rebal_freq = rebal_freq
@@ -271,7 +272,7 @@ class Basket:
 
     @requires_session
     @plot_method
-    def average_implied_volatility(self, tenor: str, strike_reference: EdrDataReference, relative_strike: Real, *,
+    def average_implied_volatility(self, tenor: str, strike_reference: VolReference, relative_strike: Real, *,
                                    real_time: bool = False, request_id: Optional[str] = None,
                                    source: Optional[str] = None) -> pd.Series:
         """
@@ -289,8 +290,7 @@ class Basket:
         if real_time:
             raise NotImplementedError('real-time basket implied vol not implemented')
 
-        ref_string, relative_strike = preprocess_implied_vol_strikes_eq(VolReference(strike_reference.value),
-                                                                        relative_strike)
+        ref_string, relative_strike = preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
 
         log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
                   relative_strike)
@@ -316,6 +316,10 @@ class Basket:
             vol_data = ts.append_last_for_measure(vol_data, self.get_marquee_ids(), QueryType.IMPLIED_VOLATILITY, where,
                                                   source=source, request_id=request_id)
             vol_data.index.rename('date', inplace=True)
+
+        # Below transformations will throw errors if vol_data is empty
+        if vol_data.empty:
+            return pd.Series()
 
         vols = vol_data.pivot_table('impliedVolatility', ['date'], 'assetId')
         vols.reindex(self.get_marquee_ids(), axis=1)
