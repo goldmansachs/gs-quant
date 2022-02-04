@@ -100,7 +100,7 @@ def test_basket_price():
 
     replace = Replacer()
 
-    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
     mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
@@ -142,7 +142,7 @@ def test_basket_average_implied_vol():
     implied_vol = x.append(y)
     implied_vol.index.name = 'date'
 
-    mock_spot = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_spot = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
     mock_spot.side_effect = [implied_vol.rename(columns={'impliedVolatility': 'spot'})]
 
     mock_data = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
@@ -176,7 +176,7 @@ def test_basket_average_realized_vol():
     dates_feb = pd.DatetimeIndex([date(2021, 2, 1), date(2021, 2, 2), date(2021, 2, 3), date(2021, 2, 4),
                                   date(2021, 2, 5), date(2021, 2, 6)])
 
-    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
     mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb(), _mock_spot_data_feb()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
@@ -248,7 +248,7 @@ def _mock_spot_data_corr():
 def test_basket_average_realized_vol_wts():
     replace = Replacer()
 
-    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
     mock_data.side_effect = [_mock_data_simple()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
@@ -277,7 +277,7 @@ def test_basket_average_realized_vol_intraday():
     z = pd.DataFrame({'spot': (a ** 3).tolist()}, index=a.index)
     z['assetId'] = 'SPX_MOCK_MQID'
 
-    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
     mock_data.side_effect = [z]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
@@ -302,7 +302,7 @@ def test_basket_average_realized_corr():
     dates = pd.DatetimeIndex([date(2021, 1, 1), date(2021, 1, 2), date(2021, 1, 3), date(2021, 1, 4), date(2021, 1, 5),
                               date(2021, 1, 6)])
 
-    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
     mock_data.side_effect = [_mock_spot_data_identical(), _mock_spot_data_corr(),
                              _mock_spot_data_identical()]
 
@@ -356,7 +356,7 @@ def test_basket_average_realized_corr():
 def test_basket_without_weights():
     replace = Replacer()
 
-    mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
     mock_data.side_effect = [_mock_spot_data(), _mock_spot_data(), _mock_spot_data(), _mock_spot_data()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())

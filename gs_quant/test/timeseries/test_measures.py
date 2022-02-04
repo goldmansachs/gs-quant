@@ -1648,6 +1648,20 @@ def test_real_corr_n():
     with pytest.raises(MqValueError):
         tm.realized_correlation(spx, '1m', 200)
 
+    mock_asset = GsAsset(asset_class='Equity', id='MA1234567890', type_='Custom Basket', name='test')
+    mock_basket = CustomBasket(gs_asset=mock_asset, _finish_init=False)
+
+    # Test baskets must have top n
+    with pytest.raises(MqValueError):
+        tm.realized_correlation(mock_basket, '1m', composition_date=datetime.date.today())
+
+    mock_asset = GsAsset(asset_class='Equity', id='MA1234567890', type_='Custom Basket', name='test')
+    mock_basket = CustomBasket(gs_asset=mock_asset, _finish_init=False)
+
+    # Test baskets must have top n
+    with pytest.raises(MqValueError):
+        tm.realized_correlation(mock_basket, '1m', composition_date=None)
+
     resources = os.path.join(os.path.dirname(__file__), '..', 'resources')
     r_vol = pd.read_csv(os.path.join(resources, 'SPX_50_rcorr_in.csv'))
     r_vol.index = pd.to_datetime(r_vol['date'])
@@ -1805,7 +1819,7 @@ def test_avg_impl_vol(mocker):
     df3 = pd.DataFrame(data={'impliedVolatility': [2, 5], 'assetId': ['MA3', 'MA3']},
                        index=pd.date_range(start='2020-01-01', periods=2))
 
-    replace('gs_quant.api.gs.assets.GsAssetApi.get_asset_positions_data', mock_index_positions_data)
+    replace('gs_quant.api.gs.indices.GsIndexApi.get_positions_data', mock_index_positions_data)
     market_data_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     mock_implied_vol = MarketDataResponseFrame(pd.concat([df1, df2, df3], join='inner'))
     mock_implied_vol.dataset_ids = _test_datasets
@@ -1864,7 +1878,7 @@ def test_avg_realized_vol():
     mock_spot = MarketDataResponseFrame(pd.concat([df1, df2, df3], join='inner'))
     mock_spot.dataset_ids = _test_datasets
 
-    replace('gs_quant.api.gs.assets.GsAssetApi.get_asset_positions_data', mock_index_positions_data)
+    replace('gs_quant.api.gs.indices.GsIndexApi.get_positions_data', mock_index_positions_data)
     last_mock = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
     last_mock.return_value = None
     market_data_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
@@ -1907,7 +1921,7 @@ def test_avg_realized_vol():
 
     replace.restore()
 
-    empty_positions_data_mock = replace('gs_quant.api.gs.assets.GsAssetApi.get_asset_positions_data', Mock())
+    empty_positions_data_mock = replace('gs_quant.api.gs.indices.GsIndexApi.get_positions_data', Mock())
     empty_positions_data_mock.return_value = []
     with pytest.raises(MqValueError):
         tm.average_realized_volatility(mock_spx, '1w', Returns.SIMPLE, 5)

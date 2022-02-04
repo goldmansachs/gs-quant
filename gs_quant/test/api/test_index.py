@@ -18,6 +18,8 @@ from unittest import mock
 
 import datetime as dt
 
+import testfixtures
+
 from gs_quant.api.gs.assets import AssetType
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.session import GsSession, Environment
@@ -127,3 +129,54 @@ def test_basket_initial_price(mocker):
     # run test
     response = GsIndexApi.initial_price(basket_id, date)
     assert response == mock_response
+
+
+def test_get_asset_positions_data(mocker):
+    marquee_id = 'MQA1234567890'
+    position_date = dt.date(2019, 2, 19)
+
+    mock_response = {'results': [
+        {
+            'underlyingAssetId': 'MA4B66MW5E27UAFU2CD',
+            'divisor': 8305900333.262549,
+            'quantity': 0.016836826158,
+            'positionType': 'close',
+            'bbid': 'EXPE UW',
+            'assetId': 'MA4B66MW5E27U8P32SB',
+            'positionDate': '2019-11-07',
+            'assetClassificationsGicsSector': 'Consumer Discretionary',
+            'closePrice': 98.29,
+            'ric': 'EXPE.OQ'
+        },
+    ]}
+
+    expected_response = [
+        {
+            'underlyingAssetId': 'MA4B66MW5E27UAFU2CD',
+            'divisor': 8305900333.262549,
+            'quantity': 0.016836826158,
+            'positionType': 'close',
+            'bbid': 'EXPE UW',
+            'assetId': 'MA4B66MW5E27U8P32SB',
+            'positionDate': '2019-11-07',
+            'assetClassificationsGicsSector': 'Consumer Discretionary',
+            'closePrice': 98.29,
+            'ric': 'EXPE.OQ'
+        },
+    ]
+
+    # mock GsSession
+    mocker.patch.object(GsSession.__class__, 'default_value',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+
+    # run test
+    response = GsIndexApi.get_positions_data(marquee_id, position_date, position_date)
+
+    position_date_str = position_date.isoformat()
+    GsSession.current._get.assert_called_with('/indices/{id}/positions/data?startDate={start_date}&endDate={end_date}'.
+                                              format(id=marquee_id,
+                                                     start_date=position_date_str,
+                                                     end_date=position_date_str))
+
+    testfixtures.compare(response, expected_response)

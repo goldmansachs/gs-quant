@@ -13,23 +13,24 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
+
+from abc import abstractmethod
+import backoff
+import certifi
+from configparser import ConfigParser
+from enum import Enum, auto, unique
 import inspect
 import itertools
 import json
-import os
-import ssl
-from abc import abstractmethod
-from configparser import ConfigParser
-from enum import Enum, auto, unique
-from typing import Optional, Union, Iterable
-
-import backoff
-import certifi
 import msgpack
+import os
 import pandas as pd
 import requests
 import requests.adapters
 import requests.cookies
+import ssl
+from typing import Optional, Union, Iterable
 
 from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
@@ -345,7 +346,7 @@ class GsSession(ContextBase):
                     return PassThroughGSSSOSession(environment_or_domain, token, api_version=api_version,
                                                    application=application, http_adapter=http_adapter)
                 except NameError:
-                    raise MqUninitialisedError('This option requires gs_quant_internal to be installed')
+                    raise MqUninitialisedError('This option requires gs_quant_auth to be installed')
             else:
                 return PassThroughSession(environment_or_domain, token, api_version=api_version,
                                           application=application, http_adapter=http_adapter)
@@ -421,7 +422,7 @@ class PassThroughSession(GsSession):
 
 
 try:
-    from gs_quant_internal.kerberos.session_kerberos import KerberosSessionMixin
+    from gs_quant_auth.kerberos.session_kerberos import KerberosSessionMixin
 
     class KerberosSession(KerberosSessionMixin, GsSession):
 

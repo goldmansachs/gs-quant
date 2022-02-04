@@ -31,6 +31,7 @@ from gs_quant.api.gs.carbon import CarbonCard, GsCarbonApi, CarbonTargetCoverage
     CarbonAnalyticsView
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.esg import ESGMeasure, GsEsgApi, ESGCard
+from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.thematics import ThematicMeasure, GsThematicApi, Region
@@ -453,7 +454,7 @@ class PositionedEntity(metaclass=ABCMeta):
                            fields: [str] = None,
                            position_type: PositionType = PositionType.CLOSE) -> List[Dict]:
         if self.positioned_entity_type == EntityType.ASSET:
-            return GsAssetApi.get_asset_positions_data(self.id, start, end, fields, position_type)
+            return GsIndexApi.get_positions_data(self.id, start, end, fields, position_type)
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             return GsPortfolioApi.get_positions_data(self.id, start, end, fields, position_type)
         raise NotImplementedError

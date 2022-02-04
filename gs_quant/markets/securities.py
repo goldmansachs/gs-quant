@@ -1391,6 +1391,7 @@ class SecurityMaster:
                 #  supported for now)
                 if class_ is None or e['assetClass'] == class_.value:
                     box = e['identifiers']
+                    box['id'] = e['id']  # copy top-level security id into result
                     key = box[id_type.value]
                     if key in box:
                         _logger.debug(f'encountered duplicate key {key}')

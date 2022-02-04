@@ -176,6 +176,52 @@ def normalized_performance(report_id: str, leg: str = None, *, source: str = Non
     return pd.Series(combined['normalizedPerformance'], name="normalizedPerformance").dropna()
 
 
+@plot_measure_entity(EntityType.REPORT, [QueryType.PNL])
+def long_pnl(report_id: str, *, source: str = None,
+             real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    PNL from long holdings
+
+    :param report_id: id of performance report
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio long pnl
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    performance_report = PerformanceReport.get(report_id)
+
+    constituent_data = performance_report.get_portfolio_constituents(
+        fields=['pnl', 'quantity'], start_date=start_date, end_date=end_date).set_index('date')
+    long_leg = constituent_data[constituent_data['quantity'] > 0]['pnl']
+    long_leg = long_leg.groupby(level=0).sum()
+    return pd.Series(long_leg, name="longPnl")
+
+
+@plot_measure_entity(EntityType.REPORT, [QueryType.PNL])
+def short_pnl(report_id: str, *, source: str = None,
+              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+
+    PNL from short holdings
+    :param report_id: id of performance report
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio short pnl
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    performance_report = PerformanceReport.get(report_id)
+
+    constituent_data = performance_report.get_portfolio_constituents(
+        fields=['pnl', 'quantity'], start_date=start_date, end_date=end_date).set_index('date')
+    short_leg = constituent_data[constituent_data['quantity'] < 0]['pnl']
+    short_leg = short_leg.groupby(level=0).sum()
+    return pd.Series(short_leg, name="shortPnl")
+
+
 @plot_measure_entity(EntityType.REPORT, [QueryType.THEMATIC_EXPOSURE])
 def thematic_exposure(report_id: str, basket_ticker: str, *, source: str = None,
                       real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:

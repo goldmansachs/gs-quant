@@ -17,15 +17,16 @@ under the License.
 from datetime import date
 import pandas as pd
 import pytest
-from gs_quant.instrument import FXOption, FXForward, IRSwaption
+from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap
 from gs_quant.backtests.triggers import *
-from gs_quant.backtests.actions import AddTradeAction, HedgeAction
+from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction
 from gs_quant.backtests.data_sources import GenericDataSource
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.generic_engine import GenericEngine
 from gs_quant.test.utils.test_utils import MockCalc
 from gs_quant.risk import Price, FXDelta
 from gs_quant.markets import PricingContext
+from gs_quant.common import Currency, PayReceive
 
 
 @pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
@@ -137,3 +138,108 @@ def test_mkt_trigger_data_sources(mocker):
         assert len(ledger) == 6
         assert round(summary[Price].sum()) == 25163614
         assert round(summary['Cumulative Cash'].sum()) == -2153015
+
+
+@pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
+def test_exit_action_noarg(mocker):
+    with MockCalc(mocker):
+
+        start_date = date(2021, 12, 6)
+        end_date = date(2021, 12, 10)
+
+        # Define trade
+        irswap = IRSwap(PayReceive.Receive, '10y', Currency.USD, notional_amount=1e5, name='swap')
+
+        trig_req_add = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b')
+        trig_req_exit = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='2b')
+        actions_add = AddTradeAction(irswap)
+        actions_exit = ExitTradeAction()
+
+        triggers = [PeriodicTrigger(trig_req_add, actions_add), PeriodicTrigger(trig_req_exit, actions_exit)]
+        strategy = Strategy(None, triggers)
+
+        # run backtest daily
+        engine = GenericEngine()
+        # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 6), date(2021, 12, 7), date(2021, 12, 8),
+                                                         date(2021, 12, 9), date(2021, 12, 10)], end=end_date,
+                                       show_progress=True)
+
+        trade_ledger = backtest.trade_ledger().to_dict('index')
+
+        assert trade_ledger['Action1_swap_2021-12-06']['Open'] == date(2021, 12, 6)
+        assert trade_ledger['Action1_swap_2021-12-06']['Close'] == date(2021, 12, 6)
+        assert trade_ledger['Action1_swap_2021-12-07']['Open'] == date(2021, 12, 7)
+        assert trade_ledger['Action1_swap_2021-12-07']['Close'] == date(2021, 12, 8)
+
+
+@pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
+def test_exit_action_emptyresults(mocker):
+    with MockCalc(mocker):
+
+        start_date = date(2021, 12, 6)
+        end_date = date(2021, 12, 10)
+
+        # Define trade
+        irswap = IRSwap(PayReceive.Receive, '10y', Currency.USD, notional_amount=1e5, name='swap')
+
+        trig_req_add = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='2b')
+        trig_req_exit = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b')
+        actions_add = AddTradeAction(irswap)
+        actions_exit = ExitTradeAction()
+
+        triggers = [PeriodicTrigger(trig_req_add, actions_add), PeriodicTrigger(trig_req_exit, actions_exit)]
+        strategy = Strategy(None, triggers)
+
+        # run backtest daily
+        engine = GenericEngine()
+        # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 6), date(2021, 12, 7), date(2021, 12, 8),
+                                                         date(2021, 12, 9), date(2021, 12, 10)], end=end_date,
+                                       show_progress=True)
+
+        trade_ledger = backtest.trade_ledger().to_dict('index')
+
+        assert trade_ledger['Action1_swap_2021-12-06']['Open'] == date(2021, 12, 6)
+        assert trade_ledger['Action1_swap_2021-12-06']['Close'] == date(2021, 12, 6)
+        assert trade_ledger['Action1_swap_2021-12-08']['Open'] == date(2021, 12, 8)
+        assert trade_ledger['Action1_swap_2021-12-08']['Close'] == date(2021, 12, 8)
+        assert trade_ledger['Action1_swap_2021-12-10']['Open'] == date(2021, 12, 10)
+        assert trade_ledger['Action1_swap_2021-12-10']['Close'] == date(2021, 12, 10)
+
+
+@pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
+def test_exit_action_bytradename(mocker):
+    with MockCalc(mocker):
+
+        start_date = date(2021, 12, 6)
+        end_date = date(2021, 12, 10)
+
+        # Define trade
+        irswap1 = IRSwap(PayReceive.Receive, '10y', Currency.USD, notional_amount=1e5, name='swap1')
+        irswap2 = IRSwap(PayReceive.Pay, '5y', Currency.USD, notional_amount=1e5, name='swap2')
+
+        trig_req_add = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b')
+        trig_req_exit = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='2b')
+        actions_add = AddTradeAction([irswap1, irswap2])
+        actions_exit = ExitTradeAction('swap1')
+
+        triggers = [PeriodicTrigger(trig_req_add, actions_add), PeriodicTrigger(trig_req_exit, actions_exit)]
+        strategy = Strategy(None, triggers)
+
+        # run backtest daily
+        engine = GenericEngine()
+        # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 6), date(2021, 12, 7), date(2021, 12, 8),
+                                                         date(2021, 12, 9), date(2021, 12, 10)], end=end_date,
+                                       show_progress=True)
+
+        trade_ledger = backtest.trade_ledger().to_dict('index')
+
+        assert trade_ledger['Action1_swap1_2021-12-06']['Open'] == date(2021, 12, 6)
+        assert trade_ledger['Action1_swap1_2021-12-06']['Close'] == date(2021, 12, 6)
+        assert trade_ledger['Action1_swap1_2021-12-07']['Open'] == date(2021, 12, 7)
+        assert trade_ledger['Action1_swap1_2021-12-07']['Close'] == date(2021, 12, 8)
+        assert trade_ledger['Action1_swap2_2021-12-06']['Status'] == 'open'
+        assert trade_ledger['Action1_swap2_2021-12-07']['Status'] == 'open'
+        assert trade_ledger['Action1_swap2_2021-12-10']['Status'] == 'open'

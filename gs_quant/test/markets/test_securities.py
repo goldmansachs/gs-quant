@@ -431,7 +431,7 @@ def test_get_all_identifiers_with_assetTypes_not_none(mocker):
         "results": [
             {
                 "type": "ETF",
-                "id": "GSPD_mock_ETF",
+                "id": "mock_ETF_id",
                 "assetClass": "Equity",
                 "identifiers": {
                     "gsid": 1111111,
@@ -447,13 +447,13 @@ def test_get_all_identifiers_with_assetTypes_not_none(mocker):
         "results": [
             {
                 "type": "Common Stock",
-                "id": "GSPD_mock_stock",
+                "id": "mock_stock_id",
                 "assetClass": "Equity",
                 "identifiers": {
                     "gsid": 222222,
                     "ric": "mock_stock_ric",
-                    "id": "mock_stock_id",
                     "bbid": "mock_stock_bbid"
+                    # id omitted from nested dict for testing
                 }
             }
         ],

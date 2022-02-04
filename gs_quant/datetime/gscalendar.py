@@ -36,6 +36,7 @@ class GsCalendar:
 
         self.__calendars = calendars
         self.__holidays = set()
+        self.__holidays_loaded = False
         self.__business_day_calendars = {}
 
     @staticmethod
@@ -54,12 +55,12 @@ class GsCalendar:
 
     @property
     def holidays(self) -> set:
-        if self.__calendars and not self.__holidays:
+        if self.__calendars and not self.__holidays_loaded:
             dataset = Dataset(Dataset.GS.HOLIDAY)
-            for holiday_id in self.__calendars:
-                data = dataset.get_data(exchange=holiday_id, start=self.DATE_LOW_LIMIT, end=self.DATE_HIGH_LIMIT)
-                if not data.empty:
-                    self.__holidays.update(data.index.values.astype('datetime64[D]'))
+            data = dataset.get_data(exchange=self.__calendars, start=self.DATE_LOW_LIMIT, end=self.DATE_HIGH_LIMIT)
+            if not data.empty:
+                self.__holidays.update(data.index.values.astype('datetime64[D]'))
+            self.__holidays_loaded = True
 
         return self.__holidays
 

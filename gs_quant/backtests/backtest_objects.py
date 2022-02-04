@@ -146,7 +146,15 @@ class BackTest(BaseBacktest):
         for date in sorted(self.cash_payments.keys()):
             cash_list = self.cash_payments[date]
             for cash in cash_list:
-                if cash.trade.name in names:
+                if cash.direction == 0:
+                    ledger[cash.trade.name] = {'Open': date,
+                                               'Close': date,
+                                               'Open Value': 0,
+                                               'Close Value': 0,
+                                               'Long Short': cash.direction,
+                                               'Status': 'closed',
+                                               'Trade PnL': 0}
+                elif cash.trade.name in names:
                     if cash.cash_paid is not None:
                         ledger[cash.trade.name]['Close'] = date
                         ledger[cash.trade.name]['Close Value'] += cash.cash_paid

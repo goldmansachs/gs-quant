@@ -364,10 +364,9 @@ class FactorRiskModel(RiskModel):
         :param factor_metadata: factor metadata object
         """
         try:
-            GsFactorRiskModelApi.get_risk_model_factor(self.id, factor_id=factor_metadata.identifier)
+            GsFactorRiskModelApi.update_risk_model_factor(self.id, factor_metadata)
         except MqRequestError:
             GsFactorRiskModelApi.create_risk_model_factor(self.id, factor_metadata)
-        GsFactorRiskModelApi.update_risk_model_factor(self.id, factor_metadata)
 
     def delete_factor_metadata(self, factor_id: str):
         """ Delete a factor's metadata from a risk model

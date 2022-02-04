@@ -159,6 +159,51 @@ constituents_data_l_s = {
     ]
 }
 
+pnl_data_l_s = {
+    'quantity': [
+        -1,
+        -2,
+        -3,
+        -1,
+        -2,
+        -3,
+        1,
+        2,
+        3,
+        1,
+        2,
+        3
+    ],
+    'pnl': [
+        0,
+        -1,
+        -1,
+        0,
+        -1,
+        -1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1
+    ],
+    'date': [
+        '2020-01-02',
+        '2020-01-03',
+        '2020-01-04',
+        '2020-01-02',
+        '2020-01-03',
+        '2020-01-04',
+        '2020-01-02',
+        '2020-01-03',
+        '2020-01-04',
+        '2020-01-02',
+        '2020-01-03',
+        '2020-01-04'
+    ]
+}
+
 constituents_data = {
     'netExposure': [
         1,
@@ -174,6 +219,34 @@ constituents_data = {
         1,
         1,
         1
+    ],
+    'pnl': [
+        0,
+        1,
+        1
+    ],
+    'date': [
+        '2020-01-02',
+        '2020-01-03',
+        '2020-01-04'
+    ]
+}
+
+constituents_data_s = {
+    'netExposure': [
+        -1,
+        -2,
+        -3
+    ],
+    'assetId': [
+        "MA",
+        "MA",
+        "MA"
+    ],
+    'quantity': [
+        -1,
+        -1,
+        -1
     ],
     'pnl': [
         0,
@@ -516,6 +589,116 @@ def test_normalized_performance_short():
         with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
             actual = mr.normalized_performance('MP1', k)
             assert all((actual.values - v.values) < 0.01)
+    replace.restore()
+
+
+def test_get_long_pnl():
+    idx = pd.date_range('2020-01-02', freq='D', periods=3)
+    replace = Replacer()
+    expected = pd.Series(data=[0, 2, 2], index=idx, name='longPnl', dtype='float64')
+
+    mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
+    mock.return_value = [
+        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
+                          'type': 'Portfolio Performance Analytics',
+                          'parameters': {'transactionCostModel': 'FIXED'}})]
+    # mock PerformanceReport.get_portfolio_constituents()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
+    mock.return_value = MarketDataResponseFrame(data=pnl_data_l_s, dtype="float64")
+
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+    mock.return_value = PerformanceReport(report_id='RP1',
+                                          position_source_type='Portfolio',
+                                          position_source_id='MP1',
+                                          report_type='Portfolio Performance Analytics',
+                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+        actual = mr.long_pnl('MP1')
+        assert all(actual.values == expected.values)
+    replace.restore()
+
+
+def test_get_short_pnl():
+    idx = pd.date_range('2020-01-02', freq='D', periods=3)
+    replace = Replacer()
+    expected = pd.Series(data=[0, -2, -2], index=idx, name='shortPnl', dtype='float64')
+
+    mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
+    mock.return_value = [
+        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
+                          'type': 'Portfolio Performance Analytics',
+                          'parameters': {'transactionCostModel': 'FIXED'}})]
+    # mock PerformanceReport.get_portfolio_constituents()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
+    mock.return_value = MarketDataResponseFrame(data=pnl_data_l_s, dtype="float64")
+
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+    mock.return_value = PerformanceReport(report_id='RP1',
+                                          position_source_type='Portfolio',
+                                          position_source_id='MP1',
+                                          report_type='Portfolio Performance Analytics',
+                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+        actual = mr.short_pnl('MP1')
+        assert all(actual.values == expected.values)
+    replace.restore()
+
+
+def test_get_short_pnl_empty():
+    replace = Replacer()
+    expected = pd.Series()
+
+    mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
+    mock.return_value = [
+        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
+                          'type': 'Portfolio Performance Analytics',
+                          'parameters': {'transactionCostModel': 'FIXED'}})]
+    # mock PerformanceReport.get_portfolio_constituents()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
+    mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
+
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+    mock.return_value = PerformanceReport(report_id='RP1',
+                                          position_source_type='Portfolio',
+                                          position_source_id='MP1',
+                                          report_type='Portfolio Performance Analytics',
+                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+        actual = mr.short_pnl('MP1')
+        assert all(actual.values == expected.values)
+    replace.restore()
+
+
+def test_get_long_pnl_empty():
+    replace = Replacer()
+    expected = pd.Series()
+
+    mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
+    mock.return_value = [
+        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
+                          'type': 'Portfolio Performance Analytics',
+                          'parameters': {'transactionCostModel': 'FIXED'}})]
+    # mock PerformanceReport.get_portfolio_constituents()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
+    mock.return_value = MarketDataResponseFrame(data=constituents_data_s, dtype="float64")
+
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+    mock.return_value = PerformanceReport(report_id='RP1',
+                                          position_source_type='Portfolio',
+                                          position_source_id='MP1',
+                                          report_type='Portfolio Performance Analytics',
+                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+        actual = mr.long_pnl('MP1')
+        assert all(actual.values == expected.values)
     replace.restore()
 
 

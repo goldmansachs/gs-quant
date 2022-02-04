@@ -15,7 +15,7 @@ under the License.
 """
 
 from abc import ABCMeta
-from gs_quant.target.instrument import Instrument, Cash
+from gs_quant.instrument import Instrument, Cash
 from gs_quant.backtests.core import TimeWindow, ValuationFixingType
 from gs_quant.backtests.data_handler import DataHandler
 import numpy as np
