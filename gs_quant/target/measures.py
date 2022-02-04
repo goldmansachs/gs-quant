@@ -286,10 +286,10 @@ EqAnnualImpliedVol = RiskMeasure(name="EqAnnualImpliedVol", asset_class=AssetCla
 EqAnnualImpliedVol.__doc__ = "Equity Annual Implied Volatility (%)"
 
 EqDelta = RiskMeasure(name="EqDelta", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Delta"))
-EqDelta.__doc__ = "Change in Dollar Price (USD present value) due to individual $1 moves in the spot price of underlying equity security"
+EqDelta.__doc__ = "Change in Dollar Price (USD present value) due to individual 1% move in the spot price of underlying equity security"
 
 EqGamma = RiskMeasure(name="EqGamma", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Gamma"))
-EqGamma.__doc__ = "Change in EqDelta for a $1 shift in the price of the underlying equity security"
+EqGamma.__doc__ = "Change in EqDelta for a 1% move in the price of the underlying equity security"
 
 EqSpot = RiskMeasure(name="EqSpot", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Spot"))
 EqSpot.__doc__ = "Equity Spot"

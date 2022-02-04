@@ -19,7 +19,8 @@ from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHa
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date
 from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment
-from gs_quant.backtests.actions import Action, AddTradeAction, HedgeAction, AddTradeActionInfo, HedgeActionInfo
+from gs_quant.backtests.actions import Action, AddTradeAction, HedgeAction, AddTradeActionInfo, HedgeActionInfo, \
+    ExitTradeAction, ExitTradeActionInfo
 from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.instrument import Instrument
 from gs_quant.markets.portfolio import Portfolio
@@ -129,11 +130,67 @@ class HedgeActionImpl(ActionHandler):
         return backtest
 
 
+class ExitTradeActionImpl(ActionHandler):
+    def __init__(self, action: ExitTradeAction):
+        super().__init__(action)
+
+    def apply_action(self,
+                     state: Union[date, Iterable[date]],
+                     backtest: BackTest,
+                     trigger_info: Optional[Union[ExitTradeActionInfo, Iterable[ExitTradeActionInfo]]] = None):
+
+        cash_payments_remove = []
+
+        for s in state:
+
+            trades_to_remove = []
+
+            fut_dates = list(filter(lambda d: d >= s and type(d) is dt.date, backtest.states))
+            for port_date in fut_dates:
+                pos_fut = list(backtest.portfolio_dict[port_date].all_instruments)
+
+                if self.action.priceable_names:
+                    indexes_to_remove = [i for i, x in enumerate(pos_fut) if
+                                         dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s and
+                                         x.name.split('_')[-2] in self.action.priceable_names]
+                else:
+                    indexes_to_remove = [i for i, x in enumerate(pos_fut) if
+                                         dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s]
+
+                for index in sorted(indexes_to_remove, reverse=True):
+                    if pos_fut[index].name not in trades_to_remove:
+                        trades_to_remove.append(pos_fut[index].name)
+                    del pos_fut[index]
+                backtest.portfolio_dict[port_date] = Portfolio(tuple(pos_fut))
+
+            for cp_date, cp_list in backtest.cash_payments.items():
+                if cp_date > s:
+                    indexes_to_remove = [i for i, cp in enumerate(cp_list) if cp.trade.name in trades_to_remove]
+                    for index in sorted(indexes_to_remove, reverse=True):
+                        cp = cp_list[index]
+                        prev_pos = [i for i, x in enumerate(backtest.cash_payments[s]) if cp.trade.name == x.trade.name]
+                        if prev_pos:
+                            backtest.cash_payments[s][prev_pos[0]].direction += cp.direction
+                        else:
+                            cp.effective_date = s
+                            backtest.cash_payments[s].append(cp)
+                        del backtest.cash_payments[cp_date][index]
+
+                    if not backtest.cash_payments[cp_date] and cp_date not in cash_payments_remove:
+                        cash_payments_remove.append(cp_date)
+
+        for cp_date in cash_payments_remove:
+            del backtest.cash_payments[cp_date]
+
+        return backtest
+
+
 class GenericEngineActionFactory(ActionHandlerBaseFactory):
     def __init__(self, action_impl_map={}):
         self.action_impl_map = action_impl_map
         self.action_impl_map[AddTradeAction] = AddTradeActionImpl
         self.action_impl_map[HedgeAction] = HedgeActionImpl
+        self.action_impl_map[ExitTradeAction] = ExitTradeActionImpl
 
     def get_action_handler(self, action: Action) -> Action:
         if type(action) in self.action_impl_map:

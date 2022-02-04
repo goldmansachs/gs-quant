@@ -24,6 +24,7 @@ import pandas as pd
 import re
 import copy
 from functools import reduce
+import warnings
 
 
 class BacktestResult(object):
@@ -91,10 +92,15 @@ class EquityVolEngine(object):
         # Validate Actions
 
         all_actions = reduce(lambda acc, x: acc + x, (map(lambda x: x.actions, strategy.triggers)), [])
-        if not all(isinstance(x, (a.EnterPositionQuantityScaledAction, a.HedgeAction, a.ExitPositionAction))
-                   for x in all_actions):
+
+        if any(isinstance(x, a.ExitPositionAction) for x in all_actions):
+            warnings.warn('ExitPositionAction will be deprecated soon, use ExitTradeAction.', DeprecationWarning, 2)
+
+        if not all(isinstance(x, (a.EnterPositionQuantityScaledAction, a.HedgeAction, a.ExitPositionAction,
+                                  a.ExitTradeAction)) for x in all_actions):
             check_results.append(
-                'Error: actions must be one of EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction')
+                'Error: actions must be one of EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction, '
+                'ExitTradeAction')
 
         # no duplicate actions
         if not len(set(map(lambda x: type(x), all_actions))) == len(all_actions):
@@ -144,7 +150,7 @@ class EquityVolEngine(object):
                         check_results.append('Error: HedgeAction: risk type must be EqDelta')
                     if not trigger.trigger_requirements.frequency == 'B':
                         check_results.append('Error: HedgeAction: frequency must be \'B\'')
-                elif isinstance(action, a.ExitPositionAction):
+                elif isinstance(action, (a.ExitPositionAction, a.ExitTradeAction)):
                     continue
                 else:
                     check_results.append('Error: Unsupported action type \'{}\''.format(type(action)))

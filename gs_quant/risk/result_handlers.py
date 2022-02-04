@@ -275,6 +275,33 @@ def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
 
 
+def mmapi_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                        request_id: Optional[str] = None) -> DataFrameWithInfo:
+    coordinates = []
+    for r in result['rows']:
+        raw_point = r['modelCoordinate'].get('point', '')
+        point = ';'.join(raw_point) if isinstance(raw_point, list) else raw_point
+        r['modelCoordinate'].update({'point': point})
+        raw_tags = r['modelCoordinate'].get('tags', '')
+        tags = ';'.join(raw_tags) if isinstance(raw_tags, list) else raw_tags
+        r['modelCoordinate'].update({'tags': tags})
+        rows = r['value'].get('value', '')
+        DataPoints = []
+        for row in rows:
+            DataPoints.append([dt.date.fromisoformat(row["date"]), row["value"]])
+        r['modelCoordinate'].update({'value': DataPoints})
+        coordinates.append(r['modelCoordinate'])
+
+    mappings = (('mkt_type', 'type'),
+                ('mkt_asset', 'asset'),
+                ('mkt_point', 'point'),
+                ('mkt_tags', 'tags'),
+                ('mkt_quoting_style', 'quotingStyle'),
+                ('value', 'value'))
+
+    return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
+
+
 def market_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                    request_id: Optional[str] = None) -> StringWithInfo:
     return StringWithInfo(risk_key, result.get('marketRef'), request_id=request_id)
@@ -291,6 +318,7 @@ result_handlers = {
     'LegDefinition': leg_definition_handler,
     'Message': message_handler,
     'MDAPITable': mdapi_table_handler,
+    'MMAPITable': mmapi_table_handler,
     'NumberAndUnit': number_and_unit_handler,
     'RequireAssets': required_assets_handler,
     'Risk': risk_handler,

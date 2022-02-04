@@ -77,7 +77,7 @@ setuptools.setup(
         "websockets",
     ],
     extras_require={
-        "internal": ["gs_quant_internal", "requests_kerberos<0.13.0"],
+        "internal": ["gs_quant_auth"],
         "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib", "seaborn", "treelib"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],

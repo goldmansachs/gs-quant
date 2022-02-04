@@ -33,11 +33,11 @@ def handle_proxy(url, params):
         internal = False
     if internal or socket.getfqdn().split('.')[-2:] == ['gs', 'com']:
         try:
-            import gs_quant_internal
-            proxies = gs_quant_internal.__proxies__
+            import gs_quant_auth
+            proxies = gs_quant_auth.__proxies__
             response = requests.get(url, params=params, proxies=proxies)
         except ModuleNotFoundError:
-            raise RuntimeError('You must install gs_quant_internal to be able to use this endpoint')
+            raise RuntimeError('You must install gs_quant_auth to be able to use this endpoint')
     else:
         response = requests.get(url, params=params)
     return response

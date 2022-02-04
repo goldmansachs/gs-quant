@@ -91,6 +91,7 @@ class AddTradeAction(Action):
 
 AddTradeActionInfo = namedtuple('AddTradeActionInfo', 'scaling')
 HedgeActionInfo = namedtuple('HedgeActionInfo', 'not_applicable')
+ExitTradeActionInfo = namedtuple('ExitTradeActionInfo', 'not_applicable')
 
 
 class EnterPositionQuantityScaledAction(Action):
@@ -143,6 +144,21 @@ class ExitPositionAction(Action):
         :param name: optional name of the action
         """
         super().__init__(name)
+
+
+class ExitTradeAction(Action):
+    def __init__(self, priceable_names: Union[str, Iterable[str]] = None, name: str = None):
+        """
+        Fully exit all held positions
+        :param priceable_names: optional string or list of strings of priceable names
+        :param name: optional name of the action
+        """
+        super().__init__(name)
+        self._priceables_names = make_list(priceable_names)
+
+    @property
+    def priceable_names(self):
+        return self._priceables_names
 
 
 class HedgeAction(Action):

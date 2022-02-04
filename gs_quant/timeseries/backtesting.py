@@ -219,7 +219,9 @@ class Basket:
         if self._spot_data is None:
             q = GsDataApi.build_market_data_query(self.get_marquee_ids(), QueryType.SPOT)
             log_debug(request_id, _logger, 'q %s', q)
-            spot_data = GsDataApi.get_market_data(q, request_id=request_id)
+            spot_data = ts.get_historical_and_last_for_measure(self.get_marquee_ids(), QueryType.SPOT, None,
+                                                               request_id=request_id)
+
             dataset_ids = getattr(spot_data, 'dataset_ids', ())
 
             df = spot_data.set_index([spot_data.index, 'assetId'])

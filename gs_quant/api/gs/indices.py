@@ -15,8 +15,10 @@ under the License.
 """
 
 import datetime as dt
-from typing import Dict, Union
+from typing import Dict, List
 
+from gs_quant.api.gs.assets import IdList
+from gs_quant.common import PositionType
 from gs_quant.session import GsSession
 from gs_quant.target.indices import *
 
@@ -106,3 +108,25 @@ class GsIndexApi:
         url = f'/indices/{_id}/risk/reports'
         inputs = CustomBasketsRiskScheduleInputs(risk_models=inputs)
         return GsSession.current._post(url, payload=inputs)
+
+    @staticmethod
+    def get_positions_data(
+            asset_id: str,
+            start_date: dt.date,
+            end_date: dt.date,
+            fields: IdList = None,
+            position_type: PositionType = None,
+    ) -> List[dict]:
+        start_date_str = start_date.isoformat()
+        end_date_str = end_date.isoformat()
+        url = '/indices/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(id=asset_id,
+                                                                                              start_date=start_date_str,
+                                                                                              end_date=end_date_str)
+        if fields is not None:
+            url += '&fields='.join([''] + fields)
+
+        if position_type is not None:
+            url += '&type=' + position_type.value
+
+        results = GsSession.current._get(url)['results']
+        return results

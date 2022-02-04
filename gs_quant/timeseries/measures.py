@@ -12,39 +12,28 @@
 #
 # Plot Service will make use of appropriately decorated functions in this module.
 
-import calendar
-import datetime
-import logging
 import re
 from collections import namedtuple
-from enum import auto
-from functools import partial
 from numbers import Real
-from typing import List
 
 import cachetools.func
 import inflection
 import numpy as np
-import pandas as pd
 from dateutil import tz
-from dateutil.relativedelta import relativedelta
 from pandas import Series
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
     sunday_to_monday
 from pydash import chunk, flatten
 
-from gs_quant.api.gs.assets import GsIdType
-from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
+from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.api.gs.data import QueryType
-from gs_quant.api.utils import ThreadPoolManager
+from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.data import Dataset
 from gs_quant.data.core import DataContext
 from gs_quant.data.fields import Fields
 from gs_quant.data.log import log_debug, log_warning
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.datetime.point import relative_date_add
-from gs_quant.entities.entity import PositionedEntity
-from gs_quant.errors import MqTypeError
 from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, AssetType as SecAssetType
 from gs_quant.target.common import AssetClass, AssetType
@@ -1358,7 +1347,7 @@ def _get_index_constituent_weights(asset: Asset, top_n_of_index: Optional[int] =
                                    composition_date: Optional[GENERIC_DATE] = None):
     start, end = _range_from_pricing_date(asset.exchange, composition_date, buffer=1)
     mqid = asset.get_marquee_id()
-    positions_data = GsAssetApi.get_asset_positions_data(mqid, start, end, ['netWeight'])
+    positions_data = GsIndexApi.get_positions_data(mqid, start, end, ['netWeight'])
     if not len(positions_data):
         raise MqValueError('Unable to get constituents of {} between {} and {}'.format(mqid, start, end))
 
@@ -1856,7 +1845,7 @@ def _skew_fetcher(asset_id, query_type, where, source, real_time, request_id=Non
     asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
               pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
-              request_id: Optional[str] = None) -> ExtendedSeries:
+              request_id: Optional[str] = None) -> pd.Series:
     """
     Skew term structure. Uses most recent date available if pricing_date is not provided.
 
@@ -3577,7 +3566,8 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.REALIZED_CORRELATION])
+@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF, AssetType.Custom_Basket,
+                                     AssetType.Research_Basket), [QueryType.REALIZED_CORRELATION])
 def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int] = None,
                          composition_date: Optional[GENERIC_DATE] = None, *, source: str = None,
                          real_time: bool = False, request_id: Optional[str] = None) -> Series:
@@ -3597,8 +3587,11 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
     if real_time:
         raise NotImplementedError('realtime realized_correlation not implemented')
 
-    if top_n_of_index is None and composition_date is not None:
-        raise MqValueError('specify top_n_of_index to get realized correlation of top constituents')
+    if top_n_of_index is None:
+        if composition_date is not None:
+            raise MqValueError('specify top_n_of_index to get realized correlation of top constituents')
+        if asset.get_type() in (SecAssetType.CUSTOM_BASKET, SecAssetType.RESEARCH_BASKET):
+            raise MqValueError('Baskets must have top_n_of_index set')
 
     _check_top_n(top_n_of_index)
     if top_n_of_index is not None and top_n_of_index > 100:
