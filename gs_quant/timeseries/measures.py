@@ -763,14 +763,13 @@ def implied_volatility_credit(asset: Asset, expiry: str, strike_reference: CdsVo
 
 @plot_measure((AssetClass.Credit,), (AssetType.Default_Swap,), [QueryType.CDS_SPREAD_100],
               display_name='spread')
-def cds_spread(asset: Asset, spread: int, location: str, *, source: str = None, real_time: bool = False,
+def cds_spread(asset: Asset, spread: int, *, source: str = None, real_time: bool = False,
                request_id: Optional[str] = None) -> Series:
     """
     CDS Spread levels.
 
     :param asset: asset object loaded from security master
     :param spread: in bps 100, 250, 500
-    :param location: pricing location
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -779,7 +778,7 @@ def cds_spread(asset: Asset, spread: int, location: str, *, source: str = None, 
     if real_time:
         raise NotImplementedError('realtime spread not implemented for cds spreads')
 
-    _logger.debug('where spread=%s, location=%s', spread, location)
+    _logger.debug('where spread=%s', spread)
 
     if spread == 100:
         qt = QueryType.CDS_SPREAD_100
@@ -794,7 +793,7 @@ def cds_spread(asset: Asset, spread: int, location: str, *, source: str = None, 
         [asset.get_marquee_id()],
         qt,
         where=dict(
-            pricingLocation=location
+            pricingLocation="NYC"
         ),
         source=source,
         real_time=real_time

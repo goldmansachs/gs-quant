@@ -14,12 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 import os
-import setuptools
 import shutil
 import subprocess
 import sys
-import versioneer
 from pathlib import Path
+
+import setuptools
+
+import versioneer
 
 if "sdist" in sys.argv:
     reference = os.path.dirname(__file__)
@@ -70,7 +72,7 @@ setuptools.setup(
         "python-dateutil>=2.7.0",
         "requests",
         "scipy>=1.2.0,<=1.6.0;python_version<'3.7'",
-        "scipy>=1.2.0;python_version>'3.6'",
+        "scipy>=1.2.0,<=1.8.0;python_version>'3.6'",
         "statsmodels>=0.11.1,<0.13.0",
         "tqdm",
         "typing;python_version<'3.7'",

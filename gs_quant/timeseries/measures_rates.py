@@ -1051,7 +1051,6 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
     if real_time:
         raise NotImplementedError('realtime swaption_vol not implemented')
 
-    check_forward_looking(pricing_date, source, 'swaption_vol_term')
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
     if location is None:
         location = PricingLocation(swaptions_defaults_provider.get_swaption_parameter(currency, "pricingLocation"))
@@ -1092,6 +1091,8 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swaptionVol'])
     series.dataset_ids = dataset_ids
+    if series.empty:  # Raise descriptive error if no data returned + historical date context
+        check_forward_looking(None, source, 'swaption_vol_term')
     return series
 
 
@@ -1255,7 +1256,6 @@ def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_
     if real_time:
         raise NotImplementedError('realtime swap_rate not implemented')
 
-    check_forward_looking(pricing_date, source, 'swap_term_structure')
     currency = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     currency = CurrencyEnum(currency)
     if currency.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK.keys():
@@ -1325,6 +1325,8 @@ def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_
             df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
             series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
+    if series.empty:  # Raise descriptive error if no data returned + date context is in the past
+        check_forward_looking(None, source, 'swaption_vol_term')
     return series
 
 
@@ -1358,7 +1360,6 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
     """
     if real_time:
         raise NotImplementedError('realtime basis_swap_rate not implemented')
-    check_forward_looking(pricing_date, source, 'basis_swap_term_structure')
 
     tenor_type = _check_tenor_type(tenor_type)
     tenor_dict = _check_term_structure_tenor(tenor_type=tenor_type, tenor=tenor)
@@ -1414,6 +1415,8 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
             df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
             series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['basisSwapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
+    if series.empty:  # Raise descriptive error if no data returned + historical date context
+        check_forward_looking(None, source, 'swaption_vol_term')
     return series
 
 
