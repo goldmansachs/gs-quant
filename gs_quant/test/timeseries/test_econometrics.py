@@ -16,6 +16,7 @@ under the License.
 import os
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 from pandas.testing import assert_series_equal
 from testfixtures import Replacer
@@ -488,6 +489,13 @@ def test_sharpe_ratio():
     numpy.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
     actual = sharpe_ratio(price_df['SPX'], RiskFreeRateCurrency.USD)
     numpy.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
+    actual = sharpe_ratio(price_df['SPX'][:], RiskFreeRateCurrency.USD, '1m')
+    expected = pd.Series([np.nan, np.nan, np.nan, 8.266434, 6.731811],
+                         index=pd.date_range(datetime.date(2019, 2, 4), periods=5))
+    numpy.testing.assert_almost_equal(actual[:5].values, expected.values, decimal=5)
+    with pytest.raises(MqValueError):
+        actual = sharpe_ratio(price_df['SPX'][:], RiskFreeRateCurrency.USD, 22, method=Interpolate.INTERSECT)
+
     replace.restore()
 
     actual = _get_ratio(price_df['SPX'], 0.0175, 10, day_count_convention=DayCountConvention.ACTUAL_360)

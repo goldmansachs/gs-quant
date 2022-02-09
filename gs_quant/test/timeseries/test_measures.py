@@ -1782,16 +1782,16 @@ def test_cds_spreads():
     replace = Replacer()
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_cds_spread)
     cds_asset = DefaultSwap('MAD6V3NP8ZB7HZTY', 'Lockheed_C_PFA_2y_USD')
-    actual = tm.cds_spread(cds_asset, 100, "NYC")
+    actual = tm.cds_spread(cds_asset, 100)
     assert_series_equal(pd.Series([0.000836], index=_index2, name='spreadAt100'), pd.Series(actual))
-    actual = tm.cds_spread(cds_asset, 250, "NYC")
+    actual = tm.cds_spread(cds_asset, 250)
     assert_series_equal(pd.Series([0.000436], index=_index2, name='spreadAt250'), pd.Series(actual))
-    actual = tm.cds_spread(cds_asset, 500, "NYC")
+    actual = tm.cds_spread(cds_asset, 500)
     assert_series_equal(pd.Series([0.00036], index=_index2, name='spreadAt500'), pd.Series(actual))
     with pytest.raises(NotImplementedError):
-        tm.cds_spread(cds_asset, 200, "NYC")
+        tm.cds_spread(cds_asset, 200)
     with pytest.raises(NotImplementedError):
-        tm.cds_spread(cds_asset, 200, "NYC", real_time=True)
+        tm.cds_spread(cds_asset, 200, real_time=True)
     replace.restore()
 
 

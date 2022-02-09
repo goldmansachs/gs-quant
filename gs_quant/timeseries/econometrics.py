@@ -92,33 +92,49 @@ def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Curr
     return excess_returns_pure(price_series, df['spot'])
 
 
-def _annualized_return(levels: pd.Series, rolling: int) -> pd.Series:
-    starting = [0] * rolling
-    starting.extend([a for a in range(1, len(levels) - rolling + 1)])
-    points = list(
-        map(lambda d, v, i: pow(v / levels[i], 365.25 / (d - levels.index[i]).days) - 1, levels.index[1:],
-            levels.values[1:], starting[1:]))
+def _annualized_return(levels: pd.Series, rolling: Union[int, pd.DateOffset],
+                       interpolation_method: Interpolate = Interpolate.NAN) -> pd.Series:
+    if isinstance(rolling, pd.DateOffset):
+        starting = [tstamp - rolling for tstamp in levels.index]
+        levels = interpolate(levels, method=interpolation_method)
+        points = list(
+            map(lambda d, v, i: pow(v / levels.get(i, np.nan),
+                                    365.25 / (d - i).days) - 1,
+                levels.index[1:],
+                levels.values[1:], starting[1:]))
+    else:
+        if interpolation_method is not Interpolate.NAN:
+            raise MqValueError(f'If w is not a relative date, method must be nan. You specified method: '
+                               f'{interpolation_method.value}.')
+        starting = [0] * rolling
+        starting.extend([a for a in range(1, len(levels) - rolling + 1)])
+        points = list(
+            map(lambda d, v, i: pow(v / levels[i], 365.25 / (d - levels.index[i]).days) - 1, levels.index[1:],
+                levels.values[1:], starting[1:]))
     points.insert(0, 0)
     return pd.Series(points, index=levels.index)
 
 
-def get_ratio_pure(er: pd.Series, w: Union[Window, int, str]) -> pd.Series:
+def get_ratio_pure(er: pd.Series, w: Union[Window, int, str],
+                   interpolation_method: Interpolate = Interpolate.NAN) -> pd.Series:
     w = normalize_window(er, w or None)  # continue to support 0 as an input for window
-    ann_return = _annualized_return(er, w.w)
-    ann_vol = volatility(er, w.w).iloc[1:] if w.w < len(er) else volatility(er)
+    ann_return = _annualized_return(er, w.w, interpolation_method=interpolation_method)
+    long_enough = (er.index[-1] - w.w) >= er.index[0] if isinstance(w.w, pd.DateOffset) else w.w < len(er)
+    ann_vol = volatility(er, w).iloc[1:] if long_enough else volatility(er)
     result = ann_return / ann_vol * 100
     return apply_ramp(result, w)
 
 
 def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], w: Union[Window, int, str], *,
-               day_count_convention: DayCountConvention, curve_type: CurveType = CurveType.PRICES) -> pd.Series:
+               day_count_convention: DayCountConvention, curve_type: CurveType = CurveType.PRICES,
+               interpolation_method: Interpolate = Interpolate.NAN) -> pd.Series:
     if curve_type == CurveType.PRICES:
         er = excess_returns(input_series, benchmark_or_rate, day_count_convention=day_count_convention)
     else:
         assert curve_type == CurveType.EXCESS_RETURNS
         er = input_series
 
-    return get_ratio_pure(er, w)
+    return get_ratio_pure(er, w, interpolation_method)
 
 
 class RiskFreeRateCurrency(Enum):
@@ -166,15 +182,19 @@ def excess_returns_(price_series: pd.Series, currency: RiskFreeRateCurrency = Ri
 
 @plot_session_function
 def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRateCurrency.USD,
-                 w: Union[Window, int] = None, curve_type: CurveType = CurveType.PRICES) -> pd.Series:
+                 w: Union[Window, int, str] = None, curve_type: CurveType = CurveType.PRICES,
+                 method: Interpolate = Interpolate.NAN) -> pd.Series:
     """
     Calculate Sharpe ratio
 
     :param series: series of prices or excess returns for an asset
     :param currency: currency for risk-free rate, defaults to USD
-    :param curve_type: whether input series is of prices or excess returns, defaults to prices
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value.
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Window size defaults to length of series.
+    :param curve_type: whether input series is of prices or excess returns, defaults to prices
+    :param method: interpolation method (default: nan). Used to calculate returns on dates without data (i.e. weekends)
+              when window is a relative date. Defaults to no interpolation.
     :return: Sharpe ratio
 
     **Usage**
@@ -202,7 +222,7 @@ def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRat
     :func:`volatility`
     """
     return _get_ratio(series, Currency(currency.value), w, day_count_convention=DayCountConvention.ACTUAL_360,
-                      curve_type=curve_type)
+                      curve_type=curve_type, interpolation_method=method)
 
 
 @plot_function

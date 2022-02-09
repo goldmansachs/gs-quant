@@ -296,7 +296,8 @@ class GsDataApi(DataApi):
             # We require the Dataframe to return a list in the 'records' format:
             #  https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_json.html
             data = data.to_json(orient='records')
-        result = GsSession.current._post('/data/{}'.format(dataset_id), payload=data)
+        result = GsSession.current._post('/data/{}'.format(dataset_id), payload=data,
+                                         request_headers={'Content-Type': 'application/x-msgpack'})
         return result
 
     @classmethod
