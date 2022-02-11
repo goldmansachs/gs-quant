@@ -19,6 +19,7 @@ from unittest import mock
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import *
 from gs_quant.target.risk_models import RiskModel as Risk_Model, CoverageType, Term, UniverseIdentifier
+import datetime as dt
 
 
 empty_entitlements = {
@@ -38,7 +39,8 @@ mock_risk_model_obj = Risk_Model(CoverageType.Country,
                                  'GS',
                                  1.0,
                                  entitlements=empty_entitlements,
-                                 description='Test'
+                                 description='Test',
+                                 expected_update_time='00:00:00'
                                  )
 
 
@@ -71,7 +73,8 @@ def test_create_risk_model(mocker):
                                 'GS',
                                 0.1,
                                 entitlements={},
-                                description='Test')
+                                description='Test',
+                                expected_update_time=dt.datetime.strptime('00:00:00', '%H:%M:%S').time())
     new_model.save()
     assert new_model.id == mock_risk_model_obj.id
     assert new_model.name == mock_risk_model_obj.name
@@ -79,6 +82,8 @@ def test_create_risk_model(mocker):
     assert new_model.term == mock_risk_model_obj.term
     assert new_model.coverage == mock_risk_model_obj.coverage
     assert new_model.universe_identifier == mock_risk_model_obj.universe_identifier
+    assert new_model.expected_update_time == dt.datetime.strptime(
+        mock_risk_model_obj.expected_update_time, '%H:%M:%S').time()
 
 
 def test_update_risk_model_entitlements(mocker):
@@ -151,6 +156,11 @@ def test_update_risk_model(mocker):
     new_model.update()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
     assert new_model.name == 'TEST RISK MODEL'
+
+    new_model.expected_update_time = dt.time(1, 0, 0)
+    new_model.update()
+    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    assert new_model.expected_update_time == dt.time(1, 0, 0)
 
 
 if __name__ == "__main__":

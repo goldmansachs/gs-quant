@@ -2088,7 +2088,19 @@ class EqOption(Instrument):
     @trade_as.setter
     def trade_as(self, value: Union[TradeAs, str]):
         self._property_changed('trade_as')
-        self.__trade_as = get_enum_value(TradeAs, value)        
+        self.__trade_as = get_enum_value(TradeAs, value)
+
+    def scale_in_place(self, scaling: Optional[float] = None):
+        if self.unresolved is None:
+            raise RuntimeError('Can only scale resolved instruments')
+        if scaling is None or scaling == 1:
+            return
+
+        if scaling < 0:
+            flip_dict = {BuySell.Buy: BuySell.Sell, BuySell.Sell: BuySell.Buy}
+            self.buy_sell = flip_dict[self.buy_sell]
+        self.number_of_options *= abs(scaling)
+        return
 
 
 class EqOptionLeg(Instrument):

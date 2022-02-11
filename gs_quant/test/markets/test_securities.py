@@ -906,6 +906,14 @@ def test_map_identifiers_asset_service(mocker):
                                                 as_of_date=datetime.date(2021, 10, 11))
     assert actual == expected
 
+    date_string = datetime.date.today().strftime('%Y-%m-%d')
+    expected2 = {date_string: expected["2021-10-11"]}
+    with AssetContext():
+        actual2 = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
+                                                 ['GS UN', 'AAPL UN'],
+                                                 [SecurityIdentifier.RIC])
+    assert actual2 == expected2
+
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=lambda *arg, **kwargs: {})
     with AssetContext():
         actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,

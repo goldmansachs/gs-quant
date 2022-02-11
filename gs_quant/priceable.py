@@ -19,7 +19,7 @@ from typing import Union, Optional
 
 from gs_quant.base import Priceable
 from gs_quant.context_base import nullcontext
-from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext, CloseMarket, OverlayMarket
+from gs_quant.markets import MarketDataCoordinate, PricingContext, CloseMarket, OverlayMarket
 from gs_quant.risk import DataFrameWithInfo, DollarPrice, FloatWithInfo, Price, SeriesWithInfo, \
     MarketData
 from gs_quant.risk.results import PricingFuture, PortfolioRiskResult, ErrorValue
@@ -106,7 +106,7 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
                 return result
 
             properties = MarketDataCoordinate.properties()
-            is_historical = isinstance(PricingContext.current, HistoricalPricingContext)
+            is_historical = result.index.name == 'date'
             location = PricingContext.current.market_data_location
 
             def extract_market_data(this_result: DataFrameWithInfo):

@@ -1478,6 +1478,8 @@ class SecurityMaster:
                 raise MqValueError('provide exactly one output type')
             if (start_date or end_date) is not None:
                 raise MqValueError('use as_of_date instead of start_date and/or end_date')
+            if as_of_date is None:
+                as_of_date = datetime.date.today()
 
             input_type = get_asset_id_type(input_type)
             output_type = get_asset_id_type(output_types[0])
