@@ -513,6 +513,7 @@ class RiskModel(Base):
             created_time: datetime.datetime = None,
             last_updated_by_id: str = None,
             last_updated_time: datetime.datetime = None,
+            expected_update_time: Union[datetime.time, str] = None,
             description: str = None,
             entitlements: Entitlements = None,
             owner_id: str = None,
@@ -529,6 +530,7 @@ class RiskModel(Base):
         self.created_time = created_time
         self.last_updated_by_id = last_updated_by_id
         self.last_updated_time = last_updated_time
+        self.expected_update_time = expected_update_time
         self.description = description
         self.entitlements = entitlements
         self.owner_id = owner_id
@@ -642,6 +644,16 @@ class RiskModel(Base):
     def last_updated_time(self, value: datetime.datetime):
         self._property_changed('last_updated_time')
         self.__last_updated_time = value
+
+    @property
+    def expected_update_time(self) -> Union[datetime.time, str]:
+        """Expected time risk model daily data is updated"""
+        return self.__expected_update_time
+
+    @expected_update_time.setter
+    def expected_update_time(self, value: Union[datetime.time, str]):
+        self._property_changed("expected_update_time")
+        self.__expected_update_time = value
 
     @property
     def description(self) -> str:

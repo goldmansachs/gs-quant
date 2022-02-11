@@ -18,6 +18,7 @@ import datetime as dt
 
 import pandas as pd
 import pytest
+from pandas._libs.tslibs.offsets import CustomBusinessDay
 from pandas.testing import assert_series_equal
 from testfixtures import Replacer
 from testfixtures.mock import Mock
@@ -26,6 +27,7 @@ import gs_quant.timeseries.measures_inflation as tm
 import gs_quant.timeseries.measures as tm_rates
 from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
+from gs_quant.data import DataContext
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.common import PricingLocation, Currency as CurrEnum
@@ -33,6 +35,7 @@ from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import Currency, CurrencyEnum, SecurityMaster
 from gs_quant.timeseries.measures_inflation import _currency_to_tdapi_inflation_swap_rate_asset, \
     INFLATION_RATES_DEFAULTS, TdapiInflationRatesDefaultsProvider
+from gs_quant.timeseries.measures_rates import _ClearingHouse
 
 _index = [pd.Timestamp('2021-03-30')]
 _test_datasets = ('TEST_DATASET',)
@@ -244,6 +247,98 @@ def test_inflation_swap_rate(mocker):
     expected.dataset_ids = _test_datasets
     assert_series_equal(expected, actual)
     assert actual.dataset_ids == _test_datasets
+    replace.restore()
+
+
+def test_inflation_swap_term(mocker):
+    replace = Replacer()
+    args = dict(forward_tenor='1y', pricing_date='0d', clearing_house=_ClearingHouse.LCH,
+                real_time=False)
+
+    class ObjectView(object):
+        def __init__(self, d):
+            self.__dict__ = d
+    holidays = replace('gs_quant.datetime.GsCalendar.get', Mock(holidays=[]))
+    holidays.return_value = ObjectView({'holidays': []})
+
+    bd_calendar = replace('gs_quant.timeseries.measures_inflation._get_custom_bd', Mock())
+    bd_calendar.return_value = CustomBusinessDay()
+    pricing_date_mock = replace('gs_quant.timeseries.measures_inflation._range_from_pricing_date', Mock())
+    pricing_date_mock.return_value = [dt.date(2019, 1, 1), dt.date(2019, 1, 1)]
+
+    mock_nok = Currency('MA891', 'PLN')
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'ACU'
+    args['asset'] = mock_nok
+    with pytest.raises(NotImplementedError):
+        tm.inflation_swap_term(**args)
+
+    mock_usd = Currency('MAZ7RWC904JYHYPS', 'USD')
+    args['asset'] = mock_usd
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    args['real_time'] = True
+    with pytest.raises(NotImplementedError):
+        tm.inflation_swap_term(**args)
+    args['real_time'] = False
+
+    args['forward_tenor'] = '5yr'
+    with pytest.raises(MqValueError):
+        tm.inflation_swap_term(**args)
+    args['forward_tenor'] = '1y'
+
+    bd_mock = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+    bd_mock.return_value = pd.DataFrame(data=dict(date="2020-04-10", exchange="NYC", description="Good Friday"),
+                                        index=[pd.Timestamp('2020-04-10')])
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    identifiers_empty = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    identifiers_empty.return_value = {}
+    with pytest.raises(MqValueError):
+        tm.inflation_swap_term(**args)
+
+    identifiers = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    mock_asset = Currency('USD', name='USD')
+    mock_asset.id = 'MAEMPCXQG3T716EX'
+    mock_asset.exchange = 'OTC'
+    identifiers.return_value = [mock_asset]
+
+    d = {
+        'terminationTenor': ['1y', '2y', '3y', '4y'], 'swapRate': [1, 2, 3, 4],
+        'assetId': ['MAEMPCXQG3T716EX', 'MAFRSWPAF5QPNTP2', 'MA88BXZ3TCTXTFW1', 'MAC4KAG9B9ZAZHFT']
+    }
+
+    bd_mock.return_value = pd.DataFrame()
+    market_data_mock = replace('gs_quant.timeseries.measures_inflation._get_inflation_swap_data', Mock())
+
+    market_data_mock.return_value = pd.DataFrame()
+    df = pd.DataFrame(data=d, index=_index * 4)
+    actual = tm.inflation_swap_term(**args)
+    assert actual.empty
+
+    series_apply_mock = replace('gs_quant.timeseries.measures_inflation.pd.Series.apply', Mock())
+    series_apply_mock.return_value = pd.Series([dt.date(2022, 3, 30), dt.date(2023, 3, 30), dt.date(2024, 3, 30),
+                                               dt.date(2025, 3, 30)], index=df.index)
+
+    market_data_mock.return_value = df
+    with DataContext('2019-01-01', '2026-01-01'):
+        actual = tm.inflation_swap_term(**args)
+    actual.dataset_ids = _test_datasets
+    expected = tm.ExtendedSeries([1, 2, 3, 4], index=[dt.date(2022, 3, 30), dt.date(2023, 3, 30), dt.date(2024, 3, 30),
+                                                      dt.date(2025, 3, 30)])
+    expected.dataset_ids = _test_datasets
+    assert_series_equal(expected, actual, check_names=False)
+    assert actual.dataset_ids == expected.dataset_ids
+
+    args['location'] = PricingLocation.NYC
+    with DataContext('2019-01-01', '2026-01-01'):
+        tm.inflation_swap_term(**args)
+
+    holidays.return_value = ObjectView({'holidays': ['0d']})
+    with pytest.raises(MqValueError):
+        tm.inflation_swap_term(**args)
+
     replace.restore()
 
 

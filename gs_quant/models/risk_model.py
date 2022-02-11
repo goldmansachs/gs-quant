@@ -178,7 +178,8 @@ class FactorRiskModel(RiskModel):
                  vendor: str,
                  version: float,
                  entitlements: Union[Dict, Entitlements] = None,
-                 description: str = None):
+                 description: str = None,
+                 expected_update_time: dt.time = None):
         """ Create new factor risk model object
 
         :param id_: risk model id (cannot be changed)
@@ -190,6 +191,7 @@ class FactorRiskModel(RiskModel):
         :param version: version of model
         :param entitlements: entitlements associated with risk model
         :param description: risk model description
+        :param expected_update_time: time when risk model daily data is expected to be uploaded
 
         :return: FactorRiskModel object
         """
@@ -199,6 +201,7 @@ class FactorRiskModel(RiskModel):
         self.__universe_identifier = universe_identifier
         self.__vendor = vendor
         self.__version = version
+        self.__expected_update_time = expected_update_time
 
     @property
     def vendor(self) -> str:
@@ -245,6 +248,16 @@ class FactorRiskModel(RiskModel):
         """ Set risk model coverage """
         self.__coverage = coverage
 
+    @property
+    def expected_update_time(self) -> dt.time:
+        """ Get risk model expected update time """
+        return self.__expected_update_time
+
+    @expected_update_time.setter
+    def expected_update_time(self, expected_update_time: dt.time):
+        """ Set expected update time """
+        self.__expected_update_time = expected_update_time
+
     @classmethod
     def from_target(cls, model: RiskModelBuilder):
         uid = model.universe_identifier
@@ -257,7 +270,9 @@ class FactorRiskModel(RiskModel):
             model.vendor,
             model.version,
             entitlements=model.entitlements,
-            description=model.description
+            description=model.description,
+            expected_update_time=dt.datetime.strptime(
+                model.expected_update_time, "%H:%M:%S").time() if model.expected_update_time else None
         )
 
     @classmethod
@@ -309,7 +324,9 @@ class FactorRiskModel(RiskModel):
                                      self.vendor,
                                      self.version,
                                      description=self.description,
-                                     entitlements=self.entitlements)
+                                     entitlements=self.entitlements,
+                                     expected_update_time=self.expected_update_time.strftime(
+                                         '%H:%M:%S') if self.expected_update_time else None)
         GsRiskModelApi.create_risk_model(new_model)
 
     def update(self):
@@ -322,7 +339,9 @@ class FactorRiskModel(RiskModel):
                                          self.vendor,
                                          self.version,
                                          description=self.description,
-                                         entitlements=self.entitlements)
+                                         entitlements=self.entitlements,
+                                         expected_update_time=self.expected_update_time.strftime(
+                                             '%H:%M:%S') if self.expected_update_time else None)
         GsRiskModelApi.update_risk_model(updated_model)
 
     def get_factor(self, name: str) -> Factor:
@@ -841,6 +860,8 @@ class FactorRiskModel(RiskModel):
             s += ", entitlements={}".format(self)
         if self.description is not None:
             s += ", description={}".format(self)
+        if self.expected_update_time is not None:
+            s += ", expected_update_time={}".format(self)
 
         s += ")"
         return s
