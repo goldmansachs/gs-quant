@@ -36,7 +36,7 @@ from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
-from gs_quant.json_encoder import JSONEncoder, default
+from gs_quant.json_encoder import JSONEncoder, encode_default
 
 API_VERSION = 'v1'
 DEFAULT_APPLICATION = 'gs-quant'
@@ -186,7 +186,8 @@ class GsSession(ContextBase):
 
             if is_dataframe or payload:
                 kwargs['data'] = payload if isinstance(payload, (str, bytes)) else \
-                    msgpack.dumps(payload, default=default) if use_msgpack else json.dumps(payload, cls=JSONEncoder)
+                    msgpack.dumps(payload, default=encode_default) if use_msgpack else \
+                    json.dumps(payload, cls=JSONEncoder)
         else:
             raise MqError('not implemented')
 

@@ -41,7 +41,7 @@ class ContentFixtures:
             ]
         },
         'createdById': 'some-created-by-id',
-        'createdTime': dt.date(2019, 5, 13),
+        'createdTime': dt.datetime(2019, 5, 13),
         'authors': [
             {
                 'name': 'some-author-name',
@@ -51,7 +51,7 @@ class ContentFixtures:
                 'division': 'some-author-division'
             }
         ],
-        'lastUpdatedTime': dt.date(2019, 5, 14),
+        'lastUpdatedTime': dt.datetime(2019, 5, 14),
         'content': {
             'body': b64encode(b'Hello world!'),
             'mimeType': 'text/plain',

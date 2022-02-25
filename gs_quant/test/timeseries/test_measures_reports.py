@@ -30,10 +30,10 @@ from gs_quant.markets.securities import Stock
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
 from gs_quant.target.common import ReportParameters, XRef
 from gs_quant.target.reports import Report, PositionSourceType, ReportType
-from gs_quant.target.risk_models import RiskModel, CoverageType, Term, UniverseIdentifier
+from gs_quant.target.risk_models import RiskModel, RiskModelCoverage, RiskModelTerm, RiskModelUniverseIdentifier
 
-risk_model = RiskModel(coverage=CoverageType.Country, id_='model_id', name='Fake Risk Model',
-                       term=Term.Long, universe_identifier=UniverseIdentifier.gsid, vendor='GS',
+risk_model = RiskModel(coverage=RiskModelCoverage.Country, id_='model_id', name='Fake Risk Model',
+                       term=RiskModelTerm.Long, universe_identifier=RiskModelUniverseIdentifier.gsid, vendor='GS',
                        version=1.0)
 
 factor_risk_report = Report(position_source_id='position source id',
@@ -126,28 +126,28 @@ constituents_data_l_s = {
         "MA2"
     ],
     'quantity': [
-        -1,
-        -2,
-        -3,
-        1,
-        2,
-        3
+        -1.,
+        -2.,
+        -3.,
+        1.,
+        2.,
+        3.
     ],
     'netExposure': [
-        -1,
-        -2,
-        -3,
-        1,
-        2,
-        3
+        -1.,
+        -2.,
+        -3.,
+        1.,
+        2.,
+        3.
     ],
     'pnl': [
-        0,
-        -1,
-        -1,
-        0,
-        1,
-        1
+        0.,
+        -1.,
+        -1.,
+        0.,
+        1.,
+        1.
     ],
     'date': [
         '2020-01-02',
@@ -161,32 +161,32 @@ constituents_data_l_s = {
 
 pnl_data_l_s = {
     'quantity': [
-        -1,
-        -2,
-        -3,
-        -1,
-        -2,
-        -3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3
+        -1.,
+        -2.,
+        -3.,
+        -1.,
+        -2.,
+        -3.,
+        1.,
+        2.,
+        3.,
+        1.,
+        2.,
+        3.
     ],
     'pnl': [
-        0,
-        -1,
-        -1,
-        0,
-        -1,
-        -1,
-        0,
-        1,
-        1,
-        0,
-        1,
-        1
+        0.,
+        -1.,
+        -1.,
+        0.,
+        -1.,
+        -1.,
+        0.,
+        1.,
+        1.,
+        0.,
+        1.,
+        1.
     ],
     'date': [
         '2020-01-02',
@@ -206,9 +206,9 @@ pnl_data_l_s = {
 
 constituents_data = {
     'netExposure': [
-        1,
-        2,
-        3
+        1.,
+        2.,
+        3.
     ],
     'assetId': [
         "MA",
@@ -216,14 +216,14 @@ constituents_data = {
         "MA"
     ],
     'quantity': [
-        1,
-        1,
-        1
+        1.,
+        1.,
+        1.
     ],
     'pnl': [
-        0,
-        1,
-        1
+        0.,
+        1.,
+        1.
     ],
     'date': [
         '2020-01-02',
@@ -234,9 +234,9 @@ constituents_data = {
 
 constituents_data_s = {
     'netExposure': [
-        -1,
-        -2,
-        -3
+        -1.,
+        -2.,
+        -3.
     ],
     'assetId': [
         "MA",
@@ -244,14 +244,14 @@ constituents_data_s = {
         "MA"
     ],
     'quantity': [
-        -1,
-        -1,
-        -1
+        -1.,
+        -1.,
+        -1.
     ],
     'pnl': [
-        0,
-        1,
-        1
+        0.,
+        1.,
+        1.
     ],
     'date': [
         '2020-01-02',
@@ -305,8 +305,8 @@ thematic_data = [
 
 
 def mock_risk_model():
-    risk_model = RiskModel(coverage=CoverageType.Country, id_='model_id', name='Fake Risk Model',
-                           term=Term.Long, universe_identifier=UniverseIdentifier.gsid, vendor='GS',
+    risk_model = RiskModel(coverage=RiskModelCoverage.Country, id_='model_id', name='Fake Risk Model',
+                           term=RiskModelTerm.Long, universe_identifier=RiskModelUniverseIdentifier.gsid, vendor='GS',
                            version=1.0)
 
     replace = Replacer()
@@ -541,7 +541,7 @@ def test_normalized_performance():
                           'parameters': {'transactionCostModel': 'FIXED'}})]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
-    mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
+    mock.return_value = MarketDataResponseFrame(data=constituents_data)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
@@ -575,7 +575,7 @@ def test_normalized_performance_short():
                           'parameters': {'transactionCostModel': 'FIXED'}})]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
-    mock.return_value = MarketDataResponseFrame(data=constituents_data_l_s, dtype="float64")
+    mock.return_value = MarketDataResponseFrame(data=constituents_data_l_s)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
@@ -604,7 +604,7 @@ def test_get_long_pnl():
                           'parameters': {'transactionCostModel': 'FIXED'}})]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
-    mock.return_value = MarketDataResponseFrame(data=pnl_data_l_s, dtype="float64")
+    mock.return_value = MarketDataResponseFrame(data=pnl_data_l_s)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
@@ -632,7 +632,7 @@ def test_get_short_pnl():
                           'parameters': {'transactionCostModel': 'FIXED'}})]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
-    mock.return_value = MarketDataResponseFrame(data=pnl_data_l_s, dtype="float64")
+    mock.return_value = MarketDataResponseFrame(data=pnl_data_l_s)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
@@ -650,7 +650,7 @@ def test_get_short_pnl():
 
 def test_get_short_pnl_empty():
     replace = Replacer()
-    expected = pd.Series()
+    expected = pd.Series(dtype=float)
 
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
     mock.return_value = [
@@ -659,7 +659,7 @@ def test_get_short_pnl_empty():
                           'parameters': {'transactionCostModel': 'FIXED'}})]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
-    mock.return_value = MarketDataResponseFrame(data=constituents_data, dtype="float64")
+    mock.return_value = MarketDataResponseFrame(data=constituents_data)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
@@ -677,7 +677,7 @@ def test_get_short_pnl_empty():
 
 def test_get_long_pnl_empty():
     replace = Replacer()
-    expected = pd.Series()
+    expected = pd.Series(dtype=float)
 
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
     mock.return_value = [
@@ -686,7 +686,7 @@ def test_get_long_pnl_empty():
                           'parameters': {'transactionCostModel': 'FIXED'}})]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
-    mock.return_value = MarketDataResponseFrame(data=constituents_data_s, dtype="float64")
+    mock.return_value = MarketDataResponseFrame(data=constituents_data_s)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())

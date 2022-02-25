@@ -13,35 +13,32 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-import datetime
+import datetime as dt
 from enum import Enum
 import json
 import pandas as pd
 
-from gs_quant.base import Base
+from gs_quant.base import Base, Market
+from gs_quant.json_convertors import encode_date_or_str, encode_datetime, remove_nulls
 
 
-def default(o):
-    if isinstance(o, datetime.datetime):
-        try:
-            iso_formatted = o.isoformat(timespec='milliseconds')
-        except TypeError:
-            # Pandas Timestamp objects don't take timespec, will raise TypeError (as of 1.2.4)
-            iso_formatted = o.isoformat()
-        return iso_formatted if o.tzinfo else iso_formatted + 'Z'  # Make sure to be explict about timezone
-    if isinstance(o, datetime.date):
-        return o.isoformat()
+def encode_default(o):
+    if isinstance(o, dt.datetime):
+        return encode_datetime(o)
+    if isinstance(o, dt.date):
+        return encode_date_or_str(o)
     elif isinstance(o, Enum):
         return o.value
+    elif isinstance(o, Market):
+        return o.to_dict()
+    elif isinstance(o, (Base, Market)):
+        return remove_nulls(o.to_dict())
     elif isinstance(o, pd.DataFrame):
-        return o.to_json()
-    elif isinstance(o, Base):
         return o.to_json()
 
 
 class JSONEncoder(json.JSONEncoder):
 
     def default(self, o):
-        ret = default(o)
+        ret = encode_default(o)
         return super().default(o) if ret is None else ret

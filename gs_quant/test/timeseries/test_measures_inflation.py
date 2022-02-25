@@ -133,8 +133,8 @@ def test_check_valid_indices():
 
 
 def test_get_tdapi_inflation_rates_assets(mocker):
-    mock_asset_1 = GsAsset(asset_class='Rate', id='MA26QSMPX9990G66', type_='InflationSwap', name='Test_asset')
-    mock_asset_2 = GsAsset(asset_class='Rate', id='MA44SBCHF192S6FR', type_='InflationSwap', name='Test_asset')
+    mock_asset_1 = GsAsset(asset_class='Rates', id='MA26QSMPX9990G66', type_='InflationSwap', name='Test_asset')
+    mock_asset_2 = GsAsset(asset_class='Rates', id='MA44SBCHF192S6FR', type_='InflationSwap', name='Test_asset')
 
     replace = Replacer()
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())

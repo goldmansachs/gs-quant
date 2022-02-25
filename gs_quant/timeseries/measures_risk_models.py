@@ -24,7 +24,8 @@ from gs_quant.entities.entity import EntityType
 from gs_quant.markets.securities import Asset
 from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat
 from gs_quant.target.common import AssetClass, AssetType
-from gs_quant.target.risk_models import Measure, DataAssetsRequest, RiskModelUniverseIdentifierRequest
+from gs_quant.target.risk_models import RiskModelDataMeasure, RiskModelDataAssetsRequest,\
+    RiskModelUniverseIdentifierRequest
 from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
 from gs_quant.timeseries.measures import _extract_series_from_df
 
@@ -49,10 +50,12 @@ def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
 
     # Query risk model data
     query_results = model.get_data(
-        measures=[Measure.Factor_Name, Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
+        measures=[RiskModelDataMeasure.Factor_Name,
+                  RiskModelDataMeasure.Universe_Factor_Exposure,
+                  RiskModelDataMeasure.Asset_Universe],
         start_date=DataContext.current.start_time,
         end_date=DataContext.current.end_time,
-        assets=DataAssetsRequest(identifier=RiskModelUniverseIdentifierRequest.gsid, universe=[gsid])
+        assets=RiskModelDataAssetsRequest(identifier=RiskModelUniverseIdentifierRequest.gsid, universe=[gsid])
     ).get('results', [])
 
     # Get the factor data from query results
@@ -151,11 +154,9 @@ def factor_performance(risk_model_id: str, factor_name: str, *, source: str = No
 
     model = FactorRiskModel.get(risk_model_id)
     factor = model.get_factor(factor_name)
-    factor_returns = factor.returns(DataContext.current.start_date,
-                                    DataContext.current.end_date,
-                                    ReturnFormat.JSON)
-    factor_return_timeseries = pd.Series(factor_returns)
-    return prices(factor_return_timeseries, 100)
+    factor_returns_df = factor.returns(DataContext.current.start_date, DataContext.current.end_date)
+    factor_returns_series = factor_returns_df.squeeze() / 100
+    return prices(factor_returns_series, 100)
 
 
 def __format_plot_measure_results(time_series: Dict, query_type: QueryType, multiplier=1, handle_missing_column=False):

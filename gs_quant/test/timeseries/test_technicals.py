@@ -82,6 +82,25 @@ def test_smoothed_moving_average():
     assert_series_equal(result, expected, obj="Smoothed moving average with wider window than series")
 
 
+def test_macd():
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+        date(2019, 1, 5),
+        date(2019, 1, 6),
+    ]
+
+    x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+    assert (macd(x, 10, 10) == 0).all()
+
+    assert (macd(x, 10, 12, s=1) == macd(x, 10, 12)).all()
+
+    expected = pd.Series([0, -0.166667, 0.027778, -0.282407, 0.093364, 0.624871], index=dates)
+    assert_series_equal(macd(x, 2, 3), expected)
+
+
 def test_bollinger_bands():
     dates = [
         date(2019, 1, 1),

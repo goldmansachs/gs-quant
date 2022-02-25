@@ -314,14 +314,16 @@ class Basket:
         actual_weights = self.get_actual_weights(request_id)
 
         # Add in today's data
-        if not real_time and DataContext.current.end_date >= datetime.date.today():
+        today = datetime.date.today()
+        if not real_time and DataContext.current.end_date >= today and \
+                (vol_data.empty or today not in vol_data.index.date):
             vol_data = ts.append_last_for_measure(vol_data, self.get_marquee_ids(), QueryType.IMPLIED_VOLATILITY, where,
                                                   source=source, request_id=request_id)
             vol_data.index.rename('date', inplace=True)
 
         # Below transformations will throw errors if vol_data is empty
         if vol_data.empty:
-            return pd.Series()
+            return pd.Series(dtype=float)
 
         vols = vol_data.pivot_table('impliedVolatility', ['date'], 'assetId')
         vols.reindex(self.get_marquee_ids(), axis=1)
@@ -334,7 +336,7 @@ class Basket:
 
     @requires_session
     @plot_method
-    def average_realized_volatility(self, tenor: str, returns_type: Returns = Returns.SIMPLE, *,
+    def average_realized_volatility(self, tenor: str, returns_type: Returns = Returns.LOGARITHMIC, *,
                                     real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
         """
         Weighted average realized volatility
@@ -351,13 +353,6 @@ class Basket:
 
         spot_df = self.get_spot_data(request_id=request_id)
         actual_weights = self.get_actual_weights(request_id=request_id)
-
-        # Add in today's data
-        if not real_time and DataContext.current.end_date >= datetime.date.today():
-            recent_spot = ts.get_last_for_measure(self.get_marquee_ids(), QueryType.SPOT, {}, request_id=request_id)
-            if recent_spot is not None and len(recent_spot):
-                recent_spot.index.rename('date', inplace=True)
-                spot_df = spot_df.append(recent_spot.pivot_table('spot', ['date'], 'assetId'))
 
         vols = [volatility(spot_df[asset_id], Window(tenor, tenor), returns_type) for asset_id in spot_df]
         vols = pd.concat(vols, axis=1)

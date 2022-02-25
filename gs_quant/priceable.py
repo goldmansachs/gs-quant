@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import logging
-from abc import ABCMeta
+from abc import ABC
 from typing import Union, Optional
 
 from gs_quant.base import Priceable
@@ -28,7 +28,7 @@ __asset_class_and_type_to_instrument = {}
 _logger = logging.getLogger(__name__)
 
 
-class PriceableImpl(Priceable, metaclass=ABCMeta):
+class PriceableImpl(Priceable, ABC):
 
     @property
     def _pricing_context(self) -> PricingContext:
@@ -126,12 +126,11 @@ class PriceableImpl(Priceable, metaclass=ABCMeta):
 
             if is_historical:
                 return {date: OverlayMarket(
-                    base_market=CloseMarket(date=date,
-                                            location=location,
-                                            market_data=extract_market_data(result.loc[date])),
-                ) for date in set(result.index)}
+                    base_market=CloseMarket(date=date, location=location),
+                    market_data=extract_market_data(result.loc[date]))
+                    for date in set(result.index)}
             else:
-                return OverlayMarket(base_market=result.risk_key.market.clone_with_market_data(
-                    extract_market_data(result)))
+                return OverlayMarket(base_market=result.risk_key.market,
+                                     market_data=extract_market_data(result))
 
         return self.calc(MarketData, fn=handle_result)

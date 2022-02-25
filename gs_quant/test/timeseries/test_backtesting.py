@@ -161,7 +161,7 @@ def test_basket_average_implied_vol():
         a_basket.average_implied_volatility('6m', VolReference.DELTA_CALL, 50, real_time=True)
 
     mock_data.return_value = [pd.DataFrame(), pd.DataFrame()]
-    expected = pd.Series()
+    expected = pd.Series(dtype=float)
     actual = a_basket.average_implied_volatility('3m', VolReference.FORWARD, 20)  # no data for this
     assert_series_equal(expected, actual)
 
@@ -185,18 +185,18 @@ def test_basket_average_realized_vol():
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
 
-    expected = pd.Series([1.1225, 4.49, 2.245, 2.245], index=dates[2:])
+    expected = pd.Series([1.1059, 4.4906, 2.2677, 2.2228], index=dates[2:])
     with DataContext('2021-01-01', '2021-01-06'):
         actual = a_basket.average_realized_volatility('2d')
-    assert_series_equal(actual, expected)
+    assert_series_equal(actual, expected, atol=10e-3)
 
-    expected = pd.Series([3.304542, 3.174902, 3.174902], index=dates[3:])
+    expected = pd.Series([3.3088, 3.1754, 3.1754], index=dates[3:])
     with DataContext('2021-01-01', '2021-01-06'):
         actual = a_basket.average_realized_volatility('3d')
     assert_series_equal(actual, expected)
     mock_data.assert_called_once()
 
-    expected = pd.Series([34.698082, 19.719302, 18.860533], index=dates_feb[3:])
+    expected = pd.Series([34.81054014068537, 19.98982339010735, 19.08853721611424], index=dates_feb[3:])
     with DataContext('2021-02-01', '2021-02-06'):
         actual = a_basket.average_realized_volatility('3d')
     assert_series_equal(actual, expected)
@@ -270,7 +270,7 @@ def test_basket_average_realized_vol_wts():
 def test_basket_average_realized_vol_intraday():
     replace = Replacer()
 
-    end_date = date.today() - datetime.timedelta(days=1)
+    end_date = date.today()
     start_date = end_date - datetime.timedelta(days=4)
 
     a = pd.Series([1 for i in range(5)], index=pd.date_range(start_date, end_date))

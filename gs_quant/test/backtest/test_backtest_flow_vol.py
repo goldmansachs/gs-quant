@@ -51,11 +51,11 @@ def test_eqstrategies_backtest(mocker):
     start_date = dt.date(2019, 6, 3)
     end_date = dt.date(2019, 6, 5)
 
-    data = (
-        FieldValueMap({'date': '2019-02-18', 'price': 0}),
-        FieldValueMap({'date': '2019-02-19', 'price': 0}),
-        FieldValueMap({'date': '2019-02-20', 'price': -14256.398}),
-    )
+    data = [{'name': 'Delta', 'timeseries': [
+        {'date': '2019-02-18', 'price': 0},
+        {'date': '2019-02-19', 'price': 0},
+        {'date': '2019-02-20', 'price': -14256.398},
+    ]}]
 
     delta = BacktestRisk.from_dict({'name': 'Delta', 'timeseries': [
         {'date': '2019-02-18', 'price': 0},
@@ -79,10 +79,7 @@ def test_eqstrategies_backtest(mocker):
     ]})
 
     risk_data = (delta, vega, gamma, theta)
-
     mock_response = BacktestResult('BT1', performance=data, risks=risk_data, stats=None, backtest_version=1)
-
-    expected_response = BacktestResult('BT1', performance=data, risks=risk_data, stats=None, backtest_version=1)
 
     set_session()
 
@@ -90,7 +87,7 @@ def test_eqstrategies_backtest(mocker):
 
     result = strategy.backtest(start_date, end_date)
 
-    assert result == expected_response
+    assert result == mock_response
 
     trading_parameters = BacktestTradingParameters(
         quantity=1,

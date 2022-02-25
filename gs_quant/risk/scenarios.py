@@ -33,6 +33,7 @@ class MarketDataVolShockScenario(__MarketDataVolShockScenario):
     def from_dataframe(cls, asset_ric: str, df: DataFrame, ref_spot: float = None):
         """
         Create a MarketDataVolShockScenario using an input DataFrame containing expiry dates, strikes and vol levels
+        :param asset_ric: the RIC of the asset
         :param df: input data frame.  Expects a DataFrame indexed by date/time and containing columns expirationDate,
         absoluteStrike and impliedVolatility.
         :param ref_spot: the current reference spot level

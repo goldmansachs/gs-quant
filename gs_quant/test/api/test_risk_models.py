@@ -18,7 +18,7 @@ import datetime as dt
 
 from gs_quant.api.gs.risk_models import GsRiskModelApi, GsFactorRiskModelApi
 from gs_quant.session import *
-from gs_quant.target.risk_models import RiskModel, RiskModelFactor, RiskModelCalendar
+from gs_quant.target.risk_models import RiskModel, Factor, RiskModelCalendar
 
 
 def test_get_risk_models(mocker):
@@ -31,6 +31,7 @@ def test_get_risk_models(mocker):
                 "term": "Medium",
                 "vendor": "Goldman Sachs",
                 "universeIdentifier": "gsid",
+                "type": "Factor",
                 "version": 4
             }),
             RiskModel.from_dict({
@@ -40,7 +41,8 @@ def test_get_risk_models(mocker):
                 "term": "Medium",
                 "vendor": "Goldman Sachs",
                 "universeIdentifier": "gsid",
-                "version": 2
+                "version": 2,
+                "type": "Thematic"
             })
         ],
         'totalResults': 2
@@ -48,9 +50,9 @@ def test_get_risk_models(mocker):
 
     expected_response = [
         RiskModel(coverage='Global', id='WW_TEST_MODEL', name='World Wide Medium Term Test Model', term='Medium',
-                  vendor='Goldman Sachs', universe_identifier='gsid', version=4),
+                  vendor='Goldman Sachs', universe_identifier='gsid', version=4, type='Factor'),
         RiskModel(coverage='Global', id='WW_TEST_MODEL_2', name='World Wide Medium Term Test Model 2', term='Medium',
-                  vendor='Goldman Sachs', universe_identifier='gsid', version=2)
+                  vendor='Goldman Sachs', universe_identifier='gsid', version=2, type='Thematic')
     ]
 
     # mock GsSession
@@ -78,11 +80,13 @@ def test_get_risk_model(mocker):
         "term": "Medium",
         "vendor": "Goldman Sachs",
         "universeIdentifier": "gsid",
-        "version": 4
+        "version": 4,
+        "type": "Factor"
     })
 
     expected_response = RiskModel(coverage='Global', id='WW_TEST_MODEL', name='World Wide Medium Term Test Model',
-                                  term='Medium', vendor='Goldman Sachs', version=4, universe_identifier='gsid')
+                                  term='Medium', vendor='Goldman Sachs', version=4, universe_identifier='gsid',
+                                  type='Factor')
 
     # mock GsSession
     mocker.patch.object(
@@ -108,12 +112,13 @@ def test_create_risk_model(mocker):
         "term": "Medium",
         "vendor": "Goldman Sachs",
         "universeIdentifier": "gsid",
-        "version": 4
+        "version": 4,
+        "type": "Macro"
     })
 
     expected_response = RiskModel(coverage='Global', id='WW_TEST_MODEL', name='World Wide Medium Term Test Model',
-                                  term='Medium',
-                                  vendor='Goldman Sachs', version=4, universe_identifier='gsid')
+                                  term='Medium', vendor='Goldman Sachs', version=4, universe_identifier='gsid',
+                                  type='Macro')
 
     # mock GsSession
     mocker.patch.object(
@@ -138,7 +143,7 @@ def test_update_risk_model(mocker):
         "name": "World Wide Medium Term Test Model",
         "term": "Medium",
         "vendor": "Goldman Sachs",
-        "universeIdentifier": "gsid",
+        "RiskModelUniverseIdentifier": "gsid",
         "version": 4
     })
 
@@ -225,11 +230,11 @@ def test_upload_risk_model_calendar(mocker):
 
 def test_get_risk_model_factors(mocker):
     factors = {'results': [
-        RiskModelFactor.from_dict({
+        Factor.from_dict({
             "type": "Factor",
             "identifier": "Factor1"
         }),
-        RiskModelFactor.from_dict({
+        Factor.from_dict({
             "type": "Category",
             "identifier": "Factor2"
         })
@@ -238,8 +243,8 @@ def test_get_risk_model_factors(mocker):
     }
 
     expected_response = [
-        RiskModelFactor(identifier='Factor1', type='Factor'),
-        RiskModelFactor(identifier='Factor2', type='Category')
+        Factor(identifier='Factor1', type='Factor'),
+        Factor(identifier='Factor2', type='Category')
     ]
 
     # mock GsSession
@@ -254,17 +259,17 @@ def test_get_risk_model_factors(mocker):
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_factors(model_id='id')
-    GsSession.current._get.assert_called_with('/risk/models/id/factors', cls=RiskModelFactor)
+    GsSession.current._get.assert_called_with('/risk/models/id/factors', cls=Factor)
     assert response == expected_response
 
 
 def test_create_risk_model_factor(mocker):
-    factor = RiskModelFactor.from_dict({
+    factor = Factor.from_dict({
         "identifier": "Factor1",
         "type": "Factor"
     })
 
-    expected_response = RiskModelFactor(identifier='Factor1', type='Factor')
+    expected_response = Factor(identifier='Factor1', type='Factor')
 
     # mock GsSession
     mocker.patch.object(
@@ -278,12 +283,12 @@ def test_create_risk_model_factor(mocker):
 
     # run test
     response = GsFactorRiskModelApi.create_risk_model_factor(model_id='id', factor=factor)
-    GsSession.current._post.assert_called_with('/risk/models/id/factors', factor, cls=RiskModelFactor)
+    GsSession.current._post.assert_called_with('/risk/models/id/factors', factor, cls=Factor)
     assert response == expected_response
 
 
 def test_update_risk_model_factor(mocker):
-    factor = RiskModelFactor.from_dict({
+    factor = Factor.from_dict({
         "identifier": "factor",
         "type": "Factor"
     })
@@ -301,18 +306,18 @@ def test_update_risk_model_factor(mocker):
     # run test
     response = GsFactorRiskModelApi.update_risk_model_factor(model_id='id', factor=factor)
     GsSession.current._put.assert_called_with('/risk/models/{id}/factors/{identifier}'
-                                              .format(id='id', identifier='factor'), factor, cls=RiskModelFactor)
+                                              .format(id='id', identifier='factor'), factor, cls=Factor)
     assert response == factor
 
 
 def test_get_risk_model_coverage(mocker):
     results = {
         "results": [
-            RiskModelFactor.from_dict({
+            Factor.from_dict({
                 "model": "AXUS4S",
                 "businessDate": "2020-11-02"
             }),
-            RiskModelFactor.from_dict({
+            Factor.from_dict({
                 "model": "AXAU4M",
                 "businessDate": "2020-11-03"
             })

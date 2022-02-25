@@ -14,11 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from gs_quant.base import *
 from gs_quant.common import *
 import datetime
-from typing import Mapping, Tuple, Union, Optional
+from typing import Dict, Optional, Tuple, Union
+from dataclasses import dataclass, field
+from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
-from gs_quant.base import Base, EnumBase, InstrumentBase, camel_case_translate, get_enum_value
 
 
 class MqexsAssetClass(EnumBase, Enum):    
@@ -402,6 +404,25 @@ class MqexsOtcSettlementType(EnumBase, Enum):
     CalMonth_Avg_No_Roll_Adjust = 'CalMonth Avg No Roll Adjust'    
 
 
+class MqexsPricingType(EnumBase, Enum):    
+    
+    """The source to be used to get a quote"""
+
+    CommodStream = 'CommodStream'
+    eAronStream = 'eAronStream'
+    FXStreaming = 'FXStreaming'
+    Heat = 'Heat'
+    Indicative = 'Indicative'
+    LiquidityStream = 'LiquidityStream'
+    OneDeltaStream = 'OneDeltaStream'
+    OptionChain = 'OptionChain'
+    RFQ = 'RFQ'
+    Roll = 'Roll'
+    Swap = 'Swap'
+    TradableStream = 'TradableStream'
+    UnifiedRFQ = 'UnifiedRFQ'    
+
+
 class MqexsSide(EnumBase, Enum):    
     
     """Field represents the order or trade action."""
@@ -415,396 +436,58 @@ class MqexsSide(EnumBase, Enum):
     _ = ''    
 
 
+@fix_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class MqexsErrorInfo(Base):
-        
-    """Service specific error code and message returned as a server response"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        error_code: str,
-        error_msg: str,
-        error_severity: Union[MqexsErrorSeverity, str] = None,
-        asset_class: Union[MqexsAssetClass, str] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.error_code = error_code
-        self.error_msg = error_msg
-        self.error_severity = error_severity
-        self.asset_class = asset_class
-        self.name = name
-
-    @property
-    def error_code(self) -> str:
-        """specific error code in the server response indicating an order processing error."""
-        return self.__error_code
-
-    @error_code.setter
-    def error_code(self, value: str):
-        self._property_changed('error_code')
-        self.__error_code = value        
-
-    @property
-    def error_msg(self) -> str:
-        """specific error message in the server response indicating an order processing
-           error."""
-        return self.__error_msg
-
-    @error_msg.setter
-    def error_msg(self, value: str):
-        self._property_changed('error_msg')
-        self.__error_msg = value        
-
-    @property
-    def error_severity(self) -> Union[MqexsErrorSeverity, str]:
-        """The severity of the error, which can be a warning or a fatal error"""
-        return self.__error_severity
-
-    @error_severity.setter
-    def error_severity(self, value: Union[MqexsErrorSeverity, str]):
-        self._property_changed('error_severity')
-        self.__error_severity = get_enum_value(MqexsErrorSeverity, value)        
-
-    @property
-    def asset_class(self) -> Union[MqexsAssetClass, str]:
-        """Asset classification of security. Assets are classified into broad groups which
-           exhibit similar characteristics and behave in a consistent way under
-           different market conditions"""
-        return self.__asset_class
-
-    @asset_class.setter
-    def asset_class(self, value: Union[MqexsAssetClass, str]):
-        self._property_changed('asset_class')
-        self.__asset_class = get_enum_value(MqexsAssetClass, value)        
+    error_code: str = None
+    error_msg: str = None
+    error_severity: Optional[MqexsErrorSeverity] = None
+    asset_class: Optional[MqexsAssetClass] = None
 
 
+@fix_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class MqexsProductDetails(Base):
-        
-    """Details specific to the product type."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        name: str,
-        contract_code: str = None,
-        clearer: Union[MqexsClearer, str] = None,
-        settlement_type: Union[MqexsOtcSettlementType, str] = None
-    ):        
-        super().__init__()
-        self.contract_code = contract_code
-        self.name = name
-        self.clearer = clearer
-        self.settlement_type = settlement_type
-
-    @property
-    def contract_code(self) -> str:
-        """Contract month"""
-        return self.__contract_code
-
-    @contract_code.setter
-    def contract_code(self, value: str):
-        self._property_changed('contract_code')
-        self.__contract_code = value        
-
-    @property
-    def name(self) -> str:
-        """The financial product symbol"""
-        return self.__name
-
-    @name.setter
-    def name(self, value: str):
-        self._property_changed('name')
-        self.__name = value        
-
-    @property
-    def clearer(self) -> Union[MqexsClearer, str]:
-        """The clearer code"""
-        return self.__clearer
-
-    @clearer.setter
-    def clearer(self, value: Union[MqexsClearer, str]):
-        self._property_changed('clearer')
-        self.__clearer = get_enum_value(MqexsClearer, value)        
-
-    @property
-    def settlement_type(self) -> Union[MqexsOtcSettlementType, str]:
-        """OTC settlement type"""
-        return self.__settlement_type
-
-    @settlement_type.setter
-    def settlement_type(self, value: Union[MqexsOtcSettlementType, str]):
-        self._property_changed('settlement_type')
-        self.__settlement_type = get_enum_value(MqexsOtcSettlementType, value)        
+    name: str = None
+    contract_code: Optional[str] = None
+    clearer: Optional[MqexsClearer] = None
+    settlement_type: Optional[MqexsOtcSettlementType] = None
 
 
+@fix_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class MqexsTradeDetails(Base):
-        
-    """Details specific to the trade type."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        side: Union[MqexsSide, str],
-        quantity: str,
-        unit_price: str,
-        currency: Union[MqexsCurrencyExt, str],
-        settlement_date: datetime.date = None,
-        quantity_lots: str = None,
-        quantity_unit: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.settlement_date = settlement_date
-        self.side = side
-        self.quantity = quantity
-        self.quantity_lots = quantity_lots
-        self.unit_price = unit_price
-        self.quantity_unit = quantity_unit
-        self.currency = currency
-        self.name = name
-
-    @property
-    def settlement_date(self) -> datetime.date:
-        """Settlement date, formatted as yyyy-MM or yyyy-MM-dd (ISO-8601)"""
-        return self.__settlement_date
-
-    @settlement_date.setter
-    def settlement_date(self, value: datetime.date):
-        self._property_changed('settlement_date')
-        self.__settlement_date = value        
-
-    @property
-    def side(self) -> Union[MqexsSide, str]:
-        """Field represents the order or trade action."""
-        return self.__side
-
-    @side.setter
-    def side(self, value: Union[MqexsSide, str]):
-        self._property_changed('side')
-        self.__side = get_enum_value(MqexsSide, value)        
-
-    @property
-    def quantity(self) -> str:
-        """Quantity of product being requested, as a string representation of the double
-           value"""
-        return self.__quantity
-
-    @quantity.setter
-    def quantity(self, value: str):
-        self._property_changed('quantity')
-        self.__quantity = value        
-
-    @property
-    def quantity_lots(self) -> str:
-        """Quantity in lots of product being requested, as a string representation of the
-           double value"""
-        return self.__quantity_lots
-
-    @quantity_lots.setter
-    def quantity_lots(self, value: str):
-        self._property_changed('quantity_lots')
-        self.__quantity_lots = value        
-
-    @property
-    def unit_price(self) -> str:
-        """trade unit price."""
-        return self.__unit_price
-
-    @unit_price.setter
-    def unit_price(self, value: str):
-        self._property_changed('unit_price')
-        self.__unit_price = value        
-
-    @property
-    def quantity_unit(self) -> str:
-        """unit and frequency of the quantity of a product in a quote"""
-        return self.__quantity_unit
-
-    @quantity_unit.setter
-    def quantity_unit(self, value: str):
-        self._property_changed('quantity_unit')
-        self.__quantity_unit = value        
-
-    @property
-    def currency(self) -> Union[MqexsCurrencyExt, str]:
-        """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
-        return self.__currency
-
-    @currency.setter
-    def currency(self, value: Union[MqexsCurrencyExt, str]):
-        self._property_changed('currency')
-        self.__currency = get_enum_value(MqexsCurrencyExt, value)        
+    side: MqexsSide = None
+    quantity: str = None
+    unit_price: str = None
+    currency: MqexsCurrencyExt = None
+    settlement_date: Optional[datetime.date] = None
+    quantity_lots: Optional[str] = None
+    quantity_unit: Optional[str] = None
 
 
+@fix_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class MqexsTradeExt(Base):
-        
-    """Trade Object Model"""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        id_: str,
-        trade_details: MqexsTradeDetails,
-        product_details: MqexsProductDetails,
-        quote_id: str,
-        asset_class: Union[MqexsAssetClassExt, str],
-        created_by_id: str,
-        created_time: datetime.datetime,
-        last_updated_time: datetime.datetime,
-        last_updated_by_id: str,
-        inquiry_id: str = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.__id = id_
-        self.trade_details = trade_details
-        self.product_details = product_details
-        self.quote_id = quote_id
-        self.asset_class = asset_class
-        self.created_by_id = created_by_id
-        self.created_time = created_time
-        self.last_updated_time = last_updated_time
-        self.last_updated_by_id = last_updated_by_id
-        self.inquiry_id = inquiry_id
-        self.name = name
-
-    @property
-    def id(self) -> str:
-        """trade unique identifier"""
-        return self.__id
-
-    @id.setter
-    def id(self, value: str):
-        self._property_changed('id')
-        self.__id = value        
-
-    @property
-    def trade_details(self) -> MqexsTradeDetails:
-        """Details specific to the trade type."""
-        return self.__trade_details
-
-    @trade_details.setter
-    def trade_details(self, value: MqexsTradeDetails):
-        self._property_changed('trade_details')
-        self.__trade_details = value        
-
-    @property
-    def product_details(self) -> MqexsProductDetails:
-        """Details specific to the product type."""
-        return self.__product_details
-
-    @product_details.setter
-    def product_details(self, value: MqexsProductDetails):
-        self._property_changed('product_details')
-        self.__product_details = value        
-
-    @property
-    def quote_id(self) -> str:
-        """trade unique identifier"""
-        return self.__quote_id
-
-    @quote_id.setter
-    def quote_id(self, value: str):
-        self._property_changed('quote_id')
-        self.__quote_id = value        
-
-    @property
-    def asset_class(self) -> Union[MqexsAssetClassExt, str]:
-        """Asset classification of security. Assets are classified into broad groups which
-           exhibit similar characteristics and behave in a consistent way under
-           different market conditions"""
-        return self.__asset_class
-
-    @asset_class.setter
-    def asset_class(self, value: Union[MqexsAssetClassExt, str]):
-        self._property_changed('asset_class')
-        self.__asset_class = get_enum_value(MqexsAssetClassExt, value)        
-
-    @property
-    def created_by_id(self) -> str:
-        """Creation user's unique identifier"""
-        return self.__created_by_id
-
-    @created_by_id.setter
-    def created_by_id(self, value: str):
-        self._property_changed('created_by_id')
-        self.__created_by_id = value        
-
-    @property
-    def created_time(self) -> datetime.datetime:
-        """Creation time as ISO-8601 UTC instant"""
-        return self.__created_time
-
-    @created_time.setter
-    def created_time(self, value: datetime.datetime):
-        self._property_changed('created_time')
-        self.__created_time = value        
-
-    @property
-    def last_updated_time(self) -> datetime.datetime:
-        """Last update time as ISO-8601 UTC instant"""
-        return self.__last_updated_time
-
-    @last_updated_time.setter
-    def last_updated_time(self, value: datetime.datetime):
-        self._property_changed('last_updated_time')
-        self.__last_updated_time = value        
-
-    @property
-    def last_updated_by_id(self) -> str:
-        """Last update user's unique identifier"""
-        return self.__last_updated_by_id
-
-    @last_updated_by_id.setter
-    def last_updated_by_id(self, value: str):
-        self._property_changed('last_updated_by_id')
-        self.__last_updated_by_id = value        
-
-    @property
-    def inquiry_id(self) -> str:
-        """trade unique identifier"""
-        return self.__inquiry_id
-
-    @inquiry_id.setter
-    def inquiry_id(self, value: str):
-        self._property_changed('inquiry_id')
-        self.__inquiry_id = value        
+    id_: str = field(default=None, metadata=config(field_name='id'))
+    trade_details: MqexsTradeDetails = None
+    product_details: MqexsProductDetails = None
+    quote_id: str = None
+    asset_class: MqexsAssetClassExt = None
+    created_by_id: str = None
+    created_time: datetime.datetime = None
+    last_updated_time: datetime.datetime = None
+    last_updated_by_id: str = None
+    inquiry_id: Optional[str] = None
 
 
+@fix_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class MqexsTradesWErrorExt(Base):
-        
-    """List of trade objects returned as a server response with specific error code and
-       message in case of a server error."""
-
-    @camel_case_translate
-    def __init__(
-        self,
-        trades: Tuple[MqexsTradeExt, ...] = None,
-        errors: Tuple[MqexsErrorInfo, ...] = None,
-        name: str = None
-    ):        
-        super().__init__()
-        self.trades = trades
-        self.errors = errors
-        self.name = name
-
-    @property
-    def trades(self) -> Tuple[MqexsTradeExt, ...]:
-        """The requested trades"""
-        return self.__trades
-
-    @trades.setter
-    def trades(self, value: Tuple[MqexsTradeExt, ...]):
-        self._property_changed('trades')
-        self.__trades = value        
-
-    @property
-    def errors(self) -> Tuple[MqexsErrorInfo, ...]:
-        """Errors encountered during request"""
-        return self.__errors
-
-    @errors.setter
-    def errors(self, value: Tuple[MqexsErrorInfo, ...]):
-        self._property_changed('errors')
-        self.__errors = value        
+    trades: Optional[Tuple[MqexsTradeExt, ...]] = None
+    errors: Optional[Tuple[MqexsErrorInfo, ...]] = None

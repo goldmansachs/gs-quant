@@ -25,7 +25,6 @@ from gs_quant.datetime import date
 from gs_quant.session import GsSession
 from gs_quant.target.common import Enum
 from gs_quant.target.data import DataQuery
-from gs_quant.target.risk_models import FactorType
 
 
 class ReturnFormat(Enum):
@@ -39,7 +38,7 @@ class Factor:
     def __init__(self,
                  risk_model_id: str,
                  id_: str,
-                 type_: FactorType,
+                 type_: str,
                  name: str = None,
                  category: str = None,
                  tooltip: str = None,
@@ -63,7 +62,7 @@ class Factor:
         return self.__name
 
     @property
-    def type(self) -> FactorType:
+    def type(self) -> str:
         return self.__type
 
     @property
@@ -178,8 +177,7 @@ class Factor:
             )
         ).get('data', [])
 
-        return_data = {factor_data['date']: factor_data['return'] for factor_data in data_query_results
-                       if factor_data.get('return')}
+        return_data = {dp['date']: dp['return'] for dp in data_query_results if dp.get('return')}
 
         if format == ReturnFormat.DATA_FRAME:
             return pd.DataFrame.from_dict(return_data, orient='index', columns=['return'])

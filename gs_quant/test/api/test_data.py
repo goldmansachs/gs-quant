@@ -24,7 +24,7 @@ from gs_quant.context_base import ContextMeta
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.assets import FieldFilterMap
+from gs_quant.target.data import FieldFilterMapDataQuery
 from gs_quant.target.coordinates import MDAPIDataQuery
 from gs_quant.target.data import MarketDataVendor, DataSetEntity, DataQuery, DataSetFieldEntity
 
@@ -351,7 +351,7 @@ def test_auto_scroll_on_pages(mocker):
     query = DataQuery(
         start_date=dt.date(2017, 1, 15),
         end_date=dt.date(2017, 1, 18),
-        where=FieldFilterMap(
+        where=FieldFilterMapDataQuery(
             currency="GBP"
         )
     )

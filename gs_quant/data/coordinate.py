@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import json
+import uuid
 from abc import ABCMeta
 from datetime import date, datetime
 from enum import Enum
@@ -76,7 +77,7 @@ class BaseDataCoordinate(metaclass=ABCMeta):
 class DataCoordinate(BaseDataCoordinate):
     """A coordinate which locates a given datapoint through time"""
 
-    __slots__ = ['__dataset_id', '__frequency']
+    __slots__ = ['__dataset_id', '__frequency', '__id']
 
     def __init__(self,
                  measure: Union[DataMeasure, str],
@@ -103,6 +104,7 @@ class DataCoordinate(BaseDataCoordinate):
         super().__init__(measure, dimensions)
         self.__dataset_id = dataset_id
         self.__frequency = frequency
+        self.__id = str(uuid.uuid4())
 
     @property
     def dataset_id(self) -> str:
@@ -111,6 +113,14 @@ class DataCoordinate(BaseDataCoordinate):
     @property
     def frequency(self) -> DataFrequency:
         return self.__frequency
+
+    @property
+    def id(self) -> str:
+        return self.__id
+
+    @id.setter
+    def id(self, value):
+        self.__id = value
 
     def __eq__(self, other):
         """Determine if coordinates are equal
@@ -197,6 +207,7 @@ class DataCoordinate(BaseDataCoordinate):
         coordinate = {
             'measure': self.measure.value if isinstance(self.measure, Enum) else self.measure,
             'frequency': self.frequency.value,
+            'id': self.id
         }
 
         if self.dataset_id:
@@ -212,6 +223,7 @@ class DataCoordinate(BaseDataCoordinate):
         dimensions = obj.get('dimensions', {})
         frequency = obj.get('frequency')
         dataset_id = obj.get('datasetId')
+        id_ = obj.get('id')
 
         measure = DataMeasure(measure) if measure in DataMeasure._value2member_map_ else measure
 
@@ -222,10 +234,13 @@ class DataCoordinate(BaseDataCoordinate):
                 parsed_dimensions[DataDimension(key)] = value
             else:
                 parsed_dimensions[key] = value
-        if dataset_id:
-            return DataCoordinate(dataset_id=dataset_id,
-                                  measure=measure,
-                                  dimensions=parsed_dimensions,
-                                  frequency=DataFrequency(frequency))
-        else:
-            return DataCoordinate(measure=measure, dimensions=parsed_dimensions, frequency=DataFrequency(frequency))
+
+        coordinate = DataCoordinate(dataset_id=dataset_id,
+                                    measure=measure,
+                                    dimensions=parsed_dimensions,
+                                    frequency=DataFrequency(frequency)) if dataset_id else \
+            DataCoordinate(measure=measure, dimensions=parsed_dimensions, frequency=DataFrequency(frequency))
+        if id_:
+            coordinate.id = id_
+
+        return coordinate

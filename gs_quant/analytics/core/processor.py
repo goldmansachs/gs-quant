@@ -204,7 +204,14 @@ class BaseProcessor(metaclass=ABCMeta):
                 if overrides:
                     override_dimensions = list(filter(lambda x: x.coordinate == child, overrides))
                     if len(override_dimensions):
-                        child.set_dimensions(overrides[0].dimensions)
+                        use_default = True
+                        for override in overrides:
+                            if override.coordinate_id == child.id:
+                                child.set_dimensions(override.dimensions)
+                                use_default = False
+                                break
+                        if use_default and overrides[0].coordinate_id is None:
+                            child.set_dimensions(overrides[0].dimensions)
 
                 if child.frequency == DataFrequency.DAILY:
                     query = DataQuery(coordinate=child, start=attributes.get('start'), end=attributes.get('end'))

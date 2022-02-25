@@ -34,9 +34,9 @@ from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskPosition, Ris
 
 priceables = (
     CommodSwap('Electricity', '1y'),
-    EqForward('GS.N', '1y'),
+    EqForward('GS.N', expiration_date='1y'),
     EqOption('GS.N', '3m', 'ATMF', 'Call', 'European'),
-    FXOption('EUR', 'USD', '1y', 'Call', strike_price='ATMF'),
+    FXOption(pair='EURUSD', expiration_date='1y', option_type='Call', strike_price='ATMF'),
     IRSwap('Pay', '10y', 'USD'),
     IRBasisSwap('10y', 'USD'),
     IRSwaption('Pay', '10y', 'USD'),

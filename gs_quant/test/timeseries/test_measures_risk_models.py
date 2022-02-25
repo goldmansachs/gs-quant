@@ -16,6 +16,7 @@ under the License.
 import datetime
 from math import sqrt
 
+import pandas as pd
 import pytest
 from testfixtures import Replacer
 from testfixtures.mock import Mock
@@ -25,14 +26,14 @@ from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
 from gs_quant.markets.securities import Stock
-from gs_quant.target.risk_models import RiskModel, CoverageType, Term, UniverseIdentifier
+from gs_quant.target.risk_models import RiskModel, RiskModelCoverage, RiskModelTerm, RiskModelUniverseIdentifier
 
 mock_risk_model_obj = RiskModel(
     id_='model_id',
     name='Fake Risk Model',
-    coverage=CoverageType.Country,
-    term=Term.Long,
-    universe_identifier=UniverseIdentifier.gsid,
+    coverage=RiskModelCoverage.Country,
+    term=RiskModelTerm.Long,
+    universe_identifier=RiskModelUniverseIdentifier.gsid,
     vendor='GS',
     version=1.0
 )
@@ -94,7 +95,6 @@ def mock_risk_model():
 
 
 def test_factor_zscore():
-
     replace = Replacer()
 
     # mock getting risk model entity()
@@ -167,7 +167,6 @@ def test_factor_zscore():
 
 
 def test_factor_covariance():
-
     replace = Replacer()
 
     # mock getting risk model entity()
@@ -200,7 +199,6 @@ def test_factor_covariance():
 
 
 def test_factor_volatility():
-
     replace = Replacer()
 
     # mock getting risk model factor entity
@@ -233,7 +231,6 @@ def test_factor_volatility():
 
 
 def test_factor_correlation():
-
     replace = Replacer()
 
     # mock getting risk model factor entity
@@ -263,7 +260,6 @@ def test_factor_correlation():
 
 
 def test_factor_performance():
-
     replace = Replacer()
 
     # mock getting risk model factor entity
@@ -284,7 +280,7 @@ def test_factor_performance():
 
     # mock getting factor returns
     mock = replace('gs_quant.markets.factor.Factor.returns', Mock())
-    mock.return_value = mock_covariance_curve
+    mock.return_value = pd.DataFrame.from_dict(mock_covariance_curve, orient='index', columns=['return'])
 
     with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
         actual = mrm.factor_performance(mock_risk_model(), 'Factor Name')

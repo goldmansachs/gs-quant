@@ -18,20 +18,17 @@ import copy
 
 import pandas as pd
 from gs_quant.common import AssetClass, CurrencyParameter, FiniteDifferenceParameter, StringParameter, \
-    ListOfStringParameter, ListOfNumberParameter, MapParameter
+    ListOfStringParameter, ListOfNumberParameter, MapParameter, AggregationLevel
 from gs_quant.common import ParameterisedRiskMeasure, RiskMeasure
-from gs_quant.context_base import do_not_serialise
 from gs_quant.target.risk import RiskMeasureType, RiskMeasureUnit
 
 
 class RiskMeasureWithCurrencyParameter(ParameterisedRiskMeasure):
-
     @property
-    @do_not_serialise
     def currency(self):
         return self.parameters.value if self.parameters else None
 
-    def __call__(self, currency=None, name=None):
+    def __call__(self, currency=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
         if isinstance(currency, pd.DataFrame):
@@ -50,13 +47,11 @@ class RiskMeasureWithCurrencyParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithListOfNumberParameter(ParameterisedRiskMeasure):
-
     @property
-    @do_not_serialise
     def list_of_number(self):
         return self.parameters.values if self.parameters else None
 
-    def __call__(self, list_of_number=None, name=None):
+    def __call__(self, list_of_number=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
         if isinstance(list_of_number, pd.DataFrame):
@@ -75,13 +70,11 @@ class RiskMeasureWithListOfNumberParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithListOfStringParameter(ParameterisedRiskMeasure):
-
     @property
-    @do_not_serialise
     def list_of_string(self):
         return self.parameters.values if self.parameters else None
 
-    def __call__(self, list_of_string=None, name=None):
+    def __call__(self, list_of_string=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
         if isinstance(list_of_string, pd.DataFrame):
@@ -100,13 +93,11 @@ class RiskMeasureWithListOfStringParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithMapParameter(ParameterisedRiskMeasure):
-
     @property
-    @do_not_serialise
     def map(self):
         return self.parameters.value if self.parameters else None
 
-    def __call__(self, map=None, name=None):
+    def __call__(self, map=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
         if isinstance(map, pd.DataFrame):
@@ -125,13 +116,11 @@ class RiskMeasureWithMapParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithStringParameter(ParameterisedRiskMeasure):
-
     @property
-    @do_not_serialise
     def string(self):
         return self.parameters.value if self.parameters else None
 
-    def __call__(self, string=None, name=None):
+    def __call__(self, string=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
         if isinstance(string, pd.DataFrame):
@@ -150,44 +139,35 @@ class RiskMeasureWithStringParameter(ParameterisedRiskMeasure):
 
 
 class RiskMeasureWithFiniteDifferenceParameter(ParameterisedRiskMeasure):
-
     @property
-    @do_not_serialise
     def aggregation_level(self):
         return self.parameters.aggregation_level if self.parameters else None
 
     @property
-    @do_not_serialise
     def bump_size(self):
         return self.parameters.bump_size if self.parameters else None
 
     @property
-    @do_not_serialise
     def currency(self):
         return self.parameters.currency if self.parameters else None
 
     @property
-    @do_not_serialise
     def finite_difference_method(self):
         return self.parameters.finite_difference_method if self.parameters else None
 
     @property
-    @do_not_serialise
     def local_curve(self):
         return self.parameters.local_curve if self.parameters else None
 
     @property
-    @do_not_serialise
     def mkt_marking_options(self):
         return self.parameters.mkt_marking_options if self.parameters else None
 
     @property
-    @do_not_serialise
     def scale_factor(self):
         return self.parameters.scale_factor if self.parameters else None
 
-    def __call__(self, aggregation_level=None, bump_size=None, currency=None, finite_difference_method=None,
-                 local_curve=None, mkt_marking_options=None, scale_factor=None, name=None):
+    def __call__(self, aggregation_level=None,  bump_size=None,  currency=None,  finite_difference_method=None,  local_curve=None,  mkt_marking_options=None,  scale_factor=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
         if isinstance(aggregation_level, pd.DataFrame):
@@ -212,36 +192,30 @@ class RiskMeasureWithFiniteDifferenceParameter(ParameterisedRiskMeasure):
         if scale_factor is None and clone.parameters is not None:
             scale_factor = clone.parameters.scale_factor
 
-        param = FiniteDifferenceParameter(aggregation_level=aggregation_level, bump_size=bump_size, currency=currency,
-                                          finite_difference_method=finite_difference_method, local_curve=local_curve,
-                                          mkt_marking_options=mkt_marking_options, scale_factor=scale_factor)
+        param = FiniteDifferenceParameter(aggregation_level=aggregation_level,bump_size=bump_size,currency=currency,finite_difference_method=finite_difference_method,local_curve=local_curve,mkt_marking_options=mkt_marking_options,scale_factor=scale_factor)
         clone.parameters = param
         return clone
 
 
-Annuity = RiskMeasureWithCurrencyParameter(name="Annuity", asset_class=AssetClass("Rates"),
-                                           measure_type=RiskMeasureType("AnnuityLocalCcy"))
+Annuity = RiskMeasureWithCurrencyParameter(name="Annuity", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("AnnuityLocalCcy"))
 Annuity.__doc__ = "Annuity"
 
 BaseCPI = RiskMeasure(name="BaseCPI", measure_type=RiskMeasureType("BaseCPI"))
 BaseCPI.__doc__ = "Base CPI"
 
-CDATMSpread = RiskMeasure(name="CDATMSpread", asset_class=AssetClass("Credit"),
-                          measure_type=RiskMeasureType("ATM Spread"))
+CDATMSpread = RiskMeasure(name="CDATMSpread", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("ATM Spread"))
 CDATMSpread.__doc__ = "Credit ATM Spread"
 
 CDDelta = RiskMeasure(name="CDDelta", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("Delta"))
 CDDelta.__doc__ = "Credit Delta"
 
-CDFwdSpread = RiskMeasure(name="CDFwdSpread", asset_class=AssetClass("Credit"),
-                          measure_type=RiskMeasureType("Forward Spread"))
+CDFwdSpread = RiskMeasure(name="CDFwdSpread", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("Forward Spread"))
 CDFwdSpread.__doc__ = "Credit Forward Spread"
 
 CDGamma = RiskMeasure(name="CDGamma", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("Gamma"))
 CDGamma.__doc__ = "CDIndexGamma"
 
-CDImpliedVolatility = RiskMeasure(name="CDImpliedVolatility", asset_class=AssetClass("Credit"),
-                                  measure_type=RiskMeasureType("Implied Volatility"))
+CDImpliedVolatility = RiskMeasure(name="CDImpliedVolatility", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("Implied Volatility"))
 CDImpliedVolatility.__doc__ = "CDImpliedVolatility"
 
 CDIndexVega = RiskMeasure(name="CDIndexVega", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("Vega"))
@@ -262,6 +236,9 @@ Cashflows.__doc__ = "Cashflows"
 CommodDelta = RiskMeasure(name="CommodDelta", asset_class=AssetClass("Commod"), measure_type=RiskMeasureType("Delta"))
 CommodDelta.__doc__ = "Commod Delta"
 
+CommodImpliedVol = RiskMeasure(name="CommodImpliedVol", asset_class=AssetClass("Commod"), measure_type=RiskMeasureType("Volatility"))
+CommodImpliedVol.__doc__ = "Commod Implied Volatility"
+
 CommodTheta = RiskMeasure(name="CommodTheta", asset_class=AssetClass("Commod"), measure_type=RiskMeasureType("Theta"))
 CommodTheta.__doc__ = "Commod Theta"
 
@@ -280,16 +257,14 @@ Description.__doc__ = "Description"
 DollarPrice = RiskMeasure(name="DollarPrice", measure_type=RiskMeasureType("Dollar Price"))
 DollarPrice.__doc__ = "Price of the instrument in US Dollars"
 
-EqAnnualImpliedVol = RiskMeasure(name="EqAnnualImpliedVol", asset_class=AssetClass("Equity"),
-                                 measure_type=RiskMeasureType("Annual Implied Volatility"),
-                                 unit=RiskMeasureUnit("Percent"))
+EqAnnualImpliedVol = RiskMeasure(name="EqAnnualImpliedVol", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Annual Implied Volatility"), unit=RiskMeasureUnit("Percent"))
 EqAnnualImpliedVol.__doc__ = "Equity Annual Implied Volatility (%)"
 
 EqDelta = RiskMeasure(name="EqDelta", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Delta"))
-EqDelta.__doc__ = "Change in Dollar Price (USD present value) due to individual 1% move in the spot price of underlying equity security"
+EqDelta.__doc__ = "Change in Dollar Price (USD present value) due to individual $1 moves in the spot price of underlying equity security"
 
 EqGamma = RiskMeasure(name="EqGamma", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Gamma"))
-EqGamma.__doc__ = "Change in EqDelta for a 1% move in the price of the underlying equity security"
+EqGamma.__doc__ = "Change in EqDelta for a $1 shift in the price of the underlying equity security"
 
 EqSpot = RiskMeasure(name="EqSpot", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Spot"))
 EqSpot.__doc__ = "Equity Spot"
@@ -297,31 +272,32 @@ EqSpot.__doc__ = "Equity Spot"
 EqVega = RiskMeasure(name="EqVega", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Vega"))
 EqVega.__doc__ = "Change in Dollar Price (USD present value) due to individual 1bp moves in the implied volatility of the underlying equity security"
 
-FXAnnualATMImpliedVol = RiskMeasure(name="FXAnnualATMImpliedVol", asset_class=AssetClass("FX"),
-                                    measure_type=RiskMeasureType("Annual ATM Implied Volatility"),
-                                    unit=RiskMeasureUnit("Percent"))
+FXAnnualATMImpliedVol = RiskMeasure(name="FXAnnualATMImpliedVol", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Annual ATM Implied Volatility"), unit=RiskMeasureUnit("Percent"))
 FXAnnualATMImpliedVol.__doc__ = "FX Annual ATM Implied Volatility"
 
-FXAnnualImpliedVol = RiskMeasure(name="FXAnnualImpliedVol", asset_class=AssetClass("FX"),
-                                 measure_type=RiskMeasureType("Annual Implied Volatility"),
-                                 unit=RiskMeasureUnit("Percent"))
+FXAnnualImpliedVol = RiskMeasure(name="FXAnnualImpliedVol", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Annual Implied Volatility"), unit=RiskMeasureUnit("Percent"))
 FXAnnualImpliedVol.__doc__ = "FX Annual Implied Volatility"
 
-FXBlackScholes = RiskMeasure(name="FXBlackScholes", asset_class=AssetClass("FX"),
-                             measure_type=RiskMeasureType("BSPrice"))
+FXBlackScholes = RiskMeasure(name="FXBlackScholes", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("BSPrice"))
 FXBlackScholes.__doc__ = "FXBlackScholes"
 
-FXCalcDelta = RiskMeasure(name="FXCalcDelta", asset_class=AssetClass("FX"),
-                          measure_type=RiskMeasureType("FX Calculated Delta"))
+FXBlackScholesPct = RiskMeasure(name="FXBlackScholesPct", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("BSPricePct"))
+FXBlackScholesPct.__doc__ = "FXBlackScholes in Percent of Notional"
+
+FXCalcDelta = RiskMeasure(name="FXCalcDelta", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Calculated Delta"))
 FXCalcDelta.__doc__ = "FXCalcDelta"
 
-FXCalcDeltaNoPremAdj = RiskMeasure(name="FXCalcDeltaNoPremAdj", asset_class=AssetClass("FX"),
-                                   measure_type=RiskMeasureType("FX Calculated Delta No Premium Adjustment"))
+FXCalcDeltaNoPremAdj = RiskMeasure(name="FXCalcDeltaNoPremAdj", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Calculated Delta No Premium Adjustment"))
 FXCalcDeltaNoPremAdj.__doc__ = "FXCalcDeltaNoPremAdj"
 
-FXDelta = RiskMeasureWithFiniteDifferenceParameter(name="FXDelta", asset_class=AssetClass("FX"),
-                                                   measure_type=RiskMeasureType("Delta"))
+FXDelta = RiskMeasureWithFiniteDifferenceParameter(name="FXDelta", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Delta"))
 FXDelta.__doc__ = "Dollar Price sensitivity of the instrument to a move in the underlying spot such that dSpot * FXDelta = PnL"
+
+FXDiscountFactorOver = RiskMeasure(name="FXDiscountFactorOver", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Discount Factor Over"))
+FXDiscountFactorOver.__doc__ = "Discount Factor to Maturity in the Over Currency of the FX Pair"
+
+FXDiscountFactorUnder = RiskMeasure(name="FXDiscountFactorUnder", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Discount Factor Under"))
+FXDiscountFactorUnder.__doc__ = "Discount Factor to Maturity in the Under Currency of the FX Pair"
 
 FXFwd = RiskMeasure(name="FXFwd", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Forward Rate"))
 FXFwd.__doc__ = "FXFwd"
@@ -335,23 +311,25 @@ FXPoints.__doc__ = "FXPoints"
 FXPremium = RiskMeasure(name="FXPremium", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Premium"))
 FXPremium.__doc__ = "FXPremium"
 
-FXQuotedDelta = RiskMeasure(name="FXQuotedDelta", asset_class=AssetClass("FX"),
-                            measure_type=RiskMeasureType("QuotedDelta"))
+FXPremiumPct = RiskMeasure(name="FXPremiumPct", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Premium Pct"))
+FXPremiumPct.__doc__ = "FXPremium in Percent of Notional"
+
+FXPremiumPctFlatFwd = RiskMeasure(name="FXPremiumPctFlatFwd", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Premium Pct Flat Fwd"))
+FXPremiumPctFlatFwd.__doc__ = "FXPremium in Percent of Notional in a Flat Forward environment"
+
+FXQuotedDelta = RiskMeasure(name="FXQuotedDelta", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("QuotedDelta"))
 FXQuotedDelta.__doc__ = "FXQuotedDelta"
 
-FXQuotedDeltaNoPremAdj = RiskMeasure(name="FXQuotedDeltaNoPremAdj", asset_class=AssetClass("FX"),
-                                     measure_type=RiskMeasureType("FX Quoted Delta No Premium Adjustment"))
+FXQuotedDeltaNoPremAdj = RiskMeasure(name="FXQuotedDeltaNoPremAdj", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Quoted Delta No Premium Adjustment"))
 FXQuotedDeltaNoPremAdj.__doc__ = "FXQuotedDeltaNoPremAdj"
 
-FXQuotedVega = RiskMeasure(name="FXQuotedVega", asset_class=AssetClass("FX"),
-                           measure_type=RiskMeasureType("FX Quoted Vega"))
+FXQuotedVega = RiskMeasure(name="FXQuotedVega", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Quoted Vega"))
 FXQuotedVega.__doc__ = "FXQuotedVega"
 
 FXSpot = RiskMeasure(name="FXSpot", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Spot"))
 FXSpot.__doc__ = "FX spot reference"
 
-FXVega = RiskMeasureWithFiniteDifferenceParameter(name="FXVega", asset_class=AssetClass("FX"),
-                                                  measure_type=RiskMeasureType("Vega"))
+FXVega = RiskMeasureWithFiniteDifferenceParameter(name="FXVega", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Vega"))
 FXVega.__doc__ = "Change in Dollar Price due to a 1 vol move in the implied volatility of ATM instruments used to build the volatility surface"
 
 FairPrice = RiskMeasure(name="FairPrice", asset_class=AssetClass("Commod"), measure_type=RiskMeasureType("Fair Price"))
@@ -363,77 +341,61 @@ FairVarStrike.__doc__ = "Fair Variance Strike Value of a Variance Swap"
 FairVolStrike = RiskMeasure(name="FairVolStrike", measure_type=RiskMeasureType("FairVolStrike"))
 FairVolStrike.__doc__ = "Fair Volatility Strike Value of a Variance Swap"
 
-ForwardPrice = RiskMeasure(name="ForwardPrice", measure_type=RiskMeasureType("Forward Price"),
-                           unit=RiskMeasureUnit("BPS"))
+ForwardPrice = RiskMeasure(name="ForwardPrice", measure_type=RiskMeasureType("Forward Price"), unit=RiskMeasureUnit("BPS"))
 ForwardPrice.__doc__ = " Price of the instrument at expiry in the local currency"
 
-IRAnnualATMImpliedVol = RiskMeasure(name="IRAnnualATMImpliedVol", asset_class=AssetClass("Rates"),
-                                    measure_type=RiskMeasureType("Annual ATMF Implied Volatility"),
-                                    unit=RiskMeasureUnit("Percent"))
+IRAnnualATMImpliedVol = RiskMeasure(name="IRAnnualATMImpliedVol", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Annual ATMF Implied Volatility"), unit=RiskMeasureUnit("Percent"))
 IRAnnualATMImpliedVol.__doc__ = "Interest rate annual implied at-the-money volatility (in percent)"
 
-IRAnnualImpliedVol = RiskMeasure(name="IRAnnualImpliedVol", asset_class=AssetClass("Rates"),
-                                 measure_type=RiskMeasureType("Annual Implied Volatility"),
-                                 unit=RiskMeasureUnit("Percent"))
+IRAnnualImpliedVol = RiskMeasure(name="IRAnnualImpliedVol", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Annual Implied Volatility"), unit=RiskMeasureUnit("Percent"))
 IRAnnualImpliedVol.__doc__ = "Interest rate annual implied volatility (in percent)"
 
-IRBasis = RiskMeasureWithFiniteDifferenceParameter(name="IRBasis", asset_class=AssetClass("Rates"),
-                                                   measure_type=RiskMeasureType("Basis"))
+IRBasis = RiskMeasureWithFiniteDifferenceParameter(name="IRBasis", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Basis"))
 IRBasis.__doc__ = "Change in Dollar Price (USD present value) due to individual 1bp moves in the interest rate instruments used to build the basis curve(s)"
 
-IRDailyImpliedVol = RiskMeasure(name="IRDailyImpliedVol", asset_class=AssetClass("Rates"),
-                                measure_type=RiskMeasureType("Daily Implied Volatility"), unit=RiskMeasureUnit("BPS"))
+IRDailyImpliedVol = RiskMeasure(name="IRDailyImpliedVol", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Daily Implied Volatility"), unit=RiskMeasureUnit("BPS"))
 IRDailyImpliedVol.__doc__ = "Interest rate daily implied volatility (in basis points)"
 
-IRDelta = RiskMeasureWithFiniteDifferenceParameter(name="IRDelta", asset_class=AssetClass("Rates"),
-                                                   measure_type=RiskMeasureType("Delta"))
+IRDelta = RiskMeasureWithFiniteDifferenceParameter(name="IRDelta", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Delta"))
 IRDelta.__doc__ = "Change in Dollar Price (USD present value) due to individual 1bp moves in the interest rate instruments used to build the underlying discount curve"
 
-IRDiscountDeltaParallel = RiskMeasure(name="IRDiscountDeltaParallel", asset_class=AssetClass("Rates"),
-                                      measure_type=RiskMeasureType("ParallelDiscountDelta"))
+IRDiscountDeltaParallel = RiskMeasure(name="IRDiscountDeltaParallel", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("ParallelDiscountDelta"))
 IRDiscountDeltaParallel.__doc__ = "Parallel Discount Delta"
 
-IRDiscountDeltaParallelLocalCcy = RiskMeasure(name="IRDiscountDeltaParallelLocalCcy", asset_class=AssetClass("Rates"),
-                                              measure_type=RiskMeasureType("ParallelDiscountDeltaLocalCcy"))
+IRDiscountDeltaParallelLocalCcy = RiskMeasure(name="IRDiscountDeltaParallelLocalCcy", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("ParallelDiscountDeltaLocalCcy"))
 IRDiscountDeltaParallelLocalCcy.__doc__ = "Parallel Discount Delta (Local Ccy)"
 
-IRFwdRate = RiskMeasure(name="IRFwdRate", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Forward Rate"),
-                        unit=RiskMeasureUnit("Percent"))
+IRFwdRate = RiskMeasure(name="IRFwdRate", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Forward Rate"), unit=RiskMeasureUnit("Percent"))
 IRFwdRate.__doc__ = "Interest rate par rate (in percent)"
 
 IRGamma = RiskMeasure(name="IRGamma", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Gamma"))
 IRGamma.__doc__ = "IRGamma"
 
-IRGammaParallel = RiskMeasure(name="IRGammaParallel", asset_class=AssetClass("Rates"),
-                              measure_type=RiskMeasureType("ParallelGamma"))
+IRGammaParallel = RiskMeasure(name="IRGammaParallel", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("ParallelGamma"))
 IRGammaParallel.__doc__ = "Change in aggregated IRDelta for a aggregated 1bp shift in the interest rate instruments used to build the underlying discount curve"
 
-IRGammaParallelLocalCcy = RiskMeasure(name="IRGammaParallelLocalCcy", asset_class=AssetClass("Rates"),
-                                      measure_type=RiskMeasureType("ParallelGammaLocalCcy"))
+IRGammaParallelLocalCcy = RiskMeasure(name="IRGammaParallelLocalCcy", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("ParallelGammaLocalCcy"))
 IRGammaParallelLocalCcy.__doc__ = "Interest Rate Parallel Gamma (Local Ccy)"
 
-IRSpotRate = RiskMeasure(name="IRSpotRate", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Spot Rate"),
-                         unit=RiskMeasureUnit("Percent"))
+IRSpotRate = RiskMeasure(name="IRSpotRate", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Spot Rate"), unit=RiskMeasureUnit("Percent"))
 IRSpotRate.__doc__ = "Interest rate at-the-money spot rate (in percent)"
 
-IRVega = RiskMeasureWithFiniteDifferenceParameter(name="IRVega", asset_class=AssetClass("Rates"),
-                                                  measure_type=RiskMeasureType("Vega"))
+IRVega = RiskMeasureWithFiniteDifferenceParameter(name="IRVega", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Vega"))
 IRVega.__doc__ = "Change in Dollar Price (USD present value) due to individual 1bp moves in the implied volatility (IRAnnualImpliedVol) of instruments used to build the volatility surface"
 
-IRXccyDelta = RiskMeasureWithFiniteDifferenceParameter(name="IRXccyDelta", asset_class=AssetClass("Rates"),
-                                                       measure_type=RiskMeasureType("XccyDelta"))
+IRXccyDelta = RiskMeasureWithFiniteDifferenceParameter(name="IRXccyDelta", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("XccyDelta"))
 IRXccyDelta.__doc__ = "Change in Price due to 1bp move in cross currency rates."
 
-InflMaturityCPI = RiskMeasure(name="InflMaturityCPI", asset_class=AssetClass("Rates"),
-                              measure_type=RiskMeasureType("FinalCPI"))
+InflDeltaParallelLocalCcyInBps = RiskMeasure(name="InflDeltaParallelLocalCcyInBps", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Inflation Delta in Bps"))
+InflDeltaParallelLocalCcyInBps.__doc__ = "Inflation Delta"
+
+InflMaturityCPI = RiskMeasure(name="InflMaturityCPI", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("FinalCPI"))
 InflMaturityCPI.__doc__ = "InflMaturityCPI"
 
-Infl_CompPeriod = RiskMeasure(name="Infl_CompPeriod", asset_class=AssetClass("Rates"),
-                              measure_type=RiskMeasureType("Inflation Compounding Period"))
+Infl_CompPeriod = RiskMeasure(name="Infl_CompPeriod", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Inflation Compounding Period"))
 Infl_CompPeriod.__doc__ = "Infl_CompPeriod"
 
-InflationDelta = RiskMeasureWithFiniteDifferenceParameter(name="InflationDelta", asset_class=AssetClass("Rates"),
-                                                          measure_type=RiskMeasureType("InflationDelta"))
+InflationDelta = RiskMeasureWithFiniteDifferenceParameter(name="InflationDelta", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("InflationDelta"))
 InflationDelta.__doc__ = "Change in Price due to 1bp move in inflation curve."
 
 LightningDV01 = RiskMeasure(name="LightningDV01", measure_type=RiskMeasureType("DV01"))
@@ -442,8 +404,7 @@ LightningDV01.__doc__ = "LightningDV01"
 LightningOAS = RiskMeasure(name="LightningOAS", measure_type=RiskMeasureType("OAS"))
 LightningOAS.__doc__ = "LightningOAS"
 
-LocalAnnuityInCents = RiskMeasure(name="LocalAnnuityInCents", asset_class=AssetClass("Rates"),
-                                  measure_type=RiskMeasureType("Local Currency Accrual in Cents"))
+LocalAnnuityInCents = RiskMeasure(name="LocalAnnuityInCents", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Local Currency Accrual in Cents"))
 LocalAnnuityInCents.__doc__ = "Local Currency Accrual in Cents"
 
 Market = RiskMeasure(name="Market", measure_type=RiskMeasureType("Market"))
@@ -455,47 +416,39 @@ MarketData.__doc__ = "Market Data"
 MarketDataAssets = RiskMeasure(name="MarketDataAssets", measure_type=RiskMeasureType("Market Data Assets"))
 MarketDataAssets.__doc__ = "MarketDataAssets"
 
-NonUSDOisDomRate = RiskMeasure(name="NonUSDOisDomRate", asset_class=AssetClass("FX"),
-                               measure_type=RiskMeasureType("NonUSDOisDomesticRate"))
+NonUSDOisDomRate = RiskMeasure(name="NonUSDOisDomRate", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("NonUSDOisDomesticRate"))
 NonUSDOisDomRate.__doc__ = "NonUSDOisDomRate"
 
-OisFXSprExSpkRate = RiskMeasure(name="OisFXSprExSpkRate", asset_class=AssetClass("FX"),
-                                measure_type=RiskMeasureType("OisFXSpreadRateExcludingSpikes"))
+OisFXSprExSpkRate = RiskMeasure(name="OisFXSprExSpkRate", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("OisFXSpreadRateExcludingSpikes"))
 OisFXSprExSpkRate.__doc__ = "OisFXSprExSpkRate"
 
-OisFXSprRate = RiskMeasure(name="OisFXSprRate", asset_class=AssetClass("FX"),
-                           measure_type=RiskMeasureType("OisFXSpreadRate"))
+OisFXSprRate = RiskMeasure(name="OisFXSprRate", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("OisFXSpreadRate"))
 OisFXSprRate.__doc__ = "OisFXSprRate"
 
 ParSpread = RiskMeasure(name="ParSpread", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Spread"))
 ParSpread.__doc__ = "Par Spread"
 
-PremiumCents = RiskMeasure(name="PremiumCents", asset_class=AssetClass("Rates"),
-                           measure_type=RiskMeasureType("Premium In Cents"))
+PremiumCents = RiskMeasure(name="PremiumCents", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Premium In Cents"))
 PremiumCents.__doc__ = "PremiumCents"
 
-PremiumSummary = RiskMeasure(name="PremiumSummary", asset_class=AssetClass("Commod"),
-                             measure_type=RiskMeasureType("Premium"))
+PremiumSummary = RiskMeasure(name="PremiumSummary", asset_class=AssetClass("Commod"), measure_type=RiskMeasureType("Premium"))
 PremiumSummary.__doc__ = "PremiumSummary"
 
-Price = RiskMeasureWithCurrencyParameter(name="Price", measure_type=RiskMeasureType("PV"))
-Price.__doc__ = "Present Value"
+Price = RiskMeasureWithCurrencyParameter(name="Price", measure_type=RiskMeasureType("Price"))
+Price.__doc__ = "Price"
 
-PricePips = RiskMeasureWithCurrencyParameter(name="PricePips", measure_type=RiskMeasureType("Price"),
-                                             unit=RiskMeasureUnit("Pips"))
+PricePips = RiskMeasureWithCurrencyParameter(name="PricePips", measure_type=RiskMeasureType("Price"), unit=RiskMeasureUnit("Pips"))
 PricePips.__doc__ = "Present value in pips"
 
-ProbabilityOfExercise = RiskMeasure(name="ProbabilityOfExercise",
-                                    measure_type=RiskMeasureType("Probability Of Exercise"))
+ProbabilityOfExercise = RiskMeasure(name="ProbabilityOfExercise", measure_type=RiskMeasureType("Probability Of Exercise"))
 ProbabilityOfExercise.__doc__ = "Probability Of Exercise"
 
-ResolvedInstrumentValues = RiskMeasure(name="ResolvedInstrumentValues",
-                                       measure_type=RiskMeasureType("Resolved Instrument Values"))
+ResolvedInstrumentValues = RiskMeasure(name="ResolvedInstrumentValues", measure_type=RiskMeasureType("Resolved Instrument Values"))
 ResolvedInstrumentValues.__doc__ = "Resolved InstrumentBase Values"
 
 Theta = RiskMeasure(name="Theta", measure_type=RiskMeasureType("Theta"))
 Theta.__doc__ = "Theta"
 
-USDOisDomRate = RiskMeasure(name="USDOisDomRate", asset_class=AssetClass("FX"),
-                            measure_type=RiskMeasureType("USDOisDomesticRate"))
+USDOisDomRate = RiskMeasure(name="USDOisDomRate", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("USDOisDomesticRate"))
 USDOisDomRate.__doc__ = "USDOisDomRate"
+

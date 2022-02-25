@@ -13,11 +13,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from abc import ABC
 import datetime as dt
 from gs_quant.base import Market, RiskKey
 from gs_quant.common import PricingLocation
-from gs_quant.context_base import do_not_serialise
 from gs_quant.datetime.date import prev_business_date
 from gs_quant.target.common import CloseMarket as _CloseMarket, LiveMarket as _LiveMarket, \
     OverlayMarket as _OverlayMarket, RelativeMarket as _RelativeMarket, TimestampedMarket as _TimestampedMarket, \
@@ -104,57 +102,21 @@ Coordinates = Tuple[MarketDataCoordinate, ...]
 MarketDataMap = Mapping[MarketDataCoordinate, float]
 
 
-class MarketWithData(Market, ABC):
-
-    def __init__(self, market_data: Optional[MarketDataMap] = None):
-        super().__init__()
-        if market_data:
-            self.__redact(market_data)
-        else:
-            self.__market_data = {}
-            self.__redacted_coordinates = ()
-
-    @property
-    @do_not_serialise
-    def market_data_dict(self) -> MarketDataMap:
-        return self.__market_data
-
-    @property
-    @do_not_serialise
-    def market_data(self) -> Tuple[MarketDataCoordinateValue, ...]:
-        # Market data that should be supplied in pricing requests. For close and timestamped markets this will be
-        # empty but for live it should be supplied (as a new live market will return different values)
-        return ()
-
-    @property
-    @do_not_serialise
-    def redacted_coordinates(self) -> Coordinates:
-        return self.__redacted_coordinates
-
-    def clone_with_market_data(self, market_data: MarketDataMap):
-        ret = self.clone()
-        ret.__redact(market_data)
-        return ret
-
-    def __redact(self, market_data: MarketDataMap):
-        # filter market_data map input to separate permissioned and redacted coordinates. redacted coordinates have
-        # 'redacted' as their coordinate value
-        self.__market_data = dict(filter(lambda elem: elem[1] != 'redacted', market_data.items()))
-        self.__redacted_coordinates = tuple(key for (key, value) in market_data.items() if value == 'redacted')
-
-
 class LocationOnlyMarket(Market):
 
     def __init__(self, location: Optional[Union[str, PricingLocation]]):
-        super().__init__()
         self.__location = location
+
+    @property
+    def market(self):
+        return None
 
     @property
     def location(self) -> PricingLocation:
         return self.__location
 
 
-class CloseMarket(_CloseMarket, MarketWithData):
+class CloseMarket(Market):
     """Market Object which captures market data based on market_location
     and close_market_date
     """
@@ -163,94 +125,91 @@ class CloseMarket(_CloseMarket, MarketWithData):
     def __init__(self,
                  date: Optional[dt.date] = None,
                  location: Optional[Union[str, PricingLocation]] = None,
-                 check: Optional[bool] = True,
-                 market_data: Optional[MarketDataMap] = None):
-        _CloseMarket.__init__(self, date=date, location=location)
-        MarketWithData.__init__(self, market_data=market_data)
+                 check: Optional[bool] = True):
+        self.__date = date
+        self.__location = location
         self.check = check
 
     def __repr__(self):
         return f'{self.date} ({self.location.value})'
 
-    @_CloseMarket.location.getter
+    @property
+    def market(self):
+        return _CloseMarket(date=self.date, location=self.location)
+
+    @property
     def location(self) -> PricingLocation:
-        location = super().location
-        if location is not None and not self.check:
-            return location
+        if self.__location is not None and not self.check:
+            return self.__location
         else:
-            return market_location(super().location)
+            return market_location(self.__location)
 
-    @_CloseMarket.date.getter
+    @property
     def date(self) -> dt.date:
-        date = super().date
-        if date is not None and not self.check:
-            return date
+        if self.__date is not None and not self.check:
+            return self.__date
         else:
-            return close_market_date(self.location, super().date)
+            return close_market_date(self.location, self.__date)
 
 
-class TimestampedMarket(_TimestampedMarket, MarketWithData):
+class TimestampedMarket(Market):
     """Market Object which captures market data based on location
     and timestamp
     """
 
-    def __init__(self,
-                 timestamp: dt.datetime,
-                 location: Optional[Union[str, PricingLocation]] = None,
-                 market_data: Optional[MarketDataMap] = None):
-        _TimestampedMarket.__init__(self, timestamp=timestamp, location=location)
-        MarketWithData.__init__(self, market_data=market_data)
+    def __init__(self, timestamp: dt.datetime, location: Optional[Union[str, PricingLocation]] = None):
+        self.__timestamp = timestamp
+        self.__location = location
 
     def __repr__(self):
-        return f'{self.timestamp} ({self.location.value})'
+        return f'{self.__timestamp} ({self.location.value})'
 
-    @_TimestampedMarket.location.getter
+    @property
+    def market(self):
+        return _TimestampedMarket(timestamp=self.__timestamp, location=self.location)
+
+    @property
     def location(self) -> PricingLocation:
-        return market_location(super().location)
+        return market_location(self.market.location)
 
 
-class LiveMarket(_LiveMarket, MarketWithData):
+class LiveMarket(Market):
     """Market Object which captures market data based on location
     and time at runtime
     """
 
-    def __init__(self,
-                 location: Optional[Union[str, PricingLocation]] = None,
-                 market_data: Optional[MarketDataMap] = None):
-        _LiveMarket.__init__(self, location=location)
-        MarketWithData.__init__(self, market_data=market_data)
+    def __init__(self, location: Optional[Union[str, PricingLocation]] = None):
+        self.__location = location
 
     def __repr__(self):
         return f'Live ({self.location.value})'
 
-    @MarketWithData.market_data.getter
-    @do_not_serialise
-    def market_data(self) -> Tuple[MarketDataCoordinateValue, ...]:
-        return tuple(MarketDataCoordinateValue(coordinate=c, value=v) for c, v in self.market_data_dict.items())
-
-    @_LiveMarket.location.getter
+    @property
     def location(self) -> PricingLocation:
-        return market_location(super().location)
+        return market_location(self.__location)
+
+    @property
+    def market(self):
+        return _LiveMarket(location=self.location)
 
 
-class OverlayMarket(_OverlayMarket, Market):
+class OverlayMarket(Market):
     """Market Object which overlays a base Market object (eg: CloseMarket, LiveMarket or
     TimestampedMarket) with a MarketDataMap (a map of market coordinate to float)
     """
 
     def __init__(self, market_data: Optional[MarketDataMap] = None, base_market: Optional[Market] = None):
-        super().__init__(base_market=base_market or CloseMarket(), market_data=())
-        self.__market_data = market_data or {}
+        market_data = market_data or {}
+
+        self.__base_market = base_market or CloseMarket()
+        self.__market_data = dict(filter(lambda elem: elem[1] != 'redacted', market_data.items()))
+        self.__redacted_coordinates = tuple(key for (key, value) in market_data.items() if value == 'redacted')
 
     def __getitem__(self, item):
         if isinstance(item, str):
             item = MarketDataCoordinate.from_string(item)
 
-        value = self.__market_data.get(item)
-        if value is None:
-            value = self.base_market.market_data_dict[item]
-
-        return value
+        return self.__market_data.get(item)
 
     def __setitem__(self, key, value):
         if isinstance(key, str):
@@ -259,73 +218,71 @@ class OverlayMarket(_OverlayMarket, Market):
         if key in self.redacted_coordinates:
             raise KeyError(f'{key} cannot be overridden')
 
-        current_value = self.__market_data.get(key)
-        base_value = self.base_market.market_data_dict.get(key)
-
-        if current_value is not None:
-            if value == base_value:
-                self.__market_data.pop(key)
-                Market._property_changed(self, 'market_data')
-        elif value != base_value:
-            self.__market_data[key] = value
-            Market._property_changed(self, 'market_data')
+        self.__market_data[key] = value
 
     def __repr__(self):
-        return f'Overlay ({id(self)}): {repr(self.base_market)}'
+        return f'Overlay ({id(self)}): {repr(self.__base_market)}'
 
-    @_OverlayMarket.market_data.getter
+    @property
     def market_data(self) -> Tuple[MarketDataCoordinateValue, ...]:
-        return tuple(MarketDataCoordinateValue(coordinate=c, value=v) for c, v in self.__market_data.items()) +\
-            self.base_market.market_data
+        return tuple(MarketDataCoordinateValue(coordinate=c, value=v) for c, v in self.__market_data.items())
 
     @property
-    @do_not_serialise
     def market_data_dict(self) -> MarketDataMap:
-        return {**{p.coordinate: p.value for p in self.market_data}, **self.base_market.market_data_dict}
+        return {p.coordinate: p.value for p in self.market_data}
 
-    @Market.location.getter
-    @do_not_serialise
+    @property
     def location(self) -> PricingLocation:
-        return self.base_market.location
+        return self.__base_market.location
 
     @property
-    @do_not_serialise
+    def market(self):
+        return _OverlayMarket(base_market=self.__base_market.market, market_data=self.market_data)
+
+    @property
     def coordinates(self) -> Coordinates:
-        return tuple(self.__market_data.keys()) + tuple(self.base_market.market_data_dict.keys())
+        return tuple(self.__market_data.keys())
 
     @property
-    @do_not_serialise
     def redacted_coordinates(self) -> Coordinates:
-        return self.base_market.redacted_coordinates
+        return self.__redacted_coordinates
 
 
-class RefMarket(_RefMarket, Market):
+class RefMarket(Market):
     """Market Object which represents a Reference to a Market
     """
 
     def __init__(self, market_ref: str):
-        super().__init__(market_ref='')
-        self.__market_ref = market_ref
+        self.__market = _RefMarket(market_ref=market_ref)
 
     def __repr__(self):
-        return f'Market Ref ({id(self)})'
+        return f'Market Ref ({self.__market.market_ref})'
 
-    @Market.location.getter
+    @property
+    def market(self):
+        return self.__market
+
+    @property
     def location(self) -> PricingLocation:
-        return market_location(super().location)
+        return market_location()
 
 
-class RelativeMarket(_RelativeMarket, Market):
+class RelativeMarket(Market):
     """Market Object which captures the change between two Market Objects
     (to_market and from_market)
     """
 
     def __init__(self, from_market: Market, to_market: Market):
-        super().__init__(from_market=from_market, to_market=to_market)
+        self.__from_market = from_market
+        self.__to_market = to_market
 
     def __repr__(self):
-        return f'{repr(self.from_market)} -> {repr(self.to_market)}'
+        return f'{repr(self.__from_market)} -> {repr(self.__to_market)}'
 
-    @Market.location.getter
+    @property
+    def market(self):
+        return _RelativeMarket(from_market=self.__from_market.market, to_market=self.__to_market.market)
+
+    @property
     def location(self) -> PricingLocation:
-        return self.from_market.location if self.from_market.location == self.to_market.location else None
+        return self.__from_market.location if self.__from_market.location == self.__to_market.location else None

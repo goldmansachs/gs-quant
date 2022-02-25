@@ -187,12 +187,15 @@ def test_asset_types(mocker):
     ata = getattr(SecurityMaster, '_SecurityMaster__gs_asset_to_asset')
     assert ata is not None
     asset = GsAsset(AssetClass.Equity, None, 'Test Asset')
-    setattr(asset, '_Asset__type', MockType.Foo)
 
     mocker.patch.object(json, 'dumps', return_value='{}')
-    with pytest.raises(TypeError) as exc_info:
+    # with pytest.raises(ValueError) as exc_info:
+    #     setattr(asset, 'type', MockType.Foo)
+    # assert 'is not a valid AssetType' in str(exc_info.value)  # reached exception at end of function
+
+    with pytest.raises(AttributeError) as exc_info:
         ata(asset)
-    assert 'unsupported asset type' in str(exc_info.value)  # reached exception at end of function
+    assert "has no attribute 'value'" in str(exc_info.value)  # reached exception at end of function
 
 
 class SecMasterContext:

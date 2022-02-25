@@ -22,9 +22,9 @@ from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
-from gs_quant.markets.report import FactorRiskReport, PerformanceReport
-from gs_quant.markets.report import ThematicReport
-from gs_quant.models.risk_model import ReturnFormat, FactorRiskModel
+from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport, ReturnFormat
+
+from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _extract_series_from_df, SecurityMaster, AssetIdentifier
 

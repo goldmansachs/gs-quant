@@ -164,6 +164,14 @@ def test_currency_to_tdapi_swaption_rate_asset_retuns_throws():
     replace.restore()
 
 
+def test_currency_to_tdapi_midcurve_asset():
+    replace = Replacer()
+    replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock()).return_value = 'ZAR'
+    asset = Currency('MA1', 'ZAR')
+    assert tm_rates._currency_to_tdapi_midcurve_asset(asset) == 'MA1'
+    replace.restore()
+
+
 def test_currency_to_tdapi_swaption_rate_asset_retuns_asset_id(mocker):
     replace = Replacer()
     mocker.patch.object(GsSession.__class__, 'current',

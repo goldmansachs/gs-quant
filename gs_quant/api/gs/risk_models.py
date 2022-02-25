@@ -19,8 +19,8 @@ import logging
 from typing import Tuple, Dict, List, Union
 
 from gs_quant.session import GsSession
-from gs_quant.target.risk_models import RiskModel, RiskModelCalendar, RiskModelFactor, Term, RiskModelData, \
-    DataAssetsRequest, Measure, RiskModelEventType
+from gs_quant.target.risk_models import RiskModel, RiskModelCalendar, Factor, RiskModelData, \
+    RiskModelDataAssetsRequest, RiskModelDataMeasure, RiskModelEventType, RiskModelTerm
 
 _logger = logging.getLogger(__name__)
 
@@ -42,39 +42,30 @@ class GsRiskModelApi:
                         limit: int = None,
                         offset: int = None,
                         terms: List[str] = None,
-                        last_updated_by_ids: List[str] = None,
-                        created_by_ids: List[str] = None,
                         versions: List[str] = None,
-                        owner_ids: List[str] = None,
                         vendors: List[str] = None,
                         names: List[str] = None,
-                        descriptions: List[str] = None,
+                        types: List[str] = None,
                         coverages: List[str] = None) -> Tuple[RiskModel, ...]:
         url = '/risk/models?'
-        if limit is not None:
+        if limit:
             url += f'&limit={limit}'
-        if ids is not None:
+        if ids:
             url += '&id={ids}'.format(ids='&id='.join(ids))
-        if offset is not None:
+        if offset:
             url += f'&offset={offset}'
-        if terms is not None:
+        if terms:
             url += f'&term={terms}'
-        if last_updated_by_ids is not None:
-            url += '&lastUpdatedById={ids}'.format(ids='&lastUpdatedById='.join(last_updated_by_ids))
-        if created_by_ids is not None:
-            url += '&createdById={ids}'.format(ids='&createdById='.join(created_by_ids))
-        if versions is not None:
+        if versions:
             url += '&version={versions}'.format(versions='&version='.join(versions))
-        if owner_ids is not None:
-            url += '&ownerId={ids}'.format(ids='&ownerId='.join(owner_ids))
-        if vendors is not None:
+        if vendors:
             url += '&vendor={vendors}'.format(vendors='&vendor='.join(vendors))
         if names is not None:
             url += '&name={names}'.format(names='&name='.join(names))
-        if descriptions is not None:
-            url += '&description={des}'.format(des='&description='.join(descriptions))
         if coverages is not None:
             url += '&coverage={cov}'.format(cov='&coverage='.join(coverages))
+        if types is not None:
+            url += '&type={type}'.format(type='&type='.join(types))
         return GsSession.current._get(url, cls=RiskModel)['results']
 
     @classmethod
@@ -116,21 +107,21 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         super().__init__()
 
     @classmethod
-    def get_risk_model_factors(cls, model_id: str) -> Tuple[RiskModelFactor, ...]:
-        return GsSession.current._get(f'/risk/models/{model_id}/factors', cls=RiskModelFactor)['results']
+    def get_risk_model_factors(cls, model_id: str) -> Tuple[Factor, ...]:
+        return GsSession.current._get(f'/risk/models/{model_id}/factors', cls=Factor)['results']
 
     @classmethod
-    def create_risk_model_factor(cls, model_id: str, factor: RiskModelFactor) -> RiskModelFactor:
-        return GsSession.current._post(f'/risk/models/{model_id}/factors', factor, cls=RiskModelFactor)
+    def create_risk_model_factor(cls, model_id: str, factor: Factor) -> Factor:
+        return GsSession.current._post(f'/risk/models/{model_id}/factors', factor, cls=Factor)
 
     @classmethod
-    def get_risk_model_factor(cls, model_id: str, factor_id: str) -> RiskModelFactor:
+    def get_risk_model_factor(cls, model_id: str, factor_id: str) -> Factor:
         return GsSession.current._get(f'/risk/models/{model_id}/factors/{factor_id}')
 
     @classmethod
-    def update_risk_model_factor(cls, model_id: str, factor: RiskModelFactor) -> RiskModelFactor:
+    def update_risk_model_factor(cls, model_id: str, factor: Factor) -> Factor:
         url = f'/risk/models/{model_id}/factors/{factor.identifier}'
-        return GsSession.current._put(url, factor, cls=RiskModelFactor)
+        return GsSession.current._put(url, factor, cls=Factor)
 
     @classmethod
     def delete_risk_model_factor(cls, model_id: str, factor_id: str) -> Dict:
@@ -158,7 +149,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
     def get_risk_model_coverage(cls,
                                 asset_ids: List[str] = None,
                                 as_of_date: dt.datetime = None,
-                                sort_by_term: Term = None) -> List[Dict]:
+                                sort_by_term: RiskModelTerm = None) -> List[Dict]:
         query = {}
         if asset_ids is not None:
             query['assetIds'] = asset_ids
@@ -183,7 +174,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
 
     @classmethod
     def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date = None,
-                            assets: DataAssetsRequest = None, measures: List[Measure] = None,
+                            assets: RiskModelDataAssetsRequest = None, measures: List[RiskModelDataMeasure] = None,
                             limit_factors: bool = None) -> Dict:
         end_date = cls.get_risk_model_dates(model_id)[-1] if not end_date else end_date.strftime('%Y-%m-%d')
         query = {

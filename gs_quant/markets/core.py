@@ -85,7 +85,8 @@ class PricingContext(ContextBaseWithDefault):
                  timeout: Optional[int] = None,
                  market: Optional[Market] = None,
                  show_progress: Optional[bool] = False,
-                 use_server_cache: Optional[bool] = False):
+                 use_server_cache: Optional[bool] = False,
+                 market_behaviour: Optional[str] = 'ContraintsBased'):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
         as per the examples
@@ -102,6 +103,8 @@ class PricingContext(ContextBaseWithDefault):
         :param timeout: the timeout for batch operations
         :param show_progress: add a progress bar (tqdm)
         :param use_server_cache: cache query results on the GS servers
+        :param market_behaviour: the behaviour to build the curve for pricing ('ContraintsBased' or 'Calibrated'
+            (defaults to ContraintsBased))
 
         **Examples**
 
@@ -143,11 +146,11 @@ class PricingContext(ContextBaseWithDefault):
         if market:
             market_date = None
             if isinstance(market, OverlayMarket) or isinstance(market, CloseMarket):
-                market_date = getattr(market, 'date', None) or getattr(market.base_market, 'date', None)
+                market_date = getattr(market, 'date', None) or getattr(market.market, 'date', None)
 
             if isinstance(market, RelativeMarket):
-                market_date = market.from_market.date if market.from_market.date > dt.date.today() \
-                    else market.to_market.date
+                market_date = market.market.from_market.date if market.market.from_market.date > dt.date.today() \
+                    else market.market.to_market.date
 
             if market_date:
                 if market_date > dt.date.today():
@@ -169,6 +172,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__pricing_date = pricing_date or (self.prior_context.pricing_date if self.prior_context else
                                                business_day_offset(dt.date.today(), 0, roll='preceding'))
         self.__csa_term = csa_term
+        self.__market_behaviour = market_behaviour
         self.__is_async = is_async
         self.__is_batch = is_batch
         self.__timeout = timeout
@@ -294,7 +298,8 @@ class PricingContext(ContextBaseWithDefault):
 
     @property
     def _parameters(self) -> RiskRequestParameters:
-        return RiskRequestParameters(csa_term=self.__csa_term, raw_results=True)
+        return RiskRequestParameters(csa_term=self.__csa_term, raw_results=True, \
+                                     market_behaviour=self.__market_behaviour)
 
     @property
     def _scenario(self) -> Optional[MarketDataScenario]:
@@ -336,6 +341,10 @@ class PricingContext(ContextBaseWithDefault):
     @property
     def csa_term(self) -> str:
         return self._parameters.csa_term
+
+    @property
+    def market_behaviour(self) -> str:
+        return self._parameters.market_behaviour
 
     @property
     def pricing_date(self) -> dt.date:

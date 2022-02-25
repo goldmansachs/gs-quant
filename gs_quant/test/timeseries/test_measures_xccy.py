@@ -134,8 +134,8 @@ def test_check_valid_indices():
 
 
 def test_get_tdapi_crosscurrency_rates_assets(mocker):
-    mock_asset_1 = GsAsset(asset_class='Rate', id='MAW8SAXPSKYA94E2', type_='XccySwapMTM', name='Test_asset')
-    mock_asset_2 = GsAsset(asset_class='Rate', id='MATDD783JM1C2GGD', type_='XccySwapMTM', name='Test_asset')
+    mock_asset_1 = GsAsset(asset_class='Rates', id='MAW8SAXPSKYA94E2', type_='XccySwapMTM', name='Test_asset')
+    mock_asset_2 = GsAsset(asset_class='Rates', id='MATDD783JM1C2GGD', type_='XccySwapMTM', name='Test_asset')
 
     replace = Replacer()
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())

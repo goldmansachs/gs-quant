@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.api.gs.backtests import BacktestResult
 from gs_quant.api.gs.backtests import GsBacktestApi, Backtest
 from gs_quant.session import *
 from gs_quant.target.common import *
@@ -109,34 +108,6 @@ def test_delete_backtest(mocker):
     response = GsBacktestApi.delete_backtest(id_1)
     GsSession.current._delete.assert_called_with('/backtests/{id}'.format(id=id_1))
     assert response == mock_response
-
-
-def test_get_backtest_results(mocker):
-    id_1 = 'BT1'
-
-    mock_response = {'backtestResults': (
-        BacktestResult('BT1', performance=(
-            FieldValueMap({'date': '2019-02-18', 'price': 100}),
-            FieldValueMap({'date': '2019-02-19', 'price': 99}),
-        ), stats=None, history=(), backtestVersion=1)
-    )}
-
-    expected_response = BacktestResult('BT1', performance=(
-        FieldValueMap({'date': '2019-02-18', 'price': 100}),
-        FieldValueMap({'date': '2019-02-19', 'price': 99}),
-    ), stats=None, history=(), backtestVersion=1)
-
-    # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
-
-    # run test
-    response = GsBacktestApi.get_results(backtest_id=id_1)
-
-    GsSession.current._get.assert_called_with('/backtests/results?id={id}'.format(id=id_1))
-
-    assert response == expected_response
 
 
 def test_schedule_backtest(mocker):

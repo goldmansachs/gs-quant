@@ -13,36 +13,28 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-import datetime as dt
+from copy import deepcopy
+from functools import wraps
 import json
 import logging
-import pandas as pd
+from pydash import has, set_
 
-from copy import deepcopy
-from enum import Enum
-from functools import wraps
-from pydash import get, has, set_
-from typing import Dict, List, Optional
-
-from gs_quant.api.gs.assets import GsAsset, GsAssetApi
-from gs_quant.api.gs.data import GsDataApi
+from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.users import GsUsersApi
-from gs_quant.common import DateLimit, PositionType
 from gs_quant.data.fields import DataMeasure
 from gs_quant.entities.entity import EntityType, PositionedEntity
 from gs_quant.entities.entitlements import Entitlements as BasketEntitlements
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets.indices_utils import *
-from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.securities import Asset, AssetType as SecAssetType
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
 from gs_quant.target.indices import *
 from gs_quant.target.reports import Report, ReportStatus
+from gs_quant.markets.position_set import PositionSet
 
 
 _logger = logging.getLogger(__name__)
@@ -222,6 +214,7 @@ class Basket(Asset, PositionedEntity):
         """
         edit_inputs, rebal_inputs = self.__get_updates()
         entitlements = self.__entitlements.to_target()
+        response = None
         if not entitlements == self.__initial_entitlements:
             response = GsAssetApi.update_asset_entitlements(self.id, entitlements)
         if edit_inputs is None and rebal_inputs is None:

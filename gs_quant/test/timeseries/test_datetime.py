@@ -365,7 +365,7 @@ def test_date_range():
 
     values = [1.0, 2.0, 3.0, 4.0, 5.0, 7.0]
     s0 = pd.Series(values, index=dates)
-    s1 = pd.Series(values, index=pd.date_range('2019-01-01', periods=6, freq='D'))
+    s1 = pd.Series(values, index=pd.date_range('2019-01-01', periods=6, freq='D').date)
 
     for x in [s0, s1]:
         assert (date_range(x, 0, 0) == x).all()
