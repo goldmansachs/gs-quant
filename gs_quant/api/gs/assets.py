@@ -113,7 +113,7 @@ class GsAssetApi:
             **kwargs
     ) -> EntityQuery:
         keys = set(kwargs.keys())
-        valid = keys.intersection(i for i in dir(FieldFilterMap) if isinstance(getattr(FieldFilterMap, i), property))
+        valid = keys.intersection(FieldFilterMap.properties())
         invalid = keys.difference(valid)
 
         if invalid:

@@ -13,19 +13,18 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from dataclasses_json import global_config
 import datetime as dt
 import inspect
 import logging
 import warnings
-from abc import ABCMeta
 from copy import deepcopy
 from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
-from gs_quant.base import get_enum_value, InstrumentBase, QuotableBuilder
+from gs_quant.base import get_enum_value, Base, InstrumentBase, QuotableBuilder
 from gs_quant.common import AssetClass, AssetType, XRef, RiskMeasure
-from gs_quant.context_base import do_not_serialise
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, \
@@ -36,28 +35,78 @@ from gs_quant.session import GsSession
 _logger = logging.getLogger(__name__)
 
 
-class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
+def resolution_safe(cls):
+
+    cls.__dataclass_hash__ = cls.__hash__
+    cls.__hash__ = cls.__hash_safe__
+
+    cls.__dataclass_eq__ = cls.__eq__
+    cls.__eq__ = cls.__eq_safe__
+
+    cls.__dataclass_repr__ = Base.__repr__
+    cls.__repr__ = cls.__repr_safe__
+
+    cls._dataclass_json_to_dict = cls.to_dict
+    cls.to_dict = cls._to_dict_safe
+
+    return cls
+
+
+class Instrument(PriceableImpl, InstrumentBase):
+
     PROVIDER = GsRiskApi
     __instrument_mappings = {}
+    __suppress_resolution = False
+
+    class __SuppressResolutionContext:
+
+        def __init__(self, instrument):
+            self.__suppress_resolution = None
+            self.__instrument = instrument
+
+        def __enter__(self):
+            self.__suppress_resolution = self.__instrument._Instrument__suppress_resolution
+            self.__instrument._Instrument__suppress_resolution = True
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.__instrument._Instrument__suppress_resolution = self.__suppress_resolution
+
+    def __hash_safe__(self):
+        with Instrument.__SuppressResolutionContext(self):
+            return self.__dataclass_hash__()
+
+    def __eq_safe__(self, other):
+        if not isinstance(other, Instrument):
+            return False
+
+        with Instrument.__SuppressResolutionContext(self), Instrument.__SuppressResolutionContext(other):
+            return self.__dataclass_eq__(other)
+
+    def __repr_safe__(self):
+        with Instrument.__SuppressResolutionContext(self):
+            return self.__dataclass_repr__()
+
+    def _to_dict_safe(self, encode_json: Optional[bool] = False):
+        with Instrument.__SuppressResolutionContext(self):
+            return self._to_dict(encode_json)
+
+    def _to_dict(self, encode_json: Optional[bool]):
+        return self._dataclass_json_to_dict(encode_json=encode_json)
+
+    def clone(self):
+        with Instrument.__SuppressResolutionContext(self):
+            return super().clone()
 
     def __getattribute__(self, name):
         ret = super().__getattribute__(name)
-        if ret is not None or name not in self.properties():
+        flds = super().__getattribute__('_fields_by_name')()
+
+        if ret is not None or name not in flds or super().__getattribute__('_Instrument__suppress_resolution'):
             return ret
 
-        attr = getattr(super().__getattribute__('__class__'), name, None)
-        if getattr(attr.fget, 'do_not_resolve', False):
-            return ret
-
-        resolved = False
-
-        try:
-            resolved = super().__getattribute__('resolution_key') is not None
-        except AttributeError:
-            pass
-
-        if GsSession.current_is_set and not resolved:
-            if attr and isinstance(attr, property):
+        if GsSession.current_is_set and super().__getattribute__('resolution_key') is None:
+            try:
+                self.__suppress_resolution = True
                 resolved_inst = self.resolve(in_place=False)
                 if isinstance(resolved_inst, PricingFuture):
                     ret = PricingFuture()
@@ -65,6 +114,8 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                         object.__getattribute__(inst_f.result(), name)))
                 else:
                     ret = object.__getattribute__(resolved_inst, name)
+            finally:
+                self.__suppress_resolution = False
 
         return ret
 
@@ -84,7 +135,6 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
         return cls.__instrument_mappings
 
     @property
-    @do_not_serialise
     def provider(self):
         return self.PROVIDER
 
@@ -221,13 +271,13 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                 if 'properties' in values:
                     values.update(values.pop('properties'))
 
-                ret = cls._from_dict(values)
+                ret = super().from_dict(values)
                 if valuation_overrides:
                     ret.valuation_overrides = valuation_overrides
 
                 return ret
             elif hasattr(cls, 'asset_class'):
-                return cls._from_dict(values)
+                return super().from_dict(values)
             else:
                 builder_type = values.get('$type') or values.get('builder', values.get('defn', {})).get('$type')
                 if builder_type:
@@ -257,7 +307,7 @@ class Instrument(PriceableImpl, InstrumentBase, metaclass=ABCMeta):
                 if instrument is None:
                     raise ValueError('unable to build instrument')
 
-                return instrument._from_dict(values)
+                return instrument.from_dict(values)
 
     @classmethod
     def from_quick_entry(cls, text: str, asset_class: Optional[AssetClass] = None):
@@ -366,4 +416,15 @@ class Security(XRef, Instrument):
             raise ValueError('Only specify one identifier')
 
         XRef.__init__(self, ticker=ticker, bbid=bbid, ric=ric, isin=isin, cusip=cusip, prime_id=prime_id)
-        Instrument.__init__(self, quantity)
+        Instrument.__init__(self)
+        self.quantity_ = quantity
+
+
+def encode_instrument(instrument: Instrument):
+    return instrument.to_dict()
+
+
+from gs_quant.base import Priceable
+global_config.decoders[Instrument] = Instrument.from_dict
+global_config.encoders[Instrument] = encode_instrument
+global_config.encoders[Priceable] = encode_instrument

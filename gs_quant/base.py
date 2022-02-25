@@ -13,32 +13,28 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from abc import ABC, ABCMeta, abstractmethod
 import builtins
+from collections import namedtuple
 import copy
+from dataclasses import Field, InitVar, MISSING, dataclass, field, fields, replace
+from dataclasses_json import config, global_config
+from dataclasses_json.core import _is_supported_generic, _decode_generic
 import datetime as dt
-import itertools
+from enum import EnumMeta
+import inflection
+import inspect
 import keyword
 import logging
-from abc import ABCMeta, abstractmethod
-from collections import namedtuple
-from enum import EnumMeta
-from functools import wraps
-from inspect import signature, Parameter
-import re
-from typing import Iterable, Optional, Union, get_type_hints
-
-import inflection
-from dateutil.parser import isoparse
 import numpy as np
+from typing import Iterable, Mapping, Optional, Union
 
-from gs_quant.context_base import ContextBase, ContextMeta, do_not_serialise
+from gs_quant.context_base import ContextBase, ContextMeta
+from gs_quant.json_convertors import encode_date_or_str, decode_date_or_str, decode_optional_date, encode_datetime,\
+    decode_datetime, decode_float_or_str, decode_instrument, encode_dictable
+
 
 _logger = logging.getLogger(__name__)
-
-_valid_date_formats = ('%Y-%m-%d',  # '2020-07-28'
-                       '%d%b%y',    # '28Jul20'
-                       '%d-%b-%y',  # '28-Jul-20'
-                       '%d/%m/%Y')  # '28/07/2020
 
 __builtins = set(dir(builtins))
 __iskeyword = keyword.iskeyword
@@ -53,36 +49,6 @@ def is_iterable(o, t):
 
 def is_instance_or_iterable(o, t):
     return isinstance(o, t) or is_iterable(o, t)
-
-
-def camel_case_translate(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        normalised_kwargs = {}
-        for arg, value in kwargs.items():
-            if arg in __builtins or __iskeyword(arg):
-                arg += '_'
-
-            if not arg.isupper():
-                snake_case_arg = _underscore(arg)
-                if snake_case_arg != arg:
-                    if snake_case_arg in kwargs:
-                        raise ValueError('{} and {} both specified'.format(arg, snake_case_arg))
-
-                    normalised_kwargs[snake_case_arg] = value
-                else:
-                    normalised_kwargs[arg] = value
-            else:
-                normalised_kwargs[arg] = value
-
-        return f(*args, **normalised_kwargs)
-
-    return wrapper
-
-
-def do_not_resolve(func):
-    func.do_not_resolve = True
-    return func
 
 
 class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'scenario', 'risk_measure'))):
@@ -100,6 +66,8 @@ class EnumBase:
 
     @classmethod
     def _missing_(cls: EnumMeta, key):
+        if not isinstance(key, str):
+            key = str(key)
         return next((m for m in cls.__members__.values() if m.value.lower() == key.lower()), None)
 
     def __reduce_ex__(self, protocol):
@@ -112,101 +80,202 @@ class EnumBase:
         return self.value
 
 
-class Base(metaclass=ABCMeta):
-    """The base class for all generated classes"""
+class DictBase(dict):
 
-    __properties = set()
+    _PROPERTIES = set()
 
-    def __init__(self, **kwargs):
-        self.__calced_hash: Optional[int] = None
-        self.__as_dict = {False: {}, True: {}}
+    def __init__(self, *args, **kwargs):
+        if self._PROPERTIES:
+            invalid_arg = next((k for k in kwargs.keys() if k not in self._PROPERTIES), None)
+            if invalid_arg is not None:
+                raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{invalid_arg}'")
 
-        try:
-            self.name: Optional[str] = None
-        except AttributeError:
-            # Regrettably, read-only properties called name exist
-            pass
+        super().__init__(*args, **kwargs)
 
     def __getattr__(self, item):
-        properties = __getattribute__(self, 'properties')()
+        if self._PROPERTIES:
+            if item in self._PROPERTIES:
+                return self.get(item)
+        elif item in self:
+            return self[item]
 
-        if item.startswith('_') or item == 'name' or item in properties:
+        raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{item}'")
+
+    def __setattr__(self, key, value):
+        if key in dir(self):
+            return super().__setattr__(key, value)
+        elif self._PROPERTIES and key not in self._PROPERTIES:
+            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{key}'")
+
+        self[key] = value
+
+    def __hash__(self):
+        return hash(tuple(self.items()))
+
+    @classmethod
+    def properties(cls) -> set:
+        return cls._PROPERTIES
+
+
+def fix_args(cls):
+    # Rather unfortunate: prior to the refactor to use dataclasses, 'name' was a non-property argument
+    # Adding it add post_init() to base to allow it to be passed, puts it as the first postional argument
+    # and breaks backward compatibility. This can be fixed using the kw_only argument, which sadly was not added
+    # until later versions than Python 3.7 (though it seems to be in the 3.6 backport)
+    #
+    # Additionally, some classes actually have a field called 'name', we need to use Base.name_ so positional passing
+    # continues to work
+
+    init = cls.__init__
+    signature = inspect.signature(init)
+    add_name = not any(p for p in signature.parameters.values() if p.name == 'name')
+
+    if add_name:
+        name_param = inspect.Parameter('name', inspect.Parameter.POSITIONAL_OR_KEYWORD, default=None,
+                                       annotation=Optional[str])
+        params = tuple(signature.parameters.values()) + (name_param,)
+        signature = signature.replace(parameters=params)
+
+    def wrapper(self, *args, name: Optional[str] = None, **kwargs):
+        normalised_kwargs = {}
+
+        # Handle legacy use of passing args as camel case
+
+        for arg, value in kwargs.items():
+            if not arg.isupper():
+                snake_case_arg = _underscore(arg)
+                if snake_case_arg != arg and snake_case_arg in kwargs:
+                    raise ValueError('{} and {} both specified'.format(arg, snake_case_arg))
+
+                arg = snake_case_arg
+
+            arg = cls._field_mappings().get(arg, arg)
+            normalised_kwargs[arg] = value
+
+        init(self, *args, **normalised_kwargs)
+
+        if name is not None:
+            self.name = name
+
+    wrapper.__name__ = init.__name__
+    wrapper.__qualname__ = init.__qualname__
+    wrapper.__doc__ = init.__doc__
+    wrapper.__module__ = init.__module__
+
+    if add_name:
+        cls.__doc__ = cls.__doc__[:-1] + f', name: Union[str, NoneType] = None)'
+        annotations = copy.copy(init.__annotations__)
+        annotations['name'] = Optional[str]
+        wrapper.__annotations__ = {**{'name': Optional[str]}, **init.__annotations__}
+
+    wrapper.__signature__ = signature
+
+    cls.__init__ = wrapper
+    cls.__base_dataclass_eq__ = cls.__eq__
+    cls.__eq__ = cls.__eq_with_name__
+
+    return cls
+
+
+@dataclass
+class Base(ABC):
+    """The base class for all generated classes"""
+
+    name_: InitVar[str] = field(init=False, default=None)
+
+    __fields_by_name = None
+    __field_mappings = None
+
+    def __getattr__(self, item):
+        fields_by_name = __getattribute__(self, '_fields_by_name')()
+
+        if item.startswith('_') or item in fields_by_name:
             return __getattribute__(self, item)
 
+        if item == 'name':
+            return __getattribute__(self, 'name_')
+
+        # Handle setting via camelCase names (legacy behaviour) and field mappings from disallowed names
         snake_case_item = _underscore(item)
-        if snake_case_item in properties:
+        field_mappings = __getattribute__(self, '_field_mappings')()
+        snake_case_item = field_mappings.get(snake_case_item, snake_case_item)
+
+        try:
             return __getattribute__(self, snake_case_item)
-        else:
+        except AttributeError:
             return __getattribute__(self, item)
 
     def __setattr__(self, key, value):
-        properties = __getattribute__(self, 'properties')()
-
-        # tolist converts scalar or array to native python type if not already native.
-        value = getattr(value, "tolist", lambda: value)()
-
-        if key.startswith('_') or key == 'name' or key in properties:
-            return __setattr__(self, key, value)
-
+        # Handle setting via camelCase names (legacy behaviour)
         snake_case_key = inflection.underscore(key)
+        snake_case_key = self._field_mappings().get(snake_case_key, snake_case_key)
+        fld = self._fields_by_name().get(snake_case_key)
 
-        if snake_case_key in properties:
-            return __setattr__(self, snake_case_key, value)
-        else:
-            return __setattr__(self, key, value)
+        if fld:
+            if not fld.init:
+                raise ValueError(f'{key} cannot be set')
+
+            key = snake_case_key
+            value = self.__coerce_value(fld.type, value)
+            self._property_changed(key, value)
+        elif key == 'name':
+            key = 'name_'
+
+        __setattr__(self, key, value)
 
     def __repr__(self):
         if self.name is not None:
-            return '{} ({})'.format(self.name, self.__class__.__name__)
+            return f'{self.name} ({self.__class__.__name__})'
 
         return super().__repr__()
 
-    def _property_changed(self, prop: str):
-        self.__calced_hash = None
-        self.__as_dict = {False: {}, True: {}}
+    def __eq_with_name__(self, other):
+        return isinstance(other, Base) and self.name_ == other.name_ and self.__base_dataclass_eq__(other)
 
-    @property
-    def _hash_is_calced(self) -> bool:
-        return self.__calced_hash is not None
+    @classmethod
+    def __coerce_value(cls, typ: type, value):
+        if isinstance(value, np.generic):
+            # Handle numpy types
+            return value.item()
+        elif hasattr(value, 'tolist'):
+            # tolist converts scalar or array to native python type if not already native.
+            return value()
+        elif typ in (DictBase, Optional[DictBase]) and isinstance(value, Base):
+            return value.to_dict()
+        if _is_supported_generic(typ):
+            return _decode_generic(typ, value, False)
+        else:
+            return value
 
-    def __hash__(self) -> int:
-        if not self._hash_is_calced:
-            calced_hash = hash(self.name)
-            for prop in self.properties():
-                value = __getattribute__(self, prop)
-                if isinstance(value, dict):
-                    value = tuple(value.items())
-                elif isinstance(value, list):
-                    value = tuple(value)
-                calced_hash ^= hash(value)
+    @classmethod
+    def _fields_by_name(cls) -> Mapping[str, Field]:
+        if cls is Base:
+            return {}
 
-            self.__calced_hash = calced_hash
+        if cls.__fields_by_name is None:
+            cls.__fields_by_name = {f.name: f for f in fields(cls)}
 
-        return self.__calced_hash
+        return cls.__fields_by_name
 
-    def __eq__(self, other) -> bool:
-        return \
-            type(self) == type(other) and (self.name is None or other.name is None or self.name == other.name) and \
-            (self.__calced_hash is None or other.__calced_hash is None or self.__calced_hash == other.__calced_hash) \
-            and all(__getattribute__(self, p) == __getattribute__(other, p) for p in self.properties())
+    @classmethod
+    def _field_mappings(cls) -> Mapping[str, str]:
+        if cls is Base:
+            return {}
 
-    def __ne__(self, other) -> bool:
-        return not self.__eq__(other)
+        if cls.__field_mappings is None:
+            field_mappings = {}
+            for fld in fields(cls):
+                config_fn = fld.metadata.get('dataclasses_json', {}).get('letter_case')
+                if config_fn:
+                    mapped_name = config_fn('field_name')
+                    if mapped_name:
+                        field_mappings[mapped_name] = fld.name
 
-    def __lt__(self, other):
-        if not isinstance(other, type(self)):
-            return type(self).__name__ < type(other).__name__
+            cls.__field_mappings = field_mappings
+        return cls.__field_mappings
 
-        for prop in itertools.chain(('name',), sorted(self.properties())):
-            val = __getattribute__(self, prop)
-            other_val = __getattribute__(other, prop)
-
-            if val != other_val:
-                if val is None:
-                    return False
-                return val < other_val
-
-        return False
+    def _property_changed(self, prop: str, value):
+        pass
 
     def clone(self, **kwargs):
         """
@@ -223,202 +292,42 @@ class Base(metaclass=ABCMeta):
             >>>
             >>> new_cap = cap.clone(cap_rate=0.01)
         """
-        clone = copy.copy(self)
-        properties = self.properties()
-        for key, value in kwargs.items():
-            if key in properties:
-                setattr(clone, key, value)
-            else:
-                raise ValueError('Only properties may be passed as kwargs')
-
-        return clone
+        ret = replace(self, **kwargs)
+        ret.name_ = self.name_
+        return ret
 
     @classmethod
     def properties(cls) -> set:
         """The public property names of this class"""
-        if not cls.__properties:
-            cls.__properties = set(i for i in dir(cls) if isinstance(getattr(cls, i), property)
-                                   and not i.startswith('_') and not
-                                   getattr(getattr(cls, i).fget, 'do_not_serialise', False))
-        return cls.__properties
+        return set(f[:-1] if f[-1] == '_' else f for f in cls._fields_by_name().keys())
 
     def as_dict(self, as_camel_case: bool = False) -> dict:
         """Dictionary of the public, non-null properties and values"""
-        name_mappings = getattr(self, '_name_mappings', {})
 
-        if not self.__as_dict[as_camel_case]:
-            raw_properties = self.properties()
-            properties = (name_mappings[p] if p in name_mappings else
-                          inflection.camelize(p, uppercase_first_letter=False) for p in raw_properties) \
-                if as_camel_case else raw_properties
-            values = (__getattribute__(self, p) for p in raw_properties)
-            self.__as_dict[as_camel_case] = dict((p, v) for p, v in zip(properties, values) if v is not None)
+        # to_dict() converts all the values to JSON type, does camel case and name mappings
+        # asdict() does not convert values or case of the keys or do name mappings
 
-        return copy.copy(self.__as_dict[as_camel_case])
+        ret = {}
+        field_mappings = {v: k for k, v in self._field_mappings().items()}
 
-    @classmethod
-    def prop_type(cls, prop: str, additional: Optional[list] = None) -> type:
-        return_hints = get_type_hints(getattr(cls, prop).fget).get('return')
-        if hasattr(return_hints, '__origin__'):
-            prop_type = return_hints.__origin__
-        else:
-            prop_type = return_hints
+        for key in self.__fields_by_name.keys():
+            value = __getattribute__(self, key)
+            key = field_mappings.get(key, key)
 
-        if prop_type == Union:
-            prop_type = next((a for a in return_hints.__args__ if issubclass(a, (Base, EnumBase))), None)
-            if prop_type is None:
-                for typ in (dt.datetime, dt.date):
-                    if typ in return_hints.__args__:
-                        prop_type = typ
+            if value is not None:
+                if as_camel_case:
+                    key = inflection.camelize(key, uppercase_first_letter=False)
 
-                        if additional is not None:
-                            additional.extend([a for a in return_hints.__args__ if a != prop_type])
-                        break
+                ret[key] = value
 
-            if prop_type is None and additional is not None:
-                prop_type = return_hints.__args__[-1]
-                additional.extend(return_hints.__args__[:-1])
-
-        if prop_type is InstrumentBase:
-            # TODO Fix this
-            from .instrument import Instrument
-            prop_type = Instrument
-
-        return prop_type
-
-    @classmethod
-    def prop_item_type(cls, prop: str) -> type:
-        return_hints = get_type_hints(getattr(cls, prop).fget).get('return')
-        item_type = return_hints.__args__[0]
-
-        item_args = [i for i in getattr(item_type, '__args__', ()) if isinstance(i, type)]
-        if item_args:
-            item_type = next((a for a in item_args if issubclass(a, (Base, EnumBase))), item_args[-1])
-
-        return item_type
-
-    def __from_dict(self, values: dict):
-        name_mappings = getattr(self, '_name_mappings', {})
-
-        for prop in self.properties():
-            if getattr(type(self), prop).fset is None:
-                continue
-
-            prop_value = values.get(name_mappings.get(prop, prop),
-                                    values.get(inflection.camelize(prop, uppercase_first_letter=False)))
-
-            if prop_value is not None:
-                if isinstance(prop_value, np.generic):
-                    prop_value = prop_value.item()
-
-                additional_types = []
-                prop_type = self.prop_type(prop, additional=additional_types)
-
-                if prop_type is None:
-                    # This shouldn't happen
-                    setattr(self, prop, prop_value)
-                elif issubclass(prop_type, dt.datetime):
-                    if isinstance(prop_value, int):
-                        setattr(self, prop, dt.datetime.fromtimestamp(prop_value / 1000).isoformat())
-                    else:
-                        import re
-                        matcher = re.search('\\.([0-9]*)Z$', prop_value)
-                        if matcher:
-                            sub_seconds = matcher.group(1)
-                            if len(sub_seconds) > 6:
-                                prop_value = re.sub(matcher.re, '.{}Z'.format(sub_seconds[:6]), prop_value)
-
-                        try:
-                            setattr(self, prop, isoparse(prop_value))
-                        except ValueError:
-                            if str in additional_types:
-                                setattr(self, prop, prop_value)
-                elif issubclass(prop_type, dt.date) and type(prop_value) is not dt.date:
-                    date_value = None
-
-                    if isinstance(prop_value, float):
-                        # Assume it's an Excel date
-                        if prop_value > 59:
-                            prop_value -= 1  # Excel leap year bug, 1900 is not a leap year!
-                        date_value = dt.datetime(1899, 12, 31) + dt.timedelta(days=prop_value).date()
-                    elif isinstance(prop_value, str):
-                        for format in _valid_date_formats:
-                            try:
-                                date_value = dt.datetime.strptime(prop_value, format).date()
-                                break
-                            except ValueError:
-                                pass
-
-                    setattr(self, prop, date_value or prop_value)
-                elif issubclass(prop_type, float) and isinstance(prop_value, str):
-                    if prop_value.endswith('%'):
-                        setattr(self, prop, float(prop_value[:-1]) / 100)
-                    else:
-                        setattr(self, prop, float(prop_value))
-                elif issubclass(prop_type, EnumBase):
-                    setattr(self, prop, get_enum_value(prop_type, prop_value))
-                elif issubclass(prop_type, Base):
-                    if isinstance(prop_value, Base):
-                        setattr(self, prop, prop_value)
-                    else:
-                        setattr(self, prop, prop_type.from_dict(prop_value))
-                elif issubclass(prop_type, (list, tuple)):
-                    item_type = self.prop_item_type(prop)
-                    if issubclass(item_type, Base):
-                        item_values = tuple(v if isinstance(v, (Base, EnumBase)) else item_type.from_dict(v)
-                                            for v in prop_value)
-                    elif issubclass(item_type, EnumBase):
-                        item_values = tuple(get_enum_value(item_type, v) for v in prop_value)
-                    else:
-                        item_values = tuple(prop_value)
-                    setattr(self, prop, item_values)
-                else:
-                    setattr(self, prop, prop_value)
-
-    @classmethod
-    def _from_dict(cls, values: dict):
-        args = [k for k, v in signature(cls.__init__).parameters.items() if k not in ('kwargs', '_kwargs')
-                and v.default == Parameter.empty][1:]
-        required = {}
-
-        for arg in args:
-            prop_name = arg[:-1] if arg.endswith('_') and not keyword.iskeyword(arg) else arg
-            prop_type = cls.prop_type(prop_name)
-            value = values.pop(arg, None)
-
-            if prop_type:
-                if issubclass(prop_type, Base) and isinstance(value, dict):
-                    value = prop_type.from_dict(value)
-                elif issubclass(prop_type, (list, tuple)) and isinstance(value, (list, tuple)):
-                    item_type = cls.prop_item_type(prop_name)
-                    if issubclass(item_type, Base):
-                        value = tuple(v if isinstance(v, (Base, EnumBase)) else item_type.from_dict(v) for v in value)
-                elif issubclass(prop_type, EnumBase):
-                    value = get_enum_value(prop_type, value)
-
-            required[arg] = value
-
-        instance = cls(**required)
-        instance.__from_dict(values)
-        return instance
-
-    @classmethod
-    def from_dict(cls, values: dict):
-        """
-        Construct an instance of this type from a dictionary
-
-        :param values: a dictionary (potentially nested)
-        :return: an instance of this type, populated with values
-        """
-        return cls._from_dict(values)
+        return ret
 
     @classmethod
     def default_instance(cls):
         """
         Construct a default instance of this type
         """
-        args = [k for k, v in signature(cls.__init__).parameters.items() if v.default == Parameter.empty][1:]
-        required = {a: None for a in args}
+        required = {f.name: None if f.default == MISSING else f.default for f in fields(cls) if f.init}
         return cls(**required)
 
     def from_instance(self, instance):
@@ -430,33 +339,12 @@ class Base(metaclass=ABCMeta):
         if not isinstance(instance, type(self)):
             raise ValueError('Can only use from_instance with an object of the same type')
 
-        for prop in self.properties():
-            attr = getattr(__getattribute__(self, '__class__'), prop)
-            if attr.fset:
-                __setattr__(self, prop, __getattribute__(instance, prop))
-
-    def to_json(self) -> dict:
-        return {re.sub('_$', '', k): v for k, v in self.as_dict(as_camel_case=True).items()}
+        for fld in fields(self.__class__):
+            if fld.init:
+                __setattr__(self, fld.name, __getattribute__(instance, fld.name))
 
 
-class TypeMixin(metaclass=ABCMeta):
-
-    @property
-    @abstractmethod
-    def _type(self) -> str:
-        ...
-
-    def to_json(self) -> dict:
-        ret = super().to_json()
-        ret['$type'] = self._type
-        return ret
-
-
-class TypedBase(TypeMixin, Base):
-    pass
-
-
-class Priceable(Base, metaclass=ABCMeta):
+class Priceable(Base):
 
     def resolve(self, in_place: bool = True):
         """
@@ -580,51 +468,53 @@ class RiskMeasureParameter(Base):
     pass
 
 
+@dataclass
 class InstrumentBase(Base):
 
-    def __init__(self, quantity: Optional[float] = 1):
-        super().__init__()
-        self.__instrument_quantity = quantity
-        self.__resolution_key: Optional[RiskKey] = None
-        self.__unresolved: Optional[InstrumentBase] = None
-        self.__metadata: dict = None
+    quantity_: InitVar[float] = field(init=False, default=1)
 
     @property
     @abstractmethod
-    @do_not_serialise
     def provider(self):
         ...
 
     @property
-    @do_not_serialise
     def instrument_quantity(self) -> float:
-        return self.__instrument_quantity
+        return self.quantity_
 
     @property
-    @do_not_serialise
-    def resolution_key(self) -> RiskKey:
-        return self.__resolution_key
+    def resolution_key(self) -> Optional[RiskKey]:
+        try:
+            return self.__resolution_key
+        except AttributeError:
+            return None
 
     @property
-    @do_not_serialise
     def unresolved(self):
-        return self.__unresolved
+        try:
+            return self.__unresolved
+        except AttributeError:
+            return None
 
     @property
-    @do_not_serialise
     def metadata(self):
-        return self.__metadata
+        try:
+            return self.__metadata
+        except AttributeError:
+            return None
 
     @metadata.setter
     def metadata(self, value):
         self.__metadata = value
 
-    def _property_changed(self, prop: str):
-        if self.__resolution_key:
-            self.__resolution_key = None
-            self.unresolve()
-
-        super()._property_changed(prop)
+    def _property_changed(self, prop: str, value):
+        try:
+            if self.__resolution_key:
+                self.__resolution_key = None
+                self.unresolve()
+        except AttributeError:
+            # Can happen during init
+            pass
 
     def from_instance(self, instance):
         self.__resolution_key = None
@@ -648,45 +538,41 @@ class InstrumentBase(Base):
             self.__unresolved = None
 
 
-class QuotableBuilder(TypeMixin):
+class QuotableBuilder(Base):
 
-    def __init__(self, valuation_overrides: Optional[dict] = None):
-        super().__init__()
-        self.valuation_overrides = valuation_overrides
+    valuation_overrides: dict = field(default={}, metadata=config(field_name='overrides'))
+
+
+@dataclass
+class Market(ABC):
+
+    def __hash__(self):
+        return hash(self.market or self.location)
+
+    def __eq__(self, other):
+        return (self.market or self.location) == (other.market or other.location)
+
+    def __lt__(self, other):
+        return repr(self) < repr(other)
 
     @property
-    @do_not_resolve
-    @do_not_serialise
-    def valuation_overrides(self) -> Optional[dict]:
-        return self.__valuation_overrides
-
-    @valuation_overrides.setter
-    def valuation_overrides(self, value: dict):
-        self.__valuation_overrides = value
-
-    def as_dict(self, as_camel_case: bool = False):
-        ret = super().as_dict(as_camel_case)
-        if self.__valuation_overrides:
-            ret['overrides'] = copy.copy(self.__valuation_overrides)
-        return ret
-
-    def to_json(self):
-        ret = {'properties': TypeMixin.to_json(self)}
-        ret['$type'] = ret['properties'].pop('$type')
-
-        # Per as_dict if there are valuation overrides they will have been put here
-        if self.__valuation_overrides:
-            ret['valuationOverrides'] = ret['properties'].pop('overrides')
-
-        return ret
-
-
-class Market(Base):
+    @abstractmethod
+    def market(self):
+        ...
 
     @property
     @abstractmethod
     def location(self):
         ...
+
+    def to_dict(self):
+        return self.market.to_dict()
+
+    def to_dict(self):
+        return self.market.to_dict()
+
+    def to_dict(self):
+        return self.market.to_dict()
 
 
 class Sentinel:
@@ -714,15 +600,24 @@ def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
     return enum_value
 
 
-def as_tuple(f):
-    def wrap(*args):
-        value = args[1]
-        if value is not None and not isinstance(value, str):
-            try:
-                iter(value)
-            except TypeError:
-                value = (value,)
+# Yes, I know this is a little evil ...
+global_config.encoders[dt.date] = dt.date.isoformat
+global_config.encoders[Optional[dt.date]] = encode_date_or_str
+global_config.decoders[dt.date] = decode_optional_date
+global_config.decoders[Optional[dt.date]] = decode_optional_date
+global_config.encoders[Union[dt.date, str]] = encode_date_or_str
+global_config.encoders[Optional[Union[dt.date, str]]] = encode_date_or_str
+global_config.decoders[Union[dt.date, str]] = decode_date_or_str
+global_config.decoders[Optional[Union[dt.date, str]]] = decode_date_or_str
+global_config.encoders[dt.datetime] = encode_datetime
+global_config.encoders[Optional[dt.datetime]] = encode_datetime
+global_config.decoders[dt.datetime] = decode_datetime
+global_config.decoders[Optional[dt.datetime]] = decode_datetime
+global_config.decoders[Union[float, str]] = decode_float_or_str
+global_config.decoders[Optional[Union[float, str]]] = decode_float_or_str
 
-        return f(args[0], value)
+global_config.decoders[InstrumentBase] = decode_instrument
+global_config.decoders[Optional[InstrumentBase]] = decode_instrument
 
-    return wrap
+global_config.encoders[Market] = encode_dictable
+global_config.encoders[Optional[Market]] = encode_dictable

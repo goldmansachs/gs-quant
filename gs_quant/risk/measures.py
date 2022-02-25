@@ -17,7 +17,6 @@ from typing import Union
 
 from gs_quant.base import Market
 from gs_quant.common import AssetClass, AggregationLevel, RiskMeasure
-from gs_quant.context_base import do_not_serialise
 from gs_quant.target.common import RiskMeasureType, RiskMeasureUnit
 from gs_quant.target.measures import IRBasis, IRVega, IRDelta, IRXccyDelta, InflationDelta
 
@@ -36,11 +35,11 @@ class __RelativeRiskMeasure(RiskMeasure):
                  unit: Union[RiskMeasureUnit, str] = None,
                  value: Union[float, str] = None,
                  name: str = None):
-        super().__init__(asset_class=asset_class, measure_type=measure_type, unit=unit, value=value, name=name)
+        super().__init__(asset_class=asset_class, measure_type=measure_type, unit=unit, value=value)
         self.__to_market = to_market
+        self.name = name
 
     @property
-    @do_not_serialise
     def pricing_context(self):
         from gs_quant.markets import PricingContext, RelativeMarket
         current = PricingContext.current

@@ -65,7 +65,7 @@ class Portfolio(PriceableImpl):
         else:
             self.priceables = priceables
 
-        self.__name = name
+        self.name = name
         self.__id = None
         self.__quote_id = None
 
@@ -94,7 +94,7 @@ class Portfolio(PriceableImpl):
         return iter(self.__priceables)
 
     def __hash__(self):
-        hash_code = hash(self.__name) ^ hash(self.__id)
+        hash_code = hash(self.name) ^ hash(self.__id)
         for priceable in self.__priceables:
             hash_code ^= hash(priceable)
 
@@ -132,14 +132,6 @@ class Portfolio(PriceableImpl):
     @property
     def quote_id(self) -> str:
         return self.__quote_id
-
-    @property
-    def name(self) -> str:
-        return self.__name
-
-    @name.setter
-    def name(self, name):
-        self.__name = name
 
     @property
     def priceables(self) -> Tuple[PriceableImpl, ...]:
@@ -269,10 +261,10 @@ class Portfolio(PriceableImpl):
             if not overwrite:
                 raise ValueError(f'Portfolio with id {id} already exists. Use overwrite=True to overwrite')
         else:
-            if not self.__name:
+            if not self.name:
                 raise ValueError('name not set')
-            self.__id = GsPortfolioApi.create_portfolio(MarqueePortfolio('USD', self.__name)).id
-            _logger.info(f'Created Marquee portfolio {self.__name} with id {self.__id}')
+            self.__id = GsPortfolioApi.create_portfolio(MarqueePortfolio('USD', self.name)).id
+            _logger.info(f'Created Marquee portfolio {self.name} with id {self.__id}')
 
         position_set = PositionSet(
             position_date=self.__position_context.position_date,
@@ -517,12 +509,12 @@ class Portfolio(PriceableImpl):
                     update_market_data(market_data, result.base_market.market_data_dict)
                 else:
                     for market in result.values():
-                        update_market_data(overlay_markets.setdefault(market.base_market, {}), market.market_data)
+                        update_market_data(overlay_markets.setdefault(market, {}), market.market_data)
 
             if market_data:
-                ret = OverlayMarket(base_market=results[0].base_market.clone_with_market_data(market_data))
+                ret = OverlayMarket(base_market=results[0], market_data=market_data)
             else:
-                ret = {base_market.date: OverlayMarket(base_market=base_market.clone_with_market_data(market_data))
+                ret = {base_market.date: OverlayMarket(base_market=base_market, market_data=market_data)
                        for base_market, market_data in overlay_markets.items()}
 
             if result_future:

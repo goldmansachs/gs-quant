@@ -45,8 +45,8 @@ def mock_session(mocker):
 @mock.patch.object(GsIndexApi, 'create')
 def test_basket_create(mocker):
     # construct inputs and mock response
-    inputs = CustomBasketsCreateInputs(name, position_set, pricing_parameters, return_type,
-                                       ticker, publish_parameters=publish_parameters)
+    inputs = CustomBasketsCreateInputs(ticker, name, pricing_parameters, position_set, return_type,
+                                       publish_parameters=publish_parameters)
     mock_response = CustomBasketsResponse(report_id, basket_id, 'done')
 
     # setup mock session and api response
@@ -76,7 +76,7 @@ def test_basket_edit(mocker):
 @mock.patch.object(GsIndexApi, 'rebalance')
 def test_basket_rebalance(mocker):
     # construct inputs and mock response
-    inputs = CustomBasketsRebalanceInputs(position_set, pricing_parameters)
+    inputs = CustomBasketsRebalanceInputs(position_set=position_set, pricing_parameters=pricing_parameters)
     mock_response = CustomBasketsResponse(report_id, basket_id, 'done')
 
     # setup mock session and api response

@@ -61,7 +61,7 @@ def moving_average(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -
     reactive to changes in the asset price, but more volatile. Larger windows will be smoother but less reactive to
     near term changes in asset prices.
 
-    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} X_t}{N}`
+    :math:`R_t = \\frac{\\sum_{i=t-w+1}^{t} X_t}{N}`
 
     where N is the number of observations in each rolling window, :math:`w`. If window is not provided, computes
     rolling mean over the full series
@@ -261,7 +261,7 @@ def exponential_moving_average(x: pd.Series, beta: float = 0.75) -> pd.Series:
 
     :math:`Y_0 = X_0`
 
-    :math:`Y_t = \\beta \cdot Y_{t-1} + (1 - \\beta) \cdot X_t`
+    :math:`Y_t = \\beta \\cdot Y_{t-1} + (1 - \\beta) \\cdot X_t`
 
     where :math:`\\beta` is the weight we place on the previous average.
 
@@ -281,6 +281,54 @@ def exponential_moving_average(x: pd.Series, beta: float = 0.75) -> pd.Series:
 
     """
     return x.ewm(alpha=1 - beta, adjust=False).mean()
+
+
+@plot_function
+def macd(x: pd.Series, m: int = 12, n: int = 26, s: int = 1) -> pd.Series:
+    """
+    Moving average convergence divergence (MACD).
+
+    Moving average convergence divergence (MACD) is a trend-following momentum indicator that shows the relationship
+    between two moving averages of a timeseries. It is the result of subtracting the exponential moving average of `x`
+    with a period of `m` from the exponential moving average of `x` with a period of `n`.
+
+    Optionally, specify `s` to apply an exponential moving average to the resulting series with a period of `s`
+    (default 1, equivalent to no exponential moving average).
+
+    :param x: time series
+    :param m: period of first exponential moving average
+    :param n: period of second exponential moving average
+    :param s: optional smoothing parameter (default 1)
+    :return: date-based time series of return
+
+    **Usage**
+
+    The exponential(ly weighted) moving average (EMA) of a series [:math:`X_0`, :math:`X_1`, :math:`X_2`, ...],
+    is defined as:
+
+    :math:`Y_0 = X_0`
+
+    :math:`Y_t = \\beta \cdot Y_{t-1} + (1 - \\beta) \cdot X_t`
+
+    where :math:`\\beta = \frac{2}{\\text{period} + 1}` is the weight we place on the previous average.
+
+    The MACD of a series is defined as :math:`\\text{EMA}(\\text{EMA}(X, N) - \\text{EMA}(X, M), S)`
+
+    **Examples**
+
+    Generate price series with 100 observations starting from today's date:
+
+    >>> prices = generate_series(100)
+    >>> macd(prices, 12, 26)
+
+    **See also**
+
+    :func:`exponential_moving_average` :func:`moving_average` :func:`smoothed_moving_average`
+
+    """
+    a = x.ewm(adjust=False, span=m).mean()
+    b = x.ewm(adjust=False, span=n).mean()
+    return subtract(a, b).ewm(adjust=False, span=s).mean()
 
 
 @plot_function

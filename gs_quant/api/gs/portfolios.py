@@ -20,10 +20,10 @@ from typing import Tuple, Union, List, Dict
 from gs_quant.common import PositionType
 from gs_quant.instrument import Instrument
 from gs_quant.session import GsSession
-from gs_quant.target.common import RiskRequest, Currency
+from gs_quant.common import RiskRequest, Currency
 from gs_quant.target.portfolios import Portfolio, Position, PositionSet
 from gs_quant.target.reports import Report
-from gs_quant.target.risk_models import Term
+from gs_quant.target.risk_models import RiskModelTerm as Term
 
 _logger = logging.getLogger(__name__)
 

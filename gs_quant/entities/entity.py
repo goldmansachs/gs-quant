@@ -44,7 +44,6 @@ from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.markets.position_set import PositionSet, Position
 from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport, \
     flatten_results_into_df, get_thematic_breakdown_as_df
-from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
 from gs_quant.target.reports import ReportStatus, ReportType
@@ -482,19 +481,6 @@ class PositionedEntity(metaclass=ABCMeta):
             else:
                 report_objects.append(Report.from_target(report))
         return report_objects
-
-    def get_report_factor_risk_models(self) -> Tuple[FactorRiskModel, ...]:
-        all_reports = self.get_reports()
-        risk_model_ids = []
-        for report in all_reports:
-            if report.parameters.risk_model is not None and report.parameters.risk_model not in risk_model_ids:
-                risk_model_ids.append(report.parameters.risk_model)
-        if not len(risk_model_ids):
-            raise ValueError('No factor risk models available for ' + self.id)
-
-        risk_models = FactorRiskModel.get_many(risk_model_ids)
-
-        return risk_models
 
     def get_status_of_reports(self) -> pd.DataFrame:
         reports = self.get_reports()

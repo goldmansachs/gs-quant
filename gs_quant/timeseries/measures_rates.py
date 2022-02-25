@@ -138,7 +138,7 @@ CURRENCY_TO_SWAP_RATE_BENCHMARK = {
     'NOK': OrderedDict([('NIBOR', 'NOK-NIBOR-BBA'), ('NOWA', 'NOK-NOWA-OIS-COMPOUND')]),
     'DKK': OrderedDict([('CIBOR', 'DKK-CIBOR2-DKNA13'), ('OIS', 'DKK-DKKOIS-OIS-COMPOUND')]),
     'AUD': OrderedDict([('BBR', 'AUD-BBR-BBSW'), ('AONIA', 'AUD-AONIA-OIS-COMPOUND')]),
-    'CAD': OrderedDict([('CDOR', 'CAD-BA-CDOR')]),
+    'CAD': OrderedDict([('CDOR', 'CAD-BA-CDOR'), ('CORRA', 'CAD-CORRA-OIS-COMP')]),
     'NZD': OrderedDict([('BBR', 'NZD-BBR-FRA'), ('NZIONA', 'NZD-NZIONA-OIS-COMPOUND')]),
     'KRW': {'KSDA': 'KRW-CD-KSDA-BLOOMBERG'},
     'CNY': {'REPO': 'CNY-REPO RATE'},
@@ -173,6 +173,7 @@ BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS = {
     'AUD-BBR-BBSW': '6m',
     'AUD-AONIA-OIS-COMPOUND': '1y',
     'CAD-BA-CDOR': '3m',
+    'CAD-CORRA-OIS-COMP': '3m',
     'NZD-BBR-FRA': '3m',
     'NZD-NZIONA-OIS-COMPOUND': '1y',
     'KRW-CD-KSDA-BLOOMBERG': '3m',
@@ -249,7 +250,7 @@ CROSS_BBID_TO_DUMMY_OISXCCY_ASSET = {
 
 def _pricing_location_normalized(location: PricingLocation, ccy: CurrencyEnum) -> PricingLocation:
     if location == PricingLocation.HKG or location == PricingLocation.TKO:
-        if ccy in CURRENCY_TO_PRICING_LOCATION.keys() and\
+        if ccy in CURRENCY_TO_PRICING_LOCATION.keys() and \
                 PricingLocation.HKG == CURRENCY_TO_PRICING_LOCATION.get(ccy, PricingLocation.LDN):
             return PricingLocation.HKG
         else:
@@ -281,10 +282,10 @@ def _currency_to_tdapi_swap_rate_asset(asset_spec: ASSET_SPEC) -> str:
     return result
 
 
-def _currency_to_tdapi_swaption_rate_asset(asset_spec: ASSET_SPEC) -> str:
+def _currency_to_tdapi_asset_base(asset_spec: ASSET_SPEC, allowed_bbids=None) -> str:
     asset = _asset_from_spec(asset_spec)
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    if bbid is None:
+    if bbid is None or (allowed_bbids and bbid not in allowed_bbids):
         return asset.get_marquee_id()
     try:
         result = swaptions_defaults_provider.get_swaption_parameter(bbid, "assetIdForAvailabilityCheck")
@@ -292,6 +293,14 @@ def _currency_to_tdapi_swaption_rate_asset(asset_spec: ASSET_SPEC) -> str:
         logging.info("No assetIdForAvailabilityCheck for" + bbid)
         return asset.get_marquee_id()
     return result
+
+
+def _currency_to_tdapi_midcurve_asset(asset_spec: ASSET_SPEC) -> str:
+    return _currency_to_tdapi_asset_base(asset_spec, ['GBP', 'EUR', 'USD'])
+
+
+def _currency_to_tdapi_swaption_rate_asset(asset_spec: ASSET_SPEC) -> str:
+    return _currency_to_tdapi_asset_base(asset_spec)
 
 
 def _currency_to_tdapi_basis_swap_rate_asset(asset_spec: ASSET_SPEC) -> str:
@@ -658,7 +667,7 @@ def swaption_annuity(asset: Asset, expiration_tenor: str = None, termination_ten
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
+              [MeasureDependency(id_provider=_currency_to_tdapi_midcurve_asset,
                                  query_type=QueryType.MIDCURVE_PREMIUM)])
 def midcurve_premium(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
                      relative_strike: float = None, benchmark_type: str = None,
@@ -691,7 +700,7 @@ def midcurve_premium(asset: Asset, expiration_tenor: str, forward_tenor: str, te
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
+              [MeasureDependency(id_provider=_currency_to_tdapi_midcurve_asset,
                                  query_type=QueryType.MIDCURVE_ANNUITY)])
 def midcurve_annuity(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
                      relative_strike: float = None, benchmark_type: str = None,
@@ -786,7 +795,7 @@ def swaption_vol(asset: Asset, expiration_tenor: str = None, termination_tenor: 
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
+              [MeasureDependency(id_provider=_currency_to_tdapi_midcurve_asset,
                                  query_type=QueryType.MIDCURVE_VOL)])
 def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
                  relative_strike: float = None, benchmark_type: str = None,
@@ -817,7 +826,7 @@ def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termin
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=_currency_to_tdapi_swaption_rate_asset,
+              [MeasureDependency(id_provider=_currency_to_tdapi_midcurve_asset,
                                  query_type=QueryType.MIDCURVE_ATM_FWD_RATE)])
 def midcurve_atm_fwd_rate(asset: Asset, expiration_tenor: str, forward_tenor: str, termination_tenor: str,
                           benchmark_type: str = None,
@@ -1214,12 +1223,7 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
                   kwargs['asset_parameters_payer_designated_maturity'], kwargs['asset_parameters_receiver_rate_option'],
                   kwargs['asset_parameters_receiver_designated_maturity'],
                   kwargs['asset_parameters_effective_date'], kwargs['pricing_location'])
-
-    where = _get_basis_swap_csa_terms(kwargs['asset_parameters_notional_currency'],
-                                      kwargs['asset_parameters_payer_rate_option'],
-                                      kwargs['asset_parameters_receiver_rate_option'])
-
-    where['pricingLocation'] = kwargs['pricing_location'].value
+    where = {'pricingLocation': kwargs['pricing_location'].value}
 
     q = GsDataApi.build_market_data_query([rate_mqid], QueryType.BASIS_SWAP_RATE, where=where,
                                           source=source, real_time=real_time)
@@ -1382,11 +1386,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
                   kwargs['asset_parameters_receiver_designated_maturity'],
                   kwargs[tenor_dict['tenor_dataset_field']], tenor_dict['tenor'], kwargs['pricing_location'].value)
 
-    where = _get_basis_swap_csa_terms(kwargs['asset_parameters_notional_currency'],
-                                      kwargs['asset_parameters_payer_rate_option'],
-                                      kwargs['asset_parameters_receiver_rate_option'])
-
-    where['pricingLocation'] = kwargs['pricing_location'].value
+    where = {'pricingLocation': kwargs['pricing_location'].value}
     start, end = _range_from_pricing_date(calendar, pricing_date)
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query(rate_mqids, QueryType.BASIS_SWAP_RATE, where=where,

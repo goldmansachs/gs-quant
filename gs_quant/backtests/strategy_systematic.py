@@ -18,6 +18,7 @@ from typing import Iterable
 
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
+from gs_quant.base import get_enum_value
 from gs_quant.backtests.core import Backtest, TradeInMethod, MarketModel
 from gs_quant.errors import MqValueError
 from gs_quant.target.backtests import *

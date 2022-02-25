@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from enum import Enum
+from enum import Enum, auto
 from time import sleep
 from typing import Tuple, Union, List, Dict
 
@@ -29,11 +29,16 @@ from gs_quant.datetime import business_day_offset
 from gs_quant.errors import MqValueError
 from gs_quant.markets.report_utils import _get_ppaa_batches
 from inflection import titleize
-from gs_quant.models.risk_model import ReturnFormat
 from gs_quant.target.common import ReportParameters, Currency
 from gs_quant.target.coordinates import MDAPIDataBatchResponse
 from gs_quant.target.data import DataQuery, DataQueryResponse
 from gs_quant.target.reports import Report as TargetReport, ReportType, PositionSourceType, ReportStatus
+
+
+class ReturnFormat(Enum):
+    """Alternative format for data to be returned from get_data functions"""
+    JSON = auto()
+    DATA_FRAME = auto()
 
 
 class ReportDataset(Enum):

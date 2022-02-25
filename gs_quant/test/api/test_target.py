@@ -26,7 +26,7 @@ def classes(module_name) -> list:
     module_path = 'gs_quant.target.' + module_name
     __import__(module_path)
     module = sys.modules[module_path]
-    return [m for n, m in inspect.getmembers(module) if inspect.isclass(m) and issubclass(m, Base)]
+    return [m for n, m in inspect.getmembers(module) if inspect.isclass(m) and issubclass(m, Base) and m is not Base]
 
 
 def test_enum():
@@ -42,13 +42,13 @@ def test_classes():
                         'hedge', 'indices', 'instrument', 'monitor', 'portfolios', 'reports', 'risk', 'trades',
                         'workspaces_markets'):
         for typ in classes(module_name):
-            properties = typ.properties()
-            if not properties:
+            fields_by_name = typ._fields_by_name()
+            if not fields_by_name:
                 continue
 
             obj = typ.default_instance()
 
-            for prop_name in properties:
-                _ = object.__getattribute__(obj, prop_name)
-                if getattr(typ, prop_name).fset is not None:
-                    setattr(obj, prop_name, None)
+            for fld in fields_by_name.values():
+                _ = object.__getattribute__(obj, fld.name)
+                if fld.init:
+                    setattr(obj, fld.name, None)

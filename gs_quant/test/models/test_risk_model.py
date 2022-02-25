@@ -18,7 +18,8 @@ from unittest import mock
 
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import *
-from gs_quant.target.risk_models import RiskModel as Risk_Model, CoverageType, Term, UniverseIdentifier
+from gs_quant.target.risk_models import RiskModel as Risk_Model, RiskModelCoverage, RiskModelTerm,\
+    RiskModelUniverseIdentifier, RiskModelType
 import datetime as dt
 
 
@@ -31,16 +32,17 @@ empty_entitlements = {
     "upload": []
 }
 
-mock_risk_model_obj = Risk_Model(CoverageType.Country,
+mock_risk_model_obj = Risk_Model(RiskModelCoverage.Country,
                                  'model_id',
                                  'Fake Risk Model',
-                                 Term.Long,
-                                 UniverseIdentifier.gsid,
+                                 RiskModelTerm.Long,
+                                 RiskModelUniverseIdentifier.gsid,
                                  'GS',
                                  1.0,
                                  entitlements=empty_entitlements,
                                  description='Test',
-                                 expected_update_time='00:00:00'
+                                 expected_update_time='00:00:00',
+                                 type=RiskModelType.Factor
                                  )
 
 
@@ -67,9 +69,9 @@ def test_create_risk_model(mocker):
     mocker.patch.object(GsSession.current, '_post', return_value=mock_risk_model_obj)
     new_model = FactorRiskModel(risk_model_id,
                                 'Fake Risk Model',
-                                CoverageType.Country,
-                                Term.Long,
-                                UniverseIdentifier.gsid,
+                                RiskModelCoverage.Country,
+                                RiskModelTerm.Long,
+                                RiskModelUniverseIdentifier.gsid,
                                 'GS',
                                 0.1,
                                 entitlements={},
@@ -98,11 +100,11 @@ def test_update_risk_model_entitlements(mocker):
     }
 
     new_model.entitlements = new_entitlements
-    new_model.update()
+    new_model.save()
     assert 'guid:X' in new_model.entitlements.get('execute')
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
     new_model.entitlements = empty_entitlements
-    new_model.update()
+    new_model.save()
     new_entitlements = {
         "execute": ['guid:X'],
         "edit": [],
@@ -112,7 +114,7 @@ def test_update_risk_model_entitlements(mocker):
         "upload": ['guid:XXX']
     }
     new_model.entitlements = new_entitlements
-    new_model.update()
+    new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
     assert 'guid:X' in new_model.entitlements.get('execute')
     assert 'guid:XX' in new_model.entitlements.get('admin')
@@ -122,45 +124,50 @@ def test_update_risk_model_entitlements(mocker):
 def test_update_risk_model(mocker):
     new_model = mock_risk_model(mocker)
 
-    new_model.term = Term.Short
-    new_model.update()
+    new_model.term = RiskModelTerm.Short
+    new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
-    assert new_model.term == Term.Short
+    assert new_model.term == RiskModelTerm.Short
 
     new_model.description = 'Test risk model'
-    new_model.update()
+    new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
     assert new_model.description == 'Test risk model'
 
     new_model.vendor = 'GS'
-    new_model.update()
+    new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
     assert new_model.vendor == 'GS'
 
-    new_model.term = Term.Medium
-    new_model.update()
+    new_model.term = RiskModelTerm.Medium
+    new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
-    assert new_model.term == Term.Medium
+    assert new_model.term == RiskModelTerm.Medium
 
     new_model.version = 0.1
-    new_model.update()
+    new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
     assert new_model.version == 0.1
 
-    new_model.coverage = CoverageType.Global
-    new_model.update()
+    new_model.coverage = RiskModelCoverage.Global
+    new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
-    assert new_model.coverage == CoverageType.Global
+    assert new_model.coverage == RiskModelCoverage.Global
 
     new_model.name = 'TEST RISK MODEL'
-    new_model.update()
+    new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
     assert new_model.name == 'TEST RISK MODEL'
 
     new_model.expected_update_time = dt.time(1, 0, 0)
-    new_model.update()
+    new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
     assert new_model.expected_update_time == dt.time(1, 0, 0)
+
+    new_model.type = RiskModelType.Thematic
+    new_model.save()
+    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    assert new_model.type == RiskModelType.Thematic
 
 
 if __name__ == "__main__":

@@ -16,7 +16,6 @@ under the License.
 
 import datetime as dt
 
-from gs_quant.context_base import do_not_serialise
 from gs_quant.target.common import *
 from gs_quant.target.common import PayReceive as _PayReceive
 from gs_quant.target.common import RiskMeasure as __RiskMeasure
@@ -67,16 +66,15 @@ class RiskMeasure(__RiskMeasure):
         return self.name or self.measure_type.name
 
     @property
-    @do_not_serialise
     def pricing_context(self):
         from gs_quant.markets import PricingContext
         return PricingContext.current
 
 
 class ParameterisedRiskMeasure(RiskMeasure):
-    def __init__(self, name: str = None, asset_class: Union[AssetClass, str] = None,
+    def __init__(self, asset_class: Union[AssetClass, str] = None,
                  measure_type: Union[RiskMeasureType, str] = None, unit: Union[RiskMeasureUnit, str] = None,
-                 value: Union[float, str] = None, parameters: RiskMeasureParameter = None):
+                 value: Union[float, str] = None, parameters: RiskMeasureParameter = None, name: str = None):
         super().__init__(asset_class=asset_class, measure_type=measure_type, unit=unit, value=value, name=name)
         if parameters:
             if isinstance(parameters, RiskMeasureParameter):

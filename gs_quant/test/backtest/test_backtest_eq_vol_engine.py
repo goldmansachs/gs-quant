@@ -39,14 +39,17 @@ def set_session():
 
 
 def api_mock_data() -> APIBacktestResult:
-    PNL_data = [
-        {'date': '2019-02-18', 'value': 0},
-        {'date': '2019-02-19', 'value': -0.000000000058},
-        {'date': '2019-02-20', 'value': 0.000000000262}
-    ]
+    pnl_response = {
+        'RiskData': {
+            'PNL': [
+                {'date': '2019-02-18', 'value': 0},
+                {'date': '2019-02-19', 'value': -0.000000000058},
+                {'date': '2019-02-20', 'value': 0.000000000262}
+            ]
+        }
+    }
 
-    risk_data = {'PNL': PNL_data}
-    return APIBacktestResult('BT1', risks=risk_data)
+    return GsBacktestApi.backtest_result_from_response(pnl_response)
 
 
 def mock_api_response(mocker, mock_result: APIBacktestResult):
@@ -83,7 +86,9 @@ def test_eq_vol_engine_result(mocker):
 
     # 4. assert response
 
-    df = pd.DataFrame(api_mock_data().risks[FlowVolBacktestMeasure.PNL.value])
+    pnl = FlowVolBacktestMeasure.PNL.value
+    data = next((r.timeseries for r in api_mock_data().risks if r.name == pnl), ())
+    df = pd.DataFrame.from_records(data)
     df.date = pd.to_datetime(df.date)
     expected_pnl = df.set_index('date').value
 

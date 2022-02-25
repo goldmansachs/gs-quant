@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime as dt
 import logging
 from urllib.parse import urlencode
 
@@ -93,18 +92,20 @@ class GsBacktestApi:
             request_headers["X-CorrelationId"] = correlation_id
 
         response = GsSession.current._post('/backtests/calculate', backtest, request_headers=request_headers)
+        return cls.backtest_result_from_response(response)
 
-        # map the response to backtest result
-        if "Data" not in response and "RiskData" not in response:
-            raise MqValueError('No Data in Response Message.')
+    @classmethod
+    def backtest_result_from_response(cls, response: dict) -> BacktestResult:
+        if 'RiskData' not in response:
+            raise MqValueError('No risk data received')
 
-        data = response['Data'] if 'Data' in response else None
-        risks = response['RiskData'] if 'RiskData' in response else None
         portfolio = response['Portfolio'] if 'Portfolio' in response else None
+        risks = tuple(
+            BacktestRisk(name=k, timeseries=tuple(FieldValueMap(date=r['date'], value=r['value']) for r in v))
+            for k, v, in response['RiskData'].items()
+        )
 
-        return BacktestResult(performance=data,
-                              risks=risks,
-                              portfolio=portfolio)
+        return BacktestResult(portfolio=portfolio, risks=risks)
 
     @classmethod
     def calculate_position_risk(cls, backtestRiskRequest: BacktestRiskRequest) -> dict:

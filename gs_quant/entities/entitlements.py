@@ -544,7 +544,7 @@ class Entitlements:
         :return: A new Entitlements object with all specified entitlements
         """
         entitlements = TargetEntitlements.default_instance() if entitlements is None else entitlements
-        return cls.from_dict(entitlements.to_json())
+        return cls.from_dict(entitlements.as_dict())
 
     @classmethod
     def from_dict(cls, entitlements: Dict):

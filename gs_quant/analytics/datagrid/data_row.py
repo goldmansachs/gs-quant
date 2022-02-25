@@ -83,22 +83,28 @@ class DimensionsOverride(Override):
     def __init__(self,
                  column_names: List[str],
                  dimensions: DataDimensions,
-                 coordinate: DataCoordinate):
+                 coordinate: DataCoordinate,
+                 coordinate_id: str = None):
         """ Override dimensions for the given coordinate
 
         :param column_names: column names to override with the specified dimensions
         :param dimensions: dict of dimensions to override columns when fetching data
+        :param coordinate: coordinate to apply the override
+        :param coordinate_id: id of the coordinate to apply override. Gives additional control vs just passing
+        coordinate
         """
         super().__init__(column_names)
         # Following coordinate model, convert override dimensions to match coordinate dimension
         self.dimensions = {k.value if isinstance(k, Enum) else k: v for k, v in dimensions.items()}
         self.coordinate = coordinate
+        self.coordinate_id = coordinate_id
 
     def as_dict(self):
         override = super().as_dict()
         override['type'] = DIMENSIONS_OVERRIDE
         override['dimensions'] = self.dimensions
         override['coordinate'] = self.coordinate.as_dict()
+        override['coordinateId'] = self.coordinate_id
         return override
 
     @classmethod
@@ -112,7 +118,8 @@ class DimensionsOverride(Override):
                 parsed_dimensions[key] = value
         return DimensionsOverride(column_names=obj.get('columnNames', []),
                                   dimensions=parsed_dimensions,
-                                  coordinate=DataCoordinate.from_dict(obj.get('coordinate', {})))
+                                  coordinate=DataCoordinate.from_dict(obj.get('coordinate', {})),
+                                  coordinate_id=obj.get('coordinateId'))
 
 
 class ProcessorOverride(Override):

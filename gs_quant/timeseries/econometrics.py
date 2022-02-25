@@ -528,7 +528,7 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
     Calculate rolling annualized realized volatility of a price series over a given window. Annual volatility of 20% is
     returned as 20.0:
 
-    :math:`Y_t = \sqrt{\\frac{1}{N-1} \sum_{i=t-w+1}^t (R_t - \overline{R_t})^2} * \sqrt{252} * 100`
+    :math:`Y_t = \\sqrt{\\frac{1}{N-1} \\sum_{i=t-w+1}^t (R_t - \\overline{R_t})^2} * \\sqrt{252} * 100`
 
     where N is the number of observations in each rolling window :math:`w`, :math:`R_t` is the return on time
     :math:`t` based on *returns_type*
@@ -665,11 +665,11 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0
     Calculate rolling `beta <https://en.wikipedia.org/wiki/Beta_(finance)>`_,
     :math:`\\beta_t` of a series to a benchmark over a given window:
 
-    :math:`R_t = \\alpha_t + \\beta S_t + \epsilon_t`
+    :math:`R_t = \\alpha_t + \\beta S_t + \\epsilon_t`
 
     Calculated as:
 
-    :math:`\\beta_t = \\frac{\sum_{i=t-w+1}^t Cov(R_t, S_t)}{Var(S_t)}`
+    :math:`\\beta_t = \\frac{\\sum_{i=t-w+1}^t Cov(R_t, S_t)}{Var(S_t)}`
 
     where N is the number of observations in each rolling window, :math:`w`, and :math:`R_t` and :math:`S_t` are the
     simple returns for each series on time :math:`t`:
@@ -732,7 +732,7 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0
 
         result = pd.Series(cov_results / var_results, index=series_index, dtype=np.double)
     else:
-        cov = ret_series.rolling(w.w, 0).cov(ret_benchmark.rolling(w.w, 0))
+        cov = ret_series.rolling(w.w, 0).cov(ret_benchmark)
         result = cov / ret_benchmark.rolling(w.w, 0).var()
 
     # do not compute initial values as they may be extreme when sample size is small

@@ -44,7 +44,7 @@ except ImportError:
         start = 0
         for i in range(1, size):
             for j in range(start, i + 1):
-                if index[j] > index[i] - offset:
+                if pd.Timestamp(index[j]) > index[i] - offset:
                     start = j
                     break
             results[i] = np.std(values[start:i + 1], ddof=1)
@@ -207,10 +207,10 @@ def range_(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Ser
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
 
-    max = max_(x, Window(w.w, 0))
-    min = min_(x, Window(w.w, 0))
+    max_v = max_(x, Window(w.w, 0))
+    min_v = min_(x, Window(w.w, 0))
 
-    return apply_ramp(max - min, w)
+    return apply_ramp(max_v - min_v, w)
 
 
 @plot_function
@@ -230,13 +230,13 @@ def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
 
     If a timeseries is provided:
 
-    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`
+    :math:`R_t = \\frac{\\sum_{i=t-w+1}^{t} X_i}{N}`
 
     where :math:`N` is the number of observations in each rolling window, :math:`w`.
 
     If an array of timeseries is provided:
 
-    :math:`R_t = \\frac{\sum_{i=t-w+1}^{t} {\sum_{j=1}^{n}} X_{ij}}{N}`
+    :math:`R_t = \\frac{\\sum_{i=t-w+1}^{t} {\\sum_{j=1}^{n}} X_{ij}}{N}`
 
     where :math:`n` is the number of series, and :math:`N` is the number of observations in each rolling window,
     :math:`w`.
@@ -287,7 +287,7 @@ def median(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Ser
 
     :math:`d = \\frac{w-1}{2}`
 
-    :math:`R_t = \\frac{X_{\lfloor t-d \\rfloor} + X_{\lceil t-d \\rceil}}{2}`
+    :math:`R_t = \\frac{X_{\\lfloor t-d \\rfloor} + X_{\\lceil t-d \\rceil}}{2}`
 
     where :math:`w` is the size of the rolling window. If window is not provided, computes median over the full series
 
@@ -367,13 +367,13 @@ def sum_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
 
     If :math:`x` is a series:
 
-    :math:`R_t = \sum_{i=t-w+1}^{t} X_i`
+    :math:`R_t = \\sum_{i=t-w+1}^{t} X_i`
 
     where :math:`w` is the size of the rolling window.
 
     If :math:`x` is an array of series:
 
-    :math:`R_t = \sum_{i=t-w+1}^{t} \sum_{j=1}^{n} X_{ij}`
+    :math:`R_t = \\sum_{i=t-w+1}^{t} \\sum_{j=1}^{n} X_{ij}`
 
     where :math:`w` is the size of the rolling window and :math:`n` is the number of series
 
@@ -419,7 +419,7 @@ def product(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Se
     Calculate the product of observations over a given rolling window. For each time, :math:`t`, returns the value
     of all observations from :math:`t-w+1` to :math:`t` multiplied together:
 
-    :math:`R_t = \prod_{i=t-w+1}^{t} X_i`
+    :math:`R_t = \\prod_{i=t-w+1}^{t} X_i`
 
     where :math:`w` is the size of the rolling window. If window is not provided, computes product over the full series
 
@@ -459,12 +459,12 @@ def std(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series
     Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of sample
     `standard deviation <https://en.wikipedia.org/wiki/Standard_deviation>`_ over a rolling window:
 
-    :math:`R_t = \sqrt{\\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t})^2}`
+    :math:`R_t = \\sqrt{\\frac{1}{N-1} \\sum_{i=t-w+1}^t (X_i - \\overline{X_t})^2}`
 
-    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` is the
+    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\\overline{X_t}` is the
     mean value over the same window:
 
-    :math:`\overline{X_t} = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`
+    :math:`\\overline{X_t} = \\frac{\\sum_{i=t-w+1}^{t} X_i}{N}`
 
     If window is not provided, computes standard deviation over the full series
 
@@ -515,7 +515,7 @@ def exponential_std(x: pd.Series, beta: float = 0.75) -> pd.Series:
     `Weighted sample variance <https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance>`_
     for further details):
 
-    :math:`DF_t = \\frac{(\sum_{i=0}^t w_i)^2} {(\sum_{i=0}^t w_i)^2 - \sum_{i=0}^t w_i^2}`
+    :math:`DF_t = \\frac{(\\sum_{i=0}^t w_i)^2} {(\\sum_{i=0}^t w_i)^2 - \\sum_{i=0}^t w_i^2}`
 
     where :math:`w_i` is the weight assigned to :math:`i` th observation:
 
@@ -552,12 +552,12 @@ def var(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series
     Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of sample
     `variance <https://en.wikipedia.org/wiki/Variance>`_ over a rolling window:
 
-    :math:`R_t = \\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t})^2`
+    :math:`R_t = \\frac{1}{N-1} \\sum_{i=t-w+1}^t (X_i - \\overline{X_t})^2`
 
-    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` is the
+    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\\overline{X_t}` is the
     mean value over the same window:
 
-    :math:`\overline{X_t} = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}`
+    :math:`\\overline{X_t} = \\frac{\\sum_{i=t-w+1}^{t} X_i}{N}`
 
     If window is not provided, computes variance over the full series
 
@@ -599,13 +599,13 @@ def cov(x: pd.Series, y: pd.Series, w: Union[Window, int, str] = Window(None, 0)
     Provides `unbiased estimator <https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation>`_ of sample
     `co-variance <https://en.wikipedia.org/wiki/Covariance>`_ over a rolling window:
 
-    :math:`R_t = \\frac{1}{N-1} \sum_{i=t-w+1}^t (X_i - \overline{X_t}) (Y_i - \overline{Y_t})`
+    :math:`R_t = \\frac{1}{N-1} \\sum_{i=t-w+1}^t (X_i - \\overline{X_t}) (Y_i - \\overline{Y_t})`
 
-    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\overline{X_t}` and
-    :math:`\overline{Y_t}` represent the sample mean of series :math:`X_t` and :math:`Y_t` over the same window:
+    where :math:`N` is the number of observations in each rolling window, :math:`w`, and :math:`\\overline{X_t}` and
+    :math:`\\overline{Y_t}` represent the sample mean of series :math:`X_t` and :math:`Y_t` over the same window:
 
-    :math:`\overline{X_t} = \\frac{\sum_{i=t-w+1}^{t} X_i}{N}` and
-    :math:`\overline{Y_t} = \\frac{\sum_{i=t-w+1}^{t} Y_i}{N}`
+    :math:`\\overline{X_t} = \\frac{\\sum_{i=t-w+1}^{t} X_i}{N}` and
+    :math:`\\overline{Y_t} = \\frac{\\sum_{i=t-w+1}^{t} Y_i}{N}`
 
     If window is not provided, computes variance over the full series
 
@@ -654,9 +654,9 @@ def zscores(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Se
     window. Standard deviation and sample mean are computed over the specified rolling window, then element is
     normalized to provide a rolling z-score:
 
-    :math:`R_t = \\frac { X_t - \mu }{ \sigma }`
+    :math:`R_t = \\frac { X_t - \\mu }{ \\sigma }`
 
-    Where :math:`\mu` and :math:`\sigma` are sample mean and standard deviation over the given window
+    Where :math:`\\mu` and :math:`\\sigma` are sample mean and standard deviation over the given window
 
     If window is not provided, computes z-score relative to mean and standard deviation over the full series
 
@@ -716,11 +716,11 @@ def winsorize(x: pd.Series, limit: float = 2.5, w: Union[Window, int, str] = Win
 
     Lower and upper limits are defined as:
 
-    :math:`upper = \mu + \sigma \\times limit`
+    :math:`upper = \\mu + \\sigma \\times limit`
 
-    :math:`lower = \mu - \sigma \\times limit`
+    :math:`lower = \\mu - \\sigma \\times limit`
 
-    Where :math:`\mu` and :math:`\sigma` are sample mean and standard deviation. The series is restricted by:
+    Where :math:`\\mu` and :math:`\\sigma` are sample mean and standard deviation. The series is restricted by:
 
     :math:`R_t = max( min( X_t, upper), lower )`
 
@@ -779,7 +779,7 @@ def generate_series(length: int, direction: Direction = Direction.START_TODAY) -
     Assume random variables :math:`R` which follow a normal distribution with mean :math:`0` and standard deviation
     of :math:`1`
 
-    :math:`R \sim N(0, 1)`
+    :math:`R \\sim N(0, 1)`
 
     The timeseries is generated from these random numbers through:
 
@@ -826,7 +826,7 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
     Calculate `percentile rank <https://en.wikipedia.org/wiki/Percentile_rank>`_ of :math:`y` in the sample distribution
     of :math:`x` over a rolling window of length :math:`w`:
 
-    :math:`R_t = \\frac{\sum_{i=t-N+1}^{t}{[X_i<{Y_t}]}+0.5\sum_{i=t-N+1}^{t}{[X_i={Y_t}]}}{N}\\times100\%`
+    :math:`R_t = \\frac{\\sum_{i=t-N+1}^{t}{[X_i<{Y_t}]}+0.5\\sum_{i=t-N+1}^{t}{[X_i={Y_t}]}}{N}\\times100\\%`
 
     Where :math:`N` is the number of observations in a rolling window. If :math:`y` is not provided (or is NULL),
     calculates percentiles of :math:`x` over its historical values. If window length :math:`w` is not provided, uses an
@@ -929,11 +929,12 @@ class LinearRegression:
 
     **Examples**
 
-    R Squared of an OLS model:
+    Run a linear regression on y vs. x1 and x2 and compute the R squared:
 
-    >>> x = generate_series(100)
+    >>> x1 = generate_series(100)
+    >>> x2 = generate_series(100)
     >>> y = generate_series(100)
-    >>> r = LinearRegression(x, y)
+    >>> r = LinearRegression([x1, x2], y, True)
     >>> r.r_squared()
 
     """
@@ -1022,11 +1023,12 @@ class RollingLinearRegression:
 
     **Examples**
 
-    R Squared of a rolling OLS model:
+    Run linear regressions on y vs. x1 and x2 in a rolling window of 22 observations and compute the R Squared:
 
-    >>> x = generate_series(100)
+    >>> x1 = generate_series(100)
+    >>> x2 = generate_series(100)
     >>> y = generate_series(100)
-    >>> r = RollingLinearRegression(x, y, 5)
+    >>> r = RollingLinearRegression([x1, x2], y, 22)
     >>> r.r_squared()
 
     """

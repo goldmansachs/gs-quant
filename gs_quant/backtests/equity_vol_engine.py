@@ -13,13 +13,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
-from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
+from gs_quant.backtests import FlowVolBacktestMeasure
 from gs_quant.backtests import triggers as t
 from gs_quant.backtests import actions as a
+from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.risk import EqDelta
-from gs_quant.target.backtests import FlowVolBacktestMeasure, BacktestSignalSeriesItem, BacktestTradingQuantityType
+from gs_quant.target.backtests import BacktestSignalSeriesItem, BacktestTradingQuantityType
 import pandas as pd
 import re
 import copy
@@ -27,12 +27,16 @@ from functools import reduce
 import warnings
 
 
-class BacktestResult(object):
+class BacktestResult:
     def __init__(self, results):
         self._results = results
 
     def get_measure_series(self, measure: FlowVolBacktestMeasure):
-        df = pd.DataFrame(self._results.risks[measure.value])
+        data = next(iter(r.timeseries for r in self._results.risks if r.name == measure.value), ())
+        df = pd.DataFrame.from_records(data)
+        if len(df) == 0:
+            return df
+
         df['date'] = pd.to_datetime(df['date'])
         return df.set_index('date').value
 

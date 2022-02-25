@@ -556,38 +556,35 @@ class PerformanceHedgeParameters:
         self.__ridge_weight = value
 
     def to_dict(self):
-        # Convert position set to hedgeTarget and notional
-        positions_as_dict = []
+        positions_to_price = []
         for position in self.initial_portfolio.positions:
-            pos = {'assetId': position.asset_id}
-            if self.initial_portfolio.reference_notional:
-                pos['notional'] = position.weight * self.initial_portfolio.reference_notional
-            else:
-                if position.quantity is None:
-                    raise MqValueError('Position sets without reference notionals must have quantities for positions.')
-                pos['quantity'] = position.quantity
-            positions_as_dict.append(pos)
-        if self.initial_portfolio.reference_notional is None:
-            positions_to_price = []
-            for position in self.initial_portfolio.positions:
-                positions_to_price.append({
-                    'assetId': position.asset_id,
-                    'quantity': position.quantity
-                })
-            payload = {
-                'positions': positions_to_price,
-                'parameters': {
-                    'currency': 'USD',
-                    'pricingDate': self.initial_portfolio.date.strftime('%Y-%m-%d'),
-                    'assetDataSetId': 'GSEOD'
-                }
+            pos_to_price = {'assetId': position.asset_id}
+            if position.quantity:
+                pos_to_price['quantity'] = position.quantity
+            if position.weight:
+                pos_to_price['weight'] = position.weight
+            positions_to_price.append(pos_to_price)
+        payload = {
+            'positions': positions_to_price,
+            'parameters': {
+                'currency': 'USD',
+                'pricingDate': self.initial_portfolio.date.strftime('%Y-%m-%d'),
+                'useUnadjustedClosePrice': True,
+                'frequency': 'End Of Day'
             }
-            try:
-                price_results = GsSession.current._post('/price/positions', payload)
-            except Exception as e:
-                raise MqValueError('There was an error pricing your positions. Please try uploading your positions as '
-                                   f'weights instead: {e}')
-            notional = price_results.get('actualNotional')
+        }
+        if self.initial_portfolio.reference_notional:
+            payload['parameters']['targetNotional'] = self.initial_portfolio.reference_notional
+            payload['parameters']['weightingStrategy'] = "Weight"
+        try:
+            price_results = GsSession.current._post('/price/positions', payload)
+        except Exception as e:
+            raise MqValueError('There was an error pricing your positions. Please try uploading your positions as '
+                               f'weights instead: {e}')
+        if self.initial_portfolio.reference_notional is None:
+            self.initial_portfolio.reference_notional = price_results.get('actualNotional')
+        positions_as_dict = [{'assetId': p['assetId'], 'quantity': p['quantity']} for p in
+                             price_results.get('positions', [])]
 
         # Resolve any assets in the hedge universe, asset constraints, and asset exclusions
         hedge_date = self.initial_portfolio.date
@@ -617,7 +614,7 @@ class PerformanceHedgeParameters:
                 'positions': positions_as_dict
             },
             'universe': self.universe,
-            'notional': notional,
+            'notional': self.initial_portfolio.reference_notional,
             'observationStartDate': observation_start_date.strftime("%Y-%m-%d"),
             'observationEndDate': hedge_date.strftime("%Y-%m-%d"),
             'backtestStartDate': observation_start_date.strftime("%Y-%m-%d"),
