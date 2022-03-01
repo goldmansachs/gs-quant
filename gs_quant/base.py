@@ -540,6 +540,7 @@ class InstrumentBase(Base):
             self.__resolution_key = None
             self.__unresolved = None
 
+
 @dataclass
 class QuotableBuilder(Base):
 

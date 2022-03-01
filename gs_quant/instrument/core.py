@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 from dataclasses_json import global_config
+from dataclasses_json.core import _decode_dataclass
 import datetime as dt
 import inspect
 import logging
@@ -23,7 +24,7 @@ from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
-from gs_quant.base import get_enum_value, Base, InstrumentBase, QuotableBuilder
+from gs_quant.base import get_enum_value, Base, InstrumentBase, Priceable, QuotableBuilder
 from gs_quant.common import AssetClass, AssetType, XRef, RiskMeasure
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext
 from gs_quant.priceable import PriceableImpl
@@ -254,6 +255,10 @@ class Instrument(PriceableImpl, InstrumentBase):
 
     @classmethod
     def from_dict(cls, values: dict):
+        return cls.__from_dict(values)
+
+    @classmethod
+    def __from_dict(cls, values: dict):
         if values:
             if issubclass(cls, QuotableBuilder):
                 valuation_overrides = None
@@ -271,13 +276,13 @@ class Instrument(PriceableImpl, InstrumentBase):
                 if 'properties' in values:
                     values.update(values.pop('properties'))
 
-                ret = super().from_dict(values)
+                ret = _decode_dataclass(cls, values, False)
                 if valuation_overrides:
                     ret.valuation_overrides = valuation_overrides
 
                 return ret
             elif hasattr(cls, 'asset_class'):
-                return super().from_dict(values)
+                return _decode_dataclass(cls, values, False)
             else:
                 builder_type = values.get('$type') or values.get('builder', values.get('defn', {})).get('$type')
                 if builder_type:
@@ -287,7 +292,7 @@ class Instrument(PriceableImpl, InstrumentBase):
                         raise RuntimeError('Cannot resolve TDAPI type {}'.format(tdapi_cls))
                     values_no_type = values.copy()
                     del values_no_type['$type']
-                    return tdapi_cls.from_dict(values_no_type)
+                    return tdapi_cls.__from_dict(values_no_type)
 
                 asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
                 if not asset_class_field:
@@ -425,7 +430,6 @@ def encode_instrument(instrument: Instrument):
     return instrument.to_dict()
 
 
-from gs_quant.base import Priceable
 global_config.decoders[Instrument] = Instrument.from_dict
 global_config.encoders[Instrument] = encode_instrument
 global_config.encoders[Priceable] = encode_instrument

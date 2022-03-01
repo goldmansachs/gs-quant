@@ -417,7 +417,7 @@ class GenericEngine(BacktestBaseEngine):
                 leaves = []
                 for leaf in portfolio:
                     if leaf.name not in trades_for_date:
-                        logging.info(f'{day}: new portfolio position {leaf} scheduled for calcuation')
+                        logging.info(f'{day}: new portfolio position {leaf} scheduled for calculation')
                         leaves.append(leaf)
 
                 if len(leaves):
@@ -431,9 +431,10 @@ class GenericEngine(BacktestBaseEngine):
 
         logging.info('Calculating prices for cash payments')
         # run any additional calcs to handle cash scaling (e.g. unwinds)
-        cash_calcs = defaultdict(list)
+        cash_results = {}
         with PricingContext(is_batch=True, show_progress=show_progress, csa_term=csa_term, visible_to_gs=visible_to_gs):
             backtest.calc_calls += 1
+            cash_trades_by_date = defaultdict(list)
             for _, cash_payments in backtest.cash_payments.items():
                 for cp in cash_payments:
                     # only calc if additional point is required
@@ -442,21 +443,14 @@ class GenericEngine(BacktestBaseEngine):
                         if cp.effective_date and cp.effective_date <= end:
                             if cp.effective_date not in backtest.results or \
                                     trade not in backtest.results[cp.effective_date]:
-                                with PricingContext(cp.effective_date):
-                                    backtest.calculations += len(risks)
-                                    cash_calcs[cp.effective_date].append(Portfolio([trade]).calc(price_risk))
+                                cash_trades_by_date[cp.effective_date].append(trade)
                             else:
                                 cp.scale_date = None
 
-        logging.info('Processing price results for cash payments')
-        cash_results = {}
-        for day, risk_results in cash_calcs.items():
-            logging.info(f'{day}: Processing price results')
-            if day <= end:
-                cash_results[day] = risk_results[0]
-                if len(risk_results) > 1:
-                    for i in range(1, len(risk_results)):
-                        cash_results[day] += risk_results[i]
+            for cash_date, trades in cash_trades_by_date.items():
+                with PricingContext(cash_date):
+                    backtest.calculations += len(risks)
+                    cash_results[cash_date] = Portfolio(trades).calc(price_risk)
 
         # handle cash
         current_value = None
