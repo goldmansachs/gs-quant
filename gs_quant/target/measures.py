@@ -434,8 +434,8 @@ PremiumCents.__doc__ = "PremiumCents"
 PremiumSummary = RiskMeasure(name="PremiumSummary", asset_class=AssetClass("Commod"), measure_type=RiskMeasureType("Premium"))
 PremiumSummary.__doc__ = "PremiumSummary"
 
-Price = RiskMeasureWithCurrencyParameter(name="Price", measure_type=RiskMeasureType("Price"))
-Price.__doc__ = "Price"
+Price = RiskMeasureWithCurrencyParameter(name="Price", measure_type=RiskMeasureType("PV"))
+Price.__doc__ = "Present Value"
 
 PricePips = RiskMeasureWithCurrencyParameter(name="PricePips", measure_type=RiskMeasureType("Price"), unit=RiskMeasureUnit("Pips"))
 PricePips.__doc__ = "Present value in pips"

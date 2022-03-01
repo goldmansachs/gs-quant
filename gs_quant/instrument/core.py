@@ -285,8 +285,9 @@ class Instrument(PriceableImpl, InstrumentBase):
                     tdapi_cls = getattr(tdapi, builder_type.replace('Defn', 'Builder'))
                     if not tdapi_cls:
                         raise RuntimeError('Cannot resolve TDAPI type {}'.format(tdapi_cls))
-
-                    return tdapi_cls.from_dict(values)
+                    values_no_type = values.copy()
+                    del values_no_type['$type']
+                    return tdapi_cls.from_dict(values_no_type)
 
                 asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
                 if not asset_class_field:

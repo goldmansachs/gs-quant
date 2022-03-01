@@ -247,9 +247,13 @@ class GenericEngine(BacktestBaseEngine):
 
         logging.info(f'Starting Backtest: Building Date Schedule - {dt.datetime.now()}')
 
-        dates = RelativeDateSchedule(frequency,
-                                     start,
-                                     end).apply_rule(holiday_calendar=holiday_calendar) if states is None else states
+        strategy_pricing_dates = RelativeDateSchedule(frequency,
+                                                      start,
+                                                      end).apply_rule(holiday_calendar=holiday_calendar) \
+            if states is None else states
+
+        strategy_start_date = strategy_pricing_dates[0]
+        strategy_end_date = strategy_pricing_dates[-1]
 
         risks = list(set(make_list(risks) + strategy.risks))
         if result_ccy is not None:
@@ -257,23 +261,25 @@ class GenericEngine(BacktestBaseEngine):
                       else raiser(f'Unparameterised risk: {r}')) for r in risks]
         price_risk = Price(currency=result_ccy) if result_ccy is not None else Price
 
-        backtest = BackTest(strategy, dates, risks)
+        backtest = BackTest(strategy, strategy_pricing_dates, risks)
 
         logging.info('Resolving initial portfolio')
         if len(strategy.initial_portfolio):
             for index in range(len(strategy.initial_portfolio)):
                 old_name = strategy.initial_portfolio[index].name
-                strategy.initial_portfolio[index].name = f'{old_name}_{dates[0].strftime("%Y-%m-%d")}'
-                backtest.cash_payments[dates[0]].append(CashPayment(strategy.initial_portfolio[index],
-                                                                    effective_date=dates[0], direction=-1))
-                final_date = get_final_date(strategy.initial_portfolio[index], dates[0], None)
-                backtest.cash_payments[final_date].append(CashPayment(strategy.initial_portfolio[index],
-                                                                      effective_date=final_date))
+                strategy.initial_portfolio[index].name = f'{old_name}_{strategy_start_date.strftime("%Y-%m-%d")}'
+                entry_payment = CashPayment(strategy.initial_portfolio[index],
+                                            effective_date=strategy_start_date, direction=-1)
+                backtest.cash_payments[strategy_start_date].append(entry_payment)
+                final_date = get_final_date(strategy.initial_portfolio[index], strategy_start_date, None)
+                exit_payment = CashPayment(strategy.initial_portfolio[index],
+                                           effective_date=final_date)
+                backtest.cash_payments[final_date].append(exit_payment)
             init_port = Portfolio(strategy.initial_portfolio)
-            with PricingContext(pricing_date=dates[0], csa_term=csa_term, show_progress=show_progress,
+            with PricingContext(pricing_date=strategy_start_date, csa_term=csa_term, show_progress=show_progress,
                                 visible_to_gs=visible_to_gs):
                 init_port.resolve()
-            for d in dates:
+            for d in strategy_pricing_dates:
                 backtest.portfolio_dict[d].append(init_port.instruments)
 
         logging.info('Building simple and semi-deterministic triggers and actions')
@@ -281,7 +287,7 @@ class GenericEngine(BacktestBaseEngine):
             if trigger.calc_type != CalcType.path_dependent:
                 triggered_dates = []
                 trigger_infos = defaultdict(list)
-                for d in dates:
+                for d in strategy_pricing_dates:
                     t_info = trigger.has_triggered(d, backtest)
                     if t_info:
                         triggered_dates.append(d)
@@ -295,6 +301,12 @@ class GenericEngine(BacktestBaseEngine):
                                                                      backtest,
                                                                      trigger_infos[type(action)]
                                                                      if type(action) in trigger_infos else None)
+
+        logging.info(f'Filtering strategy calculations to run from {strategy_start_date} to {strategy_end_date}')
+        backtest.portfolio_dict = {k: backtest.portfolio_dict[k] for k in backtest.portfolio_dict
+                                   if strategy_start_date <= k <= strategy_end_date}
+        backtest.scaling_portfolios = {k: backtest.scaling_portfolios[k] for k in backtest.scaling_portfolios
+                                       if strategy_start_date <= k <= strategy_end_date}
 
         logging.info('Pricing simple and semi-deterministic triggers and actions')
         with PricingContext(is_batch=True, show_progress=show_progress, csa_term=csa_term, visible_to_gs=visible_to_gs):
@@ -315,7 +327,7 @@ class GenericEngine(BacktestBaseEngine):
 
         logging.info('Scaling semi-deterministic triggers and actions and calculating path dependent triggers '
                      'and actions')
-        for d in dates:
+        for d in strategy_pricing_dates:
             logging.info(f'{d}: Processing triggers and actions')
             # path dependent
             for trigger in strategy.triggers:
@@ -448,7 +460,7 @@ class GenericEngine(BacktestBaseEngine):
 
         # handle cash
         current_value = None
-        for d in sorted(set(dates + list(backtest.cash_payments.keys()))):
+        for d in sorted(set(strategy_pricing_dates + list(backtest.cash_payments.keys()))):
             if d <= end:
                 if current_value is not None:
                     backtest.cash_dict[d] = current_value
