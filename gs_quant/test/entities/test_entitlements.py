@@ -58,13 +58,13 @@ def get_fake_group():
 def test_to_target():
     ent = Entitlements(edit=EntitlementBlock(users=[get_fake_user()], groups=[get_fake_group()]))
     as_target = ent.to_target()
-    assert as_target.edit == ['guid:userId', 'group:groupId']
+    assert as_target.edit == ('guid:userId', 'group:groupId')
 
 
 def test_to_dict():
     ent = Entitlements(edit=EntitlementBlock(users=[get_fake_user()], groups=[get_fake_group()]))
     as_dict = ent.to_dict()
-    assert as_dict == {'edit': ['guid:userId', 'group:groupId']}
+    assert as_dict == {'edit': ('guid:userId', 'group:groupId')}
 
 
 def test_from_target():

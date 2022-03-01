@@ -22,7 +22,7 @@ from dataclasses_json import config, global_config
 from dataclasses_json.core import _is_supported_generic, _decode_generic
 import datetime as dt
 from enum import EnumMeta
-import inflection
+from inflection import camelize, underscore
 import inspect
 import keyword
 import logging
@@ -40,7 +40,6 @@ __builtins = set(dir(builtins))
 __iskeyword = keyword.iskeyword
 __getattribute__ = object.__getattribute__
 __setattr__ = object.__setattr__
-_underscore = inflection.underscore
 
 
 def is_iterable(o, t):
@@ -90,11 +89,17 @@ class DictBase(dict):
             if invalid_arg is not None:
                 raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{invalid_arg}'")
 
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **{camelize(k, uppercase_first_letter=False): v for k, v in kwargs.items()})
+
+    def __getitem__(self, item):
+        return super().__getitem__(camelize(item, uppercase_first_letter=False))
+
+    def __setitem__(self, key, value):
+        return super().__setitem__(camelize(key, uppercase_first_letter=False), value)
 
     def __getattr__(self, item):
         if self._PROPERTIES:
-            if item in self._PROPERTIES:
+            if underscore(item) in self._PROPERTIES:
                 return self.get(item)
         elif item in self:
             return self[item]
@@ -104,7 +109,7 @@ class DictBase(dict):
     def __setattr__(self, key, value):
         if key in dir(self):
             return super().__setattr__(key, value)
-        elif self._PROPERTIES and key not in self._PROPERTIES:
+        elif self._PROPERTIES and underscore(key) not in self._PROPERTIES:
             raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{key}'")
 
         self[key] = value
@@ -143,7 +148,7 @@ def fix_args(cls):
 
         for arg, value in kwargs.items():
             if not arg.isupper():
-                snake_case_arg = _underscore(arg)
+                snake_case_arg = underscore(arg)
                 if snake_case_arg != arg and snake_case_arg in kwargs:
                     raise ValueError('{} and {} both specified'.format(arg, snake_case_arg))
 
@@ -164,8 +169,6 @@ def fix_args(cls):
 
     if add_name:
         cls.__doc__ = cls.__doc__[:-1] + f', name: Union[str, NoneType] = None)'
-        annotations = copy.copy(init.__annotations__)
-        annotations['name'] = Optional[str]
         wrapper.__annotations__ = {**{'name': Optional[str]}, **init.__annotations__}
 
     wrapper.__signature__ = signature
@@ -196,7 +199,7 @@ class Base(ABC):
             return __getattribute__(self, 'name_')
 
         # Handle setting via camelCase names (legacy behaviour) and field mappings from disallowed names
-        snake_case_item = _underscore(item)
+        snake_case_item = underscore(item)
         field_mappings = __getattribute__(self, '_field_mappings')()
         snake_case_item = field_mappings.get(snake_case_item, snake_case_item)
 
@@ -207,7 +210,7 @@ class Base(ABC):
 
     def __setattr__(self, key, value):
         # Handle setting via camelCase names (legacy behaviour)
-        snake_case_key = inflection.underscore(key)
+        snake_case_key = underscore(key)
         snake_case_key = self._field_mappings().get(snake_case_key, snake_case_key)
         fld = self._fields_by_name().get(snake_case_key)
 
@@ -316,7 +319,7 @@ class Base(ABC):
 
             if value is not None:
                 if as_camel_case:
-                    key = inflection.camelize(key, uppercase_first_letter=False)
+                    key = camelize(key, uppercase_first_letter=False)
 
                 ret[key] = value
 
@@ -537,10 +540,10 @@ class InstrumentBase(Base):
             self.__resolution_key = None
             self.__unresolved = None
 
-
+@dataclass
 class QuotableBuilder(Base):
 
-    valuation_overrides: dict = field(default={}, metadata=config(field_name='overrides'))
+    valuation_overrides: DictBase = field(default_factory=DictBase, metadata=config(field_name='overrides'))
 
 
 @dataclass
