@@ -28,7 +28,7 @@ from cachetools import TTLCache
 from gs_quant.api.data import DataApi
 from gs_quant.base import Base
 from gs_quant.data.core import DataContext, DataFrequency
-from gs_quant.data.log import log_debug
+from gs_quant.data.log import log_debug, log_warning
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.session import GsSession
@@ -476,7 +476,11 @@ class GsDataApi(DataApi):
     def get_market_data(cls, query, request_id=None) -> pd.DataFrame:
         GsSession.current: GsSession
         start = time.perf_counter()
-        body = GsSession.current._post('/data/measures', payload=query)
+        try:
+            body = GsSession.current._post('/data/measures', payload=query)
+        except Exception as e:
+            log_warning(request_id, _logger, f'Market data query {query} failed due to {e}')
+            raise e
         log_debug(request_id, _logger, 'market data query (%s) ran in %.3f ms', body.get('requestId'),
                   (time.perf_counter() - start) * 1000)
 
