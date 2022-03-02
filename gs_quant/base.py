@@ -79,7 +79,13 @@ class EnumBase:
         return self.value
 
 
-class DictBase(dict):
+class HashableDict(dict):
+
+    def __hash__(self):
+        return hash(tuple(self.items()))
+
+
+class DictBase(HashableDict):
 
     _PROPERTIES = set()
 
@@ -113,9 +119,6 @@ class DictBase(dict):
             raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{key}'")
 
         self[key] = value
-
-    def __hash__(self):
-        return hash(tuple(self.items()))
 
     @classmethod
     def properties(cls) -> set:
@@ -544,7 +547,7 @@ class InstrumentBase(Base):
 @dataclass
 class QuotableBuilder(Base):
 
-    valuation_overrides: DictBase = field(default_factory=DictBase, metadata=config(field_name='overrides'))
+    valuation_overrides: DictBase = field(default_factory=HashableDict, metadata=config(field_name='overrides'))
 
 
 @dataclass

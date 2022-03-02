@@ -104,7 +104,8 @@ class DimensionsOverride(Override):
         override['type'] = DIMENSIONS_OVERRIDE
         override['dimensions'] = self.dimensions
         override['coordinate'] = self.coordinate.as_dict()
-        override['coordinateId'] = self.coordinate_id
+        if self.coordinate_id:
+            override['coordinateId'] = self.coordinate_id
         return override
 
     @classmethod

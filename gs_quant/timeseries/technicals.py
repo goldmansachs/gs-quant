@@ -290,14 +290,14 @@ def macd(x: pd.Series, m: int = 12, n: int = 26, s: int = 1) -> pd.Series:
 
     Moving average convergence divergence (MACD) is a trend-following momentum indicator that shows the relationship
     between two moving averages of a timeseries. It is the result of subtracting the exponential moving average of `x`
-    with a period of `m` from the exponential moving average of `x` with a period of `n`.
+    with a period of :math:`m` from the exponential moving average of :math:`x` with a period of :math:`n`.
 
-    Optionally, specify `s` to apply an exponential moving average to the resulting series with a period of `s`
-    (default 1, equivalent to no exponential moving average).
+    Optionally, specify :math:`s` to apply an exponential moving average to the resulting series with a period of
+    :math:`s` (default 1, equivalent to no exponential moving average).
 
     :param x: time series
-    :param m: period of first exponential moving average
-    :param n: period of second exponential moving average
+    :param m: period of first, short exponential moving average (default 12)
+    :param n: period of second, long exponential moving average (default 26)
     :param s: optional smoothing parameter (default 1)
     :return: date-based time series of return
 
@@ -310,9 +310,9 @@ def macd(x: pd.Series, m: int = 12, n: int = 26, s: int = 1) -> pd.Series:
 
     :math:`Y_t = \\beta \cdot Y_{t-1} + (1 - \\beta) \cdot X_t`
 
-    where :math:`\\beta = \frac{2}{\\text{period} + 1}` is the weight we place on the previous average.
+    where :math:`\\beta = \\frac{2}{\\text{period} + 1}` is the weight we place on the previous average.
 
-    The MACD of a series is defined as :math:`\\text{EMA}(\\text{EMA}(X, N) - \\text{EMA}(X, M), S)`
+    The MACD of a series is defined as :math:`\\text{EMA}(\\text{EMA}(X, M) - \\text{EMA}(X, N), S)`
 
     **Examples**
 
