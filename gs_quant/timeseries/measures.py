@@ -1917,6 +1917,7 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
         series = ExtendedSeries(dtype=float)
     else:
         df = df.loc[p_date]
+        df.index = pd.DatetimeIndex(df.index) if not isinstance(df.index, pd.DatetimeIndex) else df.index
         df.index = DatetimeIndex([RelativeDate(df['tenor'][i], df.index.date[i]).apply_rule(exchange=asset.exchange)
                                   for i in range(len(df))])
         series = _skew(df, 'relativeStrike', 'impliedVolatility', q_strikes)

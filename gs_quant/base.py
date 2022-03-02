@@ -18,8 +18,9 @@ import builtins
 from collections import namedtuple
 import copy
 from dataclasses import Field, InitVar, MISSING, dataclass, field, fields, replace
-from dataclasses_json import config, global_config
+from dataclasses_json import global_config
 from dataclasses_json.core import _is_supported_generic, _decode_generic
+import dataclasses_json.core
 import datetime as dt
 from enum import EnumMeta
 from inflection import camelize, underscore
@@ -545,12 +546,6 @@ class InstrumentBase(Base):
 
 
 @dataclass
-class QuotableBuilder(Base):
-
-    valuation_overrides: DictBase = field(default_factory=HashableDict, metadata=config(field_name='overrides'))
-
-
-@dataclass
 class Market(ABC):
 
     def __hash__(self):
@@ -628,3 +623,18 @@ global_config.decoders[Optional[InstrumentBase]] = decode_instrument
 
 global_config.encoders[Market] = encode_dictable
 global_config.encoders[Optional[Market]] = encode_dictable
+
+
+def __decode_dataclass(cls, kvs, infer_missing):
+    # EXTREMELY unfortunate
+    if isinstance(kvs, cls):
+        return kvs
+    elif hasattr(cls, 'decode_dataclass'):
+        return cls.decode_dataclass(kvs)
+    else:
+        from dataclasses_json.core import _decode_dataclass_orig
+        return _decode_dataclass_orig(cls, kvs, infer_missing)
+
+
+dataclasses_json.core._decode_dataclass_orig = dataclasses_json.core._decode_dataclass
+dataclasses_json.core._decode_dataclass = __decode_dataclass

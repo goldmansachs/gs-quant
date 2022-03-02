@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 from dataclasses_json import global_config
-from dataclasses_json.core import _decode_dataclass
 import datetime as dt
 import inspect
 import logging
@@ -24,7 +23,7 @@ from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
-from gs_quant.base import get_enum_value, Base, InstrumentBase, Priceable, QuotableBuilder
+from gs_quant.base import get_enum_value, Base, InstrumentBase, Priceable
 from gs_quant.common import AssetClass, AssetType, XRef, RiskMeasure
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext
 from gs_quant.priceable import PriceableImpl
@@ -255,65 +254,35 @@ class Instrument(PriceableImpl, InstrumentBase):
 
     @classmethod
     def from_dict(cls, values: dict):
-        return cls.__from_dict(values)
+        if not values:
+            return
 
-    @classmethod
-    def __from_dict(cls, values: dict):
-        if values:
-            if issubclass(cls, QuotableBuilder):
-                valuation_overrides = None
-                if 'builder' in values:
-                    valuation_overrides = values.get('overrides', {})
-                    if valuation_overrides:
-                        valuation_overrides = valuation_overrides.get('properties')
+        instrument = cls if hasattr(cls, 'asset_class') else None
+        if instrument is None:
+            builder_type = values.get('$type') or values.get('builder', values.get('defn', {})).get('$type')
+            if builder_type:
+                from gs_quant_internal.base import QuotableBuilder
+                return QuotableBuilder.from_dict(values)
 
-                    values = values['builder']
-                elif 'defn' in values:
-                    values = values['defn']
-                elif 'overrides' in values:
-                    valuation_overrides = values.pop('overrides')
+            asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
+            if not asset_class_field:
+                raise ValueError('assetClass/asset_class not specified')
+            if 'type' not in values:
+                raise ValueError('type not specified')
 
-                if 'properties' in values:
-                    values.update(values.pop('properties'))
+            asset_type = values.pop('type')
+            asset_class = values.pop(asset_class_field)
+            security_types = (None, '', 'Security')
+            default_type = Security if asset_type in security_types and asset_class in security_types else None
 
-                ret = _decode_dataclass(cls, values, False)
-                if valuation_overrides:
-                    ret.valuation_overrides = valuation_overrides
+            instrument = Instrument.__asset_class_and_type_to_instrument().get((
+                get_enum_value(AssetClass, asset_class),
+                get_enum_value(AssetType, asset_type)), default_type)
 
-                return ret
-            elif hasattr(cls, 'asset_class'):
-                return _decode_dataclass(cls, values, False)
-            else:
-                builder_type = values.get('$type') or values.get('builder', values.get('defn', {})).get('$type')
-                if builder_type:
-                    from gs_quant_internal import tdapi
-                    tdapi_cls = getattr(tdapi, builder_type.replace('Defn', 'Builder'))
-                    if not tdapi_cls:
-                        raise RuntimeError('Cannot resolve TDAPI type {}'.format(tdapi_cls))
-                    values_no_type = values.copy()
-                    del values_no_type['$type']
-                    return tdapi_cls.__from_dict(values_no_type)
+            if instrument is None:
+                raise ValueError('unable to build instrument')
 
-                asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
-                if not asset_class_field:
-                    raise ValueError('assetClass/asset_class not specified')
-                if 'type' not in values:
-                    raise ValueError('type not specified')
-
-                asset_type = values.pop('type')
-                asset_class = values.pop(asset_class_field)
-                default_type = Security if asset_type in [None, "", "Security"] and asset_class in [None, "",
-                                                                                                    "Security"] \
-                    else None
-
-                instrument = Instrument.__asset_class_and_type_to_instrument().get((
-                    get_enum_value(AssetClass, asset_class),
-                    get_enum_value(AssetType, asset_type)), default_type)
-
-                if instrument is None:
-                    raise ValueError('unable to build instrument')
-
-                return instrument.from_dict(values)
+        return instrument.from_dict(values)
 
     @classmethod
     def from_quick_entry(cls, text: str, asset_class: Optional[AssetClass] = None):
@@ -426,8 +395,14 @@ class Security(XRef, Instrument):
         self.quantity_ = quantity
 
 
-def encode_instrument(instrument: Instrument):
-    return instrument.to_dict()
+def encode_instrument(instrument: Optional[Instrument]) -> Optional[dict]:
+    if instrument is not None:
+        return instrument.to_dict()
+
+
+def encode_instruments(instruments: Optional[Iterable[Instrument]]) -> Optional[Iterable[Optional[dict]]]:
+    if instruments is not None:
+        return [encode_instrument(i) for i in instruments]
 
 
 global_config.decoders[Instrument] = Instrument.from_dict

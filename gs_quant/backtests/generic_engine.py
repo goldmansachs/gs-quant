@@ -303,10 +303,12 @@ class GenericEngine(BacktestBaseEngine):
                                                                      if type(action) in trigger_infos else None)
 
         logging.info(f'Filtering strategy calculations to run from {strategy_start_date} to {strategy_end_date}')
-        backtest.portfolio_dict = {k: backtest.portfolio_dict[k] for k in backtest.portfolio_dict
-                                   if strategy_start_date <= k <= strategy_end_date}
-        backtest.scaling_portfolios = {k: backtest.scaling_portfolios[k] for k in backtest.scaling_portfolios
-                                       if strategy_start_date <= k <= strategy_end_date}
+        backtest.portfolio_dict = defaultdict(Portfolio, {k: backtest.portfolio_dict[k]
+                                                          for k in backtest.portfolio_dict
+                                                          if strategy_start_date <= k <= strategy_end_date})
+        backtest.scaling_portfolios = defaultdict(list, {k: backtest.scaling_portfolios[k]
+                                                         for k in backtest.scaling_portfolios
+                                                         if strategy_start_date <= k <= strategy_end_date})
 
         logging.info('Pricing simple and semi-deterministic triggers and actions')
         with PricingContext(is_batch=True, show_progress=show_progress, csa_term=csa_term, visible_to_gs=visible_to_gs):
