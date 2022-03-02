@@ -86,3 +86,20 @@ Securities
    Index
    Stock
    SecurityMaster
+
+
+Report
+------------
+
+.. currentmodule:: gs_quant.markets.report
+
+.. autosummary::
+   :toctree: classes
+   :template: processors.rst
+
+   ReportJobFuture
+   Report
+   PerformanceReport
+   FactorRiskReport
+   ThematicReport
+

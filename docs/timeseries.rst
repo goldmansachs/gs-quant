@@ -167,4 +167,5 @@ Technical Analysis
    exponential_spread_volatility
    smoothed_moving_average
    relative_strength_index
+   macd
    
