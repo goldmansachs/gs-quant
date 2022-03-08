@@ -19,7 +19,7 @@ import json
 import pandas as pd
 
 from gs_quant.base import Base, Market
-from gs_quant.json_convertors import encode_date_or_str, encode_datetime, remove_nulls
+from gs_quant.json_convertors import encode_date_or_str, encode_datetime
 
 
 def encode_default(o):
@@ -29,10 +29,8 @@ def encode_default(o):
         return encode_date_or_str(o)
     elif isinstance(o, Enum):
         return o.value
-    elif isinstance(o, Market):
-        return o.to_dict()
     elif isinstance(o, (Base, Market)):
-        return remove_nulls(o.to_dict())
+        return o.to_dict()
     elif isinstance(o, pd.DataFrame):
         return o.to_json()
 

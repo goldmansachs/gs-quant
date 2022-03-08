@@ -877,19 +877,24 @@ def mock_missing_bucket_implied_volatility():
     return pd.DataFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 8))
 
 
-def mock_fx_vol(_cls, q):
-    queries = q.get('queries', [])
-    if len(queries) > 0 and 'Last' in queries[0]['measures']:
-        return MarketDataResponseFrame({'impliedVolatility': [3]}, index=[pd.Timestamp('2019-01-04T12:00:00Z')])
-
+def mock_fx_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None, request_id=None):
     d = {
         'strikeReference': ['delta', 'spot', 'forward'],
         'relativeStrike': [25, 100, 100],
         'impliedVolatility': [5, 1, 2],
         'forecast': [1.1, 1.1, 1.1]
     }
-    df = MarketDataResponseFrame(data=d, index=pd.date_range('2019-01-01', periods=3, freq='D'))
+    if DataContext.current.end_date >= datetime.date.today():
+        periods = 4
+        d['impliedVolatility'].append(3)
+        d['strikeReference'].append('delta')
+        d['relativeStrike'].append(100)
+        d['forecast'].append(1.1)
+    else:
+        periods = 3
+    df = MarketDataResponseFrame(data=d, index=pd.date_range('2019-01-01', periods=periods, freq='D'))
     df.dataset_ids = _test_datasets
+    df.index.freq = None
     return df
 
 
@@ -1026,40 +1031,25 @@ def mock_eq(_cls, _q):
     return df
 
 
-def mock_eq_vol(_cls, q):
-    queries = q.get('queries', [])
-    if len(queries) > 0 and 'Last' in queries[0]['measures']:
-        idx = [pd.Timestamp(datetime.datetime.now(pytz.UTC))]
-        return MarketDataResponseFrame({'impliedVolatility': [3]}, index=idx)
-
+def mock_eq_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None, request_id=None):
     d = {
         'impliedVolatility': [5, 1, 2],
     }
-    end = datetime.datetime.now(pytz.UTC).date() - datetime.timedelta(days=1)
-    df = MarketDataResponseFrame(data=d, index=pd.date_range(end=end, periods=3, freq='D'))
+    if DataContext.current.end_date >= datetime.date.today():
+        end = datetime.datetime.now(pytz.UTC).date()
+        periods = 4
+        d['impliedVolatility'].append(3)
+    else:
+        end = datetime.datetime.now(pytz.UTC).date() - datetime.timedelta(days=1)
+        periods = 3
+    df = MarketDataResponseFrame(data=d, index=pd.date_range(end=end, periods=periods, freq='D'))
     df.dataset_ids = _test_datasets
+    df.index.freq = None
     return df
 
 
-def mock_eq_vol_last_err(_cls, q):
-    queries = q.get('queries', [])
-    if len(queries) > 0 and 'Last' in queries[0]['measures']:
-        raise MqValueError('error while getting last')
-
-    d = {
-        'impliedVolatility': [5, 1, 2],
-    }
-    end = datetime.date.today() - datetime.timedelta(days=1)
-    df = MarketDataResponseFrame(data=d, index=pd.date_range(end=end, periods=3, freq='D'))
-    df.dataset_ids = _test_datasets
-    return df
-
-
-def mock_eq_vol_last_empty(_cls, q):
-    queries = q.get('queries', [])
-    if len(queries) > 0 and 'Last' in queries[0]['measures']:
-        return MarketDataResponseFrame()
-
+def mock_eq_vol_last_empty(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None,
+                           request_id=None):
     d = {
         'impliedVolatility': [5, 1, 2],
     }
@@ -1336,7 +1326,7 @@ def test_skew_fx():
 def test_implied_vol():
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq_vol)
+    replace('gs_quant.timeseries.measures.get_historical_and_last_for_measure', mock_eq_vol)
     idx = pd.date_range(end=datetime.datetime.now(pytz.UTC).date(), periods=4, freq='D')
     idx.freq = None
 
@@ -1350,6 +1340,39 @@ def test_implied_vol():
         tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_NEUTRAL)
     with pytest.raises(MqError):
         tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL)
+    with DataContext(datetime.date(2020, 1, 11), datetime.date(2021, 1, 11)):
+        actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL, 25)
+        actual.index.freq = None
+        assert_series_equal(pd.Series([5, 1, 2], index=idx[:-1], name='impliedVolatility'), pd.Series(actual))
+    replace.restore()
+
+
+def test_merge_dataframes():
+    a = pd.DataFrame({'a': [1, 2, 3]})
+    b = pd.DataFrame({'a': [1, 5, 6]})
+    c = tm.merge_dataframes([a, b])
+    assert not len(c.dataset_ids)
+    assert len(c) == 5
+    c = tm.merge_dataframes([a, None])
+    assert_series_equal(a['a'], c['a'])
+    assert tm.merge_dataframes(None).empty
+
+
+def test_get_last_for_measure():
+    replace = Replacer()
+    mock_market = replace('gs_quant.timeseries.measures._market_data_timed', Mock())
+    mock_market.return_value = pd.DataFrame([1], index=pd.date_range('2020-01-01', periods=1, freq='D', tz=pytz.UTC))
+
+    a = tm.get_last_for_measure(['blah'], QueryType.IMPLIED_VOLATILITY, {})
+    assert len(a) == 1
+
+    mock_market.return_value = pd.DataFrame()
+    a = tm.get_last_for_measure(['blah'], QueryType.IMPLIED_VOLATILITY, {})
+    assert a is None
+
+    mock_market.side_effect = [MqValueError()]
+    a = tm.get_last_for_measure(['blah'], QueryType.IMPLIED_VOLATILITY, {})
+    assert a is None
     replace.restore()
 
 
@@ -1363,14 +1386,8 @@ def test_implied_vol_no_last():
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
     idx = pd.date_range(end=datetime.date.today() - datetime.timedelta(days=1), periods=3, freq='D')
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq_vol_last_err)
 
-    actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL, 25)
-    assert_series_equal(pd.Series([5, 1, 2], index=idx, name='impliedVolatility'), pd.Series(actual))
-    actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_PUT, 75)
-    assert_series_equal(pd.Series([5, 1, 2], index=idx, name='impliedVolatility'), pd.Series(actual))
-
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq_vol_last_empty)
+    replace('gs_quant.timeseries.measures.get_historical_and_last_for_measure', mock_eq_vol_last_empty)
     actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL, 25)
     assert_series_equal(pd.Series([5, 1, 2], index=idx, name='impliedVolatility'), pd.Series(actual))
     actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_PUT, 75)
@@ -1387,7 +1404,7 @@ def test_implied_vol_fx():
     replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
     # for different delta strikes
-    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx_vol)
+    replace('gs_quant.timeseries.measures.get_historical_and_last_for_measure', mock_fx_vol)
     actual = tm.implied_volatility(mock, '1m', tm.VolReference.DELTA_CALL, 25)
     expected = pd.Series([5, 1, 2, 3], index=pd.date_range('2019-01-01', periods=4, freq='D'), name='impliedVolatility')
     expected.index.freq = None
@@ -3375,8 +3392,46 @@ def _fwd_term_typical():
         assert_series_equal(expected, pd.Series(actual))
         assert actual.dataset_ids == _test_datasets
     market_mock.assert_called_once()
+
+    with pytest.raises(MqValueError):
+        tm.fwd_term(Index('MA123', AssetClass.Equity, '123'), fwd_type=tm.FXForwardType.POINTS)
     replace.restore()
     return actual
+
+
+def _fwd_term_fx_typical():
+    assert DataContext.current_is_set
+    fwd_data = {
+        'tenor': ['1w', '2w', '1y', '2y'],
+        'forwardPoint': [1, 2, 3, 4]
+    }
+    out = MarketDataResponseFrame(data=fwd_data, index=pd.DatetimeIndex(['2018-01-01'] * 4))
+    out.dataset_ids = _test_datasets
+
+    spot_data = {'spot': [100], 'assetId': 'MA123'}
+    spot = MarketDataResponseFrame(data=spot_data, index=pd.DatetimeIndex(['2018-01-01']))
+
+    replace = Replacer()
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = out
+
+    fx_asset_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
+    fx_asset_mock.return_value = 'MA123'
+
+    thread_mock = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
+    thread_mock.return_value = [out, spot]
+
+    actual = tm.fwd_term(Index('MA123', AssetClass.FX, '123'))
+    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    expected = pd.Series([101, 102, 103, 104], name='forwardPoint', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+
+    if expected.empty:
+        assert actual.empty
+    else:
+        assert_series_equal(expected, pd.Series(actual))
+        assert actual.dataset_ids == _test_datasets
+    replace.restore()
 
 
 def _fwd_term_empty():
@@ -3391,7 +3446,12 @@ def _fwd_term_empty():
     replace.restore()
 
 
-def test_fwd_term():
+def _fwd_term_fx():
+    with DataContext('2018-01-01', '2019-01-01'):
+        _fwd_term_fx_typical()
+
+
+def _fwd_term_equity():
     with DataContext('2018-01-01', '2019-01-01'):
         _fwd_term_typical()
         _fwd_term_empty()
@@ -3401,6 +3461,20 @@ def test_fwd_term():
         assert out.dataset_ids == _test_datasets
     with pytest.raises(NotImplementedError):
         tm.fwd_term(..., real_time=True)
+
+
+def test_fwd_term():
+    _fwd_term_fx()
+    _fwd_term_equity()
+
+
+def test_measure_request_safe():
+    def error(raise_error):
+        if raise_error:
+            raise MqValueError()
+    with pytest.raises(MqValueError):
+        tm.measure_request_safe('error', Index('MA123', AssetClass.Equity, '123'), error, None, True)
+    tm.measure_request_safe('error', Index('MA123', AssetClass.Equity, '123'), error, None, False)
 
 
 def test_bucketize_price():

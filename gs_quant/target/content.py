@@ -245,204 +245,199 @@ class QueryableStatus(EnumBase, Enum):
     Replaced = 'Replaced'    
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Content(Base):
-    body: str = None
-    mime_type: object = None
-    encoding: object = None
+    body: str = field(default=None, metadata=field_metadata)
+    mime_type: object = field(default=None, metadata=field_metadata)
+    encoding: object = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 class Object(DictBase):
     pass
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Author(Base):
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    name: Optional[str] = None
-    division: Optional[Division] = None
-    email: Optional[str] = None
-    title: Optional[str] = None
-    kerberos: Optional[str] = None
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    division: Optional[Division] = field(default=None, metadata=field_metadata)
+    email: Optional[str] = field(default=None, metadata=field_metadata)
+    title: Optional[str] = field(default=None, metadata=field_metadata)
+    kerberos: Optional[str] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BulkDeleteContentResponse(Base):
-    status: Optional[int] = None
-    message: Optional[str] = None
-    data: Optional[Tuple[str, ...]] = None
+    status: Optional[int] = field(default=None, metadata=field_metadata)
+    message: Optional[str] = field(default=None, metadata=field_metadata)
+    data: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Certification(Base):
-    submission_id: str = None
-    version: str = None
-    submission_state: object = None
-    allowed_distribution: Tuple[Object, ...] = None
-    etask_process_instance_id: Optional[str] = None
-    tags: Optional[Tuple[None, ...]] = None
+    submission_id: str = field(default=None, metadata=field_metadata)
+    version: str = field(default=None, metadata=field_metadata)
+    submission_state: object = field(default=None, metadata=field_metadata)
+    allowed_distribution: Tuple[Object, ...] = field(default=None, metadata=field_metadata)
+    etask_process_instance_id: Optional[str] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[None, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DeleteContentResponse(Base):
-    status: Optional[int] = None
-    message: Optional[str] = None
-    data: Optional[str] = None
+    status: Optional[int] = field(default=None, metadata=field_metadata)
+    message: Optional[str] = field(default=None, metadata=field_metadata)
+    data: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class InvestmentRecommendationAsset(Base):
-    asset_id: str = None
-    direction: Optional[InvestmentRecommendationDirection] = None
-    currency: Optional[str] = None
-    price: Optional[float] = None
-    price_target: Optional[float] = None
+    asset_id: str = field(default=None, metadata=field_metadata)
+    direction: Optional[InvestmentRecommendationDirection] = field(default=None, metadata=field_metadata)
+    currency: Optional[str] = field(default=None, metadata=field_metadata)
+    price: Optional[float] = field(default=None, metadata=field_metadata)
+    price_target: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class InvestmentRecommendationCustomAsset(Base):
-    asset_name: str = None
-    direction: Optional[InvestmentRecommendationDirection] = None
-    currency: Optional[str] = None
-    price: Optional[float] = None
-    price_target: Optional[float] = None
+    asset_name: str = field(default=None, metadata=field_metadata)
+    direction: Optional[InvestmentRecommendationDirection] = field(default=None, metadata=field_metadata)
+    currency: Optional[str] = field(default=None, metadata=field_metadata)
+    price: Optional[float] = field(default=None, metadata=field_metadata)
+    price_target: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentResponse(Base):
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    version: Optional[str] = None
-    name: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    entitlement_exclusions: Optional[EntitlementExclusions] = None
-    created_by_id: Optional[str] = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_time: Optional[datetime.datetime] = None
-    channels: Optional[Tuple[str, ...]] = None
-    content: Optional[Content] = None
-    language: Optional[Language] = None
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    version: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    channels: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    content: Optional[Content] = field(default=None, metadata=field_metadata)
+    language: Optional[Language] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentUpdateRequest(Base):
-    name: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    entitlement_exclusions: Optional[EntitlementExclusions] = None
-    content: Optional[Content] = None
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    content: Optional[Content] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class InvestmentRecommendations(Base):
-    assets: Tuple[InvestmentRecommendationAsset, ...] = None
-    custom_assets: Optional[Tuple[InvestmentRecommendationCustomAsset, ...]] = None
+    assets: Tuple[InvestmentRecommendationAsset, ...] = field(default=None, metadata=field_metadata)
+    custom_assets: Optional[Tuple[InvestmentRecommendationCustomAsset, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BulkContentUpdateRequestItem(Base):
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    update: Optional[ContentUpdateRequest] = None
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    update: Optional[ContentUpdateRequest] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentAuditFields(Base):
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    version: Optional[str] = None
-    name: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    entitlement_exclusions: Optional[EntitlementExclusions] = None
-    created_by_id: Optional[str] = None
-    authors: Optional[Tuple[Author, ...]] = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_time: Optional[datetime.datetime] = None
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    version: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    authors: Optional[Tuple[Author, ...]] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentParameters(Base):
-    author_ids: Tuple[str, ...] = None
-    language: Language = None
-    status: Optional[object] = None
-    source: Optional[Division] = None
-    tags: Optional[Tuple[str, ...]] = None
-    slug: Optional[str] = None
-    attachments: Optional[Tuple[Content, ...]] = None
-    certification: Optional[Certification] = None
-    certification_type: Optional[object] = None
-    asset_ids: Optional[Tuple[str, ...]] = None
-    origin: Optional[Origin] = None
-    investment_recommendations: Optional[InvestmentRecommendations] = None
-    is_flow: Optional[bool] = None
-    is_research_summary: Optional[bool] = None
-    is_restricted: Optional[bool] = None
+    author_ids: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    language: Language = field(default=None, metadata=field_metadata)
+    status: Optional[object] = field(default=None, metadata=field_metadata)
+    source: Optional[Division] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    slug: Optional[str] = field(default=None, metadata=field_metadata)
+    attachments: Optional[Tuple[Content, ...]] = field(default=None, metadata=field_metadata)
+    certification: Optional[Certification] = field(default=None, metadata=field_metadata)
+    certification_type: Optional[object] = field(default=None, metadata=field_metadata)
+    asset_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    origin: Optional[Origin] = field(default=None, metadata=field_metadata)
+    investment_recommendations: Optional[InvestmentRecommendations] = field(default=None, metadata=field_metadata)
+    is_flow: Optional[bool] = field(default=None, metadata=field_metadata)
+    is_research_summary: Optional[bool] = field(default=None, metadata=field_metadata)
+    is_restricted: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class GetManyContentsResponse(Base):
-    status: Optional[int] = None
-    message: Optional[str] = None
-    data: Optional[Tuple[ContentResponse, ...]] = None
+    status: Optional[int] = field(default=None, metadata=field_metadata)
+    message: Optional[str] = field(default=None, metadata=field_metadata)
+    data: Optional[Tuple[ContentResponse, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BulkContentUpdateResponse(Base):
-    status: Optional[int] = None
-    message: Optional[str] = None
-    data: Optional[Tuple[ContentAuditFields, ...]] = None
+    status: Optional[int] = field(default=None, metadata=field_metadata)
+    message: Optional[str] = field(default=None, metadata=field_metadata)
+    data: Optional[Tuple[ContentAuditFields, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentCreateRequest(Base):
-    name: str = None
-    entitlements: Entitlements = None
-    entitlement_exclusions: EntitlementExclusions = None
-    content: Content = None
-    parameters: ContentParameters = None
+    name: str = field(default=None, metadata=field_metadata)
+    entitlements: Entitlements = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: EntitlementExclusions = field(default=None, metadata=field_metadata)
+    content: Content = field(default=None, metadata=field_metadata)
+    parameters: ContentParameters = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentCreateResponse(Base):
-    status: Optional[int] = None
-    message: Optional[str] = None
-    data: Optional[ContentAuditFields] = None
+    status: Optional[int] = field(default=None, metadata=field_metadata)
+    message: Optional[str] = field(default=None, metadata=field_metadata)
+    data: Optional[ContentAuditFields] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentUpdateResponse(Base):
-    status: Optional[int] = None
-    message: Optional[str] = None
-    data: Optional[ContentAuditFields] = None
+    status: Optional[int] = field(default=None, metadata=field_metadata)
+    message: Optional[str] = field(default=None, metadata=field_metadata)
+    data: Optional[ContentAuditFields] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)

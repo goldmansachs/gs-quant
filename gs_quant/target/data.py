@@ -70,117 +70,116 @@ class MeasureEntityType(EnumBase, Enum):
     RISK_MODEL = 'RISK_MODEL'    
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AdvancedFilter(Base):
-    column: str = None
-    operator: str = None
-    value: Optional[float] = None
-    values: Optional[Tuple[str, ...]] = None
-    format_: Optional[str] = field(default=None, metadata=config(field_name='format'))
+    column: str = field(default=None, metadata=field_metadata)
+    operator: str = field(default=None, metadata=field_metadata)
+    value: Optional[float] = field(default=None, metadata=field_metadata)
+    values: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    format_: Optional[str] = field(default=None, metadata=config(field_name='format', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetCondition(Base):
-    column: str = None
-    operator: str = None
-    value: Optional[float] = None
-    values: Optional[Tuple[str, ...]] = None
+    column: str = field(default=None, metadata=field_metadata)
+    operator: str = field(default=None, metadata=field_metadata)
+    value: Optional[float] = field(default=None, metadata=field_metadata)
+    values: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetDefaults(Base):
-    start_seconds: Optional[float] = None
-    end_seconds: Optional[float] = None
-    delay_seconds: Optional[float] = None
+    start_seconds: Optional[float] = field(default=None, metadata=field_metadata)
+    end_seconds: Optional[float] = field(default=None, metadata=field_metadata)
+    delay_seconds: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityAttributes(Base):
-    in_code: Optional[bool] = None
-    is_entity: Optional[bool] = None
+    in_code: Optional[bool] = field(default=None, metadata=field_metadata)
+    is_entity: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityClassifications(Base):
-    groups: Optional[Tuple[str, ...]] = None
-    data_set_id: Optional[str] = None
+    groups: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityNumberParameters(Base):
-    maximum: Optional[int] = None
-    minimum: Optional[int] = None
+    maximum: Optional[int] = field(default=None, metadata=field_metadata)
+    minimum: Optional[int] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EntityMetadata(Base):
-    created_by_id: Optional[str] = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_by_id: Optional[str] = None
-    last_updated_time: Optional[datetime.datetime] = None
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ErrorInfo(Base):
-    status_code: int = None
-    reason_phrase: str = None
-    title: Optional[str] = None
-    messages: Optional[Tuple[str, ...]] = None
+    status_code: int = field(default=None, metadata=field_metadata)
+    reason_phrase: str = field(default=None, metadata=field_metadata)
+    title: Optional[str] = field(default=None, metadata=field_metadata)
+    messages: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FieldLinkSelector(Base):
-    field_selector: Optional[str] = None
-    description: Optional[str] = None
-    display_name: Optional[str] = None
+    field_selector: Optional[str] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    display_name: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MDAPI(Base):
-    type_: str = field(default=None, metadata=config(field_name='type'))
-    quoting_styles: Tuple[DictBase, ...] = None
-    class_: Optional[str] = field(default=None, metadata=config(field_name='class'))
+    type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    quoting_styles: Tuple[DictBase, ...] = field(default=None, metadata=field_metadata)
+    class_: Optional[str] = field(default=None, metadata=config(field_name='class', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MarketDataField(Base):
-    name: Optional[str] = None
-    mapping: Optional[str] = None
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    mapping: Optional[str] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MarketDataFilteredField(Base):
-    field_: Optional[str] = field(default=None, metadata=config(field_name='field'))
-    default_value: Optional[str] = None
-    default_numerical_value: Optional[float] = None
-    default_boolean_value: Optional[bool] = None
-    numerical_values: Optional[Tuple[float, ...]] = None
-    values: Optional[Tuple[str, ...]] = None
-    multi_measure: Optional[bool] = None
+    field_: Optional[str] = field(default=None, metadata=config(field_name='field', exclude=exclude_none))
+    default_value: Optional[str] = field(default=None, metadata=field_metadata)
+    default_numerical_value: Optional[float] = field(default=None, metadata=field_metadata)
+    default_boolean_value: Optional[bool] = field(default=None, metadata=field_metadata)
+    numerical_values: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    values: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    multi_measure: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 class MeasureBacktest(DictBase):
@@ -191,416 +190,413 @@ class MeasureKpi(DictBase):
     pass
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MidPrice(Base):
-    bid_column: Optional[str] = None
-    ask_column: Optional[str] = None
-    mid_column: Optional[str] = None
+    bid_column: Optional[str] = field(default=None, metadata=field_metadata)
+    ask_column: Optional[str] = field(default=None, metadata=field_metadata)
+    mid_column: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ParserEntity(Base):
-    only_normalized_fields: Optional[bool] = None
-    quotes: Optional[bool] = None
-    trades: Optional[bool] = None
+    only_normalized_fields: Optional[bool] = field(default=None, metadata=field_metadata)
+    quotes: Optional[bool] = field(default=None, metadata=field_metadata)
+    trades: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RemapFieldPair(Base):
-    field_: Optional[str] = field(default=None, metadata=config(field_name='field'))
-    remap_to: Optional[str] = None
+    field_: Optional[str] = field(default=None, metadata=config(field_name='field', exclude=exclude_none))
+    remap_to: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ResponseInfo(Base):
-    request_id: Optional[str] = None
-    messages: Optional[Tuple[str, ...]] = None
+    request_id: Optional[str] = field(default=None, metadata=field_metadata)
+    messages: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SymbolFilterLink(Base):
-    entity_type: Optional[str] = 'MktCoordinate'
-    entity_field: Optional[str] = None
+    entity_type: Optional[str] = field(default='MktCoordinate', metadata=field_metadata)
+    entity_field: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataFilter(Base):
-    field_: str = field(default=None, metadata=config(field_name='field'))
-    values: Tuple[str, ...] = None
-    column: Optional[str] = None
-    where: Optional[DataSetCondition] = None
+    field_: str = field(default=None, metadata=config(field_name='field', exclude=exclude_none))
+    values: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    column: Optional[str] = field(default=None, metadata=field_metadata)
+    where: Optional[DataSetCondition] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetCoverageProperties(Base):
-    prefixes: Optional[Tuple[str, ...]] = None
-    prefix_type: Optional[str] = None
-    asset_classes: Optional[Tuple[AssetClass, ...]] = None
-    asset_types: Optional[Tuple[AssetType, ...]] = None
-    entity_types: Optional[Tuple[MeasureEntityType, ...]] = None
+    prefixes: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    prefix_type: Optional[str] = field(default=None, metadata=field_metadata)
+    asset_classes: Optional[Tuple[AssetClass, ...]] = field(default=None, metadata=field_metadata)
+    asset_types: Optional[Tuple[AssetType, ...]] = field(default=None, metadata=field_metadata)
+    entity_types: Optional[Tuple[MeasureEntityType, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetDelay(Base):
-    until_seconds: float = None
-    at_time_zone: str = None
-    when: Optional[Tuple[DelayExclusionType, ...]] = None
-    history_up_to_seconds: Optional[float] = None
-    history_up_to_time: Optional[datetime.datetime] = None
-    history_up_to_months: Optional[float] = None
+    until_seconds: float = field(default=None, metadata=field_metadata)
+    at_time_zone: str = field(default=None, metadata=field_metadata)
+    when: Optional[Tuple[DelayExclusionType, ...]] = field(default=None, metadata=field_metadata)
+    history_up_to_seconds: Optional[float] = field(default=None, metadata=field_metadata)
+    history_up_to_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    history_up_to_months: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityStringParameters(Base):
-    enum: Optional[Tuple[str, ...]] = None
-    format_: Optional[FieldFormat] = field(default=None, metadata=config(field_name='format'))
-    pattern: Optional[str] = '^[\w ]{1,256}$'
-    max_length: Optional[int] = None
-    min_length: Optional[int] = None
+    enum: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    format_: Optional[FieldFormat] = field(default=None, metadata=config(field_name='format', exclude=exclude_none))
+    pattern: Optional[str] = field(default='^[\w ]{1,256}$', metadata=field_metadata)
+    max_length: Optional[int] = field(default=None, metadata=field_metadata)
+    min_length: Optional[int] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetParameters(Base):
-    frequency: str = None
-    category: Optional[str] = None
-    sub_category: Optional[str] = None
-    methodology: Optional[str] = None
-    coverage: Optional[str] = None
-    coverages: Optional[Tuple[AssetType, ...]] = None
-    notes: Optional[str] = None
-    history: Optional[str] = None
-    sample_start: Optional[datetime.datetime] = None
-    sample_end: Optional[datetime.datetime] = None
-    published_date: Optional[datetime.datetime] = None
-    history_date: Optional[datetime.datetime] = None
-    asset_class: Optional[AssetClass] = None
-    owner_ids: Optional[Tuple[str, ...]] = None
-    support_ids: Optional[Tuple[str, ...]] = None
-    support_distribution_list: Optional[Tuple[str, ...]] = None
-    apply_market_data_entitlements: Optional[bool] = None
-    upload_data_policy: Optional[str] = None
-    logical_db: Optional[str] = None
-    symbol_strategy: Optional[str] = None
-    underlying_data_set_id: Optional[str] = None
-    immutable: Optional[bool] = None
-    include_in_catalog: Optional[bool] = False
-    coverage_enabled: Optional[bool] = True
-    use_created_time_for_upload: Optional[bool] = None
-    apply_entity_entitlements: Optional[bool] = None
-    development_status: Optional[DevelopmentStatus] = None
-    internal_owned: Optional[bool] = None
+    frequency: str = field(default=None, metadata=field_metadata)
+    category: Optional[str] = field(default=None, metadata=field_metadata)
+    sub_category: Optional[str] = field(default=None, metadata=field_metadata)
+    methodology: Optional[str] = field(default=None, metadata=field_metadata)
+    coverage: Optional[str] = field(default=None, metadata=field_metadata)
+    coverages: Optional[Tuple[AssetType, ...]] = field(default=None, metadata=field_metadata)
+    notes: Optional[str] = field(default=None, metadata=field_metadata)
+    history: Optional[str] = field(default=None, metadata=field_metadata)
+    sample_start: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    sample_end: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    published_date: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    history_date: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(default=None, metadata=field_metadata)
+    owner_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    support_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    support_distribution_list: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    apply_market_data_entitlements: Optional[bool] = field(default=None, metadata=field_metadata)
+    upload_data_policy: Optional[str] = field(default=None, metadata=field_metadata)
+    logical_db: Optional[str] = field(default=None, metadata=field_metadata)
+    symbol_strategy: Optional[str] = field(default=None, metadata=field_metadata)
+    underlying_data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
+    immutable: Optional[bool] = field(default=None, metadata=field_metadata)
+    include_in_catalog: Optional[bool] = field(default=False, metadata=field_metadata)
+    coverage_enabled: Optional[bool] = field(default=True, metadata=field_metadata)
+    use_created_time_for_upload: Optional[bool] = field(default=None, metadata=field_metadata)
+    apply_entity_entitlements: Optional[bool] = field(default=None, metadata=field_metadata)
+    development_status: Optional[DevelopmentStatus] = field(default=None, metadata=field_metadata)
+    internal_owned: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetTransforms(Base):
-    redact_columns: Optional[Tuple[str, ...]] = None
-    round_columns: Optional[Tuple[str, ...]] = None
-    remap_fields: Optional[Tuple[RemapFieldPair, ...]] = None
+    redact_columns: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    round_columns: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    remap_fields: Optional[Tuple[RemapFieldPair, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 class FieldFilterMapDataQuery(DictBase):
     pass
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FieldLink(Base):
-    entity_type: Optional[str] = 'Asset'
-    entity_identifier: Optional[str] = None
-    prefix: Optional[str] = None
-    additional_entity_fields: Optional[Tuple[FieldLinkSelector, ...]] = None
+    entity_type: Optional[str] = field(default='Asset', metadata=field_metadata)
+    entity_identifier: Optional[str] = field(default=None, metadata=field_metadata)
+    prefix: Optional[str] = field(default=None, metadata=field_metadata)
+    additional_entity_fields: Optional[Tuple[FieldLinkSelector, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MarketDataMapping(Base):
-    asset_class: Optional[AssetClass] = None
-    query_type: Optional[str] = None
-    description: Optional[str] = None
-    scale: Optional[float] = None
-    frequency: Optional[MarketDataFrequency] = None
-    measures: Optional[Tuple[MarketDataMeasure, ...]] = None
-    data_set: Optional[str] = None
-    vendor: Optional[MarketDataVendor] = None
-    fields: Optional[Tuple[MarketDataField, ...]] = None
-    rank: Optional[float] = None
-    filtered_fields: Optional[Tuple[MarketDataFilteredField, ...]] = None
-    asset_types: Optional[Tuple[AssetType, ...]] = None
-    entity_type: Optional[MeasureEntityType] = None
-    backtest_entity: Optional[MeasureBacktest] = None
-    kpi_entity: Optional[MeasureKpi] = None
-    multi_measure: Optional[bool] = None
+    asset_class: Optional[AssetClass] = field(default=None, metadata=field_metadata)
+    query_type: Optional[str] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    scale: Optional[float] = field(default=None, metadata=field_metadata)
+    frequency: Optional[MarketDataFrequency] = field(default=None, metadata=field_metadata)
+    measures: Optional[Tuple[MarketDataMeasure, ...]] = field(default=None, metadata=field_metadata)
+    data_set: Optional[str] = field(default=None, metadata=field_metadata)
+    vendor: Optional[MarketDataVendor] = field(default=None, metadata=field_metadata)
+    fields: Optional[Tuple[MarketDataField, ...]] = field(default=None, metadata=field_metadata)
+    rank: Optional[float] = field(default=None, metadata=field_metadata)
+    filtered_fields: Optional[Tuple[MarketDataFilteredField, ...]] = field(default=None, metadata=field_metadata)
+    asset_types: Optional[Tuple[AssetType, ...]] = field(default=None, metadata=field_metadata)
+    entity_type: Optional[MeasureEntityType] = field(default=None, metadata=field_metadata)
+    backtest_entity: Optional[MeasureBacktest] = field(default=None, metadata=field_metadata)
+    kpi_entity: Optional[MeasureKpi] = field(default=None, metadata=field_metadata)
+    multi_measure: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ProcessorEntity(Base):
-    filters: Optional[Tuple[str, ...]] = None
-    parsers: Optional[Tuple[ParserEntity, ...]] = None
-    deduplicate: Optional[Tuple[str, ...]] = None
-    enum_type: Optional[Tuple[str, ...]] = None
+    filters: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    parsers: Optional[Tuple[ParserEntity, ...]] = field(default=None, metadata=field_metadata)
+    deduplicate: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    enum_type: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SymbolFilterDimension(Base):
-    field_: Optional[str] = field(default=None, metadata=config(field_name='field'))
-    field_description: Optional[str] = None
-    symbol_filter_link: Optional[SymbolFilterLink] = None
+    field_: Optional[str] = field(default=None, metadata=config(field_name='field', exclude=exclude_none))
+    field_description: Optional[str] = field(default=None, metadata=field_metadata)
+    symbol_filter_link: Optional[SymbolFilterLink] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ComplexFilter(Base):
-    operator: str = None
-    simple_filters: Tuple[DataFilter, ...] = None
+    operator: str = field(default=None, metadata=field_metadata)
+    simple_filters: Tuple[DataFilter, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataGroup(Base):
-    context: Optional[FieldValueMap] = None
-    data: Optional[Tuple[FieldValueMap, ...]] = None
+    context: Optional[FieldValueMap] = field(default=None, metadata=field_metadata)
+    data: Optional[Tuple[FieldValueMap, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataQuery(Base):
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    data_set_id: Optional[str] = None
-    format_: Optional[Format] = field(default=None, metadata=config(field_name='format'))
-    where: Optional[FieldFilterMapDataQuery] = None
-    vendor: Optional[MarketDataVendor] = None
-    start_date: Optional[datetime.date] = None
-    end_date: Optional[datetime.date] = None
-    start_time: Optional[datetime.datetime] = None
-    page: Optional[int] = None
-    page_size: Optional[int] = None
-    end_time: Optional[datetime.datetime] = None
-    relative_start_date: Optional[str] = None
-    relative_end_date: Optional[str] = None
-    as_of_time: Optional[datetime.datetime] = None
-    id_as_of_date: Optional[datetime.date] = None
-    use_temporal_x_ref: Optional[bool] = False
-    restrict_secondary_identifier: Optional[bool] = False
-    since: Optional[datetime.datetime] = None
-    dates: Optional[Tuple[datetime.date, ...]] = None
-    times: Optional[Tuple[datetime.datetime, ...]] = None
-    delay: Optional[int] = None
-    intervals: Optional[int] = None
-    samples: Optional[int] = None
-    limit: Optional[int] = None
-    polling_interval: Optional[int] = None
-    grouped: Optional[bool] = None
-    fields: Optional[Tuple[Union[DictBase, str], ...]] = None
-    restrict_fields: Optional[bool] = False
-    entity_filter: Optional[FieldFilterMapDataQuery] = None
-    interval: Optional[str] = None
-    distinct_consecutive: Optional[bool] = False
-    time_filter: Optional[TimeFilter] = None
-    use_field_alias: Optional[bool] = False
-    remap_schema_to_alias: Optional[bool] = False
-    show_linked_dimensions: Optional[bool] = True
-    use_project_processor: Optional[bool] = False
-    snapshot: Optional[bool] = False
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
+    format_: Optional[Format] = field(default=None, metadata=config(field_name='format', exclude=exclude_none))
+    where: Optional[FieldFilterMapDataQuery] = field(default=None, metadata=field_metadata)
+    vendor: Optional[MarketDataVendor] = field(default=None, metadata=field_metadata)
+    start_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    end_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    start_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    page: Optional[int] = field(default=None, metadata=field_metadata)
+    page_size: Optional[int] = field(default=None, metadata=field_metadata)
+    end_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    relative_start_date: Optional[str] = field(default=None, metadata=field_metadata)
+    relative_end_date: Optional[str] = field(default=None, metadata=field_metadata)
+    as_of_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    id_as_of_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    use_temporal_x_ref: Optional[bool] = field(default=False, metadata=field_metadata)
+    restrict_secondary_identifier: Optional[bool] = field(default=False, metadata=field_metadata)
+    since: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    dates: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
+    times: Optional[Tuple[datetime.datetime, ...]] = field(default=None, metadata=field_metadata)
+    delay: Optional[int] = field(default=None, metadata=field_metadata)
+    intervals: Optional[int] = field(default=None, metadata=field_metadata)
+    samples: Optional[int] = field(default=None, metadata=field_metadata)
+    limit: Optional[int] = field(default=None, metadata=field_metadata)
+    polling_interval: Optional[int] = field(default=None, metadata=field_metadata)
+    grouped: Optional[bool] = field(default=None, metadata=field_metadata)
+    fields: Optional[Tuple[Union[DictBase, str], ...]] = field(default=None, metadata=field_metadata)
+    restrict_fields: Optional[bool] = field(default=False, metadata=field_metadata)
+    entity_filter: Optional[FieldFilterMapDataQuery] = field(default=None, metadata=field_metadata)
+    interval: Optional[str] = field(default=None, metadata=field_metadata)
+    distinct_consecutive: Optional[bool] = field(default=False, metadata=field_metadata)
+    time_filter: Optional[TimeFilter] = field(default=None, metadata=field_metadata)
+    use_field_alias: Optional[bool] = field(default=False, metadata=field_metadata)
+    remap_schema_to_alias: Optional[bool] = field(default=False, metadata=field_metadata)
+    show_linked_dimensions: Optional[bool] = field(default=True, metadata=field_metadata)
+    use_project_processor: Optional[bool] = field(default=False, metadata=field_metadata)
+    snapshot: Optional[bool] = field(default=False, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetCatalogEntry(Base):
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    name: str = None
-    vendor: str = None
-    fields: DictBase = None
-    description: Optional[str] = None
-    short_description: Optional[str] = None
-    data_product: Optional[str] = None
-    terms: Optional[str] = None
-    internal_only: Optional[bool] = None
-    actions: Optional[Tuple[str, ...]] = None
-    default_start_seconds: Optional[float] = None
-    identifier_mapper_name: Optional[str] = None
-    identifier_updater_name: Optional[str] = None
-    default_delay_minutes: Optional[float] = None
-    apply_market_data_entitlements: Optional[bool] = None
-    sample: Optional[Tuple[FieldValueMap, ...]] = None
-    parameters: Optional[DataSetParameters] = None
-    tags: Optional[Tuple[str, ...]] = None
-    created_time: Optional[str] = None
-    last_updated_time: Optional[str] = None
-    start_date: Optional[datetime.date] = None
-    mdapi: Optional[MDAPI] = None
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    name: str = field(default=None, metadata=field_metadata)
+    vendor: str = field(default=None, metadata=field_metadata)
+    fields: DictBase = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    short_description: Optional[str] = field(default=None, metadata=field_metadata)
+    data_product: Optional[str] = field(default=None, metadata=field_metadata)
+    terms: Optional[str] = field(default=None, metadata=field_metadata)
+    internal_only: Optional[bool] = field(default=None, metadata=field_metadata)
+    actions: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    default_start_seconds: Optional[float] = field(default=None, metadata=field_metadata)
+    identifier_mapper_name: Optional[str] = field(default=None, metadata=field_metadata)
+    identifier_updater_name: Optional[str] = field(default=None, metadata=field_metadata)
+    default_delay_minutes: Optional[float] = field(default=None, metadata=field_metadata)
+    apply_market_data_entitlements: Optional[bool] = field(default=None, metadata=field_metadata)
+    sample: Optional[Tuple[FieldValueMap, ...]] = field(default=None, metadata=field_metadata)
+    parameters: Optional[DataSetParameters] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    created_time: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[str] = field(default=None, metadata=field_metadata)
+    start_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    mdapi: Optional[MDAPI] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntity(Base):
-    name: str = None
-    description: str = None
-    type_: str = field(default=None, metadata=config(field_name='type'))
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    classifications: Optional[DataSetFieldEntityClassifications] = None
-    unique: Optional[bool] = False
-    field_java_type: Optional[str] = None
-    parameters: Optional[DictBase] = None
-    entitlements: Optional[Entitlements] = None
-    metadata: Optional[EntityMetadata] = None
-    attributes: Optional[DataSetFieldEntityAttributes] = None
+    name: str = field(default=None, metadata=field_metadata)
+    description: str = field(default=None, metadata=field_metadata)
+    type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    classifications: Optional[DataSetFieldEntityClassifications] = field(default=None, metadata=field_metadata)
+    unique: Optional[bool] = field(default=False, metadata=field_metadata)
+    field_java_type: Optional[str] = field(default=None, metadata=field_metadata)
+    parameters: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    metadata: Optional[EntityMetadata] = field(default=None, metadata=field_metadata)
+    attributes: Optional[DataSetFieldEntityAttributes] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetTransformation(Base):
-    transforms: DataSetTransforms = None
-    condition: Optional[DataSetCondition] = None
+    transforms: DataSetTransforms = field(default=None, metadata=field_metadata)
+    condition: Optional[DataSetCondition] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DeleteCoverageQuery(Base):
-    where: Optional[FieldFilterMapDataQuery] = None
-    delete_all: Optional[bool] = False
+    where: Optional[FieldFilterMapDataQuery] = field(default=None, metadata=field_metadata)
+    delete_all: Optional[bool] = field(default=False, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FieldColumnPair(Base):
-    field_: Optional[str] = field(default=None, metadata=config(field_name='field'))
-    column: Optional[str] = None
-    field_description: Optional[str] = None
-    link: Optional[FieldLink] = None
-    aliases: Optional[Tuple[str, ...]] = None
-    resolvable: Optional[bool] = None
+    field_: Optional[str] = field(default=None, metadata=config(field_name='field', exclude=exclude_none))
+    column: Optional[str] = field(default=None, metadata=field_metadata)
+    field_description: Optional[str] = field(default=None, metadata=field_metadata)
+    link: Optional[FieldLink] = field(default=None, metadata=field_metadata)
+    aliases: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    resolvable: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HistoryFilter(Base):
-    absolute_start: Optional[datetime.datetime] = None
-    absolute_end: Optional[datetime.datetime] = None
-    relative_start_seconds: Optional[float] = None
-    relative_end_seconds: Optional[float] = None
-    delay: Optional[DictBase] = None
+    absolute_start: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    absolute_end: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    relative_start_seconds: Optional[float] = field(default=None, metadata=field_metadata)
+    relative_end_seconds: Optional[float] = field(default=None, metadata=field_metadata)
+    delay: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataQueryResponse(Base):
-    type_: str = field(default=None, metadata=config(field_name='type'))
-    request_id: Optional[str] = None
-    error_message: Optional[str] = None
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    total_pages: Optional[int] = None
-    data_set_id: Optional[str] = None
-    entity_type: Optional[MeasureEntityType] = None
-    delay: Optional[int] = None
-    data: Optional[Tuple[FieldValueMap, ...]] = None
-    groups: Optional[Tuple[DataGroup, ...]] = None
+    type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    request_id: Optional[str] = field(default=None, metadata=field_metadata)
+    error_message: Optional[str] = field(default=None, metadata=field_metadata)
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    total_pages: Optional[int] = field(default=None, metadata=field_metadata)
+    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
+    entity_type: Optional[MeasureEntityType] = field(default=None, metadata=field_metadata)
+    delay: Optional[int] = field(default=None, metadata=field_metadata)
+    data: Optional[Tuple[FieldValueMap, ...]] = field(default=None, metadata=field_metadata)
+    groups: Optional[Tuple[DataGroup, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetDimensions(Base):
-    symbol_dimensions: Tuple[str, ...] = None
-    time_field: Optional[str] = None
-    transaction_time_field: Optional[str] = None
-    symbol_dimension_properties: Optional[Tuple[FieldColumnPair, ...]] = None
-    non_symbol_dimensions: Optional[Tuple[FieldColumnPair, ...]] = None
-    symbol_dimension_link: Optional[FieldLink] = None
-    linked_dimensions: Optional[Tuple[FieldLinkSelector, ...]] = None
-    symbol_filter_dimensions: Optional[Tuple[SymbolFilterDimension, ...]] = None
-    key_dimensions: Optional[Tuple[str, ...]] = None
-    measures: Optional[Tuple[FieldColumnPair, ...]] = None
-    entity_dimension: Optional[str] = None
+    symbol_dimensions: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    time_field: Optional[str] = field(default=None, metadata=field_metadata)
+    transaction_time_field: Optional[str] = field(default=None, metadata=field_metadata)
+    symbol_dimension_properties: Optional[Tuple[FieldColumnPair, ...]] = field(default=None, metadata=field_metadata)
+    non_symbol_dimensions: Optional[Tuple[FieldColumnPair, ...]] = field(default=None, metadata=field_metadata)
+    symbol_dimension_link: Optional[FieldLink] = field(default=None, metadata=field_metadata)
+    linked_dimensions: Optional[Tuple[FieldLinkSelector, ...]] = field(default=None, metadata=field_metadata)
+    symbol_filter_dimensions: Optional[Tuple[SymbolFilterDimension, ...]] = field(default=None, metadata=field_metadata)
+    key_dimensions: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    measures: Optional[Tuple[FieldColumnPair, ...]] = field(default=None, metadata=field_metadata)
+    entity_dimension: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityBulkRequest(Base):
-    fields: Tuple[DataSetFieldEntity, ...] = None
+    fields: Tuple[DataSetFieldEntity, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EntityFilter(Base):
-    operator: Optional[str] = None
-    simple_filters: Optional[Tuple[DataFilter, ...]] = None
-    complex_filters: Optional[Tuple[ComplexFilter, ...]] = None
+    operator: Optional[str] = field(default=None, metadata=field_metadata)
+    simple_filters: Optional[Tuple[DataFilter, ...]] = field(default=None, metadata=field_metadata)
+    complex_filters: Optional[Tuple[ComplexFilter, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFilters(Base):
-    entity_filter: Optional[EntityFilter] = None
-    row_filters: Optional[Tuple[DataFilter, ...]] = None
-    advanced_filters: Optional[Tuple[AdvancedFilter, ...]] = None
-    history_filter: Optional[HistoryFilter] = None
-    time_filter: Optional[TimeFilter] = None
+    entity_filter: Optional[EntityFilter] = field(default=None, metadata=field_metadata)
+    row_filters: Optional[Tuple[DataFilter, ...]] = field(default=None, metadata=field_metadata)
+    advanced_filters: Optional[Tuple[AdvancedFilter, ...]] = field(default=None, metadata=field_metadata)
+    history_filter: Optional[HistoryFilter] = field(default=None, metadata=field_metadata)
+    time_filter: Optional[TimeFilter] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetEntity(Base):
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    name: str = None
-    organization_id: Optional[str] = None
-    description: Optional[str] = None
-    short_description: Optional[str] = None
-    mappings: Optional[Tuple[MarketDataMapping, ...]] = None
-    vendor: Optional[MarketDataVendor] = None
-    mdapi: Optional[MDAPI] = None
-    data_product: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    query_processors: Optional[ProcessorEntity] = None
-    parameters: Optional[DataSetParameters] = None
-    dimensions: Optional[DataSetDimensions] = None
-    coverage_properties: Optional[DataSetCoverageProperties] = None
-    defaults: Optional[DataSetDefaults] = None
-    filters: Optional[DataSetFilters] = None
-    transformations: Optional[Tuple[DataSetTransformation, ...]] = None
-    created_by_id: Optional[str] = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_by_id: Optional[str] = None
-    last_updated_time: Optional[datetime.datetime] = None
-    tags: Optional[Tuple[str, ...]] = None
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    name: str = field(default=None, metadata=field_metadata)
+    organization_id: Optional[str] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    short_description: Optional[str] = field(default=None, metadata=field_metadata)
+    mappings: Optional[Tuple[MarketDataMapping, ...]] = field(default=None, metadata=field_metadata)
+    vendor: Optional[MarketDataVendor] = field(default=None, metadata=field_metadata)
+    mdapi: Optional[MDAPI] = field(default=None, metadata=field_metadata)
+    data_product: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    query_processors: Optional[ProcessorEntity] = field(default=None, metadata=field_metadata)
+    parameters: Optional[DataSetParameters] = field(default=None, metadata=field_metadata)
+    dimensions: Optional[DataSetDimensions] = field(default=None, metadata=field_metadata)
+    coverage_properties: Optional[DataSetCoverageProperties] = field(default=None, metadata=field_metadata)
+    defaults: Optional[DataSetDefaults] = field(default=None, metadata=field_metadata)
+    filters: Optional[DataSetFilters] = field(default=None, metadata=field_metadata)
+    transformations: Optional[Tuple[DataSetTransformation, ...]] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)

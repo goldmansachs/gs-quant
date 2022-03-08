@@ -326,10 +326,7 @@ class MultipleRiskMeasureFuture(CompositeResultFuture):
 
     def __add__(self, other):
         result = self.result() + other.result() if isinstance(other, MultipleRiskMeasureFuture) else other
-        ret = MultipleRiskMeasureFuture(self.__instrument, {k: PricingFuture(v) for k, v in result.items()})
-        ret._set_result()
-
-        return ret
+        return MultipleRiskMeasureFuture(self.__instrument, {k: PricingFuture(v) for k, v in result.items()})
 
     def _set_result(self):
         self.set_result(MultipleRiskMeasureResult(self.__instrument,
@@ -602,7 +599,7 @@ class PortfolioRiskResult(CompositeResultFuture):
                  display_options: DisplayOptions = None):
         def get_name(obj, idx):
             if isinstance(obj, InstrumentBase) and hasattr(obj, 'type'):
-                type_name = obj.type.name if isinstance(obj.type, AssetType) else obj._type
+                type_name = obj.type.name if isinstance(obj.type, AssetType) else obj.type_
             else:
                 type_name = 'Portfolio'
             return f'{type_name}_{idx}' if obj.name is None else obj.name

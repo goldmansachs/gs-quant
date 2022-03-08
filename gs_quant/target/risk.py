@@ -60,544 +60,538 @@ class OptimizationUrgency(EnumBase, Enum):
     VERY_HIGH = 'VERY_HIGH'    
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AdvCurveTick(Base):
-    date: Optional[datetime.date] = None
-    value: Optional[float] = None
+    date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    value: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ExecutionCostForHorizon(Base):
-    minutes_expired: Optional[int] = None
-    execution_cost: Optional[float] = None
-    execution_cost_long: Optional[float] = None
-    execution_cost_short: Optional[float] = None
+    minutes_expired: Optional[int] = field(default=None, metadata=field_metadata)
+    execution_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    execution_cost_long: Optional[float] = field(default=None, metadata=field_metadata)
+    execution_cost_short: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityBucket(Base):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    net_exposure: Optional[float] = None
-    gross_exposure: Optional[float] = None
-    net_weight: Optional[float] = None
-    gross_weight: Optional[float] = None
-    transaction_cost: Optional[float] = None
-    marginal_cost: Optional[float] = None
-    adv22_day_pct: Optional[float] = None
-    number_of_positions: Optional[float] = None
-    beta_adjusted_exposure: Optional[float] = None
-    long_weight: Optional[float] = None
-    long_exposure: Optional[float] = None
-    long_transaction_cost: Optional[float] = None
-    long_marginal_cost: Optional[float] = None
-    long_adv22_day_pct: Optional[float] = None
-    long_number_of_positions: Optional[float] = None
-    long_beta_adjusted_exposure: Optional[float] = None
-    short_weight: Optional[float] = None
-    short_exposure: Optional[float] = None
-    short_transaction_cost: Optional[float] = None
-    short_marginal_cost: Optional[float] = None
-    short_adv22_day_pct: Optional[float] = None
-    short_number_of_positions: Optional[float] = None
-    short_beta_adjusted_exposure: Optional[float] = None
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    net_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    gross_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    net_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    gross_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    transaction_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    marginal_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    adv22_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    number_of_positions: Optional[float] = field(default=None, metadata=field_metadata)
+    beta_adjusted_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    long_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    long_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    long_transaction_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    long_marginal_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    long_adv22_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    long_number_of_positions: Optional[float] = field(default=None, metadata=field_metadata)
+    long_beta_adjusted_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    short_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    short_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    short_transaction_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    short_marginal_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    short_adv22_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    short_number_of_positions: Optional[float] = field(default=None, metadata=field_metadata)
+    short_beta_adjusted_exposure: Optional[float] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityFactor(Base):
-    name: Optional[str] = None
-    value: Optional[float] = None
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    value: Optional[float] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquiditySummarySection(Base):
-    adv10_day_pct: Optional[float] = None
-    adv22_day_pct: Optional[float] = None
-    adv5_day_pct: Optional[float] = None
-    annualized_risk: Optional[float] = None
-    annualized_tracking_error: Optional[float] = None
-    beta: Optional[float] = None
-    beta_adjusted_exposure: Optional[float] = None
-    beta_adjusted_net_exposure: Optional[float] = None
-    bid_ask_spread: Optional[float] = None
-    correlation: Optional[float] = None
-    daily_risk: Optional[float] = None
-    daily_tracking_error: Optional[float] = None
-    est1_day_complete_pct: Optional[float] = None
-    five_day_price_change_bps: Optional[float] = None
-    gross_exposure: Optional[float] = None
-    marginal_cost: Optional[float] = None
-    market_cap: Optional[float] = None
-    minutes_to_trade100_pct: Optional[float] = None
-    net_exposure: Optional[float] = None
-    number_of_positions: Optional[float] = None
-    percent_in_benchmark: Optional[object] = None
-    transaction_cost: Optional[float] = None
-    weight_of_top_five_positions: Optional[float] = None
+    adv10_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    adv22_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    adv5_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    annualized_risk: Optional[float] = field(default=None, metadata=field_metadata)
+    annualized_tracking_error: Optional[float] = field(default=None, metadata=field_metadata)
+    beta: Optional[float] = field(default=None, metadata=field_metadata)
+    beta_adjusted_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    beta_adjusted_net_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    bid_ask_spread: Optional[float] = field(default=None, metadata=field_metadata)
+    correlation: Optional[float] = field(default=None, metadata=field_metadata)
+    daily_risk: Optional[float] = field(default=None, metadata=field_metadata)
+    daily_tracking_error: Optional[float] = field(default=None, metadata=field_metadata)
+    est1_day_complete_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    five_day_price_change_bps: Optional[float] = field(default=None, metadata=field_metadata)
+    gross_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    marginal_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    market_cap: Optional[float] = field(default=None, metadata=field_metadata)
+    minutes_to_trade100_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    net_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    number_of_positions: Optional[float] = field(default=None, metadata=field_metadata)
+    percent_in_benchmark: Optional[object] = field(default=None, metadata=field_metadata)
+    transaction_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    weight_of_top_five_positions: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationAssetAnalyticsDaily(Base):
-    asset_id: str = None
-    trade_day_number: int = None
-    total_cost: float = None
-    total_variance_contribution: float = None
-    total_portfolio_risk_on_day: float = None
-    total_risk: float = None
-    cratos: float = None
-    adv: float = None
-    cluster_id: int = None
-    cluster_label: str = None
+    asset_id: str = field(default=None, metadata=field_metadata)
+    trade_day_number: int = field(default=None, metadata=field_metadata)
+    total_cost: float = field(default=None, metadata=field_metadata)
+    total_variance_contribution: float = field(default=None, metadata=field_metadata)
+    total_portfolio_risk_on_day: float = field(default=None, metadata=field_metadata)
+    total_risk: float = field(default=None, metadata=field_metadata)
+    cratos: float = field(default=None, metadata=field_metadata)
+    adv: float = field(default=None, metadata=field_metadata)
+    cluster_id: int = field(default=None, metadata=field_metadata)
+    cluster_label: str = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationAssetAnalyticsDayOne(Base):
-    asset_id: str = None
-    auction_trade_percentage: float = None
-    auction_pov_percentage: float = None
+    asset_id: str = field(default=None, metadata=field_metadata)
+    auction_trade_percentage: float = field(default=None, metadata=field_metadata)
+    auction_pov_percentage: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationAssetAnalyticsIntraday(Base):
-    period_number: int = None
-    trade_day_number: int = None
-    period_start_time: datetime.datetime = None
-    period_end_time: datetime.datetime = None
-    is_trading: bool = None
-    buy: float = None
-    sell: float = None
-    gross: float = None
-    net: float = None
-    trade_absolute: float = None
-    asset_id: str = None
-    volume: float = None
-    volatility: float = None
-    fx: float = None
-    price_local: float = None
-    currency: str = None
-    total_cost_spread: float = None
-    total_cost_volatility: float = None
-    total_cost_permanent: float = None
-    beta_historical: float = None
-    mcr: float = None
-    total_cost: float = None
-    adv_percentage: float = None
-    country: str = None
-    industry: str = None
-    sector: str = None
-    spread: float = None
-    region: str = None
-    region_minor: str = None
-    quantity: int = None
+    period_number: int = field(default=None, metadata=field_metadata)
+    trade_day_number: int = field(default=None, metadata=field_metadata)
+    period_start_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    period_end_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    is_trading: bool = field(default=None, metadata=field_metadata)
+    buy: float = field(default=None, metadata=field_metadata)
+    sell: float = field(default=None, metadata=field_metadata)
+    gross: float = field(default=None, metadata=field_metadata)
+    net: float = field(default=None, metadata=field_metadata)
+    trade_absolute: float = field(default=None, metadata=field_metadata)
+    asset_id: str = field(default=None, metadata=field_metadata)
+    volume: float = field(default=None, metadata=field_metadata)
+    volatility: float = field(default=None, metadata=field_metadata)
+    fx: float = field(default=None, metadata=field_metadata)
+    price_local: float = field(default=None, metadata=field_metadata)
+    currency: str = field(default=None, metadata=field_metadata)
+    total_cost_spread: float = field(default=None, metadata=field_metadata)
+    total_cost_volatility: float = field(default=None, metadata=field_metadata)
+    total_cost_permanent: float = field(default=None, metadata=field_metadata)
+    beta_historical: float = field(default=None, metadata=field_metadata)
+    mcr: float = field(default=None, metadata=field_metadata)
+    total_cost: float = field(default=None, metadata=field_metadata)
+    adv_percentage: float = field(default=None, metadata=field_metadata)
+    country: str = field(default=None, metadata=field_metadata)
+    industry: str = field(default=None, metadata=field_metadata)
+    sector: str = field(default=None, metadata=field_metadata)
+    spread: float = field(default=None, metadata=field_metadata)
+    region: str = field(default=None, metadata=field_metadata)
+    region_minor: str = field(default=None, metadata=field_metadata)
+    quantity: int = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationCloseAuctionAnalytics(Base):
-    exchange_city: str = None
-    trade_absolute: float = None
-    trade_net: float = None
-    gross: float = None
-    net: float = None
-    auction_pov_percentage: float = None
-    close_auction_start_time: datetime.datetime = None
-    number_of_assets: int = None
-    close_auction_trade_percentage: float = None
+    exchange_city: str = field(default=None, metadata=field_metadata)
+    trade_absolute: float = field(default=None, metadata=field_metadata)
+    trade_net: float = field(default=None, metadata=field_metadata)
+    gross: float = field(default=None, metadata=field_metadata)
+    net: float = field(default=None, metadata=field_metadata)
+    auction_pov_percentage: float = field(default=None, metadata=field_metadata)
+    close_auction_start_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    number_of_assets: int = field(default=None, metadata=field_metadata)
+    close_auction_trade_percentage: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationClusterAnalytics(Base):
-    cluster_id: int = None
-    cluster_label: str = None
-    gross: float = None
-    total_cost_bps: float = None
-    total_risk_bps: float = None
+    cluster_id: int = field(default=None, metadata=field_metadata)
+    cluster_label: str = field(default=None, metadata=field_metadata)
+    gross: float = field(default=None, metadata=field_metadata)
+    total_cost_bps: float = field(default=None, metadata=field_metadata)
+    total_risk_bps: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationClusterAnalyticsIntradayItem(Base):
-    cluster_id: int = None
-    cluster_label: str = None
-    adv_percentage: float = None
-    gross_percentage: float = None
+    cluster_id: int = field(default=None, metadata=field_metadata)
+    cluster_label: str = field(default=None, metadata=field_metadata)
+    adv_percentage: float = field(default=None, metadata=field_metadata)
+    gross_percentage: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationEodCashPositionsItem(Base):
-    trade_day_num: str = None
-    net: Optional[float] = None
+    trade_day_num: str = field(default=None, metadata=field_metadata)
+    net: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationExcludedAsset(Base):
-    asset_id: str = None
-    security_type: str = None
-    quantity: int = None
-    reason: str = None
+    asset_id: str = field(default=None, metadata=field_metadata)
+    security_type: str = field(default=None, metadata=field_metadata)
+    quantity: int = field(default=None, metadata=field_metadata)
+    reason: str = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationFactorAnalyticsItem(Base):
-    period_number: int = None
-    trade_day_number: int = None
-    period_start_time: datetime.datetime = None
-    period_end_time: datetime.datetime = None
-    factors: Tuple[DictBase, ...] = None
-    time: Optional[datetime.datetime] = None
+    period_number: int = field(default=None, metadata=field_metadata)
+    trade_day_number: int = field(default=None, metadata=field_metadata)
+    period_start_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    period_end_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    factors: Tuple[DictBase, ...] = field(default=None, metadata=field_metadata)
+    time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationPortfolioAnalyticsDaily(Base):
-    trade_day_number: int = None
-    estimated_cost_bps: float = None
-    completion_rate_percent: float = None
-    mean_expected_cost_versus_benchmark: float = None
+    trade_day_number: int = field(default=None, metadata=field_metadata)
+    estimated_cost_bps: float = field(default=None, metadata=field_metadata)
+    completion_rate_percent: float = field(default=None, metadata=field_metadata)
+    mean_expected_cost_versus_benchmark: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationPortfolioAnalyticsIntraday(Base):
-    period_number: int = None
-    trade_day_number: int = None
-    period_start_time: datetime.datetime = None
-    period_end_time: datetime.datetime = None
-    time: datetime.datetime = None
-    sell: float = None
-    buy: float = None
-    gross: float = None
-    net: float = None
-    trade_absolute: float = None
-    total_cost_spread: float = None
-    total_cost_volatility: float = None
-    total_cost_permanent: float = None
-    total_cost: float = None
-    adv_average_percentage: float = None
-    total_risk: float = None
-    factor_risk: float = None
-    specific_risk: float = None
-    diagonal_risk: float = None
-    total_risk_objective: float = None
-    factor_risk_objective: float = None
-    specific_risk_objective: float = None
-    diagonal_risk_objective: float = None
-    total_risk_bps: float = None
-    trade_percentage_cumulative_sum: float = None
-    net_period_percentage: float = None
-    total_cost_budget_percentage: float = None
-    total_risk_percentage: float = None
+    period_number: int = field(default=None, metadata=field_metadata)
+    trade_day_number: int = field(default=None, metadata=field_metadata)
+    period_start_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    period_end_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    time: datetime.datetime = field(default=None, metadata=field_metadata)
+    sell: float = field(default=None, metadata=field_metadata)
+    buy: float = field(default=None, metadata=field_metadata)
+    gross: float = field(default=None, metadata=field_metadata)
+    net: float = field(default=None, metadata=field_metadata)
+    trade_absolute: float = field(default=None, metadata=field_metadata)
+    total_cost_spread: float = field(default=None, metadata=field_metadata)
+    total_cost_volatility: float = field(default=None, metadata=field_metadata)
+    total_cost_permanent: float = field(default=None, metadata=field_metadata)
+    total_cost: float = field(default=None, metadata=field_metadata)
+    adv_average_percentage: float = field(default=None, metadata=field_metadata)
+    total_risk: float = field(default=None, metadata=field_metadata)
+    factor_risk: float = field(default=None, metadata=field_metadata)
+    specific_risk: float = field(default=None, metadata=field_metadata)
+    diagonal_risk: float = field(default=None, metadata=field_metadata)
+    total_risk_objective: float = field(default=None, metadata=field_metadata)
+    factor_risk_objective: float = field(default=None, metadata=field_metadata)
+    specific_risk_objective: float = field(default=None, metadata=field_metadata)
+    diagonal_risk_objective: float = field(default=None, metadata=field_metadata)
+    total_risk_bps: float = field(default=None, metadata=field_metadata)
+    trade_percentage_cumulative_sum: float = field(default=None, metadata=field_metadata)
+    net_period_percentage: float = field(default=None, metadata=field_metadata)
+    total_cost_budget_percentage: float = field(default=None, metadata=field_metadata)
+    total_risk_percentage: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationPortfolioSummarySection(Base):
-    position: float = None
-    number_of_assets: int = None
-    diagonal_risk: float = None
-    total_risk: float = None
-    factor_risk: float = None
-    specific_risk: float = None
-    historical_beta: float = None
-    spread: float = None
-    total_risk_bps: float = None
-    adv_average_percentage: float = None
-    adv_max_percentage: float = None
+    position: float = field(default=None, metadata=field_metadata)
+    number_of_assets: int = field(default=None, metadata=field_metadata)
+    diagonal_risk: float = field(default=None, metadata=field_metadata)
+    total_risk: float = field(default=None, metadata=field_metadata)
+    factor_risk: float = field(default=None, metadata=field_metadata)
+    specific_risk: float = field(default=None, metadata=field_metadata)
+    historical_beta: float = field(default=None, metadata=field_metadata)
+    spread: float = field(default=None, metadata=field_metadata)
+    total_risk_bps: float = field(default=None, metadata=field_metadata)
+    adv_average_percentage: float = field(default=None, metadata=field_metadata)
+    adv_max_percentage: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationTradedPosition(Base):
-    asset_id: str = None
-    quantity: int = None
-    position: int = None
+    asset_id: str = field(default=None, metadata=field_metadata)
+    quantity: int = field(default=None, metadata=field_metadata)
+    position: int = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PRateForHorizon(Base):
-    minutes_expired: Optional[int] = None
-    participation_rate: Optional[float] = None
-    participation_rate_long: Optional[float] = None
-    participation_rate_short: Optional[float] = None
+    minutes_expired: Optional[int] = field(default=None, metadata=field_metadata)
+    participation_rate: Optional[float] = field(default=None, metadata=field_metadata)
+    participation_rate_long: Optional[float] = field(default=None, metadata=field_metadata)
+    participation_rate_short: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskAtHorizon(Base):
-    minutes_expired: Optional[int] = None
-    risk: Optional[int] = None
-    risk_long: Optional[float] = None
-    risk_short: Optional[float] = None
+    minutes_expired: Optional[int] = field(default=None, metadata=field_metadata)
+    risk: Optional[int] = field(default=None, metadata=field_metadata)
+    risk_long: Optional[float] = field(default=None, metadata=field_metadata)
+    risk_short: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class TradeCompleteAtHorizon(Base):
-    minutes_expired: Optional[int] = None
-    positions_complete: Optional[int] = None
-    positions_complete_pct: Optional[float] = None
-    notional_complete_pct: Optional[float] = None
+    minutes_expired: Optional[int] = field(default=None, metadata=field_metadata)
+    positions_complete: Optional[int] = field(default=None, metadata=field_metadata)
+    positions_complete_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    notional_complete_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityConstituent(Base):
-    asset_id: Optional[str] = None
-    name: Optional[str] = None
-    exchange: Optional[str] = None
-    quantity: Optional[float] = None
-    gross_weight: Optional[float] = None
-    net_weight: Optional[float] = None
-    currency: Optional[Currency] = None
-    gross_exposure: Optional[float] = None
-    net_exposure: Optional[float] = None
-    transaction_cost: Optional[float] = None
-    marginal_cost: Optional[float] = None
-    country: Optional[str] = None
-    region: Optional[Region] = None
-    type_: Optional[AssetType] = field(default=None, metadata=config(field_name='type'))
-    market_cap_bucket: Optional[object] = None
-    est1_day_complete_pct: Optional[float] = None
-    in_benchmark: Optional[bool] = None
-    in_risk_model: Optional[bool] = None
-    in_cost_predict_model: Optional[bool] = None
-    beta: Optional[float] = None
-    daily_risk: Optional[float] = None
-    annualized_risk: Optional[float] = None
-    one_day_price_change_pct: Optional[float] = None
-    beta_adjusted_exposure: Optional[float] = None
-    adv_bucket: Optional[object] = None
-    settlement_date: Optional[datetime.date] = None
+    asset_id: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    exchange: Optional[str] = field(default=None, metadata=field_metadata)
+    quantity: Optional[float] = field(default=None, metadata=field_metadata)
+    gross_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    net_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    gross_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    net_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    transaction_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    marginal_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    country: Optional[str] = field(default=None, metadata=field_metadata)
+    region: Optional[Region] = field(default=None, metadata=field_metadata)
+    type_: Optional[AssetType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    market_cap_bucket: Optional[object] = field(default=None, metadata=field_metadata)
+    est1_day_complete_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    in_benchmark: Optional[bool] = field(default=None, metadata=field_metadata)
+    in_risk_model: Optional[bool] = field(default=None, metadata=field_metadata)
+    in_cost_predict_model: Optional[bool] = field(default=None, metadata=field_metadata)
+    beta: Optional[float] = field(default=None, metadata=field_metadata)
+    daily_risk: Optional[float] = field(default=None, metadata=field_metadata)
+    annualized_risk: Optional[float] = field(default=None, metadata=field_metadata)
+    one_day_price_change_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    beta_adjusted_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    adv_bucket: Optional[object] = field(default=None, metadata=field_metadata)
+    settlement_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityFactorCategory(Base):
-    name: Optional[str] = None
-    sub_factors: Optional[Tuple[LiquidityFactor, ...]] = None
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    sub_factors: Optional[Tuple[LiquidityFactor, ...]] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquiditySummary(Base):
-    total: LiquiditySummarySection = None
-    long: Optional[LiquiditySummarySection] = None
-    short: Optional[LiquiditySummarySection] = None
-    long_vs_short: Optional[LiquiditySummarySection] = None
+    total: LiquiditySummarySection = field(default=None, metadata=field_metadata)
+    long: Optional[LiquiditySummarySection] = field(default=None, metadata=field_metadata)
+    short: Optional[LiquiditySummarySection] = field(default=None, metadata=field_metadata)
+    long_vs_short: Optional[LiquiditySummarySection] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationClusterAnalyticsIntraday(Base):
-    time: datetime.datetime = None
-    period_number: int = None
-    trade_day_number: int = None
-    clusters: Tuple[OptimizationClusterAnalyticsIntradayItem, ...] = None
+    time: datetime.datetime = field(default=None, metadata=field_metadata)
+    period_number: int = field(default=None, metadata=field_metadata)
+    trade_day_number: int = field(default=None, metadata=field_metadata)
+    clusters: Tuple[OptimizationClusterAnalyticsIntradayItem, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationEodCashPositions(Base):
-    currency: str = None
-    positions: Tuple[OptimizationEodCashPositionsItem, ...] = None
+    currency: str = field(default=None, metadata=field_metadata)
+    positions: Tuple[OptimizationEodCashPositionsItem, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationPortfolioCharacteristics(Base):
-    sell: OptimizationPortfolioSummarySection = None
-    buy: OptimizationPortfolioSummarySection = None
-    net: OptimizationPortfolioSummarySection = None
-    gross: OptimizationPortfolioSummarySection = None
+    sell: OptimizationPortfolioSummarySection = field(default=None, metadata=field_metadata)
+    buy: OptimizationPortfolioSummarySection = field(default=None, metadata=field_metadata)
+    net: OptimizationPortfolioSummarySection = field(default=None, metadata=field_metadata)
+    gross: OptimizationPortfolioSummarySection = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityTableRow(Base):
-    asset_id: Optional[str] = None
-    name: Optional[str] = None
-    adv22_day_pct: Optional[float] = None
-    shares: Optional[float] = None
-    net_weight: Optional[float] = None
-    gross_weight: Optional[float] = None
-    gross_exposure: Optional[float] = None
-    net_exposure: Optional[float] = None
-    transaction_cost: Optional[float] = None
-    marginal_cost: Optional[float] = None
-    one_day_price_change_pct: Optional[float] = None
-    normalized_performance: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
+    asset_id: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    adv22_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    shares: Optional[float] = field(default=None, metadata=field_metadata)
+    net_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    gross_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    gross_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    net_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    transaction_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    marginal_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    one_day_price_change_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    normalized_performance: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityTimeSeriesItem(Base):
-    name: Optional[str] = None
-    normalized_performance: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
-    annualized_return: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
-    annualized_correlation: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
-    annualized_volatility: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
-    annualized_sharp_ratio: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
-    annualized_tracking_error: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
-    max_drawdown: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
-    net_exposure: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
-    cumulative_pnl: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    normalized_performance: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    annualized_return: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    annualized_correlation: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    annualized_volatility: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    annualized_sharp_ratio: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    annualized_tracking_error: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    max_drawdown: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    net_exposure: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    cumulative_pnl: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationFactorAnalyticsIntraday(Base):
-    country: Tuple[OptimizationFactorAnalyticsItem, ...] = None
-    sector: Tuple[OptimizationFactorAnalyticsItem, ...] = None
-    domestic_china: Tuple[OptimizationFactorAnalyticsItem, ...] = None
-    market: Tuple[OptimizationFactorAnalyticsItem, ...] = None
-    currency: Tuple[OptimizationFactorAnalyticsItem, ...] = None
-    industry: Tuple[OptimizationFactorAnalyticsItem, ...] = None
-    risk: Tuple[OptimizationFactorAnalyticsItem, ...] = None
-    cluster_classification: Tuple[OptimizationFactorAnalyticsItem, ...] = None
+    country: Tuple[OptimizationFactorAnalyticsItem, ...] = field(default=None, metadata=field_metadata)
+    sector: Tuple[OptimizationFactorAnalyticsItem, ...] = field(default=None, metadata=field_metadata)
+    domestic_china: Tuple[OptimizationFactorAnalyticsItem, ...] = field(default=None, metadata=field_metadata)
+    market: Tuple[OptimizationFactorAnalyticsItem, ...] = field(default=None, metadata=field_metadata)
+    currency: Tuple[OptimizationFactorAnalyticsItem, ...] = field(default=None, metadata=field_metadata)
+    industry: Tuple[OptimizationFactorAnalyticsItem, ...] = field(default=None, metadata=field_metadata)
+    risk: Tuple[OptimizationFactorAnalyticsItem, ...] = field(default=None, metadata=field_metadata)
+    cluster_classification: Tuple[OptimizationFactorAnalyticsItem, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationTradeSchedule(Base):
-    period_number: int = None
-    trade_day_number: int = None
-    period_start_time: datetime.datetime = None
-    period_end_time: datetime.datetime = None
-    traded_positions: Tuple[OptimizationTradedPosition, ...] = None
+    period_number: int = field(default=None, metadata=field_metadata)
+    trade_day_number: int = field(default=None, metadata=field_metadata)
+    period_start_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    period_end_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    traded_positions: Tuple[OptimizationTradedPosition, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityResponse(Base):
-    as_of_date: Optional[datetime.date] = None
-    risk_model: Optional[str] = None
-    notional: Optional[float] = None
-    currency: Optional[Currency] = None
-    report: Optional[str] = None
-    summary: Optional[LiquiditySummary] = None
-    constituent_transaction_costs: Optional[Tuple[LiquidityConstituent, ...]] = None
-    constituents: Optional[Tuple[LiquidityConstituent, ...]] = None
-    largest_holdings_by_weight: Optional[Tuple[LiquidityTableRow, ...]] = None
-    least_liquid_holdings: Optional[Tuple[LiquidityTableRow, ...]] = None
-    adv_buckets: Optional[Tuple[LiquidityBucket, ...]] = None
-    region_buckets: Optional[Tuple[LiquidityBucket, ...]] = None
-    country_buckets: Optional[Tuple[LiquidityBucket, ...]] = None
-    sector_buckets: Optional[Tuple[LiquidityBucket, ...]] = None
-    industry_buckets: Optional[Tuple[LiquidityBucket, ...]] = None
-    market_cap_buckets: Optional[Tuple[LiquidityBucket, ...]] = None
-    currency_buckets: Optional[Tuple[LiquidityBucket, ...]] = None
-    execution_costs_with_different_time_horizons: Optional[Tuple[ExecutionCostForHorizon, ...]] = None
-    time_to_trade_with_different_participation_rates: Optional[Tuple[PRateForHorizon, ...]] = None
-    risk_over_time: Optional[Tuple[RiskAtHorizon, ...]] = None
-    trade_complete_percent_over_time: Optional[Tuple[TradeCompleteAtHorizon, ...]] = None
-    adv_percent_over_time: Optional[Tuple[AdvCurveTick, ...]] = None
-    risk_buckets: Optional[Tuple[LiquidityFactor, ...]] = None
-    factor_risk_buckets: Optional[Tuple[LiquidityFactorCategory, ...]] = None
-    exposure_buckets: Optional[Tuple[LiquidityFactor, ...]] = None
-    factor_exposure_buckets: Optional[Tuple[LiquidityFactorCategory, ...]] = None
-    timeseries_data: Optional[Tuple[LiquidityTimeSeriesItem, ...]] = None
-    assets_not_in_risk_model: Optional[Tuple[str, ...]] = None
-    assets_not_in_cost_predict_model: Optional[Tuple[str, ...]] = None
-    assets_without_compositions: Optional[Tuple[str, ...]] = None
-    error_message: Optional[str] = None
+    as_of_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    risk_model: Optional[str] = field(default=None, metadata=field_metadata)
+    notional: Optional[float] = field(default=None, metadata=field_metadata)
+    currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    report: Optional[str] = field(default=None, metadata=field_metadata)
+    summary: Optional[LiquiditySummary] = field(default=None, metadata=field_metadata)
+    constituent_transaction_costs: Optional[Tuple[LiquidityConstituent, ...]] = field(default=None, metadata=field_metadata)
+    constituents: Optional[Tuple[LiquidityConstituent, ...]] = field(default=None, metadata=field_metadata)
+    largest_holdings_by_weight: Optional[Tuple[LiquidityTableRow, ...]] = field(default=None, metadata=field_metadata)
+    least_liquid_holdings: Optional[Tuple[LiquidityTableRow, ...]] = field(default=None, metadata=field_metadata)
+    adv_buckets: Optional[Tuple[LiquidityBucket, ...]] = field(default=None, metadata=field_metadata)
+    region_buckets: Optional[Tuple[LiquidityBucket, ...]] = field(default=None, metadata=field_metadata)
+    country_buckets: Optional[Tuple[LiquidityBucket, ...]] = field(default=None, metadata=field_metadata)
+    sector_buckets: Optional[Tuple[LiquidityBucket, ...]] = field(default=None, metadata=field_metadata)
+    industry_buckets: Optional[Tuple[LiquidityBucket, ...]] = field(default=None, metadata=field_metadata)
+    market_cap_buckets: Optional[Tuple[LiquidityBucket, ...]] = field(default=None, metadata=field_metadata)
+    currency_buckets: Optional[Tuple[LiquidityBucket, ...]] = field(default=None, metadata=field_metadata)
+    execution_costs_with_different_time_horizons: Optional[Tuple[ExecutionCostForHorizon, ...]] = field(default=None, metadata=field_metadata)
+    time_to_trade_with_different_participation_rates: Optional[Tuple[PRateForHorizon, ...]] = field(default=None, metadata=field_metadata)
+    risk_over_time: Optional[Tuple[RiskAtHorizon, ...]] = field(default=None, metadata=field_metadata)
+    trade_complete_percent_over_time: Optional[Tuple[TradeCompleteAtHorizon, ...]] = field(default=None, metadata=field_metadata)
+    adv_percent_over_time: Optional[Tuple[AdvCurveTick, ...]] = field(default=None, metadata=field_metadata)
+    risk_buckets: Optional[Tuple[LiquidityFactor, ...]] = field(default=None, metadata=field_metadata)
+    factor_risk_buckets: Optional[Tuple[LiquidityFactorCategory, ...]] = field(default=None, metadata=field_metadata)
+    exposure_buckets: Optional[Tuple[LiquidityFactor, ...]] = field(default=None, metadata=field_metadata)
+    factor_exposure_buckets: Optional[Tuple[LiquidityFactorCategory, ...]] = field(default=None, metadata=field_metadata)
+    timeseries_data: Optional[Tuple[LiquidityTimeSeriesItem, ...]] = field(default=None, metadata=field_metadata)
+    assets_not_in_risk_model: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    assets_not_in_cost_predict_model: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    assets_without_compositions: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    error_message: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationAnalytics(Base):
-    portfolio_characteristics: OptimizationPortfolioCharacteristics = None
-    asset_analytics_daily: Tuple[OptimizationAssetAnalyticsDaily, ...] = None
-    portfolio_analytics_daily: Tuple[OptimizationPortfolioAnalyticsDaily, ...] = None
-    assets_excluded: Tuple[OptimizationExcludedAsset, ...] = None
-    constraints_consultations: Tuple[DictBase, ...] = None
-    factor_analytics_intraday: OptimizationFactorAnalyticsIntraday = None
-    asset_analytics_intraday: Tuple[OptimizationAssetAnalyticsIntraday, ...] = None
-    portfolio_analytics_intraday: Tuple[OptimizationPortfolioAnalyticsIntraday, ...] = None
-    cluster_analytics_intraday: Tuple[OptimizationClusterAnalyticsIntraday, ...] = None
-    cluster_analytics: Tuple[OptimizationClusterAnalytics, ...] = None
-    eod_cash_positions: Tuple[OptimizationEodCashPositions, ...] = None
-    asset_analytics_day_one: Optional[Tuple[OptimizationAssetAnalyticsDayOne, ...]] = None
-    close_auction_analytics: Optional[Tuple[OptimizationCloseAuctionAnalytics, ...]] = None
+    portfolio_characteristics: OptimizationPortfolioCharacteristics = field(default=None, metadata=field_metadata)
+    asset_analytics_daily: Tuple[OptimizationAssetAnalyticsDaily, ...] = field(default=None, metadata=field_metadata)
+    portfolio_analytics_daily: Tuple[OptimizationPortfolioAnalyticsDaily, ...] = field(default=None, metadata=field_metadata)
+    assets_excluded: Tuple[OptimizationExcludedAsset, ...] = field(default=None, metadata=field_metadata)
+    constraints_consultations: Tuple[DictBase, ...] = field(default=None, metadata=field_metadata)
+    factor_analytics_intraday: OptimizationFactorAnalyticsIntraday = field(default=None, metadata=field_metadata)
+    asset_analytics_intraday: Tuple[OptimizationAssetAnalyticsIntraday, ...] = field(default=None, metadata=field_metadata)
+    portfolio_analytics_intraday: Tuple[OptimizationPortfolioAnalyticsIntraday, ...] = field(default=None, metadata=field_metadata)
+    cluster_analytics_intraday: Tuple[OptimizationClusterAnalyticsIntraday, ...] = field(default=None, metadata=field_metadata)
+    cluster_analytics: Tuple[OptimizationClusterAnalytics, ...] = field(default=None, metadata=field_metadata)
+    eod_cash_positions: Tuple[OptimizationEodCashPositions, ...] = field(default=None, metadata=field_metadata)
+    asset_analytics_day_one: Optional[Tuple[OptimizationAssetAnalyticsDayOne, ...]] = field(default=None, metadata=field_metadata)
+    close_auction_analytics: Optional[Tuple[OptimizationCloseAuctionAnalytics, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationResult(Base):
-    created_by_id: str = None
-    created_time: datetime.datetime = None
-    entitlements: Entitlements = None
-    entitlement_exclusions: EntitlementExclusions = None
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    last_updated_by_id: str = None
-    last_updated_time: datetime.datetime = None
-    owner_id: str = None
-    analytics: OptimizationAnalytics = None
-    status: OptimizationStatus = None
-    trade_schedule: Optional[Tuple[OptimizationTradeSchedule, ...]] = None
+    created_by_id: str = field(default=None, metadata=field_metadata)
+    created_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    entitlements: Entitlements = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: EntitlementExclusions = field(default=None, metadata=field_metadata)
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    last_updated_by_id: str = field(default=None, metadata=field_metadata)
+    last_updated_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    owner_id: str = field(default=None, metadata=field_metadata)
+    analytics: OptimizationAnalytics = field(default=None, metadata=field_metadata)
+    status: OptimizationStatus = field(default=None, metadata=field_metadata)
+    trade_schedule: Optional[Tuple[OptimizationTradeSchedule, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationRequest(Base):
-    positions: Tuple[Position, ...] = None
-    execution_start_time: datetime.datetime = None
-    execution_end_time: datetime.datetime = None
-    parameters: DictBase = None
-    type_: OptimizationType = field(default=None, metadata=config(field_name='type'))
-    created_by_id: Optional[str] = None
-    created_time: Optional[datetime.datetime] = None
-    entitlements: Optional[Entitlements] = None
-    entitlement_exclusions: Optional[EntitlementExclusions] = None
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    last_updated_by_id: Optional[str] = None
-    last_updated_time: Optional[datetime.datetime] = None
-    owner_id: Optional[str] = None
-    wait_for_results: Optional[bool] = False
+    positions: Tuple[Position, ...] = field(default=None, metadata=field_metadata)
+    execution_start_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    execution_end_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    parameters: DictBase = field(default=None, metadata=field_metadata)
+    type_: OptimizationType = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    wait_for_results: Optional[bool] = field(default=False, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)

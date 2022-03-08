@@ -16,17 +16,18 @@ under the License.
 import datetime as dt
 from enum import Enum, auto
 from typing import List, Dict, Tuple, Union
-
 import pandas as pd
+import logging
+import pydash
 
-from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
 from gs_quant.base import EnumBase
 from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.markets.factor import Factor
 from gs_quant.models.risk_model_utils import build_asset_data_map, build_factor_data_map, \
-    build_factor_data_dataframe, build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, \
-    get_closest_date_index, divide_request, batch_and_upload_partial_data, risk_model_data_to_json, get_universe_size
+    build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, get_closest_date_index, \
+    batch_and_upload_partial_data, risk_model_data_to_json, get_universe_size, batch_and_upload_coverage_data, \
+    upload_model_data
 from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModelEventType, RiskModelData, \
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
     RiskModelCoverage as CoverageType, RiskModelUniverseIdentifier as UniverseIdentifier, Entitlements, \
@@ -305,8 +306,7 @@ class MarqueeRiskModel(RiskModel):
         """
         if not assets.universe and not end_date:
             end_date = start_date
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+        results = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,
@@ -426,17 +426,17 @@ class MarqueeRiskModel(RiskModel):
         limit_factors = True if assets else False
         measures = [Measure.Factor_Return, Measure.Factor_Name, Measure.Factor_Id]
         if assets:
-            measures.append(Measure.Universe_Factor_Exposure)
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+            measures += [Measure.Universe_Factor_Exposure, Measure.Asset_Universe]
+        results = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,
             measures=measures,
             limit_factors=limit_factors
         ).get('results')
-        factor_data = build_factor_data_dataframe(results, 'factorName') if \
-            format == ReturnFormat.DATA_FRAME else build_factor_data_map(results, 'factorName')
+        factor_data = build_factor_data_map(results, 'factorName')
+        if format == ReturnFormat.DATA_FRAME:
+            factor_data = pd.DataFrame(factor_data)
         return factor_data
 
     def get_factor_returns_by_id(self,
@@ -452,20 +452,21 @@ class MarqueeRiskModel(RiskModel):
         :param format: which format to return the results in
         :return: factor returns by factor id
         """
+
         limit_factors = True if assets else False
         measures = [Measure.Factor_Return, Measure.Factor_Name, Measure.Factor_Id]
         if assets:
-            measures.append(Measure.Universe_Factor_Exposure)
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+            measures += [Measure.Universe_Factor_Exposure, Measure.Asset_Universe]
+        results = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,
             measures=measures,
             limit_factors=limit_factors
         ).get('results')
-        factor_data = build_factor_data_dataframe(results, 'id') if format == ReturnFormat.DATA_FRAME else \
-            build_factor_data_map(results, 'id')
+        factor_data = build_factor_data_map(results, 'id')
+        if format == ReturnFormat.DATA_FRAME:
+            factor_data = pd.DataFrame(factor_data)
         return factor_data
 
     def get_universe_exposure(self,
@@ -483,15 +484,14 @@ class MarqueeRiskModel(RiskModel):
 
         :return: factor exposure for assets requested
         """
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+        results = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,
             measures=[Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
-        universe = assets.universe if assets.universe else results[0].get('assetData').get('universe')
+        universe = pydash.get(results, '0.assetData.universe', [])
         factor_exposure = build_asset_data_map(results, universe, 'factorExposure')
         if format == ReturnFormat.DATA_FRAME:
             factor_exposure = pd.DataFrame.from_dict(
@@ -501,34 +501,6 @@ class MarqueeRiskModel(RiskModel):
                 orient='index'
             )
         return factor_exposure
-
-    def get_total_risk(self,
-                       start_date: dt.date,
-                       end_date: dt.date = None,
-                       assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
-                       format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Get total risk data for existing risk model
-
-        :param start_date: start date for data request
-        :param end_date: end date for data request
-        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
-        :param format: which format to return the results in
-
-        :return: total risk for assets requested
-        """
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Total_Risk, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = assets.universe if assets.universe else results[0].get('assetData').get('universe')
-        total_risk = build_asset_data_map(results, universe, 'totalRisk')
-        if format == ReturnFormat.DATA_FRAME:
-            total_risk = pd.DataFrame(total_risk)
-        return total_risk
 
     def get_specific_risk(self,
                           start_date: dt.date,
@@ -544,15 +516,14 @@ class MarqueeRiskModel(RiskModel):
 
         :return: specific risk for assets requested
         """
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+        results = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,
             measures=[Measure.Specific_Risk, Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
-        universe = assets.universe if assets.universe else results[0].get('assetData').get('universe')
+        universe = pydash.get(results, '0.assetData.universe', [])
         specific_risk = build_asset_data_map(results, universe, 'specificRisk')
         if format == ReturnFormat.DATA_FRAME:
             specific_risk = pd.DataFrame(specific_risk)
@@ -573,15 +544,14 @@ class MarqueeRiskModel(RiskModel):
 
         :return: residual variance for assets requested
          """
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+        results = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,
             measures=[Measure.Residual_Variance, Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
-        universe = assets.universe if assets.universe else results[0].get('assetData').get('universe')
+        universe = pydash.get(results, '0.assetData.universe', [])
         residual_variance = build_asset_data_map(results, universe, 'residualVariance')
         if format == ReturnFormat.DATA_FRAME:
             residual_variance = pd.DataFrame(residual_variance)
@@ -605,6 +575,7 @@ class MarqueeRiskModel(RiskModel):
 
         :return: risk model data
         """
+
         return GsFactorRiskModelApi.get_risk_model_data(
             model_id=self.id,
             start_date=start_date,
@@ -622,19 +593,19 @@ class MarqueeRiskModel(RiskModel):
             issuerSpecificCovariance and factorPortfolios
         :param max_asset_batch_size: size of payload to batch with. Defaults to 20000 assets
 
-        If upload universe is over max_asset_batch_size, will batch and upload data in chunks of 20000 assets
+        If upload universe is over max_asset_batch_size, will batch data in chunks of max_asset_batch_size assets
         """
 
         data = risk_model_data_to_json(data) if type(data) == RiskModelData else data
         target_universe_size = get_universe_size(data)
-        print(target_universe_size)
+        logging.info(f'Target universe size for upload: {target_universe_size}')
         if target_universe_size > max_asset_batch_size:
-            print('Batching uploads due to universe size')
+            logging.info('Batching uploads due to universe size')
             batch_and_upload_partial_data(self.id, data, max_asset_batch_size)
         else:
-            print(GsFactorRiskModelApi.upload_risk_model_data(self.id, data))
+            upload_model_data(self.id, data)
 
-    def upload_partial_data(self, data: RiskModelData, target_universe_size: float = None):
+    def upload_partial_data(self, data: Union[RiskModelData, dict], target_universe_size: float = None):
         """ Upload partial risk model data to existing risk model in Marquee
 
         :param data: partial risk model data for uploading on given date
@@ -643,12 +614,7 @@ class MarqueeRiskModel(RiskModel):
         The models factorData and covarianceMatrix must be uploaded first on given date if repeats in partial
             upload, newer posted data will replace existing data on upload day
         """
-        print(GsFactorRiskModelApi.upload_risk_model_data(
-            self.id,
-            data,
-            partial_upload=True,
-            target_universe_size=target_universe_size)
-        )
+        upload_model_data(self.id, data, partial_upload=True, target_universe_size=target_universe_size)
 
     def upload_asset_coverage_data(self, date: dt.date = None):
         """ Upload to the coverage dataset for given risk model and date
@@ -660,16 +626,11 @@ class MarqueeRiskModel(RiskModel):
         """
         if not date:
             date = self.get_dates()[-1]
-        update_time = dt.datetime.today().strftime("%Y-%m-%dT%H:%M:%SZ")
         gsid_list = self.get_asset_universe(
             date, assets=DataAssetsRequest('gsid', []), format=ReturnFormat.JSON).get(date)
-        request_array = [{'date': date.strftime('%Y-%m-%d'),
-                          'gsid': gsid,
-                          'riskModel': self.id,
-                          'updateTime': update_time} for gsid in set(gsid_list)]
-        list_of_requests = list(divide_request(request_array, 1000))
-        for request_set in list_of_requests:
-            print(GsDataApi.upload_data('RISK_MODEL_ASSET_COVERAGE', request_set))
+        if not gsid_list:
+            raise MqRequestError(404, f'No asset data found on {date}')
+        batch_and_upload_coverage_data(date, gsid_list, self.id)
 
     @classmethod
     def from_target(cls, model):
@@ -783,6 +744,33 @@ class FactorRiskModel(MarqueeRiskModel):
                                                 )
         return cls.from_many_targets(models)
 
+    def get_total_risk(self,
+                       start_date: dt.date,
+                       end_date: dt.date = None,
+                       assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                       format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get total risk data for existing risk model
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: which format to return the results in
+
+        :return: total risk for assets requested
+        """
+        results = self.get_data(
+            start_date=start_date,
+            end_date=end_date,
+            assets=assets,
+            measures=[Measure.Total_Risk, Measure.Asset_Universe],
+            limit_factors=False
+        ).get('results')
+        universe = pydash.get(results, '0.assetData.universe', [])
+        total_risk = build_asset_data_map(results, universe, 'totalRisk')
+        if format == ReturnFormat.DATA_FRAME:
+            total_risk = pd.DataFrame(total_risk)
+        return total_risk
+
     def get_historical_beta(self,
                             start_date: dt.date,
                             end_date: dt.date = None,
@@ -797,15 +785,14 @@ class FactorRiskModel(MarqueeRiskModel):
 
         :return: historical beta for assets requested
         """
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+        results = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,
             measures=[Measure.Historical_Beta, Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
-        universe = assets.universe if assets.universe else results[0].get('assetData').get('universe')
+        universe = pydash.get(results, '0.assetData.universe', [])
         historical_beta = build_asset_data_map(results, universe, 'historicalBeta')
         if format == ReturnFormat.DATA_FRAME:
             historical_beta = pd.DataFrame(historical_beta)
@@ -846,9 +833,8 @@ class FactorRiskModel(MarqueeRiskModel):
         limit_factors = True if assets else False
         measures = [Measure.Covariance_Matrix, Measure.Factor_Name, Measure.Factor_Id]
         if assets:
-            measures.append(Measure.Universe_Factor_Exposure)
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+            measures += [Measure.Universe_Factor_Exposure, Measure.Asset_Universe]
+        results = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,
@@ -873,8 +859,7 @@ class FactorRiskModel(MarqueeRiskModel):
 
         :return: issuer specific covariance matrix (covariance of assets with the same issuer)
         """
-        isc = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+        isc = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,
@@ -899,8 +884,7 @@ class FactorRiskModel(MarqueeRiskModel):
 
         :return: factor portfolios data
         """
-        results = GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
+        results = self.get_data(
             start_date=start_date,
             end_date=end_date,
             assets=assets,

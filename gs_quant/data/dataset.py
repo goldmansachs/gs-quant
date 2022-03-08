@@ -14,14 +14,20 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import webbrowser
 from enum import Enum
 from typing import Iterable, Optional, Union, List, Dict
+from urllib.parse import quote
+import re
 
+import inflection
+import numpy as np
 import pandas as pd
 
 from gs_quant.api.data import DataApi
 from gs_quant.data.fields import Fields
 from gs_quant.errors import MqValueError
+from gs_quant.session import GsSession
 
 
 class Dataset:
@@ -319,3 +325,79 @@ class Dataset:
         >>> upload_response = weather.upload_data(data)
         """
         return self.provider.upload_data(self.id, data)
+
+
+class PTPDataset(Dataset):
+
+    """
+    Special class for and viewing PTP-style datasets.
+
+    PTP provides a wrapper around the data service that makes it easy to define datasets, upload data, and plot them in
+    PlotTool Pro. PTP datasets can only contain numeric data with a pd.DatetimeIndex (will throw an error otherwise).
+    Currently, we only support EOD data; realtime data is not allowed.
+
+    (Technically, PTP datasets are datasets with one symbol dimension, which is the dataset ID. Tags indicate that they
+    are PTP-style datasets and can be viewed in the 'Datasets' tab in PTP).
+
+    :param series: pd.DataFrame or pd.Series with a pd.DatetimeIndex containing EOD numeric data.
+    :param name: Name of dataset (default "GSQ Default")
+
+    **Example**
+
+    >>> from gs_quant.data import PTPDataset
+    >>> import datetime
+    >>> a = pd.Series(range(50), index=pd.date_range(start=datetime.date(2021, 1, 1), periods=50, freq='D'))
+    >>> dataset = PTPDataset(a, 'My Dataset')
+    >>> dataset.sync()
+    >>> print(dataset.plot())
+    >>> dataset.delete()
+    """
+    def __init__(self, series: Union[pd.Series, pd.DataFrame], name: str = None):
+        if isinstance(series, pd.Series):
+            series = pd.DataFrame({series.attrs.get('name', 'values'): series})
+        if not isinstance(series.index, pd.DatetimeIndex):
+            raise MqValueError('PTP datasets require a Pandas object with a DatetimeIndex.')
+        if isinstance(series, pd.DataFrame) and \
+                len(series.select_dtypes(include=np.number).columns) != len(series.columns):
+            raise MqValueError('PTP datasets must contain only numbers.')
+
+        self._series = series
+        self._name = name
+        super(PTPDataset, self).__init__('', None)
+
+    def sync(self):
+        """
+        Upload data and save dataset.
+        """
+        temp_ser = self._series.assign(date=self._series.index.to_series().apply(dt.date.isoformat))
+        data = temp_ser.to_dict('records')
+        kwargs = dict(data=data, name=self._name if self._name else 'GSQ Default',
+                      fields=list(self._series.columns))
+        res = GsSession.current._post('/plots/datasets', payload=kwargs)
+        self._fields = {key: inflection.underscore(field) for key, field in res['fieldMap'].items() if field not in
+                        ['updateTime', 'date', 'datasetId']}
+        self._id = res['dataset']['id']
+        super(PTPDataset, self).__init__(self._id, None)
+
+    def plot(self, open_in_browser: bool = True, field: str = None) -> str:
+        """
+        Generate transient plot expression to view dataset in PTP. Copying and pasting the transient expression
+        will show your data in PTP.
+
+        :param open_in_browser: whether to use webbrowser to open the generated plot expression in your default browser
+            (default True)
+        :param field: if passed, only this field will be included in the transient plot (default None)
+        :return: transient plot expression.
+        """
+        if not field:
+            fields = self._fields.values()
+        else:
+            fields = [field]
+        fields = [inflection.underscore(re.sub(r'([a-zA-Z])(\d)', r'\1_\2', f)) for f in fields]
+        domain = GsSession.current.domain.replace('marquee.web', 'marquee')  # remove .web from prod domain
+        expression = f'{domain}/s/plottool/transient?expr=Dataset("{self._id}").{fields[0]}()'
+        for f in fields[1:]:
+            expression += quote("\n") + f'Dataset("{self._id}").{f}()'
+        if open_in_browser:
+            webbrowser.open(expression)
+        return expression

@@ -22,45 +22,43 @@ from dataclasses import dataclass, field
 from dataclasses_json import LetterCase, config, dataclass_json
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CountryXref(Base):
-    alpha2: str = None
-    alpha3: str = None
-    country_code: str = None
-    bbid: Optional[str] = None
+    alpha2: str = field(default=None, metadata=field_metadata)
+    alpha3: str = field(default=None, metadata=field_metadata)
+    country_code: str = field(default=None, metadata=field_metadata)
+    bbid: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Country(Base):
-    name: str = None
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    xref: CountryXref = None
-    region: str = None
-    sub_region: str = None
-    region_code: str = None
-    sub_region_code: str = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_time: Optional[datetime.datetime] = None
-    created_by_id: Optional[str] = None
-    last_updated_by_id: Optional[str] = None
-    owner_id: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
+    name: str = field(default=None, metadata=field_metadata)
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    xref: CountryXref = field(default=None, metadata=field_metadata)
+    region: str = field(default=None, metadata=field_metadata)
+    sub_region: str = field(default=None, metadata=field_metadata)
+    region_code: str = field(default=None, metadata=field_metadata)
+    sub_region_code: str = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Subdivision(Base):
-    name: str = None
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    country_id: str = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_time: Optional[datetime.datetime] = None
-    created_by_id: Optional[str] = None
-    last_updated_by_id: Optional[str] = None
-    owner_id: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
+    name: str = field(default=None, metadata=field_metadata)
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    country_id: str = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)

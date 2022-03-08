@@ -77,303 +77,298 @@ class HedgerConstraintPrioritySetting(EnumBase, Enum):
     _5 = '5'    
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetConstraint(Base):
-    asset_id: str = None
-    max_: float = field(default=None, metadata=config(field_name='max'))
-    min_: float = field(default=None, metadata=config(field_name='min'))
+    asset_id: str = field(default=None, metadata=field_metadata)
+    max_: float = field(default=None, metadata=config(field_name='max', exclude=exclude_none))
+    min_: float = field(default=None, metadata=config(field_name='min', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ClassificationConstraint(Base):
-    type_: str = field(default=None, metadata=config(field_name='type'))
-    name: str = None
-    max_: float = field(default=None, metadata=config(field_name='max'))
-    min_: float = field(default=None, metadata=config(field_name='min'))
+    type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    name: str = field(default=None, metadata=field_metadata)
+    max_: float = field(default=None, metadata=config(field_name='max', exclude=exclude_none))
+    min_: float = field(default=None, metadata=config(field_name='min', exclude=exclude_none))
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ESGConstraint(Base):
-    name: str = None
-    max_: float = field(default=None, metadata=config(field_name='max'))
-    min_: float = field(default=None, metadata=config(field_name='min'))
+    name: str = field(default=None, metadata=field_metadata)
+    max_: float = field(default=None, metadata=config(field_name='max', exclude=exclude_none))
+    min_: float = field(default=None, metadata=config(field_name='min', exclude=exclude_none))
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorConstraint(Base):
-    factor: str = None
-    exposure: float = None
+    factor: str = field(default=None, metadata=field_metadata)
+    exposure: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorExposure(Base):
-    factor: str = None
-    exposure: float = None
+    factor: str = field(default=None, metadata=field_metadata)
+    exposure: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgerComparisonProperties(Base):
-    hedge_value_type: str = None
-    hedge_value: float = None
+    hedge_value_type: str = field(default=None, metadata=field_metadata)
+    hedge_value: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorExposures(Base):
-    country: Tuple[FactorExposure, ...] = None
-    industry: Tuple[FactorExposure, ...] = None
-    sector: Tuple[FactorExposure, ...] = None
-    style: Tuple[FactorExposure, ...] = None
+    country: Tuple[FactorExposure, ...] = field(default=None, metadata=field_metadata)
+    industry: Tuple[FactorExposure, ...] = field(default=None, metadata=field_metadata)
+    sector: Tuple[FactorExposure, ...] = field(default=None, metadata=field_metadata)
+    style: Tuple[FactorExposure, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgeUniverse(Base):
-    asset_ids: Optional[Tuple[str, ...]] = None
-    asset_types: Optional[Tuple[HedgeUniverseAssetType, ...]] = None
+    asset_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    asset_types: Optional[Tuple[HedgeUniverseAssetType, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgerConstraintPrioritySettings(Base):
-    min_sector_weights: Optional[HedgerConstraintPrioritySetting] = None
-    max_sector_weights: Optional[HedgerConstraintPrioritySetting] = None
-    min_industry_weights: Optional[HedgerConstraintPrioritySetting] = None
-    max_industry_weights: Optional[HedgerConstraintPrioritySetting] = None
-    min_region_weights: Optional[HedgerConstraintPrioritySetting] = None
-    max_region_weights: Optional[HedgerConstraintPrioritySetting] = None
-    min_country_weights: Optional[HedgerConstraintPrioritySetting] = None
-    max_country_weights: Optional[HedgerConstraintPrioritySetting] = None
-    style_exposures: Optional[HedgerConstraintPrioritySetting] = None
-    country_exposures: Optional[HedgerConstraintPrioritySetting] = None
-    region_exposures: Optional[HedgerConstraintPrioritySetting] = None
-    industry_exposures: Optional[HedgerConstraintPrioritySetting] = None
-    sector_exposures: Optional[HedgerConstraintPrioritySetting] = None
+    min_sector_weights: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    max_sector_weights: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    min_industry_weights: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    max_industry_weights: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    min_region_weights: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    max_region_weights: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    min_country_weights: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    max_country_weights: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    style_exposures: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    country_exposures: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    region_exposures: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    industry_exposures: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    sector_exposures: Optional[HedgerConstraintPrioritySetting] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgeConstituent(Base):
-    asset_id: str = None
-    name: str = None
-    weight: float = None
-    currency: Currency = None
-    country: Optional[str] = None
-    correlation: Optional[float] = None
-    transaction_cost: Optional[float] = None
-    marginal_cost: Optional[float] = None
-    borrow_cost: Optional[float] = None
-    shares: Optional[float] = None
-    price: Optional[float] = None
-    multiplier: Optional[float] = None
-    notional: Optional[float] = None
-    bbid: Optional[str] = None
-    adv_percentage: Optional[float] = None
-    sector: Optional[str] = None
-    industry: Optional[str] = None
+    asset_id: str = field(default=None, metadata=field_metadata)
+    name: str = field(default=None, metadata=field_metadata)
+    weight: float = field(default=None, metadata=field_metadata)
+    currency: Currency = field(default=None, metadata=field_metadata)
+    country: Optional[str] = field(default=None, metadata=field_metadata)
+    correlation: Optional[float] = field(default=None, metadata=field_metadata)
+    transaction_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    marginal_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    borrow_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    shares: Optional[float] = field(default=None, metadata=field_metadata)
+    price: Optional[float] = field(default=None, metadata=field_metadata)
+    multiplier: Optional[float] = field(default=None, metadata=field_metadata)
+    notional: Optional[float] = field(default=None, metadata=field_metadata)
+    bbid: Optional[str] = field(default=None, metadata=field_metadata)
+    adv_percentage: Optional[float] = field(default=None, metadata=field_metadata)
+    sector: Optional[str] = field(default=None, metadata=field_metadata)
+    industry: Optional[str] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgerResultPositions(Base):
-    beta_exposure: float = None
-    daily_va_r: float = None
-    factor_exposures: FactorExposures = None
-    specific_exposure: float = None
-    systematic_exposure: float = None
-    total_risk: float = None
-    volatility: float = None
-    net_exposure: float = None
-    constituents: Optional[Tuple[HedgeConstituent, ...]] = None
-    number_of_positions: Optional[float] = None
-    cumulative_pnl: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
-    transaction_cost: Optional[float] = None
-    borrow_cost_bps: Optional[float] = None
-    max_drawdown: Optional[float] = None
-    gross_exposure: Optional[float] = None
-    long_exposure: Optional[float] = None
-    short_exposure: Optional[float] = None
-    tracking_error: Optional[float] = None
-    correlation: Optional[float] = None
-    exposure_overlap_with_target: Optional[float] = None
-    total_pnl: Optional[float] = None
-    turnover_percentage: Optional[float] = None
+    beta_exposure: float = field(default=None, metadata=field_metadata)
+    daily_va_r: float = field(default=None, metadata=field_metadata)
+    factor_exposures: FactorExposures = field(default=None, metadata=field_metadata)
+    specific_exposure: float = field(default=None, metadata=field_metadata)
+    systematic_exposure: float = field(default=None, metadata=field_metadata)
+    total_risk: float = field(default=None, metadata=field_metadata)
+    volatility: float = field(default=None, metadata=field_metadata)
+    net_exposure: float = field(default=None, metadata=field_metadata)
+    constituents: Optional[Tuple[HedgeConstituent, ...]] = field(default=None, metadata=field_metadata)
+    number_of_positions: Optional[float] = field(default=None, metadata=field_metadata)
+    cumulative_pnl: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    transaction_cost: Optional[float] = field(default=None, metadata=field_metadata)
+    borrow_cost_bps: Optional[float] = field(default=None, metadata=field_metadata)
+    max_drawdown: Optional[float] = field(default=None, metadata=field_metadata)
+    gross_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    long_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    short_exposure: Optional[float] = field(default=None, metadata=field_metadata)
+    tracking_error: Optional[float] = field(default=None, metadata=field_metadata)
+    correlation: Optional[float] = field(default=None, metadata=field_metadata)
+    exposure_overlap_with_target: Optional[float] = field(default=None, metadata=field_metadata)
+    total_pnl: Optional[float] = field(default=None, metadata=field_metadata)
+    turnover_percentage: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgeBenchmark(Base):
-    asset_id: str = None
-    cumulative_pnl: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = None
+    asset_id: str = field(default=None, metadata=field_metadata)
+    cumulative_pnl: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgeGetManyRequestPathSchema(Base):
-    limit: Optional[Tuple[str, ...]] = None
-    offset: Optional[Tuple[str, ...]] = None
-    scroll: Optional[Tuple[str, ...]] = None
-    scroll_id: Optional[Tuple[str, ...]] = None
-    ids: Optional[Tuple[str, ...]] = None
-    order_by: Optional[Tuple[Union[DictBase, str], ...]] = None
-    hedge_tracking_error: Optional[Tuple[float, ...]] = None
-    hedge_volatility: Optional[Tuple[float, ...]] = None
-    tags: Optional[Tuple[str, ...]] = None
-    last_updated_by_id: Optional[Tuple[str, ...]] = None
-    created_by_id: Optional[Tuple[str, ...]] = None
-    target_notional: Optional[Tuple[float, ...]] = None
-    owner_id: Optional[Tuple[str, ...]] = None
-    hedge_annualized_volatility: Optional[Tuple[float, ...]] = None
-    name: Optional[Tuple[str, ...]] = None
-    description: Optional[Tuple[str, ...]] = None
-    id_: Optional[Tuple[str, ...]] = field(default=None, metadata=config(field_name='id'))
-    objective: Optional[Tuple[str, ...]] = None
-    hedge_notional: Optional[Tuple[float, ...]] = None
+    limit: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    offset: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    scroll: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    scroll_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    order_by: Optional[Tuple[Union[DictBase, str], ...]] = field(default=None, metadata=field_metadata)
+    hedge_tracking_error: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    hedge_volatility: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    target_notional: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    hedge_annualized_volatility: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    description: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    id_: Optional[Tuple[str, ...]] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    objective: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    hedge_notional: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PerformanceHedgeResult(Base):
-    target: DictBase = None
-    hedge: Optional[DictBase] = None
-    hedged_target: Optional[DictBase] = None
-    benchmarks: Optional[Tuple[DictBase, ...]] = None
+    target: DictBase = field(default=None, metadata=field_metadata)
+    hedge: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    hedged_target: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    benchmarks: Optional[Tuple[DictBase, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgeResult(Base):
-    hedge: FactorHedgerResultPositions = None
-    hedged_target: FactorHedgerResultPositions = None
-    target: Optional[FactorHedgerResultPositions] = None
+    hedge: FactorHedgerResultPositions = field(default=None, metadata=field_metadata)
+    hedged_target: FactorHedgerResultPositions = field(default=None, metadata=field_metadata)
+    target: Optional[FactorHedgerResultPositions] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgerComparison(Base):
-    entity_id: str = None
-    entity_type: HedgerComparisonType = None
-    hedge_properties: HedgerComparisonProperties = None
-    result: Optional[DictBase] = None
+    entity_id: str = field(default=None, metadata=field_metadata)
+    entity_type: HedgerComparisonType = field(default=None, metadata=field_metadata)
+    hedge_properties: HedgerComparisonProperties = field(default=None, metadata=field_metadata)
+    result: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Target(Base):
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    positions: Optional[Tuple[Position, ...]] = None
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    positions: Optional[Tuple[Position, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgeParameters(Base):
-    risk_model: str = None
-    target_notional: float = None
-    hedge_notional: float = None
-    hedge_target: Target = None
-    hedge_universe: FactorHedgeUniverse = None
-    hedge_date: datetime.date = None
-    backtest_start_date: datetime.date = None
-    backtest_end_date: datetime.date = None
-    fx_hedged: Optional[bool] = None
-    exclude_target_assets: Optional[bool] = None
-    exclude_corporate_actions: Optional[bool] = None
-    exclude_corporate_actions_types: Optional[Tuple[CorporateActionsTypes, ...]] = None
-    exclude_hard_to_borrow_assets: Optional[bool] = None
-    exclude_restricted_assets: Optional[bool] = None
-    max_adv_percentage: Optional[float] = None
-    explode_universe: Optional[bool] = None
-    min_names: Optional[float] = None
-    max_names: Optional[float] = None
-    min_weight: Optional[float] = None
-    max_weight: Optional[float] = None
-    min_market_cap: Optional[float] = None
-    max_market_cap: Optional[float] = None
-    market_participation_rate: Optional[float] = 10
-    asset_constraints: Optional[Tuple[AssetConstraint, ...]] = None
-    factor_constraints: Optional[Tuple[FactorConstraint, ...]] = None
-    classification_constraints: Optional[Tuple[ClassificationConstraint, ...]] = None
-    esg_constraints: Optional[Tuple[ESGConstraint, ...]] = None
-    constraint_priority_settings: Optional[FactorHedgerConstraintPrioritySettings] = None
-    comparisons: Optional[Tuple[HedgerComparison, ...]] = None
-    turnover_portfolio_id: Optional[str] = None
-    max_turnover_percentage: Optional[float] = None
+    risk_model: str = field(default=None, metadata=field_metadata)
+    target_notional: float = field(default=None, metadata=field_metadata)
+    hedge_notional: float = field(default=None, metadata=field_metadata)
+    hedge_target: Target = field(default=None, metadata=field_metadata)
+    hedge_universe: FactorHedgeUniverse = field(default=None, metadata=field_metadata)
+    hedge_date: datetime.date = field(default=None, metadata=field_metadata)
+    backtest_start_date: datetime.date = field(default=None, metadata=field_metadata)
+    backtest_end_date: datetime.date = field(default=None, metadata=field_metadata)
+    fx_hedged: Optional[bool] = field(default=None, metadata=field_metadata)
+    exclude_target_assets: Optional[bool] = field(default=None, metadata=field_metadata)
+    exclude_corporate_actions: Optional[bool] = field(default=None, metadata=field_metadata)
+    exclude_corporate_actions_types: Optional[Tuple[CorporateActionsTypes, ...]] = field(default=None, metadata=field_metadata)
+    exclude_hard_to_borrow_assets: Optional[bool] = field(default=None, metadata=field_metadata)
+    exclude_restricted_assets: Optional[bool] = field(default=None, metadata=field_metadata)
+    max_adv_percentage: Optional[float] = field(default=None, metadata=field_metadata)
+    explode_universe: Optional[bool] = field(default=None, metadata=field_metadata)
+    min_names: Optional[float] = field(default=None, metadata=field_metadata)
+    max_names: Optional[float] = field(default=None, metadata=field_metadata)
+    min_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    max_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    min_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
+    max_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
+    market_participation_rate: Optional[float] = field(default=10, metadata=field_metadata)
+    asset_constraints: Optional[Tuple[AssetConstraint, ...]] = field(default=None, metadata=field_metadata)
+    factor_constraints: Optional[Tuple[FactorConstraint, ...]] = field(default=None, metadata=field_metadata)
+    classification_constraints: Optional[Tuple[ClassificationConstraint, ...]] = field(default=None, metadata=field_metadata)
+    esg_constraints: Optional[Tuple[ESGConstraint, ...]] = field(default=None, metadata=field_metadata)
+    constraint_priority_settings: Optional[FactorHedgerConstraintPrioritySettings] = field(default=None, metadata=field_metadata)
+    comparisons: Optional[Tuple[HedgerComparison, ...]] = field(default=None, metadata=field_metadata)
+    turnover_portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    max_turnover_percentage: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PerformanceHedgeParameters(Base):
-    hedge_target: Target = None
-    universe: Tuple[str, ...] = None
-    notional: float = None
-    observation_start_date: datetime.date = None
-    observation_end_date: datetime.date = None
-    backtest_start_date: Optional[datetime.date] = None
-    backtest_end_date: Optional[datetime.date] = None
-    sampling_period: Optional[str] = 'Weekly'
-    max_leverage: Optional[float] = None
-    percentage_in_cash: Optional[float] = None
-    explode_universe: Optional[bool] = None
-    exclude_target_assets: Optional[bool] = None
-    exclude_corporate_actions: Optional[bool] = None
-    exclude_corporate_actions_types: Optional[Tuple[CorporateActionsTypes, ...]] = None
-    exclude_hard_to_borrow_assets: Optional[bool] = None
-    exclude_restricted_assets: Optional[bool] = None
-    max_adv_percentage: Optional[float] = None
-    max_return_deviation: Optional[float] = None
-    max_weight: Optional[float] = None
-    min_market_cap: Optional[float] = None
-    max_market_cap: Optional[float] = None
-    market_participation_rate: Optional[float] = 10
-    asset_constraints: Optional[Tuple[AssetConstraint, ...]] = None
-    classification_constraints: Optional[Tuple[ClassificationConstraint, ...]] = None
-    esg_constraints: Optional[Tuple[ESGConstraint, ...]] = None
-    benchmarks: Optional[Tuple[str, ...]] = None
-    use_machine_learning: Optional[bool] = False
-    lasso_weight: Optional[float] = None
-    ridge_weight: Optional[float] = None
+    hedge_target: Target = field(default=None, metadata=field_metadata)
+    universe: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    notional: float = field(default=None, metadata=field_metadata)
+    observation_start_date: datetime.date = field(default=None, metadata=field_metadata)
+    observation_end_date: datetime.date = field(default=None, metadata=field_metadata)
+    backtest_start_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    backtest_end_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    sampling_period: Optional[str] = field(default='Weekly', metadata=field_metadata)
+    max_leverage: Optional[float] = field(default=None, metadata=field_metadata)
+    percentage_in_cash: Optional[float] = field(default=None, metadata=field_metadata)
+    explode_universe: Optional[bool] = field(default=None, metadata=field_metadata)
+    exclude_target_assets: Optional[bool] = field(default=None, metadata=field_metadata)
+    exclude_corporate_actions: Optional[bool] = field(default=None, metadata=field_metadata)
+    exclude_corporate_actions_types: Optional[Tuple[CorporateActionsTypes, ...]] = field(default=None, metadata=field_metadata)
+    exclude_hard_to_borrow_assets: Optional[bool] = field(default=None, metadata=field_metadata)
+    exclude_restricted_assets: Optional[bool] = field(default=None, metadata=field_metadata)
+    max_adv_percentage: Optional[float] = field(default=None, metadata=field_metadata)
+    max_return_deviation: Optional[float] = field(default=None, metadata=field_metadata)
+    max_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    min_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
+    max_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
+    market_participation_rate: Optional[float] = field(default=10, metadata=field_metadata)
+    asset_constraints: Optional[Tuple[AssetConstraint, ...]] = field(default=None, metadata=field_metadata)
+    classification_constraints: Optional[Tuple[ClassificationConstraint, ...]] = field(default=None, metadata=field_metadata)
+    esg_constraints: Optional[Tuple[ESGConstraint, ...]] = field(default=None, metadata=field_metadata)
+    benchmarks: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    use_machine_learning: Optional[bool] = field(default=False, metadata=field_metadata)
+    lasso_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    ridge_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Hedge(Base):
-    name: str = None
-    parameters: DictBase = None
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    owner_id: Optional[str] = None
-    created_by_id: Optional[str] = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_by_id: Optional[str] = None
-    last_updated_time: Optional[datetime.datetime] = None
-    entitlements: Optional[Entitlements] = None
-    tags: Optional[Tuple[str, ...]] = None
-    description: Optional[str] = None
-    objective: Optional[HedgeObjective] = None
-    result: Optional[DictBase] = None
-    comparison_results: Optional[Tuple[HedgerComparison, ...]] = None
+    name: str = field(default=None, metadata=field_metadata)
+    parameters: DictBase = field(default=None, metadata=field_metadata)
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    objective: Optional[HedgeObjective] = field(default=None, metadata=field_metadata)
+    result: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    comparison_results: Optional[Tuple[HedgerComparison, ...]] = field(default=None, metadata=field_metadata)

@@ -169,7 +169,7 @@ class GsReportApi:
                                      order_type: OrderType = None) -> dict:
         url = f'/risk/factors/reports/{risk_report_id}/tables?'
         if mode is not None:
-            url += f'&mode={mode}'
+            url += f'&mode={mode.value}'
         if currency is not None:
             url += f'&currency={currency.value}'
         if date is not None:

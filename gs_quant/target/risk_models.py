@@ -103,151 +103,150 @@ class RiskModelUniverseIdentifierRequest(EnumBase, Enum):
     primeId = 'primeId'    
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Factor(Base):
-    identifier: str = None
-    type_: str = field(default=None, metadata=config(field_name='type'))
-    description: Optional[str] = None
-    glossary_description: Optional[str] = None
-    tooltip: Optional[str] = None
-    created_by_id: Optional[str] = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_by_id: Optional[str] = None
-    last_updated_time: Optional[datetime.datetime] = None
+    identifier: str = field(default=None, metadata=field_metadata)
+    type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    glossary_description: Optional[str] = field(default=None, metadata=field_metadata)
+    tooltip: Optional[str] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelCalendar(Base):
-    business_dates: Tuple[datetime.date, ...] = None
-    created_by_id: Optional[str] = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_by_id: Optional[str] = None
-    last_updated_time: Optional[datetime.datetime] = None
+    business_dates: Tuple[datetime.date, ...] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelFactorData(Base):
-    factor_id: str = None
-    factor_name: str = None
-    factor_category_id: str = None
-    factor_category: str = None
-    factor_return: float = None
+    factor_id: str = field(default=None, metadata=field_metadata)
+    factor_name: str = field(default=None, metadata=field_metadata)
+    factor_category_id: str = field(default=None, metadata=field_metadata)
+    factor_category: str = field(default=None, metadata=field_metadata)
+    factor_return: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 RiskModelFactorExposure = Dict[str, float]
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelFactorPortfolio(Base):
-    factor_id: str = None
-    weights: Tuple[float, ...] = None
+    factor_id: str = field(default=None, metadata=field_metadata)
+    weights: Tuple[float, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelIssuerSpecificCovarianceData(Base):
-    universe_id1: Tuple[str, ...] = None
-    universe_id2: Tuple[str, ...] = None
-    covariance: Tuple[float, ...] = None
+    universe_id1: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    universe_id2: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    covariance: Tuple[float, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelAssetData(Base):
-    universe: Tuple[str, ...] = None
-    specific_risk: Tuple[float, ...] = None
-    factor_exposure: Tuple[RiskModelFactorExposure, ...] = None
-    specific_return: Optional[Tuple[float, ...]] = None
-    residual_variance: Optional[Tuple[float, ...]] = None
-    historical_beta: Optional[Tuple[float, ...]] = None
-    total_risk: Optional[Tuple[float, ...]] = None
+    universe: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    specific_risk: Tuple[float, ...] = field(default=None, metadata=field_metadata)
+    factor_exposure: Tuple[RiskModelFactorExposure, ...] = field(default=None, metadata=field_metadata)
+    specific_return: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    residual_variance: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    historical_beta: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    total_risk: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelCoverageRequest(Base):
-    asset_ids: Optional[Tuple[str, ...]] = None
-    as_of_date: Optional[datetime.date] = None
-    sort_by_term: Optional[RiskModelTerm] = None
+    asset_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    as_of_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    sort_by_term: Optional[RiskModelTerm] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelDataAssetsRequest(Base):
-    identifier: RiskModelUniverseIdentifierRequest = None
-    universe: Tuple[str, ...] = None
+    identifier: RiskModelUniverseIdentifierRequest = field(default=None, metadata=field_metadata)
+    universe: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelFactorPortfoliosData(Base):
-    universe: Tuple[str, ...] = None
-    portfolio: Tuple[RiskModelFactorPortfolio, ...] = None
+    universe: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    portfolio: Tuple[RiskModelFactorPortfolio, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModel(Base):
-    coverage: RiskModelCoverage = None
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    name: str = None
-    term: RiskModelTerm = None
-    universe_identifier: RiskModelUniverseIdentifier = None
-    vendor: str = None
-    version: float = None
-    created_by_id: Optional[str] = None
-    created_time: Optional[datetime.datetime] = None
-    description: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    last_updated_by_id: Optional[str] = None
-    last_updated_time: Optional[datetime.datetime] = None
-    expected_update_time: Optional[str] = None
-    owner_id: Optional[str] = None
-    type_: Optional[RiskModelType] = field(default=None, metadata=config(field_name='type'))
+    coverage: RiskModelCoverage = field(default=None, metadata=field_metadata)
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    name: str = field(default=None, metadata=field_metadata)
+    term: RiskModelTerm = field(default=None, metadata=field_metadata)
+    universe_identifier: RiskModelUniverseIdentifier = field(default=None, metadata=field_metadata)
+    vendor: str = field(default=None, metadata=field_metadata)
+    version: float = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    expected_update_time: Optional[str] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    type_: Optional[RiskModelType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelData(Base):
-    date: datetime.date = None
-    asset_data: Optional[RiskModelAssetData] = None
-    factor_data: Optional[Tuple[RiskModelFactorData, ...]] = None
-    covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = None
-    issuer_specific_covariance: Optional[RiskModelIssuerSpecificCovarianceData] = None
-    factor_portfolios: Optional[RiskModelFactorPortfoliosData] = None
+    date: datetime.date = field(default=None, metadata=field_metadata)
+    asset_data: Optional[RiskModelAssetData] = field(default=None, metadata=field_metadata)
+    factor_data: Optional[Tuple[RiskModelFactorData, ...]] = field(default=None, metadata=field_metadata)
+    covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = field(default=None, metadata=field_metadata)
+    issuer_specific_covariance: Optional[RiskModelIssuerSpecificCovarianceData] = field(default=None, metadata=field_metadata)
+    factor_portfolios: Optional[RiskModelFactorPortfoliosData] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelDataRequest(Base):
-    start_date: datetime.date = None
-    end_date: datetime.date = None
-    assets: Optional[RiskModelDataAssetsRequest] = None
-    measures: Optional[Tuple[RiskModelDataMeasure, ...]] = None
-    limit_factors: Optional[bool] = True
-    format_: Optional[str] = field(default='Json', metadata=config(field_name='format'))
+    start_date: datetime.date = field(default=None, metadata=field_metadata)
+    end_date: datetime.date = field(default=None, metadata=field_metadata)
+    assets: Optional[RiskModelDataAssetsRequest] = field(default=None, metadata=field_metadata)
+    measures: Optional[Tuple[RiskModelDataMeasure, ...]] = field(default=None, metadata=field_metadata)
+    limit_factors: Optional[bool] = field(default=True, metadata=field_metadata)
+    format_: Optional[str] = field(default='Json', metadata=config(field_name='format', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelDataResponse(Base):
-    results: Tuple[RiskModelData, ...] = None
-    total_results: int = None
-    missing_dates: Optional[Tuple[datetime.date, ...]] = None
+    results: Tuple[RiskModelData, ...] = field(default=None, metadata=field_metadata)
+    total_results: int = field(default=None, metadata=field_metadata)
+    missing_dates: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)

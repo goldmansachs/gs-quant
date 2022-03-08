@@ -22,105 +22,104 @@ from dataclasses import dataclass, field
 from dataclasses_json import LetterCase, config, dataclass_json
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerRequestStringOptions(Base):
-    options: tuple = None
-    type_: str = field(default=None, metadata=config(field_name='type'))
+    options: tuple = field(default=None, metadata=field_metadata)
+    type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCarbonRequestFilter(Base):
-    science_based_target: Optional[AssetScreenerRequestStringOptions] = None
-    net_zero_emissions_target: Optional[AssetScreenerRequestStringOptions] = None
-    emissions_intensity_enterprise_value: Optional[AssetScreenerRequestFilterLimits] = None
-    emissions_intensity_revenue: Optional[AssetScreenerRequestFilterLimits] = None
+    science_based_target: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    net_zero_emissions_target: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    emissions_intensity_enterprise_value: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    emissions_intensity_revenue: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCreditRequestFilters(Base):
-    face_value: Optional[float] = None
-    direction: Optional[str] = None
-    liquidity_score: Optional[AssetScreenerRequestFilterLimits] = None
-    gs_charge_bps: Optional[AssetScreenerRequestFilterLimits] = None
-    gs_charge_dollars: Optional[AssetScreenerRequestFilterLimits] = None
-    duration: Optional[AssetScreenerRequestFilterLimits] = None
-    carbon_data: Optional[AssetScreenerCarbonRequestFilter] = None
-    issue_date: Optional[AssetScreenerRequestFilterDateLimits] = None
-    yield_: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=config(field_name='yield'))
-    spread: Optional[AssetScreenerRequestFilterLimits] = None
-    z_spread: Optional[AssetScreenerRequestFilterLimits] = None
-    g_spread: Optional[AssetScreenerRequestFilterLimits] = None
-    mid_price: Optional[AssetScreenerRequestFilterLimits] = None
-    maturity: Optional[AssetScreenerRequestFilterLimits] = None
-    amount_outstanding: Optional[AssetScreenerRequestFilterLimits] = None
-    rating: Optional[AssetScreenerCreditStandardAndPoorsRatingOptions] = None
-    seniority: Optional[AssetScreenerRequestStringOptions] = None
-    ticker: Optional[AssetScreenerRequestStringOptions] = None
-    cusip: Optional[AssetScreenerRequestStringOptions] = None
-    isin: Optional[AssetScreenerRequestStringOptions] = None
-    currency: Optional[AssetScreenerRequestStringOptions] = None
-    region: Optional[AssetScreenerRequestStringOptions] = None
-    sector: Optional[AssetScreenerRequestStringOptions] = None
+    face_value: Optional[float] = field(default=None, metadata=field_metadata)
+    direction: Optional[str] = field(default=None, metadata=field_metadata)
+    liquidity_score: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    gs_charge_bps: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    gs_charge_dollars: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    duration: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    carbon_data: Optional[AssetScreenerCarbonRequestFilter] = field(default=None, metadata=field_metadata)
+    issue_date: Optional[AssetScreenerRequestFilterDateLimits] = field(default=None, metadata=field_metadata)
+    yield_: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=config(field_name='yield', exclude=exclude_none))
+    spread: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    z_spread: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    g_spread: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    mid_price: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    maturity: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    amount_outstanding: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    rating: Optional[AssetScreenerCreditStandardAndPoorsRatingOptions] = field(default=None, metadata=field_metadata)
+    seniority: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    ticker: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    cusip: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    isin: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    currency: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    region: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    sector: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCreditResponseItem(Base):
-    asset_id: Optional[str] = None
-    name: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    entitlement_exclusions: Optional[EntitlementExclusions] = None
-    cusip: Optional[str] = None
-    isin: Optional[str] = None
-    bbid: Optional[str] = None
-    currency: Optional[Currency] = None
-    region: Optional[Region] = None
-    seniority: Optional[str] = None
-    ticker: Optional[str] = None
-    rating_standard_and_poors: Optional[str] = None
-    gs_liquidity_score: Optional[float] = None
-    amount_outstanding: Optional[float] = None
-    maturity: Optional[float] = None
-    bval_mid_price: Optional[float] = None
-    yield_to_convention: Optional[float] = None
-    modified_duration: Optional[float] = None
-    spread_to_benchmark: Optional[float] = None
-    g_spread: Optional[float] = None
-    z_spread: Optional[float] = None
-    charge_in_dollars: Optional[str] = None
-    charge_in_bps: Optional[str] = None
-    science_based_target: Optional[str] = None
-    net_zero_emissions_target: Optional[str] = None
-    emissions_intensity_enterprise_value: Optional[float] = None
-    emissions_intensity_revenue: Optional[float] = None
-    direction: Optional[str] = None
-    face_value: Optional[float] = None
+    asset_id: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    cusip: Optional[str] = field(default=None, metadata=field_metadata)
+    isin: Optional[str] = field(default=None, metadata=field_metadata)
+    bbid: Optional[str] = field(default=None, metadata=field_metadata)
+    currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    region: Optional[Region] = field(default=None, metadata=field_metadata)
+    seniority: Optional[str] = field(default=None, metadata=field_metadata)
+    ticker: Optional[str] = field(default=None, metadata=field_metadata)
+    rating_standard_and_poors: Optional[str] = field(default=None, metadata=field_metadata)
+    gs_liquidity_score: Optional[float] = field(default=None, metadata=field_metadata)
+    amount_outstanding: Optional[float] = field(default=None, metadata=field_metadata)
+    maturity: Optional[float] = field(default=None, metadata=field_metadata)
+    bval_mid_price: Optional[float] = field(default=None, metadata=field_metadata)
+    yield_to_convention: Optional[float] = field(default=None, metadata=field_metadata)
+    modified_duration: Optional[float] = field(default=None, metadata=field_metadata)
+    spread_to_benchmark: Optional[float] = field(default=None, metadata=field_metadata)
+    g_spread: Optional[float] = field(default=None, metadata=field_metadata)
+    z_spread: Optional[float] = field(default=None, metadata=field_metadata)
+    charge_in_dollars: Optional[str] = field(default=None, metadata=field_metadata)
+    charge_in_bps: Optional[str] = field(default=None, metadata=field_metadata)
+    science_based_target: Optional[str] = field(default=None, metadata=field_metadata)
+    net_zero_emissions_target: Optional[str] = field(default=None, metadata=field_metadata)
+    emissions_intensity_enterprise_value: Optional[float] = field(default=None, metadata=field_metadata)
+    emissions_intensity_revenue: Optional[float] = field(default=None, metadata=field_metadata)
+    direction: Optional[str] = field(default=None, metadata=field_metadata)
+    face_value: Optional[float] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCreditResponse(Base):
-    total_results: int = None
-    results: Optional[Tuple[AssetScreenerCreditResponseItem, ...]] = None
-    scroll_id: Optional[str] = None
+    total_results: int = field(default=None, metadata=field_metadata)
+    results: Optional[Tuple[AssetScreenerCreditResponseItem, ...]] = field(default=None, metadata=field_metadata)
+    scroll_id: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerRequest(Base):
-    asset_class: Optional[AssetClass] = None
-    type_: Optional[AssetType] = field(default=None, metadata=config(field_name='type'))
-    scroll: Optional[str] = None
-    scroll_id: Optional[str] = None
-    limit: Optional[int] = None
-    offset: Optional[int] = None
-    filters: Optional[AssetScreenerCreditRequestFilters] = None
+    asset_class: Optional[AssetClass] = field(default=None, metadata=field_metadata)
+    type_: Optional[AssetType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    scroll: Optional[str] = field(default=None, metadata=field_metadata)
+    scroll_id: Optional[str] = field(default=None, metadata=field_metadata)
+    limit: Optional[int] = field(default=None, metadata=field_metadata)
+    offset: Optional[int] = field(default=None, metadata=field_metadata)
+    filters: Optional[AssetScreenerCreditRequestFilters] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)

@@ -22,75 +22,61 @@ from dataclasses import dataclass, field
 from dataclasses_json import LetterCase, config, dataclass_json
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class GroupWithMembersCount(Base):
-    members_count: Optional[int] = None
+    members_count: Optional[int] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class UpdateGroupMembershipRequest(Base):
-    user_ids: Tuple[str, ...] = None
+    user_ids: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class UserCoverage(Base):
-    name: str = None
-    email: str = None
-    app: Optional[str] = None
-    phone: Optional[str] = None
-    guid: Optional[str] = None
-
-
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class GroupResponse(Base):
-    results: Tuple[GroupWithMembersCount, ...] = None
-    total_results: int = None
-    scroll_id: Optional[Tuple[str, ...]] = None
+    results: Tuple[GroupWithMembersCount, ...] = field(default=None, metadata=field_metadata)
+    total_results: int = field(default=None, metadata=field_metadata)
+    scroll_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CreateGroupRequest(Base):
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    name: str = None
-    description: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    oe_id: Optional[str] = None
-    owner_id: Optional[str] = None
-    tags: Optional[Tuple[str, ...]] = None
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    name: str = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    oe_id: Optional[str] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class UpdateGroupRequest(Base):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    oe_id: Optional[str] = None
-    owner_id: Optional[str] = None
-    tags: Optional[Tuple[str, ...]] = None
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    oe_id: Optional[str] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Group(Base):
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    name: str = None
-    description: Optional[str] = None
-    created_by_id: Optional[str] = None
-    last_updated_by_id: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    owner_id: Optional[str] = None
-    oe_id: Optional[str] = None
-    tags: Optional[Tuple[str, ...]] = None
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    name: str = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    oe_id: Optional[str] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)

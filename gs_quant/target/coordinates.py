@@ -32,36 +32,36 @@ class MDAPIQueryField(EnumBase, Enum):
     actualDataQuality = 'actualDataQuality'    
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MDAPIDataQuery(Base):
-    market_data_coordinates: Tuple[MarketDataCoordinate, ...] = None
-    format_: Optional[Format] = field(default=None, metadata=config(field_name='format'))
-    pricing_location: Optional[PricingLocation] = None
-    selector_function: Optional[str] = None
-    samples: Optional[int] = None
-    interval: Optional[str] = None
-    vendor: Optional[MarketDataVendor] = None
-    start_time: Optional[datetime.datetime] = None
-    end_time: Optional[datetime.datetime] = None
-    start_date: Optional[datetime.date] = None
-    end_date: Optional[datetime.date] = None
-    real_time: Optional[bool] = True
-    fields: Optional[Tuple[MDAPIQueryField, ...]] = None
-    time_filter: Optional[TimeFilter] = None
+    market_data_coordinates: Tuple[MarketDataCoordinate, ...] = field(default=None, metadata=field_metadata)
+    format_: Optional[Format] = field(default=None, metadata=config(field_name='format', exclude=exclude_none))
+    pricing_location: Optional[PricingLocation] = field(default=None, metadata=field_metadata)
+    selector_function: Optional[str] = field(default=None, metadata=field_metadata)
+    samples: Optional[int] = field(default=None, metadata=field_metadata)
+    interval: Optional[str] = field(default=None, metadata=field_metadata)
+    vendor: Optional[MarketDataVendor] = field(default=None, metadata=field_metadata)
+    start_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    end_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    start_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    end_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    real_time: Optional[bool] = field(default=True, metadata=field_metadata)
+    fields: Optional[Tuple[MDAPIQueryField, ...]] = field(default=None, metadata=field_metadata)
+    time_filter: Optional[TimeFilter] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MDAPIDataQueryResponse(Base):
-    data: Optional[Tuple[FieldValueMap, ...]] = None
+    data: Optional[Tuple[FieldValueMap, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MDAPIDataBatchResponse(Base):
-    request_id: Optional[str] = None
-    responses: Optional[Tuple[MDAPIDataQueryResponse, ...]] = None
+    request_id: Optional[str] = field(default=None, metadata=field_metadata)
+    responses: Optional[Tuple[MDAPIDataQueryResponse, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)

@@ -134,224 +134,219 @@ class WipiFilterType(EnumBase, Enum):
     OR = 'OR'    
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnProperty(Base):
-    column_name: Optional[str] = None
-    property_: Optional[str] = field(default=None, metadata=config(field_name='property'))
+    column_name: Optional[str] = field(default=None, metadata=field_metadata)
+    property_: Optional[str] = field(default=None, metadata=config(field_name='property', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 class FieldMap(DictBase):
     pass
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Historical(Base):
-    value: Optional[Union[float, str]] = None
+    value: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MonitorResponseData(Base):
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    result: DictBase = None
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    result: DictBase = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Movers(Base):
-    column_name: str = None
-    top: Optional[float] = None
-    bottom: Optional[float] = None
+    column_name: str = field(default=None, metadata=field_metadata)
+    top: Optional[float] = field(default=None, metadata=field_metadata)
+    bottom: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnFormat(Base):
-    precision: float = None
-    unit: Optional[AvailableUnitTypes] = None
-    human_readable: Optional[bool] = None
-    multiplier: Optional[float] = None
-    axis_key: Optional[str] = None
-    show_tooltip: Optional[bool] = None
-    low_color: Optional[str] = None
-    high_color: Optional[str] = None
-    mid_color: Optional[str] = None
-    low_value: Optional[float] = None
-    high_value: Optional[float] = None
-    mid_value: Optional[float] = None
-    hide_value: Optional[bool] = None
+    precision: float = field(default=None, metadata=field_metadata)
+    unit: Optional[AvailableUnitTypes] = field(default=None, metadata=field_metadata)
+    human_readable: Optional[bool] = field(default=None, metadata=field_metadata)
+    multiplier: Optional[float] = field(default=None, metadata=field_metadata)
+    axis_key: Optional[str] = field(default=None, metadata=field_metadata)
+    show_tooltip: Optional[bool] = field(default=None, metadata=field_metadata)
+    low_color: Optional[str] = field(default=None, metadata=field_metadata)
+    high_color: Optional[str] = field(default=None, metadata=field_metadata)
+    mid_color: Optional[str] = field(default=None, metadata=field_metadata)
+    low_value: Optional[float] = field(default=None, metadata=field_metadata)
+    high_value: Optional[float] = field(default=None, metadata=field_metadata)
+    mid_value: Optional[float] = field(default=None, metadata=field_metadata)
+    hide_value: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnMappings(Base):
-    column_name: Optional[str] = None
-    parameters: Optional[FieldMap] = None
-    color: Optional[str] = None
+    column_name: Optional[str] = field(default=None, metadata=field_metadata)
+    parameters: Optional[FieldMap] = field(default=None, metadata=field_metadata)
+    color: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnOperation(Base):
-    column_names: Optional[Tuple[str, ...]] = None
-    function_name: Optional[str] = None
-    type_: Optional[str] = field(default=None, metadata=config(field_name='type'))
-    parameters: Optional[FieldMap] = None
+    column_names: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    function_name: Optional[str] = field(default=None, metadata=field_metadata)
+    type_: Optional[str] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    parameters: Optional[FieldMap] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ExportParameters(Base):
-    tokens: Tuple[str, ...] = None
-    data_set_id: Optional[str] = None
-    fields: Optional[Tuple[str, ...]] = None
-    label: Optional[str] = None
-    start_date: Optional[str] = None
+    tokens: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
+    fields: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    label: Optional[str] = field(default=None, metadata=field_metadata)
+    start_date: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Function(Base):
-    measure: str = None
-    frequency: str = None
-    name: Optional[str] = None
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
-    start_time: Optional[str] = None
-    end_time: Optional[str] = None
-    fields: Optional[Tuple[str, ...]] = None
-    parameters: Optional[FieldMap] = None
-    where: Optional[FieldMap] = None
-    vendor: Optional[str] = None
-    data_set_id: Optional[str] = None
+    measure: str = field(default=None, metadata=field_metadata)
+    frequency: str = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    start_date: Optional[str] = field(default=None, metadata=field_metadata)
+    end_date: Optional[str] = field(default=None, metadata=field_metadata)
+    start_time: Optional[str] = field(default=None, metadata=field_metadata)
+    end_time: Optional[str] = field(default=None, metadata=field_metadata)
+    fields: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    parameters: Optional[FieldMap] = field(default=None, metadata=field_metadata)
+    where: Optional[FieldMap] = field(default=None, metadata=field_metadata)
+    vendor: Optional[str] = field(default=None, metadata=field_metadata)
+    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RateRow(Base):
-    period: ParameterPeriod = None
-    last: float = None
-    change: float = None
-    std: float = None
-    slope: float = None
-    historical: Optional[Historical] = None
-    percentage_change: Optional[float] = None
+    period: ParameterPeriod = field(default=None, metadata=field_metadata)
+    last: float = field(default=None, metadata=field_metadata)
+    change: float = field(default=None, metadata=field_metadata)
+    std: float = field(default=None, metadata=field_metadata)
+    slope: float = field(default=None, metadata=field_metadata)
+    historical: Optional[Historical] = field(default=None, metadata=field_metadata)
+    percentage_change: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Sort(Base):
-    column_name: str = None
-    type_: Optional[SortType] = field(default=None, metadata=config(field_name='type'))
-    direction: Optional[SortDirection] = None
+    column_name: str = field(default=None, metadata=field_metadata)
+    type_: Optional[SortType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    direction: Optional[SortDirection] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class WipiRequestFilter(Base):
-    column: str = None
-    operation: WipiFilterOperation = None
-    value: Union[float, str] = None
-    type_: Optional[WipiFilterType] = field(default=None, metadata=config(field_name='type'))
+    column: str = field(default=None, metadata=field_metadata)
+    operation: WipiFilterOperation = field(default=None, metadata=field_metadata)
+    value: Union[float, str] = field(default=None, metadata=field_metadata)
+    type_: Optional[WipiFilterType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnDefinition(Base):
-    render: ParameterRender = None
-    name: str = None
-    enable_cell_flashing: Optional[bool] = None
-    entity_property: Optional[str] = None
-    function: Optional[Function] = None
-    format_: Optional[ColumnFormat] = field(default=None, metadata=config(field_name='format'))
-    width: Optional[float] = None
-    column_property: Optional[ColumnProperty] = None
-    column_operation: Optional[ColumnOperation] = None
-    expression: Optional[str] = None
-    expressions: Optional[Tuple[str, ...]] = None
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
-    tooltip: Optional[str] = None
-    parent_column_name: Optional[str] = None
-    primary: Optional[bool] = None
-    pivots: Optional[Tuple[str, ...]] = None
-    disable_cell_tooltips: Optional[bool] = None
+    render: ParameterRender = field(default=None, metadata=field_metadata)
+    name: str = field(default=None, metadata=field_metadata)
+    enable_cell_flashing: Optional[bool] = field(default=None, metadata=field_metadata)
+    entity_property: Optional[str] = field(default=None, metadata=field_metadata)
+    function: Optional[Function] = field(default=None, metadata=field_metadata)
+    format_: Optional[ColumnFormat] = field(default=None, metadata=config(field_name='format', exclude=exclude_none))
+    width: Optional[float] = field(default=None, metadata=field_metadata)
+    column_property: Optional[ColumnProperty] = field(default=None, metadata=field_metadata)
+    column_operation: Optional[ColumnOperation] = field(default=None, metadata=field_metadata)
+    expression: Optional[str] = field(default=None, metadata=field_metadata)
+    expressions: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    start_date: Optional[str] = field(default=None, metadata=field_metadata)
+    end_date: Optional[str] = field(default=None, metadata=field_metadata)
+    tooltip: Optional[str] = field(default=None, metadata=field_metadata)
+    parent_column_name: Optional[str] = field(default=None, metadata=field_metadata)
+    primary: Optional[bool] = field(default=None, metadata=field_metadata)
+    pivots: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    disable_cell_tooltips: Optional[bool] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EntityId(Base):
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    column_mappings: Optional[Tuple[ColumnMappings, ...]] = None
-    color: Optional[str] = None
-    route_url: Optional[str] = None
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    column_mappings: Optional[Tuple[ColumnMappings, ...]] = field(default=None, metadata=field_metadata)
+    color: Optional[str] = field(default=None, metadata=field_metadata)
+    route_url: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RatesResponseData(Base):
-    name: RateIds = None
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    rows: Tuple[RateRow, ...] = None
-    libor_id: Optional[str] = field(default=None, metadata=config(field_name='libor_id'))
+    name: RateIds = field(default=None, metadata=field_metadata)
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    rows: Tuple[RateRow, ...] = field(default=None, metadata=field_metadata)
+    libor_id: Optional[str] = field(default=None, metadata=config(field_name='libor_id', exclude=exclude_none))
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RowGroup(Base):
-    name: str = None
-    entity_ids: Tuple[EntityId, ...] = None
-    movers: Optional[Movers] = None
-    sort: Optional[Sort] = None
-    export: Optional[ExportParameters] = None
+    name: str = field(default=None, metadata=field_metadata)
+    entity_ids: Tuple[EntityId, ...] = field(default=None, metadata=field_metadata)
+    movers: Optional[Movers] = field(default=None, metadata=field_metadata)
+    sort: Optional[Sort] = field(default=None, metadata=field_metadata)
+    export: Optional[ExportParameters] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MonitorParameters(Base):
-    column_definitions: Tuple[ColumnDefinition, ...] = None
-    row_groups: Tuple[RowGroup, ...] = None
-    export: Optional[ExportParameters] = None
-    ignore_business_day_logic: Optional[bool] = None
-    horizontal_scroll: Optional[bool] = None
-    mid_value_average: Optional[bool] = None
-    aggregate_queries: Optional[bool] = None
-    row_heatmap: Optional[bool] = None
+    column_definitions: Tuple[ColumnDefinition, ...] = field(default=None, metadata=field_metadata)
+    row_groups: Tuple[RowGroup, ...] = field(default=None, metadata=field_metadata)
+    export: Optional[ExportParameters] = field(default=None, metadata=field_metadata)
+    ignore_business_day_logic: Optional[bool] = field(default=None, metadata=field_metadata)
+    horizontal_scroll: Optional[bool] = field(default=None, metadata=field_metadata)
+    mid_value_average: Optional[bool] = field(default=None, metadata=field_metadata)
+    aggregate_queries: Optional[bool] = field(default=None, metadata=field_metadata)
+    row_heatmap: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Monitor(Base):
-    name: str = None
-    type_: EntitiesSupported = field(default=None, metadata=config(field_name='type'))
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    parameters: Optional[MonitorParameters] = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_time: Optional[datetime.datetime] = None
-    created_by_id: Optional[str] = None
-    last_updated_by_id: Optional[str] = None
-    owner_id: Optional[str] = None
-    entitlements: Optional[Entitlements] = None
-    folder_name: Optional[str] = None
-    polling_time: Optional[float] = None
-    tags: Optional[Tuple[str, ...]] = None
+    name: str = field(default=None, metadata=field_metadata)
+    type_: EntitiesSupported = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    parameters: Optional[MonitorParameters] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    folder_name: Optional[str] = field(default=None, metadata=field_metadata)
+    polling_time: Optional[float] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)

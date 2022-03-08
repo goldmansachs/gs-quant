@@ -18,14 +18,11 @@ import builtins
 from collections import namedtuple
 import copy
 from dataclasses import Field, InitVar, MISSING, dataclass, field, fields, replace
-from dataclasses_json import global_config
-from dataclasses_json.core import _is_supported_generic, _decode_generic
-import dataclasses_json.core
+from dataclasses_json import config, global_config
+from dataclasses_json.core import _decode_generic, _is_supported_generic
 import datetime as dt
 from enum import EnumMeta
 from inflection import camelize, underscore
-import inspect
-import keyword
 import logging
 import numpy as np
 from typing import Iterable, Mapping, Optional, Union
@@ -38,9 +35,16 @@ from gs_quant.json_convertors import encode_date_or_str, decode_date_or_str, dec
 _logger = logging.getLogger(__name__)
 
 __builtins = set(dir(builtins))
-__iskeyword = keyword.iskeyword
 __getattribute__ = object.__getattribute__
 __setattr__ = object.__setattr__
+
+
+def exclude_none(o):
+    return o is None
+
+
+def exlude_always(_o):
+    return True
 
 
 def is_iterable(o, t):
@@ -49,6 +53,10 @@ def is_iterable(o, t):
 
 def is_instance_or_iterable(o, t):
     return isinstance(o, t) or is_iterable(o, t)
+
+
+field_metadata = config(exclude=exclude_none)
+name_metadata = config(exclude=exlude_always)
 
 
 class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'scenario', 'risk_measure'))):
@@ -126,29 +134,10 @@ class DictBase(HashableDict):
         return cls._PROPERTIES
 
 
-def fix_args(cls):
-    # Rather unfortunate: prior to the refactor to use dataclasses, 'name' was a non-property argument
-    # Adding it add post_init() to base to allow it to be passed, puts it as the first postional argument
-    # and breaks backward compatibility. This can be fixed using the kw_only argument, which sadly was not added
-    # until later versions than Python 3.7 (though it seems to be in the 3.6 backport)
-    #
-    # Additionally, some classes actually have a field called 'name', we need to use Base.name_ so positional passing
-    # continues to work
+class BaseMeta(ABCMeta):
 
-    init = cls.__init__
-    signature = inspect.signature(init)
-    add_name = not any(p for p in signature.parameters.values() if p.name == 'name')
-
-    if add_name:
-        name_param = inspect.Parameter('name', inspect.Parameter.POSITIONAL_OR_KEYWORD, default=None,
-                                       annotation=Optional[str])
-        params = tuple(signature.parameters.values()) + (name_param,)
-        signature = signature.replace(parameters=params)
-
-    def wrapper(self, *args, name: Optional[str] = None, **kwargs):
+    def __call__(cls, *args, **kwargs):
         normalised_kwargs = {}
-
-        # Handle legacy use of passing args as camel case
 
         for arg, value in kwargs.items():
             if not arg.isupper():
@@ -161,34 +150,11 @@ def fix_args(cls):
             arg = cls._field_mappings().get(arg, arg)
             normalised_kwargs[arg] = value
 
-        init(self, *args, **normalised_kwargs)
-
-        if name is not None:
-            self.name = name
-
-    wrapper.__name__ = init.__name__
-    wrapper.__qualname__ = init.__qualname__
-    wrapper.__doc__ = init.__doc__
-    wrapper.__module__ = init.__module__
-
-    if add_name:
-        cls.__doc__ = cls.__doc__[:-1] + f', name: Union[str, NoneType] = None)'
-        wrapper.__annotations__ = {**{'name': Optional[str]}, **init.__annotations__}
-
-    wrapper.__signature__ = signature
-
-    cls.__init__ = wrapper
-    cls.__base_dataclass_eq__ = cls.__eq__
-    cls.__eq__ = cls.__eq_with_name__
-
-    return cls
+        return super().__call__(*args, **normalised_kwargs)
 
 
-@dataclass
-class Base(ABC):
+class Base(ABC, metaclass=BaseMeta):
     """The base class for all generated classes"""
-
-    name_: InitVar[str] = field(init=False, default=None)
 
     __fields_by_name = None
     __field_mappings = None
@@ -198,9 +164,6 @@ class Base(ABC):
 
         if item.startswith('_') or item in fields_by_name:
             return __getattribute__(self, item)
-
-        if item == 'name':
-            return __getattribute__(self, 'name_')
 
         # Handle setting via camelCase names (legacy behaviour) and field mappings from disallowed names
         snake_case_item = underscore(item)
@@ -225,8 +188,6 @@ class Base(ABC):
             key = snake_case_key
             value = self.__coerce_value(fld.type, value)
             self._property_changed(key, value)
-        elif key == 'name':
-            key = 'name_'
 
         __setattr__(self, key, value)
 
@@ -235,9 +196,6 @@ class Base(ABC):
             return f'{self.name} ({self.__class__.__name__})'
 
         return super().__repr__()
-
-    def __eq_with_name__(self, other):
-        return isinstance(other, Base) and self.name_ == other.name_ and self.__base_dataclass_eq__(other)
 
     @classmethod
     def __coerce_value(cls, typ: type, value):
@@ -299,9 +257,7 @@ class Base(ABC):
             >>>
             >>> new_cap = cap.clone(cap_rate=0.01)
         """
-        ret = replace(self, **kwargs)
-        ret.name_ = self.name_
-        return ret
+        return replace(self, **kwargs)
 
     @classmethod
     def properties(cls) -> set:
@@ -351,6 +307,7 @@ class Base(ABC):
                 __setattr__(self, fld.name, __getattribute__(instance, fld.name))
 
 
+@dataclass
 class Priceable(Base):
 
     def resolve(self, in_place: bool = True):
@@ -463,20 +420,22 @@ class Priceable(Base):
         raise NotImplementedError
 
 
-class __ScenarioMeta(ABCMeta, ContextMeta):
-    pass
-
-
-class Scenario(Base, ContextBase, metaclass=__ScenarioMeta):
-    pass
-
-
-class RiskMeasureParameter(Base):
+class __ScenarioMeta(BaseMeta, ContextMeta):
     pass
 
 
 @dataclass
-class InstrumentBase(Base):
+class Scenario(Base, ContextBase, ABC, metaclass=__ScenarioMeta):
+    pass
+
+
+@dataclass
+class RiskMeasureParameter(Base, ABC):
+    pass
+
+
+@dataclass
+class InstrumentBase(Base, ABC):
 
     quantity_: InitVar[float] = field(init=False, default=1)
 
@@ -623,18 +582,3 @@ global_config.decoders[Optional[InstrumentBase]] = decode_instrument
 
 global_config.encoders[Market] = encode_dictable
 global_config.encoders[Optional[Market]] = encode_dictable
-
-
-def __decode_dataclass(cls, kvs, infer_missing):
-    # EXTREMELY unfortunate
-    if isinstance(kvs, cls):
-        return kvs
-    elif hasattr(cls, 'decode_dataclass'):
-        return cls.decode_dataclass(kvs)
-    else:
-        from dataclasses_json.core import _decode_dataclass_orig
-        return _decode_dataclass_orig(cls, kvs, infer_missing)
-
-
-dataclasses_json.core._decode_dataclass_orig = dataclasses_json.core._decode_dataclass
-dataclasses_json.core._decode_dataclass = __decode_dataclass
