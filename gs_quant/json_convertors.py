@@ -24,15 +24,6 @@ __valid_date_formats = ('%Y-%m-%d',  # '2020-07-28'
                         '%d/%m/%Y')  # '28/07/2020
 
 
-def remove_nulls(msg):
-    if isinstance(msg, list):
-        return [remove_nulls(i) for i in msg if i is not None]
-    elif isinstance(msg, dict):
-        return {k: remove_nulls(v) for k, v in msg.items() if v is not None}
-    else:
-        return msg
-
-
 def encode_date_or_str(value: Optional[Union[str, dt.date]]) -> Optional[str]:
     return value.isoformat() if isinstance(value, dt.date) else value
 

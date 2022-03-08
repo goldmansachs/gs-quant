@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from dataclasses import dataclass
 import datetime as dt
 import logging
 from itertools import chain
@@ -39,6 +40,7 @@ from more_itertools import unique_everseen
 _logger = logging.getLogger(__name__)
 
 
+@dataclass
 class Portfolio(PriceableImpl):
     """A collection of instruments
 
@@ -371,8 +373,8 @@ class Portfolio(PriceableImpl):
                     records.extend(to_records(priceable))
                 else:
                     as_dict = priceable.as_dict()
-                    if hasattr(priceable, '_type'):
-                        as_dict['$type'] = priceable._type
+                    if not hasattr(priceable, 'asset_class'):
+                        as_dict['$type'] = priceable.type_
 
                     records.append(dict(chain(as_dict.items(),
                                               (('instrument', priceable), ('portfolio', portfolio.name)))))

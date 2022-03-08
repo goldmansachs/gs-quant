@@ -101,7 +101,7 @@ class Instrument(PriceableImpl, InstrumentBase):
         ret = super().__getattribute__(name)
         flds = super().__getattribute__('_fields_by_name')()
 
-        if ret is not None or name not in flds or super().__getattribute__('_Instrument__suppress_resolution'):
+        if ret is not None or name not in flds or name == 'name' or super().__getattribute__('_Instrument__suppress_resolution'):
             return ret
 
         if GsSession.current_is_set and super().__getattribute__('resolution_key') is None:
@@ -261,8 +261,8 @@ class Instrument(PriceableImpl, InstrumentBase):
         if instrument is None:
             builder_type = values.get('$type') or values.get('builder', values.get('defn', {})).get('$type')
             if builder_type:
-                from gs_quant_internal.base import QuotableBuilder
-                return QuotableBuilder.from_dict(values)
+                from gs_quant_internal.base import decode_quill_value
+                return decode_quill_value(values)
 
             asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
             if not asset_class_field:

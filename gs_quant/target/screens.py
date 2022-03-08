@@ -22,41 +22,40 @@ from dataclasses import dataclass, field
 from dataclasses_json import LetterCase, config, dataclass_json
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ScreenParameters(Base):
-    face_value: Optional[float] = None
-    direction: Optional[str] = None
-    currency: Optional[Tuple[str, ...]] = None
-    gs_liquidity_score: Optional[AssetScreenerRequestFilterLimits] = None
-    gs_charge_bps: Optional[AssetScreenerRequestFilterLimits] = None
-    gs_charge_dollars: Optional[AssetScreenerRequestFilterLimits] = None
-    modified_duration: Optional[AssetScreenerRequestFilterLimits] = None
-    issue_date: Optional[AssetScreenerRequestFilterDateLimits] = None
-    yield_to_convention: Optional[AssetScreenerRequestFilterLimits] = None
-    spread_to_benchmark: Optional[AssetScreenerRequestFilterLimits] = None
-    z_spread: Optional[AssetScreenerRequestFilterLimits] = None
-    g_spread: Optional[AssetScreenerRequestFilterLimits] = None
-    bval_mid_price: Optional[AssetScreenerRequestFilterLimits] = None
-    maturity: Optional[AssetScreenerRequestFilterLimits] = None
-    amount_outstanding: Optional[AssetScreenerRequestFilterLimits] = None
-    rating_standard_and_poors: Optional[AssetScreenerCreditStandardAndPoorsRatingOptions] = None
-    seniority: Optional[Tuple[str, ...]] = None
-    sector: Optional[Tuple[str, ...]] = None
+    face_value: Optional[float] = field(default=None, metadata=field_metadata)
+    direction: Optional[str] = field(default=None, metadata=field_metadata)
+    currency: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    gs_liquidity_score: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    gs_charge_bps: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    gs_charge_dollars: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    modified_duration: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    issue_date: Optional[AssetScreenerRequestFilterDateLimits] = field(default=None, metadata=field_metadata)
+    yield_to_convention: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    spread_to_benchmark: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    z_spread: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    g_spread: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    bval_mid_price: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    maturity: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    amount_outstanding: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    rating_standard_and_poors: Optional[AssetScreenerCreditStandardAndPoorsRatingOptions] = field(default=None, metadata=field_metadata)
+    seniority: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    sector: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Screen(Base):
-    name: str = None
-    parameters: ScreenParameters = None
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id'))
-    active: Optional[bool] = None
-    owner_id: Optional[str] = None
-    created_by_id: Optional[str] = None
-    created_time: Optional[datetime.datetime] = None
-    last_updated_by_id: Optional[str] = None
-    last_updated_time: Optional[datetime.datetime] = None
-    entitlements: Optional[Entitlements] = None
+    name: str = field(default=None, metadata=field_metadata)
+    parameters: ScreenParameters = field(default=None, metadata=field_metadata)
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    active: Optional[bool] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)

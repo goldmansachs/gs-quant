@@ -19,6 +19,7 @@ from numbers import Real
 import cachetools.func
 import inflection
 import numpy as np
+import pandas as pd
 from dateutil import tz
 from pandas import Series, DatetimeIndex
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
@@ -126,6 +127,11 @@ class CdsVolReference(Enum):
 class VolSmileReference(Enum):
     SPOT = 'spot'
     FORWARD = 'forward'
+
+
+class FXForwardType(Enum):
+    POINTS = 'points'
+    OUTRIGHT = 'outright'
 
 
 class FxForecastHorizon(Enum):
@@ -516,8 +522,8 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
 
 
 @plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
-              id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
-              asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
+    id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
+    asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *,
          source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
@@ -848,13 +854,9 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
               relative_strike)
     tenor = _tenor_month_to_year(tenor)
     where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
-    q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
-                                          real_time=real_time)
-    log_debug(request_id, _logger, 'q %s', q)
-    df = _market_data_timed(q, request_id)
-    if not real_time and DataContext.current.end_date >= datetime.date.today():
-        df = append_last_for_measure(df, [asset_id], QueryType.IMPLIED_VOLATILITY, where, source=source,
-                                     request_id=request_id)
+    # Parallel calls when fetching / appending last results
+    df = get_historical_and_last_for_measure([asset_id], QueryType.IMPLIED_VOLATILITY, where, source=source,
+                                             real_time=real_time, request_id=request_id)
 
     s = _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
     return s
@@ -1848,8 +1850,8 @@ def _skew_fetcher(asset_id, query_type, where, source, real_time, request_id=Non
 
 
 @plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
-              id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
-              asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
+    id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
+    asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
               pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
               request_id: Optional[str] = None) -> pd.Series:
@@ -2082,14 +2084,27 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
     return series
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.FORWARD])
-def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
-             real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def measure_request_safe(parent_fn_name, asset, fn, request_id, *args, **kwargs):
+    try:
+        return fn(*args, **kwargs)
+    except MqValueError as e:
+        error_msg = e.args[0] if len(e.args) else 'No error message provided.'
+        log_debug(request_id, _logger, f'measure_request_safe: {error_msg}')
+        raise MqValueError(f'{parent_fn_name} not available for {asset.name}.')
+
+
+@plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX), None, [QueryType.FORWARD, QueryType.FORWARD_POINT])
+def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
+             fwd_type: FXForwardType = FXForwardType.OUTRIGHT, *, source: str = None, real_time: bool = False,
+             request_id: Optional[str] = None) -> pd.Series:
     """
-    Forward term structure. Uses most recent date available if pricing_date is not provided.
+    Forward term structure. Uses most recent date available if pricing_date is not provided. If pricing_date falls on
+    a weekend or holiday, uses the previous business day as pricing date.
 
     :param asset: asset object loaded from security master
-    :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
+    :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y (default today)
+    :param fwd_type: applicable only to FX forward term. Either "points" for forward points or "outright"
+        (default outright)
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -2098,15 +2113,36 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
     if real_time:
         raise NotImplementedError('realtime forward term not implemented')  # TODO
 
-    check_forward_looking(pricing_date, source, 'fwd_term')
-    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
-    with DataContext(start, end):
-        where = dict(strikeReference='forward', relativeStrike=1)
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD, where=where, source=source,
-                                              real_time=real_time)
-        log_debug(request_id, _logger, 'q %s', q)
-        df = _market_data_timed(q, request_id)
+    if asset.asset_class == AssetClass.FX:
+        asset_id = cross_stored_direction_for_fx_vol(asset)
+        forward_col_name = 'forwardPoint'
+        query_type, where = QueryType.FORWARD_POINT, {}
 
+        get_spot = fwd_type == FXForwardType.OUTRIGHT
+    else:
+        if fwd_type != FXForwardType.OUTRIGHT:
+            raise MqValueError('Parameter fwd_type must be outright for non-FX assets.')
+        asset_id = asset.get_marquee_id()
+        query_type, where = QueryType.FORWARD, dict(strikeReference='forward', relativeStrike=1)
+        forward_col_name = 'forward'
+        get_spot = False
+
+    check_forward_looking(pricing_date, source, 'fwd_term')
+    cbd = _get_custom_bd(asset.exchange)
+    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    start -= cbd  # get previous business day's pricing if start, end on a non-BD
+    with DataContext(start, end):
+        q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source,
+                                              real_time=real_time)
+        if get_spot:  # Add in spot data for FX outright mode
+            q_spot = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT, where={}, source=source,
+                                                       real_time=real_time)
+            data_requests = [partial(_market_data_timed, q, request_id),
+                             partial(_market_data_timed, q_spot, request_id)]
+            df, spot_df = measure_request_safe('fwd_term', asset, ThreadPoolManager.run_async, data_requests)
+        else:
+            log_debug(request_id, _logger, 'q %s', q)
+            df = measure_request_safe('fwd_term', asset, _market_data_timed, request_id, q, request_id)
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
         series = ExtendedSeries(dtype=float)
@@ -2114,12 +2150,14 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
-        cbd = _get_custom_bd(asset.exchange)
         df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
         df = df.set_index('expirationDate')
         df.sort_index(inplace=True)
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
-        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['forward'])
+        if get_spot:
+            spot = spot_df.loc[latest]['spot']
+            df[forward_col_name] = df[forward_col_name] + spot
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[forward_col_name])
     series.dataset_ids = dataset_ids
     return series
 
@@ -4171,6 +4209,17 @@ def get_last_for_measure(asset_ids: List[str], query_type, where, *, source: str
     return None
 
 
+def merge_dataframes(dataframes: List[pd.DataFrame], merge_dataset_ids=True):
+    if dataframes is None:
+        return pd.DataFrame()
+    result = pd.concat(dataframes)
+    result["dummy"] = result.index  # drop_duplicates ignores indexes, so we need to include it as a column first
+    result = result.drop_duplicates().drop(columns=["dummy"])
+    result = result.sort_index(kind='mergesort')  # mergesort for its "stable" sort functionality
+    setattr(result, 'dataset_ids', tuple(set(flatten(get(df, 'dataset_ids', ()) for df in dataframes))))
+    return result
+
+
 def append_last_for_measure(df: pd.DataFrame, asset_ids: List[str], query_type, where, *, source: str = None,
                             request_id: Optional[str] = None):
     df_l = get_last_for_measure(asset_ids, query_type, where, source=source, request_id=request_id)
@@ -4209,15 +4258,7 @@ def get_historical_and_last_for_measure(asset_ids: List[str],
                     request_id=request_id))
 
     results = ThreadPoolManager.run_async(tasks)
-    df = pd.concat(results)
-    if df.empty:
-        return df
-
-    df["dummy"] = df.index  # drop_duplicates ignores indexes, so we need to include it as a column first
-    result = df.drop_duplicates().drop(columns=["dummy"])
-    result = result.sort_index(kind="mergesort")  # mergesort for its "stable" sort functionality
-    setattr(result, 'dataset_ids', tuple(set(flatten(get(result, 'dataset_ids', ()) for result in results))))
-    return result
+    return merge_dataframes(results)
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.FutureMarket,), [QueryType.SETTLEMENT_PRICE], )

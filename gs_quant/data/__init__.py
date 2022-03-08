@@ -16,7 +16,7 @@ under the License.
 
 from .coordinate import DataCoordinate
 from .core import DataContext, DataFrequency
-from .dataset import Dataset
+from .dataset import Dataset, PTPDataset
 from .fields import DataMeasure, DataDimension, Fields
 
 __name__ = 'data'

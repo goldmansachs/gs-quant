@@ -25,6 +25,8 @@ class RenderType:
     HEATMAP = 'heatmap'
     BOXPLOT = 'boxplot'
     SCALE = 'scale'
+    DATE_MMM_YY = 'dateMmmYy'
+    TIME_HH_MM = 'timeHhMm'
 
 
 @dataclass

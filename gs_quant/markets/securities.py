@@ -36,7 +36,7 @@ from gs_quant.api.gs.assets import GsAsset, AssetParameters, \
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import get_enum_value
 from gs_quant.common import DateLimit
-from gs_quant.data import DataMeasure, DataFrequency
+from gs_quant.data import DataMeasure, DataFrequency, Dataset
 from gs_quant.data.coordinate import DataDimensions
 from gs_quant.data.coordinate import DateOrDatetime
 from gs_quant.data.core import IntervalFrequency, DataAggregationOperator
@@ -482,34 +482,45 @@ class Asset(Entity, metaclass=ABCMeta):
         :class:`DataMeasure`
         :func:`get_close_prices`
         """
-        if interval_frequency == IntervalFrequency.DAILY:
-            dates = None
-            use_field = False
-        elif interval_frequency == IntervalFrequency.MONTHLY:
-            d = dt.date(start.year, start.month, 1)
-            dates = [d, dt.date(d.year, d.month, calendar.monthrange(d.year, d.month)[-1])]
-            d += relativedelta(months=1)
-            while d < end:
-                dates.append(dt.date(d.year, d.month, calendar.monthrange(d.year, d.month)[-1]))
+
+        if self.asset_class == AssetClass.Equity:
+            if interval_frequency == IntervalFrequency.DAILY:
+                dates = None
+                use_field = False
+            elif interval_frequency == IntervalFrequency.MONTHLY:
+                d = dt.date(start.year, start.month, 1)
+                dates = [d, dt.date(d.year, d.month, calendar.monthrange(d.year, d.month)[-1])]
                 d += relativedelta(months=1)
-            dates.append(end)
-            use_field = True
+                while d < end:
+                    dates.append(dt.date(d.year, d.month, calendar.monthrange(d.year, d.month)[-1]))
+                    d += relativedelta(months=1)
+                dates.append(end)
+                use_field = True
+            else:
+                raise MqValueError(f'Unsupported IntervalFrequency {interval_frequency.value} for get_hloc_prices')
+
+            tasks = [
+                partial(self.get_data_series, DataMeasure.ADJUSTED_HIGH_PRICE, None, DataFrequency.DAILY, start, end,
+                        dates=dates, operator=DataAggregationOperator.MAX if use_field else None),
+                partial(self.get_data_series, DataMeasure.ADJUSTED_LOW_PRICE, None, DataFrequency.DAILY, start, end,
+                        dates=dates, operator=DataAggregationOperator.MIN if use_field else None),
+                partial(self.get_data_series, DataMeasure.ADJUSTED_OPEN_PRICE, None, DataFrequency.DAILY, start, end,
+                        dates=dates, operator=DataAggregationOperator.FIRST if use_field else None),
+                partial(self.get_data_series, DataMeasure.ADJUSTED_CLOSE_PRICE, None, DataFrequency.DAILY, start, end,
+                        dates=dates, operator=DataAggregationOperator.LAST if use_field else None)
+            ]
+
+            results = ThreadPoolManager.run_async(tasks)
+            df = pd.DataFrame({'high': results[0], 'low': results[1], 'open': results[2], 'close': results[3]})
+        elif self.asset_class == AssetClass.FX:
+            if interval_frequency != IntervalFrequency.DAILY:
+                raise MqValueError('Unsupported IntervalFrequency for FX asset class.')
+            ds = Dataset('FX_HLOC')
+            df = ds.get_data(start=start, end=end, assetId=self.get_marquee_id())
+            df = df.drop(columns=['assetId', 'updateTime']).reindex(columns=['high', 'low', 'open', 'close'])
         else:
-            raise MqValueError(f'Unsupported IntervalFrequency {interval_frequency.value} for get_hloc_prices')
+            raise MqValueError('Unsupported AssetClass for HLOC data.')
 
-        tasks = [
-            partial(self.get_data_series, DataMeasure.ADJUSTED_HIGH_PRICE, None, DataFrequency.DAILY, start, end,
-                    dates=dates, operator=DataAggregationOperator.MAX if use_field else None),
-            partial(self.get_data_series, DataMeasure.ADJUSTED_LOW_PRICE, None, DataFrequency.DAILY, start, end,
-                    dates=dates, operator=DataAggregationOperator.MIN if use_field else None),
-            partial(self.get_data_series, DataMeasure.ADJUSTED_OPEN_PRICE, None, DataFrequency.DAILY, start, end,
-                    dates=dates, operator=DataAggregationOperator.FIRST if use_field else None),
-            partial(self.get_data_series, DataMeasure.ADJUSTED_CLOSE_PRICE, None, DataFrequency.DAILY, start, end,
-                    dates=dates, operator=DataAggregationOperator.LAST if use_field else None)
-        ]
-
-        results = ThreadPoolManager.run_async(tasks)
-        df = pd.DataFrame({'high': results[0], 'low': results[1], 'open': results[2], 'close': results[3]})
         return df.dropna()
 
     @abstractmethod

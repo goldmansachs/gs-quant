@@ -436,58 +436,57 @@ class MqexsSide(EnumBase, Enum):
     _ = ''    
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsErrorInfo(Base):
-    error_code: str = None
-    error_msg: str = None
-    error_severity: Optional[MqexsErrorSeverity] = None
-    asset_class: Optional[MqexsAssetClass] = None
+    error_code: str = field(default=None, metadata=field_metadata)
+    error_msg: str = field(default=None, metadata=field_metadata)
+    error_severity: Optional[MqexsErrorSeverity] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[MqexsAssetClass] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsProductDetails(Base):
-    name: str = None
-    contract_code: Optional[str] = None
-    clearer: Optional[MqexsClearer] = None
-    settlement_type: Optional[MqexsOtcSettlementType] = None
+    name: str = field(default=None, metadata=field_metadata)
+    contract_code: Optional[str] = field(default=None, metadata=field_metadata)
+    clearer: Optional[MqexsClearer] = field(default=None, metadata=field_metadata)
+    settlement_type: Optional[MqexsOtcSettlementType] = field(default=None, metadata=field_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsTradeDetails(Base):
-    side: MqexsSide = None
-    quantity: str = None
-    unit_price: str = None
-    currency: MqexsCurrencyExt = None
-    settlement_date: Optional[datetime.date] = None
-    quantity_lots: Optional[str] = None
-    quantity_unit: Optional[str] = None
+    side: MqexsSide = field(default=None, metadata=field_metadata)
+    quantity: str = field(default=None, metadata=field_metadata)
+    unit_price: str = field(default=None, metadata=field_metadata)
+    currency: MqexsCurrencyExt = field(default=None, metadata=field_metadata)
+    settlement_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    quantity_lots: Optional[str] = field(default=None, metadata=field_metadata)
+    quantity_unit: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsTradeExt(Base):
-    id_: str = field(default=None, metadata=config(field_name='id'))
-    trade_details: MqexsTradeDetails = None
-    product_details: MqexsProductDetails = None
-    quote_id: str = None
-    asset_class: MqexsAssetClassExt = None
-    created_by_id: str = None
-    created_time: datetime.datetime = None
-    last_updated_time: datetime.datetime = None
-    last_updated_by_id: str = None
-    inquiry_id: Optional[str] = None
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    trade_details: MqexsTradeDetails = field(default=None, metadata=field_metadata)
+    product_details: MqexsProductDetails = field(default=None, metadata=field_metadata)
+    quote_id: str = field(default=None, metadata=field_metadata)
+    asset_class: MqexsAssetClassExt = field(default=None, metadata=field_metadata)
+    created_by_id: str = field(default=None, metadata=field_metadata)
+    created_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    last_updated_time: datetime.datetime = field(default=None, metadata=field_metadata)
+    last_updated_by_id: str = field(default=None, metadata=field_metadata)
+    inquiry_id: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-@fix_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsTradesWErrorExt(Base):
-    trades: Optional[Tuple[MqexsTradeExt, ...]] = None
-    errors: Optional[Tuple[MqexsErrorInfo, ...]] = None
+    trades: Optional[Tuple[MqexsTradeExt, ...]] = field(default=None, metadata=field_metadata)
+    errors: Optional[Tuple[MqexsErrorInfo, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)

@@ -13,13 +13,17 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import json
 from typing import List
 import pandas as pd
 import datetime as dt
 import math
+import logging
+from time import sleep
 
+from gs_quant.api.gs.data import GsDataApi
+from gs_quant.errors import MqRequestError
 from gs_quant.target.risk_models import RiskModelData
-
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi
 
 
@@ -38,6 +42,8 @@ def build_asset_data_map(results: List, universe: List, measure: str) -> dict:
 
 
 def build_factor_data_map(results: List, identifier: str) -> dict:
+    if not results:
+        return {}
     factor_data = [factor.get('factorId') for factor in results[0].get('factorData')]
     data_map = {}
     for factor in factor_data:
@@ -52,25 +58,6 @@ def build_factor_data_map(results: List, identifier: str) -> dict:
     return data_map
 
 
-def build_factor_data_dataframe(results: List, identifier: str) -> pd.DataFrame:
-    data_map = {}
-    date_list = []
-    for row in results:
-        date_list.append(row.get('date'))
-        for data in row.get('factorData'):
-            factor_name = data.get('factorId') if identifier == 'id' else data.get(identifier)
-            factor_return = data.get('factorReturn')
-            if factor_name in data_map.keys():
-                factor_returns = data_map.get(factor_name)
-                factor_returns.append(factor_return)
-            else:
-                factor_returns = [factor_return]
-            data_map[factor_name] = factor_returns
-        data_map['date'] = date_list
-    data_frame = pd.DataFrame(data_map).set_index('date')
-    return data_frame
-
-
 def build_pfp_data_dataframe(results: List) -> pd.DataFrame:
     date_list = []
     pfp_list = []
@@ -83,8 +70,8 @@ def build_pfp_data_dataframe(results: List) -> pd.DataFrame:
         weights_df = pd.DataFrame(pfp_map)
         pfp_list.append(weights_df)
         date_list.append(row.get('date'))
-    data = pd.concat(pfp_list, keys=date_list)
-    return data
+    results = pd.concat(pfp_list, keys=date_list) if pfp_list else pd.DataFrame({})
+    return results
 
 
 def get_isc_dataframe(results: dict) -> pd.DataFrame:
@@ -94,8 +81,8 @@ def get_isc_dataframe(results: dict) -> pd.DataFrame:
         matrix_df = pd.DataFrame(row.get('issuerSpecificCovariance'))
         cov_list.append(matrix_df)
         date_list.append(row.get('date'))
-    data = pd.concat(cov_list, keys=date_list)
-    return data
+    results = pd.concat(cov_list, keys=date_list) if cov_list else pd.DataFrame({})
+    return results
 
 
 def get_covariance_matrix_dataframe(results: dict) -> pd.DataFrame:
@@ -108,8 +95,8 @@ def get_covariance_matrix_dataframe(results: dict) -> pd.DataFrame:
         matrix_df.index = factor_names
         cov_list.append(matrix_df)
         date_list.append(row.get('date'))
-    data = pd.concat(cov_list, keys=date_list)
-    return data
+    results = pd.concat(cov_list, keys=date_list) if cov_list else pd.DataFrame({})
+    return results
 
 
 def get_closest_date_index(date: dt.date, dates: List[str], direction: str) -> int:
@@ -133,42 +120,53 @@ def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size):
     """ Takes in total risk model data for one day and batches requests according to
     asset data size, returns a list of messages from resulting post calls"""
     date = data.get('date')
+    errors = []
     if data.get('factorData'):
         factor_data = {
             'date': date,
             'factorData': data.get('factorData')}
         if data.get('covarianceMatrix'):
             factor_data['covarianceMatrix'] = data.get('covarianceMatrix')
-        print('Uploading factor data')
-        print(GsFactorRiskModelApi.upload_risk_model_data(
-            model_id,
-            factor_data,
-            partial_upload=True)
-        )
+        logging.info('Uploading factor data')
+        _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
+                                  model_data=factor_data, partial_upload=True)
 
     if data.get('assetData'):
         asset_data_list, target_size = _batch_input_data({'assetData': data.get('assetData')}, max_asset_size)
-        for asset_data_batch in asset_data_list:
-            print(GsFactorRiskModelApi.upload_risk_model_data(
-                model_id,
-                {'assetData': asset_data_batch, 'date': date},
-                partial_upload=True,
-                target_universe_size=target_size)
-            )
+        for i in range(len(asset_data_list)):
+            _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
+                                      model_data={'assetData': asset_data_list[i], 'date': date}, partial_upload=True,
+                                      target_universe_size=target_size)
 
     if 'issuerSpecificCovariance' in data.keys() or 'factorPortfolios' in data.keys():
         for optional_input_key in ['issuerSpecificCovariance', 'factorPortfolios']:
             if data.get(optional_input_key):
                 optional_data = data.get(optional_input_key)
                 optional_data_list, target_size = _batch_input_data({optional_input_key: optional_data}, max_asset_size)
-                print(f'{optional_input_key} being uploaded for {date}...')
-                for optional_data_batch in optional_data_list:
-                    print(GsFactorRiskModelApi.upload_risk_model_data(
-                        model_id,
-                        {optional_input_key: optional_data_batch, 'date': date},
-                        partial_upload=True,
-                        target_universe_size=target_size)
-                    )
+                logging.info(f'{optional_input_key} being uploaded for {date}...')
+                for i in range(len(optional_data_list)):
+                    _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
+                                              model_data={optional_input_key: optional_data_list[i], 'date': date},
+                                              partial_upload=True, target_universe_size=target_size)
+    if errors:
+        raise errors.pop()
+
+
+def batch_and_upload_coverage_data(date: dt.date, gsid_list: list, model_id: str):
+    update_time = dt.datetime.today().strftime("%Y-%m-%dT%H:%M:%SZ")
+    request_array = [{'date': date.strftime('%Y-%m-%d'),
+                      'gsid': gsid,
+                      'riskModel': model_id,
+                      'updateTime': update_time} for gsid in set(gsid_list)]
+    logging.info(f"Uploading {len(request_array)} gsids to asset coverage dataset")
+    list_of_requests = list(divide_request(request_array, 1000))
+    logging.info(f"Uploading in {len(list_of_requests)} batches of 1000 gsids")
+    [_repeat_try_catch_request(GsDataApi.upload_data, data=data, dataset_id="RISK_MODEL_ASSET_COVERAGE") for data in
+     list_of_requests]
+
+
+def upload_model_data(model_id: str, data: dict, **kwargs):
+    _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id, model_data=data, **kwargs)
 
 
 def risk_model_data_to_json(risk_model_data: RiskModelData) -> dict:
@@ -250,3 +248,30 @@ def _batch_isc_input(input_data: dict, i: int, split_idx: int, split_num: int, t
     return {'universeId1': input_data.get('universeId1')[i * split_idx:end_idx],
             'universeId2': input_data.get('universeId2')[i * split_idx:end_idx],
             'covariance': input_data.get('covariance')[i * split_idx:end_idx]}
+
+
+def _repeat_try_catch_request(input_function, number_retries: int = 5, **kwargs):
+    t = 2.0
+    errors = []
+    for i in range(number_retries):
+        try:
+            result = input_function(**kwargs)
+            logging.info(result)
+            errors.clear()
+            break
+        except MqRequestError as e:
+            errors.append(e)
+            if json.loads(e.message).get("statusCode", 400) == 429:
+                sleep_time = math.pow(2.2, t)
+                t += 1
+                if i < number_retries - 1:
+                    logging.warning(
+                        f'Rate limiting hit while making request: {e}, retrying in {int(sleep_time)}'
+                        f' seconds...')
+                    sleep(sleep_time)
+            elif json.loads(e.message).get("statusCode", 400) < 500:
+                raise e
+            elif i < number_retries - 1:
+                logging.warning(f'Exception caught while making request: {e}, retrying...')
+    if errors:
+        raise errors.pop()
