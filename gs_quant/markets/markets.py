@@ -85,9 +85,9 @@ class MarketDataCoordinate(__MarketDataCoordinate):
     def from_string(cls, value: str):
         from gs_quant.api.gs.data import GsDataApi
         ret = GsDataApi._coordinate_from_str(value)
-        if len(ret.__mkt_point) == 1:
+        if len(ret.mkt_point) == 1:
             # Unfortunately _,; have all been used as delimiters in various places
-            ret.__mkt_point = tuple(re.split('[,_;]', ret.__mkt_point[0]))
+            ret.mkt_point = tuple(re.split('[,_;]', ret.mkt_point[0]))
 
         return ret
 
@@ -105,7 +105,8 @@ MarketDataMap = Mapping[MarketDataCoordinate, float]
 class LocationOnlyMarket(Market):
 
     def __init__(self, location: Optional[Union[str, PricingLocation]]):
-        self.__location = location
+        self.__location = location if isinstance(location, PricingLocation) or location is None else \
+            PricingLocation(location)
 
     @property
     def market(self):
@@ -127,7 +128,8 @@ class CloseMarket(Market):
                  location: Optional[Union[str, PricingLocation]] = None,
                  check: Optional[bool] = True):
         self.__date = date
-        self.__location = location
+        self.__location = location if isinstance(location, PricingLocation) or location is None else \
+            PricingLocation(location)
         self.check = check
 
     def __repr__(self):
@@ -159,7 +161,8 @@ class TimestampedMarket(Market):
 
     def __init__(self, timestamp: dt.datetime, location: Optional[Union[str, PricingLocation]] = None):
         self.__timestamp = timestamp
-        self.__location = location
+        self.__location = location if isinstance(location, PricingLocation) or location is None else \
+            PricingLocation(location)
 
     def __repr__(self):
         return f'{self.__timestamp} ({self.location.value})'
@@ -179,7 +182,8 @@ class LiveMarket(Market):
     """
 
     def __init__(self, location: Optional[Union[str, PricingLocation]] = None):
-        self.__location = location
+        self.__location = location if isinstance(location, PricingLocation) or location is None else \
+            PricingLocation(location)
 
     def __repr__(self):
         return f'Live ({self.location.value})'

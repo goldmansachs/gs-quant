@@ -104,13 +104,15 @@ class DictBase(HashableDict):
             if invalid_arg is not None:
                 raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{invalid_arg}'")
 
-        super().__init__(*args, **{camelize(k, uppercase_first_letter=False): v for k, v in kwargs.items()})
+        super().__init__(*args, **{camelize(k, uppercase_first_letter=False): v for k, v in kwargs.items()
+                                   if v is not None})
 
     def __getitem__(self, item):
         return super().__getitem__(camelize(item, uppercase_first_letter=False))
 
     def __setitem__(self, key, value):
-        return super().__setitem__(camelize(key, uppercase_first_letter=False), value)
+        if value is not None:
+            return super().__setitem__(camelize(key, uppercase_first_letter=False), value)
 
     def __getattr__(self, item):
         if self._PROPERTIES:
