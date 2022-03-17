@@ -22,6 +22,7 @@ from dataclasses_json import config, global_config
 from dataclasses_json.core import _decode_generic, _is_supported_generic
 import datetime as dt
 from enum import EnumMeta
+from functools import update_wrapper
 from inflection import camelize, underscore
 import logging
 import numpy as np
@@ -53,6 +54,30 @@ def is_iterable(o, t):
 
 def is_instance_or_iterable(o, t):
     return isinstance(o, t) or is_iterable(o, t)
+
+
+def handle_camel_case_args(cls):
+    init = cls.__init__
+
+    def wrapper(self, *args, **kwargs):
+        normalised_kwargs = {}
+
+        for arg, value in kwargs.items():
+            if not arg.isupper():
+                snake_case_arg = underscore(arg)
+                if snake_case_arg != arg and snake_case_arg in kwargs:
+                    raise ValueError('{} and {} both specified'.format(arg, snake_case_arg))
+
+                arg = snake_case_arg
+
+            arg = cls._field_mappings().get(arg, arg)
+            normalised_kwargs[arg] = value
+
+        return init(self, *args, **normalised_kwargs)
+
+    cls.__init__ = update_wrapper(wrapper=wrapper, wrapped=init)
+
+    return cls
 
 
 field_metadata = config(exclude=exclude_none)
@@ -136,26 +161,7 @@ class DictBase(HashableDict):
         return cls._PROPERTIES
 
 
-class BaseMeta(ABCMeta):
-
-    def __call__(cls, *args, **kwargs):
-        normalised_kwargs = {}
-
-        for arg, value in kwargs.items():
-            if not arg.isupper():
-                snake_case_arg = underscore(arg)
-                if snake_case_arg != arg and snake_case_arg in kwargs:
-                    raise ValueError('{} and {} both specified'.format(arg, snake_case_arg))
-
-                arg = snake_case_arg
-
-            arg = cls._field_mappings().get(arg, arg)
-            normalised_kwargs[arg] = value
-
-        return super().__call__(*args, **normalised_kwargs)
-
-
-class Base(ABC, metaclass=BaseMeta):
+class Base(ABC):
     """The base class for all generated classes"""
 
     __fields_by_name = None
@@ -189,7 +195,7 @@ class Base(ABC, metaclass=BaseMeta):
 
             key = snake_case_key
             value = self.__coerce_value(fld.type, value)
-            self._property_changed(key, value)
+            self._property_changed(snake_case_key, value)
 
         __setattr__(self, key, value)
 
@@ -422,7 +428,7 @@ class Priceable(Base):
         raise NotImplementedError
 
 
-class __ScenarioMeta(BaseMeta, ContextMeta):
+class __ScenarioMeta(ABCMeta, ContextMeta):
     pass
 
 
@@ -439,7 +445,7 @@ class RiskMeasureParameter(Base, ABC):
 @dataclass
 class InstrumentBase(Base, ABC):
 
-    quantity_: InitVar[float] = field(init=False, default=1)
+    quantity_: InitVar[float] = field(default=1, init=False)
 
     @property
     @abstractmethod
@@ -477,8 +483,7 @@ class InstrumentBase(Base, ABC):
 
     def _property_changed(self, prop: str, value):
         try:
-            if self.__resolution_key:
-                self.__resolution_key = None
+            if self.__resolution_key and prop not in ('valuation_overrides', 'name'):
                 self.unresolve()
         except AttributeError:
             # Can happen during init

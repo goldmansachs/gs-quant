@@ -94,6 +94,7 @@ class IndicesRebalanceInputTypes(Base):
     pass
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ApprovalComment(Base):
@@ -102,6 +103,7 @@ class ApprovalComment(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketRiskParams(Base):
@@ -111,6 +113,7 @@ class CustomBasketRiskParams(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsRebalanceAction(IndicesRebalanceActionTypes):
@@ -119,6 +122,7 @@ class CustomBasketsRebalanceAction(IndicesRebalanceActionTypes):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsResponse(IndicesConstructResponseTypes):
@@ -128,6 +132,7 @@ class CustomBasketsResponse(IndicesConstructResponseTypes):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectActionRequest(IndicesRebalanceActionTypes):
@@ -137,6 +142,7 @@ class ISelectActionRequest(IndicesRebalanceActionTypes):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectIndexParameter(Base):
@@ -144,6 +150,7 @@ class ISelectIndexParameter(Base):
     value: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectIndexParameters(Base):
@@ -151,6 +158,7 @@ class ISelectIndexParameters(Base):
     value: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectSeries(Base):
@@ -160,6 +168,7 @@ class ISelectSeries(Base):
     name: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IndicesPositionInput(Base):
@@ -168,6 +177,7 @@ class IndicesPositionInput(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PositionPriceInput(Base):
@@ -178,6 +188,7 @@ class PositionPriceInput(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PublishParameters(Base):
@@ -188,6 +199,7 @@ class PublishParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CreditCustomBasketPricingParameters(Base):
@@ -200,6 +212,7 @@ class CreditCustomBasketPricingParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsPricingParameters(Base):
@@ -218,6 +231,7 @@ class CustomBasketsPricingParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsRiskScheduleInputs(Base):
@@ -225,6 +239,7 @@ class CustomBasketsRiskScheduleInputs(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectConstituentColumn(Base):
@@ -243,6 +258,7 @@ class ISelectConstituentColumn(Base):
     tooltip: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IndicesPositionSet(Base):
@@ -251,6 +267,7 @@ class IndicesPositionSet(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CreditCustomBasketCreateInputs(IndicesConstructRequestTypes):
@@ -268,8 +285,11 @@ class CreditCustomBasketCreateInputs(IndicesConstructRequestTypes):
     index_notes: Optional[str] = field(default=None, metadata=field_metadata)
     flagship: Optional[bool] = field(default=False, metadata=field_metadata)
     on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
+    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
+    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsBackcastInputs(Base):
@@ -277,6 +297,7 @@ class CustomBasketsBackcastInputs(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsCreateInputs(IndicesConstructRequestTypes):
@@ -301,6 +322,7 @@ class CustomBasketsCreateInputs(IndicesConstructRequestTypes):
     default_backcast: Optional[bool] = field(default=True, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsEditInputs(Base):
@@ -317,6 +339,7 @@ class CustomBasketsEditInputs(Base):
     portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsRebalanceInputs(Base):
@@ -332,6 +355,7 @@ class CustomBasketsRebalanceInputs(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DynamicConstructionResponse(IndicesConstructResponseTypes):
@@ -353,6 +377,7 @@ class DynamicConstructionResponse(IndicesConstructResponseTypes):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectRebalance(Base):
@@ -364,6 +389,7 @@ class ISelectRebalance(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectRequest(IndicesRebalanceInputTypes):
@@ -381,6 +407,7 @@ class ISelectRequest(IndicesRebalanceInputTypes):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectResponse(Base):
@@ -417,6 +444,7 @@ class ISelectResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IndicesDynamicConstructInputs(IndicesConstructRequestTypes):
@@ -427,6 +455,7 @@ class IndicesDynamicConstructInputs(IndicesConstructRequestTypes):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IndicesBackcastInputs(Base):
@@ -434,6 +463,7 @@ class IndicesBackcastInputs(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IndicesEditInputs(Base):
@@ -441,6 +471,7 @@ class IndicesEditInputs(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IndicesRebalanceInputs(IndicesRebalanceInputTypes):
@@ -448,6 +479,7 @@ class IndicesRebalanceInputs(IndicesRebalanceInputTypes):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ApprovalCustomBasketResponse(Base):

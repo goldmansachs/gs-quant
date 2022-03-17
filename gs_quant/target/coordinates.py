@@ -32,6 +32,7 @@ class MDAPIQueryField(EnumBase, Enum):
     actualDataQuality = 'actualDataQuality'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MDAPIDataQuery(Base):
@@ -52,6 +53,7 @@ class MDAPIDataQuery(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MDAPIDataQueryResponse(Base):
@@ -59,6 +61,7 @@ class MDAPIDataQueryResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MDAPIDataBatchResponse(Base):

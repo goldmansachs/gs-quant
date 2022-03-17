@@ -576,11 +576,14 @@ class PerformanceHedgeParameters:
         if self.initial_portfolio.reference_notional:
             payload['parameters']['targetNotional'] = self.initial_portfolio.reference_notional
             payload['parameters']['weightingStrategy'] = "Weight"
+
         try:
             price_results = GsSession.current._post('/price/positions', payload)
         except Exception as e:
-            raise MqValueError('There was an error pricing your positions. Please try uploading your positions as '
-                               f'weights instead: {e}')
+            raise MqValueError(f'There was an error pricing your positions: {e}')
+        if 'errorMessage' in price_results:
+            raise MqValueError(f'There was an error pricing your positions: {price_results["errorMessage"]}')
+
         if self.initial_portfolio.reference_notional is None:
             self.initial_portfolio.reference_notional = price_results.get('actualNotional')
         positions_as_dict = [{'assetId': p['assetId'], 'quantity': p['quantity']} for p in

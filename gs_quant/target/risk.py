@@ -60,6 +60,7 @@ class OptimizationUrgency(EnumBase, Enum):
     VERY_HIGH = 'VERY_HIGH'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AdvCurveTick(Base):
@@ -68,6 +69,7 @@ class AdvCurveTick(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ExecutionCostForHorizon(Base):
@@ -78,6 +80,7 @@ class ExecutionCostForHorizon(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityBucket(Base):
@@ -108,6 +111,7 @@ class LiquidityBucket(Base):
     short_beta_adjusted_exposure: Optional[float] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityFactor(Base):
@@ -115,6 +119,7 @@ class LiquidityFactor(Base):
     value: Optional[float] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquiditySummarySection(Base):
@@ -144,6 +149,7 @@ class LiquiditySummarySection(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationAssetAnalyticsDaily(Base):
@@ -160,6 +166,7 @@ class OptimizationAssetAnalyticsDaily(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationAssetAnalyticsDayOne(Base):
@@ -169,6 +176,7 @@ class OptimizationAssetAnalyticsDayOne(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationAssetAnalyticsIntraday(Base):
@@ -205,6 +213,7 @@ class OptimizationAssetAnalyticsIntraday(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationCloseAuctionAnalytics(Base):
@@ -220,6 +229,7 @@ class OptimizationCloseAuctionAnalytics(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationClusterAnalytics(Base):
@@ -231,6 +241,7 @@ class OptimizationClusterAnalytics(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationClusterAnalyticsIntradayItem(Base):
@@ -241,6 +252,7 @@ class OptimizationClusterAnalyticsIntradayItem(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationEodCashPositionsItem(Base):
@@ -249,6 +261,7 @@ class OptimizationEodCashPositionsItem(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationExcludedAsset(Base):
@@ -259,6 +272,7 @@ class OptimizationExcludedAsset(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationFactorAnalyticsItem(Base):
@@ -271,6 +285,7 @@ class OptimizationFactorAnalyticsItem(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationPortfolioAnalyticsDaily(Base):
@@ -281,6 +296,7 @@ class OptimizationPortfolioAnalyticsDaily(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationPortfolioAnalyticsIntraday(Base):
@@ -315,6 +331,7 @@ class OptimizationPortfolioAnalyticsIntraday(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationPortfolioSummarySection(Base):
@@ -332,6 +349,7 @@ class OptimizationPortfolioSummarySection(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationTradedPosition(Base):
@@ -341,6 +359,7 @@ class OptimizationTradedPosition(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PRateForHorizon(Base):
@@ -351,6 +370,7 @@ class PRateForHorizon(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskAtHorizon(Base):
@@ -361,6 +381,7 @@ class RiskAtHorizon(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class TradeCompleteAtHorizon(Base):
@@ -371,6 +392,7 @@ class TradeCompleteAtHorizon(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityConstituent(Base):
@@ -402,6 +424,7 @@ class LiquidityConstituent(Base):
     settlement_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityFactorCategory(Base):
@@ -409,6 +432,7 @@ class LiquidityFactorCategory(Base):
     sub_factors: Optional[Tuple[LiquidityFactor, ...]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquiditySummary(Base):
@@ -419,6 +443,7 @@ class LiquiditySummary(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationClusterAnalyticsIntraday(Base):
@@ -429,6 +454,7 @@ class OptimizationClusterAnalyticsIntraday(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationEodCashPositions(Base):
@@ -437,6 +463,7 @@ class OptimizationEodCashPositions(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationPortfolioCharacteristics(Base):
@@ -447,6 +474,7 @@ class OptimizationPortfolioCharacteristics(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityTableRow(Base):
@@ -464,6 +492,7 @@ class LiquidityTableRow(Base):
     normalized_performance: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityTimeSeriesItem(Base):
@@ -479,6 +508,7 @@ class LiquidityTimeSeriesItem(Base):
     cumulative_pnl: Optional[Tuple[Tuple[Union[datetime.date, float], ...], ...]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationFactorAnalyticsIntraday(Base):
@@ -493,6 +523,7 @@ class OptimizationFactorAnalyticsIntraday(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationTradeSchedule(Base):
@@ -504,6 +535,7 @@ class OptimizationTradeSchedule(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiquidityResponse(Base):
@@ -541,6 +573,7 @@ class LiquidityResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationAnalytics(Base):
@@ -560,6 +593,7 @@ class OptimizationAnalytics(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationResult(Base):
@@ -577,6 +611,7 @@ class OptimizationResult(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptimizationRequest(Base):

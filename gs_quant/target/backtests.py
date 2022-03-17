@@ -92,6 +92,7 @@ class FlowVolBacktestMeasure(EnumBase, Enum):
     NAV = 'NAV'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestComparison(Base):
@@ -100,6 +101,7 @@ class BacktestComparison(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestRebalanceParameters(Base):
@@ -110,6 +112,7 @@ class BacktestRebalanceParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestSignalSeriesItem(Base):
@@ -118,6 +121,7 @@ class BacktestSignalSeriesItem(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BaseIndexRefData(Base):
@@ -126,6 +130,7 @@ class BaseIndexRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BuySellRefData(Base):
@@ -134,6 +139,7 @@ class BuySellRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DeltaHedgeParameters(Base):
@@ -144,6 +150,7 @@ class DeltaHedgeParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DeltaHedgingParameters(Base):
@@ -154,6 +161,7 @@ class DeltaHedgingParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EnhancedBetaUnderlier(Base):
@@ -165,6 +173,7 @@ class EnhancedBetaUnderlier(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EnhancedBetaUnderlierRefData(Base):
@@ -174,6 +183,7 @@ class EnhancedBetaUnderlierRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EntityCorrelation(Base):
@@ -183,6 +193,7 @@ class EntityCorrelation(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ExpirationRefData(Base):
@@ -191,6 +202,7 @@ class ExpirationRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FixingTimeRefData(Base):
@@ -199,6 +211,7 @@ class FixingTimeRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FrequencyRefData(Base):
@@ -207,6 +220,7 @@ class FrequencyRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HistoricalUnderlier(Base):
@@ -216,6 +230,7 @@ class HistoricalUnderlier(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LookBackPeriodRefData(Base):
@@ -224,6 +239,7 @@ class LookBackPeriodRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class NotionalPercentageRefData(Base):
@@ -233,6 +249,7 @@ class NotionalPercentageRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptionStrikeTypeRefData(Base):
@@ -241,6 +258,7 @@ class OptionStrikeTypeRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptionTypeRefData(Base):
@@ -249,6 +267,7 @@ class OptionTypeRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ScalingMethodRefData(Base):
@@ -257,6 +276,7 @@ class ScalingMethodRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class StrikeRefData(Base):
@@ -266,6 +286,7 @@ class StrikeRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class TradeInMethodRefData(Base):
@@ -274,6 +295,7 @@ class TradeInMethodRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class TradeInTimeRefData(Base):
@@ -282,6 +304,7 @@ class TradeInTimeRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class VolatilityWeightedWeightingModifier(Base):
@@ -291,6 +314,7 @@ class VolatilityWeightedWeightingModifier(Base):
     use_log_return: Optional[bool] = field(default=False, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class VolatilityWeightedWeightingModifierRefData(Base):
@@ -299,6 +323,7 @@ class VolatilityWeightedWeightingModifierRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestStrategyUnderlierHedge(Base):
@@ -307,6 +332,7 @@ class BacktestStrategyUnderlierHedge(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestTradingParameters(Base):
@@ -321,6 +347,7 @@ class BacktestTradingParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BasketBacktestParameters(Base):
@@ -331,6 +358,7 @@ class BasketBacktestParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CurrencyRefData(Base):
@@ -339,6 +367,7 @@ class CurrencyRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DeltaHedgingRefData(Base):
@@ -348,6 +377,7 @@ class DeltaHedgingRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EnhancedBetaBacktestParameters(Base):
@@ -358,6 +388,7 @@ class EnhancedBetaBacktestParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectBacktestParameters(Base):
@@ -366,6 +397,7 @@ class ISelectBacktestParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class OptionBacktestUnderlier(Base):
@@ -381,6 +413,7 @@ class OptionBacktestUnderlier(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PerformanceRange(Base):
@@ -389,6 +422,7 @@ class PerformanceRange(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class UnderlyingAssetIdDataRefData(Base):
@@ -398,6 +432,7 @@ class UnderlyingAssetIdDataRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestPerformanceDecomposition(Base):
@@ -406,6 +441,7 @@ class BacktestPerformanceDecomposition(Base):
     stats: Optional[PerformanceStats] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestRisk(Base):
@@ -413,6 +449,7 @@ class BacktestRisk(Base):
     timeseries: Optional[Tuple[FieldValueMap, ...]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestRiskPosition(Base):
@@ -423,6 +460,7 @@ class BacktestRiskPosition(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestStrategyUnderlier(Base):
@@ -434,6 +472,7 @@ class BacktestStrategyUnderlier(Base):
     hedge: Optional[BacktestStrategyUnderlierHedge] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BasketBacktestRefData(Base):
@@ -444,6 +483,7 @@ class BasketBacktestRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ComparisonBacktestResult(Base):
@@ -453,6 +493,7 @@ class ComparisonBacktestResult(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EnhancedBetaRefData(Base):
@@ -464,6 +505,7 @@ class EnhancedBetaRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class UnderlyingAssetIdRefData(Base):
@@ -473,6 +515,7 @@ class UnderlyingAssetIdRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class VolatilityBacktestParameters(Base):
@@ -482,6 +525,7 @@ class VolatilityBacktestParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestResult(Base):
@@ -498,6 +542,7 @@ class BacktestResult(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestRiskRequest(Base):
@@ -508,6 +553,7 @@ class BacktestRiskRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class VolBacktestRefData(Base):
@@ -529,6 +575,7 @@ class VolBacktestRefData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class VolatilityFlowBacktestParameters(Base):
@@ -539,6 +586,7 @@ class VolatilityFlowBacktestParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Backtest(Base):
@@ -563,6 +611,7 @@ class Backtest(Base):
     version: Optional[float] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestRefData(Base):

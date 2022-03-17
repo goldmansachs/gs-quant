@@ -44,7 +44,9 @@ def build_asset_data_map(results: List, universe: List, measure: str) -> dict:
 def build_factor_data_map(results: List, identifier: str) -> dict:
     if not results:
         return {}
-    factor_data = [factor.get('factorId') for factor in results[0].get('factorData')]
+    factor_data = set()
+    for row in results:
+        factor_data |= set([factor.get('factorId') for factor in row.get('factorData')])
     data_map = {}
     for factor in factor_data:
         date_list = {}

@@ -78,6 +78,7 @@ class SecMasterSourceNames(EnumBase, Enum):
     Goldman_Sachs = 'Goldman Sachs'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterAuditFields(Base):
@@ -92,6 +93,7 @@ class SecMasterAuditFields(Base):
 SecMasterIdentifiers = Dict[str, str]
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterResourceCompany(Base):
@@ -100,6 +102,7 @@ class SecMasterResourceCompany(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterTemporalCompany(SecMasterResponseMulti):
@@ -110,6 +113,7 @@ class SecMasterTemporalCompany(SecMasterResponseMulti):
     name: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ExchangeGetRequestPathSchema(Base):
@@ -128,6 +132,7 @@ class ExchangeGetRequestPathSchema(Base):
     offset_key: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterExchange(SecMasterResponseMulti):
@@ -140,6 +145,7 @@ class SecMasterExchange(SecMasterResponseMulti):
     identifiers: Optional[SecMasterIdentifiers] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterGetRequestPathSchema(Base):
@@ -163,6 +169,7 @@ class SecMasterGetRequestPathSchema(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterResourceExchange(Base):
@@ -170,6 +177,7 @@ class SecMasterResourceExchange(Base):
     identifiers: Optional[SecMasterIdentifiers] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterResourceProduct(Base):
@@ -180,6 +188,7 @@ class SecMasterResourceProduct(Base):
 SecMasterSources = Dict[str, SecMasterSourceNames]
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterTemporalProduct(SecMasterResponseMulti):
@@ -197,6 +206,7 @@ class SecMasterTemporalProduct(SecMasterResponseMulti):
     update_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterAssetSources(Base):
@@ -210,6 +220,7 @@ class SecMasterAssetSources(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterResponseMulti(Base):
@@ -222,6 +233,7 @@ class SecMasterResponseMulti(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterAsset(Base):
@@ -241,6 +253,7 @@ class SecMasterAsset(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecMasterResponseAssets(Base):

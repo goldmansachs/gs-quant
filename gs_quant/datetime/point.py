@@ -17,6 +17,7 @@ import datetime as dt
 import functools
 import re
 import string
+from typing import Optional
 
 from gs_quant.errors import MqValueError
 
@@ -118,7 +119,7 @@ def relative_date_add(date_rule: str, strict: bool = False) -> float:
 
 
 @functools.lru_cache(maxsize=None)
-def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
+def point_sort_order(point: str, ref_date: Optional[dt.date] = None) -> Optional[float]:
     """
     Calculates a number that can be used to sort Mkt Points by it.
 
@@ -131,6 +132,8 @@ def point_sort_order(point: str, ref_date: dt.date = dt.date.today()) -> float:
     >>> import datetime as dt
     >>> days = point_sort_order(point = 'Dec20', ref_date=dt.date.today())
     """
+
+    ref_date = dt.date.today() if ref_date is None else ref_date
 
     if not point or not isinstance(point, str):
         return 0

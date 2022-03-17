@@ -11,7 +11,6 @@
 # under the License.
 #
 # Plot Service will make use of appropriately decorated functions in this module.
-
 import re
 from collections import namedtuple
 from numbers import Real
@@ -2093,10 +2092,56 @@ def measure_request_safe(parent_fn_name, asset, fn, request_id, *args, **kwargs)
         raise MqValueError(f'{parent_fn_name} not available for {asset.name}.')
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX), None, [QueryType.FORWARD, QueryType.FORWARD_POINT])
-def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
-             fwd_type: FXForwardType = FXForwardType.OUTRIGHT, *, source: str = None, real_time: bool = False,
+@plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.FORWARD])
+def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
              request_id: Optional[str] = None) -> pd.Series:
+    """
+    Forward term structure. Uses most recent date available if pricing_date is not provided. If pricing_date falls on
+    a weekend or holiday, uses the previous business day as pricing date.
+
+    :param asset: asset object loaded from security master
+    :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y (default today)
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: forward term structure
+    """
+    if real_time:
+        raise NotImplementedError('realtime forward term not implemented')  # TODO
+
+    asset_id = asset.get_marquee_id()
+    query_type, where = QueryType.FORWARD, dict(strikeReference='forward', relativeStrike=1)
+    forward_col_name = 'forward'
+
+    check_forward_looking(pricing_date, source, 'fwd_term')
+    cbd = _get_custom_bd(asset.exchange)
+    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    start = start + cbd - cbd  # get previous business day's pricing if start, end on a non-BD
+    with DataContext(start, end):
+        q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source,
+                                              real_time=real_time)
+        log_debug(request_id, _logger, 'q %s', q)
+        df = measure_request_safe('fwd_term', asset, _market_data_timed, request_id, q, request_id)
+    dataset_ids = getattr(df, 'dataset_ids', ())
+    if df.empty:
+        series = ExtendedSeries(dtype=float)
+    else:
+        latest = df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        df = df.loc[latest]
+        df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
+        df = df.set_index('expirationDate')
+        df.sort_index(inplace=True)
+        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[forward_col_name])
+    series.dataset_ids = dataset_ids
+    return series
+
+
+@plot_measure((AssetClass.FX,), None, [QueryType.SPOT, QueryType.FORWARD_POINT], display_name='fwd_term')
+def fx_fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
+                fwd_type: FXForwardType = FXForwardType.OUTRIGHT, *, source: str = None, real_time: bool = False,
+                request_id: Optional[str] = None) -> pd.Series:
     """
     Forward term structure. Uses most recent date available if pricing_date is not provided. If pricing_date falls on
     a weekend or holiday, uses the previous business day as pricing date.
@@ -2113,24 +2158,17 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
     if real_time:
         raise NotImplementedError('realtime forward term not implemented')  # TODO
 
-    if asset.asset_class == AssetClass.FX:
-        asset_id = cross_stored_direction_for_fx_vol(asset)
-        forward_col_name = 'forwardPoint'
-        query_type, where = QueryType.FORWARD_POINT, {}
-
-        get_spot = fwd_type == FXForwardType.OUTRIGHT
-    else:
-        if fwd_type != FXForwardType.OUTRIGHT:
-            raise MqValueError('Parameter fwd_type must be outright for non-FX assets.')
-        asset_id = asset.get_marquee_id()
-        query_type, where = QueryType.FORWARD, dict(strikeReference='forward', relativeStrike=1)
-        forward_col_name = 'forward'
-        get_spot = False
+    assert asset.asset_class == AssetClass.FX
+    asset_id = cross_stored_direction_for_fx_vol(asset)
+    forward_col_name = 'forwardPoint'
+    query_type, where = QueryType.FORWARD_POINT, {}
+    get_spot = fwd_type == FXForwardType.OUTRIGHT
 
     check_forward_looking(pricing_date, source, 'fwd_term')
     cbd = _get_custom_bd(asset.exchange)
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
-    start -= cbd  # get previous business day's pricing if start, end on a non-BD
+    start = start + cbd - cbd  # get previous business day's pricing if start, end on a non-BD
+    dataset_ids = set()
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source,
                                               real_time=real_time)
@@ -2139,10 +2177,13 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
                                                        real_time=real_time)
             data_requests = [partial(_market_data_timed, q, request_id),
                              partial(_market_data_timed, q_spot, request_id)]
-            df, spot_df = measure_request_safe('fwd_term', asset, ThreadPoolManager.run_async, data_requests)
+            df, spot_df = measure_request_safe('fwd_term', asset, ThreadPoolManager.run_async, request_id,
+                                               data_requests)
+            dataset_ids.update(getattr(df, 'dataset_ids', ()) + getattr(spot_df, 'dataset_ids', ()))
         else:
             log_debug(request_id, _logger, 'q %s', q)
             df = measure_request_safe('fwd_term', asset, _market_data_timed, request_id, q, request_id)
+            dataset_ids.update(getattr(df, 'dataset_ids', ()))
     dataset_ids = getattr(df, 'dataset_ids', ())
     if df.empty:
         series = ExtendedSeries(dtype=float)
@@ -2158,7 +2199,64 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
             spot = spot_df.loc[latest]['spot']
             df[forward_col_name] = df[forward_col_name] + spot
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[forward_col_name])
-    series.dataset_ids = dataset_ids
+    series.dataset_ids = tuple(dataset_ids)
+    return series
+
+
+@plot_measure((AssetClass.FX,), None, [QueryType.FORWARD, QueryType.SPOT])
+def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
+               annualized: FXSpotCarry = FXSpotCarry.ANNUALIZED, *, source: str = None,
+               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    Carry term structure. Uses most recent date available if pricing_date is not provided. If pricing_date falls on
+    a weekend or holiday, uses the previous business day as pricing date.
+
+    Carry is FORWARD POINT / CURRENT SPOT for FX assets.
+
+    :param asset: asset object loaded from security master
+    :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y (default today)
+    :param annualized: whether or not to annualize returned carry
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: forward term structure
+    """
+    if real_time:
+        raise NotImplementedError('realtime forward term not implemented')  # TODO
+
+    asset_id = cross_stored_direction_for_fx_vol(asset)
+    forward_col_name = 'forwardPoint'
+
+    check_forward_looking(pricing_date, source, 'fwd_term')
+    cbd = _get_custom_bd(asset.exchange)
+    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
+    start = start + cbd - cbd  # get previous business day's pricing if start, end on a non-BD
+    with DataContext(start, end):
+        q = GsDataApi.build_market_data_query([asset_id], QueryType.FORWARD_POINT, where={}, source=source,
+                                              real_time=real_time)
+        q_spot = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT, where={}, source=source,
+                                                   real_time=real_time)
+        data_requests = [partial(_market_data_timed, q, request_id),
+                         partial(_market_data_timed, q_spot, request_id)]
+        df, spot_df = measure_request_safe('fwd_term', asset, ThreadPoolManager.run_async, request_id, data_requests)
+    dataset_ids = set(getattr(df, 'dataset_ids', ()) + getattr(spot_df, 'dataset_ids', ()))
+    if df.empty:
+        series = ExtendedSeries(dtype=float)
+    else:
+        latest = df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        df = df.loc[latest]
+        df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
+        df = df.set_index('expirationDate')
+        df.sort_index(inplace=True)
+        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        spot = spot_df.loc[latest]['spot']
+        df[forward_col_name] = df[forward_col_name] / spot
+        if annualized == FXSpotCarry.ANNUALIZED:
+            df[forward_col_name] = df[forward_col_name] * np.sqrt((df.index.to_series() - latest).dt.days / 252)
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[forward_col_name])
+    series.name = 'carry'
+    series.dataset_ids = tuple(dataset_ids)
     return series
 
 

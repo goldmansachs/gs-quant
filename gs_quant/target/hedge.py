@@ -77,6 +77,7 @@ class HedgerConstraintPrioritySetting(EnumBase, Enum):
     _5 = '5'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetConstraint(Base):
@@ -86,6 +87,7 @@ class AssetConstraint(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ClassificationConstraint(Base):
@@ -95,6 +97,7 @@ class ClassificationConstraint(Base):
     min_: float = field(default=None, metadata=config(field_name='min', exclude=exclude_none))
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ESGConstraint(Base):
@@ -103,6 +106,7 @@ class ESGConstraint(Base):
     min_: float = field(default=None, metadata=config(field_name='min', exclude=exclude_none))
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorConstraint(Base):
@@ -111,6 +115,7 @@ class FactorConstraint(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorExposure(Base):
@@ -119,6 +124,7 @@ class FactorExposure(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgerComparisonProperties(Base):
@@ -127,6 +133,7 @@ class HedgerComparisonProperties(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorExposures(Base):
@@ -137,6 +144,7 @@ class FactorExposures(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgeUniverse(Base):
@@ -145,6 +153,7 @@ class FactorHedgeUniverse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgerConstraintPrioritySettings(Base):
@@ -164,6 +173,7 @@ class FactorHedgerConstraintPrioritySettings(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgeConstituent(Base):
@@ -186,6 +196,7 @@ class HedgeConstituent(Base):
     industry: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgerResultPositions(Base):
@@ -214,6 +225,7 @@ class FactorHedgerResultPositions(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgeBenchmark(Base):
@@ -222,6 +234,7 @@ class HedgeBenchmark(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgeGetManyRequestPathSchema(Base):
@@ -246,6 +259,7 @@ class HedgeGetManyRequestPathSchema(Base):
     hedge_notional: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PerformanceHedgeResult(Base):
@@ -256,6 +270,7 @@ class PerformanceHedgeResult(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgeResult(Base):
@@ -265,6 +280,7 @@ class FactorHedgeResult(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgerComparison(Base):
@@ -275,6 +291,7 @@ class HedgerComparison(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Target(Base):
@@ -283,6 +300,7 @@ class Target(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorHedgeParameters(Base):
@@ -320,6 +338,7 @@ class FactorHedgeParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PerformanceHedgeParameters(Base):
@@ -355,6 +374,7 @@ class PerformanceHedgeParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Hedge(Base):

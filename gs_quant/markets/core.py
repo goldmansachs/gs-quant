@@ -186,6 +186,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__show_progress = show_progress
         self._max_concurrent = 1000
         self.__use_server_cache = use_server_cache
+        self._group_by_date = True
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
         if exc_val:
@@ -255,7 +256,7 @@ class PricingContext(ContextBaseWithDefault):
                                         zip_longest(*[iter(instruments)] * self._max_concurrent)]:
                         for dates_chunk in [tuple(filter(None, i)) for i in
                                             zip_longest(*[iter(dates_markets)] * (
-                                                    1 if self._max_concurrent == 1000 else self._max_concurrent))]:
+                                                    1 if self._group_by_date else self._max_concurrent))]:
                             requests.append(RiskRequest(
                                 tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity,
                                                    instrument_name=i.name) for i in insts_chunk),

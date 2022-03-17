@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import LetterCase, config, dataclass_json
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class GroupWithMembersCount(Base):
@@ -29,6 +30,7 @@ class GroupWithMembersCount(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class UpdateGroupMembershipRequest(Base):
@@ -36,6 +38,32 @@ class UpdateGroupMembershipRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class UserCoverage(Base):
+    name: str = field(default=None, metadata=field_metadata)
+    email: str = field(default=None, metadata=field_metadata)
+    app: Optional[str] = field(default=None, metadata=field_metadata)
+    phone: Optional[str] = field(default=None, metadata=field_metadata)
+    guid: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class UserTag(Base):
+    name: str = field(default=None, metadata=field_metadata)
+    added_on: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    added_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    removed: Optional[bool] = field(default=None, metadata=field_metadata)
+    removed_on: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    removed_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    removal_reason: Optional[str] = field(default=None, metadata=field_metadata)
+    category: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class GroupResponse(Base):
@@ -45,6 +73,7 @@ class GroupResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CreateGroupRequest(Base):
@@ -57,6 +86,7 @@ class CreateGroupRequest(Base):
     tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class UpdateGroupRequest(Base):
@@ -68,6 +98,7 @@ class UpdateGroupRequest(Base):
     tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Group(Base):
