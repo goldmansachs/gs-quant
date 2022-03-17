@@ -13,13 +13,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from dataclasses_json import global_config
 import datetime as dt
 import inspect
 import logging
 import warnings
 from copy import deepcopy
 from typing import Iterable, Optional, Tuple, Union
+
+from dataclasses_json import global_config
 
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
@@ -93,9 +94,9 @@ class Instrument(PriceableImpl, InstrumentBase):
     def _to_dict(self, encode_json: Optional[bool]):
         return self._dataclass_json_to_dict(encode_json=encode_json)
 
-    def clone(self):
+    def clone(self, **kwargs):
         with Instrument.__SuppressResolutionContext(self):
-            return super().clone()
+            return super().clone(**kwargs)
 
     def __getattribute__(self, name):
         ret = super().__getattribute__(name)
@@ -250,7 +251,8 @@ class Instrument(PriceableImpl, InstrumentBase):
             future.add_done_callback(cb)
             future = ret
 
-        return future if self._return_future else future.result()
+        with Instrument.__SuppressResolutionContext(self):
+            return future if self._return_future else future.result()
 
     @classmethod
     def from_dict(cls, values: dict):

@@ -134,6 +134,7 @@ class WipiFilterType(EnumBase, Enum):
     OR = 'OR'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnProperty(Base):
@@ -146,6 +147,7 @@ class FieldMap(DictBase):
     pass
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Historical(Base):
@@ -153,6 +155,7 @@ class Historical(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MonitorResponseData(Base):
@@ -161,6 +164,7 @@ class MonitorResponseData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Movers(Base):
@@ -170,6 +174,7 @@ class Movers(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnFormat(Base):
@@ -189,6 +194,7 @@ class ColumnFormat(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnMappings(Base):
@@ -198,6 +204,7 @@ class ColumnMappings(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnOperation(Base):
@@ -208,6 +215,7 @@ class ColumnOperation(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ExportParameters(Base):
@@ -219,6 +227,7 @@ class ExportParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Function(Base):
@@ -236,6 +245,7 @@ class Function(Base):
     data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RateRow(Base):
@@ -249,6 +259,7 @@ class RateRow(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Sort(Base):
@@ -258,6 +269,7 @@ class Sort(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class WipiRequestFilter(Base):
@@ -268,6 +280,7 @@ class WipiRequestFilter(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ColumnDefinition(Base):
@@ -291,6 +304,7 @@ class ColumnDefinition(Base):
     disable_cell_tooltips: Optional[bool] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EntityId(Base):
@@ -301,6 +315,7 @@ class EntityId(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RatesResponseData(Base):
@@ -310,6 +325,7 @@ class RatesResponseData(Base):
     libor_id: Optional[str] = field(default=None, metadata=config(field_name='libor_id', exclude=exclude_none))
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RowGroup(Base):
@@ -320,6 +336,7 @@ class RowGroup(Base):
     export: Optional[ExportParameters] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MonitorParameters(Base):
@@ -334,6 +351,7 @@ class MonitorParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Monitor(Base):

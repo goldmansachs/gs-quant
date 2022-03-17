@@ -105,6 +105,7 @@ class ReportType(EnumBase, Enum):
     PCO = 'PCO'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Report(Base):
@@ -132,6 +133,7 @@ class Report(Base):
     percentage_complete: Optional[float] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ParametersOverrides(Base):
@@ -140,6 +142,7 @@ class ParametersOverrides(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ReportGenerateRequest(Base):
@@ -150,6 +153,7 @@ class ReportGenerateRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ReportRescheduleRequest(Base):
@@ -157,6 +161,7 @@ class ReportRescheduleRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ReportWithParametersOverrides(Base):
@@ -165,6 +170,7 @@ class ReportWithParametersOverrides(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ReportToggleEntityRequest(Base):
@@ -175,6 +181,7 @@ class ReportToggleEntityRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ReportBatchScheduleRequest(Base):
@@ -189,6 +196,7 @@ class ReportBatchScheduleRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ReportJob(Base):

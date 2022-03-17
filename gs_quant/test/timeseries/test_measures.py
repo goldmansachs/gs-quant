@@ -3393,13 +3393,11 @@ def _fwd_term_typical():
         assert actual.dataset_ids == _test_datasets
     market_mock.assert_called_once()
 
-    with pytest.raises(MqValueError):
-        tm.fwd_term(Index('MA123', AssetClass.Equity, '123'), fwd_type=tm.FXForwardType.POINTS)
     replace.restore()
     return actual
 
 
-def _fwd_term_fx_typical():
+def _fx_fwd_term_typical():
     assert DataContext.current_is_set
     fwd_data = {
         'tenor': ['1w', '2w', '1y', '2y'],
@@ -3421,16 +3419,23 @@ def _fwd_term_fx_typical():
     thread_mock = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
     thread_mock.return_value = [out, spot]
 
-    actual = tm.fwd_term(Index('MA123', AssetClass.FX, '123'))
+    actual = tm.fx_fwd_term(Index('MA123', AssetClass.FX, '123'))
     idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([101, 102, 103, 104], name='forwardPoint', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+    assert_series_equal(pd.Series(actual), expected)
+    assert actual.dataset_ids == _test_datasets
 
-    if expected.empty:
-        assert actual.empty
-    else:
-        assert_series_equal(expected, pd.Series(actual))
-        assert actual.dataset_ids == _test_datasets
+    actual = tm.fx_fwd_term(Index('MA123', AssetClass.FX, '123'), fwd_type=tm.FXForwardType.POINTS)
+    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    expected = pd.Series([1, 2, 3, 4], name='forwardPoint', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+    assert_series_equal(pd.Series(actual), expected)
+    assert actual.dataset_ids == _test_datasets
+
+    with pytest.raises(NotImplementedError):
+        tm.fx_fwd_term(..., real_time=True)
+
     replace.restore()
 
 
@@ -3443,12 +3448,28 @@ def _fwd_term_empty():
     assert actual.empty
     assert actual.dataset_ids == ()
     market_mock.assert_called_once()
+
     replace.restore()
 
 
-def _fwd_term_fx():
+def _fx_fwd_term_empty():
+    replace = Replacer()
+    fx_asset_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
+    fx_asset_mock.return_value = 'MA123'
+
+    thread_mock = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
+    thread_mock.return_value = [pd.DataFrame(), pd.DataFrame()]
+
+    actual = tm.fx_fwd_term(Index('MAXYZ', AssetClass.FX, 'XYZ'))
+    assert actual.empty
+    assert actual.dataset_ids == ()
+    replace.restore()
+
+
+def _fx_fwd_term():
     with DataContext('2018-01-01', '2019-01-01'):
-        _fwd_term_fx_typical()
+        _fx_fwd_term_typical()
+        _fx_fwd_term_empty()
 
 
 def _fwd_term_equity():
@@ -3464,8 +3485,60 @@ def _fwd_term_equity():
 
 
 def test_fwd_term():
-    _fwd_term_fx()
+    _fx_fwd_term()
     _fwd_term_equity()
+
+
+def _carry_term_typical():
+    assert DataContext.current_is_set
+    fwd_data = {
+        'tenor': ['1w', '2w', '1y', '2y'],
+        'forwardPoint': [1, 2, 3, 4]
+    }
+    out = MarketDataResponseFrame(data=fwd_data, index=pd.DatetimeIndex(['2018-01-01'] * 4))
+    out.dataset_ids = _test_datasets
+
+    spot_data = {'spot': [100], 'assetId': 'MA123'}
+    spot = MarketDataResponseFrame(data=spot_data, index=pd.DatetimeIndex(['2018-01-01']))
+
+    replace = Replacer()
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.return_value = out
+
+    fx_asset_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
+    fx_asset_mock.return_value = 'MA123'
+
+    thread_mock = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
+    thread_mock.return_value = [out, spot]
+
+    actual = tm.carry_term(Index('MA123', AssetClass.FX, '123'), annualized=tm.FXSpotCarry.DAILY)
+    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    expected = pd.Series([0.01, 0.02, 0.03, 0.04], name='carry', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+
+    assert_series_equal(expected, pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    actual = tm.carry_term(Index('MA123', AssetClass.FX, '123'))
+    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    expected = pd.Series([0.001667, 0.004714, 0.036105, 0.05621], name='carry', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+
+    assert_series_equal(expected, pd.Series(actual), check_exact=False, check_less_precise=3)
+    assert actual.dataset_ids == _test_datasets
+
+    with pytest.raises(NotImplementedError):
+        tm.carry_term(Index('MA123', AssetClass.FX, '123'), real_time=True)
+
+    thread_mock.return_value = [pd.DataFrame(), pd.DataFrame()]
+    actual = tm.carry_term(Index('MA123', AssetClass.FX, '123'))
+    assert actual.empty
+    replace.restore()
+
+
+def test_carry_term():
+    with DataContext('2018-01-01', '2019-01-01'):
+        _carry_term_typical()
 
 
 def test_measure_request_safe():

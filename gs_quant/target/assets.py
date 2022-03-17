@@ -113,6 +113,7 @@ class CommoditySubFamily(EnumBase, Enum):
     NG = 'NG'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetMetadata(Base):
@@ -120,6 +121,7 @@ class AssetMetadata(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Benchmark(Base):
@@ -128,6 +130,7 @@ class Benchmark(Base):
     name: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodityEUNaturalGasHub(Base):
@@ -136,6 +139,7 @@ class CommodityEUNaturalGasHub(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodityNaturalGasHub(Base):
@@ -145,6 +149,7 @@ class CommodityNaturalGasHub(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodityPowerAggregatedNodes(Base):
@@ -154,6 +159,7 @@ class CommodityPowerAggregatedNodes(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodityPowerNode(Base):
@@ -162,6 +168,7 @@ class CommodityPowerNode(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodityReferencePriceParameters(Base):
@@ -174,6 +181,7 @@ class CommodityReferencePriceParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FutureContract(Base):
@@ -182,6 +190,7 @@ class FutureContract(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FutureMarket(Base):
@@ -191,6 +200,7 @@ class FutureMarket(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class NumberRange(Base):
@@ -199,6 +209,7 @@ class NumberRange(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class People(Base):
@@ -206,6 +217,7 @@ class People(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class WeatherIndexParameters(Base):
@@ -224,6 +236,7 @@ class WeatherIndexParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetStats(Base):
@@ -236,6 +249,7 @@ class AssetStats(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodConfigParameters(Base):
@@ -244,6 +258,7 @@ class CommodConfigParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CreditBasketParameters(Base):
@@ -258,9 +273,13 @@ class CreditBasketParameters(Base):
     quoting_type: Optional[QuoteType] = field(default=None, metadata=field_metadata)
     weighting_type: Optional[WeightingType] = field(default=None, metadata=field_metadata)
     close_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
+    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
+    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HedgeFundParameters(Base):
@@ -286,6 +305,7 @@ class HedgeFundParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecuritiesLendingLoan(Base):
@@ -308,6 +328,7 @@ class SecuritiesLendingLoan(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ShareClassParameters(Base):
@@ -343,6 +364,7 @@ class ShareClassParameters(Base):
     term_type: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class TemporalPeople(Base):
@@ -352,6 +374,7 @@ class TemporalPeople(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class TemporalXRef(Base):
@@ -361,6 +384,7 @@ class TemporalXRef(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetGetRequestPathSchema(Base):
@@ -438,6 +462,7 @@ class AssetGetRequestPathSchema(Base):
     asset_parameters_receiver_spread: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Asset(Base):
@@ -482,6 +507,7 @@ class Asset(Base):
     metadata: Optional[AssetMetadata] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetToInstrumentResponse(Base):

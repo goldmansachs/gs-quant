@@ -103,6 +103,7 @@ class RiskModelUniverseIdentifierRequest(EnumBase, Enum):
     primeId = 'primeId'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Factor(Base):
@@ -118,6 +119,7 @@ class Factor(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelCalendar(Base):
@@ -129,6 +131,7 @@ class RiskModelCalendar(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelFactorData(Base):
@@ -143,6 +146,7 @@ class RiskModelFactorData(Base):
 RiskModelFactorExposure = Dict[str, float]
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelFactorPortfolio(Base):
@@ -151,6 +155,7 @@ class RiskModelFactorPortfolio(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelIssuerSpecificCovarianceData(Base):
@@ -160,6 +165,7 @@ class RiskModelIssuerSpecificCovarianceData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelAssetData(Base):
@@ -173,6 +179,7 @@ class RiskModelAssetData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelCoverageRequest(Base):
@@ -182,6 +189,7 @@ class RiskModelCoverageRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelDataAssetsRequest(Base):
@@ -190,6 +198,7 @@ class RiskModelDataAssetsRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelFactorPortfoliosData(Base):
@@ -198,6 +207,7 @@ class RiskModelFactorPortfoliosData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModel(Base):
@@ -219,6 +229,7 @@ class RiskModel(Base):
     type_: Optional[RiskModelType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelData(Base):
@@ -231,6 +242,7 @@ class RiskModelData(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelDataRequest(Base):
@@ -243,6 +255,7 @@ class RiskModelDataRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelDataResponse(Base):

@@ -70,6 +70,7 @@ class MeasureEntityType(EnumBase, Enum):
     RISK_MODEL = 'RISK_MODEL'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AdvancedFilter(Base):
@@ -81,6 +82,7 @@ class AdvancedFilter(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetCondition(Base):
@@ -91,6 +93,7 @@ class DataSetCondition(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetDefaults(Base):
@@ -100,6 +103,7 @@ class DataSetDefaults(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityAttributes(Base):
@@ -108,6 +112,7 @@ class DataSetFieldEntityAttributes(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityClassifications(Base):
@@ -116,6 +121,7 @@ class DataSetFieldEntityClassifications(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityNumberParameters(Base):
@@ -124,6 +130,7 @@ class DataSetFieldEntityNumberParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EntityMetadata(Base):
@@ -134,6 +141,7 @@ class EntityMetadata(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ErrorInfo(Base):
@@ -144,6 +152,7 @@ class ErrorInfo(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FieldLinkSelector(Base):
@@ -153,6 +162,7 @@ class FieldLinkSelector(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MDAPI(Base):
@@ -162,6 +172,7 @@ class MDAPI(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MarketDataField(Base):
@@ -169,6 +180,7 @@ class MarketDataField(Base):
     mapping: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MarketDataFilteredField(Base):
@@ -190,6 +202,7 @@ class MeasureKpi(DictBase):
     pass
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MidPrice(Base):
@@ -199,6 +212,7 @@ class MidPrice(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ParserEntity(Base):
@@ -208,6 +222,7 @@ class ParserEntity(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RemapFieldPair(Base):
@@ -216,6 +231,7 @@ class RemapFieldPair(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ResponseInfo(Base):
@@ -224,6 +240,7 @@ class ResponseInfo(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SymbolFilterLink(Base):
@@ -232,6 +249,7 @@ class SymbolFilterLink(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataFilter(Base):
@@ -242,6 +260,7 @@ class DataFilter(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetCoverageProperties(Base):
@@ -253,6 +272,7 @@ class DataSetCoverageProperties(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetDelay(Base):
@@ -265,6 +285,7 @@ class DataSetDelay(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityStringParameters(Base):
@@ -276,6 +297,7 @@ class DataSetFieldEntityStringParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetParameters(Base):
@@ -310,6 +332,7 @@ class DataSetParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetTransforms(Base):
@@ -323,6 +346,7 @@ class FieldFilterMapDataQuery(DictBase):
     pass
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FieldLink(Base):
@@ -333,6 +357,7 @@ class FieldLink(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MarketDataMapping(Base):
@@ -355,6 +380,7 @@ class MarketDataMapping(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ProcessorEntity(Base):
@@ -365,6 +391,7 @@ class ProcessorEntity(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SymbolFilterDimension(Base):
@@ -374,6 +401,7 @@ class SymbolFilterDimension(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ComplexFilter(Base):
@@ -382,6 +410,7 @@ class ComplexFilter(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataGroup(Base):
@@ -390,6 +419,7 @@ class DataGroup(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataQuery(Base):
@@ -433,6 +463,7 @@ class DataQuery(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetCatalogEntry(Base):
@@ -460,6 +491,7 @@ class DataSetCatalogEntry(Base):
     mdapi: Optional[MDAPI] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntity(Base):
@@ -476,6 +508,7 @@ class DataSetFieldEntity(Base):
     attributes: Optional[DataSetFieldEntityAttributes] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetTransformation(Base):
@@ -484,6 +517,7 @@ class DataSetTransformation(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DeleteCoverageQuery(Base):
@@ -492,6 +526,7 @@ class DeleteCoverageQuery(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FieldColumnPair(Base):
@@ -504,6 +539,7 @@ class FieldColumnPair(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class HistoryFilter(Base):
@@ -515,6 +551,7 @@ class HistoryFilter(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataQueryResponse(Base):
@@ -531,6 +568,7 @@ class DataQueryResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetDimensions(Base):
@@ -548,6 +586,7 @@ class DataSetDimensions(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldEntityBulkRequest(Base):
@@ -555,6 +594,7 @@ class DataSetFieldEntityBulkRequest(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EntityFilter(Base):
@@ -564,6 +604,7 @@ class EntityFilter(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetFilters(Base):
@@ -575,6 +616,7 @@ class DataSetFilters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DataSetEntity(Base):

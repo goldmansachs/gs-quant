@@ -109,7 +109,8 @@ class ChartLineType(EnumBase, Enum):
     Bubble = 'Bubble'
     Solid = 'Solid'
     Knotted = 'Knotted'
-    Dashed = 'Dashed'    
+    Dashed = 'Dashed'
+    OHLC = 'OHLC'    
 
 
 class ChartRegressionStrokeType(EnumBase, Enum):    
@@ -137,6 +138,7 @@ class ChartType(EnumBase, Enum):
     scatter = 'scatter'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ChartDisplaySettings(Base):
@@ -144,6 +146,7 @@ class ChartDisplaySettings(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ChartLabelSettings(Base):
@@ -151,6 +154,7 @@ class ChartLabelSettings(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ChartProperties(Base):
@@ -163,6 +167,7 @@ class ChartProperties(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ChartShare(Base):
@@ -171,6 +176,7 @@ class ChartShare(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ChartTime(Base):
@@ -180,6 +186,7 @@ class ChartTime(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class XAxisSettings(Base):
@@ -189,6 +196,7 @@ class XAxisSettings(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class YAxisSettings(Base):
@@ -203,6 +211,7 @@ class YAxisSettings(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ChartAnnotation(Base):
@@ -232,6 +241,7 @@ class ChartAnnotation(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ChartExpression(Base):
@@ -256,6 +266,7 @@ class ChartExpression(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ChartRegression(Base):
@@ -268,6 +279,7 @@ class ChartRegression(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Chart(Base):

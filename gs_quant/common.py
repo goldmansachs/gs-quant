@@ -57,6 +57,14 @@ class PayReceive(EnumBase, Enum):
         return cls.Receive if key.lower() in ('receive', 'receiver') else super()._missing_(key)
 
 
+class MarketBehaviour(EnumBase, Enum):
+
+    """ContraintsBased or Calibrated"""
+
+    ContraintsBased = 'ContraintsBased'
+    Calibrated = 'Calibrated'
+
+
 class RiskMeasure(__RiskMeasure):
 
     def __lt__(self, other):

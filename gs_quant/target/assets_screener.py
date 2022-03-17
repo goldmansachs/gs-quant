@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import LetterCase, config, dataclass_json
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerRequestStringOptions(Base):
@@ -30,6 +31,7 @@ class AssetScreenerRequestStringOptions(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCarbonRequestFilter(Base):
@@ -40,6 +42,7 @@ class AssetScreenerCarbonRequestFilter(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCreditRequestFilters(Base):
@@ -69,6 +72,7 @@ class AssetScreenerCreditRequestFilters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCreditResponseItem(Base):
@@ -103,6 +107,7 @@ class AssetScreenerCreditResponseItem(Base):
     face_value: Optional[float] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCreditResponse(Base):
@@ -112,6 +117,7 @@ class AssetScreenerCreditResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerRequest(Base):

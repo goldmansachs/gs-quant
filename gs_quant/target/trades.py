@@ -436,6 +436,7 @@ class MqexsSide(EnumBase, Enum):
     _ = ''    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsErrorInfo(Base):
@@ -446,6 +447,7 @@ class MqexsErrorInfo(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsProductDetails(Base):
@@ -455,6 +457,7 @@ class MqexsProductDetails(Base):
     settlement_type: Optional[MqexsOtcSettlementType] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsTradeDetails(Base):
@@ -468,6 +471,7 @@ class MqexsTradeDetails(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsTradeExt(Base):
@@ -484,6 +488,7 @@ class MqexsTradeExt(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MqexsTradesWErrorExt(Base):

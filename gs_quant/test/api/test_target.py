@@ -42,6 +42,9 @@ def test_classes():
                         'hedge', 'indices', 'instrument', 'monitor', 'portfolios', 'reports', 'risk', 'trades',
                         'workspaces_markets'):
         for typ in classes(module_name):
+            if typ.__module__ != module_name:
+                continue
+
             fields_by_name = typ._fields_by_name()
             if not fields_by_name:
                 continue

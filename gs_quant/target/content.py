@@ -245,6 +245,7 @@ class QueryableStatus(EnumBase, Enum):
     Replaced = 'Replaced'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Content(Base):
@@ -258,6 +259,7 @@ class Object(DictBase):
     pass
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Author(Base):
@@ -269,6 +271,7 @@ class Author(Base):
     kerberos: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BulkDeleteContentResponse(Base):
@@ -278,6 +281,7 @@ class BulkDeleteContentResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Certification(Base):
@@ -290,6 +294,7 @@ class Certification(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DeleteContentResponse(Base):
@@ -299,6 +304,7 @@ class DeleteContentResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class InvestmentRecommendationAsset(Base):
@@ -310,6 +316,7 @@ class InvestmentRecommendationAsset(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class InvestmentRecommendationCustomAsset(Base):
@@ -321,6 +328,7 @@ class InvestmentRecommendationCustomAsset(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentResponse(Base):
@@ -337,6 +345,7 @@ class ContentResponse(Base):
     language: Optional[Language] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentUpdateRequest(Base):
@@ -346,6 +355,7 @@ class ContentUpdateRequest(Base):
     content: Optional[Content] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class InvestmentRecommendations(Base):
@@ -354,6 +364,7 @@ class InvestmentRecommendations(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BulkContentUpdateRequestItem(Base):
@@ -362,6 +373,7 @@ class BulkContentUpdateRequestItem(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentAuditFields(Base):
@@ -376,6 +388,7 @@ class ContentAuditFields(Base):
     last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentParameters(Base):
@@ -397,6 +410,7 @@ class ContentParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class GetManyContentsResponse(Base):
@@ -406,6 +420,7 @@ class GetManyContentsResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BulkContentUpdateResponse(Base):
@@ -415,6 +430,7 @@ class BulkContentUpdateResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentCreateRequest(Base):
@@ -425,6 +441,7 @@ class ContentCreateRequest(Base):
     parameters: ContentParameters = field(default=None, metadata=field_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentCreateResponse(Base):
@@ -434,6 +451,7 @@ class ContentCreateResponse(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ContentUpdateResponse(Base):

@@ -93,7 +93,7 @@ class GsIndexApi:
     def validate_ticker(cls, ticker: str):
         """ Validate basket ticker """
         url = '/indices/validate'
-        GsSession.current._post(url, payload=IndicesValidateInputs(ticker=ticker))
+        GsSession.current._post(url, payload={'ticker': ticker})
 
     @classmethod
     def backcast(cls, _id: str, inputs: CustomBasketsBackcastInputs) -> CustomBasketsResponse:

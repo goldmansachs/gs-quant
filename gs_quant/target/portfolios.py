@@ -47,6 +47,17 @@ class PortfolioType(EnumBase, Enum):
     PCO_Share_Class = 'PCO Share Class'    
 
 
+class RefreshInterval(EnumBase, Enum):    
+    
+    """These intervals determine how often a portfolio is refreshed"""
+
+    Daily = 'Daily'
+    Start_Of_Week = 'Start Of Week'
+    End_Of_Week = 'End Of Week'
+    Start_Of_Month = 'Start Of Month'
+    End_Of_Month = 'End Of Month'    
+
+
 class RiskAumSource(EnumBase, Enum):    
     
     """Source of AUM for portfolio risk calculations."""
@@ -58,6 +69,7 @@ class RiskAumSource(EnumBase, Enum):
     Net = 'Net'    
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SecDbBookDetail(Base):
@@ -66,6 +78,7 @@ class SecDbBookDetail(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class GRDBPortfolioParameters(Base):
@@ -81,6 +94,7 @@ class GRDBPortfolioParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PCOTrade(Base):
@@ -100,6 +114,15 @@ class PCOTrade(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class TemporalPortfolioParameters(Base):
+    refresh_interval: Optional[RefreshInterval] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class PCOPortfolioParameters(Base):
@@ -132,6 +155,7 @@ class PCOPortfolioParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Portfolio(Base):
