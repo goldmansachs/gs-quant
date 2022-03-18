@@ -885,6 +885,94 @@ def test_map_identifiers_empty(mocker):
     assert actual == {}
 
 
+def test_secmaster_map_identifiers_with_passed_input_types(mocker):
+    start = str(dt.date(2021, 10, 11))
+    end = str(dt.date(2021, 10, 12))
+
+    def mock_mapping_service_response_by_input_type(*args, **kwargs):
+        '''
+        Mocks Secmaster api's response json based on payload's input_type, output_type, and ids provided
+        '''
+        input_type = None
+        for enum in SecurityIdentifier:
+            if enum.value in kwargs['payload']:
+                input_type = enum.value
+                break
+        output_types = kwargs['payload']['toIdentifiers']
+
+        mock_output = {'results': []}
+        for id in kwargs['payload'][input_type]:
+            for output_type in output_types:
+                row = {
+                    "outputType": output_type,
+                    "outputValue": "mock output for " + id,
+                    "startDate": start,
+                    "endDate": end,
+                    "input": id
+                }
+                if output_type in (SecurityIdentifier.BBID, SecurityIdentifier.BBG, SecurityIdentifier.BCID):
+                    row['exchange'] = 'mock-exchange'
+                    row['compositeExchange'] = 'mock-comp'
+                mock_output['results'].append(row)
+        return mock_output
+
+    mocker.patch.object(GsSession.current, '_get',
+                        side_effect=mock_mapping_service_response_by_input_type)
+
+    with SecMasterContext():
+        mock_any_ids = ["mock-any-1", "mock-any-2"]
+        any_to_cusip_results = SecurityMaster.map_identifiers(input_type=SecurityIdentifier.ANY, ids=mock_any_ids,
+                                                              output_types=[SecurityIdentifier.CUSIP])
+        assert start in any_to_cusip_results.keys()
+        for input_id in mock_any_ids:
+            assert input_id in any_to_cusip_results[start].keys()
+            assert SecurityIdentifier.CUSIP.value in any_to_cusip_results[start][input_id].keys()
+        assert any_to_cusip_results == {
+            "2021-10-11": {
+                "mock-any-1": {
+                    "cusip": "mock output for mock-any-1"
+                },
+                "mock-any-2": {
+                    "cusip": "mock output for mock-any-2"
+                }
+            },
+            "2021-10-12": {
+                "mock-any-1": {
+                    "cusip": "mock output for mock-any-1"
+                },
+                "mock-any-2": {
+                    "cusip": "mock output for mock-any-2"
+                }
+            }
+        }
+
+        mock_cusip_ids = ["mock-cusip-input1", "mock-cusip-input2"]
+        cusip_to_isin_result = SecurityMaster.map_identifiers(input_type=SecurityIdentifier.CUSIP, ids=mock_cusip_ids,
+                                                              output_types=[SecurityIdentifier.ISIN])
+        assert start in cusip_to_isin_result.keys()
+        for cusip_input_id in mock_cusip_ids:
+            assert cusip_input_id in cusip_to_isin_result[start].keys()
+            assert SecurityIdentifier.ISIN.value in cusip_to_isin_result[start][cusip_input_id].keys()
+        assert cusip_to_isin_result == {
+            "2021-10-11": {
+                "mock-cusip-input1": {
+                    "isin": "mock output for mock-cusip-input1"
+                },
+                "mock-cusip-input2": {
+                    "isin": "mock output for mock-cusip-input2"
+                }
+            },
+            "2021-10-12": {
+                "mock-cusip-input1": {
+                    "isin": "mock output for mock-cusip-input1"
+                },
+                "mock-cusip-input2": {
+                    "isin": "mock output for mock-cusip-input2"
+                }
+            }
+        }
+
+
 def test_map_identifiers_asset_service(mocker):
     response = {'AAPL UN': ['AAPL.N'], 'GS UN': ['GS.N']}
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=lambda *arg, **kwargs: response)
