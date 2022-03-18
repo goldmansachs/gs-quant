@@ -231,6 +231,7 @@ class SecurityIdentifier(EntityIdentifier):
     PRIMEID = "primeId"
     BBG = "bbg"
     ASSET_ID = "assetId"
+    ANY = "identifiers"
 
 
 class ReturnType(Enum):
@@ -820,8 +821,9 @@ class Bond(Asset):
     def __init__(self,
                  id_: str,
                  name: str,
+                 asset_class: AssetClass = AssetClass.Credit,
                  entity: Optional[Dict] = None):
-        Asset.__init__(self, id_, AssetClass.Credit, name, entity=entity)
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
         return AssetType.BOND
@@ -1141,7 +1143,7 @@ class SecurityMaster:
             return CommodityPowerAggregatedNodes(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type in (GsAssetType.Bond.value,):
-            return Bond(gs_asset.id, gs_asset.name, entity=asset_entity)
+            return Bond(gs_asset.id, gs_asset.name, gs_asset.assetClass or AssetClass.Credit, entity=asset_entity)
 
         if asset_type in (GsAssetType.Commodity.value,):
             return Commodity(gs_asset.id, gs_asset.name, entity=asset_entity)
@@ -1504,7 +1506,7 @@ class SecurityMaster:
 
         assert cls._source == SecurityMasterSource.SECURITY_MASTER
         params = {
-            'identifiers': list(ids),
+            input_type.value: list(ids),
             'toIdentifiers': [identifier.value for identifier in output_types],
             'compact': True
         }
@@ -1519,7 +1521,6 @@ class SecurityMaster:
         if end_date is not None:
             params['endDate'] = end_date
         r = _get_with_retries('/markets/securities/map', params)
-        # TODO: pass input_type along (after updating endpoint implementation)
 
         results = r['results']
         if isinstance(results, dict):

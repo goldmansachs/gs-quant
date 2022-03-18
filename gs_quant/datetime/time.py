@@ -59,6 +59,7 @@ class Timer:
 
 
 class Tracer:
+    __version = 0
     __stack_depth = 0
     __stack = []
 
@@ -70,10 +71,13 @@ class Tracer:
     def __enter__(self):
         self.__start = dt.datetime.now()
         self.__index = len(Tracer.__stack)
+        self.__version = Tracer.__version
         Tracer.__stack.append([dt.datetime.now(), 0.0, self.__label, Tracer.__stack_depth])
         Tracer.__stack_depth += 1
 
     def __exit__(self, *args):
+        if self.__version != Tracer.__version:
+            return
         self.__elapsed = dt.datetime.now() - self.__start
         elapsed_sec = self.__elapsed.seconds + self.__elapsed.microseconds / 1000000
         Tracer.__stack[self.__index][1] = elapsed_sec
@@ -84,6 +88,10 @@ class Tracer:
 
     @staticmethod
     def reset():
+        if Tracer.__stack_depth != 0:
+            _logger.warning('Attempted to reset unfinished Trace!')
+            Tracer.__version += 1
+
         Tracer.__stack_depth = 0
         Tracer.__stack = []
 

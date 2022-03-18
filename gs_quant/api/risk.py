@@ -159,8 +159,13 @@ class RiskApi(metaclass=ABCMeta):
                     cls.shutdown_queue_listener(responses, loop=loop)
 
         async def run_async():
+            def num_risk_jobs(request: RiskRequest):
+                # size of calculation job
+                return len(request.pricing_and_market_data_as_of) * len(request.positions)
+
             def num_risk_keys(request: RiskRequest):
-                return len(request.pricing_and_market_data_as_of) * len(request.positions) * len(request.measures)
+                # total number of risk calculations
+                return num_risk_jobs(request) * len(request.measures)
 
             is_async = not requests[0].wait_for_results
             loop = asyncio.get_event_loop()
@@ -179,7 +184,7 @@ class RiskApi(metaclass=ABCMeta):
                 # If async we need a task to handle result subscription
                 results_handler = loop.create_task(cls.get_results(responses, raw_results, timeout=timeout))
 
-            expected = sum(num_risk_keys(r) for r in requests)
+            expected = sum(num_risk_jobs(r) for r in requests)
             received = 0
             chunk_size = min(max_concurrent, expected)
             result_thread = None
@@ -198,7 +203,7 @@ class RiskApi(metaclass=ABCMeta):
                     while requests and dispatch_risk_keys < chunk_size:
                         dispatch_request = requests.pop()
                         dispatch_requests.append(dispatch_request)
-                        dispatch_risk_keys += num_risk_keys(dispatch_request)
+                        dispatch_risk_keys += num_risk_jobs(dispatch_request)
 
                     cls.enqueue(outstanding_requests, dispatch_requests, loop=loop)
 
@@ -209,14 +214,15 @@ class RiskApi(metaclass=ABCMeta):
                     break
 
                 # Enable as many new requests as we've received results, to keep the outstanding number constant
-                chunk_received = sum(num_risk_keys(request) for request, _ in completed)
-                chunk_size = min(chunk_received, expected - received)
+                risk_jobs_received = sum(num_risk_jobs(request) for request, _ in completed)
+                chunk_size = min(risk_jobs_received, expected - received)
 
                 if progress_bar:
-                    progress_bar.update(chunk_received)
+                    risk_calcs_received = sum(num_risk_keys(request) for request, _ in completed)
+                    progress_bar.update(risk_calcs_received)
                     progress_bar.refresh()
 
-                received += chunk_received
+                received += risk_jobs_received
 
                 # Handle the results
                 if unprocessed_results is not None:
