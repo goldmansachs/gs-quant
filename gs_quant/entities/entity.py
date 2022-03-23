@@ -451,11 +451,15 @@ class PositionedEntity(metaclass=ABCMeta):
                            start: dt.date = DateLimit.LOW_LIMIT.value,
                            end: dt.date = dt.date.today(),
                            fields: [str] = None,
-                           position_type: PositionType = PositionType.CLOSE) -> List[Dict]:
+                           position_type: PositionType = PositionType.CLOSE,
+                           include_all_business_days: bool = False) -> List[Dict]:
         if self.positioned_entity_type == EntityType.ASSET:
+            if include_all_business_days:
+                raise MqError('"include_all_business_days" cannot be set to true for assets')
             return GsIndexApi.get_positions_data(self.id, start, end, fields, position_type)
         if self.positioned_entity_type == EntityType.PORTFOLIO:
-            return GsPortfolioApi.get_positions_data(self.id, start, end, fields, position_type)
+            return GsPortfolioApi.get_positions_data(self.id, start, end, fields,
+                                                     position_type, include_all_business_days)
         raise NotImplementedError
 
     def get_position_dates(self) -> Tuple[dt.date, ...]:

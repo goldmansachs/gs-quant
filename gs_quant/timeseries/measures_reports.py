@@ -13,7 +13,10 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+from enum import Enum
 from typing import Optional
+
 import pandas as pd
 from pandas.tseries.offsets import BDay
 from pydash import decapitalize
@@ -22,43 +25,51 @@ from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
+from gs_quant.markets.portfolio_manager import PortfolioManager
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport, ReturnFormat
-
 from gs_quant.models.risk_model import FactorRiskModel
+from gs_quant.target.reports import PositionSourceType
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _extract_series_from_df, SecurityMaster, AssetIdentifier
 
 
+class Unit(Enum):
+    NOTIONAL = 'Notional'
+    PERCENT = 'Percent'
+
+
 @plot_measure_entity(EntityType.REPORT, [QueryType.FACTOR_EXPOSURE])
-def factor_exposure(report_id: str, factor_name: str, *, source: str = None,
+def factor_exposure(report_id: str, factor_name: str, unit: str = 'Notional', *, source: str = None,
                     real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Factor exposure data associated with a factor in a factor risk report
 
     :param report_id: factor risk report id
     :param factor_name: factor name
+    :param unit: unit in which the timeseries is returned (Notional or Percent)
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
     :return: Timeseries of factor exposure for requested factor
     """
-    return _get_factor_data(report_id, factor_name, QueryType.FACTOR_EXPOSURE)
+    return _get_factor_data(report_id, factor_name, QueryType.FACTOR_EXPOSURE, Unit(unit))
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.FACTOR_PNL])
-def factor_pnl(report_id: str, factor_name: str, *, source: str = None,
+def factor_pnl(report_id: str, factor_name: str, unit: str = 'Notional', *, source: str = None,
                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Factor PnL data associated with a factor in a factor risk report
 
     :param report_id: factor risk report id
     :param factor_name: factor name
+    :param unit: unit in which the timeseries is returned (Notional or Percent)
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
     :return: Timeseries of factor pnl for requested factor
     """
-    return _get_factor_data(report_id, factor_name, QueryType.FACTOR_PNL)
+    return _get_factor_data(report_id, factor_name, QueryType.FACTOR_PNL, Unit(unit))
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.FACTOR_PROPORTION_OF_RISK])
@@ -270,7 +281,7 @@ def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
     return _extract_series_from_df(df, QueryType.THEMATIC_BETA)
 
 
-def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) -> pd.Series:
+def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, unit: Unit = Unit.NOTIONAL) -> pd.Series:
     # Check params
     report = FactorRiskReport.get(report_id)
     if factor_name not in ['Factor', 'Specific', 'Total']:
@@ -291,7 +302,31 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType) ->
         end_date=DataContext.current.end_date,
         return_format=ReturnFormat.JSON
     )
-    factor_exposures = [{'date': d['date'], col_name: d[data_type]} for d in factor_data if d.get(data_type)]
+    factor_data = [d for d in factor_data if d.get(data_type)]
+    if unit == Unit.PERCENT:
+        if report.position_source_type != PositionSourceType.Portfolio:
+            raise MqValueError('Unit can only be set to percent for portfolio reports')
+        pm = PortfolioManager(report.position_source_id)
+        if query_type == QueryType.FACTOR_PNL:
+            last_date = dt.datetime.strptime(max([d['date'] for d in factor_data]), '%Y-%m-%d').date()
+            aum = pm.get_aum(start_date=last_date, end_date=last_date)
+            last_aum = aum.get(last_date.strftime('%Y-%m-%d'))
+            if last_aum is None:
+                raise MqValueError('Cannot convert to percent: Missing AUM on the last date in the date range')
+            factor_exposures = [{'date': d['date'], col_name: d[data_type] / last_aum * 100} for d in factor_data]
+        else:
+            start_date = dt.datetime.strptime(min([d['date'] for d in factor_data]), '%Y-%m-%d').date()
+            end_date = dt.datetime.strptime(max([d['date'] for d in factor_data]), '%Y-%m-%d').date()
+            aum = pm.get_aum(start_date=start_date, end_date=end_date)
+            for data in factor_data:
+                if aum.get(data['date']) is None:
+                    raise MqValueError('Cannot convert to percent: Missing AUM on some dates in the date range')
+            factor_exposures = [{
+                'date': d['date'],
+                col_name: d[data_type] / aum.get(d['date']) * 100
+            } for d in factor_data]
+    else:
+        factor_exposures = [{'date': d['date'], col_name: d[data_type]} for d in factor_data]
 
     # Create and return timeseries
     df = pd.DataFrame(factor_exposures)

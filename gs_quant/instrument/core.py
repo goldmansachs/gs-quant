@@ -360,7 +360,6 @@ class DummyInstrument(Instrument):
 
     @dummy_result.setter
     def dummy_result(self, value: Union[str, float]):
-        self._property_changed('dummy_result')
         self.__dummy_result = value
 
     @property

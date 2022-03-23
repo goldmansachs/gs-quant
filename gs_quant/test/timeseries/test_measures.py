@@ -1273,6 +1273,16 @@ def test_skew():
     assert_series_equal(pd.Series([2.0], index=_index, name='impliedVolatility'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    actual = tm.skew(mock_spx, '1m', tm.SkewReference.DELTA, 25, tm.NormalizationMode.NORMALIZED)
+    assert_series_equal(pd.Series([2.0], index=_index, name='impliedVolatility'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
+    actual = tm.skew(mock_spx, '1m', tm.SkewReference.DELTA, 25, tm.NormalizationMode.OUTRIGHT)
+    assert_series_equal(pd.Series([4], index=_index, name='impliedVolatility'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq_norm)
     actual = tm.skew(mock_spx, '1m', tm.SkewReference.NORMALIZED, 4)
     assert_series_equal(pd.Series([2.0], index=_index, name='impliedVolatility'), pd.Series(actual))
@@ -1307,8 +1317,17 @@ def test_skew_fx():
     mock = cross
 
     actual = tm.skew(mock, '1m', tm.SkewReference.DELTA, 25)
+    assert_series_equal(pd.Series([4], index=_index, name='impliedVolatility'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    actual = tm.skew(mock, '1m', tm.SkewReference.DELTA, 25, tm.NormalizationMode.NORMALIZED)
     assert_series_equal(pd.Series([2.0], index=_index, name='impliedVolatility'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
+
+    actual = tm.skew(mock, '1m', tm.SkewReference.DELTA, 25, tm.NormalizationMode.OUTRIGHT)
+    assert_series_equal(pd.Series([4], index=_index, name='impliedVolatility'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
     with pytest.raises(MqError):
         tm.skew(mock, '1m', tm.SkewReference.DELTA, 25, real_time=True)
     with pytest.raises(MqError):
@@ -2464,6 +2483,15 @@ def test_spread_option_vol():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_curr)
     actual = tm.spread_option_vol(mock_usd, '3m', '10y', '5y', 50)
     assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='spreadOptionVol'), pd.Series(actual))
+
+    # Check null/no identifier cases
+    identifiers.return_value = {None: 'MA123'}
+    actual = tm.spread_option_vol(mock_usd, '3m', '10y', '5y', 50)
+    assert_series_equal(pd.Series([1, 2, 3], index=_index * 3, name='spreadOptionVol'), pd.Series(actual))
+    identifiers.return_value = {}
+    with pytest.raises(MqValueError):
+        tm.spread_option_vol(mock_usd, '3m', '10y', '5y', 50)
+
     assert actual.dataset_ids == _test_datasets
     with pytest.raises(NotImplementedError):
         tm.spread_option_vol(..., '3m', '10y', '5y', 50, real_time=True)
@@ -3092,7 +3120,7 @@ def _vol_term_typical(reference, value):
     return actual
 
 
-def _skew_term_typical(reference, value):
+def _skew_term_typical(reference, value, normalization_mode=None):
     assert DataContext.current_is_set
     data = {
         'tenor': ['10y', '10y', '10y', '13m', '13m', '13m'],
@@ -3116,11 +3144,64 @@ def _skew_term_typical(reference, value):
     market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     market_mock.side_effect = [out, out_expiry]
 
-    actual = tm.skew_term(Index('MA123', AssetClass.Equity, '123'), reference, value)
+    actual = tm.skew_term(Index('MA123', AssetClass.Equity, '123'), reference, value,
+                          normalization_mode=normalization_mode)
     idx = pd.DatetimeIndex(['2022-01-12', '2023-02-13', '2032-01-12'])
-    expected = pd.Series([0.666667, 0.181818, 1], name='impliedVolatility', index=idx)
-    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
+    if normalization_mode is None:
+        normalization_mode = tm.NormalizationMode.NORMALIZED
+
+    expected = pd.Series([0.666667, 0.181818, 1], name='impliedVolatility', index=idx) \
+        if normalization_mode == tm.NormalizationMode.NORMALIZED \
+        else pd.Series([1000, 10, 10], name='impliedVolatility', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
+    if expected.empty:
+        assert actual.empty
+    else:
+        assert_series_equal(expected, pd.Series(actual))
+        assert set(actual.dataset_ids) == set(_test_datasets + _test_datasets2)
+
+    replace.restore()
+    return actual
+
+
+def _skew_term_typical_fx(reference, value, normalization_mode=None):
+    assert DataContext.current_is_set
+    data = {
+        'tenor': ['10y', '10y', '10y', '13m', '13m', '13m'],
+        'impliedVolatility': [5, 10, 15, 50, 55, 60],
+        'relativeStrike': [0.25, 0.5, 0.75, 0.25, 0.5, 0.75]
+    }
+    out = MarketDataResponseFrame(data=data, index=pd.DatetimeIndex(['2022-01-11'] * 6))
+    out.dataset_ids = _test_datasets
+
+    data_expiry = {
+        'expirationDate': ['2022-01-12', '2022-01-12', '2022-01-12'],
+        'impliedVolatilityByExpiration': [1000, 1500, 2000],
+        'relativeStrike': [0.25, 0.5, 0.75]
+    }
+    out_expiry = MarketDataResponseFrame(data=data_expiry, index=pd.DatetimeIndex(['2022-01-11'] * 3))
+    out_expiry.dataset_ids = _test_datasets2
+
+    replace = Replacer()
+    gltsd_mock = replace('gs_quant.api.utils.ThreadPoolManager.run_async', Mock())
+    gltsd_mock.side_effect = [[pd.DataFrame(), pd.DataFrame()], [out, out_expiry]]
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    fx_asset_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
+    fx_asset_mock.return_value = 'MA123'
+    market_mock.side_effect = [out, out_expiry]
+
+    actual = tm.skew_term(Index('MA123', AssetClass.FX, '123'), reference, value,
+                          normalization_mode=normalization_mode)
+    idx = pd.DatetimeIndex(['2022-01-12', '2023-02-13', '2032-01-12'])
+
+    if normalization_mode is None:
+        normalization_mode = tm.NormalizationMode.OUTRIGHT
+
+    expected = pd.Series([0.666667, 0.181818, 1], name='impliedVolatility', index=idx) \
+        if normalization_mode == tm.NormalizationMode.NORMALIZED \
+        else pd.Series([1000, 10, 10], name='impliedVolatility', index=idx)
+    expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
     if expected.empty:
         assert actual.empty
     else:
@@ -3231,12 +3312,18 @@ def test__skew():
     df = pd.DataFrame({'relativeStrike': [0.25, 0.5, 0.75, 0.25, 0.5, 0.75], 'iv': [5, 10, 15, 100, 150, 200]},
                       index=['2021-01-01'] * 3 + ['2021-02-01'] * 3)
     q_strikes = [0.75, 0.25, 0.5]
-    res = tm._skew(df, 'relativeStrike', 'iv', q_strikes)
+    res = tm._skew(df, 'relativeStrike', 'iv', q_strikes, tm.NormalizationMode.OUTRIGHT)
+    expected = tm.ExtendedSeries(pd.Series([10, 100], name='iv',
+                                           index=pd.to_datetime(['2021-01-01', '2021-02-01'])))
+    assert_series_equal(res, expected)
+
+    res = tm._skew(df, 'relativeStrike', 'iv', q_strikes, tm.NormalizationMode.NORMALIZED)
     expected = tm.ExtendedSeries(pd.Series([1.0, 0.6666666666666666], name='iv',
                                            index=pd.to_datetime(['2021-01-01', '2021-02-01'])))
     assert_series_equal(res, expected)
     with pytest.raises(MqValueError):
-        tm._skew(df.loc[df['relativeStrike'].isin([0.25, 0.5])], 'relativeStrike', 'iv', q_strikes)
+        tm._skew(df.loc[df['relativeStrike'].isin([0.25, 0.5])], 'relativeStrike', 'iv', q_strikes,
+                 tm.NormalizationMode.NORMALIZED)
 
 
 def _skew_term_no_data():
@@ -3274,6 +3361,9 @@ def test_skew_term():
         out = _skew_term_typical(tm.SkewReference.DELTA, 25)
         assert out.empty
         assert set(out.dataset_ids) == set(_test_datasets + _test_datasets2)
+    with DataContext('2018-01-16', '2018-12-31'):
+        out = _skew_term_typical_fx(tm.SkewReference.DELTA, 25)
+        assert out.empty
     with pytest.raises(NotImplementedError):
         tm.skew_term(..., tm.SkewReference.SPOT, 100, real_time=True)
     with DataContext('2020-01-01', '2021-01-01'):

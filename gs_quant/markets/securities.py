@@ -1549,14 +1549,29 @@ class SecurityMaster:
                             values.append(asset_id)
                 elif output_type == "bbg":
                     if SecurityIdentifier.BBG in output_types:
-                        inner[output_type] = output_value
+                        if SecurityIdentifier.BBG.value not in inner:
+                            inner[SecurityIdentifier.BBG.value] = []
+                        inner[SecurityIdentifier.BBG.value].append(output_value)
                     if SecurityIdentifier.BBID in output_types:
-                        inner[SecurityIdentifier.BBID.value] = f"{output_value} {row.get('exchange', '??')}"
+                        exchange = row.get('exchange')
+                        if SecurityIdentifier.BBID.value not in inner:
+                            inner[SecurityIdentifier.BBID.value] = []
+                        if exchange is not None:
+                            inner[SecurityIdentifier.BBID.value].append(f"{output_value} {exchange}")
+                        else:
+                            inner[SecurityIdentifier.BBID.value].append(f"{output_value}")
                     if SecurityIdentifier.BCID in output_types:
-                        inner[SecurityIdentifier.BCID.value] = f"{output_value} {row.get('compositeExchange', '??')}"
+                        composite_exchange = row.get('compositeExchange')
+                        if composite_exchange is not None:
+                            if SecurityIdentifier.BCID.value not in inner:
+                                inner[SecurityIdentifier.BCID.value] = []
+                            inner[SecurityIdentifier.BCID.value].append(f"{output_value} {composite_exchange}")
                 else:
                     if SecurityIdentifier(output_type) in output_types:
-                        inner[output_type] = output_value
+                        if output_type not in inner:
+                            inner[output_type] = []
+                        if output_value not in inner[output_type]:
+                            inner[output_type].append(output_value)
 
                 current += date_delta
 
