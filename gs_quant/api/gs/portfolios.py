@@ -184,15 +184,17 @@ class GsPortfolioApi:
                            start_date: dt.date,
                            end_date: dt.date,
                            fields: List[str] = None,
-                           position_type: PositionType = None) -> List[dict]:
+                           position_type: PositionType = None,
+                           include_all_business_days: bool = False) -> List[dict]:
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
         url = f'/portfolios/{portfolio_id}/positions/data?startDate={start_date_str}&endDate={end_date_str}'
         if fields is not None:
             url += '&fields='.join([''] + fields)
-
         if position_type is not None:
             url += '&type=' + position_type.value
+        if include_all_business_days:
+            url += '&includeAllBusinessDays=true'
 
         return GsSession.current._get(url)['results']
 

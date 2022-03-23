@@ -138,7 +138,9 @@ class PricingContext(ContextBaseWithDefault):
                 get_enum_value(PricingLocation, market_data_location):
             raise ValueError('market.location and market_data_location cannot be different')
 
-        if not market and pricing_date and pricing_date > dt.date.today():
+        if not market and pricing_date and pricing_date > dt.date.today() + dt.timedelta(5):
+            # We allow a small tolerance to rolling over weekends/holidays
+            # We should use a calendar but not everyone has access
             raise ValueError(
                 'The PricingContext does not support a pricing_date in the future. Please use the RollFwd Scenario '
                 'to roll the pricing_date to a future date')

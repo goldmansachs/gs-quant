@@ -195,7 +195,6 @@ class Base(ABC):
 
             key = snake_case_key
             value = self.__coerce_value(fld.type, value)
-            self._property_changed(snake_case_key, value)
 
         __setattr__(self, key, value)
 
@@ -246,9 +245,6 @@ class Base(ABC):
 
             cls.__field_mappings = field_mappings
         return cls.__field_mappings
-
-    def _property_changed(self, prop: str, value):
-        pass
 
     def clone(self, **kwargs):
         """
@@ -481,14 +477,6 @@ class InstrumentBase(Base, ABC):
     def metadata(self, value):
         self.__metadata = value
 
-    def _property_changed(self, prop: str, value):
-        try:
-            if self.__resolution_key and prop not in ('valuation_overrides', 'name'):
-                self.unresolve()
-        except AttributeError:
-            # Can happen during init
-            pass
-
     def from_instance(self, instance):
         self.__resolution_key = None
         super().from_instance(instance)
@@ -503,12 +491,6 @@ class InstrumentBase(Base, ABC):
         new_instrument.__unresolved = copy.copy(self)
         new_instrument.__resolution_key = resolution_key
         return new_instrument
-
-    def unresolve(self):
-        if self.__resolution_key and self.__unresolved:
-            self.from_instance(self.__unresolved)
-            self.__resolution_key = None
-            self.__unresolved = None
 
 
 @dataclass

@@ -313,8 +313,8 @@ def inflation_swap_term(asset: Asset, index_type: str = None,
 
     :param asset: asset object loaded from security master
     :param index_type: benchmark type e.g. UKRPI
-    :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
-            spot starting swaps, 'imm1' or 'frb1'
+    :param forward_tenor: absolute / relative date representation of forward starting point. Only 'Spot' for spot
+        starting swaps currently supported.
     :param pricing_date: YYYY-MM-DD or relative date
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
     :param location: Example - "TKO", "LDN", "NYC"

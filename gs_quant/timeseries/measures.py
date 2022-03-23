@@ -117,6 +117,11 @@ class SkewReference(Enum):
     FORWARD = 'forward'
 
 
+class NormalizationMode(Enum):
+    NORMALIZED = 'normalized'
+    OUTRIGHT = 'outright'
+
+
 class CdsVolReference(Enum):
     DELTA_CALL = 'delta_call'
     DELTA_PUT = 'delta_put'
@@ -454,7 +459,12 @@ def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionT
         else:
             to_asset = CROSS_TO_CROSS_CURRENCY_BASIS[bbid]
 
-        return GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [to_asset])[to_asset]
+        identifiers = GsAssetApi.map_identifiers(GsIdType.mdapi, GsIdType.id, [to_asset])
+        if to_asset in identifiers:
+            return identifiers[to_asset]
+        if None in identifiers:
+            return identifiers[None]
+        raise MqValueError('Unable to map identifier.')
 
     except KeyError:
         logging.info('Unsupported currency or cross')
@@ -523,7 +533,8 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
 @plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
     id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
     asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
-def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real, *,
+def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real,
+         normalization_mode: NormalizationMode = None, *,
          source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Difference in implied volatility of equidistant out-of-the-money put and call options.
@@ -532,6 +543,9 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     :param tenor: relative date representation of expiration date e.g. 1m
     :param strike_reference: reference for strike level (for equities)
     :param distance: distance from at-the-money option
+    :param normalization_mode: "normalized" to divide skew by ATM implied volatility or "outright" to leave
+                    off this normalization. By default, we normalize skew for equities
+                    and commodities but not for FX assets.
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -545,12 +559,16 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
 
     if asset.asset_class == AssetClass.FX:
         asset_id = cross_stored_direction_for_fx_vol(asset_id)
+        if normalization_mode is None:
+            normalization_mode = NormalizationMode.OUTRIGHT
         if strike_reference == SkewReference.DELTA:
             q_strikes = [0 - distance, distance, 0]
         else:
             raise MqValueError('strike_reference has to be delta to get skew for FX options')
     else:
         assert asset.asset_class in (AssetClass.Equity, AssetClass.Commod)
+        if normalization_mode is None:
+            normalization_mode = NormalizationMode.NORMALIZED
         if strike_reference in (SkewReference.DELTA, None):
             b = 50
         elif strike_reference == SkewReference.NORMALIZED:
@@ -587,7 +605,9 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
         if len(curves) < 3:
             raise MqValueError('skew not available for given inputs')
         series = [curves[qs]['impliedVolatility'] for qs in q_strikes]
-        series = ExtendedSeries((series[0] - series[1]) / series[2])
+        ext_series = ((series[0] - series[1]) / series[2]) if normalization_mode == NormalizationMode.NORMALIZED \
+            else (series[0] - series[1])
+        series = ExtendedSeries(ext_series)
     series.dataset_ids = dataset_ids
     return series
 
@@ -1806,7 +1826,8 @@ def _get_skew_strikes(asset: Asset, strike_reference: SkewReference, distance: R
     return q_strikes, buffer
 
 
-def _skew(df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes) -> ExtendedSeries:
+def _skew(df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes, normalization_mode: NormalizationMode)\
+        -> ExtendedSeries:
     """
     Calculates skew using the data in df and returns it as a series.
 
@@ -1814,12 +1835,17 @@ def _skew(df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes) -
     :param relative_strike_col: name of the column in df with relative strikes.
     :param iv_col: name of the column in df with implied volatilities.
     :param q_strikes: length-three array of floats returned by _get_skew_strikes
+    :param normalization_mode: "normalized" to divide skew by ATM implied volatility or "outright" to leave
+                    off this normalization. By default, we normalize skew for equities
+                    and commodities but not for FX assets.
     """
     curves = {k: v for k, v in df.groupby(relative_strike_col)}
     if len(curves) < 3:
         raise MqValueError('Skew not available for given inputs')
     series = [curves[qs][iv_col] for qs in q_strikes]
-    series = ExtendedSeries((series[0] - series[1]) / series[2])
+    ext_series = ((series[0] - series[1]) / series[2]) if normalization_mode == NormalizationMode.NORMALIZED \
+        else (series[0] - series[1])
+    series = ExtendedSeries(ext_series)
     series.index = pd.to_datetime(series.index)
     return series
 
@@ -1852,7 +1878,8 @@ def _skew_fetcher(asset_id, query_type, where, source, real_time, request_id=Non
     id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
     asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
-              pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
+              pricing_date: Optional[GENERIC_DATE] = None, normalization_mode: NormalizationMode = None,
+              *, source: str = None, real_time: bool = False,
               request_id: Optional[str] = None) -> pd.Series:
     """
     Skew term structure. Uses most recent date available if pricing_date is not provided.
@@ -1863,6 +1890,9 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
     :param strike_reference: reference for strike level
     :param distance: strike relative to reference
     :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y
+    :param normalization_mode: "normalized" to divide skew by ATM implied volatility or "outright" to leave
+                    off this normalization. By default, we normalize skew for equities
+                    and commodities but not for FX assets.
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -1873,8 +1903,14 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
         raise NotImplementedError('realtime skew term not implemented')  # TODO
     check_forward_looking(pricing_date, source, 'skew_term')
 
-    asset_id = cross_stored_direction_for_fx_vol(asset) if asset.asset_class == AssetClass.FX else \
-        asset.get_marquee_id()
+    if asset.asset_class == AssetClass.FX:
+        asset_id = cross_stored_direction_for_fx_vol(asset)
+        if normalization_mode is None:
+            normalization_mode = NormalizationMode.OUTRIGHT
+    else:
+        asset_id = asset.get_marquee_id()
+        if normalization_mode is None:
+            normalization_mode = NormalizationMode.NORMALIZED
 
     q_strikes, buffer = _get_skew_strikes(asset, strike_reference, distance)
 
@@ -1921,13 +1957,14 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
         df.index = pd.DatetimeIndex(df.index) if not isinstance(df.index, pd.DatetimeIndex) else df.index
         df.index = DatetimeIndex([RelativeDate(df['tenor'][i], df.index.date[i]).apply_rule(exchange=asset.exchange)
                                   for i in range(len(df))])
-        series = _skew(df, 'relativeStrike', 'impliedVolatility', q_strikes)
+        series = _skew(df, 'relativeStrike', 'impliedVolatility', q_strikes, normalization_mode)
 
     # Add additional data from expiry DF
     if not df_expiry.empty:
         df_expiry = df_expiry.loc[p_date]
         df_expiry.index = df_expiry['expirationDate']
-        series_expiry = _skew(df_expiry, 'relativeStrike', 'impliedVolatilityByExpiration', q_strikes)
+        series_expiry = _skew(df_expiry, 'relativeStrike', 'impliedVolatilityByExpiration', q_strikes,
+                              normalization_mode)
         series_expiry = series_expiry[~series_expiry.index.isin(series.index)]
         series = pd.concat([series, series_expiry])
 
@@ -2203,7 +2240,7 @@ def fx_fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
     return series
 
 
-@plot_measure((AssetClass.FX,), None, [QueryType.FORWARD, QueryType.SPOT])
+@plot_measure((AssetClass.FX,), None, [QueryType.FORWARD_POINT, QueryType.SPOT])
 def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
                annualized: FXSpotCarry = FXSpotCarry.ANNUALIZED, *, source: str = None,
                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
@@ -2211,7 +2248,7 @@ def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
     Carry term structure. Uses most recent date available if pricing_date is not provided. If pricing_date falls on
     a weekend or holiday, uses the previous business day as pricing date.
 
-    Carry is FORWARD POINT / CURRENT SPOT for FX assets.
+    Carry is FORWARD POINT / SPOT at pricing date for FX assets.
 
     :param asset: asset object loaded from security master
     :param pricing_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y (default today)

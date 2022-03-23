@@ -184,6 +184,30 @@ class PortfolioManager(PositionedEntity):
         return [CustomAUMDataPoint(date=dt.datetime.strptime(data['date'], '%Y-%m-%d'),
                                    aum=data['aum']) for data in aum_data]
 
+    def get_aum(self, start_date: dt.date, end_date: dt.date):
+        """
+        Get AUM data for portfolio
+        :param start_date: start date
+        :param end_date: end date
+        :return: dictionary of dates with corresponding AUM values
+         """
+        aum_source = self.get_aum_source()
+        if aum_source == RiskAumSource.Custom_AUM:
+            aum = self.get_custom_aum(start_date=start_date, end_date=end_date)
+            return {aum_point.date.strftime('%Y-%m-%d'): aum_point.aum for aum_point in aum}
+        if aum_source == RiskAumSource.Long:
+            aum = self.get_performance_report().get_long_exposure(start_date=start_date, end_date=end_date)
+            return {row['date']: row['longExposure'] for index, row in aum.iterrows()}
+        if aum_source == RiskAumSource.Short:
+            aum = self.get_performance_report().get_short_exposure(start_date=start_date, end_date=end_date)
+            return {row['date']: row['shortExposure'] for index, row in aum.iterrows()}
+        if aum_source == RiskAumSource.Gross:
+            aum = self.get_performance_report().get_gross_exposure(start_date=start_date, end_date=end_date)
+            return {row['date']: row['grossExposure'] for index, row in aum.iterrows()}
+        if aum_source == RiskAumSource.Net:
+            aum = self.get_performance_report().get_net_exposure(start_date=start_date, end_date=end_date)
+            return {row['date']: row['netExposure'] for index, row in aum.iterrows()}
+
     def upload_custom_aum(self,
                           aum_data: List[CustomAUMDataPoint],
                           clear_existing_data: bool = None):

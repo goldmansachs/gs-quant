@@ -61,7 +61,7 @@ def close_market_date(_location: Optional[Union[PricingLocation, str]] = None,
     from .core import PricingContext
     date = date or PricingContext.current.pricing_date
 
-    if date == dt.date.today():
+    if date >= dt.date.today():
         # Don't use the calendars argument here as external users do not (yet) have access to that dataset
         date = prev_business_date(date)
 

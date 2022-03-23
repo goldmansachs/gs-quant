@@ -684,13 +684,17 @@ def test_map_identifiers(mocker):
                 "ric": [
                     "AAPL.N"
                 ],
-                "gsid": 14593
+                "gsid": [
+                    14593
+                ]
             },
             "GS UN": {
                 "ric": [
                     "GS.N"
                 ],
-                "gsid": 901026
+                "gsid": [
+                    901026
+                ]
             }
         },
         "2021-10-12": {
@@ -698,13 +702,17 @@ def test_map_identifiers(mocker):
                 "ric": [
                     "AAPL.N"
                 ],
-                "gsid": 14593
+                "gsid": [
+                    14593
+                ]
             },
             "GS UN": {
                 "ric": [
                     "GS.N"
                 ],
-                "gsid": 901026
+                "gsid": [
+                    901026
+                ]
             }
         }
     }
@@ -721,15 +729,23 @@ def test_map_identifiers(mocker):
                 "assetId": [
                     "MARCRZHY163GQ4H3"
                 ],
-                "gsid": 14593,
-                "bbid": "AAPL UN"
+                "gsid": [
+                    14593
+                ],
+                "bbid": [
+                    "AAPL UN"
+                ]
             },
             "GS UN": {
                 "assetId": [
                     "MA4B66MW5E27UAHKG34"
                 ],
-                "gsid": 901026,
-                "bbid": "GS UN"
+                "gsid": [
+                    901026
+                ],
+                "bbid": [
+                    "GS UN"
+                ]
             }
         },
         "2021-10-12": {
@@ -737,15 +753,23 @@ def test_map_identifiers(mocker):
                 "assetId": [
                     "MARCRZHY163GQ4H3"
                 ],
-                "gsid": 14593,
-                "bbid": "AAPL UN"
+                "gsid": [
+                    14593
+                ],
+                "bbid": [
+                    "AAPL UN"
+                ]
             },
             "GS UN": {
                 "assetId": [
                     "MA4B66MW5E27UAHKG34"
                 ],
-                "gsid": 901026,
-                "bbid": "GS UN"
+                "gsid": [
+                    901026
+                ],
+                "bbid": [
+                    "GS UN"
+                ]
             }
         }
     }
@@ -849,10 +873,15 @@ def test_map_identifiers_change(mocker):
                 "ric": [
                     "USAT.OQ"
                 ],
-                "gsid": 104563,
-                "isin": "US90328S5001",
-                "bcid": "USAT US"
-
+                "gsid": [
+                    104563
+                ],
+                "isin": [
+                    "US90328S5001"
+                ],
+                "bcid": [
+                    "USAT US"
+                ]
             }
         },
         "2021-04-19": {
@@ -860,9 +889,15 @@ def test_map_identifiers_change(mocker):
                 "ric": [
                     "CTLP.OQ"
                 ],
-                "gsid": 104563,
-                "isin": "US1381031061",
-                "bcid": "CTLP US"
+                "gsid": [
+                    104563
+                ],
+                "isin": [
+                    "US1381031061"
+                ],
+                "bcid": [
+                    "CTLP US"
+                ]
             }
         }
     }
@@ -883,6 +918,30 @@ def test_map_identifiers_empty(mocker):
     with SecMasterContext():
         actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID, ['invalid id'], [SecurityIdentifier.RIC])
     assert actual == {}
+
+
+def test_map_identifiers_eq_index(mocker):
+    """
+    Test to ensure that gsq result does not append exchange or compositeExchange to Bcid and Bbid if secmaster api
+    does not respond any (Mainly from mapping equity indices).
+    """
+    mock = {
+        "results": [
+            {
+                "outputType": "bbg",
+                "outputValue": "SPX",
+                "startDate": "2022-03-17",
+                "endDate": "2022-03-17",
+                "input": "100"
+            }
+        ]
+    }
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
+
+    with SecMasterContext():
+        actual = SecurityMaster.map_identifiers(SecurityIdentifier.GSID, ['100'],
+                                                [SecurityIdentifier.BBID, SecurityIdentifier.BCID])
+    assert actual == {'2022-03-17': {'100': {'bbid': ['SPX']}}}
 
 
 def test_secmaster_map_identifiers_with_passed_input_types(mocker):
@@ -930,18 +989,26 @@ def test_secmaster_map_identifiers_with_passed_input_types(mocker):
         assert any_to_cusip_results == {
             "2021-10-11": {
                 "mock-any-1": {
-                    "cusip": "mock output for mock-any-1"
+                    "cusip": [
+                        "mock output for mock-any-1"
+                    ]
                 },
                 "mock-any-2": {
-                    "cusip": "mock output for mock-any-2"
+                    "cusip": [
+                        "mock output for mock-any-2"
+                    ]
                 }
             },
             "2021-10-12": {
                 "mock-any-1": {
-                    "cusip": "mock output for mock-any-1"
+                    "cusip": [
+                        "mock output for mock-any-1"
+                    ]
                 },
                 "mock-any-2": {
-                    "cusip": "mock output for mock-any-2"
+                    "cusip": [
+                        "mock output for mock-any-2"
+                    ]
                 }
             }
         }
@@ -956,21 +1023,95 @@ def test_secmaster_map_identifiers_with_passed_input_types(mocker):
         assert cusip_to_isin_result == {
             "2021-10-11": {
                 "mock-cusip-input1": {
-                    "isin": "mock output for mock-cusip-input1"
+                    "isin": [
+                        "mock output for mock-cusip-input1"
+                    ]
                 },
                 "mock-cusip-input2": {
-                    "isin": "mock output for mock-cusip-input2"
+                    "isin": [
+                        "mock output for mock-cusip-input2"
+                    ]
                 }
             },
             "2021-10-12": {
                 "mock-cusip-input1": {
-                    "isin": "mock output for mock-cusip-input1"
+                    "isin": [
+                        "mock output for mock-cusip-input1"
+                    ]
                 },
                 "mock-cusip-input2": {
-                    "isin": "mock output for mock-cusip-input2"
+                    "isin": [
+                        "mock output for mock-cusip-input2"
+                    ]
                 }
             }
         }
+
+
+def test_secmaster_map_identifiers_return_array_results(mocker):
+    """
+    Check if map endpoint returns multi-valued response in arrays
+    """
+    mock = {
+        "results": [
+            {
+                "outputType": "bbg",
+                "outputValue": "GS",
+                "exchange": "UN",
+                "compositeExchange": "US",
+                "startDate": "2022-03-21",
+                "endDate": "2022-03-21",
+                "input": "38141G104"
+            },
+            {
+                "outputType": "cusip",
+                "outputValue": "38141G104",
+                "startDate": "2022-03-21",
+                "endDate": "2022-03-21",
+                "input": "38141G104"
+            },
+            {
+                "outputType": "bbg",
+                "outputValue": "GOS",
+                "exchange": "TH",
+                "startDate": "2022-03-21",
+                "endDate": "2022-03-21",
+                "input": "38141G104"
+            },
+            {
+                "outputType": "bbg",
+                "outputValue": "GSCHF",
+                "exchange": "EU",
+                "startDate": "2022-03-21",
+                "endDate": "2022-03-21",
+                "input": "38141G104"
+            },
+            {
+                "outputType": "bbg",
+                "outputValue": "GSUSD",
+                "exchange": "SE",
+                "compositeExchange": "SW",
+                "startDate": "2022-03-21",
+                "endDate": "2022-03-21",
+                "input": "38141G104"
+            }
+        ]
+    }
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
+    with SecMasterContext():
+        actual = SecurityMaster.map_identifiers(input_type=SecurityIdentifier.CUSIP, ids=['38141G104'],
+                                                output_types=[SecurityIdentifier.BBID, SecurityIdentifier.BCID,
+                                                              SecurityIdentifier.CUSIP])
+    assert actual == {
+        '2022-03-21': {
+            '38141G104':
+                {
+                    'bbid': ['GS UN', 'GOS TH', 'GSCHF EU', 'GSUSD SE'],
+                    'bcid': ['GS US', 'GSUSD SW'],
+                    'cusip': ['38141G104']
+                }
+        }
+    }
 
 
 def test_map_identifiers_asset_service(mocker):

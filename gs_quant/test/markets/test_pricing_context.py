@@ -17,15 +17,29 @@ import datetime as dt
 
 import pytest
 from gs_quant import risk
+from gs_quant.common import PayReceive, Currency
 from gs_quant.datetime import business_day_offset
 from gs_quant.instrument import IRSwap
 from gs_quant.markets import PricingContext, CloseMarket, OverlayMarket, MarketDataCoordinate
 from gs_quant.risk import RollFwd
+from gs_quant.target.common import PricingLocation
 from gs_quant.test.utils.test_utils import MockCalc
+
+WEEKEND_DATE = dt.date(2022, 3, 19)
+
+
+@pytest.fixture
+def today_is_saturday(monkeypatch):
+    class MockedDatetime:
+        @classmethod
+        def today(cls):
+            return WEEKEND_DATE
+
+    monkeypatch.setattr(dt, 'date', MockedDatetime)
 
 
 def test_pricing_context(mocker):
-    swap1 = IRSwap('Pay', '1y', 'EUR', name='EUR1y')
+    swap1 = IRSwap(PayReceive.Pay, '1y', Currency.EUR, name='EUR1y')
     future_date = business_day_offset(dt.date.today(), 10, roll='forward')
     with MockCalc(mocker):
         with RollFwd(date='10b', realise_fwd=True):
@@ -47,12 +61,20 @@ def test_pricing_context(mocker):
 
 def test_pricing_dates():
     # May be on weekend but doesn't matter for basic test
-    future_date = dt.date.today() + dt.timedelta(2)
+    future_date = dt.date.today() + dt.timedelta(10)
     yesterday = dt.date.today() - dt.timedelta(1)
     pc = PricingContext(pricing_date=future_date, market=CloseMarket(yesterday))
     assert pc is not None
     with pytest.raises(ValueError, match="pricing_date in the future"):
         PricingContext(pricing_date=future_date)
+
+
+def test_weekend_dates(today_is_saturday):
+    assert dt.date.today() == WEEKEND_DATE  # Check mock worked
+    next_monday = WEEKEND_DATE + dt.timedelta(2)
+    prev_friday = WEEKEND_DATE - dt.timedelta(1)
+    pc = PricingContext(pricing_date=next_monday)
+    assert pc.market == CloseMarket(prev_friday, PricingLocation.LDN)
 
 
 def test_market_data_object():
