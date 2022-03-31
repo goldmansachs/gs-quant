@@ -2374,6 +2374,10 @@ def _get_latest_term_structure_data(asset_id, query_type, where, groupby, source
     log_debug(request_id, _logger, 'q_r %s', q_r)
     df_r = _market_data_timed(q_r, request_id)
 
+    if df_r.empty:
+        _logger.warning('no data for last of %s', query_type.value)
+        return df_r
+
     dataset_ids = getattr(df_r, 'dataset_ids', ())
     df_r['date'] = df_r.index.date
     df_r = df_r.groupby(groupby, as_index=False).last()

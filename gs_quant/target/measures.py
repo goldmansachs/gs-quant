@@ -260,16 +260,16 @@ DollarPrice.__doc__ = "Price of the instrument in US Dollars"
 EqAnnualImpliedVol = RiskMeasure(name="EqAnnualImpliedVol", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Annual Implied Volatility"), unit=RiskMeasureUnit("Percent"))
 EqAnnualImpliedVol.__doc__ = "Equity Annual Implied Volatility (%)"
 
-EqDelta = RiskMeasure(name="EqDelta", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Delta"))
-EqDelta.__doc__ = "Change in Dollar Price (USD present value) due to individual $1 moves in the spot price of underlying equity security"
+EqDelta = RiskMeasureWithCurrencyParameter(name="EqDelta", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Delta"))
+EqDelta.__doc__ = "Change in Dollar Price (USD present value) due to individual 1% move in the spot price of underlying equity security"
 
-EqGamma = RiskMeasure(name="EqGamma", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Gamma"))
-EqGamma.__doc__ = "Change in EqDelta for a $1 shift in the price of the underlying equity security"
+EqGamma = RiskMeasureWithCurrencyParameter(name="EqGamma", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Gamma"))
+EqGamma.__doc__ = "Change in EqDelta for a 1% move in the price of the underlying equity security"
 
 EqSpot = RiskMeasure(name="EqSpot", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Spot"))
 EqSpot.__doc__ = "Equity Spot"
 
-EqVega = RiskMeasure(name="EqVega", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Vega"))
+EqVega = RiskMeasureWithCurrencyParameter(name="EqVega", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Vega"))
 EqVega.__doc__ = "Change in Dollar Price (USD present value) due to individual 1bp moves in the implied volatility of the underlying equity security"
 
 FXAnnualATMImpliedVol = RiskMeasure(name="FXAnnualATMImpliedVol", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Annual ATM Implied Volatility"), unit=RiskMeasureUnit("Percent"))
@@ -331,6 +331,9 @@ FXSpot.__doc__ = "FX spot reference"
 
 FXVega = RiskMeasureWithFiniteDifferenceParameter(name="FXVega", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Vega"))
 FXVega.__doc__ = "Change in Dollar Price due to a 1 vol move in the implied volatility of ATM instruments used to build the volatility surface"
+
+FairPremium = RiskMeasureWithCurrencyParameter(name="FairPremium", measure_type=RiskMeasureType("FairPremium"))
+FairPremium.__doc__ = "Fair Premium is the instrument present value discounted to the premium settlement date"
 
 FairPrice = RiskMeasure(name="FairPrice", asset_class=AssetClass("Commod"), measure_type=RiskMeasureType("Fair Price"))
 FairPrice.__doc__ = "FairPrice"

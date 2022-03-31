@@ -30,7 +30,7 @@ from tqdm import tqdm
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
 from gs_quant.common import PricingLocation, RiskMeasure
 from gs_quant.context_base import ContextBaseWithDefault
-from gs_quant.datetime.date import business_day_offset
+from gs_quant.datetime.date import business_day_offset, today
 from gs_quant.risk import CompositeScenario, DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
     StringWithInfo
 from gs_quant.risk.results import PricingFuture
@@ -171,8 +171,11 @@ class PricingContext(ContextBaseWithDefault):
             else:
                 market_data_location = market.location
 
-        self.__pricing_date = pricing_date or (self.prior_context.pricing_date if self.prior_context else
-                                               business_day_offset(dt.date.today(), 0, roll='preceding'))
+        market_data_location = get_enum_value(PricingLocation, market_data_location)
+
+        self.__pricing_date = pricing_date or (
+            self.prior_context.pricing_date if self.prior_context else business_day_offset(
+                today(market_data_location), 0, roll='preceding'))
         self.__csa_term = csa_term
         self.__market_behaviour = market_behaviour
         self.__is_async = is_async
@@ -180,7 +183,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__timeout = timeout
         self.__use_cache = use_cache
         self.__visible_to_gs = visible_to_gs
-        self.__market_data_location = get_enum_value(PricingLocation, market_data_location)
+        self.__market_data_location = market_data_location
         self.__market = market or CloseMarket(
             date=close_market_date(self.__market_data_location, self.__pricing_date) if pricing_date else None,
             location=self.__market_data_location if market_data_location else None)

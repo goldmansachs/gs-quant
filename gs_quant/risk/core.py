@@ -134,7 +134,7 @@ class UnsupportedValue(ResultInfo):
         options = display_options if display_options is not None else gs_quant.config.display_options
         show_na = options.show_na
 
-        return [{**extra_dict, 'value': self}] if show_na else [None]
+        return [{**extra_dict, 'value': self}] if show_na else []
 
 
 class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
@@ -322,7 +322,7 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             options = display_options if display_options is not None else gs_quant.config.display_options
             show_na = options.show_na
 
-            return [{**extra_dict, 'value': None}] if show_na else [None]
+            return [{**extra_dict, 'value': None}] if show_na else []
 
         return [dict(item, **{**extra_dict}) for item in self.raw_value.to_dict('records')]
 
