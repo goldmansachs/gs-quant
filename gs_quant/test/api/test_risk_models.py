@@ -379,7 +379,7 @@ def test_upload_risk_model_data(mocker):
 
     # run test
     response = GsFactorRiskModelApi.upload_risk_model_data(model_id='id', model_data=risk_model_data)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}'.format(id='id'), risk_model_data)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}'.format(id='id'), risk_model_data, timeout=85)
     assert response == 'Successfully uploaded'
 
 

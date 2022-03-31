@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-
 from abc import abstractmethod
 import backoff
 import certifi
@@ -437,14 +436,26 @@ try:
     class PassThroughGSSSOSession(KerberosSessionMixin, GsSession):
 
         def __init__(self, environment: str, token, api_version=API_VERSION,
-                     application=DEFAULT_APPLICATION, http_adapter=None):
+                     application=DEFAULT_APPLICATION, http_adapter=None, csrf_token=None):
             domain, verify = self.domain_and_verify(environment)
             GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify,
                                http_adapter=http_adapter)
 
             self.token = token
+            self.csrf_token = csrf_token
 
         def _authenticate(self):
-            self._handle_cookies(self.token)
+            if not (self.token and self.csrf_token):
+                self._handle_cookies(self.token)
+                return
+
+            cookie = requests.cookies.create_cookie(domain='.gs.com', name='GSSSO', value=self.token)
+            self._session.cookies.set_cookie(cookie)
+            if self.csrf_token:
+                cookie = requests.cookies.create_cookie(domain='.gs.com', name='MARQUEE-CSRF-TOKEN',
+                                                        value=self.csrf_token)
+                self._session.cookies.set_cookie(cookie)
+                self._session.headers.update({'X-MARQUEE-CSRF-TOKEN': self.csrf_token})
+
 except ModuleNotFoundError:
     pass

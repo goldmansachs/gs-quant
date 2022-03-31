@@ -173,7 +173,7 @@ class TimestampedMarket(Market):
 
     @property
     def location(self) -> PricingLocation:
-        return market_location(self.market.location)
+        return market_location(self.__location)
 
 
 class LiveMarket(Market):

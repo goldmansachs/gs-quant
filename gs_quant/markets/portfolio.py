@@ -13,9 +13,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from dataclasses import dataclass
 import datetime as dt
 import logging
+from dataclasses import dataclass
 from itertools import chain
 from typing import Iterable, Optional, Tuple, Union
 from urllib.parse import quote
@@ -27,7 +27,7 @@ from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.base import InstrumentBase
 from gs_quant.common import RiskMeasure
-from gs_quant.instrument import Instrument
+from gs_quant.instrument import Instrument, AssetType
 from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext, PositionContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import ResolvedInstrumentValues
@@ -70,6 +70,31 @@ class Portfolio(PriceableImpl):
         self.name = name
         self.__id = None
         self.__quote_id = None
+
+    def _to_records(self):
+        def get_name(obj, idx):
+            if isinstance(obj, InstrumentBase) and hasattr(obj, 'type_'):
+                type_name = obj.type_.name if isinstance(obj.type_, AssetType) else obj.type_
+            else:
+                type_name = 'Portfolio'
+            return f'{type_name}_{idx}' if obj.name is None else obj.name
+
+        stack = [(None, self)]
+        records = []
+        while stack:
+            temp_records = []
+            parent, portfolio = stack.pop()
+            current_record = {} if len(records) == 0 else records.pop(0)
+            for idx, priceable in enumerate(portfolio.__priceables):
+                path = parent + PortfolioPath(idx) if parent is not None else PortfolioPath(idx)
+                priceable_name = get_name(priceable, idx)
+                if isinstance(priceable, Portfolio):
+                    stack.insert(0, (path, priceable))
+                    temp_records.append({**current_record, f'portfolio_name_{len(path)-1}': priceable_name})
+                else:
+                    temp_records.append({**current_record, 'instrument_name': priceable_name})
+            records.extend(temp_records)
+        return records
 
     def __getitem__(self, item):
         if isinstance(item, (int, slice)):

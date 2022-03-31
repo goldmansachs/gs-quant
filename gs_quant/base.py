@@ -518,12 +518,6 @@ class Market(ABC):
     def to_dict(self):
         return self.market.to_dict()
 
-    def to_dict(self):
-        return self.market.to_dict()
-
-    def to_dict(self):
-        return self.market.to_dict()
-
 
 class Sentinel:
 

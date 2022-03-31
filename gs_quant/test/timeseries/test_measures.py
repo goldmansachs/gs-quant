@@ -3084,6 +3084,22 @@ def test_forward_vol_term():
     replace.restore()
 
 
+def test_get_latest_term_structure_data():
+    # Test latest_term_structure_data where no data is returned
+    replace = Replacer()
+    data = {
+        'tenor': ['1w', '2w', '1y', '2y'],
+        'impliedVolatility': [1, 2, 3, 4]
+    }
+    out = MarketDataResponseFrame(data=data, index=pd.DatetimeIndex(['2018-01-01'] * 4))
+    out.dataset_ids = _test_datasets
+    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock.side_effect = [out, pd.DataFrame()]
+
+    # test that the function runs without error when nothing is returned by second market_data_timed call
+    tm._get_latest_term_structure_data('MA123', tm.QueryType.IMPLIED_VOLATILITY, {}, None, '', '')
+
+
 def _vol_term_typical(reference, value):
     assert DataContext.current_is_set
     data = {

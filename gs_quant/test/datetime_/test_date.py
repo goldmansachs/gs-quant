@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+
 from pytest import approx
 from gs_quant.datetime import *
 
@@ -28,6 +29,13 @@ def test_has_feb_29():
     assert not has_feb_29(dt.date(2020, 1, 1), dt.date(2020, 2, 28))
     assert has_feb_29(dt.date(2020, 1, 1), dt.date(2020, 2, 29))        # last date is inclusive
     assert has_feb_29(dt.date(2008, 1, 1), dt.date(2020, 12, 31))
+
+
+def test_today_with_location():
+    for location in PricingLocation:
+        assert today(location) is not None
+
+    assert today(None) == dt.date.today()
 
 
 def test_day_count_fraction():

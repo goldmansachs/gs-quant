@@ -18,8 +18,10 @@ import datetime as dt
 import numpy as np
 import calendar as cal
 from enum import Enum, IntEnum
+from pytz import timezone
 from typing import Iterable, Optional, Tuple, Union
 from gs_quant.datetime.gscalendar import GsCalendar
+from gs_quant.target.common import PricingLocation
 
 DateOrDates = Union[dt.date, Iterable[dt.date]]
 
@@ -201,6 +203,24 @@ def date_range(begin: Union[int, dt.date],
             raise ValueError('end must be a date if begin is an int')
     else:
         raise ValueError('begin must be a date or int')
+
+
+def today(location: Optional[PricingLocation] = None) -> dt.date:
+    if not location:
+        return dt.date.today()
+
+    if location == PricingLocation.LDN:
+        tz = 'Europe/London'
+    elif location == PricingLocation.NYC:
+        tz = 'America/New_York'
+    elif location == PricingLocation.HKG:
+        tz = 'Asia/Hong_Kong'
+    elif location == PricingLocation.TKO:
+        tz = 'Asia/Tokyo'
+    else:
+        raise ValueError(f'Unrecognized timezone {location}')
+
+    return dt.datetime.now(timezone(tz)).date()
 
 
 def has_feb_29(start: dt.date, end: dt.date):

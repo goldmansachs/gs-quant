@@ -20,6 +20,7 @@ import operator as op
 from concurrent.futures import Future
 from itertools import chain
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
+import weakref
 
 import pandas as pd
 from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_instance_or_iterable, is_iterable
@@ -27,8 +28,6 @@ from gs_quant.common import RiskMeasure
 from gs_quant.config import DisplayOptions
 from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
-from gs_quant.target.common import AssetType
-from more_itertools import unique_everseen
 
 _logger = logging.getLogger(__name__)
 
@@ -128,8 +127,13 @@ class PricingFuture(Future):
 
     def __init__(self, result: Optional[Any] = __RESULT_SENTINEL):
         super().__init__()
+        self.__pricing_context = None
+
         if result is not self.__RESULT_SENTINEL:
             self.set_result(result)
+        else:
+            from gs_quant.markets import PricingContext
+            self.__pricing_context = weakref.ref(PricingContext.current.active_context)
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
@@ -162,9 +166,10 @@ class PricingFuture(Future):
 
         Exception: If the call raised then that exception will be raised.
         """
-        from gs_quant.markets import PricingContext
-        if not self.done() and PricingContext.current.active_context.is_entered:
-            raise RuntimeError('Cannot evaluate results under the same pricing context being used to produce them')
+        if not self.done():
+            pricing_context = self.__pricing_context() if self.__pricing_context else None
+            if pricing_context is not None and pricing_context.is_entered:
+                raise RuntimeError('Cannot evaluate results under the same pricing context being used to produce them')
 
         return super().result(timeout=timeout)
 
@@ -595,51 +600,26 @@ class PortfolioRiskResult(CompositeResultFuture):
         else:
             return aggregate_results(self.__results(), allow_mismatch_risk_keys=allow_mismatch_risk_keys)
 
+    def _to_records(self, display_options: DisplayOptions = None):
+        def get_records(rec):
+            temp = []
+            for f in rec.futures:
+                if isinstance(f.result(), ResultInfo) or isinstance(f.result(), MultipleRiskMeasureResult):
+                    temp.append(f.result())
+                else:
+                    temp.extend(get_records(f.result()))
+            return temp
+
+        future_records = get_records(self)
+        portfolio_records = self.__portfolio._to_records()
+        records = []
+        if len(future_records) == len(portfolio_records):
+            for i in range(len(future_records)):
+                records.extend(future_records[i]._to_records({**portfolio_records[i]}, display_options))
+        return records
+
     def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
                  display_options: DisplayOptions = None):
-        def get_name(obj, idx):
-            if isinstance(obj, InstrumentBase) and hasattr(obj, 'type'):
-                type_name = obj.type.name if isinstance(obj.type, AssetType) else obj.type_
-            else:
-                type_name = 'Portfolio'
-            return f'{type_name}_{idx}' if obj.name is None else obj.name
-
-        def get_df(priceable):
-            portfolio_paths = list(unique_everseen(p.path[:-1] for p in priceable.all_paths if len(p.path) > 1))
-            inst_paths = [p.path for p in priceable.all_paths if len(p.path) == 1]
-            final_records = []
-            if len(portfolio_paths):
-                for portfolio_path in portfolio_paths:
-                    curr_res = self.__result(PortfolioPath(portfolio_path))
-                    portfolio_info = {}
-                    for p_idx, p in enumerate(portfolio_path):
-                        portfolio = self.__result(PortfolioPath(portfolio_path[:p_idx + 1])).__portfolio
-                        portfolio_info[f'portfolio_name_{p_idx}'] = get_name(portfolio, p)
-
-                    records = list(chain.from_iterable((i._to_records(
-                        {**portfolio_info, 'instrument_name': get_name(curr_res.__portfolio[slice_idx], slice_idx)},
-                        display_options) for slice_idx, i in enumerate(curr_res))))
-
-                    records = list(filter(lambda x: x is not None, records))
-                    for rec_idx, rec in enumerate(records):
-                        if 'risk_measure' not in rec:
-                            records[rec_idx]['risk_measure'] = curr_res.risk_measures[0]
-
-                    final_records.extend(records)
-
-            if len(inst_paths):
-                for path in inst_paths:
-                    final_records.extend(self.__result(PortfolioPath(path))._to_records(
-                        {'instrument_name': get_name(priceable[path[0]], path[0])}, display_options))
-
-            final_records = list(filter(lambda x: x is not None, final_records))
-
-            if len(final_records) > 0:
-                final_df = pd.DataFrame.from_records(final_records)
-                if 'risk_measure' not in final_df.columns.values:
-                    final_df['risk_measure'] = self.risk_measures[0]
-                return final_df
-
         def get_default_pivots(ori_cols, has_dates: bool, multi_measures: bool, simple_port: bool) -> tuple:
             portfolio_names = list(filter(lambda x: 'portfolio_name_' in x, ori_cols))
             port_and_inst_names = portfolio_names + ['instrument_name']
@@ -668,9 +648,12 @@ class PortfolioRiskResult(CompositeResultFuture):
                     return rule_output
             return None, None, None
 
-        ori_df = get_df(self.portfolio)
-
-        if ori_df is None:
+        final_records = self._to_records(display_options=display_options)
+        if len(final_records) > 0:
+            ori_df = pd.DataFrame.from_records(final_records)
+            if 'risk_measure' not in ori_df.columns.values:
+                ori_df['risk_measure'] = self.risk_measures[0]
+        else:
             return
         df_cols = list(ori_df.columns.values)
         # fill n/a values for different sub-portfolio depths

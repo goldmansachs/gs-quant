@@ -3984,6 +3984,7 @@ class RiskMeasureType(EnumBase, Enum):
     Description = 'Description'
     Dollar_Price = 'Dollar Price'
     DV01 = 'DV01'
+    FairPremium = 'FairPremium'
     Fair_Price = 'Fair Price'
     FairVarStrike = 'FairVarStrike'
     FairVolStrike = 'FairVolStrike'
@@ -5703,6 +5704,7 @@ class RiskRequest(Base):
     parameters: Optional[RiskRequestParameters] = field(default=None, metadata=field_metadata)
     request_visible_to_gs: Optional[bool] = field(default=False, metadata=field_metadata)
     use_cache: Optional[bool] = field(default=False, metadata=field_metadata)
+    priority: Optional[int] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

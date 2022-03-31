@@ -345,7 +345,7 @@ class GenericEngine(BacktestBaseEngine):
             # test to see if new trades have been added and calc
             port = []
             for t in backtest.portfolio_dict[d]:
-                if t.name not in list(backtest.results[d].to_frame().index):
+                if t.name not in backtest.results[d].portfolio:
                     port.append(t)
 
             with PricingContext(is_batch=True, csa_term=csa_term, show_progress=show_progress,

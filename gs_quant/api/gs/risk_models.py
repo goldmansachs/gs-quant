@@ -170,7 +170,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
             url += '?partialUpload=true'
             if target_universe_size:
                 url += f'&targetUniverseSize={target_universe_size}'
-        return GsSession.current._post(url, model_data)
+        return GsSession.current._post(url, model_data, timeout=85)
 
     @classmethod
     def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date = None,
