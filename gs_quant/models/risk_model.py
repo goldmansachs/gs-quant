@@ -320,14 +320,17 @@ class MarqueeRiskModel(RiskModel):
             dates_to_universe = pd.DataFrame(dates_to_universe)
         return dates_to_universe
 
-    def get_factor(self, name: str) -> Factor:
+    def get_factor(self, name: str, start_date: dt.date = None, end_date: dt.date = None) -> Factor:
         """ Get risk model factor from its name
 
         :param name: factor name associated with risk model
+        :param start_date: start date of when to search for factor (optional, default to last month)
+        :param end_date: end date of when to search for factor (optional, default to today)
 
         :return: Factor object
         """
-        name_matches = [f for f in self.get_factor_data(format=ReturnFormat.JSON) if f['name'] == name]
+        name_matches = [f for f in self.get_factor_data(start_date=start_date, end_date=end_date,
+                                                        format=ReturnFormat.JSON) if f['name'] == name]
 
         if not name_matches:
             raise MqValueError(f'Factor with name {name} does not in exist in risk model {self.id}')
@@ -573,17 +576,24 @@ class MarqueeRiskModel(RiskModel):
         :param limit_factors: limit factors included in factorData and covariance matrix to only include factors
                 which the input universe has non-zero exposure to
 
-        :return: risk model data
+        :return: risk model data or MqRequestError if query is too large for the service
         """
-
-        return GsFactorRiskModelApi.get_risk_model_data(
-            model_id=self.id,
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=measures,
-            limit_factors=limit_factors
-        )
+        try:
+            return GsFactorRiskModelApi.get_risk_model_data(
+                model_id=self.id,
+                start_date=start_date,
+                end_date=end_date,
+                assets=assets,
+                measures=measures,
+                limit_factors=limit_factors
+            )
+        except MqRequestError as e:
+            if e.status > 499:
+                logging.warning(f"Potential timeout in request for model {self.id}. Consider adding a retry or"
+                                f" batching request if error persists")
+                raise MqRequestError(e.status, f"timeout while getting model data between {start_date} and {end_date} "
+                                               f" for {self.id}, consider batching request")
+            raise e
 
     def upload_data(self, data: Union[RiskModelData, Dict], max_asset_batch_size: int = 20000):
         """ Upload risk model data to existing risk model in Marquee
@@ -591,7 +601,9 @@ class MarqueeRiskModel(RiskModel):
         :param data: complete risk model data for uploading on given date
             includes: date, factorData, assetData, covarianceMatrix with optional inputs:
             issuerSpecificCovariance and factorPortfolios
-        :param max_asset_batch_size: size of payload to batch with. Defaults to 20000 assets
+        :param max_asset_batch_size: size of payload to batch with. Defaults to 20000 assets which works well for
+            models that have factor ids ranging from 1- 3 characters in length. For models with longer factor ids,
+            consider batching with a smaller max asset batch size
 
         If upload universe is over max_asset_batch_size, will batch data in chunks of max_asset_batch_size assets
         """

@@ -83,9 +83,10 @@ setuptools.setup(
         "internal": ["gs_quant_auth"],
         "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib", "seaborn", "treelib"],
-        "test": ["pytest", "pytest-cov", "pytest-mock", "testfixtures", "nbconvert", "nbformat", "jupyter_client"],
+        "test": ["pytest", "pytest-cov", "pytest-mock", "pytest-ordering", "testfixtures", "nbconvert", "nbformat",
+                 "jupyter_client"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
-                    "pytest-mock", "testfixtures"]
+                    "pytest-mock", "pytest-ordering", "testfixtures"]
     },
     classifiers=[
         "Programming Language :: Python :: 3",

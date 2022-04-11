@@ -407,7 +407,8 @@ class PositionedEntity(metaclass=ABCMeta):
                     new_sets.append(pos_set)
                 else:
                     new_sets.append(self._convert_pos_set_with_weights(pos_set, currency))
-            GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in new_sets])
+            GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in new_sets],
+                                            net_positions=net_positions)
             time.sleep(3)
         else:
             raise NotImplementedError
@@ -844,8 +845,6 @@ class PositionedEntity(metaclass=ABCMeta):
                                    end_date: dt.date = None,
                                    basket_ids: List[str] = None,
                                    regions: List[Region] = None) -> pd.DataFrame:
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            raise NotImplementedError
         results = GsThematicApi.get_thematics(entity_id=self.id,
                                               start_date=start_date,
                                               end_date=end_date,
@@ -859,8 +858,6 @@ class PositionedEntity(metaclass=ABCMeta):
                                         end_date: dt.date = None,
                                         basket_ids: List[str] = None,
                                         regions: List[Region] = None) -> pd.DataFrame:
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            raise NotImplementedError
         results = GsThematicApi.get_thematics(entity_id=self.id,
                                               start_date=start_date,
                                               end_date=end_date,
@@ -874,8 +871,6 @@ class PositionedEntity(metaclass=ABCMeta):
                                            end_date: dt.date = None,
                                            basket_ids: List[str] = None,
                                            regions: List[Region] = None) -> pd.DataFrame:
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            raise NotImplementedError
         results = GsThematicApi.get_thematics(entity_id=self.id,
                                               start_date=start_date,
                                               end_date=end_date,
@@ -894,6 +889,4 @@ class PositionedEntity(metaclass=ABCMeta):
         :param basket_id: GS flagship basket's unique Marquee ID
         :return: a Pandas DataFrame with results
         """
-        if self.positioned_entity_type == EntityType.PORTFOLIO:
-            raise NotImplementedError
         return get_thematic_breakdown_as_df(entity_id=self.id, date=date, basket_id=basket_id)

@@ -16,9 +16,12 @@ under the License.
 
 import hashlib
 import json
+import os
 import pathlib
+from typing import List
 from unittest import mock
 
+import pytest
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
@@ -108,7 +111,20 @@ def get_risk_request_id(requests):
     return hashlib.md5(identifier.encode('utf-8')).hexdigest()
 
 
+@pytest.mark.last
+def test_all_cache_files_used():
+    # Important that this test runs last, it asserts all the test files are used so we can cleanup unused ones
+    saved_files = MockCalc.get_saved_files()
+    assert [] == saved_files, 'Did you accidentally commit with save_files=True?!'
+
+    unused_files = MockCalc.get_unused_files()
+    assert unused_files == [], 'Cleanup your unused test files!'
+
+
 class MockCalc:
+    __looked_at_files = {}
+    __saved_files = set()
+
     def __init__(self, mocker, save_files=False, paths=pathlib.Path(__file__).parents[1], application='gs-quant'):
         # do not save tests with save_files = True
         self.save_files = save_files
@@ -128,8 +144,10 @@ class MockCalc:
 
     def mock_calc(self, *args, **kwargs):
         request = kwargs.get('request') or args[0]
-        with open(self.paths / f'calc_cache/request{get_risk_request_id(request)}.json') \
-                as json_data:
+        request_id = get_risk_request_id(request)
+        file_name = f'request{request_id}.json'
+        with open(self.paths / f'calc_cache/{file_name}') as json_data:
+            MockCalc.__looked_at_files.setdefault(self.paths, set()).add(file_name)
             return json.load(json_data)
 
     def mock_calc_create_files(self, *args, **kwargs):
@@ -141,12 +159,26 @@ class MockCalc:
 
         result_json = get_json(*args, **kwargs)
         request = kwargs.get('request') or args[0]
-
-        with open(self.paths / f'calc_cache/request{get_risk_request_id(request)}.json',
+        request_id = get_risk_request_id(request)
+        with open(self.paths / f'calc_cache/request{request_id}.json',
                   'w') as json_data:
+            MockCalc.__saved_files.add(request_id)
             json.dump(result_json, json_data)
 
         return result_json
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
+
+    @staticmethod
+    def get_unused_files() -> List[str]:
+        unused_files = []
+        for test_path, files_used in MockCalc.__looked_at_files.items():
+            for test_file in os.listdir(test_path / 'calc_cache'):
+                if test_file.endswith('.json') and test_file not in files_used:
+                    unused_files.append(test_file)
+        return unused_files
+
+    @staticmethod
+    def get_saved_files() -> List[str]:
+        return list(MockCalc.__saved_files)
