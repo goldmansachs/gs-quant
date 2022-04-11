@@ -460,6 +460,7 @@ class DataQuery(Base):
     show_linked_dimensions: Optional[bool] = field(default=True, metadata=field_metadata)
     use_project_processor: Optional[bool] = field(default=False, metadata=field_metadata)
     snapshot: Optional[bool] = field(default=False, metadata=field_metadata)
+    search_until: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

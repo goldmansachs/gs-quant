@@ -75,7 +75,7 @@ class GsSession(ContextBase):
             )
 
     def __init__(self, domain: str, api_version: str = API_VERSION, application: str = DEFAULT_APPLICATION, verify=True,
-                 http_adapter: requests.adapters.HTTPAdapter = None, application_version=APP_VERSION):
+                 http_adapter: requests.adapters.HTTPAdapter = None, application_version=APP_VERSION, proxies=None):
         super().__init__()
         self._session = None
         self.domain = domain
@@ -84,6 +84,7 @@ class GsSession(ContextBase):
         self.verify = verify
         self.http_adapter = requests.adapters.HTTPAdapter(pool_maxsize=100) if http_adapter is None else http_adapter
         self.application_version = application_version
+        self.proxies = proxies
 
     @backoff.on_exception(lambda: backoff.expo(factor=2),
                           (requests.exceptions.HTTPError, requests.exceptions.Timeout),
@@ -109,6 +110,8 @@ class GsSession(ContextBase):
             self._session = requests.Session()
             if self.http_adapter is not None:
                 self._session.mount('https://', self.http_adapter)
+            if self.proxies is not None:
+                self._session.proxies = self.proxies
             self._session.verify = self.verify
             self._session.headers.update({'X-Application': self.application})
             self._session.headers.update({'X-Version': self.application_version})

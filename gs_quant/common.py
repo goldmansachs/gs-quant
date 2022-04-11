@@ -68,7 +68,18 @@ class MarketBehaviour(EnumBase, Enum):
 class RiskMeasure(__RiskMeasure):
 
     def __lt__(self, other):
-        return self.name < other.name
+        if self.name != other.name:
+            return self.name < other.name
+        elif self.parameters is not None:
+            if other.parameters is None:
+                return False
+            if not isinstance(other.parameters, type(self.parameters)):
+                return self.parameters.parameter_type < other.parameters.parameter_type
+            else:
+                return self.parameters < other.parameters
+        elif other.parameters is not None:
+            return True
+        return False
 
     def __repr__(self):
         return self.name or self.measure_type.name

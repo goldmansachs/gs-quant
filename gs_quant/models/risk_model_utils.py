@@ -13,18 +13,19 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import json
-from typing import List
-import pandas as pd
 import datetime as dt
-import math
 import logging
+import math
 from time import sleep
+from typing import List
+
+import pandas as pd
+from requests.exceptions import ReadTimeout
 
 from gs_quant.api.gs.data import GsDataApi
+from gs_quant.api.gs.risk_models import GsFactorRiskModelApi
 from gs_quant.errors import MqRequestError
 from gs_quant.target.risk_models import RiskModelData
-from gs_quant.api.gs.risk_models import GsFactorRiskModelApi
 
 
 def build_asset_data_map(results: List, universe: List, measure: str) -> dict:
@@ -263,17 +264,24 @@ def _repeat_try_catch_request(input_function, number_retries: int = 5, **kwargs)
             break
         except MqRequestError as e:
             errors.append(e)
-            if json.loads(e.message).get("statusCode", 400) == 429:
+            if e.status == 429:
                 sleep_time = math.pow(2.2, t)
                 t += 1
                 if i < number_retries - 1:
                     logging.warning(
-                        f'Rate limiting hit while making request: {e}, retrying in {int(sleep_time)}'
+                        f'Rate limiting hit while making request, retrying in {int(sleep_time)}'
                         f' seconds...')
                     sleep(sleep_time)
-            elif json.loads(e.message).get("statusCode", 400) < 500:
+            elif e.status < 500:
                 raise e
             elif i < number_retries - 1:
                 logging.warning(f'Exception caught while making request: {e}, retrying...')
+        except ReadTimeout as rt:
+            errors.append(rt)
+            if i < number_retries - 1:
+                logging.warning(f'Read timeout error caught (ReadTimeout): {rt}, retrying request...')
+            else:
+                logging.warning(f'Read timeout error caught (ReadTimeout): {rt}, max retries {number_retries}'
+                                f' already attempted')
     if errors:
         raise errors.pop()

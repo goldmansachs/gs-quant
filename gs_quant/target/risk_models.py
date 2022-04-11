@@ -44,11 +44,16 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Specific_Return = 'Specific Return'
     Residual_Variance = 'Residual Variance'
     Universe_Factor_Exposure = 'Universe Factor Exposure'
+    R_Squared = 'R Squared'
+    Fair_Value_Gap_Percent = 'Fair Value Gap Percent'
+    Fair_Value_Gap_Standard_Deviation = 'Fair Value Gap Standard Deviation'
     Factor_Id = 'Factor Id'
     Factor_Name = 'Factor Name'
     Factor_Category_Id = 'Factor Category Id'
     Factor_Category = 'Factor Category'
     Factor_Return = 'Factor Return'
+    Factor_Standard_Deviation = 'Factor Standard Deviation'
+    Factor_Z_Score = 'Factor Z Score'
     Covariance_Matrix = 'Covariance Matrix'
     Issuer_Specific_Covariance = 'Issuer Specific Covariance'
     Factor_Portfolios = 'Factor Portfolios'    
@@ -140,6 +145,8 @@ class RiskModelFactorData(Base):
     factor_category_id: str = field(default=None, metadata=field_metadata)
     factor_category: str = field(default=None, metadata=field_metadata)
     factor_return: float = field(default=None, metadata=field_metadata)
+    factor_standard_deviation: Optional[float] = field(default=None, metadata=field_metadata)
+    factor_z_score: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -176,6 +183,9 @@ class RiskModelAssetData(Base):
     residual_variance: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     historical_beta: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     total_risk: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    r_squared: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    fair_value_gap_percent: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    fair_value_gap_standard_deviation: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
