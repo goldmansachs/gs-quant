@@ -1033,4 +1033,5 @@ def flatten_results_into_df(results: List):
                         'Date': date,
                         **{titleize(k): thematic_data[k] for k in thematic_data}
                     })
+    all_results = pd.DataFrame(all_results).rename(columns={'Basket': 'Basket Id'})
     return pd.DataFrame(all_results)

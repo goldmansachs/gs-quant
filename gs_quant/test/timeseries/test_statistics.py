@@ -76,6 +76,12 @@ def test_min():
     expected = pd.Series([2.0, 3.0, 1.0, 3.0, 6.0], index=dates[1:])
     assert_series_equal(result, expected, obj="Minimum with strdate window 2")
 
+    ranges = pd.date_range('20220101', periods=6, freq='40min')
+    y = pd.Series([4.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=ranges)
+    result = min_(y, '2h')
+    expected = pd.Series([1.0, 1.0, 1.0], index=ranges[3:])
+    assert_series_equal(result, expected, obj="Minimum with string window 2h")
+
 
 def test_max():
     dates = [
@@ -115,6 +121,12 @@ def test_max():
     result = max_([s, t], 1)
     expected = pd.Series([0.0, 3, 0, 0, 6], index=dates[1:])
     assert_series_equal(result, expected, obj="Maximum with constant")
+
+    ranges = pd.date_range('20220101', periods=6, freq='30min')
+    y = pd.Series([4.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=ranges)
+    result = max_(y, '1h')
+    expected = pd.Series([3.0, 3.0, 3.0, 6.0], index=ranges[2:])
+    assert_series_equal(result, expected, obj="Maximum with string window 1h")
 
 
 def test_range():

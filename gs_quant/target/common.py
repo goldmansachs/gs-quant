@@ -4733,20 +4733,6 @@ class TimeFilter(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class UserTag(Base):
-    name: str = field(default=None, metadata=field_metadata)
-    added_on: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    added_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    removed: Optional[bool] = field(default=None, metadata=field_metadata)
-    removed_on: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    removed_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    removal_reason: Optional[str] = field(default=None, metadata=field_metadata)
-    category: Optional[str] = field(default=None, metadata=field_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class WeightedPosition(Base):
     asset_id: str = field(default=None, metadata=field_metadata)
     weight: float = field(default=None, metadata=field_metadata)

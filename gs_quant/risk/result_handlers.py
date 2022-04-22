@@ -18,11 +18,10 @@ import logging
 from typing import Iterable, Optional, Union
 
 from gs_quant.base import InstrumentBase, RiskKey
-
-from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
-    sort_values
-from gs_quant.target.measures import EqDelta, EqGamma, EqVega
 from gs_quant.risk.measures import PnlExplain
+from gs_quant.target.measures import EqDelta, EqGamma, EqVega
+from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
+    sort_values, MQVSValidatorDefnsWithInfo, MQVSValidatorDefn
 
 _logger = logging.getLogger(__name__)
 __scalar_risk_measures = (EqDelta, EqGamma, EqVega)
@@ -302,6 +301,12 @@ def mmapi_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
 
 
+def mqvs_validators_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                            request_id: Optional[str] = None) -> MQVSValidatorDefnsWithInfo:
+    validators = [MQVSValidatorDefn.from_dict(r) for r in result['validators']]
+    return MQVSValidatorDefnsWithInfo(risk_key, tuple(validators), request_id=request_id)
+
+
 def market_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                    request_id: Optional[str] = None) -> StringWithInfo:
     return StringWithInfo(risk_key, result.get('marketRef'), request_id=request_id)
@@ -319,6 +324,7 @@ result_handlers = {
     'Message': message_handler,
     'MDAPITable': mdapi_table_handler,
     'MMAPITable': mmapi_table_handler,
+    'MQVSValidators': mqvs_validators_handler,
     'NumberAndUnit': number_and_unit_handler,
     'RequireAssets': required_assets_handler,
     'Risk': risk_handler,

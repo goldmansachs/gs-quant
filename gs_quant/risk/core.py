@@ -18,10 +18,13 @@ import itertools
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from copy import copy
-from typing import Iterable, Optional, Tuple, Union
+from dataclasses import dataclass
+from typing import Iterable, Optional, Tuple, Union, Dict
+
+import pandas as pd
+from dataclasses_json import dataclass_json
 
 import gs_quant
-import pandas as pd
 from gs_quant.base import RiskKey
 from gs_quant.config import DisplayOptions
 from gs_quant.datetime import point_sort_order
@@ -325,6 +328,47 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             return [{**extra_dict, 'value': None}] if show_na else []
 
         return [dict(item, **{**extra_dict}) for item in self.raw_value.to_dict('records')]
+
+
+@dataclass_json
+@dataclass
+class MQVSValidationTarget:
+    env: Optional[str] = None
+    operator: Optional[str] = None
+    mqGroups: Optional[Tuple[str]] = None
+    users: Optional[Tuple[str]] = None
+    assetClasses: Optional[Tuple[str]] = None
+    assets: Optional[Tuple[str]] = None
+    legTypes: Optional[Tuple[str]] = None
+    legFields: Optional[Dict[str, str]] = None
+
+
+@dataclass_json
+@dataclass
+class MQVSValidatorDefn:
+    validatorType: str
+    targets: Tuple[MQVSValidationTarget]
+    args: Dict[str, str]
+
+
+class MQVSValidatorDefnsWithInfo(ResultInfo):
+    validators: Tuple[MQVSValidatorDefn]
+
+    def __init__(self,
+                 risk_key: RiskKey,
+                 value: Union[MQVSValidatorDefn, Tuple[MQVSValidatorDefn]],
+                 unit: Optional[dict] = None,
+                 error: Optional[Union[str, dict]] = None,
+                 request_id: Optional[str] = None):
+        ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
+        if value and isinstance(value, tuple):
+            self.validators = value
+        elif value and isinstance(value, MQVSValidatorDefn):
+            self.validators = tuple([value])
+
+    @property
+    def raw_value(self):
+        return self.validators
 
 
 def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None) \

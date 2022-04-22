@@ -36,89 +36,10 @@ from gs_quant.session import GsSession
 _logger = logging.getLogger(__name__)
 
 
-def resolution_safe(cls):
-
-    cls.__dataclass_hash__ = cls.__hash__
-    cls.__hash__ = cls.__hash_safe__
-
-    cls.__dataclass_eq__ = cls.__eq__
-    cls.__eq__ = cls.__eq_safe__
-
-    cls.__dataclass_repr__ = Base.__repr__
-    cls.__repr__ = cls.__repr_safe__
-
-    cls._dataclass_json_to_dict = cls.to_dict
-    cls.to_dict = cls._to_dict_safe
-
-    return cls
-
-
 class Instrument(PriceableImpl, InstrumentBase):
 
     PROVIDER = GsRiskApi
     __instrument_mappings = {}
-    __suppress_resolution = False
-
-    class __SuppressResolutionContext:
-
-        def __init__(self, instrument):
-            self.__suppress_resolution = None
-            self.__instrument = instrument
-
-        def __enter__(self):
-            self.__suppress_resolution = self.__instrument._Instrument__suppress_resolution
-            self.__instrument._Instrument__suppress_resolution = True
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            self.__instrument._Instrument__suppress_resolution = self.__suppress_resolution
-
-    def __hash_safe__(self):
-        with Instrument.__SuppressResolutionContext(self):
-            return self.__dataclass_hash__()
-
-    def __eq_safe__(self, other):
-        if not isinstance(other, Instrument):
-            return False
-
-        with Instrument.__SuppressResolutionContext(self), Instrument.__SuppressResolutionContext(other):
-            return self.__dataclass_eq__(other)
-
-    def __repr_safe__(self):
-        with Instrument.__SuppressResolutionContext(self):
-            return self.__dataclass_repr__()
-
-    def _to_dict_safe(self, encode_json: Optional[bool] = False):
-        with Instrument.__SuppressResolutionContext(self):
-            return self._to_dict(encode_json)
-
-    def _to_dict(self, encode_json: Optional[bool]):
-        return self._dataclass_json_to_dict(encode_json=encode_json)
-
-    def clone(self, **kwargs):
-        with Instrument.__SuppressResolutionContext(self):
-            return super().clone(**kwargs)
-
-    def __getattribute__(self, name):
-        ret = super().__getattribute__(name)
-        flds = super().__getattribute__('_fields_by_name')()
-
-        if ret is not None or name not in flds or name == 'name' or super().__getattribute__('_Instrument__suppress_resolution'):
-            return ret
-
-        if GsSession.current_is_set and super().__getattribute__('resolution_key') is None:
-            try:
-                self.__suppress_resolution = True
-                resolved_inst = self.resolve(in_place=False)
-                if isinstance(resolved_inst, PricingFuture):
-                    ret = PricingFuture()
-                    resolved_inst.add_done_callback(lambda inst_f: ret.set_result(
-                        object.__getattribute__(inst_f.result(), name)))
-                else:
-                    ret = object.__getattribute__(resolved_inst, name)
-            finally:
-                self.__suppress_resolution = False
-
-        return ret
 
     @classmethod
     def __asset_class_and_type_to_instrument(cls):
@@ -251,8 +172,7 @@ class Instrument(PriceableImpl, InstrumentBase):
             future.add_done_callback(cb)
             future = ret
 
-        with Instrument.__SuppressResolutionContext(self):
-            return future if self._return_future else future.result()
+        return future if self._return_future else future.result()
 
     @classmethod
     def from_dict(cls, values: dict):

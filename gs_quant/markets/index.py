@@ -258,8 +258,7 @@ class Index(Asset, PositionedEntity):
 
         if self.__is_sts_index():
             if price_type == [PriceType.INDICATIVE_CLOSE_PRICE]:
-                response = self.__query_indicative_levels_dataset(start=start, end=end)
-                indicative_level = pd.DataFrame(response)
+                indicative_level = self.__query_indicative_levels_dataset(start=start, end=end)
                 indicative_level.drop(['updateTime', 'assetId'], axis=1, inplace=True)
                 indicative_level = indicative_level.astype({'date': 'datetime64[ns]'})
                 prices['date'] = indicative_level['date']
@@ -267,8 +266,7 @@ class Index(Asset, PositionedEntity):
                 return prices
 
             official_level = super().get_close_prices(start=start, end=end).to_frame('closePrice')
-            response = self.__query_indicative_levels_dataset(start=start, end=end)
-            indicative_level = pd.DataFrame(response)
+            indicative_level = self.__query_indicative_levels_dataset(start=start, end=end)
 
             official_level.reset_index(inplace=True)
             indicative_level.drop(['updateTime', 'assetId'], axis=1, inplace=True)
@@ -531,7 +529,7 @@ class Index(Asset, PositionedEntity):
             return True
         return False
 
-    def __query_indicative_levels_dataset(self, start=None, end=None):
+    def __query_indicative_levels_dataset(self, start=None, end=None) -> pd.DataFrame:
 
         where = dict(assetId=self.id)
         if start is None:
@@ -540,7 +538,13 @@ class Index(Asset, PositionedEntity):
             query = DataQuery(where=where, start_date=start, end_date=end)
 
         response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.STS_INDICATIVE_LEVELS.value)
-        return response
+        indicative_level = pd.DataFrame(response)
+        if (len(indicative_level) == 0):
+            indicative_level['date'] = ''
+            indicative_level['assetId'] = ''
+            indicative_level['updateTime'] = ''
+            indicative_level['indicativeClosePrice'] = ''
+        return indicative_level
 
     @staticmethod
     def __get_gs_asset(identifier: str) -> GsAsset:

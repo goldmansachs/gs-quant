@@ -70,8 +70,10 @@ class AssetTreeNode:
             all_assets = GsAssetApi.get_many_assets(id=all_ids)
             asset_lookup = {mq_id: asset_obj for mq_id, asset_obj in zip(all_ids, all_assets)}
             for i_, row in query.iterrows():
-                child_node = AssetTreeNode(row[underlier_column], self.depth + 1, self.date,
-                                           asset_lookup[row[underlier_column]])
+                underlier = row[underlier_column]
+                if underlier not in asset_lookup:
+                    raise Exception("Unable to find {}".format(underlier))
+                child_node = AssetTreeNode(underlier, self.depth + 1, self.date, underlier)
                 child_node.build_tree(dataset, underlier_column)
                 self.direct_underlier_assets_as_nodes.append(child_node)
 

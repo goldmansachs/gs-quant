@@ -19,6 +19,8 @@ from copy import copy
 from datetime import date, datetime
 from typing import Union, Optional, List
 
+from pandas import Timestamp
+
 import gs_quant.datetime.rules as rules
 from gs_quant.errors import MqValueError
 from gs_quant.markets import PricingContext
@@ -64,9 +66,10 @@ class RelativeDate:
             self.base_date_passed_in = True
         elif PricingContext.current.is_entered:
             pricing_date = PricingContext.current.pricing_date
-            self.base_date = pricing_date.date() if isinstance(pricing_date, datetime) else pricing_date
+            self.base_date = pricing_date
         else:
             self.base_date = date.today()
+        self.base_date = base_date.date() if isinstance(base_date, (datetime, Timestamp)) else base_date
 
     def apply_rule(self,
                    currencies: List[Union[Currency, str]] = None,
@@ -205,7 +208,7 @@ class RelativeDateSchedule:
             self.base_date_passed_in = True
         elif PricingContext.current.is_entered:
             pricing_date = PricingContext.current.pricing_date
-            self.base_date = pricing_date.date() if isinstance(pricing_date, datetime) else pricing_date
+            self.base_date = pricing_date.date() if isinstance(pricing_date, (datetime, Timestamp)) else pricing_date
         else:
             self.base_date = date.today()
         self.end_date = end_date

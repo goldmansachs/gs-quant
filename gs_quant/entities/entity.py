@@ -151,7 +151,7 @@ class Entity(metaclass=ABCMeta):
         return self.__entity
 
     def get_unique_entity_key(self) -> EntityKey:
-        return EntityKey(self.__id, self.__entity_type)
+        return EntityKey(self.get_marquee_id(), self.__entity_type)
 
     def get_data_coordinate(self,
                             measure: Union[DataMeasure, str],
@@ -367,8 +367,11 @@ class PositionedEntity(metaclass=ABCMeta):
                                   date: dt.date,
                                   position_type: PositionType = PositionType.CLOSE) -> PositionSet:
         if self.positioned_entity_type == EntityType.ASSET:
-            response = GsAssetApi.get_asset_positions_for_date(self.id, date, position_type)[0]
-            return PositionSet.from_target(response)
+            response = GsAssetApi.get_asset_positions_for_date(self.id, date, position_type)
+            if(len(response) == 0):
+                _logger.info("No positions available for {}".format(date))
+                return PositionSet([], date=date)
+            return PositionSet.from_target(response[0])
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             response = GsPortfolioApi.get_positions_for_date(portfolio_id=self.id,
                                                              position_date=date,
@@ -382,6 +385,9 @@ class PositionedEntity(metaclass=ABCMeta):
                           position_type: PositionType = PositionType.CLOSE) -> List[PositionSet]:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
+            if(len(response) == 0):
+                _logger.info("No positions available in the date range {} - {}".format(start, end))
+                return []
             return [PositionSet.from_target(position_set) for position_set in response]
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             response = GsPortfolioApi.get_positions(portfolio_id=self.id,
