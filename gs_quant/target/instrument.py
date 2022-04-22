@@ -20,11 +20,10 @@ import datetime
 from typing import Dict, Optional, Tuple, Union
 from dataclasses import dataclass, field
 from dataclasses_json import LetterCase, config, dataclass_json
-from gs_quant.instrument.core import Instrument, resolution_safe
+from gs_quant.instrument.core import Instrument
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AssetRef(Instrument):
@@ -39,7 +38,6 @@ class AssetRef(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Bond(Instrument):
@@ -55,7 +53,6 @@ class Bond(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Cash(Instrument):
@@ -68,7 +65,6 @@ class Cash(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodOTCOptionPeriod(Instrument):
@@ -81,7 +77,6 @@ class CommodOTCOptionPeriod(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodOTCSwapLeg(Instrument):
@@ -98,7 +93,6 @@ class CommodOTCSwapLeg(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodSwap(Instrument):
@@ -124,7 +118,6 @@ class CommodSwap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqAutoroll(Instrument):
@@ -155,7 +148,6 @@ class EqAutoroll(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqBinary(Instrument):
@@ -175,7 +167,6 @@ class EqBinary(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqCliquet(Instrument):
@@ -199,7 +190,6 @@ class EqCliquet(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqConvertibleBond(Instrument):
@@ -215,7 +205,6 @@ class EqConvertibleBond(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqForward(Instrument):
@@ -230,7 +219,6 @@ class EqForward(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqFuture(Instrument):
@@ -251,7 +239,6 @@ class EqFuture(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqOption(Instrument):
@@ -293,7 +280,6 @@ class EqOption(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqOptionLeg(Instrument):
@@ -319,7 +305,6 @@ class EqOptionLeg(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqStock(Instrument):
@@ -336,7 +321,6 @@ class EqStock(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqSynthetic(Instrument):
@@ -354,7 +338,6 @@ class EqSynthetic(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqVarianceSwap(Instrument):
@@ -371,7 +354,6 @@ class EqVarianceSwap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXBinary(Instrument):
@@ -394,7 +376,6 @@ class FXBinary(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXDoubleKnockout(Instrument):
@@ -423,7 +404,6 @@ class FXDoubleKnockout(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXDoubleOneTouch(Instrument):
@@ -451,7 +431,6 @@ class FXDoubleOneTouch(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXEuropeanKnockout(Instrument):
@@ -479,7 +458,6 @@ class FXEuropeanKnockout(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXForward(Instrument):
@@ -496,7 +474,6 @@ class FXForward(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXKnockout(Instrument):
@@ -525,7 +502,6 @@ class FXKnockout(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXMultiCrossBinaryLeg(Instrument):
@@ -539,7 +515,6 @@ class FXMultiCrossBinaryLeg(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXOneTouch(Instrument):
@@ -567,7 +542,6 @@ class FXOneTouch(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXOption(Instrument):
@@ -593,7 +567,6 @@ class FXOption(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXOptionLeg(Instrument):
@@ -618,7 +591,6 @@ class FXOptionLeg(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXShiftingBermForward(Instrument):
@@ -642,7 +614,6 @@ class FXShiftingBermForward(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXTarfScheduleLeg(Instrument):
@@ -657,7 +628,6 @@ class FXTarfScheduleLeg(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXVolatilitySwap(Instrument):
@@ -679,7 +649,6 @@ class FXVolatilitySwap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Forward(Instrument):
@@ -692,7 +661,6 @@ class Forward(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRBondFuture(Instrument):
@@ -708,7 +676,6 @@ class IRBondFuture(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRCap(Instrument):
@@ -733,7 +700,6 @@ class IRCap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRFloor(Instrument):
@@ -758,7 +724,6 @@ class IRFloor(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class InflationSwap(Instrument):
@@ -793,7 +758,6 @@ class InflationSwap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class InstrumentsRepoIRDiscreteLock(Instrument):
@@ -813,7 +777,6 @@ class InstrumentsRepoIRDiscreteLock(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CDIndex(Instrument):
@@ -840,7 +803,6 @@ class CDIndex(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CDIndexOption(Instrument):
@@ -880,7 +842,6 @@ class CDIndexOption(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodOTCOptionLeg(Instrument):
@@ -900,7 +861,6 @@ class CommodOTCOptionLeg(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodOTCSwap(Instrument):
@@ -919,7 +879,6 @@ class CommodOTCSwap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodOption(Instrument):
@@ -956,7 +915,6 @@ class CommodOption(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodVolVarSwap(Instrument):
@@ -991,7 +949,6 @@ class CommodVolVarSwap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqOptionStrategy(Instrument):
@@ -1021,7 +978,6 @@ class EqOptionStrategy(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FRA(Instrument):
@@ -1049,7 +1005,6 @@ class FRA(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXMultiCrossBinary(Instrument):
@@ -1069,7 +1024,6 @@ class FXMultiCrossBinary(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXOptionStrategy(Instrument):
@@ -1097,7 +1051,6 @@ class FXOptionStrategy(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FXTarf(Instrument):
@@ -1133,7 +1086,6 @@ class FXTarf(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRAssetSwapFxdFlt(Instrument):
@@ -1173,7 +1125,6 @@ class IRAssetSwapFxdFlt(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRAssetSwapFxdFxd(Instrument):
@@ -1210,7 +1161,6 @@ class IRAssetSwapFxdFxd(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRBasisSwap(Instrument):
@@ -1241,7 +1191,6 @@ class IRBasisSwap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRBondOption(Instrument):
@@ -1265,7 +1214,6 @@ class IRBondOption(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRCMSOption(Instrument):
@@ -1290,7 +1238,6 @@ class IRCMSOption(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRCMSOptionStrip(Instrument):
@@ -1318,7 +1265,6 @@ class IRCMSOptionStrip(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRCMSSpreadOption(Instrument):
@@ -1342,7 +1288,6 @@ class IRCMSSpreadOption(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRCMSSpreadOptionStrip(Instrument):
@@ -1370,7 +1315,6 @@ class IRCMSSpreadOptionStrip(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRFixedLeg(Instrument):
@@ -1394,7 +1338,6 @@ class IRFixedLeg(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRFloatLeg(Instrument):
@@ -1421,7 +1364,6 @@ class IRFloatLeg(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRSwap(Instrument):
@@ -1472,7 +1414,6 @@ class IRSwap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRSwaption(Instrument):
@@ -1506,7 +1447,6 @@ class IRSwaption(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRXccySwap(Instrument):
@@ -1545,7 +1485,6 @@ class IRXccySwap(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRXccySwapFixFix(Instrument):
@@ -1573,7 +1512,6 @@ class IRXccySwapFixFix(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRXccySwapFixFlt(Instrument):
@@ -1610,7 +1548,6 @@ class IRXccySwapFixFlt(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IRXccySwapFltFlt(Instrument):
@@ -1647,7 +1584,6 @@ class IRXccySwapFltFlt(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CommodOTCOption(Instrument):
@@ -1668,7 +1604,6 @@ class CommodOTCOption(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class InvoiceSpread(Instrument):
@@ -1683,7 +1618,6 @@ class InvoiceSpread(Instrument):
 
 
 @handle_camel_case_args
-@resolution_safe
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CSLPython(Instrument):

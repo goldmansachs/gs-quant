@@ -16,7 +16,6 @@ under the License.
 
 from unittest import mock
 
-import copy
 import datetime as dt
 import pandas as pd
 
@@ -192,25 +191,6 @@ def test_disjoint_priceables_measures(mocker):
 
     assert swap_price_f.result() == 0.01
     assert swaption_dollar_price_f.result() == 0.01
-
-
-def test_resolution():
-    set_session()
-
-    swap = copy.copy(priceables[4])
-
-    assert 'fixed_rate' not in swap.as_dict()
-
-    with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = [[[[{'$type': 'LegDefinition', 'fixedRate': 0.01}]]]]
-        assert swap.fixed_rate == 0.01
-
-    swap.notional_currency = 'GBP'
-    assert 'fixed_rate' not in swap.as_dict()
-
-    with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
-        mocker.return_value = [[[[{'$type': 'LegDefinition', 'fixedRate': 0.007}]]]]
-        assert swap.fixed_rate == 0.007
 
 
 def test_create_pretrade_execution_optimization():

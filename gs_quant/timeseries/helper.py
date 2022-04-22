@@ -44,12 +44,14 @@ def _create_int_enum(name, mappings):
 
 def _to_offset(tenor: str) -> pd.DateOffset:
     import re
-    matcher = re.fullmatch('(\\d+)([dwmy])', tenor)
+    matcher = re.fullmatch('(\\d+)([hdwmy])', tenor)
     if not matcher:
         raise MqValueError('invalid tenor ' + tenor)
 
     ab = matcher.group(2)
-    if ab == 'd':
+    if ab == 'h':
+        name = 'hours'
+    elif ab == 'd':
         name = 'days'
     elif ab == 'w':
         name = 'weeks'

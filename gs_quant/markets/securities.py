@@ -21,6 +21,7 @@ import logging
 import threading
 import time
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from copy import deepcopy
 from enum import auto
 from functools import partial
@@ -195,6 +196,8 @@ class AssetType(Enum):
     EQUITY_WRT = 'Equity WRT'
     # ETF already defined
     SAVINGS_PLAN = 'Savings Plan'
+    EQUITY_INDEX = 'Equity Index'
+    COMMON_STOCK = 'Common Stock'
 
 
 class AssetIdentifier(EntityIdentifier):
@@ -222,6 +225,7 @@ class SecurityIdentifier(EntityIdentifier):
     RIC = "ric"
     ID = "id"
     CUSIP = "cusip"
+    CUSIP8 = "cusip8"
     SEDOL = "sedol"
     ISIN = "isin"
     TICKER = "ticker"
@@ -272,7 +276,7 @@ class Asset(Entity, metaclass=ABCMeta):
         """
         env = '-dev-ext.web' if 'dev' in get(GsSession, 'current.domain', '') else ''
         env = '-qa' if 'qa' in get(GsSession, 'current.domain', '') else env
-        return f'https://marquee{env}.gs.com/s/products/{self.__id}/summary'
+        return f'https://marquee{env}.gs.com/s/products/{self.get_marquee_id()}/summary'
 
     def get_identifiers(self, as_of: dt.date = None) -> dict:
         """
@@ -315,7 +319,7 @@ class Asset(Entity, metaclass=ABCMeta):
                 as_of = as_of.date()
 
         valid_ids = set(item.value for item in AssetIdentifier)
-        xrefs = GsAssetApi.get_asset_xrefs(self.__id)
+        xrefs = GsAssetApi.get_asset_xrefs(self.get_marquee_id())
         identifiers = {}
 
         for xref in xrefs:
@@ -369,7 +373,7 @@ class Asset(Entity, metaclass=ABCMeta):
 
         """
         if id_type == AssetIdentifier.MARQUEE_ID:
-            return self.__id
+            return self.get_marquee_id()
 
         ids = self.get_identifiers(as_of=as_of)
         return ids.get(id_type.value)
@@ -546,6 +550,194 @@ class Asset(Entity, metaclass=ABCMeta):
             sort_by_rank: bool = False) -> Optional['Asset']:
         asset = SecurityMaster.get_asset(id_value, id_type, as_of, exchange_code, asset_type, sort_by_rank)
         return asset
+
+
+class SecMasterAsset(Asset):
+    def __init__(self,
+                 id_: str,
+                 asset_type: AssetType,
+                 asset_class: AssetClass,
+                 name: str,
+                 exchange: Optional[str] = None,
+                 currency: Optional[str] = None,
+                 parameters: AssetParameters = None,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class=asset_class, name=name, exchange=exchange, currency=currency,
+                       parameters=parameters, entity=entity)
+        self.__asset_type = asset_type
+        self.__cached_identifiers = None
+
+    def get_type(self) -> AssetType:
+        return self.__asset_type
+
+    def get_marquee_id(self):
+        marquee_id = self.get_identifier(SecurityIdentifier.ASSET_ID)
+        self.__id = marquee_id  # Updates Marquee Id in case it changes from context change
+        if marquee_id is None:
+            raise MqValueError(
+                f"Current SecMasterAsset does not have a Marquee Id as of {PricingContext.current.pricing_date}. "
+                f"Perhaps asset did not exist at that time, or is a not an exchange-level asset.")
+        return marquee_id
+
+    def get_identifier(self, id_type: Union[AssetIdentifier, SecurityIdentifier], as_of: dt.date = None):
+        # Add an exception since original get_identifier() takes id_type: AssetIdentifier
+        if not isinstance(id_type, SecurityIdentifier):
+            raise MqTypeError(
+                f"""Expected id_type: SecurityIdentifier.enum for Assets sourced from SecurityMaster.
+                Received: {id_type}""")
+        if id_type == SecurityIdentifier.GSID:
+            return self.entity['identifiers'].get(SecurityIdentifier.GSID.value)
+        if id_type == SecurityIdentifier.ID:
+            return self.entity['id']
+        ids = self.get_identifiers(as_of=as_of)
+        return ids.get(id_type.value, None)
+
+    def get_identifiers(self, as_of: dt.date = None) -> dict:
+        # Cache identifiers if not already there
+        if self.__cached_identifiers is None:
+            self.__load_identifiers()
+        # Retrieve from cached identifiers
+        if as_of is None:
+            as_of = PricingContext.current.pricing_date
+        identifiers = dict()
+        for id_type in SecurityIdentifier:
+            id_history = self.__cached_identifiers.get(id_type.value)
+            if id_history is not None:
+                for xref in id_history:
+                    if xref["start_date"] <= as_of <= xref["end_date"]:
+                        identifiers[id_type.value] = xref["value"]
+                        break
+        # Add GSID and ID as it is not exposed in Get Identifiers History
+        identifiers[SecurityIdentifier.ID.value] = self.entity.get('id')
+        identifiers[SecurityIdentifier.GSID.value] = self.entity.get('identifiers').get(SecurityIdentifier.GSID.value)
+        # Mainly for currencies, where assetId is not exposed in Get Identifiers History
+        if SecurityIdentifier.ASSET_ID.value not in identifiers and self.__asset_type == AssetType.CURRENCY:
+            identifiers[SecurityIdentifier.ASSET_ID.value] = self.entity.get("identifiers").get("assetId")
+        # TODO: BCID and BBID are not exposed in Get Identifiers History.
+        return identifiers
+
+    def get_data_series(self,
+                        measure: DataMeasure,
+                        dimensions: Optional[DataDimensions] = None,
+                        frequency: Optional[DataFrequency] = None,
+                        start: Optional[DateOrDatetime] = None,
+                        end: Optional[DateOrDatetime] = None,
+                        dates: List[dt.date] = None,
+                        operator: DataAggregationOperator = None) -> pd.Series:
+        """
+        Will be also called by Asset.get_close_prices(),  Asset.get_close_price_for_date().
+        """
+
+        coordinate = self.get_data_coordinate(measure, dimensions, frequency)
+        if coordinate is None:
+            raise MqValueError(f"No data coordinate found for parameters:{measure, dimensions, frequency}")
+        range_start, range_end = coordinate.get_range(start, end)
+
+        if self.__is_validate_range(start=range_start, end=range_end):
+            with PricingContext(range_start):
+                return super(SecMasterAsset, self).get_data_series(measure=measure,
+                                                                   dimensions=dimensions,
+                                                                   frequency=frequency,
+                                                                   start=range_start,
+                                                                   end=range_end,
+                                                                   dates=dates,
+                                                                   operator=operator)
+
+    def get_hloc_prices(self,
+                        start: dt.date = DateLimit.LOW_LIMIT.value,
+                        end: dt.date = dt.date.today(),
+                        interval_frequency: IntervalFrequency = IntervalFrequency.DAILY) -> pd.DataFrame:
+
+        if self.__is_validate_range(start=start, end=end):
+            with PricingContext(start):
+                return super(SecMasterAsset, self).get_hloc_prices(start=start, end=end,
+                                                                   interval_frequency=interval_frequency)
+
+    def __is_validate_range(self, start: DateOrDatetime, end: DateOrDatetime = dt.date.today()) -> bool:
+        """
+        Validates that only one Marquee Id exist in start and end.
+        -   This function will return True if only one Marquee id exists in range.
+        -   This function will raise MqValueError if either many Marquee Ids exists in or none exist in input range or
+        the Id at start_date is not equal to id at end_date.
+
+        Example:
+                __cached_identifiers = {"assetId" : [{start: 2020-01-01, end: 2020-01-05, value: "marqueeId1"}
+                                                     {start: 2020-01-06, end: 2020-10-10, value: "marqueeId2"}]}
+                args = {start: 2020-01-01, end: 2020-01-07}
+
+                return: MqValueError
+        """
+        if self.__cached_identifiers is None:
+            self.__load_identifiers()
+
+        if isinstance(start, datetime.datetime):
+            start_date = start.date
+        else:
+            start_date = start
+
+        if isinstance(end, datetime.datetime):
+            end_date = end.date
+        else:
+            end_date = end
+
+        with PricingContext(start_date):
+            start_marquee_id = self.get_marquee_id()
+        with PricingContext(end_date):
+            end_marquee_id = self.get_marquee_id()
+        if start_marquee_id is None or end_marquee_id is None or start_marquee_id != end_marquee_id:
+            raise MqValueError(
+                f"Asset's Marquee Id is either none or different. start:[{start_date}->{start_marquee_id}] to "
+                f"end=[{end_date}->{end_marquee_id}].")
+
+        marquee_id_xref = self.__cached_identifiers.get(SecurityIdentifier.ASSET_ID.value)
+        marquee_ids = set()
+        output_range_start = None
+        output_range_end = None
+        overlap_ranges = defaultdict(list)
+        for xref in marquee_id_xref:
+            if end_date < xref['start_date'] or start_date > xref['end_date']:  # Skip xrefs that are outside range
+                continue
+            marquee_id = xref.get("value")
+            range_start = max(start_date, xref['start_date'])
+            range_end = min(end_date, xref['end_date'])
+
+            if range_start <= range_end:
+                marquee_ids.add(marquee_id)
+                overlap_ranges[marquee_id].append([range_start.strftime("%Y-%m-%d"),
+                                                   range_end.strftime("%Y-%m-%d")])
+                output_range_start = min(output_range_start,
+                                         range_start) if output_range_start is not None else output_range_start
+                output_range_end = max(output_range_end,
+                                       range_end) if output_range_end is not None else output_range_end
+
+        if len(marquee_ids) > 1:
+            raise MqValueError(
+                f"Asset has multiple Marquee ids between [start,end]=[{start_date},{end_date}] due to corporate "
+                f"actions. Try limiting the range over a single Marquee id. Marquee Ids found: {overlap_ranges}.")
+        if len(marquee_ids) == 0:
+            raise MqValueError(
+                f"Asset was not assigned Marquee Id over range [start,end]=[{start_date},{end_date}]. "
+                f"Perhaps asset did not exist at that range, or is a not an exchange-level asset.")
+        return True
+
+    def __load_identifiers(self) -> None:
+        if self.__cached_identifiers is None:
+            r = GsSession.current._get(f'/markets/securities/{self.entity["id"]}/identifiers')
+            results = r['results']
+            xrefs = defaultdict(list)
+            for temporal_xref in results:
+                id_type = temporal_xref['type']
+                xref_dict = {
+                    "start_date": datetime.datetime.strptime(temporal_xref['startDate'], "%Y-%m-%d").date(),
+                    "update_date": temporal_xref['updateTime'],
+                    "value": temporal_xref['value']
+                }
+                if temporal_xref['endDate'] == "9999-99-99":
+                    xref_dict['end_date'] = datetime.datetime.max.date()
+                else:
+                    xref_dict['end_date'] = datetime.datetime.strptime(temporal_xref['endDate'], "%Y-%m-%d").date()
+                xrefs[id_type].append(xref_dict)
+            self.__cached_identifiers = xrefs
 
 
 class Stock(Asset):
@@ -1205,7 +1397,7 @@ class SecurityMaster:
                   exchange_code: ExchangeCode = None,
                   asset_type: AssetType = None,
                   sort_by_rank: bool = False,
-                  fields: Optional[List[str]] = None) -> Union[Asset, Security]:
+                  fields: Optional[List[str]] = None) -> Asset:
         """
         Get an asset by identifier and identifier type
 
@@ -1248,7 +1440,7 @@ class SecurityMaster:
                 raise MqTypeError('expected a security identifier')
             if exchange_code or asset_type or sort_by_rank:
                 raise NotImplementedError('argument not implemented for Security Master (supported in Asset Service)')
-            return cls._get_security(id_value, id_type, as_of=as_of, fields=fields)
+            return cls._get_security_master_asset(id_value, id_type, as_of=as_of, fields=fields)
 
         if not as_of:
             as_of = PricingContext.current.pricing_date
@@ -1282,11 +1474,11 @@ class SecurityMaster:
             return cls.__gs_asset_to_asset(result)
 
     @classmethod
-    def _get_security(cls,
-                      id_value: str,
-                      id_type: SecurityIdentifier,
-                      as_of: Union[dt.date, dt.datetime] = None,
-                      fields: Optional[List[str]] = None) -> Optional[Security]:
+    def _get_security_master_asset(cls,
+                                   id_value: str,
+                                   id_type: SecurityIdentifier,
+                                   as_of: Union[dt.date, dt.datetime] = None,
+                                   fields: Optional[List[str]] = None) -> SecMasterAsset:
         as_of = as_of or datetime.datetime(2100, 1, 1)
         type_ = id_type.value
         params = {
@@ -1294,14 +1486,39 @@ class SecurityMaster:
             'asOfDate': as_of.strftime('%Y-%m-%d')  # TODO: update endpoint to take times
         }
         if fields is not None:
-            if 'identifiers' not in fields:
-                fields.append('identifiers')
-            params['fields'] = fields
+            request_fields = {
+                'identifiers',
+                'assetClass',
+                'type',
+                'currency',
+                'exchange',
+                'id'
+            }
+            request_fields.update(fields)
+            params['fields'] = request_fields
 
         r = GsSession.current._get('/markets/securities', payload=params)
         if r['totalResults'] == 0:
             return None
-        return Security(r['results'][0])
+        asset_dict = r['results'][0]
+        asset_id = asset_dict['identifiers'].get("assetId", None)
+        # Converting dict to Asset Class
+        asset_name = asset_dict.get('name', None)
+        asset_exchange = asset_dict.get("exchange").get("name", None) if "exchange" in asset_dict else None
+        asset_currency = asset_dict.get('currency', None)
+        try:
+            asset_type = AssetType(asset_dict['type'])
+            asset_class = AssetClass(asset_dict['assetClass'])
+            return SecMasterAsset(id_=asset_id,
+                                  asset_type=asset_type,
+                                  asset_class=asset_class,
+                                  name=asset_name,
+                                  exchange=asset_exchange,
+                                  currency=asset_currency,
+                                  entity=asset_dict)
+        except ValueError:
+            raise NotImplementedError(f"Not yet implemented for AssetType={asset_dict['type']}, "
+                                      f"AssetClass={asset_dict['assetClass']}.")
 
     @classmethod
     def get_identifiers(cls, id_values: List[str], id_type: SecurityIdentifier, as_of: datetime.datetime = None,

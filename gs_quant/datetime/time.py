@@ -63,10 +63,12 @@ class Tracer:
     __stack_depth = 0
     __stack = []
 
-    def __init__(self, label: str = 'Execution', print_on_exit: bool = False, threshold: int = None):
+    def __init__(self, label: str = 'Execution', print_on_exit: bool = False, threshold: int = None,
+                 wrap_exceptions=False):
         self.__print_on_exit = print_on_exit
         self.__label = label
         self.__threshold = threshold
+        self.wrap_exceptions = wrap_exceptions
 
     def __enter__(self):
         self.__start = dt.datetime.now()
@@ -75,7 +77,7 @@ class Tracer:
         Tracer.__stack.append([dt.datetime.now(), 0.0, self.__label, Tracer.__stack_depth])
         Tracer.__stack_depth += 1
 
-    def __exit__(self, *args):
+    def __exit__(self, exc_type, exc_value, exc_tb):
         if self.__version != Tracer.__version:
             return
         self.__elapsed = dt.datetime.now() - self.__start
@@ -85,6 +87,8 @@ class Tracer:
         if self.__print_on_exit:
             if self.__threshold is None or self.__elapsed.seconds > self.__threshold:
                 _logger.warning(f'{self.__label} took {elapsed_sec} seconds')
+        if self.wrap_exceptions and exc_type is not None and not exc_type == MqWrappedError:
+            raise MqWrappedError(f'Unable to calculate: {self.__label}') from exc_value
 
     @staticmethod
     def reset():
@@ -108,6 +112,7 @@ class Tracer:
         _logger.warning(f'Tracing Info:\n{tracing_str}\n{"-" * 61}\nTOTAL:{total:>52.1f} ms')
         if reset:
             Tracer.reset()
+        return tracing_str, total
 
 
 def to_zulu_string(time: dt.datetime):

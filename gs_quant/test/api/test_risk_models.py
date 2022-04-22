@@ -18,7 +18,9 @@ import datetime as dt
 
 from gs_quant.api.gs.risk_models import GsRiskModelApi, GsFactorRiskModelApi
 from gs_quant.session import *
-from gs_quant.target.risk_models import RiskModel, Factor, RiskModelCalendar
+from gs_quant.target.risk_models import RiskModel, Factor, RiskModelCalendar, \
+    RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
+    RiskModelUniverseIdentifierRequest as UniverseIdentifier
 
 
 def test_get_risk_models(mocker):
@@ -383,6 +385,57 @@ def test_upload_risk_model_data(mocker):
     assert response == 'Successfully uploaded'
 
 
+def test_upload_macro_risk_model_data(mocker):
+    macro_risk_model_data = {
+        'date': '2022-04-05',
+        'assetData': {
+            'universe': ["904026", "232128", "905739", "24985", "160444"],
+            'specificRisk': [32.9, 61, 17.27, 30, 45.6],
+            "factorExposure": [{"1": 0.2, "2": 0.3}, {"1": 0.02, "2": 0.03}, {"1": 0.82, "2": 0.63}, {"1": 6.2, "2": 3},
+                               {"1": -6.2, "2": 0.3}],
+            "rSquared": [89, 45, 34, 12, 5],
+            "fairValueGapPercent": [90, 34, 6, 8, 34],
+            "fairValueGapStandardDeviation": [4, 5, 9, 1, 7]
+        },
+        "factorData": [
+            {
+                "factorId": "1",
+                "factorName": "Factor1",
+                "factorCategory": "Category1",
+                "factorCategoryId": "Category1",
+                "factorReturn": 0.12,
+                "factorStandardDeviation": 89,
+                "factorZScore": 1.5
+
+            },
+            {
+                "factorId": "2",
+                "factorName": "Factor2",
+                "factorCategory": "Category2",
+                "factorCategoryId": "Category2",
+                "factorReturn": 0.89,
+                "factorStandardDeviation": 0.67,
+                "factorZScore": -1
+            }
+        ]
+    }
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value='Successfully uploaded')
+
+    # run test
+    response = GsFactorRiskModelApi.upload_risk_model_data(model_id='id', model_data=macro_risk_model_data)
+    GsSession.current._post.assert_called_with(
+        '/risk/models/data/{id}'.format(id='id'), macro_risk_model_data, timeout=85)
+    assert response == 'Successfully uploaded'
+
+
 def test_get_risk_model_data(mocker):
     query = {
         'startDate': '2020-01-01',
@@ -434,3 +487,187 @@ def test_get_risk_model_data(mocker):
                                                         end_date=dt.date(2020, 3, 3))
     GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
     assert response == results
+
+
+def test_get_r_squared(mocker):
+    assets = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, assets),
+        'measures': [Measure.R_Squared, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    r_squared_results = [
+        {
+            "date": "2022-04-05",
+            "assetData": {
+                "universe": ["904026", "232128", "24985", "160444"],
+                "rSquared": [89.0, 45.0, 12.0, 5.0]
+            }
+        }
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=r_squared_results)
+
+    # run test
+    response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2022, 4, 4),
+                                                        end_date=dt.date(2022, 4, 6),
+                                                        assets=DataAssetsRequest(UniverseIdentifier.gsid, assets),
+                                                        measures=[Measure.R_Squared, Measure.Asset_Universe],
+                                                        limit_factors=False)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
+    assert response == r_squared_results
+
+
+def test_get_fair_value_gap(mocker):
+    assets = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, assets),
+        'measures': [Measure.Fair_Value_Gap_Percent, Measure.Fair_Value_Gap_Standard_Deviation,
+                     Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    fvg_results = [
+        {
+            "date": "2022-04-05",
+            "assetData": {
+                "fairValueGapPercent": [90.0, 34.0, 8.0, 34.0],
+                "universe": ["904026", "232128", "24985", "160444"],
+                "fairValueGapStandardDeviation": [4.0, 5.0, 1.0, 7.0]
+            }
+        }
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=fvg_results)
+
+    # run test
+    response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2022, 4, 4),
+                                                        end_date=dt.date(2022, 4, 6),
+                                                        assets=DataAssetsRequest(UniverseIdentifier.gsid, assets),
+                                                        measures=[Measure.Fair_Value_Gap_Percent,
+                                                                  Measure.Fair_Value_Gap_Standard_Deviation,
+                                                                  Measure.Asset_Universe],
+                                                        limit_factors=False)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
+    assert response == fvg_results
+
+
+def test_get_factor_standard_deviation(mocker):
+    assets = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, assets),
+        'measures': [Measure.Factor_Standard_Deviation, Measure.Factor_Name, Measure.Factor_Id],
+        'limitFactors': False
+    }
+
+    factor_standard_deviation_results = [
+        {
+            "date": "2022-04-05",
+            "factorData": [
+                {
+                    "factorId": "1",
+                    "factorStandardDeviation": 89.0,
+                    "factorName": "Factor1"
+                },
+                {
+                    "factorId": "2",
+                    "factorStandardDeviation": 0.67,
+                    "factorName": "Factor2"
+                }
+            ]
+        }
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=factor_standard_deviation_results)
+
+    # run test
+    response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2022, 4, 4),
+                                                        end_date=dt.date(2022, 4, 6),
+                                                        assets=DataAssetsRequest(UniverseIdentifier.gsid, assets),
+                                                        measures=[Measure.Factor_Standard_Deviation,
+                                                                  Measure.Factor_Name,
+                                                                  Measure.Factor_Id],
+                                                        limit_factors=False)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
+    assert response == factor_standard_deviation_results
+
+
+def test_get_factor_z_score(mocker):
+    assets = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, assets),
+        'measures': [Measure.Factor_Z_Score, Measure.Factor_Name, Measure.Factor_Id],
+        'limitFactors': False
+    }
+
+    factor_z_score_results = [
+        {
+            "date": "2022-04-05",
+            "factorData": [
+                {
+                    "factorId": "1",
+                    "factorZScore": 1.5,
+                    "factorName": "Factor1"
+                },
+                {
+                    "factorId": "2",
+                    "factorZScore": -1.0,
+                    "factorName": "Factor2"
+                }
+            ]
+        }
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=factor_z_score_results)
+
+    # run test
+    response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2022, 4, 4),
+                                                        end_date=dt.date(2022, 4, 6),
+                                                        assets=DataAssetsRequest(UniverseIdentifier.gsid, assets),
+                                                        measures=[Measure.Factor_Z_Score,
+                                                                  Measure.Factor_Name,
+                                                                  Measure.Factor_Id],
+                                                        limit_factors=False)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
+    assert response == factor_z_score_results

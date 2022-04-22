@@ -17,14 +17,13 @@ import datetime as dt
 import logging
 import math
 from time import sleep
-from typing import List
+from typing import List, Dict
 
 import pandas as pd
-from requests.exceptions import ReadTimeout
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi
-from gs_quant.errors import MqRequestError
+from gs_quant.errors import MqRequestError, MqValueError
 from gs_quant.target.risk_models import RiskModelData
 
 
@@ -42,12 +41,14 @@ def build_asset_data_map(results: List, universe: List, measure: str) -> dict:
     return data_map
 
 
-def build_factor_data_map(results: List, identifier: str) -> dict:
+def build_factor_data_map(results: List, identifier: str, measure: str, factors: List[str] = []) -> dict:
     if not results:
         return {}
     factor_data = set()
     for row in results:
         factor_data |= set([factor.get('factorId') for factor in row.get('factorData')])
+        if factors:
+            factor_data &= set(factors)
     data_map = {}
     for factor in factor_data:
         date_list = {}
@@ -55,10 +56,34 @@ def build_factor_data_map(results: List, identifier: str) -> dict:
         for row in results:
             for data in row.get('factorData'):
                 if data.get('factorId') == factor:
-                    factor_name = factor if identifier == 'id' else data.get(identifier)
-                    date_list[row.get('date')] = data.get('factorReturn')
+                    factor_name = factor if identifier == 'factorId' else data.get(identifier)
+                    date_list[row.get('date')] = data.get(measure)
         data_map[factor_name] = date_list
     return data_map
+
+
+def validate_factors_exist(factors_to_validate: List[str], risk_model_factors: List[Dict],
+                           risk_model_id: str, identifier: str) -> List[str]:
+
+    risk_model_factors_id_to_name = {f['identifier']: f['name'] for f in risk_model_factors}
+    all_factor_names = list(risk_model_factors_id_to_name.keys()) if identifier == 'identifier' else \
+        list(risk_model_factors_id_to_name.values())
+    factor_matches = list(set(all_factor_names) & set(factors_to_validate))
+    wrong_factors = list(set(factors_to_validate) - set(factor_matches))
+
+    if wrong_factors:
+        raise MqValueError(f'Factors(s) with {identifier}(s) {", ".join(wrong_factors)} do not exist in '
+                           f'risk model {risk_model_id}. Make sure the factor {identifier}(s) are correct')
+
+    factor_ids = []
+    if identifier == 'name':
+        for f_id, f_name in risk_model_factors_id_to_name.items():
+            if f_name in factors_to_validate:
+                factor_ids.append(f_id)
+    else:
+        factor_ids = list(set(risk_model_factors_id_to_name.keys()) & set(factors_to_validate))
+
+    return factor_ids
 
 
 def build_pfp_data_dataframe(results: List) -> pd.DataFrame:
@@ -225,7 +250,10 @@ def _batch_asset_input(input_data: dict, i: int, split_idx: int, split_num: int,
     asset_data_subset = {'universe': input_data.get('universe')[i * split_idx:end_idx],
                          'specificRisk': input_data.get('specificRisk')[i * split_idx:end_idx],
                          'factorExposure': input_data.get('factorExposure')[i * split_idx:end_idx]}
-    optional_asset_inputs = ['totalRisk', 'historicalBeta', 'specificReturn']
+
+    optional_asset_inputs = ['totalRisk', 'historicalBeta', 'specificReturn', 'rSquared', 'fairValueGapPercent',
+                             'fairValueGapStandardDeviation', 'estimationUniverseWeight']
+
     for optional_input in optional_asset_inputs:
         if input_data.get(optional_input):
             asset_data_subset[optional_input] = input_data.get(optional_input)[i * split_idx:end_idx]
@@ -264,24 +292,23 @@ def _repeat_try_catch_request(input_function, number_retries: int = 5, **kwargs)
             break
         except MqRequestError as e:
             errors.append(e)
-            if e.status == 429:
-                sleep_time = math.pow(2.2, t)
-                t += 1
-                if i < number_retries - 1:
-                    logging.warning(
-                        f'Rate limiting hit while making request, retrying in {int(sleep_time)}'
-                        f' seconds...')
-                    sleep(sleep_time)
-            elif e.status < 500:
+            if e.status < 500 and e.status != 429:
                 raise e
             elif i < number_retries - 1:
-                logging.warning(f'Exception caught while making request: {e}, retrying...')
-        except ReadTimeout as rt:
-            errors.append(rt)
-            if i < number_retries - 1:
-                logging.warning(f'Read timeout error caught (ReadTimeout): {rt}, retrying request...')
+                sleep_time = math.pow(2.2, t)
+                t += 1
+                logging.warning(f'Exception caught while making request: {e}, retrying in {int(sleep_time)}')
+                sleep(sleep_time)
             else:
-                logging.warning(f'Read timeout error caught (ReadTimeout): {rt}, max retries {number_retries}'
-                                f' already attempted')
+                logging.warning(f'Maximum number of retries: {number_retries} triggered')
+        except Exception as unknown_exception:
+            errors.append(unknown_exception)
+            if i < number_retries - 1:
+                sleep_time = math.pow(2.2, t)
+                t += 1
+                logging.warning(f'Unknown exception caught: {unknown_exception}, retrying in {int(sleep_time)}')
+                sleep(sleep_time)
+            else:
+                logging.warning(f'Maximum number of retries: {number_retries} triggered')
     if errors:
         raise errors.pop()

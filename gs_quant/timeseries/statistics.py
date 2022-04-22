@@ -71,8 +71,8 @@ def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
 
     :param x: series: a timeseries or an array of timeseries
 
-    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+    :param w: window: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. If w is a string, it should be a relative time duration like '1m', '1d', etc.
               Window size defaults to length of series.
     :return: timeseries of minimum value
 
@@ -95,6 +95,19 @@ def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
 
     If window is not provided, returns the minimum value over the
     full series. If the window size is greater than the available data, will return minimum of available values.
+
+    If :math:`w` is a string, it should be a relative time duration such as '1m', '5d', etc. The available frequency
+    strings can be found below:
+
+    ==============    ================
+    Frequency         Description
+    ==============    ================
+    y                 one year
+    m                 one month
+    w                 one week
+    d                 one day
+    h                 one hour
+    ==============    ================
 
     **Examples**
 
@@ -125,8 +138,8 @@ def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
     Maximum value of series over given window
 
     :param x: series: a timeseries or an array of timeseries
-    :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
-              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+    :param w: window: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
+              and 10 the ramp up value. If w is a string, it should be a relative time duration like '1m', '5d', etc.
               Window size defaults to length of series.
     :return: timeseries of maximum value
 
@@ -148,6 +161,19 @@ def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
 
     If window is not provided, returns the maximum value over the full series. If the window size is greater than the
     available data, will return maximum of available values.
+
+    If :math:`w` is a string, it should be a relative time duration such as '1m', '5d', etc. The available frequency
+    strings can be found below:
+
+    ==============    ================
+    Frequency         Description
+    ==============    ================
+    y                 one year
+    m                 one month
+    w                 one week
+    d                 one day
+    h                 one hour
+    ==============    ================
 
     **Examples**
 

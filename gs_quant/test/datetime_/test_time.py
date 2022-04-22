@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import pytest
 from gs_quant.datetime import *
 
 
@@ -28,3 +29,15 @@ def test_time_difference_as_string():
     for expected, input in check_map.items():
         actual = time_difference_as_string(input)
         assert expected == actual
+
+
+def test_tracer_wrapped_error():
+    with pytest.raises(MqError, match='Unable to calculate: Outer Thing'):
+        with Tracer('Outer Thing', wrap_exceptions=True):
+            with Tracer('Inner Thing', ):
+                raise KeyError('meaningless error')
+
+    with pytest.raises(MqError, match='Unable to calculate: Inner Thing'):
+        with Tracer('Outer Thing', wrap_exceptions=True):
+            with Tracer('Inner Thing', wrap_exceptions=True):
+                raise KeyError('meaningless error')

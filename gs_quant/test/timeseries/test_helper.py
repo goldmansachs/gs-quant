@@ -143,6 +143,10 @@ def test_normalize_window_single_str():
     w = normalize_window(x, "3m")
     assert w.w == pd.DateOffset(months=3)
     assert w.r == pd.DateOffset(months=3)
+    x = ts.generate_series(10)
+    w = normalize_window(x, "1h")
+    assert w.w == pd.DateOffset(hours=1)
+    assert w.r == pd.DateOffset(hours=1)
 
 
 def test_apply_ramp():

@@ -30,6 +30,10 @@ class MqTypeError(MqError):
     pass
 
 
+class MqWrappedError(MqError):
+    pass
+
+
 class MqRequestError(MqError):
     def __init__(self, status, message, context=None):
         self.status = status
