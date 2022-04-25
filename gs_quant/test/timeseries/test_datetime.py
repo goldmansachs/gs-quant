@@ -20,6 +20,10 @@ from pandas.testing import assert_series_equal
 from gs_quant.timeseries.datetime import *
 
 
+def test_basic():
+    assert type(RelativeDate('0d').apply_rule()) == datetime.date
+
+
 def test_align():
     dates1 = [
         date(2019, 1, 1),

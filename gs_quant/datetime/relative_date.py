@@ -69,7 +69,7 @@ class RelativeDate:
             self.base_date = pricing_date
         else:
             self.base_date = date.today()
-        self.base_date = base_date.date() if isinstance(base_date, (datetime, Timestamp)) else base_date
+        self.base_date = self.base_date.date() if isinstance(self.base_date, (datetime, Timestamp)) else self.base_date
 
     def apply_rule(self,
                    currencies: List[Union[Currency, str]] = None,
