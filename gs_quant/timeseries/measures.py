@@ -44,7 +44,6 @@ from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, 
 GENERIC_DATE = Union[datetime.date, str]
 ASSET_SPEC = Union[Asset, str]
 TD_ONE = datetime.timedelta(days=1)
-CENTRAL_BANK_WATCH_START_DATE = datetime.date(2016, 1, 1)
 
 _logger = logging.getLogger(__name__)
 
@@ -148,40 +147,6 @@ class FxForecastHorizon(Enum):
     EOY4 = 'EOY4'
 
 
-class BenchmarkType(Enum):
-    LIBOR = 'LIBOR'
-    EURIBOR = 'EURIBOR'
-    EUROSTR = 'EUROSTR'
-    STIBOR = 'STIBOR'
-    OIS = 'OIS'
-    CDKSDA = 'CDKSDA'
-    SOFR = 'SOFR'
-    SARON = 'SARON'
-    EONIA = 'EONIA'
-    SONIA = 'SONIA'
-    TONA = 'TONA'
-    Fed_Funds = 'Fed_Funds'
-    NIBOR = 'NIBOR'
-    CIBOR = 'CIBOR'
-    BBR = 'BBR'
-    BA = 'BA'
-    KSDA = 'KSDA'
-    REPO = 'REPO'
-    SOR = 'SOR'
-    HIBOR = 'HIBOR'
-    MIBOR = 'MIBOR'
-    CDOR = 'CDOR'
-    CDI = 'CDI'
-    TNA = 'TNA'
-    IBR = 'IBR'
-    TIIE = 'TIIE'
-    AONIA = 'AONIA'
-    NZIONA = 'NZIONA'
-    NOWA = 'NOWA'
-    CORRA = 'CORRA'
-    SIOR = 'SIOR'
-
-
 class FundamentalMetricPeriodDirection(Enum):
     FORWARD = 'forward'
     TRAILING = 'trailing'
@@ -193,17 +158,6 @@ class RatesConversionType(Enum):
     INFLATION_BENCHMARK_RATE = auto()
     CROSS_CURRENCY_BASIS = auto()
     OIS_BENCHMARK_RATE = auto()
-
-
-class EventType(Enum):
-    MEETING = 'Meeting Forward'
-    EOY = 'EOY Forward'
-    SPOT = 'Spot'
-
-
-class RateType(Enum):
-    ABSOLUTE = 'absolute'
-    RELATIVE = 'relative'
 
 
 class EsgMetric(Enum):
@@ -475,22 +429,6 @@ def _get_custom_bd(exchange):
     from pandas.tseries.offsets import CustomBusinessDay
     calendar = GsCalendar.get(exchange).business_day_calendar()
     return CustomBusinessDay(calendar=calendar)
-
-
-def parse_meeting_date(valuation_date: Optional[GENERIC_DATE] = None):
-    if isinstance(valuation_date, str):
-        if len(valuation_date.split('-')) == 3:
-            year, month, day = valuation_date.split('-')
-            return dt.date(int(year), int(month), int(day))
-        else:
-            start, valuation_date = _range_from_pricing_date("", valuation_date)
-            return valuation_date.date() if isinstance(valuation_date, pd.Timestamp) else valuation_date
-    elif isinstance(valuation_date, dt.date) or valuation_date is None:
-        start, valuation_date = _range_from_pricing_date("", valuation_date)
-        return valuation_date.date() if isinstance(valuation_date, pd.Timestamp) else valuation_date
-    else:
-        raise MqValueError(
-            'valuation_date must be of type datetime.date or string YYYY-MM-DD or relative date strings like 1m, 1y')
 
 
 @log_return(_logger, 'trying pricing dates')
@@ -3150,135 +3088,6 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     return series
 
 
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_ois_asset,
-                                 query_type=QueryType.CENTRAL_BANK_SWAP_RATE)])
-def policy_rate_term_structure(asset: Asset, event_type: EventType = EventType.MEETING,
-                               rate_type: RateType = RateType.ABSOLUTE,
-                               valuation_date: Optional[GENERIC_DATE] = None, *,
-                               source: str = None, real_time: bool = False) -> pd.Series:
-    """'
-    Forward Policy Rate expectations for future Central Bank meetings or End Of Year Dates as of specified date.
-
-    :param asset: Currency
-    :param event_type: Spot= Effective OIS/Policy rate, Meeting = Forward Expectations across all future CB meetings,
-                    EOY = Forward Expectations at End of Year Dates
-    :param rate_type:  One of (absolute, relative), where relative = forward - spot rate to show what
-                hikes/cuts are priced in by the market.
-    :param valuation_date:  reference date on which all future expectations are calculated
-    :param source: name of function caller: default source = None
-    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
-    :return: OIS Swap Rate Term structure for swaps structured between consecutive CB meeting dates
-    """
-    check_forward_looking(valuation_date, source, 'policy_rate_expectation')
-
-    valuation_date = parse_meeting_date(valuation_date)
-    if real_time:
-        raise NotImplementedError('real-time central bank swap rate not implemented')
-
-    if not isinstance(event_type, EventType):
-        raise MqValueError('event_type must be one of Spot, Meeting Forward and EOY Forward')
-    if not isinstance(rate_type, RateType):
-        raise MqValueError('event_type must be either absolute or relative')
-
-    mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.OIS_BENCHMARK_RATE)
-
-    _logger.debug('where assetId=%s, metric=Central Bank Swap Rate, event_type=%s, event_type=%s, valuation date=%s',
-                  mqid, event_type, rate_type, str(valuation_date))
-
-    ds = Dataset(Dataset.GS.CENTRAL_BANK_WATCH)
-    if event_type == EventType.SPOT:
-        if rate_type == RateType.RELATIVE:
-            raise MqValueError('rate_type must be absolute for event_type = Spot')
-        else:
-            df = ds.get_data(assetId=[mqid], rateType=event_type, start=CENTRAL_BANK_WATCH_START_DATE)
-    else:
-        df = ds.get_data(assetId=[mqid], rateType=event_type, valuationDate=valuation_date,
-                         start=CENTRAL_BANK_WATCH_START_DATE)
-
-    if rate_type == RateType.RELATIVE:
-        # df = remove_dates_with_null_entries(df)
-        spot = df[df['meetingNumber'] == 0]['value'][0]
-        df['value'] = df['value'] - spot
-    try:
-        df = df.reset_index()
-        df = df.set_index('meetingDate')
-        series = ExtendedSeries(df['value'])
-        series.dataset_ids = (Dataset.GS.CENTRAL_BANK_WATCH,)
-    except KeyError:  # No data returned from ds.get_data
-        series = pd.Series(dtype=float, name='value')
-    return series
-
-
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_ois_asset,
-                                 query_type=QueryType.POLICY_RATE_EXPECTATION)])
-def policy_rate_expectation(asset: Asset, event_type: EventType = EventType.MEETING,
-                            rate_type: RateType = RateType.ABSOLUTE,
-                            meeting_date: Union[datetime.date, int, str] = 0,
-                            *, source: str = None, real_time: bool = False) -> pd.Series:
-    """'
-    Evolution of OIS/policy rate expectations for a given meeting date or end of year date.
-
-    :param asset: asset object loaded from security master
-    :param meeting_date: Actual meeting date eg. Date(2022-04-02) or meeting number standing today : 0 for last,
-                            1 for next , 2 for meeting after next and so on
-    :param rate_type: One of (absolute, relative), where relative = forward - spot rate to show what hikes/cuts are
-                    priced in by the market for specified meeting date.
-    :param event_type: Spot= Effective OIS/Policy rate, Meeting = Evolution of Rate Expectations for a given meeting
-                    date, EOY =  Evolution of Rate Expectations for specified End of Year Date.
-    :param source: name of function caller: default source = None
-    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
-    :return: Historical policy rate expectations for a given CB meeting date or an End of Year date.
-    """
-
-    if real_time:
-        raise NotImplementedError('real-time central bank swap rate not implemented')
-    if event_type not in [EventType.MEETING, EventType.EOY]:
-        raise MqValueError('invalid event_type specified, Meeting Forward or EOY Forward allowed')
-    if not isinstance(rate_type, RateType):
-        raise MqValueError('event_type must be either absolute or relative')
-    if not isinstance(meeting_date, (dt.date, str, int)):
-        raise MqValueError('valuation_date must be of type datetime.date or string YYYY-MM-DD or integer')
-
-    mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.OIS_BENCHMARK_RATE)
-
-    _logger.debug('where assetId=%s, metric=Policy Rate Expectation, meeting_date=%s, event_type=%s',
-                  mqid, str(meeting_date), rate_type)
-
-    ds = Dataset(Dataset.GS.CENTRAL_BANK_WATCH)
-    if isinstance(meeting_date, int):
-        meeting_number = meeting_date
-        if meeting_number < 0 or meeting_number > 20:
-            raise MqValueError('meeting_number has to be an integer between 0 and 20 where 0 is the '
-                               'last meeting and 1 is the next meeting')
-
-        cbw_df = ds.get_data(assetId=[mqid], rateType=event_type, meetingNumber=meeting_number,
-                             start=CENTRAL_BANK_WATCH_START_DATE)
-    else:
-        meeting_date = parse_meeting_date(meeting_date)
-        cbw_df = ds.get_data(assetId=[mqid], rateType=event_type, meetingDate=meeting_date,
-                             start=CENTRAL_BANK_WATCH_START_DATE)
-
-    if cbw_df.empty:
-        raise MqValueError('meeting date specified returned no data')
-
-    if rate_type == RateType.RELATIVE:
-        spot_df = ds.get_data(assetId=[mqid], rateType=event_type, meetingNumber=0,
-                              start=CENTRAL_BANK_WATCH_START_DATE).rename(columns={'value': 'spotValue'})
-        if spot_df.empty:
-            raise MqValueError('no spot data returned to rebase')
-        joined_df = cbw_df.merge(spot_df, on=['date', 'assetId', 'rateType', 'location', 'valuationDate'], how='inner')
-        joined_df = joined_df.set_index('valuationDate')
-        joined_df['relValue'] = (joined_df['value'] - joined_df['spotValue'])
-        series = ExtendedSeries(joined_df['relValue'])
-    else:
-        cbw_df = cbw_df.set_index('valuationDate')
-        series = ExtendedSeries(cbw_df['value'])
-    series.dataset_ids = (Dataset.GS.CENTRAL_BANK_WATCH,)
-    return series
-
-
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                    *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
@@ -3833,7 +3642,8 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
     return series
 
 
-@plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX), None, [QueryType.SPOT],
+@plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX, AssetClass.Credit, AssetClass.Rates), None,
+              [QueryType.SPOT],
               asset_type_excluded=(AssetType.CommodityEUNaturalGasHub, AssetType.CommodityNaturalGasHub,))
 def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 0),
                         returns_type: Returns = Returns.LOGARITHMIC, *, source: str = None, real_time: bool = False,

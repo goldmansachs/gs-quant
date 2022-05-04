@@ -106,7 +106,7 @@ class Index(Asset, PositionedEntity):
     def get_fundamentals(self,
                          start: dt.date = DateLimit.LOW_LIMIT.value,
                          end: dt.date = dt.date.today(),
-                         period: DataMeasure = DataMeasure.ONE_YEAR.value,
+                         period: Optional[DataMeasure] = None,
                          direction: DataMeasure = DataMeasure.FORWARD.value,
                          metrics: List[DataMeasure] = DataMeasure.list_fundamentals()) -> pd.DataFrame:
         """
@@ -115,7 +115,7 @@ class Index(Asset, PositionedEntity):
         :param start: start date (default is 1 January, 1970)
         :param end: end date (default is today)
         :param period: period for the relevant metric.  Can be one of ONE_YEAR('1y'), TWO_YEARS('2y'), \
-            THREE_YEARS('3y') (default is 1y)
+            THREE_YEARS('3y') (default is all periods)
         :param direction: direction of the outlook period. Can be one of 'forward' or 'trailing' (default is forward)
         :param metrics: list of fundamentals metrics. (default is all)
         :return: dataframe with fundamentals information
@@ -135,7 +135,9 @@ class Index(Asset, PositionedEntity):
         >>> index.get_fundamentals(metrics=[DataMeasure.DIVIDEND_YIELD])
         """
         if self.__is_sts_index():
-            where = dict(assetId=self.id, period=period, periodDirection=direction, metric=metrics)
+            where = dict(assetId=self.id, periodDirection=direction, metric=metrics)
+            if period:
+                where["period"] = period
             query = DataQuery(where=where, start_date=start, end_date=end)
             response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.STS_FUNDAMENTALS.value)
             return pd.DataFrame(response)

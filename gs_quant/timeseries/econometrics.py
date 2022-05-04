@@ -14,6 +14,7 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
+from .analysis import LagMode, lag
 from .statistics import *
 from ..errors import *
 import itertools
@@ -226,12 +227,12 @@ def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRat
 
 
 @plot_function
-def returns(series: pd.Series, obs: int = 1, type: Returns = Returns.SIMPLE) -> pd.Series:
+def returns(series: pd.Series, obs: Union[Window, int, str] = 1, type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Calculate returns from price series
 
     :param series: time series of prices
-    :param obs: number of observations
+    :param obs: number of observations or relative date e.g. 3d, 1w, 1m
     :param type: returns type: simple, logarithmic or absolute
     :return: date-based time series of return
 
@@ -286,13 +287,14 @@ def returns(series: pd.Series, obs: int = 1, type: Returns = Returns.SIMPLE) -> 
     if series.size < 1:
         return series
 
+    shifted_series = lag(series, obs, LagMode.TRUNCATE)
+
     if type == Returns.SIMPLE:
-        ret_series = series / series.shift(obs) - 1
+        ret_series = series / shifted_series - 1
     elif type == Returns.LOGARITHMIC:
-        log_s = series.apply(math.log)
-        ret_series = log_s - log_s.shift(obs)
+        ret_series = series.apply(math.log) - shifted_series.apply(math.log)
     elif type == Returns.ABSOLUTE:
-        ret_series = series - series.shift(obs)
+        ret_series = series - shifted_series
     else:
         raise MqValueError('Unknown returns type (use simple / logarithmic / absolute)')
 
@@ -743,7 +745,9 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0
 @plot_function
 def max_drawdown(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
-    Compute the maximum peak to trough drawdown over a rolling window.
+    Compute the maximum peak to trough drawdown over a rolling window as a ratio.
+
+    i.e. if the max drawdown for a period is 20%, this function will return 0.2.
 
     :param x: time series
     :param w: Window, int, or str: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size

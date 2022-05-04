@@ -19,24 +19,23 @@ import logging
 import re
 from collections import OrderedDict
 from enum import Enum
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, List
 
 import pandas as pd
 from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
-from gs_quant.data import DataContext
+from gs_quant.data import DataContext, Dataset
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset
 from gs_quant.target.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation
-from gs_quant.timeseries import ASSET_SPEC, BenchmarkType, plot_measure, MeasureDependency, GENERIC_DATE
-from gs_quant.timeseries.helper import _to_offset, check_forward_looking
-from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _range_from_pricing_date, \
-    _get_custom_bd, ExtendedSeries, SwaptionTenorType, _extract_series_from_df
-
-_logger = logging.getLogger(__name__)
+from gs_quant.timeseries import currency_to_default_ois_asset, convert_asset_for_rates_data_set, RatesConversionType
+from gs_quant.timeseries.helper import _to_offset, check_forward_looking, plot_measure
+from gs_quant.timeseries.measures import _market_data_timed, _range_from_pricing_date, \
+    _get_custom_bd, ExtendedSeries, SwaptionTenorType, _extract_series_from_df, GENERIC_DATE, \
+    _asset_from_spec, ASSET_SPEC, MeasureDependency, _logger
 
 
 # TODO: Use gs_quant object
@@ -51,6 +50,26 @@ class _ClearingHouse(Enum):
 class _SwapTenorType(Enum):
     FORWARD_TENOR = 'forward_tenor'
     SWAP_TENOR = 'swap_tenor'
+
+
+class EventType(Enum):
+    MEETING = 'Meeting Forward'
+    EOY = 'EOY Forward'
+    SPOT = 'Spot'
+
+
+class RateType(Enum):
+    ABSOLUTE = 'absolute'
+    RELATIVE = 'relative'
+
+
+CCY_TO_CB = {
+    'EUR': 'ecb',
+    'USD': 'frb',
+    'GBP': 'mpc'
+}
+
+CENTRAL_BANK_WATCH_START_DATE = datetime.date(2016, 1, 1)
 
 
 class TdapiRatesDefaultsProvider:
@@ -394,10 +413,44 @@ def _check_forward_tenor(forward_tenor) -> GENERIC_DATE:
     elif forward_tenor in ['Spot', 'spot', 'SPOT']:
         return '0b'
     elif not (_is_valid_relative_date_tenor(forward_tenor) or
-              re.fullmatch('(imm[1-4]|frb[1-9]|ecb[1-6])', forward_tenor)):
+              re.fullmatch('(imm[1-4]|frb[1-9]|ecb[1-9])', forward_tenor)):
         raise MqValueError('invalid forward tenor ' + forward_tenor)
     else:
         return forward_tenor
+
+
+class BenchmarkType(Enum):
+    LIBOR = 'LIBOR'
+    EURIBOR = 'EURIBOR'
+    EUROSTR = 'EUROSTR'
+    STIBOR = 'STIBOR'
+    OIS = 'OIS'
+    CDKSDA = 'CDKSDA'
+    SOFR = 'SOFR'
+    SARON = 'SARON'
+    EONIA = 'EONIA'
+    SONIA = 'SONIA'
+    TONA = 'TONA'
+    Fed_Funds = 'Fed_Funds'
+    NIBOR = 'NIBOR'
+    CIBOR = 'CIBOR'
+    BBR = 'BBR'
+    BA = 'BA'
+    KSDA = 'KSDA'
+    REPO = 'REPO'
+    SOR = 'SOR'
+    HIBOR = 'HIBOR'
+    MIBOR = 'MIBOR'
+    CDOR = 'CDOR'
+    CDI = 'CDI'
+    TNA = 'TNA'
+    IBR = 'IBR'
+    TIIE = 'TIIE'
+    AONIA = 'AONIA'
+    NZIONA = 'NZIONA'
+    NOWA = 'NOWA'
+    CORRA = 'CORRA'
+    SIOR = 'SIOR'
 
 
 def _check_benchmark_type(currency, benchmark_type: Union[BenchmarkType, str]) -> BenchmarkType:
@@ -558,7 +611,7 @@ def _get_swap_data(asset: Asset, swap_tenor: str, benchmark_type: str = None, fl
 
 def _get_term_struct_date(tenor: Union[str, datetime.datetime], index: datetime.datetime,
                           business_day) -> datetime.datetime:
-    if isinstance(tenor, datetime.datetime):
+    if isinstance(tenor, (datetime.datetime, datetime.date)):
         return tenor
     try:
         year, month, day = tenor.split('-')
@@ -1526,4 +1579,352 @@ def usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: b
 
     series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['usdOis'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+class BenchmarkTypeCB(Enum):
+    EUROSTR = 'EUROSTR'
+    SOFR = 'SOFR'
+    EONIA = 'EONIA'
+    SONIA = 'SONIA'
+    Fed_Funds = 'Fed_Funds'
+
+
+def get_cb_swaps_kwargs(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB) -> Dict:
+    benchmark_type = _check_benchmark_type(currency, benchmark_type)
+    clearing_house = _check_clearing_house(None)
+    defaults = _get_swap_leg_defaults(currency, benchmark_type)
+    possible_swap_tenors = [f"{CCY_TO_CB[currency.value]}{i}" for i in range(0, 20)]
+    possible_fwd_tenors = [f"{CCY_TO_CB[currency.value]}{i}" for i in range(0, 20)]
+    possible_fwd_tenors.append('0b')
+    fixed_rate = 'ATM'
+    kwargs = dict(asset_class='Rates', type='Swap',
+                  asset_parameters_floating_rate_option=defaults['benchmark_type'],
+                  asset_parameters_fixed_rate=fixed_rate,
+                  asset_parameters_clearing_house=clearing_house.value,
+                  # asset_parameters_floating_rate_designated_maturity=defaults['floating_rate_tenor'],
+                  asset_parameters_termination_date=possible_swap_tenors,
+                  asset_parameters_effective_date=possible_fwd_tenors,
+                  asset_parameters_notional_currency=currency.value)
+    return kwargs
+
+
+def get_cb_meeting_swaps(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB) -> List:
+    kwargs = get_cb_swaps_kwargs(currency=currency, benchmark_type=benchmark_type)
+    return _get_tdapi_rates_assets(allow_many=True, **kwargs)
+
+
+def get_cb_meeting_swap(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB, forward_tenor: str,
+                        swap_tenor: str) -> str:
+    kwargs = get_cb_swaps_kwargs(currency=currency, benchmark_type=benchmark_type)
+    if not (re.fullmatch(f"({CCY_TO_CB[currency.value]}[0-9]|1[0-9])", swap_tenor) or
+            re.fullmatch(f"({CCY_TO_CB[currency.value]}[0-9]|1[0-9]|0b)", forward_tenor)):
+        raise MqValueError('invalid swap tenor ' + swap_tenor)
+    kwargs['asset_parameters_termination_date'] = swap_tenor
+    kwargs['asset_parameters_effective_date'] = forward_tenor
+    return _get_tdapi_rates_assets(**kwargs)
+
+
+def get_cb_swap_data(currency: CurrencyEnum, rate_mqids: list = None):
+    ds = Dataset(Dataset.GS.IR_SWAP_RATES_INTRADAY_CALC_BANK)
+    pricing_location = _default_pricing_location(currency)
+    pricing_location = _pricing_location_normalized(pricing_location, currency)
+    cbw_df = ds.get_data(assetId=rate_mqids,
+                         pricingLocation=pricing_location.value,
+                         startTime=DataContext.current.start_time,
+                         endTime=DataContext.current.end_time)
+    return cbw_df
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=currency_to_default_ois_asset,
+                                 query_type=QueryType.CENTRAL_BANK_SWAP_RATE)])
+def policy_rate_term_structure(asset: Asset, event_type: EventType = EventType.MEETING,
+                               rate_type: RateType = RateType.ABSOLUTE,
+                               valuation_date: Optional[GENERIC_DATE] = None, *,
+                               source: str = None, real_time: bool = False) -> pd.Series:
+    """
+    Forward Policy Rate expectations for future Central Bank meetings or End Of Year Dates as of specified date.
+
+    :param asset: Currency
+    :param event_type: Spot= Effective OIS/Policy rate, Meeting = Forward Expectations across all future CB meetings,
+                    EOY = Forward Expectations at End of Year Dates
+    :param rate_type:  One of (absolute, relative), where relative = forward - spot rate to show what
+                hikes/cuts are priced in by the market.
+    :param valuation_date:  reference date on which all future expectations are calculated, Eg. 3m: for 3 months ago,
+                    2022-05-02 : for expectations as of 02May22, Intraday: how expectations are changing intraday.
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: OIS Swap Rate Term structure for swaps structured between consecutive CB meeting dates
+    """
+    check_forward_looking(valuation_date, source, 'policy_rate_expectation')
+    if real_time:
+        raise NotImplementedError('change end date to +10y in date picker and specify '
+                                  'valuation_date = "Intraday" for real-time policy rate term structure')
+    if not isinstance(event_type, EventType):
+        raise MqValueError('event_type must be one of Spot, Meeting Forward and EOY Forward')
+    if not isinstance(rate_type, RateType):
+        raise MqValueError('event_type must be either absolute or relative')
+
+    if isinstance(valuation_date, str) and valuation_date.lower() == "intraday":
+        return policy_rate_term_structure_rt(asset=asset, event_type=event_type, rate_type=rate_type,
+                                             benchmark_type=None, source=source)
+    else:
+        valuation_date = parse_meeting_date(valuation_date)
+        mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.OIS_BENCHMARK_RATE)
+
+        _logger.debug(
+            'where assetId=%s, metric=Central Bank Swap Rate, event_type=%s, event_type=%s, valuation date=%s',
+            mqid, event_type, rate_type, str(valuation_date))
+
+        ds = Dataset(Dataset.GS.CENTRAL_BANK_WATCH)
+        if event_type == EventType.SPOT:
+            if rate_type == RateType.RELATIVE:
+                raise MqValueError('rate_type must be absolute for event_type = Spot')
+            else:
+                df = ds.get_data(assetId=[mqid], rateType=event_type, start=CENTRAL_BANK_WATCH_START_DATE)
+        else:
+            df = ds.get_data(assetId=[mqid], rateType=event_type, valuationDate=valuation_date,
+                             start=CENTRAL_BANK_WATCH_START_DATE)
+
+    if rate_type == RateType.RELATIVE:
+        # df = remove_dates_with_null_entries(df)
+        spot = df[df['meetingNumber'] == 0]['value'][0]
+        df['value'] = df['value'] - spot
+
+    try:
+        df = df.reset_index()
+        df = df.set_index('meetingDate')
+        series = ExtendedSeries(df['value'])
+        series.dataset_ids = (Dataset.GS.CENTRAL_BANK_WATCH,)
+    except KeyError:  # No data returned from ds.get_data
+        series = pd.Series(dtype=float, name='value')
+    return series
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=currency_to_default_ois_asset,
+                                 query_type=QueryType.POLICY_RATE_EXPECTATION)])
+def policy_rate_expectation(asset: Asset, event_type: EventType = EventType.MEETING,
+                            rate_type: RateType = RateType.ABSOLUTE,
+                            meeting_date: Union[datetime.date, int, str] = 0,
+                            *, source: str = None, real_time: bool = False) -> pd.Series:
+    """'
+    Evolution of OIS/policy rate expectations for a given meeting date or end of year date.
+
+    :param asset: asset object loaded from security master
+    :param meeting_date: Actual meeting date eg. Date(2022-04-02) or meeting number standing today : 0 for last,
+                            1 for next , 2 for meeting after next and so on
+    :param rate_type: One of (absolute, relative), where relative = forward - spot rate to show what hikes/cuts are
+                    priced in by the market for specified meeting date.
+    :param event_type: Spot= Effective OIS/Policy rate, Meeting = Evolution of Rate Expectations for a given meeting
+                    date, EOY =  Evolution of Rate Expectations for specified End of Year Date.
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Historical policy rate expectations for a given CB meeting date or an End of Year date.
+    """
+
+    if not isinstance(event_type, EventType):
+        raise MqValueError('invalid event_type specified, Meeting Forward, Spot or EOY Forward allowed')
+    if not isinstance(rate_type, RateType):
+        raise MqValueError('event_type must be either absolute or relative')
+    if not isinstance(meeting_date, (datetime.date, str, int)):
+        raise MqValueError('valuation_date must be of type datetime.date or string YYYY-MM-DD or integer')
+
+    if real_time:
+        return policy_rate_expectation_rt(asset, event_type, rate_type, meeting_date=meeting_date,
+                                          benchmark_type=None)
+    else:
+        mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.OIS_BENCHMARK_RATE)
+        _logger.debug('where assetId=%s, metric=Policy Rate Expectation, meeting_date=%s, event_type=%s',
+                      mqid, str(meeting_date), rate_type)
+
+        ds = Dataset(Dataset.GS.CENTRAL_BANK_WATCH)
+        if event_type == EventType.SPOT:
+            cbw_df = ds.get_data(assetId=[mqid], rateType=event_type, start=CENTRAL_BANK_WATCH_START_DATE)
+        elif isinstance(meeting_date, int):
+            meeting_number = meeting_date
+            if meeting_number < 0 or meeting_number > 20:
+                raise MqValueError('meeting_number has to be an integer between 0 and 20 where 0 is the '
+                                   'last meeting and 1 is the next meeting')
+            cbw_df = ds.get_data(assetId=[mqid], rateType=event_type, meetingNumber=meeting_number,
+                                 start=CENTRAL_BANK_WATCH_START_DATE)
+        else:
+            meeting_date = parse_meeting_date(meeting_date)
+            cbw_df = ds.get_data(assetId=[mqid], rateType=event_type, meetingDate=meeting_date,
+                                 start=CENTRAL_BANK_WATCH_START_DATE)
+
+    if cbw_df.empty:
+        raise MqValueError('meeting date specified returned no data')
+
+    if rate_type == RateType.RELATIVE:
+        spot_df = ds.get_data(assetId=[mqid], rateType=event_type, meetingNumber=0,
+                              start=CENTRAL_BANK_WATCH_START_DATE).rename(columns={'value': 'spotValue'})
+        if spot_df.empty:
+            raise MqValueError('no spot data returned to rebase')
+        joined_df = cbw_df.merge(spot_df, on=['date', 'assetId', 'rateType', 'location', 'valuationDate'], how='inner')
+        joined_df = joined_df.set_index('valuationDate')
+        joined_df['relValue'] = (joined_df['value'] - joined_df['spotValue'])
+        series = ExtendedSeries(joined_df['relValue'])
+    else:
+        cbw_df = cbw_df.set_index('valuationDate')
+        series = ExtendedSeries(cbw_df['value'])
+    series.dataset_ids = (Dataset.GS.CENTRAL_BANK_WATCH,)
+    return series
+
+
+def parse_meeting_date(valuation_date: Optional[GENERIC_DATE] = None):
+    if isinstance(valuation_date, str):
+        if len(valuation_date.split('-')) == 3:
+            year, month, day = valuation_date.split('-')
+            return datetime.date(int(year), int(month), int(day))
+        else:
+            start, valuation_date = _range_from_pricing_date("", valuation_date)
+            return valuation_date.date() if isinstance(valuation_date, pd.Timestamp) else valuation_date
+    elif isinstance(valuation_date, datetime.date) or valuation_date is None:
+        start, valuation_date = _range_from_pricing_date("", valuation_date)
+        return valuation_date.date() if isinstance(valuation_date, pd.Timestamp) else valuation_date
+    else:
+        raise MqValueError(
+            'valuation_date must be of type datetime.date or string YYYY-MM-DD or relative date strings like 1m, 1y')
+
+
+def _get_default_ois_benchmark(currency: CurrencyEnum) -> BenchmarkTypeCB:
+    if currency == CurrencyEnum.USD:
+        return BenchmarkTypeCB.Fed_Funds
+    elif currency == CurrencyEnum.GBP:
+        return BenchmarkTypeCB.SONIA
+    elif currency == CurrencyEnum.EUR:
+        return BenchmarkTypeCB.EUROSTR
+
+
+def _check_cb_ccy_benchmark_rt(asset: Asset, benchmark_type: BenchmarkTypeCB) -> tuple:
+    bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    currency = CurrencyEnum(bbid)
+    if currency not in [CurrencyEnum.EUR, CurrencyEnum.GBP, CurrencyEnum.USD]:
+        raise MqValueError('Only EUR, GBP and USD are supported for real time Central Bank swap data')
+    if benchmark_type is None:
+        benchmark_type = _get_default_ois_benchmark(currency)
+    if isinstance(benchmark_type, BenchmarkTypeCB) and \
+            benchmark_type.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK[currency.value].keys():
+        raise MqValueError('%s is not supported for %s', benchmark_type.value, currency.value)
+    return currency, benchmark_type
+
+
+def _get_swap_from_meeting_date(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB,
+                                meeting_date: Union[datetime.date, int, str]) -> str:
+    if isinstance(meeting_date, int):
+        if meeting_date == 0:
+            forward_tenor = '0b'
+        else:
+            forward_tenor = f"{CCY_TO_CB[currency.value]}{meeting_date}"
+        swap_tenor = f"{CCY_TO_CB[currency.value]}{str(meeting_date + 1)}"
+    elif isinstance(meeting_date, str) and re.fullmatch(f"({CCY_TO_CB[currency.value]}[0-9]|1[0-9])", meeting_date):
+        if meeting_date[-1] == '0':
+            forward_tenor = '0b'
+        else:
+            forward_tenor = f"{CCY_TO_CB[currency.value]}{meeting_date[-1]}"
+        swap_tenor = f"{CCY_TO_CB[currency.value]}{str(int(meeting_date[-1]) + 1)}"
+    else:
+        raise MqValueError('only meeting dates of the type ecb1, mpc1, frb1 or an integer 1,2...20 for next'
+                           ' meeting are available for real time central bank data')
+    rate_mqid = get_cb_meeting_swap(currency, benchmark_type, forward_tenor=forward_tenor, swap_tenor=swap_tenor)
+    return rate_mqid
+
+
+def policy_rate_expectation_rt(asset: Asset, event_type: EventType = EventType.MEETING,
+                               rate_type: RateType = RateType.ABSOLUTE,
+                               meeting_date: Union[datetime.date, int, str] = 0,
+                               benchmark_type: BenchmarkTypeCB = None):
+    currency, benchmark_type = _check_cb_ccy_benchmark_rt(asset, benchmark_type)
+    rate_mqid = _get_swap_from_meeting_date(currency, benchmark_type, meeting_date)
+    cbw_df = get_cb_swap_data(currency=currency, rate_mqids=rate_mqid)
+    if cbw_df.empty:
+        raise MqValueError('meeting date specified returned no data')
+
+    if event_type == EventType.SPOT:
+        if rate_type == RateType.ABSOLUTE:
+            series = ExtendedSeries(cbw_df['rate'])
+            series.dataset_ids = (Dataset.GS.IR_SWAP_RATES_INTRADAY_CALC_BANK,)
+            return series
+        else:
+            raise MqValueError('rate_type must be absolute for event_type = Spot')
+    elif event_type == EventType.MEETING:
+        if rate_type == RateType.RELATIVE:
+            spot_id = get_cb_meeting_swap(currency, benchmark_type, '0b', f"{CCY_TO_CB[currency.value]}1")
+            spot_df = get_cb_swap_data(currency, spot_id)
+            if spot_df.empty:
+                raise MqValueError('no spot data returned to rebase')
+            joined_df = cbw_df.merge(spot_df,
+                                     on=['time', 'pricingLocation', 'csaTerms', 'currency'],
+                                     how='inner',
+                                     suffixes=['_meeting', '_spot'])
+            joined_df['rate'] = (joined_df['rate_meeting'] - joined_df['rate_spot'])
+            series = ExtendedSeries(joined_df['rate'])
+        else:
+            series = ExtendedSeries(cbw_df['rate'])
+        series.dataset_ids = (Dataset.GS.IR_SWAP_RATES_INTRADAY_CALC_BANK,)
+        return series
+    else:
+        raise MqValueError("Real Time End of Year pricing is not supported")
+
+
+def policy_rate_term_structure_rt(asset: Asset, event_type: EventType = EventType.MEETING,
+                                  rate_type: RateType = RateType.ABSOLUTE,
+                                  benchmark_type: BenchmarkTypeCB = None, source: str = None):
+    currency, benchmark_type = _check_cb_ccy_benchmark_rt(asset, benchmark_type)
+
+    if event_type == EventType.SPOT:
+        if rate_type == RateType.RELATIVE:
+            raise MqValueError('rate_type must be absolute for event_type = Spot')
+        else:
+            mqid = get_cb_meeting_swap(currency, benchmark_type=benchmark_type, forward_tenor='0b',
+                                       swap_tenor=f"{CCY_TO_CB[currency.value]}1")
+            spot_df = get_cb_swap_data(currency, [mqid])
+            if spot_df.empty:
+                raise MqValueError('no spot data returned')
+            series = ExtendedSeries(spot_df['rate'])
+            series.dataset_ids = (Dataset.GS.IR_SWAP_RATES_INTRADAY_CALC_BANK,)
+            return series
+    elif event_type == EventType.MEETING:
+        mqids = get_cb_meeting_swaps(currency, benchmark_type=benchmark_type)
+        cbw_df = get_cb_swap_data(currency, rate_mqids=mqids)
+        if cbw_df.empty:
+            raise MqValueError('no data returned for specified arguments')
+    else:
+        raise MqValueError("Real Time End of Year pricing is not supported")
+
+    if rate_type == RateType.RELATIVE:
+        spot_id = get_cb_meeting_swap(currency, benchmark_type=benchmark_type,
+                                      forward_tenor='0b', swap_tenor=f"{CCY_TO_CB[currency.value]}1")
+        spot_df = get_cb_swap_data(currency, spot_id)
+        if spot_df.empty:
+            raise MqValueError('no spot data returned to rebase')
+        joined_df = cbw_df.merge(spot_df,
+                                 on=['time', 'pricingLocation', 'csaTerms', 'currency'],
+                                 how='inner',
+                                 suffixes=['_meeting', '_spot'])
+        joined_df['rate'] = (joined_df['rate_meeting'] - joined_df['rate_spot'])
+        joined_df = joined_df.rename(columns={'effectiveDate_meeting': 'effectiveDate'})
+    else:
+        joined_df = cbw_df
+
+    if joined_df.empty:
+        series = ExtendedSeries(dtype=float)
+    else:
+        latest = joined_df.index.max()
+        _logger.info('selected pricing date %s', latest)
+        joined_df = joined_df.loc[latest]
+        biz_day = _get_custom_bd(_default_pricing_location(currency).value)
+        # col_to_plot = 'effectiveTenor'
+        col_to_plot = 'effectiveDate'
+        joined_df.loc[:, 'expirationDate'] = joined_df[col_to_plot].apply(_get_term_struct_date,
+                                                                          args=(latest, biz_day))
+        joined_df = joined_df.set_index('expirationDate')
+        joined_df.sort_index(inplace=True)
+        joined_df = joined_df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        series = ExtendedSeries(dtype=float) if joined_df.empty else ExtendedSeries(joined_df['rate'])
+    series.dataset_ids = getattr(joined_df, 'dataset_ids', ())
+    if series.empty:  # Raise descriptive error if no data returned + date context is in the past
+        check_forward_looking(None, source, 'policy_rate_term_structure')
     return series
