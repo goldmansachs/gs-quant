@@ -69,6 +69,10 @@ def test_returns():
     expected = pd.Series([np.nan, np.nan, 3.02, -0.0404, -2.0604, 2.019192], index=dates)
     assert_series_equal(result, expected, obj="Absolute returns", atol=1e-5)
 
+    result = returns(x, '2d', Returns.ABSOLUTE)
+    expected = pd.Series([np.nan, np.nan, 3.02, -0.0404, -2.0604, 2.019192], index=pd.DatetimeIndex(dates))
+    assert_series_equal(result, expected, obj="Absolute returns with relative date")
+
     with pytest.raises(MqValueError):
         returns(x, 1, "None")
 

@@ -26,7 +26,8 @@ from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
 from gs_quant.markets.securities import Stock
-from gs_quant.target.risk_models import RiskModel, RiskModelCoverage, RiskModelTerm, RiskModelUniverseIdentifier
+from gs_quant.target.risk_models import RiskModel, RiskModelCoverage, RiskModelTerm, RiskModelUniverseIdentifier, \
+    RiskModelType
 
 mock_risk_model_obj = RiskModel(
     id_='model_id',
@@ -35,7 +36,8 @@ mock_risk_model_obj = RiskModel(
     term=RiskModelTerm.Long,
     universe_identifier=RiskModelUniverseIdentifier.gsid,
     vendor='GS',
-    version=1.0
+    version=1.0,
+    type_=RiskModelType.Factor
 )
 
 mock_risk_model_data = {
@@ -118,7 +120,7 @@ def test_factor_zscore():
     mock.return_value = ['2020-01-01', '2020-01-02', '2020-01-03']
 
     # mock getting risk model data
-    mock = replace('gs_quant.models.risk_model.FactorRiskModel.get_data', Mock())
+    mock = replace('gs_quant.models.risk_model.MarqueeRiskModel.get_data', Mock())
     mock.return_value = {
         'results': [
             {

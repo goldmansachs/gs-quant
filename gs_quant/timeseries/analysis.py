@@ -216,12 +216,12 @@ def count(x: pd.Series) -> pd.Series:
 
 
 @plot_function
-def diff(x: pd.Series, obs: int = 1) -> pd.Series:
+def diff(x: pd.Series, obs: Union[Window, int, str] = 1) -> pd.Series:
     """
     Diff observations with given lag
 
     :param x: time series of prices
-    :param obs: number of observations to lag
+    :param obs: number of observations to lag or relative date e.g. 3d, 1w, 1m
     :return: date-based time series of return
 
     **Usage**
@@ -244,11 +244,7 @@ def diff(x: pd.Series, obs: int = 1) -> pd.Series:
     :func:`lag`
 
     """
-
-    if x.size < 1:
-        return x
-
-    ret_series = x - x.shift(obs)
+    ret_series = x - lag(x, obs, LagMode.TRUNCATE)
 
     return ret_series
 

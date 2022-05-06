@@ -236,6 +236,7 @@ class RiskModel(Base):
     last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     expected_update_time: Optional[str] = field(default=None, metadata=field_metadata)
     owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    universe_size: Optional[int] = field(default=None, metadata=field_metadata)
     type_: Optional[RiskModelType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
 
 

@@ -102,6 +102,7 @@ class MarqueeRiskModel(RiskModel):
                  coverage: CoverageType,
                  universe_identifier: UniverseIdentifier,
                  term: Term,
+                 universe_size: int = None,
                  entitlements: Union[Dict, Entitlements] = None,
                  description: str = None,
                  expected_update_time: dt.time = None):
@@ -112,6 +113,7 @@ class MarqueeRiskModel(RiskModel):
         self.__coverage = coverage
         self.__universe_identifier = universe_identifier
         self.__term = term
+        self.__universe_size = universe_size
         self.__entitlements: Entitlements = entitlements if entitlements and isinstance(entitlements, Entitlements) \
             else Entitlements.from_dict(entitlements) if entitlements and isinstance(entitlements, Dict) else None
         self.__description: str = description
@@ -181,6 +183,16 @@ class MarqueeRiskModel(RiskModel):
     def description(self, description: str):
         """ Set risk model description """
         self.__description = description
+
+    @property
+    def universe_size(self) -> int:
+        """ Get risk model universe size """
+        return self.__universe_size
+
+    @universe_size.setter
+    def universe_size(self, universe_size: int):
+        """ Set risk model universe size """
+        self.__universe_size = universe_size
 
     @property
     def entitlements(self) -> Entitlements:
@@ -280,6 +292,7 @@ class MarqueeRiskModel(RiskModel):
                                  type_=self.type,
                                  description=self.description,
                                  entitlements=self.entitlements,
+                                 universe_size=self.universe_size,
                                  expected_update_time=self.expected_update_time.strftime('%H:%M:%S') if
                                  self.expected_update_time else None)
         try:
@@ -351,8 +364,31 @@ class MarqueeRiskModel(RiskModel):
                       description=factor.get('description'),
                       glossary_description=factor.get('glossaryDescription'))
 
-    def get_many_factors(self) -> List[Factor]:
-        factors = self.get_factor_data(format=ReturnFormat.JSON)
+    def get_many_factors(self,
+                         start_date: dt.date = None,
+                         end_date: dt.date = None,
+                         factor_names: List[str] = None,
+                         factor_ids: List[str] = None) -> List[Factor]:
+        factors_from_model = self.get_factor_data(start_date=start_date, end_date=end_date, format=ReturnFormat.JSON)
+
+        name_matches = []
+        if not factor_names and not factor_ids:
+            name_matches = factors_from_model
+        else:
+            for f in factors_from_model:
+                if factor_names:
+                    if f["name"] in factor_names:
+                        name_matches.append(f)
+                        factor_names.remove(f["name"])
+                if factor_ids:
+                    if f["identifier"] in factor_ids:
+                        name_matches.append(f)
+                        factor_ids.remove(f["identifier"])
+
+        if factor_names or factor_ids:
+            raise MqValueError(f'Factor names: {factor_names} and factor ids: {factor_ids} not in model'
+                               f' {self.id} for date range requested')
+
         return [Factor(risk_model_id=self.id,
                        id_=f['identifier'],
                        type_=f['type'],
@@ -360,7 +396,7 @@ class MarqueeRiskModel(RiskModel):
                        category=f.get('factorCategory'),
                        tooltip=f.get('tooltip'),
                        description=f.get('description'),
-                       glossary_description=f.get('glossaryDescription')) for f in factors]
+                       glossary_description=f.get('glossaryDescription')) for f in name_matches]
 
     def save_factor_metadata(self, factor_metadata: RiskModelFactor):
         """ Add metadata to a factor in a risk model
@@ -503,12 +539,14 @@ class MarqueeRiskModel(RiskModel):
                               end_date: dt.date = None,
                               assets: DataAssetsRequest = DataAssetsRequest(
                                   RiskModelUniverseIdentifierRequest.gsid, []),
+                              get_factors_by_name: bool = False,
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get universe factor exposure data for existing risk model
 
         :param start_date: start date for data request
         :param end_date: end date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param get_factors_by_name: return results keyed by factor name instead of ID
         :param format: which format to return the results in
 
         :return: factor exposure for assets requested
@@ -521,7 +559,11 @@ class MarqueeRiskModel(RiskModel):
             limit_factors=False
         ).get('results')
         universe = pydash.get(results, '0.assetData.universe', [])
-        factor_exposure = build_asset_data_map(results, universe, 'factorExposure')
+        factor_map = {}
+        if get_factors_by_name:
+            model_factors = self.get_factor_data(start_date=start_date, end_date=end_date, format=ReturnFormat.JSON)
+            factor_map = {factor.get('identifier'): factor.get('name') for factor in model_factors}
+        factor_exposure = build_asset_data_map(results, universe, 'factorExposure', factor_map)
         if format == ReturnFormat.DATA_FRAME:
             factor_exposure = pd.DataFrame.from_dict(
                 {(i, j): factor_exposure[i][j]
@@ -553,7 +595,7 @@ class MarqueeRiskModel(RiskModel):
             limit_factors=False
         ).get('results')
         universe = pydash.get(results, '0.assetData.universe', [])
-        specific_risk = build_asset_data_map(results, universe, 'specificRisk')
+        specific_risk = build_asset_data_map(results, universe, 'specificRisk', {})
         if format == ReturnFormat.DATA_FRAME:
             specific_risk = pd.DataFrame(specific_risk)
         return specific_risk
@@ -581,7 +623,7 @@ class MarqueeRiskModel(RiskModel):
             limit_factors=False
         ).get('results')
         universe = pydash.get(results, '0.assetData.universe', [])
-        residual_variance = build_asset_data_map(results, universe, 'residualVariance')
+        residual_variance = build_asset_data_map(results, universe, 'residualVariance', {})
         if format == ReturnFormat.DATA_FRAME:
             residual_variance = pd.DataFrame(residual_variance)
         return residual_variance
@@ -660,7 +702,7 @@ class MarqueeRiskModel(RiskModel):
         :param date: date to upload coverage data for, default date is last date from risk model calendar
 
         Posting to the coverage dataset within in the last 5 days will enable the risk model to be seen in the
-            Marquee UI dropdown for users with "execute" capabilities
+        Marquee UI dropdown for users with "execute" capabilities
         """
         if not date:
             date = self.get_dates()[-1]
@@ -672,7 +714,23 @@ class MarqueeRiskModel(RiskModel):
 
     @classmethod
     def from_target(cls, model):
-        pass
+        uid = model.universe_identifier
+        return MarqueeRiskModel(
+            id_=model.id,
+            name=model.name,
+            coverage=model.coverage if isinstance(model.coverage, CoverageType) else CoverageType(model.coverage),
+            term=model.term if isinstance(model.term, Term) else Term(model.term),
+            universe_identifier=uid if isinstance(uid, UniverseIdentifier) else
+            UniverseIdentifier(uid) if uid else None,
+            vendor=model.vendor,
+            version=model.version,
+            type_=model.type_ if not model.type_ or isinstance(model.type_, RiskModelType)
+            else RiskModelType(model.type_),
+            entitlements=model.entitlements,
+            description=model.description,
+            expected_update_time=dt.datetime.strptime(
+                model.expected_update_time, "%H:%M:%S").time() if model.expected_update_time else None
+        )
 
     @classmethod
     def from_many_targets(cls, models: Tuple[RiskModelBuilder, ...]):
@@ -693,6 +751,8 @@ class MarqueeRiskModel(RiskModel):
             self.version,
             self.type
         )
+        if self.universe_size:
+            s += ", universe_size={}".format(self)
         if self.entitlements:
             s += ", entitlements={}".format(self)
         if self.description:
@@ -715,6 +775,7 @@ class FactorRiskModel(MarqueeRiskModel):
                  universe_identifier: UniverseIdentifier,
                  vendor: str,
                  version: float,
+                 universe_size: int = None,
                  entitlements: Union[Dict, Entitlements] = None,
                  description: str = None,
                  expected_update_time: dt.time = None):
@@ -727,6 +788,7 @@ class FactorRiskModel(MarqueeRiskModel):
         :param universe_identifier: identifier used in asset universe upload (cannot be changed)
         :param vendor: risk model vendor
         :param version: version of model
+        :param universe_size: total rough expected universe size (rounding up to nearest 1k)
         :param entitlements: entitlements associated with risk model
         :param description: risk model description
         :param expected_update_time: time when risk model daily data is expected to be uploaded
@@ -734,7 +796,8 @@ class FactorRiskModel(MarqueeRiskModel):
         :return: FactorRiskModel object
         """
         super().__init__(id_, name, RiskModelType.Factor, vendor, version, coverage, universe_identifier, term,
-                         entitlements=entitlements, description=description, expected_update_time=expected_update_time)
+                         universe_size=universe_size, entitlements=entitlements, description=description,
+                         expected_update_time=expected_update_time)
 
     @classmethod
     def from_target(cls, model: RiskModelBuilder):
@@ -747,6 +810,7 @@ class FactorRiskModel(MarqueeRiskModel):
             uid if isinstance(uid, UniverseIdentifier) else UniverseIdentifier(uid) if uid else None,
             model.vendor,
             model.version,
+            universe_size=model.universe_size,
             entitlements=model.entitlements,
             description=model.description,
             expected_update_time=dt.datetime.strptime(
@@ -831,7 +895,7 @@ class FactorRiskModel(MarqueeRiskModel):
             limit_factors=False
         ).get('results')
         universe = pydash.get(results, '0.assetData.universe', [])
-        historical_beta = build_asset_data_map(results, universe, 'historicalBeta')
+        historical_beta = build_asset_data_map(results, universe, 'historicalBeta', {})
         if format == ReturnFormat.DATA_FRAME:
             historical_beta = pd.DataFrame(historical_beta)
         return historical_beta
@@ -841,17 +905,20 @@ class FactorRiskModel(MarqueeRiskModel):
                                      end_date: dt.date = None,
                                      assets: DataAssetsRequest = DataAssetsRequest(
                                          RiskModelUniverseIdentifierRequest.gsid, []),
+                                     get_factors_by_name: bool = False,
                                      format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get universe factor exposure data for existing risk model
 
         :param start_date: start date for data request
         :param end_date: end date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param get_factors_by_name: return results keyed by factor name instead of ID
         :param format: which format to return the results in
 
         :return: factor exposure for assets requested
         """
-        return super().get_universe_exposure(start_date, end_date, assets, format)
+        return super().get_universe_exposure(start_date, end_date, assets,
+                                             get_factors_by_name=get_factors_by_name, format=format)
 
     def get_covariance_matrix(self,
                               start_date: dt.date,
@@ -943,6 +1010,8 @@ class FactorRiskModel(MarqueeRiskModel):
             self.vendor,
             self.version
         )
+        if self.universe_size:
+            s += ", universe_size={}".format(self)
         if self.entitlements:
             s += ", entitlements={}".format(self)
         if self.description:
@@ -965,6 +1034,7 @@ class MacroRiskModel(MarqueeRiskModel):
                  universe_identifier: UniverseIdentifier,
                  vendor: str,
                  version: float,
+                 universe_size: int = None,
                  entitlements: Union[Dict, Entitlements] = None,
                  description: str = None,
                  expected_update_time: dt.time = None):
@@ -976,6 +1046,7 @@ class MacroRiskModel(MarqueeRiskModel):
         :param universe_identifier: identifier used in asset universe upload (cannot be changed)
         :param vendor: risk model vendor
         :param version: version of model
+        :param universe_size: total rough expected universe size (rounding up to nearest 1k)
         :param entitlements: entitlements associated with risk model
         :param description: risk model description
         :param expected_update_time: time when risk model daily data is expected to be uploaded
@@ -983,7 +1054,8 @@ class MacroRiskModel(MarqueeRiskModel):
         :return: MacroRiskModel object
         """
         super().__init__(id_, name, RiskModelType.Macro, vendor, version, coverage, universe_identifier, term,
-                         entitlements=entitlements, description=description, expected_update_time=expected_update_time)
+                         universe_size=universe_size, entitlements=entitlements, description=description,
+                         expected_update_time=expected_update_time)
 
     @classmethod
     def from_target(cls, model: RiskModelBuilder):
@@ -996,6 +1068,7 @@ class MacroRiskModel(MarqueeRiskModel):
             uid if isinstance(uid, UniverseIdentifier) else UniverseIdentifier(uid) if uid else None,
             model.vendor,
             model.version,
+            universe_size=model.universe_size,
             entitlements=model.entitlements,
             description=model.description,
             expected_update_time=dt.datetime.strptime(
@@ -1035,17 +1108,20 @@ class MacroRiskModel(MarqueeRiskModel):
                                  end_date: dt.date = None,
                                  assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
                                                                                []),
+                                 get_factors_by_name: bool = False,
                                  format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get universe sensitivity data for existing macro risk model
 
         :param start_date: start date for data request
         :param end_date: end date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param get_factors_by_name: return results keyed by factor name instead of ID
         :param format: which format to return the results in
 
         :return: sensitivity for assets requested
         """
-        return super().get_universe_exposure(start_date, end_date, assets, format)
+        return super().get_universe_exposure(start_date, end_date, assets,
+                                             get_factors_by_name=get_factors_by_name, format=format)
 
     def get_r_squared(self,
                       start_date: dt.date,
@@ -1070,7 +1146,7 @@ class MacroRiskModel(MarqueeRiskModel):
             limit_factors=False
         ).get('results')
         universe = pydash.get(results, '0.assetData.universe', [])
-        r_squared = build_asset_data_map(results, universe, 'rSquared')
+        r_squared = build_asset_data_map(results, universe, 'rSquared', {})
         if format == ReturnFormat.DATA_FRAME:
             r_squared = pd.DataFrame(r_squared)
         return r_squared
@@ -1102,9 +1178,9 @@ class MacroRiskModel(MarqueeRiskModel):
             limit_factors=False
         ).get('results')
         universe = pydash.get(results, '0.assetData.universe', [])
-        measure = 'fairValueGapStandardDeviation' if fair_value_gap_unit == Unit.STANDARD_DEVIATION else\
+        measure = 'fairValueGapStandardDeviation' if fair_value_gap_unit == Unit.STANDARD_DEVIATION else \
             'fairValueGapPercent'
-        fair_value_gap = build_asset_data_map(results, universe, measure)
+        fair_value_gap = build_asset_data_map(results, universe, measure, {})
         if format == ReturnFormat.DATA_FRAME:
             fair_value_gap = pd.DataFrame(fair_value_gap)
         return fair_value_gap
@@ -1212,6 +1288,8 @@ class MacroRiskModel(MarqueeRiskModel):
             self.vendor,
             self.version
         )
+        if self.universe_size:
+            s += ", universe_size={}".format(self)
         if self.entitlements:
             s += ", entitlements={}".format(self)
         if self.description:
@@ -1234,6 +1312,7 @@ class ThematicRiskModel(MarqueeRiskModel):
                  universe_identifier: UniverseIdentifier,
                  vendor: str,
                  version: float,
+                 universe_size: int = None,
                  entitlements: Union[Dict, Entitlements] = None,
                  description: str = None,
                  expected_update_time: dt.time = None):
@@ -1246,6 +1325,7 @@ class ThematicRiskModel(MarqueeRiskModel):
         :param universe_identifier: identifier used in asset universe upload (cannot be changed)
         :param vendor: risk model vendor
         :param version: version of model
+        :param universe_size: total rough expected universe size (rounding up to nearest 1k)
         :param entitlements: entitlements associated with risk model
         :param description: risk model description
         :param expected_update_time: time when risk model daily data is expected to be uploaded
@@ -1253,7 +1333,8 @@ class ThematicRiskModel(MarqueeRiskModel):
         :return: Thematic Risk Model object
         """
         super().__init__(id_, name, RiskModelType.Thematic, vendor, version, coverage, universe_identifier, term,
-                         entitlements=entitlements, description=description, expected_update_time=expected_update_time)
+                         universe_size=universe_size, entitlements=entitlements, description=description,
+                         expected_update_time=expected_update_time)
 
     @classmethod
     def from_target(cls, model: RiskModelBuilder):
@@ -1266,6 +1347,7 @@ class ThematicRiskModel(MarqueeRiskModel):
             uid if isinstance(uid, UniverseIdentifier) else UniverseIdentifier(uid) if uid else None,
             model.vendor,
             model.version,
+            universe_size=model.universe_size,
             entitlements=model.entitlements,
             description=model.description,
             expected_update_time=dt.datetime.strptime(
@@ -1305,17 +1387,20 @@ class ThematicRiskModel(MarqueeRiskModel):
                                  end_date: dt.date = None,
                                  assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
                                                                                []),
+                                 get_factors_by_name: bool = False,
                                  format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get universe sensitivity data for existing thematic risk model
 
         :param start_date: start date for data request
         :param end_date: end date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param get_factors_by_name: return results keyed by factor name instead of ID
         :param format: which format to return the results in
 
         :return: basket sensitivity for assets requested
         """
-        return super().get_universe_exposure(start_date, end_date, assets, format)
+        return super().get_universe_exposure(start_date, end_date, assets,
+                                             get_factors_by_name=get_factors_by_name, format=format)
 
     def __repr__(self):
         s = "{}('{}','{}','{}','{}','{}','{}'".format(
@@ -1327,6 +1412,8 @@ class ThematicRiskModel(MarqueeRiskModel):
             self.vendor,
             self.version
         )
+        if self.universe_size:
+            s += ", universe_size={}".format(self)
         if self.entitlements:
             s += ", entitlements={}".format(self)
         if self.description:

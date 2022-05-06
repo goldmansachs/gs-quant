@@ -22,7 +22,7 @@ from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.markets.securities import Asset, AssetIdentifier
-from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat
+from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat, MarqueeRiskModel
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.target.risk_models import RiskModelDataMeasure, RiskModelDataAssetsRequest,\
     RiskModelUniverseIdentifierRequest
@@ -44,7 +44,7 @@ def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
     :param request_id: service request id, if any
     :return: Time-series of asset factor exposure across available risk model dates
     """
-    model = FactorRiskModel.get(risk_model_id)
+    model = MarqueeRiskModel.get(risk_model_id)
     factor = model.get_factor(factor_name)
     gsid = asset.get_identifier(AssetIdentifier.GSID)
 

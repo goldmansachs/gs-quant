@@ -53,7 +53,10 @@ class Dataset:
 
         # Central Bank Watch
         CENTRAL_BANK_WATCH = 'CENTRAL_BANK_WATCH_PREMIUM'
+        IR_SWAP_RATES_INTRADAY_CALC_BANK = 'IR_SWAP_RATES_INTRADAY_CALC_BANK'
         RETAIL_FLOW_DAILY_V2_PREMIUM = 'RETAIL_FLOW_DAILY_V2_PREMIUM'
+        FX_EVENT_JUMPS = 'FX_EVENT_JUMPS'
+        FXSPOT_INTRADAY2 = 'FXSPOT_INTRADAY2'
         # Test Datasets
         WEATHER = 'WEATHER'
 
@@ -64,6 +67,9 @@ class Dataset:
 
     class FRED(Vendor):
         GDP = 'GDP'
+
+    class TradingEconomics(Vendor):
+        MACRO_EVENTS_CALENDAR = 'MACRO_EVENTS_CALENDAR'
 
     def __init__(self, dataset_id: Union[str, Vendor], provider: DataApi = None):
         """
@@ -328,7 +334,6 @@ class Dataset:
 
 
 class PTPDataset(Dataset):
-
     """
     Special class for and viewing PTP-style datasets.
 
@@ -352,6 +357,7 @@ class PTPDataset(Dataset):
     >>> print(dataset.plot())
     >>> dataset.delete()
     """
+
     def __init__(self, series: Union[pd.Series, pd.DataFrame], name: str = None):
         if isinstance(series, pd.Series):
             series = pd.DataFrame({series.attrs.get('name', 'values'): series})

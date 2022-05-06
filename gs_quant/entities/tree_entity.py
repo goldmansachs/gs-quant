@@ -73,7 +73,7 @@ class AssetTreeNode:
                 underlier = row[underlier_column]
                 if underlier not in asset_lookup:
                     raise Exception("Unable to find {}".format(underlier))
-                child_node = AssetTreeNode(underlier, self.depth + 1, self.date, underlier)
+                child_node = AssetTreeNode(underlier, self.depth + 1, self.date, asset_lookup[underlier])
                 child_node.build_tree(dataset, underlier_column)
                 self.direct_underlier_assets_as_nodes.append(child_node)
 
@@ -103,7 +103,7 @@ class AssetTreeNode:
             for key, value in node.data.items():
                 data[key] = value
             constituents_df = constituents_df.append(pd.DataFrame(data, index=[0]))
-            d = node.__build_constituents_df(constituents_df)
+            d = node.__build_constituents_df(pd.DataFrame())
             if len(d) > 0:
                 constituents_df = constituents_df.append(d)
         return constituents_df
@@ -191,7 +191,7 @@ class TreeHelper:
 
         return self.root
 
-    def get_visualisation(self, visualise_by: Optional[str] = 'asset_name'):
+    def get_visualisation(self, visualise_by: str = 'name'):
         try:
             from treelib import Tree
         except ModuleNotFoundError:
@@ -200,17 +200,27 @@ class TreeHelper:
         if not self.tree_built:
             self.build_tree()
 
-        if visualise_by in ['asset_name', 'bbid']:
-            parent_field = 'assetName' if visualise_by == 'asset_name' else 'assetBbid'
-            child_field = 'underlyingAssetName' if visualise_by == 'asset_name' else 'underlyingAssetBbid'
+        if visualise_by in ['name', 'bbid', 'id']:
+            # Each entry in the BFS queue is an array having the node and the prefix value for that node.
+            # The prefix is the path from root to the parent of that node, and is empty for the root node.
+            # This definition of prefix allows using the same node in multiple branches.
+            bfs_queue = [[self.root, '']]
 
-            df = self.to_frame()
             tree_vis = Tree()
-            tree_vis.create_node(f'0 - {df[parent_field][0]}', df[parent_field][0])
-            for depth, parent, child in zip(df['depth'], df[parent_field], df[child_field]):
-                tree_vis.create_node(f'{depth} - {child}', child, parent=parent)
+            while len(bfs_queue) != 0:
+                node, prefix = bfs_queue.pop(0)
+                node_id = prefix + '-' + node.id
+                node_name = getattr(node, visualise_by)
+                if str(node_name) == 'None':
+                    node_name = f'NA ({node.id})'
+                if (prefix == ''):
+                    tree_vis.create_node(node_name, node_id)
+                else:
+                    tree_vis.create_node(node_name, node_id, parent=prefix)
+                for c in node.direct_underlier_assets_as_nodes:
+                    bfs_queue.append([c, node_id])
 
         else:
-            raise MqValueError('visualise_by argument has to be either asset_name or bbid')
+            raise MqValueError('visualise_by argument has to be either name, id or bbid')
 
         return tree_vis.show()

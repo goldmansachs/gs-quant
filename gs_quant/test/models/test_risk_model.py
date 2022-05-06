@@ -40,6 +40,7 @@ mock_risk_model_obj = Risk_Model(RiskModelCoverage.Country,
                                  RiskModelUniverseIdentifier.gsid,
                                  'GS',
                                  1.0,
+                                 universe_size=10000,
                                  entitlements=empty_entitlements,
                                  description='Test',
                                  expected_update_time='00:00:00',
@@ -105,6 +106,7 @@ def test_create_risk_model(mocker):
                                 RiskModelUniverseIdentifier.gsid,
                                 'GS',
                                 0.1,
+                                universe_size=10000,
                                 entitlements={},
                                 description='Test',
                                 expected_update_time=dt.datetime.strptime('00:00:00', '%H:%M:%S').time())
@@ -113,6 +115,7 @@ def test_create_risk_model(mocker):
     assert new_model.name == mock_risk_model_obj.name
     assert new_model.description == mock_risk_model_obj.description
     assert new_model.term == mock_risk_model_obj.term
+    assert new_model.universe_size == mock_risk_model_obj.universe_size
     assert new_model.coverage == mock_risk_model_obj.coverage
     assert new_model.universe_identifier == mock_risk_model_obj.universe_identifier
     assert new_model.expected_update_time == dt.datetime.strptime(
@@ -179,6 +182,11 @@ def test_update_risk_model(mocker):
     new_model.save()
     mocker.patch.object(GsSession.current, '_get', return_value=new_model)
     assert new_model.version == 0.1
+
+    new_model.universe_size = 10000
+    new_model.save()
+    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    assert new_model.universe_size == 10000
 
     new_model.coverage = RiskModelCoverage.Global
     new_model.save()

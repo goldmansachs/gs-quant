@@ -257,7 +257,7 @@ class RefMarket(Market):
     """
 
     def __init__(self, market_ref: str):
-        self.__market = _RefMarket(market_ref=market_ref)
+        self.__market = _RefMarket(market_ref=str(market_ref))
 
     def __repr__(self):
         return f'Market Ref ({self.__market.market_ref})'

@@ -27,7 +27,7 @@ from gs_quant.errors import MqRequestError, MqValueError
 from gs_quant.target.risk_models import RiskModelData
 
 
-def build_asset_data_map(results: List, universe: List, measure: str) -> dict:
+def build_asset_data_map(results: List, universe: List, measure: str, factor_map: dict) -> dict:
     if not results:
         return {}
     data_map = {}
@@ -36,7 +36,11 @@ def build_asset_data_map(results: List, universe: List, measure: str) -> dict:
         for row in results:
             if asset in row.get('assetData').get('universe'):
                 i = row.get('assetData').get('universe').index(asset)
-                date_list[row.get('date')] = row.get('assetData').get(measure)[i]
+                if measure == 'factorExposure':
+                    exposures = row.get('assetData').get(measure)[i]
+                    date_list[row.get('date')] = {factor_map.get(f, f): v for f, v in exposures.items()}
+                else:
+                    date_list[row.get('date')] = row.get('assetData').get(measure)[i]
         data_map[asset] = date_list
     return data_map
 

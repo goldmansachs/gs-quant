@@ -81,6 +81,7 @@ class QueryType(Enum):
     PNL = "Pnl"
     SPOT = "Spot"
     AUM = "Aum"
+    RATE = "Rate"
     ES_NUMERIC_SCORE = "Es Numeric Score"
     ES_NUMERIC_PERCENTILE = "Es Numeric Percentile"
     ES_POLICY_SCORE = "Es Policy Score"
