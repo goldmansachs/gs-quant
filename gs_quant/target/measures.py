@@ -18,7 +18,7 @@ import copy
 
 import pandas as pd
 from gs_quant.common import AssetClass, CurrencyParameter, FiniteDifferenceParameter, StringParameter, \
-    ListOfStringParameter, ListOfNumberParameter, MapParameter, AggregationLevel
+    ListOfStringParameter, ListOfNumberParameter, MapParameter
 from gs_quant.common import ParameterisedRiskMeasure, RiskMeasure
 from gs_quant.target.risk import RiskMeasureType, RiskMeasureUnit
 
@@ -31,7 +31,7 @@ class RiskMeasureWithCurrencyParameter(ParameterisedRiskMeasure):
     def __call__(self, currency=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
-        if isinstance(currency, pd.DataFrame):
+        if isinstance(currency, (pd.Series, pd.DataFrame)):
             return self
 
         clone = copy.copy(self)
@@ -54,7 +54,7 @@ class RiskMeasureWithListOfNumberParameter(ParameterisedRiskMeasure):
     def __call__(self, list_of_number=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
-        if isinstance(list_of_number, pd.DataFrame):
+        if isinstance(list_of_number, (pd.Series, pd.DataFrame)):
             return self
 
         clone = copy.copy(self)
@@ -77,7 +77,7 @@ class RiskMeasureWithListOfStringParameter(ParameterisedRiskMeasure):
     def __call__(self, list_of_string=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
-        if isinstance(list_of_string, pd.DataFrame):
+        if isinstance(list_of_string, (pd.Series, pd.DataFrame)):
             return self
 
         clone = copy.copy(self)
@@ -100,7 +100,7 @@ class RiskMeasureWithMapParameter(ParameterisedRiskMeasure):
     def __call__(self, map=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
-        if isinstance(map, pd.DataFrame):
+        if isinstance(map, (pd.Series, pd.DataFrame)):
             return self
 
         clone = copy.copy(self)
@@ -123,7 +123,7 @@ class RiskMeasureWithStringParameter(ParameterisedRiskMeasure):
     def __call__(self, string=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
-        if isinstance(string, pd.DataFrame):
+        if isinstance(string, (pd.Series, pd.DataFrame)):
             return self
 
         clone = copy.copy(self)
@@ -170,7 +170,7 @@ class RiskMeasureWithFiniteDifferenceParameter(ParameterisedRiskMeasure):
     def __call__(self, aggregation_level=None,  bump_size=None,  currency=None,  finite_difference_method=None,  local_curve=None,  mkt_marking_options=None,  scale_factor=None,  name=None):
         # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
         # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
-        if isinstance(aggregation_level, pd.DataFrame):
+        if isinstance(aggregation_level, (pd.Series, pd.DataFrame)):
             return self
 
         clone = copy.copy(self)

@@ -17,19 +17,76 @@ import copy
 import datetime as dt
 import logging
 import operator as op
+import weakref
 from concurrent.futures import Future
 from itertools import chain
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
-import weakref
 
 import pandas as pd
-from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_instance_or_iterable, is_iterable
+from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_instance_or_iterable, is_iterable, Scenario
 from gs_quant.common import RiskMeasure
 from gs_quant.config import DisplayOptions
 from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
 
 _logger = logging.getLogger(__name__)
+
+
+def get_default_pivots(cls: str, has_dates: bool, multi_measures: bool,
+                       multi_scen: bool, simple_port: bool = None, ori_cols=None):
+    if cls == 'MultipleScenarioResult':
+        return 'value', 'scenario', 'dates' if has_dates else None
+    elif cls == 'MultipleRiskMeasureResult':
+        return 'value', ('risk_measure', 'scenario') if multi_scen else 'risk_measure', 'dates' if has_dates else None
+    elif cls == 'PortfolioRiskResult':
+        if ori_cols is None:
+            raise ValueError('columns of dataframe required to get default pivots')
+        portfolio_names = list(filter(lambda x: 'portfolio_name_' in x, ori_cols))
+        port_and_inst_names = portfolio_names + ['instrument_name']
+        pivot_rules = [
+            # has_dates, multi_measures,  simple_port, multi_scen
+            # output: (value,index,columns)
+            [True, True, None, False, ('value', 'dates', port_and_inst_names + ['risk_measure'])],
+            [True, False, None, False, ('value', 'dates', port_and_inst_names)],
+            [False, False, False, False, ('value', portfolio_names, 'instrument_name')],
+            [False, None, None, False, ('value', port_and_inst_names, 'risk_measure')],
+
+            [False, True, None, True, ('value', port_and_inst_names, ['risk_measure', 'scenario'])],
+            [False, False, None, True, ('value', port_and_inst_names, 'scenario')],
+        ]
+
+        def match(rule_value, check_value) -> bool:
+            if rule_value is None:
+                return True
+            elif callable(rule_value):
+                return rule_value(check_value)
+            else:
+                return rule_value == check_value
+
+        for rule in pivot_rules:
+            [rule_has_dates, rule_multi_measures, rule_simple_port, rule_multi_scen, rule_output] = rule
+            if match(rule_has_dates, has_dates) and match(rule_multi_measures, multi_measures) and \
+                    match(rule_simple_port, simple_port) and match(rule_multi_scen, multi_scen):
+                return rule_output
+        return None, None, None
+
+
+def pivot_to_frame(df, values, index, columns, aggfunc):
+    try:
+        pivot_df = df.pivot_table(values=values, index=index, columns=columns, aggfunc=aggfunc)
+    except ValueError:
+        raise RuntimeError('Unable to successfully pivot data')
+
+    try:  # attempt to correct order of index
+        if index is not None:
+            idx = df.set_index(list(pivot_df.index.names)).index.unique()
+            pivot_df = pivot_df.reindex(index=idx)
+        if columns is not None:
+            cols = df.set_index(list(pivot_df.columns.names)).index.unique()
+            pivot_df = pivot_df.reindex(columns=cols)
+        return pivot_df
+    except KeyError:
+        return pivot_df
 
 
 def _compose(lhs: ResultInfo, rhs: ResultInfo) -> ResultInfo:
@@ -109,15 +166,15 @@ def _risk_keys_compatible(lhs, rhs) -> bool:
     return historical_risk_key(lhs.risk_key).ex_measure == historical_risk_key(rhs.risk_key).ex_measure
 
 
-def _value_for_risk_measure(res: dict, risk_measure: Union[Iterable, RiskMeasure]) -> dict:
+def _value_for_measure_or_scen(res: dict, item: Union[Iterable, RiskMeasure, Scenario]) -> dict:
     result = copy.copy(res)
-    if isinstance(risk_measure, Iterable):
+    if isinstance(item, Iterable):
         for value in list(result):
-            if value not in risk_measure:
+            if value not in item:
                 del result[value]
     else:
         for value in list(result):
-            if value != risk_measure:
+            if value != item:
                 del result[value]
     return result
 
@@ -218,6 +275,13 @@ class MultipleRiskMeasureResult(dict):
                                                                      for k, v in self.items()))
             else:
                 raise ValueError('Can only index by date on historical results')
+        elif is_instance_or_iterable(item, Scenario):
+            if all(isinstance(v, (MultipleScenarioResult)) for v in self.values()):
+                return MultipleRiskMeasureResult(self.__instrument, ((k, _value_for_measure_or_scen(v, item))
+                                                                     for k, v in self.items()))
+            else:
+                raise ValueError('Can only index by scenario on multiple scenario results')
+
         else:
             return super().__getitem__(item)
 
@@ -292,6 +356,13 @@ class MultipleRiskMeasureResult(dict):
 
         return tuple(sorted(dates))
 
+    @property
+    def _multi_scen_key(self) -> Iterable[Scenario]:
+        for value in self.values():
+            if isinstance(value, (MultipleScenarioFuture, MultipleScenarioResult)):
+                return tuple(value.scenarios)
+        return tuple()
+
     def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique,
                  display_options: DisplayOptions = None):
         df = pd.DataFrame.from_records(self._to_records({}, display_options=display_options))
@@ -300,26 +371,20 @@ class MultipleRiskMeasureResult(dict):
         elif values == 'default' and index == 'default' and columns == 'default':
             if 'mkt_type' in df.columns:
                 return df.set_index('risk_measure')
-            values = 'value'
-            columns = 'risk_measure'
-            index = 'dates' if 'dates' in df.columns else None
+            values, columns, index = get_default_pivots('MultipleRiskMeasureResult', multi_measures=True,
+                                                        has_dates='dates' in df.columns,
+                                                        multi_scen='scenario' in df.columns)
         else:
             values = 'value' if values == 'default' or values is ['value'] else values
             index = None if index == 'default' else index
             columns = None if columns == 'default' else columns
-        pivot_df = df.pivot_table(values=values, index=index, columns=columns, aggfunc=aggfunc)
-        if index is not None:
-            idx = df.set_index(list(pivot_df.index.names)).index.unique()
-            pivot_df = pivot_df.reindex(index=idx)
-        if columns is not None:
-            cols = df.set_index(list(pivot_df.columns.names)).index.unique()
-            pivot_df = pivot_df.reindex(columns=cols)
-        return pivot_df
+        return pivot_to_frame(df, values, index, columns, aggfunc)
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
+        results = {rm: self[rm].result() if self._multi_scen_key else self[rm] for rm in self}
         return list(chain.from_iterable(
-            [dict(item, **{'risk_measure': rm}) for item in self[rm]._to_records(extra_dict, display_options)] for rm in
-            self))
+            [dict(item, **{'risk_measure': rm}) for item in res._to_records(extra_dict, display_options)] for rm, res in
+            results.items()))
 
 
 class MultipleRiskMeasureFuture(CompositeResultFuture):
@@ -341,6 +406,64 @@ class MultipleRiskMeasureFuture(CompositeResultFuture):
     @property
     def measures_to_futures(self) -> Mapping[RiskMeasure, PricingFuture]:
         return self.__measures_to_futures
+
+
+class MultipleScenarioResult(dict):
+    def __init__(self, instrument, dict_values: Iterable):
+        super().__init__(dict_values)
+        self.__scenarios = self.keys()
+        self.__instrument = instrument
+
+    def __getitem__(self, item):
+        return super().__getitem__(item)
+
+    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique,
+                 display_options: DisplayOptions = None):
+        df = pd.DataFrame.from_records(self.__scenarios_to_futures)
+        if values is None and index is None and columns is None:
+            return df
+        elif values == 'default' and index == 'default' and columns == 'default':
+            if 'mkt_type' in df.columns:
+                return df.set_index('scenario')
+            values, columns, index = get_default_pivots('MultipleScenarioResult', has_dates='dates' in df.columns,
+                                                        multi_measures=False, multi_scen=True)
+        else:
+            values = 'value' if values == 'default' or values is ['value'] else values
+            index = None if index == 'default' else index
+            columns = None if columns == 'default' else columns
+        return pivot_to_frame(df, values, index, columns, aggfunc)
+
+    @property
+    def instrument(self):
+        return self.__instrument
+
+    @property
+    def scenarios(self):
+        return self.__scenarios
+
+    def _to_records(self, extra_dict, display_options: DisplayOptions = None):
+        return list(chain.from_iterable(
+            [dict(item, **{'scenario': scen}) for item in self[scen].result()._to_records(extra_dict, display_options)]
+            for scen in self))
+
+
+class MultipleScenarioFuture(CompositeResultFuture):
+    def __init__(self, instrument: InstrumentBase, scenarios_to_futures: Mapping[Scenario, PricingFuture]):
+        self.__scenarios_to_futures = scenarios_to_futures
+        self.__instrument = instrument
+        self.__scenarios = scenarios_to_futures.keys()
+        super().__init__(scenarios_to_futures.values())
+
+    @property
+    def scenarios(self):
+        return self.__scenarios
+
+    @property
+    def scenarios_to_futures(self):
+        return self.__scenarios_to_futures
+
+    def _set_result(self):
+        self.set_result(MultipleScenarioResult(self.__instrument, zip(self.__scenarios, self.futures)))
 
 
 class HistoricalPricingFuture(CompositeResultFuture):
@@ -437,11 +560,32 @@ class PortfolioRiskResult(CompositeResultFuture):
                     else:
                         futures.append(MultipleRiskMeasureFuture(priceable,
                                                                  {k: PricingFuture(v) for k, v in
-                                                                  _value_for_risk_measure(result, item).items()}))
+                                                                  _value_for_measure_or_scen(result, item).items()}))
 
                 risk_measure = tuple(item) if isinstance(item, Iterable) else (item,)
                 return PortfolioRiskResult(self.__portfolio, risk_measure, futures)
 
+        elif is_instance_or_iterable(item, Scenario):
+            '''Slicing a list of scenarios'''
+            if isinstance(item, Iterable) and any(it not in self._multi_scen_key for it in item):
+                raise ValueError('{} not computed'.format(item))
+            else:
+                if item not in self._multi_scen_key:
+                    raise ValueError('{} not computed'.format(item))
+
+            if len(self._multi_scen_key) == 0:  # field not used if not multiscenario
+                return self
+            else:
+                for idx, priceable in enumerate(self.portfolio):
+                    result = self.__result(PortfolioPath(idx))
+                    if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
+                        futures.append(PricingFuture(result[item]))
+                    elif isinstance(result, MultipleScenarioFuture):
+                        # scenario = tuple(item) if isinstance(item, Iterable) else (item,)
+                        futures.append(MultipleScenarioFuture(priceable, _value_for_measure_or_scen(result.result(),
+                                                                                                    item)))
+
+                return PortfolioRiskResult(self.__portfolio, self.risk_measures, futures)
         elif is_instance_or_iterable(item, dt.date):
             for idx, _ in enumerate(self.portfolio):
                 result = self.__result(PortfolioPath(idx))
@@ -584,6 +728,15 @@ class PortfolioRiskResult(CompositeResultFuture):
         except TypeError:
             return tuple()
 
+    @property
+    def _multi_scen_key(self) -> Iterable[Scenario]:
+        for result in self.__results():
+            if isinstance(result, (MultipleScenarioFuture, MultipleScenarioResult)):
+                return tuple(result.scenarios)
+            elif isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
+                return result._multi_scen_key
+        return tuple()
+
     def result(self, timeout: Optional[int] = None):
         super().result(timeout=timeout)
         return self
@@ -604,8 +757,11 @@ class PortfolioRiskResult(CompositeResultFuture):
         def get_records(rec):
             temp = []
             for f in rec.futures:
-                if isinstance(f.result(), ResultInfo) or isinstance(f.result(), MultipleRiskMeasureResult):
+                if isinstance(f.result(), ResultInfo) or isinstance(f.result(), MultipleRiskMeasureResult) \
+                        or isinstance(f.result(), MultipleScenarioResult):
                     temp.append(f.result())
+                elif isinstance(f.result(), MultipleScenarioFuture):
+                    temp.append(f.result().result())
                 else:
                     temp.extend(get_records(f.result()))
             return temp
@@ -620,34 +776,6 @@ class PortfolioRiskResult(CompositeResultFuture):
 
     def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
                  display_options: DisplayOptions = None):
-        def get_default_pivots(ori_cols, has_dates: bool, multi_measures: bool, simple_port: bool) -> tuple:
-            portfolio_names = list(filter(lambda x: 'portfolio_name_' in x, ori_cols))
-            port_and_inst_names = portfolio_names + ['instrument_name']
-            pivot_rules = [
-                # has_dates, multi_measures,  simple_port
-                # output: (value,index,columns)
-                [True, True, None, ('value', 'dates', port_and_inst_names + ['risk_measure'])],
-                [True, False, None, ('value', 'dates', port_and_inst_names)],
-                [False, False, False, ('value', portfolio_names, 'instrument_name')],
-                [False, True, False, ('value', port_and_inst_names, 'risk_measure')],
-                [False, None, True, ('value', 'instrument_name', 'risk_measure')],
-            ]
-
-            def match(rule_value, check_value) -> bool:
-                if rule_value is None:
-                    return True
-                elif callable(rule_value):
-                    return rule_value(check_value)
-                else:
-                    return rule_value == check_value
-
-            for rule in pivot_rules:
-                [rule_has_dates, rule_multi_measures, rule_simple_port, rule_output] = rule
-                if match(rule_has_dates, has_dates) and match(rule_multi_measures, multi_measures) and \
-                        match(rule_simple_port, simple_port):
-                    return rule_output
-            return None, None, None
-
         final_records = self._to_records(display_options=display_options)
         if len(final_records) > 0:
             ori_df = pd.DataFrame.from_records(final_records)
@@ -672,6 +800,7 @@ class PortfolioRiskResult(CompositeResultFuture):
         if values is None and index is None and columns is None:  # to_frame(None, None, None)
             return ori_df
         elif values == 'default' and index == 'default' and columns == 'default':  # to_frame()
+            multi_scen = len(self._multi_scen_key) > 1
             has_bucketed = True if 'mkt_type' in df_cols else False
             has_cashflows = True if 'payment_amount' in df_cols else False
             multi_rm = True if len(self.risk_measures) > 1 else False
@@ -679,20 +808,13 @@ class PortfolioRiskResult(CompositeResultFuture):
             if has_bucketed or has_cashflows:
                 return ori_df.set_index(other_cols)
             else:
-                values, index, columns = get_default_pivots(df_cols, has_dt, multi_rm, port_depth_one)
+                values, index, columns = get_default_pivots('PortfolioRiskResult', has_dates=has_dt,
+                                                            multi_measures=multi_rm, simple_port=port_depth_one,
+                                                            multi_scen=multi_scen, ori_cols=df_cols)
         else:  # user defined pivoting
             values = 'value' if values == 'default' or values is ['value'] else values
 
-        try:
-            pivot_df = ori_df.pivot_table(values=values, index=index, columns=columns, aggfunc=aggfunc)
-        except ValueError:
-            raise RuntimeError('Unable to successfully pivot data')
-        try:  # attempt to correct order of index
-            ori_index = ori_df.set_index(list(pivot_df.index.names)).index.unique()
-            ori_columns = ori_df.set_index(list(pivot_df.columns.names)).index.unique()
-            return pivot_df.reindex(index=ori_index, columns=ori_columns)
-        except KeyError:
-            return pivot_df
+        return pivot_to_frame(ori_df, values, index, columns, aggfunc)
 
     def __paths(self, items: Union[int, slice, str, Priceable]) -> Tuple[PortfolioPath, ...]:
         if isinstance(items, int):

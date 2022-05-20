@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import logging
 from urllib.parse import urlencode
 
 from gs_quant.session import GsSession
@@ -44,12 +43,12 @@ class GsBacktestApi:
 
     @classmethod
     def create_backtest(cls, backtest: Backtest) -> Backtest:
-        request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+        request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
         return GsSession.current._post('/backtests', backtest, request_headers=request_headers, cls=Backtest)
 
     @classmethod
     def update_backtest(cls, backtest: Backtest):
-        request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+        request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
         return GsSession.current._put('/backtests/{id}'.format(id=backtest.id), backtest,
                                       request_headers=request_headers,
                                       cls=Backtest)
@@ -87,7 +86,7 @@ class GsBacktestApi:
                the same purpose (e.g. calculating a backtest)
         :return: result of running the backtest
         """
-        request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+        request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
         if correlation_id is not None:
             request_headers["X-CorrelationId"] = correlation_id
 
@@ -109,7 +108,7 @@ class GsBacktestApi:
 
     @classmethod
     def calculate_position_risk(cls, backtestRiskRequest: BacktestRiskRequest) -> dict:
-        request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+        request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
         return GsSession.current._post('/backtests/calculate-position-risk', backtestRiskRequest,
                                        request_headers=request_headers)
 
@@ -119,7 +118,7 @@ class GsBacktestApi:
 
     @classmethod
     def update_ref_data(cls, backtest_ref_data: BacktestRefData):
-        request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+        request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
         return GsSession.current._put('/backtests/refData', backtest_ref_data,
                                       request_headers=request_headers,
                                       cls=backtest_ref_data)

@@ -36,6 +36,10 @@ import datetime as dt
 import logging
 
 
+# priority set to contexts making requests to the pricing API (min. 1 - max. 10)
+DEFAULT_REQUEST_PRIORITY = 5
+
+
 def raiser(ex):
     raise RuntimeError(ex)
 
@@ -51,7 +55,7 @@ class AddTradeActionImpl(ActionHandler):
     def _raise_order(self,
                      state: Union[date, Iterable[date]],
                      trigger_info: Optional[Union[AddTradeActionInfo, Iterable[AddTradeActionInfo]]] = None):
-        with PricingContext(is_batch=True, show_progress=True):
+        with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
             state_list = make_list(state)
             orders = {}
             if trigger_info is None or isinstance(trigger_info, AddTradeActionInfo):
@@ -105,7 +109,7 @@ class HedgeActionImpl(ActionHandler):
                      backtest: BackTest,
                      trigger_info: Optional[Union[HedgeActionInfo, Iterable[HedgeActionInfo]]] = None):
         with HistoricalPricingContext(is_batch=True, dates=make_list(state), csa_term=self.action.csa_term,
-                                      show_progress=True):
+                                      show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
             backtest.calc_calls += 1
             backtest.calculations += len(make_list(state))
             f = Portfolio(self.action.priceable).resolve(in_place=False)
@@ -208,6 +212,7 @@ class GenericEngine(BacktestBaseEngine):
 
     def __init__(self, action_impl_map={}):
         self.action_impl_map = action_impl_map
+        self._pricing_context_params = None
 
     def get_action_handler(self, action: Action) -> Action:
         handler_factory = GenericEngineActionFactory(self.action_impl_map)
@@ -221,6 +226,24 @@ class GenericEngine(BacktestBaseEngine):
         except RuntimeError:
             return False
         return True
+
+    def new_pricing_context(self):
+        """
+        generate context with the same params to avoid duplication
+        """
+        context_params = self._pricing_context_params
+
+        is_batch = context_params.get('is_batch', True)
+        show_progress = context_params.get('show_progress', False)
+        csa_term = context_params.get('csa_term')
+        request_priority = context_params.get('request_priority', DEFAULT_REQUEST_PRIORITY)
+
+        context = PricingContext(is_batch=is_batch, show_progress=show_progress, csa_term=csa_term,
+                                 request_priority=request_priority)
+
+        context.max_concurrent = 10000
+
+        return context
 
     def run_backtest(self, strategy, start=None, end=None, frequency='1m', states=None, risks=Price,
                      show_progress=True, csa_term=None, visible_to_gs=False, initial_value=0, result_ccy=None,
@@ -246,6 +269,10 @@ class GenericEngine(BacktestBaseEngine):
         """
 
         logging.info(f'Starting Backtest: Building Date Schedule - {dt.datetime.now()}')
+
+        self._pricing_context_params = {'show_progress': show_progress,
+                                        'csa_term': csa_term,
+                                        'visible_to_gs': visible_to_gs}
 
         strategy_pricing_dates = RelativeDateSchedule(frequency,
                                                       start,
@@ -276,8 +303,7 @@ class GenericEngine(BacktestBaseEngine):
                                            effective_date=final_date)
                 backtest.cash_payments[final_date].append(exit_payment)
             init_port = Portfolio(strategy.initial_portfolio)
-            with PricingContext(pricing_date=strategy_start_date, csa_term=csa_term, show_progress=show_progress,
-                                visible_to_gs=visible_to_gs):
+            with self.new_pricing_context():
                 init_port.resolve()
             for d in strategy_pricing_dates:
                 backtest.portfolio_dict[d].append(init_port.instruments)
@@ -311,7 +337,7 @@ class GenericEngine(BacktestBaseEngine):
                                                          if strategy_start_date <= k <= strategy_end_date})
 
         logging.info('Pricing simple and semi-deterministic triggers and actions')
-        with PricingContext(is_batch=True, show_progress=show_progress, csa_term=csa_term, visible_to_gs=visible_to_gs):
+        with self.new_pricing_context():
             backtest.calc_calls += 1
             for day, portfolio in backtest.portfolio_dict.items():
                 if isinstance(day, dt.date):
@@ -348,8 +374,7 @@ class GenericEngine(BacktestBaseEngine):
                 if t.name not in backtest.results[d].portfolio:
                     port.append(t)
 
-            with PricingContext(is_batch=True, csa_term=csa_term, show_progress=show_progress,
-                                visible_to_gs=visible_to_gs):
+            with self.new_pricing_context():
                 if len(port):
                     with PricingContext(pricing_date=d):
                         results = Portfolio(port).calc(tuple(risks))
@@ -407,7 +432,7 @@ class GenericEngine(BacktestBaseEngine):
 
         logging.info('Calculating and scaling newly added portfolio positions')
         # test to see if new trades have been added and calc
-        with PricingContext(is_batch=True, show_progress=show_progress, csa_term=csa_term, visible_to_gs=visible_to_gs):
+        with self.new_pricing_context():
             backtest.calc_calls += 1
             leaves_by_date = {}
             for day, portfolio in backtest.portfolio_dict.items():
@@ -434,7 +459,7 @@ class GenericEngine(BacktestBaseEngine):
         logging.info('Calculating prices for cash payments')
         # run any additional calcs to handle cash scaling (e.g. unwinds)
         cash_results = {}
-        with PricingContext(is_batch=True, show_progress=show_progress, csa_term=csa_term, visible_to_gs=visible_to_gs):
+        with self.new_pricing_context():
             backtest.calc_calls += 1
             cash_trades_by_date = defaultdict(list)
             for _, cash_payments in backtest.cash_payments.items():
@@ -482,11 +507,12 @@ class GenericEngine(BacktestBaseEngine):
                             if cp.scale_date:
                                 scale_notional = backtest.portfolio_dict[cp.scale_date][cp.trade.name].notional_amount
                                 scale_date_adj = scale_notional / cp.trade.notional_amount
-                                cp.cash_paid = value * scale_date_adj * cp.direction
-                                backtest.cash_dict[d][ccy] += cp.cash_paid
+                                cp.cash_paid[ccy] += value * scale_date_adj * cp.direction
                             else:
-                                cp.cash_paid = (0 if cp.cash_paid is None else cp.cash_paid) + value * cp.direction
-                                backtest.cash_dict[d][ccy] += cp.cash_paid
+                                cp.cash_paid[ccy] += value * cp.direction
+
+                        for ccy, cash_paid in cp.cash_paid.items():
+                            backtest.cash_dict[d][ccy] += cash_paid
 
                 current_value = copy.deepcopy(backtest.cash_dict[d])
 

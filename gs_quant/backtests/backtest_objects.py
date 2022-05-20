@@ -156,9 +156,9 @@ class BackTest(BaseBacktest):
                                                'Status': 'closed',
                                                'Trade PnL': 0}
                 elif cash.trade.name in names:
-                    if cash.cash_paid is not None:
+                    if len(cash.cash_paid) > 0:
                         ledger[cash.trade.name]['Close'] = date
-                        ledger[cash.trade.name]['Close Value'] += cash.cash_paid
+                        ledger[cash.trade.name]['Close Value'] += sum(cash.cash_paid.values())
                         open_value = ledger[cash.trade.name]['Open Value']
                         ledger[cash.trade.name]['Trade PnL'] = ledger[cash.trade.name]['Close Value'] + open_value
                         ledger[cash.trade.name]['Status'] = 'closed'
@@ -166,7 +166,7 @@ class BackTest(BaseBacktest):
                     names.append(cash.trade.name)
                     ledger[cash.trade.name] = {'Open': date,
                                                'Close': None,
-                                               'Open Value': cash.cash_paid,
+                                               'Open Value': sum(cash.cash_paid.values()),
                                                'Close Value': 0,
                                                'Long Short': cash.direction,
                                                'Status': 'open',
@@ -190,7 +190,7 @@ class CashPayment:
         self.effective_date = effective_date
         self.scale_date = scale_date
         self.direction = direction
-        self.cash_paid = None
+        self.cash_paid = defaultdict(float)
 
 
 class PredefinedAssetBacktest(BaseBacktest):

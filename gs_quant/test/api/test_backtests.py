@@ -71,7 +71,7 @@ def test_create_backtest(mocker):
 
     # run test
     response = GsBacktestApi.create_backtest(backtest)
-    request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+    request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
     GsSession.current._post.assert_called_with('/backtests', backtest, request_headers=request_headers, cls=Backtest)
     assert response == backtest
 
@@ -88,7 +88,7 @@ def test_update_backtest(mocker):
 
     # run test
     response = GsBacktestApi.update_backtest(backtest)
-    request_headers = {'Content-Type': 'application/json;charset=utf-8'}
+    request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
     GsSession.current._put.assert_called_with('/backtests/{id}'.format(id=id_1), backtest,
                                               request_headers=request_headers, cls=Backtest)
     assert response == backtest

@@ -25,11 +25,11 @@ def test_instrument_resolve(mocker):
 
         eq_option.resolve()
         assert eq_option.unresolved is not None
-        assert eq_option.strike_price == 7453.714728105241
+        assert eq_option.strike_price == 7464.8
 
         eq_option.expiration_date = '3m'
         assert eq_option.unresolved is not None
-        assert eq_option.strike_price == 7453.714728105241
+        assert eq_option.strike_price == 7464.8
 
 
 def test_nested_leg_from_dict():

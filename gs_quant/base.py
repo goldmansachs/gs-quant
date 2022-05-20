@@ -13,25 +13,24 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from abc import ABC, ABCMeta, abstractmethod
 import builtins
-from collections import namedtuple
 import copy
-from dataclasses import Field, InitVar, MISSING, dataclass, field, fields, replace
-from dataclasses_json import config, global_config
-from dataclasses_json.core import _decode_generic, _is_supported_generic
 import datetime as dt
+import logging
+from abc import ABC, ABCMeta, abstractmethod
+from collections import namedtuple
+from dataclasses import Field, InitVar, MISSING, dataclass, field, fields, replace
 from enum import EnumMeta
 from functools import update_wrapper
-from inflection import camelize, underscore
-import logging
-import numpy as np
 from typing import Iterable, Mapping, Optional, Union
 
+import numpy as np
+from dataclasses_json import config, global_config
+from dataclasses_json.core import _decode_generic, _is_supported_generic
 from gs_quant.context_base import ContextBase, ContextMeta
-from gs_quant.json_convertors import encode_date_or_str, decode_date_or_str, decode_optional_date, encode_datetime,\
+from gs_quant.json_convertors import encode_date_or_str, decode_date_or_str, decode_optional_date, encode_datetime, \
     decode_datetime, decode_float_or_str, decode_instrument, encode_dictable
-
+from inflection import camelize, underscore
 
 _logger = logging.getLogger(__name__)
 
@@ -39,6 +38,7 @@ __builtins = set(dir(builtins))
 __getattribute__ = object.__getattribute__
 __setattr__ = object.__setattr__
 
+_rename_cache = {}
 
 def exclude_none(o):
     return o is None
@@ -56,6 +56,12 @@ def is_instance_or_iterable(o, t):
     return isinstance(o, t) or is_iterable(o, t)
 
 
+def _get_underscore(arg):
+    if arg not in _rename_cache:
+        _rename_cache[arg] = underscore(arg)
+
+    return _rename_cache[arg]
+
 def handle_camel_case_args(cls):
     init = cls.__init__
 
@@ -64,7 +70,7 @@ def handle_camel_case_args(cls):
 
         for arg, value in kwargs.items():
             if not arg.isupper():
-                snake_case_arg = underscore(arg)
+                snake_case_arg = _get_underscore(arg)
                 if snake_case_arg != arg and snake_case_arg in kwargs:
                     raise ValueError('{} and {} both specified'.format(arg, snake_case_arg))
 
@@ -141,7 +147,7 @@ class DictBase(HashableDict):
 
     def __getattr__(self, item):
         if self._PROPERTIES:
-            if underscore(item) in self._PROPERTIES:
+            if _get_underscore(item) in self._PROPERTIES:
                 return self.get(item)
         elif item in self:
             return self[item]
@@ -151,7 +157,7 @@ class DictBase(HashableDict):
     def __setattr__(self, key, value):
         if key in dir(self):
             return super().__setattr__(key, value)
-        elif self._PROPERTIES and underscore(key) not in self._PROPERTIES:
+        elif self._PROPERTIES and _get_underscore(key) not in self._PROPERTIES:
             raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{key}'")
 
         self[key] = value
@@ -174,7 +180,7 @@ class Base(ABC):
             return __getattribute__(self, item)
 
         # Handle setting via camelCase names (legacy behaviour) and field mappings from disallowed names
-        snake_case_item = underscore(item)
+        snake_case_item = _get_underscore(item)
         field_mappings = __getattribute__(self, '_field_mappings')()
         snake_case_item = field_mappings.get(snake_case_item, snake_case_item)
 
@@ -185,7 +191,7 @@ class Base(ABC):
 
     def __setattr__(self, key, value):
         # Handle setting via camelCase names (legacy behaviour)
-        snake_case_key = underscore(key)
+        snake_case_key = _get_underscore(key)
         snake_case_key = self._field_mappings().get(snake_case_key, snake_case_key)
         fld = self._fields_by_name().get(snake_case_key)
 
@@ -430,7 +436,20 @@ class __ScenarioMeta(ABCMeta, ContextMeta):
 
 @dataclass
 class Scenario(Base, ContextBase, ABC, metaclass=__ScenarioMeta):
-    pass
+    def __lt__(self, other):
+        if self.__repr__ != other.__repr__:
+            return self.name < other.name
+        return False
+
+    def __repr__(self):
+        if self.name:
+            return self.name
+        else:
+            params = self.as_dict()
+            sorted_keys = sorted(params.keys(), key=lambda x: x.lower())
+            params = ', '.join(
+                [f'{k}:{params[k].__repr__ if isinstance(params[k], Base) else params[k]}' for k in sorted_keys])
+            return self.scenario_type + '(' + params + ')'
 
 
 @dataclass

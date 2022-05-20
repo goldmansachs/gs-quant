@@ -20,6 +20,7 @@ from typing import Iterable, Optional, Union
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.risk.measures import PnlExplain
 from gs_quant.target.measures import EqDelta, EqGamma, EqVega
+
 from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
     sort_values, MQVSValidatorDefnsWithInfo, MQVSValidatorDefn
 
@@ -216,6 +217,16 @@ def fixing_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrumen
     return SeriesWithInfo(values, index=dates, risk_key=risk_key, request_id=request_id)
 
 
+def simple_valtable_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                            request_id: Optional[str] = None) -> DataFrameWithInfo:
+    raw_res = result['rows']
+    # simplevaltable's values contain all the information on units which needs to be extracted into the dataframe
+    df = DataFrameWithInfo([(res['label'], res['value']['val']) for res in raw_res], risk_key=risk_key,
+                           request_id=request_id, unit=raw_res[0]['value'].get('unit'))
+    df.columns = ['label', 'value']
+    return df
+
+
 def canonical_projection_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                                        request_id: Optional[str] = None) -> DataFrameWithInfo:
     mappings = (
@@ -317,6 +328,14 @@ def unsupported_handler(_result: dict, risk_key: RiskKey, _instrument: Instrumen
     return UnsupportedValue(risk_key, request_id=request_id)
 
 
+def extract_val_from_dataframe_with_info(df: DataFrameWithInfo, value_key: str = 'value'):
+    result = []
+    for val in df[value_key]:
+        if isinstance(val, float):
+            result.append(FloatWithInfo(value=val, unit=df.unit, risk_key=df.risk_key, request_id=df.request_id))
+    return result
+
+
 result_handlers = {
     'Error': error_handler,
     'IRPCashflowTable': cashflows_handler,
@@ -331,6 +350,7 @@ result_handlers = {
     'RiskByClass': risk_by_class_handler,
     'RiskVector': risk_vector_handler,
     'FixingTable': fixing_table_handler,
+    'Table': simple_valtable_handler,
     'CanonicalProjectionTable': canonical_projection_table_handler,
     'RiskSecondOrderVector': risk_float_handler,
     'RiskTheta': risk_float_handler,

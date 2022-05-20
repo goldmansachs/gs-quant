@@ -40,6 +40,7 @@ def build_macro_portfolio_exposure_df(df_constituents_and_notional: pd.DataFrame
 
     # Multiply asset notional by asset sensitivity for each factor
     column_names = universe_sensitivities_df.columns.values.tolist()
+    universe_sensitivities_df /= 100
     for column in column_names:
         universe_sensitivities_df[column] = universe_sensitivities_df[column] * notional_df['Notional']
 

@@ -20,6 +20,7 @@ from typing import Tuple, Union, List, Dict
 
 import pandas as pd
 from dateutil.relativedelta import relativedelta
+from inflection import titleize
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
@@ -28,7 +29,6 @@ from gs_quant.api.gs.thematics import Region, GsThematicApi, ThematicMeasure
 from gs_quant.datetime import business_day_offset
 from gs_quant.errors import MqValueError
 from gs_quant.markets.report_utils import _get_ppaa_batches
-from inflection import titleize
 from gs_quant.target.common import ReportParameters, Currency
 from gs_quant.target.coordinates import MDAPIDataBatchResponse
 from gs_quant.target.data import DataQuery, DataQueryResponse
@@ -43,8 +43,11 @@ class ReturnFormat(Enum):
 
 class ReportDataset(Enum):
     PPA_DATASET = "PPA"
+    PPAA_DATASET = "PPAA"
     PFR_DATASET = "PFR"
+    PFRA_DATASET = "PFRA"
     AFR_DATASET = "AFR"
+    AFRA_DATASET = "AFRA"
     ATA_DATASET = "ATA"
     ATAA_DATASET = "ATAA"
     PTA_DATASET = "PTA"
@@ -60,6 +63,11 @@ class FactorRiskViewsMode(Enum):
 class FactorRiskResultsMode(Enum):
     Portfolio = 'Portfolio'
     Positions = 'Positions'
+
+
+class FactorRiskUnit(Enum):
+    Percent = 'Percent'
+    Notional = 'Notional'
 
 
 class ReportJobFuture:
@@ -563,7 +571,10 @@ class PerformanceReport(Report):
         :return: Portfolio constituent data for each day in the requested date range
         """
         where = {'reportId': self.id}
-        date_batches = _get_ppaa_batches(self.get_asset_count(start_date, end_date), 3000000)
+        asset_count = self.get_asset_count(start_date, end_date)
+        if asset_count.empty:
+            return pd.DataFrame() if return_format == ReturnFormat.DATA_FRAME else {}
+        date_batches = _get_ppaa_batches(asset_count, 3000000)
         queries = [DataQuery(where=where, fields=fields, start_date=dates_batch[0], end_date=dates_batch[1]) for
                    dates_batch in date_batches]
         results = [GsDataApi.query_data(query=query, dataset_id=ReportDataset.PORTFOLIO_CONSTITUENTS.value)
@@ -577,6 +588,7 @@ class FactorRiskReport(Report):
     def __init__(self,
                  risk_model_id: str = None,
                  fx_hedged: bool = True,
+                 benchmark_id: str = None,
                  report_id: str = None,
                  name: str = None,
                  position_source_id: str = None,
@@ -590,7 +602,8 @@ class FactorRiskReport(Report):
                  **kwargs):
         super().__init__(report_id, name, position_source_id, position_source_type,
                          report_type, ReportParameters(risk_model=risk_model_id,
-                                                       fx_hedged=fx_hedged), earliest_start_date,
+                                                       fx_hedged=fx_hedged,
+                                                       benchmark=benchmark_id), earliest_start_date,
                          latest_end_date, latest_execution_time, status, percentage_complete)
 
     @classmethod
@@ -611,6 +624,7 @@ class FactorRiskReport(Report):
             raise MqValueError('This report is not a factor risk report.')
         return FactorRiskReport(risk_model_id=report.parameters.risk_model,
                                 fx_hedged=report.parameters.fx_hedged,
+                                benchmark_id=report.parameters.benchmark,
                                 report_id=report.id,
                                 position_source_id=report.position_source_id,
                                 position_source_type=report.position_source_type,
@@ -626,6 +640,12 @@ class FactorRiskReport(Report):
         """
         return self.parameters.risk_model
 
+    def get_benchmark_id(self) -> str:
+        """
+        :return: the unique Marquee identifier of the benchmark associated with the factor risk report
+        """
+        return self.parameters.benchmark
+
     def get_results(self,
                     mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
                     factors: List[str] = None,
@@ -633,7 +653,8 @@ class FactorRiskReport(Report):
                     start_date: dt.date = None,
                     end_date: dt.date = None,
                     currency: Currency = None,
-                    return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+                    return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+                    unit: FactorRiskUnit = FactorRiskUnit.Notional) -> Union[Dict, pd.DataFrame]:
         """
         Get the raw results associated with the factor risk report
         :param mode: results mode; defaults to the portfolio level
@@ -644,6 +665,7 @@ class FactorRiskReport(Report):
         :param currency: currency
         :param return_format: return format; defaults to a Pandas DataFrame, but can be manually
         set to ReturnFormat.JSON
+        :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: risk report results
         """
         results = GsReportApi.get_factor_risk_report_results(risk_report_id=self.id,
@@ -652,7 +674,8 @@ class FactorRiskReport(Report):
                                                              factor_categories=factor_categories,
                                                              currency=currency,
                                                              start_date=start_date,
-                                                             end_date=end_date)
+                                                             end_date=end_date,
+                                                             unit=unit.value)
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
     def get_view(self,
@@ -661,7 +684,8 @@ class FactorRiskReport(Report):
                  factor_category: str = None,
                  start_date: dt.date = None,
                  end_date: dt.date = None,
-                 currency: Currency = None) -> Dict:
+                 currency: Currency = None,
+                 unit: FactorRiskUnit = FactorRiskUnit.Notional) -> Dict:
         """
         Get the results associated with the factor risk report as seen on the Marquee user interface
         :param mode: views mode
@@ -670,6 +694,7 @@ class FactorRiskReport(Report):
         :param start_date: start date
         :param end_date: end date
         :param currency: currency
+        :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: risk report results
         """
         return GsReportApi.get_factor_risk_report_view(
@@ -679,7 +704,8 @@ class FactorRiskReport(Report):
             factor_category=factor_category,
             currency=currency,
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
+            unit=unit.value
         )
 
     def get_table(self,
@@ -717,7 +743,8 @@ class FactorRiskReport(Report):
                        factor_categories: List[str] = None,
                        start_date: dt.date = None,
                        end_date: dt.date = None,
-                       currency: Currency = None) -> pd.DataFrame:
+                       currency: Currency = None,
+                       unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical factor PnL
         :param factor_names: optional list of factor names; defaults to all of them
@@ -725,6 +752,7 @@ class FactorRiskReport(Report):
         :param start_date: start date
         :param end_date: end date
         :param currency: currency
+        :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: a Pandas DataFrame with the results
         """
         factor_data = self.get_results(factors=factor_names,
@@ -732,7 +760,8 @@ class FactorRiskReport(Report):
                                        start_date=start_date,
                                        end_date=end_date,
                                        currency=currency,
-                                       return_format=ReturnFormat.JSON)
+                                       return_format=ReturnFormat.JSON,
+                                       unit=unit)
 
         return _format_multiple_factor_table(factor_data, 'pnl')
 
@@ -741,7 +770,8 @@ class FactorRiskReport(Report):
                             factor_categories: List[str] = None,
                             start_date: dt.date = None,
                             end_date: dt.date = None,
-                            currency: Currency = None) -> pd.DataFrame:
+                            currency: Currency = None,
+                            unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical factor exposure
         :param factor_names: optional list of factor names; defaults to all of them
@@ -749,6 +779,7 @@ class FactorRiskReport(Report):
         :param start_date: start date
         :param end_date: end date
         :param currency: currency
+        :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: a Pandas DataFrame with the results
         """
         factor_data = self.get_results(factors=factor_names,
@@ -756,7 +787,8 @@ class FactorRiskReport(Report):
                                        start_date=start_date,
                                        end_date=end_date,
                                        currency=currency,
-                                       return_format=ReturnFormat.JSON)
+                                       return_format=ReturnFormat.JSON,
+                                       unit=unit)
         return _format_multiple_factor_table(factor_data, 'exposure')
 
     def get_factor_proportion_of_risk(self,

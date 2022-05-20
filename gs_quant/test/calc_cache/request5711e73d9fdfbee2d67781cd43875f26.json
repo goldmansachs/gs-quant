@@ -1,1 +1,1 @@
-[[[[{"$type": "RiskByClass", "classes": [{"type": "IR", "asset": "EUR"}, {"type": "IR", "asset": "USD"}], "values": [50715.916833078765, -9.696467980957031], "calculationTime": 1480, "queueingTime": 359}]]]]
+[[[[{"$type": "RiskByClass", "classes": [{"type": "IR", "asset": "EUR"}, {"type": "IR", "asset": "USD"}], "values": [47977.94611100083, -5.116586968231202], "calculationTime": 1656, "queueingTime": 16}]]]]

@@ -21,7 +21,7 @@ from gs_quant.timeseries.datetime import *
 
 
 def test_basic():
-    assert type(RelativeDate('0d').apply_rule()) == datetime.date
+    assert type(RelativeDate('0d').apply_rule()) == dt.date
 
 
 def test_align():
@@ -466,12 +466,12 @@ def test_bucketize():
 
 
 def test_day_count():
-    assert day_count(datetime.date(2021, 5, 7), datetime.date(2021, 5, 10)) == 1
-    assert day_count(datetime.date(2021, 5, 10), datetime.date(2021, 5, 14)) == 4
-    assert day_count(datetime.date(2021, 5, 10), datetime.date(2021, 5, 17)) == 5
+    assert day_count(dt.date(2021, 5, 7), dt.date(2021, 5, 10)) == 1
+    assert day_count(dt.date(2021, 5, 10), dt.date(2021, 5, 14)) == 4
+    assert day_count(dt.date(2021, 5, 10), dt.date(2021, 5, 17)) == 5
 
     with pytest.raises(MqValueError):
-        day_count(datetime.date(2021, 5, 7), '2021-05-10')
+        day_count(dt.date(2021, 5, 7), '2021-05-10')
 
 
 if __name__ == "__main__":

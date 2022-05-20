@@ -762,6 +762,29 @@ class Stock(Asset):
     def get_currency(self) -> Optional[Currency]:
         return self.currency
 
+    def get_thematic_beta(self,
+                          basket_identifier: str,
+                          start: dt.date = DateLimit.LOW_LIMIT.value,
+                          end: dt.date = dt.date.today()) -> pd.DataFrame:
+
+        response = GsAssetApi.resolve_assets(identifier=[basket_identifier],
+                                             fields=['id', 'type'], limit=1)[basket_identifier]
+        _id, _type = get(response, '0.id'), get(response, '0.type')
+        if len(response) == 0 or _id is None:
+            raise MqValueError(f'Basket could not be found using identifier {basket_identifier}.')
+        if _type not in BasketType.to_list():
+            raise MqValueError(f'Asset {basket_identifier} of type {_type} is not a Custom or Research Basket.')
+
+        query = DataQuery(where={'assetId': self.get_marquee_id(), 'basketId': _id},
+                          start_date=start, end_date=end)
+        response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.THEMATIC_FACTOR_BETAS_V1_STANDARD.value)
+        df = []
+        for r in response:
+            df.append({'date': r['date'], 'assetId': r['assetId'], 'basketId': r['basketId'],
+                       'thematicBeta': r['beta']})
+        df = pd.DataFrame(df)
+        return df.set_index('date')
+
 
 class Cross(Asset):
     """Base Security Type

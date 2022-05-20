@@ -13,53 +13,49 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 from datetime import date
 
-import datetime as dt
 import gs_quant.risk as risk
 import numpy as np
 import pytest
 from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg
 from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMarket
 from gs_quant.markets.portfolio import Portfolio
+from gs_quant.risk import MultiScenario
 from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel, PnlExplain
 from gs_quant.risk.core import aggregate_risk
+from gs_quant.risk.results import MultipleScenarioResult, PricingFuture, MultipleScenarioFuture
+from gs_quant.target.common import MarketDataPattern
 from gs_quant.test.utils.test_utils import MockCalc
+
+curvescen1 = CurveScenario(market_data_pattern=MarketDataPattern('IR', 'USD'), parallel_shift=5,
+                           name='parallel shift5bp')
+curvescen2 = CurveScenario(market_data_pattern=MarketDataPattern('IR', 'USD'), curve_shift=1, tenor_start=5,
+                           tenor_end=30, name='curve shift1bp')
+rollfwd = RollFwd(date=date(2020, 11, 3), name='roll fwd scenario')
 
 
 def get_attributes(p, risks, ctx='PricingCtx1', resolve=False, no_frame=False):
+    multiscenario = MultiScenario(scenarios=tuple((curvescen1, curvescen2)), name='multiscenario')
+    contexts = {'Multiple': HistoricalPricingContext(date(2020, 1, 14), date(2020, 1, 15), market_data_location='LDN'),
+                'PricingCtx1': PricingContext(date(2020, 1, 14), market_data_location='LDN'),
+                'Multiple2': HistoricalPricingContext(date(2020, 1, 16), date(2020, 1, 17), market_data_location='LDN'),
+                'PricingCtx2': PricingContext(date(2020, 1, 16), market_data_location='NYC'),
+                'PricingCtx3': PricingContext(date(2020, 1, 16), market_data_location='LDN'),
+                'RollFwd': rollfwd, 'CurveScen1': curvescen1, 'CurveScen2': curvescen2, 'MultiScen': multiscenario}
     if resolve:
         p.resolve()
-    if ctx == 'Multiple':
-        with HistoricalPricingContext(date(2020, 1, 14), date(2020, 1, 15), market_data_location='LDN'):
+    if contexts.get(ctx):
+        with contexts.get(ctx):
             res = p.calc(risks)
-    elif ctx == 'PricingCtx1':
-        with PricingContext(date(2020, 1, 14), market_data_location='LDN'):
-            res = p.calc(risks)
-    elif ctx == 'Multiple2':
-        with HistoricalPricingContext(date(2020, 1, 16), date(2020, 1, 17), market_data_location='LDN'):
-            res = p.calc(risks)
-    elif ctx == 'PricingCtx2':
-        with PricingContext(date(2020, 1, 16), market_data_location='NYC'):
-            res = p.calc(risks)
-    elif ctx == 'PricingCtx3':
-        with PricingContext(date(2020, 1, 16), market_data_location='LDN'):
-            res = p.calc(risks)
-    elif ctx == 'RollFwd':
-        with RollFwd(date=date(2020, 11, 3)):
-            res = p.calc(risks)
-    elif ctx == 'CurveScen1':
-        with CurveScenario(parallel_shift=5):
-            res = p.calc(risks)
-    elif ctx == 'CurveScen2':
-        with CurveScenario(curve_shift=1, tenor_start=5, tenor_end=30):
+    elif ctx == 'Composite':
+        with rollfwd, multiscenario:
             res = p.calc(risks)
 
     if not no_frame:
         frame = res.to_frame(None, None, None)
-
-        cols = [col for col in frame.columns]
-        return cols, res, frame
+        return [col for col in frame.columns], res, frame
     else:
         return res
 
@@ -107,26 +103,27 @@ def default_pivot_table_test(res, with_dates=''):
     pivot_df = res.to_frame()
     if with_dates == 'dated':
         assert pivot_df.index.name == 'dates'
-
     else:
         if with_dates == 'has_bucketed':
-            port_depth = len(max(res.portfolio.all_paths, key=len)) + 1  # +1 for risk measure that is stacked to idx
-            pivot_df = res.to_frame()
             if res.dates:
-                port_depth += 1  # +1 for dates that is stacked to idx
-                assert pivot_df.index.names[-1] == 'dates'
-                assert pivot_df.index.names[-2] == 'risk_measure'
-                assert pivot_df.index.names[-3] == 'instrument_name'
+                assert pivot_df.index.names[-3:] == ['instrument_name', 'risk_measure', 'dates']
             else:
-                assert pivot_df.index.names[-1] == 'risk_measure'
-                assert pivot_df.index.names[-2] == 'instrument_name'
+                assert pivot_df.index.names[-2:] == ['instrument_name', 'risk_measure']
             assert pivot_df.columns.values[-1] == 'value'
         else:
             if port_depth == 1:
-                assert pivot_df.columns.name == 'risk_measure'
                 assert pivot_df.index.nlevels == port_depth
+
+            if len(res._multi_scen_key) > 1:
+                if len(res.risk_measures) > 1:
+                    assert pivot_df.columns.names == ['risk_measure', 'scenario']
+                else:
+                    assert pivot_df.columns.name == 'scenario'
             else:
-                assert pivot_df.columns.names[-1] == 'risk_measure'
+                if port_depth == 1:
+                    assert pivot_df.columns.name == 'risk_measure'
+                else:
+                    assert pivot_df.columns.names[-1] == 'risk_measure'
 
 
 def price_values_test(res, f, with_dates=''):
@@ -146,12 +143,47 @@ def price_values_test(res, f, with_dates=''):
     assert (port_depth == f.columns.size)  # check if index setting is correct
 
 
+def test_multi_scenario(mocker):
+    with MockCalc(mocker):
+        _, r1, f1 = get_attributes(usd_port, risk.Price, resolve=True, ctx='MultiScen')
+        _, r2, f2 = get_attributes(usd_port, (risk.Price, risk.DollarPrice), resolve=True, ctx='MultiScen')
+        _, r3, f3 = get_attributes(port1, (risk.IRFwdRate, risk.Price), resolve=True, ctx='MultiScen')
+        _, r4, f4 = get_attributes(port1, risk.Price, resolve=True, ctx='MultiScen')
+
+    default_pivot_table_test(r1)
+    default_pivot_table_test(r2)
+    default_pivot_table_test(r3)
+    default_pivot_table_test(r4)
+
+    # test slicing
+    swap_res = r1[swap_3]
+    swap_res_idx = r1[0]
+    assert isinstance(swap_res, MultipleScenarioFuture)
+    assert swap_res == swap_res_idx
+
+    scen_res = r4[curvescen1]
+    assert scen_res._multi_scen_key[0] == curvescen1
+
+    # test futures
+    futures = r1.futures
+    assert len(futures) == 2
+    assert isinstance(futures[0], PricingFuture)
+    assert isinstance(futures[0].result(), MultipleScenarioFuture)
+    assert isinstance(futures[0].result().result(), MultipleScenarioResult)
+
+
+def test_composite_multi_scenario(mocker):
+    with MockCalc(mocker):
+        c, _, _ = get_attributes(usd_port, risk.Price, resolve=True, ctx='Composite')
+
+    assert 'scenario' in c
+
+
 def test_one_portfolio(mocker):
     with MockCalc(mocker):
         _, r1, f1 = get_attributes(eur_port, risk.Price)
         _, r2, f2 = get_attributes(eur_port, (risk.Price, risk.DollarPrice))
         _, _, f3 = get_attributes(Portfolio(swap_1, name='swap_1'), (risk.Price, risk.DollarPrice))
-
     price_values_test(r1, f1)
     price_values_test(r2, f2)
 

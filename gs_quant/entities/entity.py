@@ -523,14 +523,20 @@ class PositionedEntity(metaclass=ABCMeta):
 
     def get_factor_risk_report(self,
                                risk_model_id: str = None,
-                               fx_hedged: bool = None) -> FactorRiskReport:
+                               fx_hedged: bool = None,
+                               benchmark_id: str = None) -> FactorRiskReport:
         position_source_type = self.positioned_entity_type.value.capitalize()
         reports = self.get_factor_risk_reports(fx_hedged=fx_hedged)
         if risk_model_id:
             reports = [report for report in reports if report.parameters.risk_model == risk_model_id]
+        reports = [report for report in reports if report.parameters.benchmark == benchmark_id]
+        if len(reports) == 0:
+            raise MqError(f'This {position_source_type} has no factor risk reports that match '
+                          'your parameters. Please edit the risk model ID, fxHedged, and/or benchmark value in the '
+                          'function parameters.')
         if len(reports) > 1:
             raise MqError(f'This {position_source_type} has more than one factor risk report that matches '
-                          'your parameters. Please specify the risk model ID and fxHedged value in the '
+                          'your parameters. Please specify the risk model ID, fxHedged, and/or benchmark value in the '
                           'function parameters.')
         return reports[0]
 
