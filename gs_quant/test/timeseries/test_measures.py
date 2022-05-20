@@ -17,7 +17,8 @@ under the License.
 import datetime
 import datetime as dt
 import os
-from typing import Union
+import json
+from typing import Union, Dict
 
 import numpy as np
 import pandas as pd
@@ -37,6 +38,7 @@ from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
 from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqError, MqValueError, MqTypeError
+from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets.baskets import Basket as CustomBasket
 from gs_quant.markets.index import Index
 from gs_quant.markets.securities import AssetClass, Cross, Currency, SecurityMaster, Stock, \
@@ -5062,6 +5064,24 @@ def test_thematic_model_beta():
     empty_df.return_value = pd.DataFrame()
     with DataContext(datetime.date(2021, 6, 2), datetime.date(2021, 6, 2)):
         tm.thematic_model_beta(mock_basket, 'TICKER')
+
+    replace.restore()
+
+
+def test_thematic_model_beta_single_stock():
+    mock_asset = GsAsset(asset_class='Equity', id='MA4B66MW5E27U9VBB94', type_='Single Stock', name='test')
+    mock_asset_entity: Dict = json.loads(json.dumps(mock_asset.as_dict(), cls=JSONEncoder))
+    mock_stock = Stock(mock_asset.id, mock_asset.name, mock_asset.exchange, mock_asset.currency,
+                       entity=mock_asset_entity)
+    with pytest.raises(MqValueError):
+        tm.thematic_model_beta(mock_stock, 'TICKER', real_time=True)
+
+    replace = Replacer()
+
+    empty_df = replace('gs_quant.timeseries.measures.Stock.get_thematic_beta', Mock())
+    empty_df.return_value = pd.DataFrame()
+    with DataContext(datetime.date(2021, 6, 2), datetime.date(2021, 6, 2)):
+        tm.thematic_model_beta(mock_stock, 'TICKER')
 
     replace.restore()
 

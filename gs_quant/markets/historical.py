@@ -17,10 +17,11 @@ import datetime as dt
 from typing import Iterable, Optional, Tuple, Union
 
 from gs_quant.base import InstrumentBase, RiskKey
+from gs_quant.common import RiskMeasure
 from gs_quant.datetime.date import date_range, prev_business_date
 from gs_quant.risk import RollFwd, MarketDataScenario
 from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
-from gs_quant.common import RiskMeasure
+
 from .core import PricingContext
 from .markets import CloseMarket
 
@@ -40,6 +41,7 @@ class HistoricalPricingContext(PricingContext):
             is_batch: bool = False,
             use_cache: bool = False,
             visible_to_gs: bool = False,
+            request_priority: Optional[int] = None,
             csa_term: str = None,
             market_data_location: Optional[str] = None,
             timeout: Optional[int] = None,
@@ -74,8 +76,9 @@ class HistoricalPricingContext(PricingContext):
         >>> price_series = price_f.result()
         """
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
-                         csa_term=csa_term, market_data_location=market_data_location,
-                         timeout=timeout, show_progress=show_progress, use_server_cache=use_server_cache)
+                         request_priority=request_priority, csa_term=csa_term,
+                         market_data_location=market_data_location, timeout=timeout, show_progress=show_progress,
+                         use_server_cache=use_server_cache)
 
         if start is not None:
             if dates is not None:
@@ -128,7 +131,8 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
             csa_term: str = None,
             market_data_location: Optional[str] = None,
             timeout: Optional[int] = None,
-            show_progress: Optional[bool] = False):
+            show_progress: Optional[bool] = False,
+            name: Optional[str] = None):
         """
         A context for producing valuations over multiple dates
 
@@ -161,6 +165,7 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
                          csa_term=csa_term, market_data_location=market_data_location,
                          timeout=timeout, show_progress=show_progress)
         self._roll_to_fwds = roll_to_fwds
+        self.name = name
         if start is not None:
             if dates is not None:
                 raise ValueError('Must supply start or dates, not both')
@@ -185,7 +190,7 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
 
         for date in self.__date_range:
             if date > self.pricing_date:
-                scenario = MarketDataScenario(RollFwd(date=date, realise_fwd=self._roll_to_fwds))
+                scenario = MarketDataScenario(RollFwd(date=date, realise_fwd=self._roll_to_fwds, name=self.name))
                 risk_key = RiskKey(provider, date, base_market, parameters, scenario, risk_measure)
                 futures.append(self._calc(instrument, risk_key))
             else:

@@ -1,1 +1,1 @@
-[[[[{"$type": "Risk", "currency": null, "unit": null, "dataQuality": null, "dataQualityMessages": null, "marketUpdateTime": null, "val": null, "children": {"Legs_0": 1.112625, "Legs_1": 1.3009500000000003}}]]]]
+[[[[{"$type": "Risk", "val": null, "children": {"Legs_0": 1.112625, "Legs_1": 1.3009500000000003}, "calculationTime": 10164, "queueingTime": 44}]]]]

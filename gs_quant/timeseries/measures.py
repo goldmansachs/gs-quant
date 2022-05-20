@@ -18,7 +18,6 @@ from numbers import Real
 import cachetools.func
 import inflection
 import numpy as np
-import pandas as pd
 from dateutil import tz
 from pandas import Series, DatetimeIndex
 from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
@@ -28,7 +27,6 @@ from pydash import chunk, flatten
 from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.api.gs.data import QueryType
 from gs_quant.api.gs.indices import GsIndexApi
-from gs_quant.data import Dataset
 from gs_quant.data.core import DataContext
 from gs_quant.data.fields import Fields
 from gs_quant.data.log import log_debug, log_warning
@@ -38,7 +36,14 @@ from gs_quant.markets.securities import *
 from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, AssetType as SecAssetType
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.timeseries import volatility, Window, Returns, sqrt, Basket, RelativeDate
-from gs_quant.timeseries.helper import log_return, plot_measure, _to_offset, check_forward_looking, get_df_with_retries
+from gs_quant.timeseries.helper import (
+    log_return,
+    plot_measure,
+    _to_offset,
+    check_forward_looking,
+    get_df_with_retries,
+    get_dataset_data_with_retries
+)
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
 
 GENERIC_DATE = Union[datetime.date, str]
@@ -3668,7 +3673,9 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = get_historical_and_last_for_measure([asset.get_marquee_id()], QueryType.SPOT, {}, source=source)
-    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(volatility(df['spot'], w, returns_type))
+    spot = df['spot']
+    spot = spot[~spot.index.duplicated(keep='first')]
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(volatility(spot, w, returns_type))
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -4138,7 +4145,7 @@ def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: 
 def get_last_for_measure(asset_ids: List[str], query_type, where, *, source: str = None,
                          request_id: Optional[str] = None):
     now = datetime.date.today()
-    delta = datetime.timedelta(days=1)
+    delta = datetime.timedelta(days=2)
     with DataContext(now - delta, now + delta):
         q_l = GsDataApi.build_market_data_query(asset_ids, query_type, where=where,
                                                 source=source, real_time=True, measure='Last')
@@ -4158,7 +4165,7 @@ def get_last_for_measure(asset_ids: List[str], query_type, where, *, source: str
     return None
 
 
-def merge_dataframes(dataframes: List[pd.DataFrame], merge_dataset_ids=True):
+def merge_dataframes(dataframes: List[pd.DataFrame]):
     if dataframes is None:
         return pd.DataFrame()
     result = pd.concat(dataframes)
@@ -4301,7 +4308,7 @@ def thematic_model_exposure(asset: Asset, basket_identifier: str, notional: int 
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
-                                     AssetType.ETF), [QueryType.THEMATIC_MODEL_BETA])
+                                     AssetType.ETF, AssetType.Single_Stock), [QueryType.THEMATIC_MODEL_BETA])
 def thematic_model_beta(asset: Asset, basket_identifier: str, *, source: str = None,
                         real_time: bool = False) -> pd.Series:
     """
@@ -4316,7 +4323,11 @@ def thematic_model_beta(asset: Asset, basket_identifier: str, *, source: str = N
     if real_time:
         raise MqValueError('Use daily frequency instead of intraday.')
     start, end = DataContext.current.start_date, DataContext.current.end_date
-    thematic_betas = PositionedEntity.get_thematic_beta(asset, basket_identifier, start, end)
+
+    if asset.get_type().value == AssetType.Single_Stock.value:
+        thematic_betas = Stock.get_thematic_beta(asset, basket_identifier, start, end)
+    else:
+        thematic_betas = PositionedEntity.get_thematic_beta(asset, basket_identifier, start, end)
     return _extract_series_from_df(thematic_betas, QueryType.THEMATIC_BETA)
 
 
@@ -4354,7 +4365,10 @@ def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.R
         underliers = list(data[data['assetClassificationsGicsSector'] == sector.value]['id'].drop_duplicates().values)
 
     ds = Dataset(Dataset.GS.RETAIL_FLOW_DAILY_V2_PREMIUM.value)
-    retail_data = ds.get_data(start=start, end=end, underlyingSourceCategory=data_source, assetId=underliers)
+
+    retail_data = get_dataset_data_with_retries(ds, start=start, end=end, underlyingSourceCategory=data_source,
+                                                assetId=underliers)
+
     if 'Pct' in measure.value:
         measures_to_sum = [measure.value.replace('Pct', '')]
         if 'Shares' in measure.value:

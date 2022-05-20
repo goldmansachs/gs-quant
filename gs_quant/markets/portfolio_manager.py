@@ -260,9 +260,13 @@ class PortfolioManager(PositionedEntity):
         """
 
         performance_report = self.get_performance_report()
+
         constituents_df = performance_report.get_portfolio_constituents(fields=['netExposure'],
                                                                         start_date=date,
                                                                         end_date=date)
+        if constituents_df.empty:
+            raise MqValueError(f"Macro Exposure can't be calculated as the portfolio constituents could not be found on"
+                               f" the requested date {date}. Make sure the portfolio performance report is up-to-date.")
         constituents_df = constituents_df.dropna()
         constituents_df = constituents_df.loc[:, ["assetId", "netExposure"]]
         constituents_df = constituents_df.set_index("assetId")
@@ -272,7 +276,7 @@ class PortfolioManager(PositionedEntity):
                                                              as_of=dt.datetime(date.year, date.month, date.day),
                                                              limit=1000,
                                                              id=constituents_df.index.tolist())
-        df_assets_data = pd.DataFrame.from_records(assets_data).set_index("id").\
+        df_assets_data = pd.DataFrame.from_records(assets_data).set_index("id"). \
             fillna(value={"name": "Name not available"})
         df_assets_data.index.name = "Asset Identifier"
 
@@ -288,8 +292,12 @@ class PortfolioManager(PositionedEntity):
                                                                               end_date=date,
                                                                               assets=DataAssetsRequest(
                                                                                   UniverseIdentifierRequest.gsid,
-                                                                                  universe)
-                                                                              ).reset_index(level=1, drop=True)
+                                                                                  universe))
+        if universe_sensitivities_df.empty:
+            print(f"None of the assets in the portfolio are exposed to the macro factors in model "
+                  f"{macro_risk_model.id} ")
+            return pd.DataFrame()
+        universe_sensitivities_df = universe_sensitivities_df.reset_index(level=1, drop=True)
         universe_sensitivities_df.index.name = 'Asset Identifier'
         universe_sensitivities_df = universe_sensitivities_df.sort_index()
 
@@ -307,7 +315,7 @@ class PortfolioManager(PositionedEntity):
 
         factor_category_dict = {}
         if group_by_factor_category:
-            factor_category_dict = {f.name: f.category for f in factors_in_model} if factors_by_name else\
+            factor_category_dict = {f.name: f.category for f in factors_in_model} if factors_by_name else \
                 {f.id: f.category for f in factors_in_model}
 
         exposure_df = build_macro_portfolio_exposure_df(

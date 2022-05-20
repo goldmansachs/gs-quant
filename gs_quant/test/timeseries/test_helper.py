@@ -13,17 +13,23 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from enum import IntEnum
 import datetime
+from enum import IntEnum
+from unittest.mock import Mock
+
 import pandas as pd
 import pytest
-from testfixtures import Replace
-from gs_quant.data import DataContext
+from pandas._testing import assert_frame_equal
+from testfixtures import Replace, Replacer
 
 import gs_quant.timeseries as ts
-from gs_quant.errors import MqError
+from gs_quant.data import DataContext, Dataset
+from gs_quant.errors import MqError, MqRequestError
+from unittest.mock import MagicMock
+from gs_quant.session import GsSession
+from gs_quant.test.api.test_thread_manager import NullContextManager
 from gs_quant.timeseries.helper import _create_int_enum, plot_function, plot_measure, plot_method, normalize_window, \
-    Window, apply_ramp, check_forward_looking, get_df_with_retries
+    Window, apply_ramp, check_forward_looking, get_df_with_retries, get_dataset_data_with_retries
 
 # TODO test the instance of IntEnum when we have any.
 
@@ -50,7 +56,7 @@ def pf():
     pass
 
 
-@plot_measure(('xyz', ), asset_type=('abc',))
+@plot_measure(('xyz',), asset_type=('abc',))
 def pm():
     pass
 
@@ -229,6 +235,33 @@ def test_forward_looking():
         assert check_forward_looking(today, source) is None
         with pytest.raises(MqError):
             check_forward_looking(None, source)
+
+
+def test_get_dataset_data_with_retries():
+    replace = Replacer()
+    GsSession.current = MagicMock(return_calue=NullContextManager())
+    mock = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+    mock.side_effect = [
+        MqRequestError(400, message='Number of rows returned by your query is more than maximum allowed'),
+        pd.DataFrame(),
+        pd.DataFrame()
+    ]
+
+    dataset = Dataset(Dataset.TR.TREOD)
+    data = get_dataset_data_with_retries(dataset, start=datetime.date(2000, 1, 2), end=datetime.date(2019, 1, 9),
+                                         assetId='MA4B66MW5E27U8P32SB')
+
+    assert_frame_equal(data, pd.DataFrame())
+
+    mock.side_effect = [
+        MqRequestError(400, message='Some other error')
+    ]
+
+    with pytest.raises(MqRequestError):
+        get_dataset_data_with_retries(dataset, start=datetime.date(2000, 1, 2), end=datetime.date(2019, 1, 9),
+                                      assetId='MA4B66MW5E27U8P32SB')
+
+    replace.restore()
 
 
 if __name__ == "__main__":

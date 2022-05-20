@@ -90,7 +90,7 @@ class Portfolio(PriceableImpl):
                 priceable_name = get_name(priceable, idx)
                 if isinstance(priceable, Portfolio):
                     stack.insert(0, (path, priceable))
-                    temp_records.append({**current_record, f'portfolio_name_{len(path)-1}': priceable_name})
+                    temp_records.append({**current_record, f'portfolio_name_{len(path) - 1}': priceable_name})
                 else:
                     temp_records.append({**current_record, 'instrument_name': priceable_name})
             records.extend(temp_records)
@@ -575,9 +575,10 @@ class Portfolio(PriceableImpl):
             return instruments
         return self.__priceables if return_priceables else self.all_instruments
 
-    def clone(self):
-        portfolio_clone = Portfolio([p if isinstance(p, InstrumentBase) else p.clone() for p in self.__priceables],
-                                    name=self.name)
+    def clone(self, clone_instruments: bool = False):
+        portfolio_clone = Portfolio(
+            [p.clone(clone_instruments) if isinstance(p, Portfolio) else p.clone() if clone_instruments else p for p in
+             self.__priceables], name=self.name)
         portfolio_clone.__id = self.__id
         portfolio_clone.__quote_id = self.__quote_id
         return portfolio_clone

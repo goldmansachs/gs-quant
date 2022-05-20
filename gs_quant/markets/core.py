@@ -25,18 +25,19 @@ from inspect import signature
 from itertools import zip_longest
 from typing import Optional, Union
 
-from tqdm import tqdm
-
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
 from gs_quant.common import PricingLocation, RiskMeasure
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset, today
 from gs_quant.risk import CompositeScenario, DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
     StringWithInfo
-from gs_quant.risk.results import PricingFuture
+from gs_quant.risk.result_handlers import extract_val_from_dataframe_with_info
+from gs_quant.risk.results import PricingFuture, MultipleScenarioFuture
 from gs_quant.session import GsSession
-from gs_quant.target.common import PricingDateAndMarketDataAsOf
+from gs_quant.target.common import PricingDateAndMarketDataAsOf, MultiScenario
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
+from tqdm import tqdm
+
 from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket
 
 _logger = logging.getLogger(__name__)
@@ -81,6 +82,7 @@ class PricingContext(ContextBaseWithDefault):
                  is_batch: bool = False,
                  use_cache: bool = False,
                  visible_to_gs: Optional[bool] = None,
+                 request_priority: Optional[int] = None,
                  csa_term: Optional[str] = None,
                  timeout: Optional[int] = None,
                  market: Optional[Market] = None,
@@ -98,6 +100,7 @@ class PricingContext(ContextBaseWithDefault):
             It can be used with is_async=True|False (defaults to False)
         :param use_cache: store results in the pricing cache (defaults to False)
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
+        :param request_priority: the priority of risk requests
         :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
         :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG' (defaults to LDN)
         :param timeout: the timeout for batch operations
@@ -183,12 +186,14 @@ class PricingContext(ContextBaseWithDefault):
         self.__timeout = timeout
         self.__use_cache = use_cache
         self.__visible_to_gs = visible_to_gs
+        self.__request_priority = request_priority
         self.__market_data_location = market_data_location
         self.__market = market or CloseMarket(
             date=close_market_date(self.__market_data_location, self.__pricing_date) if pricing_date else None,
             location=self.__market_data_location if market_data_location else None)
         self.__pending = {}
         self.__show_progress = show_progress
+        self._max_per_batch = 1000
         self._max_concurrent = 1000
         self.__use_server_cache = use_server_cache
         self._group_by_date = True
@@ -258,10 +263,10 @@ class PricingContext(ContextBaseWithDefault):
 
                 for (params, scenario, dates_markets, risk_measures), instruments in grouped_requests.items():
                     for insts_chunk in [tuple(filter(None, i)) for i in
-                                        zip_longest(*[iter(instruments)] * self._max_concurrent)]:
+                                        zip_longest(*[iter(instruments)] * self._max_per_batch)]:
                         for dates_chunk in [tuple(filter(None, i)) for i in
                                             zip_longest(*[iter(dates_markets)] * (
-                                                    1 if self._group_by_date else self._max_concurrent))]:
+                                                    1 if self._group_by_date else self._max_per_batch))]:
                             requests.append(RiskRequest(
                                 tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity,
                                                    instrument_name=i.name) for i in insts_chunk),
@@ -273,7 +278,8 @@ class PricingContext(ContextBaseWithDefault):
                                     PricingDateAndMarketDataAsOf(pricing_date=d, market=m)
                                     for d, m in dates_chunk),
                                 request_visible_to_gs=request_visible_to_gs,
-                                use_cache=self.__use_server_cache
+                                use_cache=self.__use_server_cache,
+                                priority=self.__request_priority
                             ))
 
                 requests_for_provider[provider] = requests
@@ -381,10 +387,22 @@ class PricingContext(ContextBaseWithDefault):
 
         future = pending.get((risk_key, instrument))
 
+        multi_scenario = [i for i in Scenario.path if isinstance(i, MultiScenario)]
+
+        def handle_multi_scen_future(result):
+            if isinstance(result.result(), DataFrameWithInfo):
+                # so that we convert the float64 values from dataframe to Floatwithinfos
+                values = extract_val_from_dataframe_with_info(result.result())
+                # replace simplevaltable with futures
+                result.set_result(
+                    MultipleScenarioFuture(instrument, {multi_scenario[0].scenarios[v_idx]: PricingFuture(v)
+                                                        for v_idx, v in enumerate(values)}))
+
         if future is None:
             future = PricingFuture()
             cached_result = PricingCache.get(risk_key, instrument) if self.use_cache else None
-
+            if len(multi_scenario):
+                future.add_done_callback(handle_multi_scen_future)
             if cached_result is not None:
                 future.set_result(cached_result)
             else:

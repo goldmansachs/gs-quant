@@ -121,7 +121,8 @@ class GsReportApi:
                                        factor_categories: List[str] = None,
                                        currency: Currency = None,
                                        start_date: dt.date = None,
-                                       end_date: dt.date = None) -> dict:
+                                       end_date: dt.date = None,
+                                       unit: str = None) -> dict:
         url = f'/risk/factors/reports/{risk_report_id}/results?'
         if view is not None:
             url += f'&view={view}'
@@ -136,6 +137,8 @@ class GsReportApi:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
         if end_date is not None:
             url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
+        if unit is not None:
+            url += f'&unit={unit}'
 
         return GsSession.current._get(url)
 
@@ -147,12 +150,13 @@ class GsReportApi:
                                     factor_category: str = None,
                                     currency: Currency = None,
                                     start_date: dt.date = None,
-                                    end_date: dt.date = None) -> dict:
+                                    end_date: dt.date = None,
+                                    unit: str = None) -> dict:
 
         query_string = urllib.parse.urlencode(
             dict(filter(lambda item: item[1] is not None,
                         dict(view=view, factor=factor, factorCategory=factor_category,
-                             currency=currency, startDate=start_date, endDate=end_date).items())))
+                             currency=currency, startDate=start_date, endDate=end_date, unit=unit).items())))
 
         url = f'/risk/factors/reports/{risk_report_id}/views?{query_string}'
         return GsSession.current._get(url)

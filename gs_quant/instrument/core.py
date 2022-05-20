@@ -21,23 +21,21 @@ from copy import deepcopy
 from typing import Iterable, Optional, Tuple, Union
 
 from dataclasses_json import global_config
-
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
-from gs_quant.base import get_enum_value, Base, InstrumentBase, Priceable
+from gs_quant.base import get_enum_value, InstrumentBase, Priceable, Scenario
 from gs_quant.common import AssetClass, AssetType, XRef, RiskMeasure
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, \
     DEPRECATED_MEASURES
 from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, PricingFuture
-from gs_quant.session import GsSession
+from gs_quant.target.common import MultiScenario
 
 _logger = logging.getLogger(__name__)
 
 
 class Instrument(PriceableImpl, InstrumentBase):
-
     PROVIDER = GsRiskApi
     __instrument_mappings = {}
 
@@ -96,6 +94,9 @@ class Instrument(PriceableImpl, InstrumentBase):
 
         if in_place and is_historical:
             raise RuntimeError('Cannot resolve in place under a HistoricalPricingContext')
+
+        if in_place and len([i for i in Scenario.path if isinstance(i, MultiScenario)]):
+            raise RuntimeError('Cannot resolve in place under a MultiScenario Context')
 
         return self.calc(ResolvedInstrumentValues, fn=handle_result)
 

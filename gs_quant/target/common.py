@@ -5400,6 +5400,7 @@ class CurveScenario(Scenario):
     pivot_point: Optional[float] = field(default=None, metadata=field_metadata)
     tenor_start: Optional[float] = field(default=None, metadata=field_metadata)
     tenor_end: Optional[float] = field(default=None, metadata=field_metadata)
+    shock_type: Optional[MarketDataShockType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5609,6 +5610,15 @@ class DataSetFieldMap(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class CompositeScenario(Base):
     scenario_type: Optional[str] = field(default='CompositeScenario', metadata=field_metadata)
+    scenarios: Optional[Tuple[Scenario, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class MultiScenario(Scenario):
+    scenario_type: Optional[str] = field(default='MultiScenario', metadata=field_metadata)
     scenarios: Optional[Tuple[Scenario, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 

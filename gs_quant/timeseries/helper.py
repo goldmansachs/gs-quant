@@ -13,21 +13,22 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
+import datetime as dt
 import inspect
 import logging
 import os
 from enum import Enum, IntEnum
-from functools import wraps
+from functools import wraps, partial
 from typing import Optional, Union, List, Iterable
 
 import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
-from gs_quant.data import DataContext
+from gs_quant.api.utils import ThreadPoolManager
+from gs_quant.data import DataContext, Dataset
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entity import EntityType
-from gs_quant.errors import MqValueError
+from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.timeseries.measure_registry import register_measure
 
 ENABLE_DISPLAY_NAME = 'GSQ_ENABLE_MEASURE_DISPLAY_NAME'
@@ -168,7 +169,7 @@ def plot_session_function(fn):
 def check_forward_looking(pricing_date, source, name="function"):
     if pricing_date is not None or source != 'plottool':
         return
-    if DataContext.current.end_date <= datetime.date.today():
+    if DataContext.current.end_date <= dt.date.today():
         msg = (f'{name}() requires a forward looking date range e.g. [0d, 3y]. '
                'Please update the date range via the date picker.')
         raise MqValueError(msg)
@@ -201,6 +202,7 @@ def plot_measure(asset_class: tuple, asset_type: Optional[tuple] = None,
             return multi_measure
         else:
             return fn
+
     return decorator
 
 
@@ -278,3 +280,27 @@ def get_df_with_retries(fetcher, start_date, end_date, exchange, retries=1):
         start_date = end_date
         retries -= 1
     return result
+
+
+def get_dataset_data_with_retries(dataset: Dataset,
+                                  *,
+                                  start: dt.date,
+                                  end: dt.date,
+                                  count: int = 0,
+                                  max_retries: int = 5,
+                                  **kwargs) -> pd.DataFrame:
+    try:
+        data = dataset.get_data(start=start, end=end, **kwargs)
+    except MqRequestError as e:
+        if 'Number of rows returned by your query is more than maximum allowed' in e.message and count < max_retries:
+            mid = start + (end - start) / 2
+            count += 1
+            first_half = partial(get_dataset_data_with_retries, dataset, start=start, end=mid, count=count, **kwargs)
+            mid = mid + dt.timedelta(days=1)
+            second_half = partial(get_dataset_data_with_retries, dataset, start=mid, end=end, count=count, **kwargs)
+            results = ThreadPoolManager.run_async([first_half, second_half])
+            first_half_results, second_half_results = results[0], results[1]
+            data = pd.concat([first_half_results, second_half_results]).sort_index()
+        else:
+            raise e
+    return data

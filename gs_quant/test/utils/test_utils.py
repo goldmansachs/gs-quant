@@ -26,6 +26,7 @@ from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
 from gs_quant.session import Environment, GsSession
+from gs_quant.target.common import CompositeScenario
 
 
 def _remove_unwanted(json_text):
@@ -90,6 +91,9 @@ def get_risk_request_id(requests):
     """
     identifier = str(len(requests))
     for request in requests:
+        for pos in request.positions:
+            if pos.instrument.name is None:
+                raise ValueError('Positions must have names to be mocked')
         identifier += '_'
         identifier += '-'.join([pos.instrument.name for pos in request.positions])
         identifier += '-'.join([r.__repr__() for r in request.measures])
@@ -97,17 +101,15 @@ def get_risk_request_id(requests):
         today = PricingContext().pricing_date.strftime('%Y%b%d')
         identifier += 'today' if date == today else date
         if request.scenario is not None:
-            scenario_identifier = []
-            for k, v in request.scenario.scenario.as_dict().items():
-                if k != 'shocks':
-                    scenario_identifier.append(str(k) + "=" + str(v))
-                else:
-                    shock_value = 'shock_value' + "=" + str(v[0].shock.value)
-                    pattern = v[0].pattern
-                    shock_pattern = 'shock_pattern' + "=" + '-'.join(
-                        [str(m) for m in [pattern.mkt_type, pattern.mkt_asset, pattern.mkt_class]])
-                    scenario_identifier.append(shock_value + "+" + shock_pattern)
-            identifier += '+'.join(sorted(scenario_identifier))
+            if isinstance(request.scenario.scenario, CompositeScenario):
+                underlying_scenarios = request.scenario.scenario.scenarios
+                if any([scen.name is None for scen in underlying_scenarios]):
+                    raise RuntimeError('Please provide unique names for your scenarios for testing')
+                identifier += '+'.join(sorted([r.name for r in underlying_scenarios]))
+            else:
+                if request.scenario.scenario.name is None:
+                    raise RuntimeError('Please provide unique names for your scenarios for testing')
+                identifier += request.scenario.scenario.name
     return hashlib.md5(identifier.encode('utf-8')).hexdigest()
 
 
@@ -118,6 +120,7 @@ def test_all_cache_files_used():
     assert [] == saved_files, 'Did you accidentally commit with save_files=True?!'
 
     unused_files = MockCalc.get_unused_files()
+    print(unused_files)
     assert unused_files == [], 'Cleanup your unused test files!'
 
 
@@ -155,6 +158,11 @@ class MockCalc:
         # and switch to mock_calc
         def get_json(*i_args, **i_kwargs):
             this_json = gs_risk_api_exec(*i_args, **i_kwargs)
+            # Post process the json a bit to remove timing info that makes spurious diffs
+            for d in [d for a in this_json for b in a for c in b for d in c]:
+                for key, val in list(d.items()):
+                    if val is None or key in ['queueingTime', 'calculationTime']:
+                        del d[key]
             return this_json
 
         result_json = get_json(*args, **kwargs)
