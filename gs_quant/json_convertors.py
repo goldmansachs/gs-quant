@@ -97,16 +97,11 @@ def decode_float_or_str(value: Optional[Union[float, int, str]]) -> Optional[Uni
     elif isinstance(value, int):
         return float(value)
     elif isinstance(value, str):
-        if value.endswith('%'):
-            return float(value[:-1]) / 100
-        elif value.endswith('bp'):
-            return float(value[:-2]) / 10000
-        else:
-            try:
-                return float(value)
-            except ValueError:
-                # Assume it's a strike or similar, e.g. 'ATM'
-                return value
+        try:
+            return float(value)
+        except ValueError:
+            # Assume it's a strike or similar, e.g. 'ATM'
+            return value
 
     raise TypeError(f'Cannot convert {value} to float')
 

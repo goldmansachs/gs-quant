@@ -24,8 +24,8 @@ from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMark
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import MultiScenario
 from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel, PnlExplain
-from gs_quant.risk.core import aggregate_risk
-from gs_quant.risk.results import MultipleScenarioResult, PricingFuture, MultipleScenarioFuture
+from gs_quant.risk.core import aggregate_risk, SeriesWithInfo
+from gs_quant.risk.results import MultipleScenarioResult, PricingFuture, HistoricalPricingFuture
 from gs_quant.target.common import MarketDataPattern
 from gs_quant.test.utils.test_utils import MockCalc
 
@@ -34,10 +34,10 @@ curvescen1 = CurveScenario(market_data_pattern=MarketDataPattern('IR', 'USD'), p
 curvescen2 = CurveScenario(market_data_pattern=MarketDataPattern('IR', 'USD'), curve_shift=1, tenor_start=5,
                            tenor_end=30, name='curve shift1bp')
 rollfwd = RollFwd(date=date(2020, 11, 3), name='roll fwd scenario')
+multiscenario = MultiScenario(scenarios=tuple((curvescen1, curvescen2)), name='multiscenario')
 
 
 def get_attributes(p, risks, ctx='PricingCtx1', resolve=False, no_frame=False):
-    multiscenario = MultiScenario(scenarios=tuple((curvescen1, curvescen2)), name='multiscenario')
     contexts = {'Multiple': HistoricalPricingContext(date(2020, 1, 14), date(2020, 1, 15), market_data_location='LDN'),
                 'PricingCtx1': PricingContext(date(2020, 1, 14), market_data_location='LDN'),
                 'Multiple2': HistoricalPricingContext(date(2020, 1, 16), date(2020, 1, 17), market_data_location='LDN'),
@@ -158,7 +158,7 @@ def test_multi_scenario(mocker):
     # test slicing
     swap_res = r1[swap_3]
     swap_res_idx = r1[0]
-    assert isinstance(swap_res, MultipleScenarioFuture)
+    assert isinstance(swap_res, MultipleScenarioResult)
     assert swap_res == swap_res_idx
 
     scen_res = r4[curvescen1]
@@ -168,8 +168,28 @@ def test_multi_scenario(mocker):
     futures = r1.futures
     assert len(futures) == 2
     assert isinstance(futures[0], PricingFuture)
-    assert isinstance(futures[0].result(), MultipleScenarioFuture)
-    assert isinstance(futures[0].result().result(), MultipleScenarioResult)
+    assert isinstance(futures[0].result(), MultipleScenarioResult)
+
+
+def test_historical_multi_scenario(mocker):
+    with MockCalc(mocker):
+        with HistoricalPricingContext(date(2020, 1, 14), date(2020, 1, 15), market_data_location='LDN'):
+            with multiscenario:
+                res = Portfolio(swap_3).price()
+
+    default_pivot_table_test(res, with_dates='dated')
+
+    # test slicing
+    date_res = res[date(2020, 1, 14)]
+    assert all([isinstance(r, float) for r in date_res.futures[0].result().values()])
+
+    scen_slice_res = res[curvescen2]
+    assert all([isinstance(r, SeriesWithInfo) for r in scen_slice_res.futures[0].result().values()])
+
+    # test futures
+    futures = res.futures
+    assert isinstance(futures[0], HistoricalPricingFuture)
+    assert isinstance(futures[0].result(), MultipleScenarioResult)
 
 
 def test_composite_multi_scenario(mocker):
