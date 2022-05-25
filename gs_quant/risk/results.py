@@ -51,6 +51,8 @@ def get_default_pivots(cls: str, has_dates: bool, multi_measures: bool,
             [False, False, False, False, ('value', portfolio_names, 'instrument_name')],
             [False, None, None, False, ('value', port_and_inst_names, 'risk_measure')],
 
+            [True, True, None, True, ('value', 'dates', port_and_inst_names + ['risk_measure', 'scenario'])],
+            [True, False, None, True, ('value', 'dates', port_and_inst_names + ['scenario'])],
             [False, True, None, True, ('value', port_and_inst_names, ['risk_measure', 'scenario'])],
             [False, False, None, True, ('value', port_and_inst_names, 'scenario')],
         ]
@@ -359,7 +361,7 @@ class MultipleRiskMeasureResult(dict):
     @property
     def _multi_scen_key(self) -> Iterable[Scenario]:
         for value in self.values():
-            if isinstance(value, (MultipleScenarioFuture, MultipleScenarioResult)):
+            if isinstance(value, MultipleScenarioResult):
                 return tuple(value.scenarios)
         return tuple()
 
@@ -381,10 +383,9 @@ class MultipleRiskMeasureResult(dict):
         return pivot_to_frame(df, values, index, columns, aggfunc)
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
-        results = {rm: self[rm].result() if self._multi_scen_key else self[rm] for rm in self}
         return list(chain.from_iterable(
-            [dict(item, **{'risk_measure': rm}) for item in res._to_records(extra_dict, display_options)] for rm, res in
-            results.items()))
+            [dict(item, **{'risk_measure': rm}) for item in self[rm]._to_records(extra_dict, display_options)] for rm in
+            self))
 
 
 class MultipleRiskMeasureFuture(CompositeResultFuture):
@@ -415,11 +416,17 @@ class MultipleScenarioResult(dict):
         self.__instrument = instrument
 
     def __getitem__(self, item):
+        if is_instance_or_iterable(item, dt.date):
+            if all(isinstance(v, (DataFrameWithInfo, SeriesWithInfo)) for v in self.values()):
+                return MultipleScenarioResult(self.__instrument,
+                                              ((k, _value_for_date(v, item)) for k, v in self.items()))
+            else:
+                raise ValueError('Can only index by date on historical results')
         return super().__getitem__(item)
 
     def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique,
                  display_options: DisplayOptions = None):
-        df = pd.DataFrame.from_records(self.__scenarios_to_futures)
+        df = pd.DataFrame.from_records(self._to_records({}, display_options=display_options))
         if values is None and index is None and columns is None:
             return df
         elif values == 'default' and index == 'default' and columns == 'default':
@@ -443,27 +450,8 @@ class MultipleScenarioResult(dict):
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
         return list(chain.from_iterable(
-            [dict(item, **{'scenario': scen}) for item in self[scen].result()._to_records(extra_dict, display_options)]
+            [dict(item, **{'scenario': scen}) for item in self[scen]._to_records(extra_dict, display_options)]
             for scen in self))
-
-
-class MultipleScenarioFuture(CompositeResultFuture):
-    def __init__(self, instrument: InstrumentBase, scenarios_to_futures: Mapping[Scenario, PricingFuture]):
-        self.__scenarios_to_futures = scenarios_to_futures
-        self.__instrument = instrument
-        self.__scenarios = scenarios_to_futures.keys()
-        super().__init__(scenarios_to_futures.values())
-
-    @property
-    def scenarios(self):
-        return self.__scenarios
-
-    @property
-    def scenarios_to_futures(self):
-        return self.__scenarios_to_futures
-
-    def _set_result(self):
-        self.set_result(MultipleScenarioResult(self.__instrument, zip(self.__scenarios, self.futures)))
 
 
 class HistoricalPricingFuture(CompositeResultFuture):
@@ -476,9 +464,14 @@ class HistoricalPricingFuture(CompositeResultFuture):
             _logger.error(f'Historical pricing failed: {results[0]}')
             self.set_result(results[0])
         else:
-            result = MultipleRiskMeasureResult(base.instrument,
-                                               {k: base[k].compose(r[k] for r in results) for k in base.keys()}) \
-                if isinstance(base, MultipleRiskMeasureResult) else base.compose(results)
+            if isinstance(base, MultipleRiskMeasureResult):
+                result = MultipleRiskMeasureResult(base.instrument,
+                                                   {k: base[k].compose(r[k] for r in results) for k in base.keys()})
+            elif isinstance(base, MultipleScenarioResult):
+                result = MultipleScenarioResult(base.instrument,
+                                                {k: base[k].compose(r[k] for r in results) for k in base.keys()})
+            else:
+                result = base.compose(results)
             self.set_result(result)
 
 
@@ -579,17 +572,16 @@ class PortfolioRiskResult(CompositeResultFuture):
                 for idx, priceable in enumerate(self.portfolio):
                     result = self.__result(PortfolioPath(idx))
                     if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
-                        futures.append(PricingFuture(result[item]))
-                    elif isinstance(result, MultipleScenarioFuture):
+                        futures.append(result[item])
+                    elif isinstance(result, MultipleScenarioResult):
                         # scenario = tuple(item) if isinstance(item, Iterable) else (item,)
-                        futures.append(MultipleScenarioFuture(priceable, _value_for_measure_or_scen(result.result(),
-                                                                                                    item)))
+                        futures.append(PricingFuture(_value_for_measure_or_scen(result, item)))
 
                 return PortfolioRiskResult(self.__portfolio, self.risk_measures, futures)
         elif is_instance_or_iterable(item, dt.date):
             for idx, _ in enumerate(self.portfolio):
                 result = self.__result(PortfolioPath(idx))
-                if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
+                if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult, MultipleScenarioResult)):
                     futures.append(PricingFuture(result[item]))
                 elif isinstance(result, (DataFrameWithInfo, SeriesWithInfo)):
                     futures.append(PricingFuture(_value_for_date(result, item)))
@@ -731,7 +723,7 @@ class PortfolioRiskResult(CompositeResultFuture):
     @property
     def _multi_scen_key(self) -> Iterable[Scenario]:
         for result in self.__results():
-            if isinstance(result, (MultipleScenarioFuture, MultipleScenarioResult)):
+            if isinstance(result, MultipleScenarioResult):
                 return tuple(result.scenarios)
             elif isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
                 return result._multi_scen_key
@@ -760,8 +752,6 @@ class PortfolioRiskResult(CompositeResultFuture):
                 if isinstance(f.result(), ResultInfo) or isinstance(f.result(), MultipleRiskMeasureResult) \
                         or isinstance(f.result(), MultipleScenarioResult):
                     temp.append(f.result())
-                elif isinstance(f.result(), MultipleScenarioFuture):
-                    temp.append(f.result().result())
                 else:
                     temp.extend(get_records(f.result()))
             return temp

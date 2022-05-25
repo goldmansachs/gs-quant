@@ -32,7 +32,7 @@ from gs_quant.datetime.date import business_day_offset, today
 from gs_quant.risk import CompositeScenario, DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
     StringWithInfo
 from gs_quant.risk.result_handlers import extract_val_from_dataframe_with_info
-from gs_quant.risk.results import PricingFuture, MultipleScenarioFuture
+from gs_quant.risk.results import PricingFuture, MultipleScenarioResult
 from gs_quant.session import GsSession
 from gs_quant.target.common import PricingDateAndMarketDataAsOf, MultiScenario
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
@@ -395,7 +395,7 @@ class PricingContext(ContextBaseWithDefault):
                 values = extract_val_from_dataframe_with_info(result.result())
                 # replace simplevaltable with futures
                 result.set_result(
-                    MultipleScenarioFuture(instrument, {multi_scenario[0].scenarios[v_idx]: PricingFuture(v)
+                    MultipleScenarioResult(instrument, {multi_scenario[0].scenarios[v_idx]: v
                                                         for v_idx, v in enumerate(values)}))
 
         if future is None:

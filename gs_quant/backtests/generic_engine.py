@@ -26,6 +26,7 @@ from gs_quant.instrument import Instrument
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets import PricingContext, HistoricalPricingContext
 from gs_quant.risk import Price
+from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.common import ParameterisedRiskMeasure
 from functools import reduce
 from datetime import date
@@ -437,10 +438,9 @@ class GenericEngine(BacktestBaseEngine):
             leaves_by_date = {}
             for day, portfolio in backtest.portfolio_dict.items():
                 results_for_date = backtest.results[day]
-                if len(results_for_date) == 0:
-                    continue
 
-                trades_for_date = list(results_for_date.to_frame().index)
+                trades_for_date = results_for_date.portfolio if isinstance(results_for_date, PortfolioRiskResult) \
+                    else []
                 leaves = []
                 for leaf in portfolio:
                     if leaf.name not in trades_for_date:
