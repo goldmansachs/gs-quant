@@ -24,7 +24,7 @@ from pandas import DataFrame
 class MarketDataShockBasedScenario(__MarketDataShockBasedScenario):
 
     def __init__(self, shocks: Mapping[MarketDataPattern, MarketDataShock], name: str):
-        super().__init__(tuple(MarketDataPatternAndShock(p, s) for p, s in shocks.items()), name)
+        super().__init__(tuple(MarketDataPatternAndShock(p, s) for p, s in shocks.items()), name=name)
 
 
 class MarketDataVolShockScenario(__MarketDataVolShockScenario):
