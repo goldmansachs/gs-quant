@@ -31,6 +31,8 @@ from gs_quant.target.backtests import BacktestResult as APIBacktestResult, Backt
     VolatilityFlowBacktestParameters, BacktestTradingQuantityType, BacktestSignalSeriesItem
 import pandas as pd
 
+from gs_quant.target.common import BuySell
+
 
 def set_session():
     from gs_quant.session import OAuth2Session
@@ -63,16 +65,23 @@ def test_eq_vol_engine_result(mocker):
     start_date = dt.date(2019, 2, 18)
     end_date = dt.date(2019, 2, 20)
 
-    option = EqOption('.STOXX50E', expirationDate='3m', strikePrice='ATM', optionType=OptionType.Call,
-                      optionStyle=OptionStyle.European)
+    option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                      option_style=OptionStyle.European)
+
+    long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+    short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
     action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m')
     trigger = PeriodicTrigger(
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
     hedgetrigger = PeriodicTrigger(
-        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='B'),
-        actions=HedgeAction(EqDelta, priceables=option, trade_duration='B'))
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedgetrigger])
 
     # 2. setup mock api response
@@ -102,16 +111,23 @@ def test_engine_mapping_basic(mocker):
     start_date = dt.date(2019, 2, 18)
     end_date = dt.date(2019, 2, 20)
 
-    option = EqOption('.STOXX50E', expirationDate='3m', strikePrice='ATM', optionType=OptionType.Call,
-                      optionStyle=OptionStyle.European)
+    option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                      option_style=OptionStyle.European)
+
+    long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+    short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
     action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m')
     trigger = PeriodicTrigger(
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
     hedgetrigger = PeriodicTrigger(
-        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='B'),
-        actions=HedgeAction(EqDelta, priceables=option, trade_duration='B'))
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedgetrigger])
 
     # 2. setup mock api response
@@ -163,8 +179,15 @@ def test_engine_mapping_trade_quantity(mocker):
     start_date = dt.date(2019, 2, 18)
     end_date = dt.date(2019, 2, 20)
 
-    option = EqOption('.STOXX50E', expirationDate='3m', strikePrice='ATM', optionType=OptionType.Call,
-                      optionStyle=OptionStyle.European)
+    option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                      option_style=OptionStyle.European)
+
+    long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+    short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
     action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m', trade_quantity=12345,
                                                trade_quantity_type=BacktestTradingQuantityType.notional)
@@ -172,8 +195,8 @@ def test_engine_mapping_trade_quantity(mocker):
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
     hedgetrigger = PeriodicTrigger(
-        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='B'),
-        actions=HedgeAction(EqDelta, priceables=option, trade_duration='B'))
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedgetrigger])
 
     # 2. setup mock api response
@@ -305,8 +328,15 @@ def test_engine_mapping_trade_quantity_nav(mocker):
     start_date = dt.date(2019, 2, 18)
     end_date = dt.date(2019, 2, 20)
 
-    option = EqOption('.STOXX50E', expirationDate='3m', strikePrice='ATM', optionType=OptionType.Call,
-                      optionStyle=OptionStyle.European)
+    option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                      option_style=OptionStyle.European)
+
+    long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+    short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
     action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m', trade_quantity=12345,
                                                trade_quantity_type=BacktestTradingQuantityType.NAV)
@@ -314,8 +344,8 @@ def test_engine_mapping_trade_quantity_nav(mocker):
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
     hedgetrigger = PeriodicTrigger(
-        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='B'),
-        actions=HedgeAction(EqDelta, priceables=option, trade_duration='B'))
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedgetrigger])
 
     # 2. setup mock api response
@@ -367,16 +397,23 @@ def test_engine_mapping_listed(mocker):
     start_date = dt.date(2019, 2, 18)
     end_date = dt.date(2019, 2, 20)
 
-    option = EqOption('.STOXX50E', expirationDate='3m@listed', strikePrice='ATM', optionType=OptionType.Call,
-                      optionStyle=OptionStyle.European)
+    option = EqOption('.STOXX50E', expiration_date='3m@listed', strike_price='ATM', option_type=OptionType.Call,
+                      option_style=OptionStyle.European)
+
+    long_call = EqOption('.STOXX50E', expiration_date='3m@listed', strike_price='ATM', option_type=OptionType.Call,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+    short_put = EqOption('.STOXX50E', expiration_date='3m@listed', strike_price='ATM', option_type=OptionType.Put,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
     action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m')
     trigger = PeriodicTrigger(
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
     hedgetrigger = PeriodicTrigger(
-        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='B'),
-        actions=HedgeAction(EqDelta, priceables=option, trade_duration='B'))
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedgetrigger])
 
     # 2. setup mock api response
@@ -428,16 +465,23 @@ def test_supports_strategy():
     start_date = dt.date(2019, 2, 18)
     end_date = dt.date(2019, 2, 20)
 
-    option = EqOption('.STOXX50E', expirationDate='3m', strikePrice='ATM', optionType=OptionType.Call,
-                      optionStyle=OptionStyle.European)
+    option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                      option_style=OptionStyle.European)
+
+    long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+    short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
     action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m')
     trigger = PeriodicTrigger(
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
     hedge_trigger = PeriodicTrigger(
-        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='B'),
-        actions=HedgeAction(EqDelta, priceables=option, trade_duration='B'))
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedge_trigger])
 
     assert EquityVolEngine.supports_strategy(strategy)
@@ -525,4 +569,55 @@ def test_supports_strategy():
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=action)
     strategy = Strategy(initial_portfolio=None, triggers=[trigger])
+    assert not EquityVolEngine.supports_strategy(strategy)
+
+    # 9. Invalid - hedging without synthetic forward (not a portfolio)
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call])
+
+    hedge_trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedge_trigger])
+
+    assert not EquityVolEngine.supports_strategy(strategy)
+
+    # 10. Invalid - hedging without synthetic forward (two calls)
+
+    long_call_2 = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                           option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, long_call_2])
+
+    hedge_trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedge_trigger])
+
+    assert not EquityVolEngine.supports_strategy(strategy)
+
+    # 10. Invalid - hedging without synthetic forward (more than two options)
+
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put, long_call_2])
+
+    hedge_trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedge_trigger])
+
+    assert not EquityVolEngine.supports_strategy(strategy)
+
+    # 10. Invalid - hedging without synthetic forward (properties mismatch)
+
+    long_call_2m = EqOption('.STOXX50E', expiration_date='2m', strike_price='ATM', option_type=OptionType.Call,
+                            option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+    short_put_4m = EqOption('.STOXX50E', expiration_date='4m', strike_price='ATM', option_type=OptionType.Put,
+                            option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+
+    hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call_2m, short_put_4m])
+
+    hedge_trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+        actions=HedgeAction(EqDelta, priceables=hedge_portfolio, trade_duration='1b'))
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedge_trigger])
+
     assert not EquityVolEngine.supports_strategy(strategy)

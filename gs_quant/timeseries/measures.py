@@ -4368,6 +4368,8 @@ def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.R
 
     retail_data = get_dataset_data_with_retries(ds, start=start, end=end, underlyingSourceCategory=data_source,
                                                 assetId=underliers)
+    if retail_data.empty:
+        return ExtendedSeries(dtype=float)
 
     if 'Pct' in measure.value:
         measures_to_sum = [measure.value.replace('Pct', '')]

@@ -344,6 +344,9 @@ class DateTrigger(Trigger):
 
         return TriggerInfo(state in self._trigger_requirements.dates)
 
+    def get_trigger_times(self):
+        return self._dates_from_datetimes or self._trigger_requirements.dates
+
 
 class PortfolioTrigger(Trigger):
     def __init__(self, trigger_requirements: PortfolioTriggerRequirements, actions: Iterable[Action] = None):
