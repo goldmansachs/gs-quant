@@ -90,12 +90,16 @@ class AddTradeAction(Action):
 
 
 AddTradeActionInfo = namedtuple('AddTradeActionInfo', 'scaling')
+EnterPositionQuantityScaledActionInfo = namedtuple('EnterPositionQuantityScaledActionInfo', 'not_applicable')
 HedgeActionInfo = namedtuple('HedgeActionInfo', 'not_applicable')
 ExitTradeActionInfo = namedtuple('ExitTradeActionInfo', 'not_applicable')
 
 
 class EnterPositionQuantityScaledAction(Action):
-    def __init__(self, priceables: Union[Priceable, Iterable[Priceable]], trade_duration: str = None, name: str = None,
+    def __init__(self,
+                 priceables: Union[Priceable, Iterable[Priceable]],
+                 trade_duration: Union[str, dt.date, dt.timedelta] = None,
+                 name: str = None,
                  trade_quantity: float = 1,
                  trade_quantity_type: Union[BacktestTradingQuantityType, str] = BacktestTradingQuantityType.quantity):
         """

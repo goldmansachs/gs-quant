@@ -15,18 +15,21 @@ under the License.
 """
 
 from typing import Union, Iterable, Optional
+
+from gs_quant import risk
 from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date
 from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment
-from gs_quant.backtests.actions import Action, AddTradeAction, HedgeAction, AddTradeActionInfo, HedgeActionInfo, \
-    ExitTradeAction, ExitTradeActionInfo
+from gs_quant.backtests.actions import Action, AddTradeAction, HedgeAction, EnterPositionQuantityScaledAction, \
+    AddTradeActionInfo, HedgeActionInfo, ExitTradeAction, ExitTradeActionInfo, EnterPositionQuantityScaledActionInfo
 from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.instrument import Instrument
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets import PricingContext, HistoricalPricingContext
 from gs_quant.risk import Price
 from gs_quant.risk.results import PortfolioRiskResult
+from gs_quant.target.backtests import BacktestTradingQuantityType
 from gs_quant.common import ParameterisedRiskMeasure
 from functools import reduce
 from datetime import date
@@ -82,6 +85,89 @@ class AddTradeActionImpl(ActionHandler):
                      trigger_info: Optional[Union[AddTradeActionInfo, Iterable[AddTradeActionInfo]]] = None):
 
         orders = self._raise_order(state, trigger_info)
+
+        # record entry and unwind cashflows
+        for create_date, portfolio in orders.items():
+            for inst in portfolio.all_instruments:
+                backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
+                final_date = get_final_date(inst, create_date, self.action.trade_duration)
+                backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
+
+        for s in backtest.states:
+            pos = []
+            for create_date, portfolio in orders.items():
+                pos += [inst for inst in portfolio.instruments
+                        if get_final_date(inst, create_date, self.action.trade_duration) > s >= create_date]
+            if len(pos):
+                backtest.portfolio_dict[s].append(pos)
+
+        return backtest
+
+
+class EnterPositionQuantityScaledActionImpl(ActionHandler):
+    def __init__(self, action: EnterPositionQuantityScaledAction):
+        super().__init__(action)
+
+    @staticmethod
+    def _quantity_type_to_risk_measure(quantity_type: BacktestTradingQuantityType):
+        map = {BacktestTradingQuantityType.notional: risk.EqSpot,
+               BacktestTradingQuantityType.gamma: risk.EqGamma,
+               BacktestTradingQuantityType.vega: risk.EqVega}
+
+        if quantity_type not in map:
+            raise ValueError(f'No risk measure found for quantity type: {quantity_type}')
+
+        return map[quantity_type]
+
+    def _scale_order(self, orders):
+        quantity_type = self.action.trade_quantity_type
+        if quantity_type == BacktestTradingQuantityType.quantity:
+            scaling_factor = self.action.trade_quantity
+            for _, portfolio in orders.items():
+                portfolio.scale(scaling_factor)
+        else:
+            orders_risk = {}
+            risk_measure = EnterPositionQuantityScaledActionImpl._quantity_type_to_risk_measure(quantity_type)
+            with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
+                for day, portfolio in orders.items():
+                    with PricingContext(pricing_date=day):
+                        orders_risk[day] = portfolio.calc(risk_measure)
+
+            for day, portfolio in orders.items():
+                risk_to_scale = orders_risk[day].aggregate()
+                scaling_factor = self.action.trade_quantity / risk_to_scale
+                portfolio.scale(scaling_factor)
+
+    def _raise_order(self,
+                     state: Union[date, Iterable[date]]):
+        state_list = make_list(state)
+        orders = {}
+
+        with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
+            for s in state_list:
+                active_portfolio = self.action.priceables
+                with PricingContext(pricing_date=s):
+                    orders[s] = Portfolio(active_portfolio).resolve(in_place=False)
+
+        final_orders = {}
+        for d, p in orders.items():
+            new_port = []
+            for t in p.result():
+                t.name = f'{t.name}_{d}'
+                new_port.append(t)
+            final_orders[d] = Portfolio(new_port)
+
+        self._scale_order(final_orders)
+
+        return final_orders
+
+    def apply_action(self,
+                     state: Union[date, Iterable[date]],
+                     backtest: BackTest,
+                     trigger_info: Optional[Union[EnterPositionQuantityScaledActionInfo,
+                                                  Iterable[EnterPositionQuantityScaledActionInfo]]] = None):
+
+        orders = self._raise_order(state)
 
         # record entry and unwind cashflows
         for create_date, portfolio in orders.items():
@@ -198,6 +284,7 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
     def __init__(self, action_impl_map={}):
         self.action_impl_map = {
             AddTradeAction: AddTradeActionImpl,
+            EnterPositionQuantityScaledAction: EnterPositionQuantityScaledActionImpl,
             HedgeAction: HedgeActionImpl,
             ExitTradeAction: ExitTradeActionImpl
         }
@@ -237,10 +324,11 @@ class GenericEngine(BacktestBaseEngine):
         is_batch = context_params.get('is_batch', True)
         show_progress = context_params.get('show_progress', False)
         csa_term = context_params.get('csa_term')
+        market_data_location = context_params.get('market_data_location')
         request_priority = context_params.get('request_priority', DEFAULT_REQUEST_PRIORITY)
 
         context = PricingContext(is_batch=is_batch, show_progress=show_progress, csa_term=csa_term,
-                                 request_priority=request_priority)
+                                 market_data_location=market_data_location, request_priority=request_priority)
 
         context.max_concurrent = 10000
 
@@ -248,7 +336,7 @@ class GenericEngine(BacktestBaseEngine):
 
     def run_backtest(self, strategy, start=None, end=None, frequency='1m', states=None, risks=Price,
                      show_progress=True, csa_term=None, visible_to_gs=False, initial_value=0, result_ccy=None,
-                     holiday_calendar=None):
+                     holiday_calendar=None, market_data_location=None):
         """
         run the backtest following the triggers and actions defined in the strategy.  If states are entered run on
         those dates otherwise build a schedule from the start, end, frequency
@@ -265,6 +353,7 @@ class GenericEngine(BacktestBaseEngine):
         :param initial_value: initial cash value of strategy defaults to 0
         :param result_ccy: ccy of all risks, pvs and cash
         :param holiday_calendar for date maths - list of dates
+        :param market_data_location: location for the market data
         :return: a backtest object containing the portfolios on each day and results which show all risks on all days
 
         """
@@ -273,7 +362,8 @@ class GenericEngine(BacktestBaseEngine):
 
         self._pricing_context_params = {'show_progress': show_progress,
                                         'csa_term': csa_term,
-                                        'visible_to_gs': visible_to_gs}
+                                        'visible_to_gs': visible_to_gs,
+                                        'market_data_location': market_data_location}
 
         strategy_pricing_dates = RelativeDateSchedule(frequency,
                                                       start,

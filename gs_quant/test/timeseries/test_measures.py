@@ -5151,6 +5151,12 @@ def test_retail_interest_agg():
                                                tm.RetailMeasures.RETAIL_PCT_NOTIONAL,
                                                tm.UnderlyingSourceCategory.ALL,
                                                tm.GICSSector.ENERGY))
+    mock_retail.return_value = pd.DataFrame(dtype=float)
+    assert_series_equal(ExtendedSeries(dtype=float),
+                        tm.retail_interest_agg(mock_spx,
+                                               tm.RetailMeasures.RETAIL_PCT_NOTIONAL,
+                                               tm.UnderlyingSourceCategory.ALL,
+                                               tm.GICSSector.ENERGY))
     replace.restore()
 
 

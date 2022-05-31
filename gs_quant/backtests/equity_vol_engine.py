@@ -18,6 +18,7 @@ from gs_quant.backtests import triggers as t
 from gs_quant.backtests import actions as a
 from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
 from gs_quant.instrument import EqOption, EqVarianceSwap
+from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import EqDelta
 from gs_quant.target.backtests import BacktestSignalSeriesItem, BacktestTradingQuantityType
 import pandas as pd
@@ -25,6 +26,28 @@ import re
 import copy
 from functools import reduce
 import warnings
+
+from gs_quant.target.common import OptionType, BuySell
+
+
+def is_synthetic_forward(priceable):
+    is_portfolio = isinstance(priceable, Portfolio)
+    is_syn_fwd = is_portfolio
+    if is_portfolio:
+        is_size_two = len(priceable) == 2
+        is_syn_fwd &= is_size_two
+        if is_size_two:
+            has_two_eq_options = isinstance(priceable[0], EqOption) and isinstance(priceable[1], EqOption)
+            is_syn_fwd &= has_two_eq_options
+            if has_two_eq_options:
+                is_syn_fwd &= (priceable[0].underlier == priceable[1].underlier) and \
+                              (priceable[0].expiration_date == priceable[1].expiration_date) and \
+                              (priceable[0].strike_price == priceable[1].strike_price)
+                is_syn_fwd &= (OptionType.Call, BuySell.Buy) and (OptionType.Put, BuySell.Sell) in {
+                              (priceable[0].option_type, priceable[0].buy_sell),
+                              (priceable[1].option_type, priceable[1].buy_sell)}
+
+    return is_syn_fwd
 
 
 class BacktestResult:
@@ -147,13 +170,18 @@ class EquityVolEngine(object):
                             'Error: EnterPositionQuantityScaledAction invalid expiration_date '
                             'modifier ' + expiry_date_modes[0])
                 elif isinstance(action, a.HedgeAction):
+                    if not is_synthetic_forward(action.priceable):
+                        check_results.append(
+                            'Error: HedgeAction: Hedge instrument must be a synthetic forward - a portfolio of two '
+                            'equity options (long call and short put) with the same underlier, strike price and '
+                            'expiration date')
                     if not trigger.trigger_requirements.frequency == action.trade_duration:
                         check_results.append(
                             'Error: HedgeAction: PeriodicTrigger frequency must be the same as trade_duration')
                     if not action.risk == EqDelta:
                         check_results.append('Error: HedgeAction: risk type must be EqDelta')
-                    if not trigger.trigger_requirements.frequency == 'B':
-                        check_results.append('Error: HedgeAction: frequency must be \'B\'')
+                    if not trigger.trigger_requirements.frequency == '1b':
+                        check_results.append('Error: HedgeAction: frequency must be \'1b\'')
                 elif isinstance(action, (a.ExitPositionAction, a.ExitTradeAction)):
                     continue
                 else:
@@ -214,7 +242,7 @@ class EquityVolEngine(object):
                     index_initial_value = trade_quantity
                 expiry_date_mode = ExpirationDateParser(action.priceables[0].expiration_date).get_mode()
             elif isinstance(action, a.HedgeAction):
-                if trigger.trigger_requirements.frequency == 'B':
+                if trigger.trigger_requirements.frequency == '1b':
                     frequency = 'Daily'
                 else:
                     raise RuntimeError('unrecognised hedge frequency')
