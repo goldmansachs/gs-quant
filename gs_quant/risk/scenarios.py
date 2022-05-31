@@ -13,17 +13,18 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from typing import Mapping
+from typing import Mapping, Optional
+
+from pandas import DataFrame
 
 from gs_quant.target.risk import MarketDataPattern, MarketDataShock, \
     MarketDataPatternAndShock, MarketDataShockBasedScenario as __MarketDataShockBasedScenario, \
     MarketDataVolShockScenario as __MarketDataVolShockScenario, MarketDataVolSlice, MarketDataShockType
-from pandas import DataFrame
 
 
 class MarketDataShockBasedScenario(__MarketDataShockBasedScenario):
 
-    def __init__(self, shocks: Mapping[MarketDataPattern, MarketDataShock], name: str):
+    def __init__(self, shocks: Mapping[MarketDataPattern, MarketDataShock], name: Optional[str] = None):
         super().__init__(tuple(MarketDataPatternAndShock(p, s) for p, s in shocks.items()), name=name)
 
 
