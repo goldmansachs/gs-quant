@@ -276,6 +276,7 @@ class CreditBasketParameters(Base):
     clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
     hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
     portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    index_approval_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -431,6 +432,7 @@ class AssetGetRequestPathSchema(Base):
     last_updated_since: Optional[Tuple[datetime.datetime, ...]] = field(default=None, metadata=field_metadata)
     option_type: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     exchange: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    coin_metrics_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     asset_class: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     ric: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     trading_restriction: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)

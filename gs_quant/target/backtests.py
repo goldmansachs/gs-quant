@@ -64,7 +64,8 @@ class EquityMarketModel(EnumBase, Enum):
     """Market model for pricing"""
 
     SFK = 'SFK'
-    SD = 'SD'    
+    SD = 'SD'
+    SVR = 'SVR'    
 
 
 class FlowVolBacktestMeasure(EnumBase, Enum):    
@@ -144,9 +145,9 @@ class BuySellRefData(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class DeltaHedgeParameters(Base):
     frequency: str = field(default=None, metadata=field_metadata)
-    delta_type: Optional[str] = field(default='BlackScholes', metadata=field_metadata)
     fixing_time: Optional[str] = field(default=None, metadata=field_metadata)
     notional: Optional[float] = field(default=None, metadata=field_metadata)
+    delta_type: Optional[str] = field(init=False, default='BlackScholes', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -308,10 +309,10 @@ class TradeInTimeRefData(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class VolatilityWeightedWeightingModifier(Base):
-    name: Optional[str] = field(default='Volatility Weighted', metadata=field_metadata)
     em_aalpha: Optional[float] = field(default=None, metadata=config(field_name='EMAalpha', exclude=exclude_none))
     look_back_period: Optional[str] = field(default=None, metadata=field_metadata)
     use_log_return: Optional[bool] = field(default=False, metadata=field_metadata)
+    name: Optional[str] = field(init=False, default='Volatility Weighted', metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -465,7 +466,7 @@ class BacktestRiskPosition(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestStrategyUnderlier(Base):
     instrument: DictBase = field(default=None, metadata=field_metadata)
-    market_model: str = field(default=None, metadata=field_metadata)
+    market_model: EquityMarketModel = field(default=None, metadata=field_metadata)
     notional_percentage: Optional[float] = field(default=None, metadata=field_metadata)
     expiry_date_mode: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=field_metadata)

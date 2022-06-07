@@ -219,6 +219,8 @@ class ParserEntity(Base):
     only_normalized_fields: Optional[bool] = field(default=None, metadata=field_metadata)
     quotes: Optional[bool] = field(default=None, metadata=field_metadata)
     trades: Optional[bool] = field(default=None, metadata=field_metadata)
+    only_mqtick_fields: Optional[bool] = field(default=None, metadata=field_metadata)
+    include_trd_flg_proc: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -244,8 +246,8 @@ class ResponseInfo(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class SymbolFilterLink(Base):
-    entity_type: Optional[str] = field(default='MktCoordinate', metadata=field_metadata)
     entity_field: Optional[str] = field(default=None, metadata=field_metadata)
+    entity_type: Optional[str] = field(init=False, default='MktCoordinate', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -350,10 +352,10 @@ class FieldFilterMapDataQuery(DictBase):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FieldLink(Base):
-    entity_type: Optional[str] = field(default='Asset', metadata=field_metadata)
     entity_identifier: Optional[str] = field(default=None, metadata=field_metadata)
     prefix: Optional[str] = field(default=None, metadata=field_metadata)
     additional_entity_fields: Optional[Tuple[FieldLinkSelector, ...]] = field(default=None, metadata=field_metadata)
+    entity_type: Optional[str] = field(init=False, default='Asset', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

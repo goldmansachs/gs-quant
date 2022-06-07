@@ -184,6 +184,7 @@ class EqCliquet(Instrument):
     return_type: Optional[str] = field(default='Sum', metadata=field_metadata)
     valuation_period: Optional[str] = field(default=None, metadata=field_metadata)
     expiration_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    premium: Optional[float] = field(default=0.0, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.Cliquet, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
@@ -940,11 +941,11 @@ class CommodVolVarSwap(Instrument):
     asset_fixing_source: Optional[str] = field(default=None, metadata=field_metadata)
     sampling_frequency: Optional[str] = field(default=None, metadata=field_metadata)
     variance_convention: Optional[VarianceConvention] = field(default=None, metadata=field_metadata)
-    extra_sampling_calendars: Optional[str] = field(default='--Blank--', metadata=field_metadata)
     asset: Optional[str] = field(default=None, metadata=field_metadata)
     start_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Commod, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.VolVarSwap, metadata=config(field_name='type', exclude=exclude_none))
+    extra_sampling_calendars: Optional[str] = field(init=False, default='--Blank--', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -1230,6 +1231,7 @@ class IRCMSOption(Instrument):
     premium_payment_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
     fee: Optional[float] = field(default=0.0, metadata=field_metadata)
     fee_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    start_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
     fee_payment_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
     buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Rates, metadata=field_metadata)

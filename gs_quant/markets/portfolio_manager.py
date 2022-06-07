@@ -27,14 +27,16 @@ from gs_quant.entities.entitlements import Entitlements
 from gs_quant.entities.entity import PositionedEntity, EntityType
 from gs_quant.errors import MqError
 from gs_quant.errors import MqValueError
+from gs_quant.markets.factor import Factor
 from gs_quant.markets.report import PerformanceReport
 from gs_quant.markets.report import ReportJobFuture
-from gs_quant.markets.portfolio_manager_utils import build_macro_portfolio_exposure_df
-from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat
+from gs_quant.markets.portfolio_manager_utils import build_exposure_df, build_portfolio_constituents_df, \
+    build_sensitivity_df, build_macro_portfolio_exposure_df
+from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType, DataAssetsRequest, \
+    RiskModelUniverseIdentifierRequest as UniverseIdentifierRequest
 from gs_quant.target.common import Currency
 from gs_quant.target.portfolios import RiskAumSource
-from gs_quant.target.risk_models import RiskModelDataAssetsRequest as DataAssetsRequest, \
-    RiskModelUniverseIdentifierRequest as UniverseIdentifierRequest
+import deprecation
 
 _logger = logging.getLogger(__name__)
 
@@ -239,13 +241,16 @@ class PortfolioManager(PositionedEntity):
         """
         return pd.DataFrame(GsPortfolioApi.get_attribution(self.portfolio_id, start_date, end_date, currency))
 
+    @deprecation.deprecated(deprecated_in="0.9.39",
+                            details="Please use get_macro_exposure instead")
     def get_macro_exposure_table(self,
                                  macro_risk_model: MacroRiskModel,
                                  date: dt.date,
                                  factors: List[str] = [],
                                  factors_by_name: bool = True,
                                  group_by_factor_category: bool = False,
-                                 return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+                                 return_format: ReturnFormat = ReturnFormat.DATA_FRAME
+                                 ) -> Union[Dict, pd.DataFrame]:
         """
         Get portfolio and asset exposure to macro factors
         :param macro_risk_model: the macro risk model
@@ -292,7 +297,8 @@ class PortfolioManager(PositionedEntity):
                                                                               end_date=date,
                                                                               assets=DataAssetsRequest(
                                                                                   UniverseIdentifierRequest.gsid,
-                                                                                  universe))
+                                                                                  universe),
+                                                                              factor_type=FactorType.Factor)
         if universe_sensitivities_df.empty:
             print(f"None of the assets in the portfolio are exposed to the macro factors in model "
                   f"{macro_risk_model.id} ")
@@ -320,6 +326,55 @@ class PortfolioManager(PositionedEntity):
 
         exposure_df = build_macro_portfolio_exposure_df(
             constituents_and_notional_df, universe_sensitivities_df, factor_dict, factor_category_dict, factors_by_name)
+
+        if return_format == ReturnFormat.JSON:
+            return exposure_df.to_dict()
+
+        return exposure_df
+
+    def get_macro_exposure(self,
+                           model: MacroRiskModel,
+                           date: dt.date,
+                           factor_type: FactorType,
+                           factor_categories: List[Factor] = [],
+                           get_factors_by_name: bool = True,
+                           return_format: ReturnFormat = ReturnFormat.DATA_FRAME
+                           ) -> Union[Dict, pd.DataFrame]:
+
+        """
+        Get portfolio and asset exposure to macro factors or macro factor categories
+        :param model: the macro risk model
+        :param date: date for which to get exposure
+        :param factor_type: whether to get exposure to factor categories or factors.
+        :param factor_categories: Get portfolio exposure to these factor categories. Must be valid Factor Categories.
+        If factor_type is Factor, get exposure to factors that are grouped in these factor categories.
+        If empty, return exposure to all factor categories/factors.
+        :param get_factors_by_name: whether to identify factors by their name or identifier
+        :param return_format: whether to return a dict or a pandas dataframe
+        :return: a Pandas Dataframe or a Dict of portfolio exposure to macro factors
+        """
+        performance_report = self.get_performance_report()
+
+        # Get portfolio constituents
+        constituents_and_notional_df = build_portfolio_constituents_df(performance_report, date). \
+            rename(columns={"name": "Asset Name", "netExposure": "Notional"})
+
+        # Query universe sensitivity
+        universe = constituents_and_notional_df.index.dropna().tolist()
+        universe_sensitivities_df = build_sensitivity_df(universe, model, date, factor_type, get_factors_by_name)
+
+        # Remove assets without exposure
+        assets_with_exposure = list(universe_sensitivities_df.index.values)
+        if not assets_with_exposure:
+            logging.warning("The Portfolio is not exposed to any of the requested macro factors")
+            return pd.DataFrame()
+
+        constituents_and_notional_df = constituents_and_notional_df.loc[assets_with_exposure]
+
+        factor_data = model.get_factor_data(date, date, factor_type=FactorType.Factor) \
+            if factor_type == FactorType.Factor else pd.DataFrame()
+        exposure_df = build_exposure_df(constituents_and_notional_df, universe_sensitivities_df,
+                                        factor_categories, factor_data, get_factors_by_name)
 
         if return_format == ReturnFormat.JSON:
             return exposure_df.to_dict()

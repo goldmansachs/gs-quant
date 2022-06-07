@@ -26,6 +26,8 @@ RiskModel
 
    RiskModel
    FactorRiskModel
+   MacroRiskModel
+   ThematicRiskModel
 
 
 

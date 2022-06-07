@@ -17,6 +17,7 @@ import datetime as dt
 from enum import Enum, auto
 from typing import List, Dict, Tuple, Union
 import pandas as pd
+import numpy as np
 import logging
 import pydash
 
@@ -368,8 +369,10 @@ class MarqueeRiskModel(RiskModel):
                          start_date: dt.date = None,
                          end_date: dt.date = None,
                          factor_names: List[str] = None,
-                         factor_ids: List[str] = None) -> List[Factor]:
-        factors_from_model = self.get_factor_data(start_date=start_date, end_date=end_date, format=ReturnFormat.JSON)
+                         factor_ids: List[str] = None,
+                         factor_type: FactorType = None) -> List[Factor]:
+        factors_from_model = self.get_factor_data(start_date=start_date, end_date=end_date,
+                                                  factor_type=factor_type, format=ReturnFormat.JSON)
 
         name_matches = []
         if not factor_names and not factor_ids:
@@ -868,7 +871,7 @@ class FactorRiskModel(MarqueeRiskModel):
             limit_factors=False
         ).get('results')
         universe = pydash.get(results, '0.assetData.universe', [])
-        total_risk = build_asset_data_map(results, universe, 'totalRisk')
+        total_risk = build_asset_data_map(results, universe, 'totalRisk', {})
         if format == ReturnFormat.DATA_FRAME:
             total_risk = pd.DataFrame(total_risk)
         return total_risk
@@ -1106,22 +1109,60 @@ class MacroRiskModel(MarqueeRiskModel):
     def get_universe_sensitivity(self,
                                  start_date: dt.date,
                                  end_date: dt.date = None,
-                                 assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
-                                                                               []),
+                                 assets: DataAssetsRequest = DataAssetsRequest(
+                                     RiskModelUniverseIdentifierRequest.gsid, []),
+                                 factor_type: FactorType = FactorType.Factor,
                                  get_factors_by_name: bool = False,
-                                 format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Get universe sensitivity data for existing macro risk model
+                                 format: ReturnFormat = ReturnFormat.DATA_FRAME
+                                 ) -> Union[List[Dict], pd.DataFrame]:
+        """ Get universe factor or factor category sensitivity data for existing macro risk model
 
         :param start_date: start date for data request
         :param end_date: end date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :factor_type: return universe sensitivity to factors if Factor. Otherwise, return universe sensitivity to factor
+        categories
         :param get_factors_by_name: return results keyed by factor name instead of ID
         :param format: which format to return the results in
 
         :return: sensitivity for assets requested
         """
-        return super().get_universe_exposure(start_date, end_date, assets,
-                                             get_factors_by_name=get_factors_by_name, format=format)
+
+        sensitivity_df = super().get_universe_exposure(start_date, end_date, assets,
+                                                       get_factors_by_name=get_factors_by_name, format=format) \
+            if factor_type == FactorType.Factor else \
+            super().get_universe_exposure(start_date, end_date, assets, get_factors_by_name=get_factors_by_name)
+
+        if factor_type == FactorType.Factor:
+            return sensitivity_df
+
+        factor_data = self.get_factor_data(start_date, end_date)
+        factor_data = factor_data.set_index("name") if get_factors_by_name else factor_data.set_index("identifier")
+        columns = [(factor_data.loc[f, "factorCategory"], f) for f in sensitivity_df.columns.values] \
+            if get_factors_by_name else \
+            [(factor_data.loc[f, "factorCategoryId"], f) for f in sensitivity_df.columns.values]
+        sensitivity_df = sensitivity_df.set_axis(pd.MultiIndex.from_tuples(columns), axis=1)
+
+        factor_categories = list(set(sensitivity_df.columns.get_level_values(0).values))
+        factor_category_sens_df = pd.concat(
+            [sensitivity_df[factor_category].agg(np.sum, axis=1)
+                                            .to_frame()
+                                            .rename(columns={0: factor_category})
+             for factor_category in factor_categories], axis=1
+        )
+
+        if format == ReturnFormat.JSON:
+            factor_category_sens_df = factor_category_sens_df.to_dict(orient='index')
+            factor_category_sens_dict = {}
+
+            for key, value in factor_category_sens_df.items():
+                temp_dict = factor_category_sens_dict.get(key[0], {})
+                temp_dict[key[1]] = value
+                factor_category_sens_dict[key[0]] = temp_dict
+
+            return factor_category_sens_dict
+
+        return factor_category_sens_df
 
     def get_r_squared(self,
                       start_date: dt.date,

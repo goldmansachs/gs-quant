@@ -189,6 +189,15 @@ class ChartTime(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class ParameterField(Base):
+    field_: str = field(default=None, metadata=config(field_name='field', exclude=exclude_none))
+    values: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class XAxisSettings(Base):
     auto_fit_range_to_data: Optional[bool] = field(default=None, metadata=field_metadata)
     show_grid_lines: Optional[bool] = field(default=None, metadata=field_metadata)
@@ -282,6 +291,28 @@ class ChartRegression(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class ConstructorParameter(Base):
+    type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    values: Optional[Tuple[ParameterField, ...]] = field(default=None, metadata=field_metadata)
+    options: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class TemplateVariable(Base):
+    name: str = field(default=None, metadata=field_metadata)
+    display_name: str = field(default=None, metadata=field_metadata)
+    constructor_type: str = field(default=None, metadata=field_metadata)
+    parameters: ConstructorParameter = field(default=None, metadata=field_metadata)
+    hide: Optional[bool] = field(default=False, metadata=field_metadata)
+    tooltip: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class Chart(Base):
     name: str = field(default=None, metadata=field_metadata)
     id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
@@ -292,6 +323,7 @@ class Chart(Base):
     last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
     entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    rank: Optional[int] = field(default=None, metadata=field_metadata)
     folder_name: Optional[str] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
     description_history: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
@@ -319,3 +351,4 @@ class Chart(Base):
     display_settings: Optional[ChartDisplaySettings] = field(default=None, metadata=field_metadata)
     y_axes_settings: Optional[Tuple[YAxisSettings, ...]] = field(default=None, metadata=field_metadata)
     annotations: Optional[Tuple[ChartAnnotation, ...]] = field(default=None, metadata=field_metadata)
+    template_variables: Optional[DictBase] = field(default=None, metadata=field_metadata)

@@ -119,24 +119,82 @@ class EnterPositionQuantityScaledActionImpl(ActionHandler):
 
         return map[quantity_type]
 
+    def _nav_scale_orders(self, orders, first_quantity):
+        sorted_order_days = sorted(make_list(orders.keys()))
+        final_days_orders = {}
+
+        # Populate dict of dates and instruments sold on those dates
+        for create_date, portfolio in orders.items():
+            for inst in portfolio.all_instruments:
+                d = get_final_date(inst, create_date, self.action.trade_duration)
+                if d not in final_days_orders.keys():
+                    final_days_orders[d] = []
+                final_days_orders[d].append(inst)
+
+        # Start with first_quantity, then only use proceeds from selling instruments
+        available_cash = first_quantity
+
+        # Go through each order day of the strategy in sorted order
+        for idx, cur_day in enumerate(sorted_order_days):
+            portfolio = orders[cur_day]
+
+            # Scale portfolio price to available cash - zero all remaining orders if no cash left
+            if available_cash == 0:
+                portfolio.scale(0)
+                continue
+            else:
+                with PricingContext(pricing_date=cur_day):
+                    cur_order_price = portfolio.calc(risk.Price)
+
+                scale_factor = available_cash / cur_order_price.aggregate()
+                portfolio.scale(scale_factor)
+
+            available_cash = 0
+
+            if idx + 1 < len(sorted_order_days):
+                next_day = sorted_order_days[idx + 1]
+            else:
+                break
+
+            # Only consider final days between current order date and the next in an iteration
+            unwind_days = {d: p for d, p in final_days_orders.items() if cur_day < d <= next_day}
+
+            # Price the instruments sold in between these order dates
+            # At this point all past orders have been scaled, so these instruments will be scaled too
+            unwind_vals = []
+            with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
+                for unwind_day, inst_list in unwind_days.items():
+                    with PricingContext(pricing_date=unwind_day):
+                        unwind_vals += [i.calc(risk.Price) for i in inst_list]
+
+            # Cash received from unwinds is the cash available for the next order
+            for val in unwind_vals:
+                available_cash += val.result()
+
     def _scale_order(self, orders):
         quantity_type = self.action.trade_quantity_type
+        quantity = self.action.trade_quantity
+
         if quantity_type == BacktestTradingQuantityType.quantity:
-            scaling_factor = self.action.trade_quantity
             for _, portfolio in orders.items():
-                portfolio.scale(scaling_factor)
+                portfolio.scale(quantity)
         else:
             orders_risk = {}
-            risk_measure = EnterPositionQuantityScaledActionImpl._quantity_type_to_risk_measure(quantity_type)
-            with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
-                for day, portfolio in orders.items():
-                    with PricingContext(pricing_date=day):
-                        orders_risk[day] = portfolio.calc(risk_measure)
+            if quantity_type == BacktestTradingQuantityType.NAV:
+                # Scale separately if strategy is NAV
+                self._nav_scale_orders(orders, quantity)
+            else:
+                # Scale risk daily risk to specified value otherwise
+                risk_measure = EnterPositionQuantityScaledActionImpl._quantity_type_to_risk_measure(quantity_type)
+                with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
+                    for day, portfolio in orders.items():
+                        with PricingContext(pricing_date=day):
+                            orders_risk[day] = portfolio.calc(risk_measure)
 
-            for day, portfolio in orders.items():
-                risk_to_scale = orders_risk[day].aggregate()
-                scaling_factor = self.action.trade_quantity / risk_to_scale
-                portfolio.scale(scaling_factor)
+                for day, portfolio in orders.items():
+                    risk_to_scale = orders_risk[day].aggregate()
+                    scaling_factor = quantity / risk_to_scale
+                    portfolio.scale(scaling_factor)
 
     def _raise_order(self,
                      state: Union[date, Iterable[date]]):
@@ -557,7 +615,7 @@ class GenericEngine(BacktestBaseEngine):
                     # only calc if additional point is required
                     trades = cp.trade.all_instruments if isinstance(cp.trade, Portfolio) else [cp.trade]
                     for trade in trades:
-                        if cp.effective_date and cp.effective_date <= end:
+                        if cp.effective_date and cp.effective_date <= strategy_end_date:
                             if cp.effective_date not in backtest.results or \
                                     trade not in backtest.results[cp.effective_date]:
                                 cash_trades_by_date[cp.effective_date].append(trade)
@@ -572,7 +630,7 @@ class GenericEngine(BacktestBaseEngine):
         # handle cash
         current_value = None
         for d in sorted(set(strategy_pricing_dates + list(backtest.cash_payments.keys()))):
-            if d <= end:
+            if d <= strategy_end_date:
                 if current_value is not None:
                     backtest.cash_dict[d] = current_value
                 if d in backtest.cash_payments:
