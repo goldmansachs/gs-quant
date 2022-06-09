@@ -77,7 +77,8 @@ class BacktestResult:
         for item in self._results.portfolio:
             for transaction in item['transactions']:
                 trades = list(map(lambda x: dict(
-                    {'date': item['date'], 'quantity': x['quantity'], 'transactionType': transaction['type']},
+                    {'date': item['date'], 'quantity': x['quantity'], 'transactionType': transaction['type'],
+                     'price': x['price']},
                     **x['instrument']), transaction['trades']))
                 data = data + trades
 

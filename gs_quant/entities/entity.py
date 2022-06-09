@@ -44,7 +44,8 @@ from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.markets.position_set import PositionSet, Position
 from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport, \
     flatten_results_into_df, get_thematic_breakdown_as_df
-from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat
+from gs_quant.markets.factor import Factor
+from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
 from gs_quant.target.reports import ReportStatus, ReportType
@@ -904,11 +905,12 @@ class PositionedEntity(metaclass=ABCMeta):
         """
         return get_thematic_breakdown_as_df(entity_id=self.id, date=date, basket_id=basket_id)
 
-    def get_macro_exposure_table(self,
-                                 macro_risk_model: MacroRiskModel,
-                                 date: dt.date,
-                                 factors: List[str] = [],
-                                 factors_by_name: bool = True,
-                                 group_by_macro_bucket: bool = True,
-                                 return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+    def get_macro_exposure(self,
+                           model: MacroRiskModel,
+                           date: dt.date,
+                           factor_type: FactorType,
+                           factor_categories: List[Factor] = [],
+                           get_factors_by_name: bool = True,
+                           return_format: ReturnFormat = ReturnFormat.DATA_FRAME
+                           ) -> Union[Dict, pd.DataFrame]:
         raise NotImplementedError

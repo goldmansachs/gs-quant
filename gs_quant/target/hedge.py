@@ -328,6 +328,7 @@ class FactorHedgeParameters(Base):
     max_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
     market_participation_rate: Optional[float] = field(default=10, metadata=field_metadata)
     asset_constraints: Optional[Tuple[AssetConstraint, ...]] = field(default=None, metadata=field_metadata)
+    constrain_assets_by_notional: Optional[bool] = field(default=None, metadata=field_metadata)
     factor_constraints: Optional[Tuple[FactorConstraint, ...]] = field(default=None, metadata=field_metadata)
     classification_constraints: Optional[Tuple[ClassificationConstraint, ...]] = field(default=None, metadata=field_metadata)
     esg_constraints: Optional[Tuple[ESGConstraint, ...]] = field(default=None, metadata=field_metadata)

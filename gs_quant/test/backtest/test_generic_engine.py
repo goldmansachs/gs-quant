@@ -19,10 +19,14 @@ import pandas as pd
 import pytest
 from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap
 from gs_quant.backtests.triggers import *
-from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction
+from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction, EnterPositionQuantityScaledAction
 from gs_quant.backtests.data_sources import GenericDataSource
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.generic_engine import GenericEngine
+from gs_quant.markets.portfolio import Portfolio
+from gs_quant.target.backtests import BacktestTradingQuantityType
+from gs_quant.target.common import OptionType, OptionStyle
+from gs_quant.target.instrument import EqOption
 from gs_quant.test.utils.test_utils import MockCalc
 from gs_quant.risk import Price, FXDelta
 from gs_quant.markets import PricingContext
@@ -243,3 +247,102 @@ def test_exit_action_bytradename(mocker):
         assert trade_ledger['Action1_swap2_2021-12-06']['Status'] == 'open'
         assert trade_ledger['Action1_swap2_2021-12-07']['Status'] == 'open'
         assert trade_ledger['Action1_swap2_2021-12-10']['Status'] == 'open'
+
+
+@pytest.mark.skip(reason="requires is_batch to be set to false in generic_engine.py")
+def test_quantity_scaled_action(mocker):
+    with MockCalc(mocker):
+        start_date = date(2021, 12, 6)
+        end_date = date(2021, 12, 10)
+
+        scale_factor = 7
+
+        # Define instruments for strategy
+        # Portfolio of two eq options
+        call = EqOption('.STOXX50E', expiration_date='1m', strike_price='ATM', option_type=OptionType.Call,
+                        option_style=OptionStyle.European, name='call')
+        put = EqOption('.STOXX50E', expiration_date='1m', strike_price='ATM', option_type=OptionType.Put,
+                       option_style=OptionStyle.European, name='put')
+        portfolio = Portfolio(name='portfolio', priceables=[call, put])
+
+        # Trade the position monthly without any scaling
+        trade_action = EnterPositionQuantityScaledAction(priceables=portfolio, trade_duration='1m', name='act')
+        trade_trigger = PeriodicTrigger(
+            trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+            actions=trade_action)
+
+        strategy = Strategy(None, trade_trigger)
+
+        GE = GenericEngine()
+        backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+        summary = backtest.result_summary
+        ledger = backtest.trade_ledger()
+
+        assert len(summary) == 5
+        assert len(ledger) == 10
+        assert round(summary[Price].sum()) == 2715
+        assert round(summary['Cumulative Cash'].sum()) == -2883
+
+        # Trade the position monthly and scale the quantity of the trade
+        trade_action_scaled = EnterPositionQuantityScaledAction(priceables=portfolio, trade_duration='1m',
+                                                                trade_quantity=scale_factor, name='scaled_act')
+        trade_trigger_scaled = PeriodicTrigger(
+            trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+            actions=trade_action_scaled)
+
+        strategy_scaled = Strategy(None, trade_trigger_scaled)
+
+        backtest_scaled = GE.run_backtest(strategy_scaled, start=start_date, end=end_date, frequency='1b',
+                                          show_progress=True)
+
+        summary_scaled = backtest_scaled.result_summary
+        ledger_scaled = backtest_scaled.trade_ledger()
+
+        # Price and cash should scale linearly
+        assert len(summary_scaled) == len(summary)
+        assert len(ledger_scaled) == len(ledger)
+        assert round(summary_scaled[Price].sum()) == round(summary[Price].sum() * scale_factor)
+        assert round(summary_scaled['Cumulative Cash'].sum()) == round(summary['Cumulative Cash'].sum() * scale_factor)
+
+
+@pytest.mark.skip(reason="requires is_batch to be set to false in generic_engine.py")
+def test_quantity_scaled_action_nav(mocker):
+    with MockCalc(mocker):
+        start_date = date(2021, 12, 6)
+        end_date = date(2021, 12, 10)
+
+        initial_cash = 100
+
+        # Define instruments for strategy
+        call = EqOption('.STOXX50E', expiration_date='1m', strike_price='ATM', option_type=OptionType.Call,
+                        option_style=OptionStyle.European, name='call')
+
+        # NAV trading strategy with specified initial cash
+        trade_action_scaled = EnterPositionQuantityScaledAction(priceables=call, trade_duration='1b',
+                                                                trade_quantity=initial_cash,
+                                                                trade_quantity_type=BacktestTradingQuantityType.NAV,
+                                                                name='nav_act')
+
+        trade_trigger_scaled = PeriodicTrigger(
+            trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+            actions=trade_action_scaled)
+
+        strategy = Strategy(None, trade_trigger_scaled)
+
+        GE = GenericEngine()
+        backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+        summary = backtest.result_summary
+        ledger = backtest.trade_ledger().to_dict('index')
+
+        # Start with initial cash and only use sale proceeds to buy new options
+        assert ledger['nav_act_call_2021-12-06']['Open Value'] == -initial_cash
+        assert ledger['nav_act_call_2021-12-07']['Open Value'] == -ledger['nav_act_call_2021-12-06']['Close Value']
+        assert ledger['nav_act_call_2021-12-08']['Open Value'] == -ledger['nav_act_call_2021-12-07']['Close Value']
+        assert ledger['nav_act_call_2021-12-09']['Open Value'] == -ledger['nav_act_call_2021-12-08']['Close Value']
+        assert ledger['nav_act_call_2021-12-10']['Open Value'] == -ledger['nav_act_call_2021-12-09']['Close Value']
+
+        # Total cash spent is the initial cash throughout the entire strategy
+        assert summary['Cumulative Cash'][0] == -initial_cash
+        assert (summary['Cumulative Cash'] == summary['Cumulative Cash'][0]).all()

@@ -97,7 +97,7 @@ class DataApi(metaclass=ABCMeta):
         query.where = dict()
         for field, value in kwargs.items():
             snake_case_field = inflection.underscore(field)
-            if snake_case_field in query_properties:
+            if snake_case_field in query_properties and snake_case_field not in ('name',):
                 setattr(query, snake_case_field, value)
             else:
                 query.where[field] = value

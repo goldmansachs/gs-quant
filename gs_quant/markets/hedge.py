@@ -649,13 +649,13 @@ class PerformanceHedgeParameters:
             as_dict['assetConstraints'] = exclusions + constraints
         if 'esgConstraints' in constraints_as_dict:
             as_dict['esgConstraints'] = constraints_as_dict.get('esgConstraints', [])
-        if self.percentage_in_cash:
+        if self.percentage_in_cash is not None:
             as_dict['percentageInCash'] = self.percentage_in_cash
         if self.exclude_corporate_actions_types:
             as_dict['excludeCorporateActionTypes'] = [x.value for x in self.exclude_corporate_actions_types]
-        if self.min_market_cap:
+        if self.min_market_cap is not None:
             as_dict['minMarketCap'] = self.min_market_cap
-        if self.max_market_cap:
+        if self.max_market_cap is not None:
             as_dict['maxMarketCap'] = self.max_market_cap
 
         return as_dict

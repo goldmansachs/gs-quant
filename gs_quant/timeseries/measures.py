@@ -1924,8 +1924,8 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
              pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
              request_id: Optional[str] = None) -> pd.Series:
     """
-    Volatility term structure. Uses most recent date available if pricing_date is not provided.
-
+    Volatility term structure. Defaults to use the most recent date with live data if available. A specific pricing_date
+    can also be provided.
     :param asset: asset object loaded from security master
     :param strike_reference: reference for strike level
     :param relative_strike: strike relative to reference
@@ -3135,7 +3135,8 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity, ), (AssetType.Research_Basket, AssetType.Equity_Basket, ),
+              [QueryType.FUNDAMENTAL_METRIC])
 def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """

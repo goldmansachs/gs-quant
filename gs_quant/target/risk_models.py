@@ -42,6 +42,7 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Total_Risk = 'Total Risk'
     Specific_Risk = 'Specific Risk'
     Specific_Return = 'Specific Return'
+    Estimation_Universe_Weight = 'Estimation Universe Weight'
     Residual_Variance = 'Residual Variance'
     Universe_Factor_Exposure = 'Universe Factor Exposure'
     R_Squared = 'R Squared'
@@ -180,6 +181,7 @@ class RiskModelAssetData(Base):
     specific_risk: Tuple[float, ...] = field(default=None, metadata=field_metadata)
     factor_exposure: Tuple[RiskModelFactorExposure, ...] = field(default=None, metadata=field_metadata)
     specific_return: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    estimation_universe_weight: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     residual_variance: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     historical_beta: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     total_risk: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
@@ -228,6 +230,7 @@ class RiskModel(Base):
     universe_identifier: RiskModelUniverseIdentifier = field(default=None, metadata=field_metadata)
     vendor: str = field(default=None, metadata=field_metadata)
     version: float = field(default=None, metadata=field_metadata)
+    type_: RiskModelType = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
     created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
@@ -236,8 +239,7 @@ class RiskModel(Base):
     last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     expected_update_time: Optional[str] = field(default=None, metadata=field_metadata)
     owner_id: Optional[str] = field(default=None, metadata=field_metadata)
-    universe_size: Optional[int] = field(default=None, metadata=field_metadata)
-    type_: Optional[RiskModelType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    universe_size: Optional[float] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -259,8 +261,8 @@ class RiskModelData(Base):
 class RiskModelDataRequest(Base):
     start_date: datetime.date = field(default=None, metadata=field_metadata)
     end_date: datetime.date = field(default=None, metadata=field_metadata)
+    measures: Tuple[RiskModelDataMeasure, ...] = field(default=None, metadata=field_metadata)
     assets: Optional[RiskModelDataAssetsRequest] = field(default=None, metadata=field_metadata)
-    measures: Optional[Tuple[RiskModelDataMeasure, ...]] = field(default=None, metadata=field_metadata)
     limit_factors: Optional[bool] = field(default=True, metadata=field_metadata)
     format_: Optional[str] = field(default='Json', metadata=config(field_name='format', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)

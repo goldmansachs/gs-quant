@@ -18,6 +18,7 @@ import datetime as dt
 
 import pytest
 
+from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.carbon import GsCarbonApi, CarbonTargetCoverageCategory, CarbonScope, \
     CarbonEmissionsAllocationCategory, CarbonEmissionsIntensityType, CarbonCard, CarbonCoverageCategory, \
     CarbonEntityType
@@ -27,9 +28,12 @@ from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.entities.entitlements import Entitlements, User, EntitlementBlock
 from gs_quant.markets.portfolio_manager import PortfolioManager
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport
+from gs_quant.models.risk_model import MacroRiskModel, FactorType, UniverseIdentifier, CoverageType, Term
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.portfolios import Portfolio as TargetPortfolio
-from gs_quant.target.reports import Report
+from gs_quant.target.reports import ReportStatus, PositionSourceType, ReportType, Report
+import pandas as pd
+import numpy as np
 
 esg_data = {
     'pricingDate': '2021-08-25',
@@ -1289,6 +1293,58 @@ def test_carbon_attribution_table(mocker):
         new_entry.pop(CarbonEmissionsIntensityType.EI_MARKETCAP.value)
         actual_table.append(new_entry)
     assert attribution == actual_table
+
+
+def test_get_macro_exposure(mocker):
+
+    portfolio_constituents = {"date": ["2022-05-02", "2022-05-02"],
+                              "assetId": ["mq1", "mq2"],
+                              "direction": ["LONG", "LONG"],
+                              "netExposure": [1000, 1000]}
+    assets_data = [{"id": "mq1", "name": "asset1", "gsid": "1"},
+                   {"id": "mq2", "name": "asset2", "gsid": "2"}]
+    factor_sens = {"factor1": {("1", "2022-05-02"): 1,
+                               ("2", "2022-05-02"): 1},
+                   "factor2": {("1", "2022-05-02"): 5,
+                               ("2", "2022-05-02"): 5}}
+    factor_data = {"identifier": ["15", "17"],
+                   "name": ["factor1", "factor2"],
+                   "type": ["Factor", "Factor"],
+                   "factorCategory": ["category1", "category2"],
+                   "factorCategoryId": ["c1", "c2"]}
+
+    result = {("Asset Information", "Asset Name"): {"1": "asset1", "2": "asset2", "Total Factor Exposure": np.NAN},
+              ("Asset Information", "Notional"): {"1": 1000, "2": 1000, "Total Factor Exposure": 2000},
+              ("category2", "factor2"): {"1": 50.0, "2": 50.0, "Total Factor Exposure": 100.0},
+              ("category1", "factor1"): {"1": 10.0, "2": 10.0, "Total Factor Exposure": 20.0}}
+
+    pm = PortfolioManager("portfolioId")
+    macro_model = MacroRiskModel(id_="fake_macro_model",
+                                 name="fake_model",
+                                 coverage=CoverageType.Region,
+                                 vendor="fake_vendor",
+                                 term=Term.Long,
+                                 universe_identifier=UniverseIdentifier.sedol,
+                                 version=0.1)
+    fake_ppa = PerformanceReport(report_id='id',
+                                 position_source_type=PositionSourceType.Portfolio,
+                                 position_source_id='PORTFOLIOID',
+                                 report_type=ReportType.Portfolio_Performance_Analytics,
+                                 parameters=None,
+                                 status=ReportStatus.done
+                                 )
+
+    mocker.patch.object(PortfolioManager, "get_performance_report", return_value=fake_ppa)
+    mocker.patch.object(fake_ppa, "get_portfolio_constituents",
+                        return_value=pd.DataFrame.from_dict(portfolio_constituents))
+    mocker.patch.object(GsAssetApi, "get_many_assets_data_scroll", return_value=assets_data)
+    mocker.patch.object(macro_model, "get_factor_data", return_value=pd.DataFrame.from_dict(factor_data))
+    mocker.patch.object(macro_model, "get_universe_sensitivity",
+                        return_value=pd.DataFrame.from_dict(factor_sens))
+
+    exposure_df = pm.get_macro_exposure(model=macro_model, date=dt.date(2022, 5, 2), factor_type=FactorType.Factor)
+
+    assert exposure_df.equals(pd.DataFrame.from_dict(result))
 
 
 if __name__ == '__main__':

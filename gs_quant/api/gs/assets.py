@@ -201,6 +201,10 @@ class GsAssetApi:
         return tuple(GsTemporalXRef.from_dict(x) for x in response.get('xrefs', ()))
 
     @classmethod
+    def put_asset_xrefs(cls, asset_id: str, xrefs: List[TemporalXRef]):
+        return GsSession.current._put(f'/assets/{asset_id}/xrefs', payload=xrefs)
+
+    @classmethod
     @_cached
     def get_asset(
             cls,

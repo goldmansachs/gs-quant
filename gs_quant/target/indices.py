@@ -49,6 +49,7 @@ class IndicesCurrency(EnumBase, Enum):
     CHF = 'CHF'
     CNH = 'CNH'
     CNY = 'CNY'
+    CNO = 'CNO'
     DKK = 'DKK'
     HKD = 'HKD'
     IDR = 'IDR'
@@ -292,6 +293,20 @@ class CreditCustomBasketCreateInputs(IndicesConstructRequestTypes):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class CreditCustomBasketRebalanceInputs(IndicesRebalanceInputTypes):
+    asset_class: AssetClass = field(default='Credit', metadata=field_metadata)
+    position_set: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
+    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
+    pricing_parameters: Optional[CreditCustomBasketPricingParameters] = field(default=None, metadata=field_metadata)
+    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
+    save_as_draft: Optional[bool] = field(default=False, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsBackcastInputs(Base):
     position_set: Tuple[IndicesPositionSet, ...] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
@@ -352,6 +367,7 @@ class CustomBasketsRebalanceInputs(Base):
     clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
     hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
     portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    save_as_draft: Optional[bool] = field(default=False, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -497,4 +513,5 @@ class ApprovalCustomBasketResponse(Base):
     last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     comments: Optional[Tuple[ApprovalComment, ...]] = field(default=None, metadata=field_metadata)
     notifyees: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    action_type: Optional[object] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
