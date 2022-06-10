@@ -20,6 +20,7 @@ import pandas as pd
 import numpy as np
 import logging
 import pydash
+import deprecation
 
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
 from gs_quant.base import EnumBase
@@ -27,7 +28,7 @@ from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.markets.factor import Factor
 from gs_quant.models.risk_model_utils import build_asset_data_map, build_factor_data_map, \
     build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, get_closest_date_index, \
-    batch_and_upload_partial_data, risk_model_data_to_json, get_universe_size, batch_and_upload_coverage_data, \
+    batch_and_upload_partial_data, get_universe_size, batch_and_upload_coverage_data, only_factor_data_is_present, \
     upload_model_data, validate_factors_exist
 from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModelEventType, RiskModelData, \
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
@@ -666,38 +667,57 @@ class MarqueeRiskModel(RiskModel):
                                                f" for {self.id}, consider batching request")
             raise e
 
-    def upload_data(self, data: Union[RiskModelData, Dict], max_asset_batch_size: int = 20000):
+    def upload_data(self,
+                    data: Union[RiskModelData, Dict],
+                    max_asset_batch_size: int = 20000):
         """ Upload risk model data to existing risk model in Marquee
 
-        :param data: complete risk model data for uploading on given date
-            includes: date, factorData, assetData, covarianceMatrix with optional inputs:
-            issuerSpecificCovariance and factorPortfolios
+        :param data: complete or partial risk model data for uploading on given date
+            includes: date, and one or more of: factorData, assetData, covarianceMatrix,
+                issuerSpecificCovariance and factorPortfolios. Look at risk model upload documentation for
+                further information on what data can be grouped together if asset data size is above the
+                max asset batch size
         :param max_asset_batch_size: size of payload to batch with. Defaults to 20000 assets which works well for
             models that have factor ids ranging from 1- 3 characters in length. For models with longer factor ids,
             consider batching with a smaller max asset batch size
-
         If upload universe is over max_asset_batch_size, will batch data in chunks of max_asset_batch_size assets
+
+        This function takes risk model data, and if partial requests are necessary, will upload data by:
+            1. factor data (includes covariance matrix if factor model)
+            2. asset data in batches of max_asset_batch_size
+            3. issuer specific covariance data in batches of max_asset_batch_size / 2 due to the structure of this data
+            4. factor portfolio data in batches of max_asset_batch_size / 2 due to the structure of this data
+
+        In the case of repeat identifiers on a given data, the repeated data will replace existing data
         """
 
-        data = risk_model_data_to_json(data) if type(data) == RiskModelData else data
-        target_universe_size = get_universe_size(data)
-        logging.info(f'Target universe size for upload: {target_universe_size}')
-        if target_universe_size > max_asset_batch_size:
-            logging.info('Batching uploads due to universe size')
+        data = data.as_dict() if type(data) == RiskModelData else data
+        full_data_present = 'factorData' in data.keys() and 'assetData' in data.keys()
+        only_factor_data_present = only_factor_data_is_present(self.type, data)
+        target_universe_size = 0 if only_factor_data_present else get_universe_size(data)
+        make_partial_request = target_universe_size > max_asset_batch_size or not full_data_present
+        if target_universe_size:
+            logging.info(f'Target universe size for upload: {target_universe_size}')
+        if make_partial_request:
             batch_and_upload_partial_data(self.id, data, max_asset_batch_size)
         else:
+            logging.info('Uploading model data in one request')
             upload_model_data(self.id, data)
 
-    def upload_partial_data(self, data: Union[RiskModelData, dict], target_universe_size: float = None):
+    @deprecation.deprecated(deprecated_in="0.9.42", details="Please use upload_data instead")
+    def upload_partial_data(self,
+                            data: Union[RiskModelData, dict],
+                            final_upload: bool = None):
         """ Upload partial risk model data to existing risk model in Marquee
 
         :param data: partial risk model data for uploading on given date
-        :param target_universe_size: the size of the complete universe on date
+        :param final_upload: if this is the last upload for the batched subset of data
 
         The models factorData and covarianceMatrix must be uploaded first on given date if repeats in partial
             upload, newer posted data will replace existing data on upload day
+
         """
-        upload_model_data(self.id, data, partial_upload=True, target_universe_size=target_universe_size)
+        upload_model_data(self.id, data, partial_upload=True, final_upload=final_upload)
 
     def upload_asset_coverage_data(self, date: dt.date = None):
         """ Upload to the coverage dataset for given risk model and date
@@ -709,8 +729,9 @@ class MarqueeRiskModel(RiskModel):
         """
         if not date:
             date = self.get_dates()[-1]
-        gsid_list = self.get_asset_universe(
-            date, assets=DataAssetsRequest('gsid', []), format=ReturnFormat.JSON).get(date)
+        gsid_list = self.get_asset_universe(date,
+                                            assets=DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                                            format=ReturnFormat.JSON).get(date)
         if not gsid_list:
             raise MqRequestError(404, f'No asset data found on {date}')
         batch_and_upload_coverage_data(date, gsid_list, self.id)

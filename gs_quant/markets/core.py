@@ -78,16 +78,16 @@ class PricingContext(ContextBaseWithDefault):
     def __init__(self,
                  pricing_date: Optional[dt.date] = None,
                  market_data_location: Optional[Union[PricingLocation, str]] = None,
-                 is_async: bool = False,
-                 is_batch: bool = False,
-                 use_cache: bool = False,
+                 is_async: bool = None,
+                 is_batch: bool = None,
+                 use_cache: bool = None,
                  visible_to_gs: Optional[bool] = None,
                  request_priority: Optional[int] = None,
                  csa_term: Optional[str] = None,
                  timeout: Optional[int] = None,
                  market: Optional[Market] = None,
-                 show_progress: Optional[bool] = False,
-                 use_server_cache: Optional[bool] = False,
+                 show_progress: Optional[bool] = None,
+                 use_server_cache: Optional[bool] = None,
                  market_behaviour: Optional[str] = 'ContraintsBased'):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
@@ -137,6 +137,13 @@ class PricingContext(ContextBaseWithDefault):
         """
         super().__init__()
 
+        def _set_parameter(parameter, value, default):
+            if value is not None:
+                return value
+            if self.prior_context is not None:
+                return getattr(self.prior_context, parameter)
+            return default
+
         if market and market_data_location and market.location is not \
                 get_enum_value(PricingLocation, market_data_location):
             raise ValueError('market.location and market_data_location cannot be different')
@@ -179,23 +186,23 @@ class PricingContext(ContextBaseWithDefault):
         self.__pricing_date = pricing_date or (
             self.prior_context.pricing_date if self.prior_context else business_day_offset(
                 today(market_data_location), 0, roll='preceding'))
-        self.__csa_term = csa_term
-        self.__market_behaviour = market_behaviour
-        self.__is_async = is_async
-        self.__is_batch = is_batch
-        self.__timeout = timeout
-        self.__use_cache = use_cache
-        self.__visible_to_gs = visible_to_gs
-        self.__request_priority = request_priority
+        self.__csa_term = _set_parameter('csa_term', csa_term, None)
+        self.__market_behaviour = _set_parameter('market_behaviour', market_behaviour, 'ContraintsBased')
+        self.__is_async = _set_parameter('is_async', is_async, False)
+        self.__is_batch = _set_parameter('is_batch', is_batch, False)
+        self.__timeout = _set_parameter('timeout', timeout, None)
+        self.__use_cache = _set_parameter('use_cache', use_cache, False)
+        self.__visible_to_gs = _set_parameter('visible_to_gs', visible_to_gs, None)
+        self.__request_priority = _set_parameter('request_priority', request_priority, None)
         self.__market_data_location = market_data_location
         self.__market = market or CloseMarket(
             date=close_market_date(self.__market_data_location, self.__pricing_date) if pricing_date else None,
             location=self.__market_data_location if market_data_location else None)
         self.__pending = {}
-        self.__show_progress = show_progress
-        self._max_per_batch = 1000
-        self._max_concurrent = 1000
-        self.__use_server_cache = use_server_cache
+        self.__show_progress = _set_parameter('show_progress', show_progress, False)
+        self._max_per_batch = self.prior_context._max_per_batch if self.prior_context is not None else 1000
+        self._max_concurrent = self.prior_context._max_concurrent if self.prior_context is not None else 1000
+        self.__use_server_cache = _set_parameter('use_server_cache', use_server_cache, False)
         self._group_by_date = True
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
@@ -310,7 +317,7 @@ class PricingContext(ContextBaseWithDefault):
 
     @property
     def _parameters(self) -> RiskRequestParameters:
-        return RiskRequestParameters(csa_term=self.__csa_term, raw_results=True, \
+        return RiskRequestParameters(csa_term=self.__csa_term, raw_results=True,
                                      market_behaviour=self.__market_behaviour)
 
     @property
@@ -353,6 +360,22 @@ class PricingContext(ContextBaseWithDefault):
     @property
     def csa_term(self) -> str:
         return self._parameters.csa_term
+
+    @property
+    def show_progress(self) -> bool:
+        return self.__show_progress
+
+    @property
+    def timeout(self) -> int:
+        return self.__timeout
+
+    @property
+    def request_priority(self) -> int:
+        return self.__request_priority
+
+    @property
+    def use_server_cache(self) -> bool:
+        return self.__use_server_cache
 
     @property
     def market_behaviour(self) -> str:

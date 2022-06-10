@@ -2531,20 +2531,6 @@ def test_var_swap_tenors():
     replace.restore()
 
 
-def test_tenor_to_month():
-    with pytest.raises(MqError):
-        tm._tenor_to_month('1d')
-    with pytest.raises(MqError):
-        tm._tenor_to_month('2w')
-    assert tm._tenor_to_month('3m') == 3
-    assert tm._tenor_to_month('4y') == 48
-
-
-def test_month_to_tenor():
-    assert tm._month_to_tenor(36) == '3y'
-    assert tm._month_to_tenor(18) == '18m'
-
-
 def test_forward_var_term():
     idx = pd.DatetimeIndex([datetime.date(2020, 4, 1), datetime.date(2020, 4, 2)] * 6)
     data = {

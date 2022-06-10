@@ -164,12 +164,16 @@ class GsFactorRiskModelApi(GsRiskModelApi):
                                model_id: str,
                                model_data: Union[Dict, RiskModelData],
                                partial_upload: bool = False,
-                               target_universe_size: float = None) -> str:
+                               target_universe_size: float = None,
+                               final_upload: bool = None) -> str:
         url = f'/risk/models/data/{model_id}'
         if partial_upload:
             url += '?partialUpload=true'
             if target_universe_size:
                 url += f'&targetUniverseSize={target_universe_size}'
+            if final_upload is not None:
+                final_upload_flag = 'true' if final_upload else 'false'
+                url += f'&finalUpload={final_upload_flag}'
         return GsSession.current._post(url, model_data, timeout=85)
 
     @classmethod

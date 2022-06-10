@@ -19,9 +19,8 @@ from functools import partial
 from dateutil.relativedelta import relativedelta as rdelta
 from pydash import chunk
 
-from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.timeseries.econometrics import volatility, correlation
-from gs_quant.timeseries.helper import _create_enum
+from gs_quant.timeseries.helper import _create_enum, _tenor_to_month, _month_to_tenor
 from gs_quant.timeseries.measures_helper import VolReference, preprocess_implied_vol_strikes_eq
 from gs_quant import timeseries as ts
 from .statistics import *
@@ -219,7 +218,7 @@ class Basket:
         if self._spot_data is None:
             q = GsDataApi.build_market_data_query(self.get_marquee_ids(), QueryType.SPOT)
             log_debug(request_id, _logger, 'q %s', q)
-            spot_data = ts.get_historical_and_last_for_measure(self.get_marquee_ids(), QueryType.SPOT, None,
+            spot_data = ts.get_historical_and_last_for_measure(self.get_marquee_ids(), QueryType.SPOT, {},
                                                                request_id=request_id)
 
             dataset_ids = getattr(spot_data, 'dataset_ids', ())
@@ -396,3 +395,53 @@ class Basket:
                 tot += corr * wt
                 tot_wt += wt
         return pd.to_numeric(tot / tot_wt, errors='coerce')
+
+    @requires_session
+    @plot_method
+    def average_forward_vol(self, tenor: str, forward_start_date: str, strike_reference: VolReference,
+                            relative_strike: Real, *, real_time: bool = False, request_id: Optional[str] = None,
+                            source: Optional[str] = None) -> pd.Series:
+        if real_time:
+            raise NotImplementedError('real-time basket forward vol not implemented')
+
+        ref_string, relative_strike = preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
+
+        t1_month = _tenor_to_month(forward_start_date)
+        t2_month = _tenor_to_month(tenor) + t1_month
+        t1 = _month_to_tenor(t1_month)
+        t2 = _month_to_tenor(t2_month)
+
+        log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', f'{t1},{t2}',
+                  ref_string, relative_strike)
+        where = dict(tenor=[t1, t2], strikeReference=[ref_string], relativeStrike=[relative_strike])
+        asset_ids = self.get_marquee_ids()
+
+        vol_data = ts.get_historical_and_last_for_measure(asset_ids, QueryType.IMPLIED_VOLATILITY, where, source=source,
+                                                          request_id=request_id)
+
+        # Below transformations will throw errors if vol_data is empty
+        if vol_data.empty:
+            return pd.Series(dtype=float)
+
+        grouped_by_asset_ids = vol_data.groupby('assetId')
+        s = {}
+        for asset_id, df in grouped_by_asset_ids:
+            grouped_by_tenor = df.groupby('tenor')
+            try:
+                sg = grouped_by_tenor.get_group(t1)['impliedVolatility']
+                lg = grouped_by_tenor.get_group(t2)['impliedVolatility']
+            except KeyError:
+                log_debug(request_id, _logger, 'no data for one or more tenors')
+                series = pd.Series(dtype=float, name='forwardVol')
+            else:
+                series = pd.Series(sqrt((t2_month * lg ** 2 - t1_month * sg ** 2) / _tenor_to_month(tenor)),
+                                   name='forwardVol')
+            s[asset_id] = series
+
+        vols = pd.DataFrame(s)
+        actual_weights = self.get_actual_weights(request_id)
+
+        # Necessary when current values appended - set weights index to match vols index
+        actual_weights = actual_weights.reindex(vols.index).fillna(method='pad')
+
+        return actual_weights.mul(vols).sum(axis=1, skipna=False)

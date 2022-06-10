@@ -42,7 +42,7 @@ from gs_quant.timeseries.helper import (
     _to_offset,
     check_forward_looking,
     get_df_with_retries,
-    get_dataset_data_with_retries
+    get_dataset_data_with_retries, _tenor_to_month, _month_to_tenor, _split_where_conditions
 )
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
 
@@ -1628,7 +1628,7 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
 
     now = datetime.date.today()
     if not real_time and DataContext.current.end_date >= now:
-        where_list = _split_conditions(where)
+        where_list = _split_where_conditions(where)
         delta = datetime.timedelta(days=1)
         with DataContext(now - delta, now + delta):
             net = {"queries": []}
@@ -2255,18 +2255,6 @@ def _var_swap_tenors(asset: Asset, request_id=None):
     raise MqValueError("var swap is not available for " + aid)
 
 
-def _tenor_to_month(relative_date: str) -> int:
-    matcher = re.fullmatch('([1-9]\\d*)([my])', relative_date)
-    if matcher:
-        mag = int(matcher.group(1))
-        return mag if matcher.group(2) == 'm' else mag * 12
-    raise MqValueError('invalid input: relative date must be in months or years')
-
-
-def _month_to_tenor(months: int) -> str:
-    return f'{months // 12}y' if months % 12 == 0 else f'{months}m'
-
-
 @plot_measure((AssetClass.Equity,), None, [QueryType.VAR_SWAP])
 def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
                      real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
@@ -2403,20 +2391,6 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
     return series
 
 
-def _split_conditions(where):
-    la = [dict()]
-    for k, v in where.items():
-        lb = []
-        while len(la) > 0:
-            temp = la.pop()
-            for cv in v:
-                clone = temp.copy()
-                clone[k] = [cv]
-                lb.append(clone)
-        la = lb
-    return la
-
-
 def _get_var_swap_df(asset: Asset, where, source, real_time):
     ids = []
     q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
@@ -2427,7 +2401,7 @@ def _get_var_swap_df(asset: Asset, where, source, real_time):
 
     now = datetime.date.today()
     if not real_time and DataContext.current.end_date >= now:
-        where_list = _split_conditions(where)
+        where_list = _split_where_conditions(where)
         delta = datetime.timedelta(days=1)
         with DataContext(now - delta, now + delta):
             net = {"queries": []}
@@ -3135,7 +3109,8 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ), (AssetType.Research_Basket, AssetType.Equity_Basket, ),
+@plot_measure((AssetClass.Equity, ),
+              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
               [QueryType.FUNDAMENTAL_METRIC])
 def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
@@ -4192,7 +4167,7 @@ def append_last_for_measure(df: pd.DataFrame, asset_ids: List[str], query_type, 
 
 def get_historical_and_last_for_measure(asset_ids: List[str],
                                         query_type,
-                                        where,
+                                        where: dict,
                                         *,
                                         source: str = None,
                                         real_time: bool = False,
@@ -4210,9 +4185,10 @@ def get_historical_and_last_for_measure(asset_ids: List[str],
         tasks.append(partial(_market_data_timed, query, request_id))
 
     if not real_time and DataContext.current.end_date >= datetime.date.today():
-        tasks.append(
-            partial(get_last_for_measure, asset_ids=asset_ids, query_type=query_type, where=where, source=source,
-                    request_id=request_id))
+        where_list = _split_where_conditions(where)
+        for w in where_list:
+            tasks.append(partial(get_last_for_measure, asset_ids=asset_ids, query_type=query_type, where=w,
+                                 source=source, request_id=request_id))
 
     results = ThreadPoolManager.run_async(tasks)
     return merge_dataframes(results)

@@ -173,6 +173,45 @@ class BackTest(BaseBacktest):
                                                'Trade PnL': None}
         return pd.DataFrame(ledger).T.sort_index()
 
+    def strategy_as_time_series(self):
+        """
+        Get a dataframe indexed by strategy dates and instruments present on the respective dates
+        For each tradable, displays calculated risk measures, cash payment amount and ccy (if any) and static data.
+        """
+        # Construct a table of cash payments for each date and concat them in a single table of all cash payments
+        cp_table = pd.concat(
+            [pd.concat([cp.to_frame() for cp in date_payments])
+             for _, date_payments in self.cash_payments.items()]
+        )
+        cp_table = cp_table.set_index(['Pricing Date', 'Instrument Name']).sort_index()
+        cp_table.columns = pd.MultiIndex.from_product([['Cash Payments'], cp_table.columns])
+
+        risk_measure_dict = {date: risk_res
+                             .to_frame(values='value', index='instrument_name', columns='risk_measure')
+                             .assign(pricing_date=[date] * len(risk_res))
+                             for date, risk_res in self.results.items()}
+        risk_measure_table = pd.concat(risk_measure_dict.values())
+        risk_measure_table = risk_measure_table.reset_index()
+        risk_measure_table = risk_measure_table.rename(columns={'pricing_date': 'Pricing Date',
+                                                       'instrument_name': 'Instrument Name'})
+        risk_measure_table = risk_measure_table.set_index(['Pricing Date', 'Instrument Name'])
+        risk_measure_table.columns = pd.MultiIndex.from_product([['Risk Measures'], risk_measure_table.columns])
+
+        risk_and_cp_joined = risk_measure_table.join(cp_table, how='outer')
+
+        static_inst_info = pd.concat(
+            [info.portfolio.to_frame()
+             for info in self.results.values()]
+        )
+        static_inst_info = static_inst_info.rename(columns={'name': 'Instrument Name'})
+        static_inst_info = static_inst_info.set_index(['Instrument Name'])
+        static_inst_info = static_inst_info.drop_duplicates()
+        static_inst_info.columns = pd.MultiIndex.from_product([['Static Instrument Data'], static_inst_info.columns])
+
+        result = static_inst_info.join(risk_and_cp_joined, how='outer')
+
+        return result.sort_index()
+
 
 class ScalingPortfolio:
     def __init__(self, trade, dates, risk, csa_term=None, scaling_parameter='notional_amount'):
@@ -191,6 +230,12 @@ class CashPayment:
         self.scale_date = scale_date
         self.direction = direction
         self.cash_paid = defaultdict(float)
+
+    def to_frame(self):
+        df = pd.DataFrame(self.cash_paid.items(), columns=['Cash Ccy', 'Cash Amount'])
+        df['Instrument Name'] = self.trade.name
+        df['Pricing Date'] = self.effective_date
+        return df
 
 
 class PredefinedAssetBacktest(BaseBacktest):
