@@ -17,6 +17,7 @@ import datetime as dt
 import inspect
 import logging
 import os
+import re
 from enum import Enum, IntEnum
 from functools import wraps, partial
 from typing import Optional, Union, List, Iterable
@@ -64,6 +65,14 @@ def _to_offset(tenor: str) -> pd.DateOffset:
 
     kwarg = {name: int(matcher.group(1))}
     return pd.DateOffset(**kwarg)
+
+
+def _tenor_to_month(relative_date: str) -> int:
+    matcher = re.fullmatch('([1-9]\\d*)([my])', relative_date)
+    if matcher:
+        mag = int(matcher.group(1))
+        return mag if matcher.group(2) == 'm' else mag * 12
+    raise MqValueError('invalid input: relative date must be in months or years')
 
 
 Interpolate = _create_enum('Interpolate', ['intersect', 'step', 'nan', 'zero', 'time'])
@@ -304,3 +313,24 @@ def get_dataset_data_with_retries(dataset: Dataset,
         else:
             raise e
     return data
+
+
+def _month_to_tenor(months: int) -> str:
+    return f'{months // 12}y' if months % 12 == 0 else f'{months}m'
+
+
+def _split_where_conditions(where):
+    la = [dict()]
+    for k, v in where.items():
+        lb = []
+        while len(la) > 0:
+            temp = la.pop()
+            if isinstance(v, list):
+                for cv in v:
+                    clone = temp.copy()
+                    clone[k] = [cv]
+                    lb.append(clone)
+            else:
+                lb.append(dict(**temp, **{k: v}))
+        la = lb
+    return la

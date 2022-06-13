@@ -28,8 +28,9 @@ from gs_quant.errors import MqError, MqRequestError
 from unittest.mock import MagicMock
 from gs_quant.session import GsSession
 from gs_quant.test.api.test_thread_manager import NullContextManager
-from gs_quant.timeseries.helper import _create_int_enum, plot_function, plot_measure, plot_method, normalize_window, \
-    Window, apply_ramp, check_forward_looking, get_df_with_retries, get_dataset_data_with_retries
+from gs_quant.timeseries.helper import _create_int_enum, _tenor_to_month, _month_to_tenor, plot_function, plot_measure,\
+    plot_method, normalize_window, Window, apply_ramp, check_forward_looking, get_df_with_retries, \
+    get_dataset_data_with_retries, _split_where_conditions
 
 # TODO test the instance of IntEnum when we have any.
 
@@ -49,6 +50,20 @@ def test_int_enum():
         assert isinstance(e, IntEnum)
         assert e.name == weekday
         assert e.value == i
+
+
+def test_tenor_to_month():
+    with pytest.raises(MqError):
+        _tenor_to_month('1d')
+    with pytest.raises(MqError):
+        _tenor_to_month('2w')
+    assert _tenor_to_month('3m') == 3
+    assert _tenor_to_month('4y') == 48
+
+
+def test_month_to_tenor():
+    assert _month_to_tenor(36) == '3y'
+    assert _month_to_tenor(18) == '18m'
 
 
 @plot_function
@@ -262,6 +277,33 @@ def test_get_dataset_data_with_retries():
                                       assetId='MA4B66MW5E27U8P32SB')
 
     replace.restore()
+
+
+def test_split_where_conditions():
+    where = dict(tenor=['1m', '2m'], strikeReference='delta_call', relativeStrike=25)
+    expected = [dict(tenor=['1m'], strikeReference='delta_call', relativeStrike=25),
+                dict(tenor=['2m'], strikeReference='delta_call', relativeStrike=25)]
+    actual = _split_where_conditions(where)
+    assert actual == expected
+
+    where = dict(tenor='1m', strikeReference='delta_call', relativeStrike=25)
+    expected = [dict(tenor='1m', strikeReference='delta_call', relativeStrike=25)]
+    actual = _split_where_conditions(where)
+    assert actual == expected
+
+    where = dict()
+    expected = [dict()]
+    actual = _split_where_conditions(where)
+    assert actual == expected
+
+    where = dict(tenor=['1m', '2m'], strikeReference='delta_call', relativeStrike=[25, 50])
+    expected = [dict(tenor=['1m'], strikeReference='delta_call', relativeStrike=[25]),
+                dict(tenor=['1m'], strikeReference='delta_call', relativeStrike=[50]),
+                dict(tenor=['2m'], strikeReference='delta_call', relativeStrike=[25]),
+                dict(tenor=['2m'], strikeReference='delta_call', relativeStrike=[50])
+                ]
+    actual = _split_where_conditions(where)
+    assert actual == expected
 
 
 if __name__ == "__main__":

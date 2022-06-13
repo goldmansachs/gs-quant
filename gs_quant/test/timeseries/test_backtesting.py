@@ -381,5 +381,56 @@ def test_basket_without_weights():
     replace.restore()
 
 
+def test_basket_avg_fwd_vol():
+    replace = Replacer()
+
+    dates = pd.DatetimeIndex([date(2021, 1, 1), date(2021, 1, 2), date(2021, 1, 3), date(2021, 1, 4), date(2021, 1, 5),
+                              date(2021, 1, 6)])
+
+    x_1m = pd.DataFrame({'impliedVolatility': [30.0, 30.2, 29.8, 30.6, 30.1, 30.0]}, index=dates)
+    x_1m['assetId'] = 'MA4B66MW5E27U9VBB94'
+    x_1m['tenor'] = '1m'
+    x_2m = pd.DataFrame({'impliedVolatility': [40.0, 41.2, 35.8, 31.6, 36.1, 37.0]}, index=dates)
+    x_2m['assetId'] = 'MA4B66MW5E27U9VBB94'
+    x_2m['tenor'] = '2m'
+    y_1m = pd.DataFrame({'impliedVolatility': [20.0, 20.2, 20.3, 20.6, 21.1, 20.0]}, index=dates)
+    y_1m['assetId'] = 'MA4B66MW5E27UAL9SUX'
+    y_1m['tenor'] = '1m'
+    y_2m = pd.DataFrame({'impliedVolatility': [21.0, 22.2, 23.3, 21.6, 23.3, 21.0]}, index=dates)
+    y_2m['assetId'] = 'MA4B66MW5E27UAL9SUX'
+    y_2m['tenor'] = '2m'
+    implied_vol = pd.concat([x_1m, x_2m, y_1m, y_2m])
+    spot = implied_vol.rename(columns={'impliedVolatility': 'spot'})
+
+    mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
+    mock_data.side_effect = [implied_vol, spot]
+
+    mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
+    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
+
+    a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
+    expected = pd.Series([24.55488, 26.61354, 27.45295, 23.557069, 26.90214, 24.046239], index=dates)
+    actual = a_basket.average_forward_vol('1m', '1m', VolReference.DELTA_CALL, 50)
+    assert_series_equal(actual, expected)
+
+    with pytest.raises(NotImplementedError):
+        a_basket.average_forward_vol('1m', '1m', VolReference.DELTA_CALL, 50, real_time=True)
+
+    mock_data.side_effect = [pd.DataFrame(), spot]
+    expected = pd.Series(dtype=float)
+    actual = a_basket.average_forward_vol('1m', '1m', VolReference.DELTA_CALL, 50)
+    assert_series_equal(expected, actual)
+
+    implied_vol = pd.concat([x_1m, x_2m, y_1m])
+    implied_vol.index.name = 'date'
+    mock_data.side_effect = [implied_vol, spot]
+    expected = pd.Series([np.nan] * 6, index=dates)
+    actual = a_basket.average_forward_vol('1m', '1m', VolReference.DELTA_CALL, 50)
+    assert_series_equal(expected, actual)
+
+    replace.restore()
+
+
 if __name__ == '__main__':
     pytest.main(args=[__file__])
