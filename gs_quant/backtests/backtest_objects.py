@@ -205,7 +205,7 @@ class BackTest(BaseBacktest):
         )
         static_inst_info = static_inst_info.rename(columns={'name': 'Instrument Name'})
         static_inst_info = static_inst_info.set_index(['Instrument Name'])
-        static_inst_info = static_inst_info.drop_duplicates()
+        static_inst_info = static_inst_info[~static_inst_info.index.duplicated(keep='first')]
         static_inst_info.columns = pd.MultiIndex.from_product([['Static Instrument Data'], static_inst_info.columns])
 
         result = static_inst_info.join(risk_and_cp_joined, how='outer')
