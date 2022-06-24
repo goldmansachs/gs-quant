@@ -338,7 +338,7 @@ def test_get_risk_model_coverage(mocker):
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_coverage()
-    GsSession.current._post.assert_called_with('/risk/models/coverage', {})
+    GsSession.current._post.assert_called_with('/risk/models/coverage', {}, timeout=200)
     assert response == results['results']
 
 
@@ -381,7 +381,7 @@ def test_upload_risk_model_data(mocker):
 
     # run test
     response = GsFactorRiskModelApi.upload_risk_model_data(model_id='id', model_data=risk_model_data)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}'.format(id='id'), risk_model_data, timeout=85)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}'.format(id='id'), risk_model_data, timeout=200)
     assert response == 'Successfully uploaded'
 
 
@@ -432,7 +432,7 @@ def test_upload_macro_risk_model_data(mocker):
     # run test
     response = GsFactorRiskModelApi.upload_risk_model_data(model_id='id', model_data=macro_risk_model_data)
     GsSession.current._post.assert_called_with(
-        '/risk/models/data/{id}'.format(id='id'), macro_risk_model_data, timeout=85)
+        '/risk/models/data/{id}'.format(id='id'), macro_risk_model_data, timeout=200)
     assert response == 'Successfully uploaded'
 
 
@@ -485,7 +485,7 @@ def test_get_risk_model_data(mocker):
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2020, 1, 1),
                                                         end_date=dt.date(2020, 3, 3))
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == results
 
 
@@ -525,7 +525,7 @@ def test_get_r_squared(mocker):
                                                         assets=DataAssetsRequest(UniverseIdentifier.gsid, assets),
                                                         measures=[Measure.R_Squared, Measure.Asset_Universe],
                                                         limit_factors=False)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == r_squared_results
 
 
@@ -569,7 +569,7 @@ def test_get_fair_value_gap(mocker):
                                                                   Measure.Fair_Value_Gap_Standard_Deviation,
                                                                   Measure.Asset_Universe],
                                                         limit_factors=False)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == fvg_results
 
 
@@ -619,7 +619,7 @@ def test_get_factor_standard_deviation(mocker):
                                                                   Measure.Factor_Name,
                                                                   Measure.Factor_Id],
                                                         limit_factors=False)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == factor_standard_deviation_results
 
 
@@ -669,5 +669,5 @@ def test_get_factor_z_score(mocker):
                                                                   Measure.Factor_Name,
                                                                   Measure.Factor_Id],
                                                         limit_factors=False)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == factor_z_score_results

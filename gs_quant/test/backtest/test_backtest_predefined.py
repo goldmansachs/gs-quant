@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 from gs_quant.data.core import DataFrequency
 from gs_quant.backtests.core import ValuationFixingType
-from gs_quant.instrument import Security, IRBondFuture
+from gs_quant.instrument import IRBondFuture
 from gs_quant.backtests.order import OrderMarketOnClose, OrderTWAP, TimeWindow
 from unittest import mock
 import gs_quant.datetime
@@ -40,7 +40,7 @@ class ExampleTestTrigger(OrdersGeneratorTrigger):
     def generate_orders(self, time: dt.datetime, backtest: PredefinedAssetBacktest = None) -> list:
         date = time.date()
         if date == dt.date(2021, 1, 5):
-            return [OrderMarketOnClose(instrument=Security(ric='TestRic'),
+            return [OrderMarketOnClose(instrument=IRBondFuture(currency='EUR', name='TestRic'),
                                        quantity=1,
                                        generation_time=time,
                                        execution_date=date,
@@ -64,7 +64,7 @@ class FuturesExample(OrdersGeneratorTrigger):
     def generate_orders(self, state: dt.datetime, backtest: PredefinedAssetBacktest = None) -> list:
         date = state.date()
 
-        contract = Security(ric='TestRic')
+        contract = IRBondFuture(currency='EUR', name='TestRic')
         orders = []
         units_to_trade = 1
 
@@ -101,7 +101,8 @@ def test_backtest_predefined_timezone_aware():
     s_eod = s_rt.at_time('17:00')
     s_eod.index = s_eod.index.date
 
-    generic_bond_future = IRBondFuture(currency='EUR')
+    generic_bond_future = IRBondFuture(currency='EUR', name='EURBond')
+
     add_trade_action = AddTradeAction(generic_bond_future)
     simple_date_trigger_requirement = DateTriggerRequirements(dates=trigger_dates)
     simple_date_trigger = DateTrigger(trigger_requirements=simple_date_trigger_requirement, actions=[add_trade_action])
@@ -133,7 +134,7 @@ def test_backtest_predefined():
     gs_quant.backtests.predefined_asset_engine.business_day_offset = mock.Mock(return_value=mid)
 
     data_mgr = DataManager()
-    underlying = Security(ric='TestRic')
+    underlying = IRBondFuture(currency='EUR', name='TestRic')
     close_prices = pd.Series(dtype=float)
     close_prices[start] = 1
     close_prices[mid] = 1.5

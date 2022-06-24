@@ -349,7 +349,9 @@ class MQVSValidatorDefn:
     validatorType: str
     targets: Tuple[MQVSValidationTarget]
     args: Dict[str, str]
-
+    groupId: Optional[str] = None
+    groupIndex: Optional[int] = None
+    groupMethod: Optional[str] = None
 
 class MQVSValidatorDefnsWithInfo(ResultInfo):
     validators: Tuple[MQVSValidatorDefn]

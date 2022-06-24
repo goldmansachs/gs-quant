@@ -20,6 +20,7 @@ from typing import TypeVar
 from gs_quant.backtests.backtest_utils import *
 from gs_quant.base import Priceable
 from gs_quant.markets.securities import *
+from gs_quant.markets.portfolio import Portfolio
 from gs_quant.target.backtests import BacktestTradingQuantityType
 
 action_count = 1
@@ -64,14 +65,15 @@ class AddTradeAction(Action):
         :param name: optional additional name to the priceable name
         """
         super().__init__(name)
-        self._priceables = make_list(priceables)
+
+        self._priceables = []
         self._dated_priceables = {}
         self._trade_duration = trade_duration
-        for i, p in enumerate(self._priceables):
+        for i, p in enumerate(make_list(priceables)):
             if p.name is None:
-                p.name = '{}_Priceable{}'.format(self._name, i)
+                self._priceables.append(p.clone(name=f'{self._name}_Priceable{i}'))
             else:
-                p.name = '{}_{}'.format(self._name, p.name)
+                self._priceables.append(p.clone(name=f'{self._name}_{p.name}'))
 
     @property
     def priceables(self):
@@ -93,6 +95,7 @@ AddTradeActionInfo = namedtuple('AddTradeActionInfo', 'scaling')
 EnterPositionQuantityScaledActionInfo = namedtuple('EnterPositionQuantityScaledActionInfo', 'not_applicable')
 HedgeActionInfo = namedtuple('HedgeActionInfo', 'not_applicable')
 ExitTradeActionInfo = namedtuple('ExitTradeActionInfo', 'not_applicable')
+RebalanceActionInfo = namedtuple('RebalanceActionInfo', 'not_applicable')
 
 
 class EnterPositionQuantityScaledAction(Action):
@@ -114,13 +117,13 @@ class EnterPositionQuantityScaledAction(Action):
                                     underlier notional
         """
         super().__init__(name)
-        self._priceables = make_list(priceables)
+        self._priceables = []
         self._trade_duration = trade_duration
-        for i, p in enumerate(self._priceables):
+        for i, p in enumerate(make_list(priceables)):
             if p.name is None:
-                p.name = '{}_Priceable{}'.format(self._name, i)
+                self._priceables.append(p.clone(name=f'{self._name}_Priceable{i}'))
             else:
-                p.name = '{}_{}'.format(self._name, p.name)
+                self._priceables.append(p.clone(name=f'{self._name}_{p.name}'))
         self._trade_quantity = trade_quantity
         self._trade_quantity_type = trade_quantity_type
 
@@ -175,11 +178,20 @@ class HedgeAction(Action):
         self._trade_duration = trade_duration
         self._csa_term = csa_term
         self._scaling_parameter = scaling_parameter
-        if priceables is not None:
-            if self._priceable.name is None:
-                self._priceable.name = '{}_Priceable{}'.format(self._name, 0)
-            else:
-                self._priceable.name = '{}_{}'.format(self._name, self._priceable.name)
+        if isinstance(priceables, Portfolio):
+            trades = []
+            for i, priceable in enumerate(priceables):
+                if priceable.name is None:
+                    trades.append(priceable.clone(name=f'{self._name}_Priceable{i}'))
+                else:
+                    trades.append(priceable.clone(name=f'{self._name}_{priceable.name}'))
+            self._priceable = Portfolio(trades)
+        else:
+            if priceables is not None:
+                if priceables.name is None:
+                    self._priceable = priceables.clone(name=f'{self._name}_Priceable0')
+                else:
+                    self._priceable = priceables.clone(name=f'{self._name}_{priceables.name}')
 
     @property
     def trade_duration(self):
@@ -200,3 +212,32 @@ class HedgeAction(Action):
     @property
     def scaling_parameter(self):
         return self._scaling_parameter
+
+
+class RebalanceAction(Action):
+    def __init__(self, priceable: Priceable, size_parameter, method):
+        super().__init__()
+        self._calc_type = CalcType.path_dependent
+        self._size_parameter = size_parameter
+        self._method = method
+        if priceable is not None:
+            if priceable.name is None:
+                self._priceable = priceable.clone(name=f'{self._name}_Priceable0')
+            else:
+                self._priceable = priceable.clone(name=f'{self._name}_{priceable.name}')
+
+    @property
+    def priceable(self):
+        return self._priceable
+
+    @property
+    def size_parameter(self):
+        return self._size_parameter
+
+    @property
+    def method(self):
+        return self._method
+
+    @property
+    def args(self):
+        return self._args

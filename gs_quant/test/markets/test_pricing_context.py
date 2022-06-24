@@ -13,12 +13,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime
 import datetime as dt
 
 import pytest
 from gs_quant import risk
 from gs_quant.common import PayReceive, Currency
 from gs_quant.datetime import business_day_offset
+from gs_quant.errors import MqValueError
 from gs_quant.instrument import IRSwap
 from gs_quant.markets import PricingContext, CloseMarket, OverlayMarket, MarketDataCoordinate
 from gs_quant.risk import RollFwd
@@ -91,3 +93,34 @@ def test_market_data_object():
 
     assert overlay_market.coordinates[0] == MarketDataCoordinate.from_dict(coord_val_pair[0]['coordinate'])
     assert overlay_market.redacted_coordinates[0] == MarketDataCoordinate.from_dict(coord_val_pair[1]['coordinate'])
+
+
+def test_pricing_context_metadata():
+    assert len(PricingContext.path) == 0
+    assert not PricingContext.has_prior
+
+    c1 = PricingContext(pricing_date=datetime.date(2022, 6, 15))
+    c2 = PricingContext(pricing_date=datetime.date(2022, 6, 16))
+    c3 = PricingContext(pricing_date=datetime.date(2022, 6, 17))
+
+    PricingContext.current = PricingContext()
+    assert len(PricingContext.path) == 1
+
+    PricingContext.current = c1
+    assert len(PricingContext.path) == 1
+
+    with c2:
+        with pytest.raises(MqValueError):
+            PricingContext.current = PricingContext()
+
+        assert PricingContext.current == c2
+        assert PricingContext.has_prior and PricingContext.prior == c1
+        assert len(PricingContext.path) == 2
+
+        with c3:
+            assert PricingContext.current == c3
+            assert PricingContext.has_prior and PricingContext.prior == c2
+            assert len(PricingContext.path) == 3
+
+    PricingContext.pop()
+    assert len(PricingContext.path) == 0

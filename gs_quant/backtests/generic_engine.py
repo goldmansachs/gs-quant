@@ -22,7 +22,8 @@ from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date
 from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment
 from gs_quant.backtests.actions import Action, AddTradeAction, HedgeAction, EnterPositionQuantityScaledAction, \
-    AddTradeActionInfo, HedgeActionInfo, ExitTradeAction, ExitTradeActionInfo, EnterPositionQuantityScaledActionInfo
+    AddTradeActionInfo, HedgeActionInfo, ExitTradeAction, ExitTradeActionInfo, EnterPositionQuantityScaledActionInfo, \
+    RebalanceAction, RebalanceActionInfo
 from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.instrument import Instrument
 from gs_quant.markets.portfolio import Portfolio
@@ -59,7 +60,7 @@ class AddTradeActionImpl(ActionHandler):
     def _raise_order(self,
                      state: Union[date, Iterable[date]],
                      trigger_info: Optional[Union[AddTradeActionInfo, Iterable[AddTradeActionInfo]]] = None):
-        with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
+        with PricingContext():
             state_list = make_list(state)
             orders = {}
             if trigger_info is None or isinstance(trigger_info, AddTradeActionInfo):
@@ -162,7 +163,7 @@ class EnterPositionQuantityScaledActionImpl(ActionHandler):
             # Price the instruments sold in between these order dates
             # At this point all past orders have been scaled, so these instruments will be scaled too
             unwind_vals = []
-            with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
+            with PricingContext():
                 for unwind_day, inst_list in unwind_days.items():
                     with PricingContext(pricing_date=unwind_day):
                         unwind_vals += [i.calc(risk.Price) for i in inst_list]
@@ -186,7 +187,7 @@ class EnterPositionQuantityScaledActionImpl(ActionHandler):
             else:
                 # Scale risk daily risk to specified value otherwise
                 risk_measure = EnterPositionQuantityScaledActionImpl._quantity_type_to_risk_measure(quantity_type)
-                with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
+                with PricingContext():
                     for day, portfolio in orders.items():
                         with PricingContext(pricing_date=day):
                             orders_risk[day] = portfolio.calc(risk_measure)
@@ -201,7 +202,7 @@ class EnterPositionQuantityScaledActionImpl(ActionHandler):
         state_list = make_list(state)
         orders = {}
 
-        with PricingContext(is_batch=True, show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
+        with PricingContext():
             for s in state_list:
                 active_portfolio = self.action.priceables
                 with PricingContext(pricing_date=s):
@@ -253,8 +254,7 @@ class HedgeActionImpl(ActionHandler):
                      state: Union[date, Iterable[date]],
                      backtest: BackTest,
                      trigger_info: Optional[Union[HedgeActionInfo, Iterable[HedgeActionInfo]]] = None):
-        with HistoricalPricingContext(is_batch=True, dates=make_list(state), csa_term=self.action.csa_term,
-                                      show_progress=True, request_priority=DEFAULT_REQUEST_PRIORITY):
+        with HistoricalPricingContext(dates=make_list(state), csa_term=self.action.csa_term):
             backtest.calc_calls += 1
             backtest.calculations += len(make_list(state))
             f = Portfolio(self.action.priceable).resolve(in_place=False)
@@ -338,13 +338,36 @@ class ExitTradeActionImpl(ActionHandler):
         return backtest
 
 
+class RebalanceActionImpl(ActionHandler):
+    def __init__(self, action: RebalanceAction):
+        super().__init__(action)
+
+    def apply_action(self,
+                     state: Union[date, Iterable[date]],
+                     backtest: BackTest,
+                     trigger_info: Optional[Union[RebalanceActionInfo, Iterable[RebalanceActionInfo]]] = None):
+
+        new_size = self.action.method(state, backtest, trigger_info)
+        current_size = 0
+        for trade in backtest.portfolio_dict[state]:
+            if self.action.priceable.name.split('_')[-1] in trade.name:
+                current_size += getattr(trade, self.action.size_parameter)
+        pos = self.action.priceable.clone(**{self.action.size_parameter: new_size - current_size,
+                                             'name': f'{self.action.priceable.name}_{state}'})
+        for s in backtest.states:
+            if s >= state:
+                backtest.portfolio_dict[s].append(pos)
+        return backtest
+
+
 class GenericEngineActionFactory(ActionHandlerBaseFactory):
     def __init__(self, action_impl_map={}):
         self.action_impl_map = {
             AddTradeAction: AddTradeActionImpl,
             EnterPositionQuantityScaledAction: EnterPositionQuantityScaledActionImpl,
             HedgeAction: HedgeActionImpl,
-            ExitTradeAction: ExitTradeActionImpl
+            ExitTradeAction: ExitTradeActionImpl,
+            RebalanceAction: RebalanceActionImpl
         }
         self.action_impl_map.update(action_impl_map)
 
@@ -424,9 +447,7 @@ class GenericEngine(BacktestBaseEngine):
                                         'visible_to_gs': visible_to_gs,
                                         'market_data_location': market_data_location}
 
-        if PricingContext.current_is_set:
-            self._initial_pricing_context = PricingContext.current
-        PricingContext.current = self.new_pricing_context()
+        PricingContext.push(self.new_pricing_context())
 
         try:
             strategy_pricing_dates = RelativeDateSchedule(frequency,
@@ -668,9 +689,11 @@ class GenericEngine(BacktestBaseEngine):
                             for ccy, cash_paid in cp.cash_paid.items():
                                 backtest.cash_dict[d][ccy] += cash_paid
 
-                    current_value = copy.deepcopy(backtest.cash_dict[d])
+                        current_value = backtest.cash_dict[d]
+
+                    current_value = copy.deepcopy(current_value)
 
             logging.info(f'Finished Backtest:- {dt.datetime.now()}')
             return backtest
         finally:
-            PricingContext.current = self._initial_pricing_context
+            PricingContext.pop()

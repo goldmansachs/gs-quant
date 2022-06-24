@@ -16,7 +16,7 @@ under the License.
 
 import threading
 
-from gs_quant.errors import MqUninitialisedError
+from gs_quant.errors import MqUninitialisedError, MqValueError
 
 thread_local = threading.local()
 
@@ -53,6 +53,18 @@ class ContextMeta(type):
 
     @current.setter
     def current(cls, current):
+        path = cls.path
+        if cls.has_prior:
+            raise MqValueError('Cannot set current while in a nested context {}'.format(cls.__name__))
+
+        if len(path) == 1:
+            cur = cls.current
+            try:
+                if cur.is_entered:
+                    raise MqValueError('Cannot set current while in a nested context {}'.format(cls.__name__))
+            except AttributeError:
+                pass
+
         setattr(thread_local, cls.__path_key, (current,))
 
     @property
@@ -68,6 +80,19 @@ class ContextMeta(type):
                 setattr(thread_local, cls.__default_key, default)
 
         return default
+
+    @property
+    def prior(cls):
+        path = cls.path
+        if len(path) < 2:
+            raise MqValueError('Current {} has no prior'.format(cls.__name__))
+
+        return path[1]
+
+    @property
+    def has_prior(cls):
+        path = cls.path
+        return len(path) >= 2
 
     def push(cls, context):
         setattr(thread_local, cls.__path_key, (context,) + cls.path)

@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 import pathlib
+from os.path import exists
 from typing import List
 from unittest import mock
 
@@ -138,7 +139,8 @@ class MockCalc:
     def __enter__(self):
         if self.save_files:
             GsSession.use(Environment.PROD, None, None, application=self.application)
-            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=self.mock_calc_create_files)
+            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=self.mock_calc_create_new_files if str(
+                self.save_files).casefold() == 'new' else self.mock_calc_create_files)
         else:
             from gs_quant.session import OAuth2Session
             OAuth2Session.init = mock.MagicMock(return_value=None)
@@ -174,6 +176,15 @@ class MockCalc:
             json.dump(result_json, json_data)
 
         return result_json
+
+    def mock_calc_create_new_files(self, *args, **kwargs):
+        request = kwargs.get('request') or args[0]
+        request_id = get_risk_request_id(request)
+        file_exists = exists(self.paths / f'calc_cache/request{request_id}.json')
+        if file_exists:
+            return self.mock_calc(*args, *kwargs)
+        else:
+            return self.mock_calc_create_files(*args, *kwargs)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass

@@ -14,15 +14,16 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
-from enum import Enum
-from typing import Union, Iterable
 import datetime as dt
-from gs_quant.data import Dataset
+from enum import Enum
+import numpy as np
 import pandas as pd
 import pytz
-import numpy as np
-from gs_quant.data import DataFrequency
+from typing import Union, Iterable
+
+from gs_quant.backtests.core import ValuationFixingType
+from gs_quant.data import DataFrequency, Dataset
+from gs_quant.instrument import Instrument
 
 
 class MissingDataStrategy(Enum):
@@ -37,7 +38,7 @@ class DataSource:
 
 
 class GsDataSource(DataSource):
-    def __init__(self, data_set: str, asset_id: str, min_date: datetime.date = None, max_date: datetime.date = None,
+    def __init__(self, data_set: str, asset_id: str, min_date: dt.date = None, max_date: dt.date = None,
                  value_header: str = 'rate'):
         self._data_set = data_set
         self._asset_id = asset_id
@@ -46,7 +47,7 @@ class GsDataSource(DataSource):
         self._value_header = value_header
         self._loaded_data = None
 
-    def get_data(self, state: Union[datetime.date, datetime.datetime] = None):
+    def get_data(self, state: Union[dt.date, dt.datetime] = None):
         if self._loaded_data is None:
             ds = Dataset(self._data_set)
             if self._min_date:
@@ -68,13 +69,13 @@ class GenericDataSource(DataSource):
         self._data_set = data_set
         self._missing_data_strategy = missing_data_strategy
         self._tz_aware = isinstance(self._data_set.index[0],
-                                    datetime.datetime) and self._data_set.index[0].tzinfo is not None
+                                    dt.datetime) and self._data_set.index[0].tzinfo is not None
         if self._missing_data_strategy == MissingDataStrategy.interpolate:
             self._data_set.interpolate()
         elif self._missing_data_strategy == MissingDataStrategy.fill_forward:
             self._data_set.ffill()
 
-    def get_data(self, state: Union[datetime.date, datetime.datetime, Iterable]):
+    def get_data(self, state: Union[dt.date, dt.datetime, Iterable]):
         """
         Get the value of the dataset at a time or date.  If a list of dates or times is provided return the avg value
         :param state: a date, datetime or a list of dates or datetimes
@@ -105,8 +106,8 @@ class GenericDataSource(DataSource):
             return self._data_set[pd.to_datetime(state)] if isinstance(self._data_set.index,
                                                                        pd.DatetimeIndex) else self._data_set[state]
 
-    def get_data_range(self, start: Union[datetime.date, datetime.datetime],
-                       end: Union[datetime.date, datetime.datetime, int]):
+    def get_data_range(self, start: Union[dt.date, dt.datetime],
+                       end: Union[dt.date, dt.datetime, int]):
         """
         get a range of values from the dataset.
         :param start: a date or datetime
@@ -121,22 +122,27 @@ class GenericDataSource(DataSource):
 
 class DataManager:
     def __init__(self):
-        self._data_sources = {DataFrequency.DAILY: {}, DataFrequency.REAL_TIME: {}}
+        self._data_sources = {}
 
-    def add_data_source(self, series: Union[pd.Series, DataSource], data_freq: DataFrequency, *key):
+    def add_data_source(self, series: Union[pd.Series, DataSource], data_freq: DataFrequency,
+                        instrument: Instrument, valuation_type: ValuationFixingType):
         if not isinstance(series, DataSource) and not len(series):
             return
-        self._data_sources[data_freq][key] = GenericDataSource(series) if isinstance(series, pd.Series) else series
+        if instrument.name is None:
+            raise RuntimeError('Please add a name identify your instrument')
+        key = (data_freq, instrument.name, valuation_type)
+        if key in self._data_sources:
+            raise RuntimeError('A dataset with this frequency instrument name and valuation type already added to '
+                               'Data Manager')
+        self._data_sources[key] = GenericDataSource(series) if isinstance(series, pd.Series) else series
 
-    def get_data(self, state: Union[dt.date, dt.datetime], *key):
-        if isinstance(state, dt.datetime):
-            return self._data_sources[DataFrequency.REAL_TIME][key].get_data(state)
-        else:
-            return self._data_sources[DataFrequency.DAILY][key].get_data(state)
+    def get_data(self, state: Union[dt.date, dt.datetime], instrument: Instrument, valuation_type: ValuationFixingType):
+        key = (DataFrequency.REAL_TIME if isinstance(state, dt.datetime) else DataFrequency.DAILY,
+               instrument.name.split('_')[-1], valuation_type)
+        return self._data_sources[key].get_data(state)
 
     def get_data_range(self, start: Union[dt.date, dt.datetime],
-                       end: Union[dt.date, dt.datetime], *key):
-        if isinstance(start, dt.datetime):
-            return self._data_sources[DataFrequency.REAL_TIME][key].get_data_range(start, end)
-        else:
-            return self._data_sources[DataFrequency.DAILY][key].get_data_range(start, end)
+                       end: Union[dt.date, dt.datetime], instrument: Instrument, valuation_type: ValuationFixingType):
+        key = (DataFrequency.REAL_TIME if isinstance(start, dt.datetime) else DataFrequency.DAILY,
+               instrument.name.split('_')[-1], valuation_type)
+        return self._data_sources[key].get_data_range(start, end)

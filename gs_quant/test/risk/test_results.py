@@ -24,7 +24,7 @@ from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMark
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import MultiScenario
 from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel, PnlExplain
-from gs_quant.risk.core import aggregate_risk, SeriesWithInfo
+from gs_quant.risk.core import aggregate_risk, SeriesWithInfo, FloatWithInfo
 from gs_quant.risk.results import MultipleScenarioResult, PricingFuture, HistoricalPricingFuture
 from gs_quant.target.common import MarketDataPattern
 from gs_quant.test.utils.test_utils import MockCalc
@@ -176,15 +176,20 @@ def test_historical_multi_scenario(mocker):
         with HistoricalPricingContext(date(2020, 1, 14), date(2020, 1, 15), market_data_location='LDN'):
             with multiscenario:
                 res = Portfolio(swap_3).price()
+                res_multi_rm = Portfolio(swap_3).calc((risk.Price, risk.IRFwdRate))
 
     default_pivot_table_test(res, with_dates='dated')
+    default_pivot_table_test(res_multi_rm, with_dates='dated')
 
     # test slicing
     date_res = res[date(2020, 1, 14)]
     assert all([isinstance(r, float) for r in date_res.futures[0].result().values()])
+    date_res_2 = res_multi_rm[swap_3][risk.Price][date(2020, 1, 14)]
+    assert all([isinstance(r, FloatWithInfo) for r in date_res_2.values()])
 
     scen_slice_res = res[curvescen2]
     assert all([isinstance(r, SeriesWithInfo) for r in scen_slice_res.futures[0].result().values()])
+    assert isinstance(res_multi_rm[swap_3][risk.Price][curvescen2], SeriesWithInfo)
 
     # test futures
     futures = res.futures
@@ -194,9 +199,14 @@ def test_historical_multi_scenario(mocker):
 
 def test_composite_multi_scenario(mocker):
     with MockCalc(mocker):
-        c, _, _ = get_attributes(usd_port, risk.Price, resolve=True, ctx='Composite')
+        c, res1, _ = get_attributes(usd_port, risk.Price, resolve=True, ctx='Composite')
+        c2, res2, _ = get_attributes(eur_port, (risk.Price, risk.IRFwdRate), resolve=True, ctx='Composite')
 
     assert 'scenario' in c
+    assert 'scenario' in c2
+    assert 'risk_measure' in c2
+    assert len(res1.risk_measures) == 1
+    assert len(res2.risk_measures) == 2
 
 
 def test_one_portfolio(mocker):

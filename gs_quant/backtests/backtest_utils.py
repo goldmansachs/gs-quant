@@ -63,9 +63,6 @@ def get_final_date(inst, create_date, duration, holiday_calendar=None):
     return final_date_cache[cache_key]
 
 
-def scale_trade(inst, ratio):
-    inst_dict = inst.as_dict()
-    inst_dict['notional_amount'] = inst_dict['notional_amount'] * ratio
-    new_inst = Instrument.from_dict(inst_dict)
-    new_inst.name = inst.name
+def scale_trade(inst: Instrument, ratio: float):
+    new_inst = inst.scale(ratio)
     return new_inst

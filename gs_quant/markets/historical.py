@@ -37,16 +37,16 @@ class HistoricalPricingContext(PricingContext):
             end: Optional[Union[int, dt.date]] = None,
             calendars: Union[str, Tuple] = (),
             dates: Optional[Iterable[dt.date]] = None,
-            is_async: bool = False,
-            is_batch: bool = False,
-            use_cache: bool = False,
-            visible_to_gs: bool = False,
+            is_async: bool = None,
+            is_batch: bool = None,
+            use_cache: bool = None,
+            visible_to_gs: bool = None,
             request_priority: Optional[int] = None,
             csa_term: str = None,
             market_data_location: Optional[str] = None,
             timeout: Optional[int] = None,
-            show_progress: Optional[bool] = False,
-            use_server_cache: Optional[bool] = False):
+            show_progress: Optional[bool] = None,
+            use_server_cache: Optional[bool] = None):
         """
         A context for producing valuations over multiple dates
 
@@ -124,14 +124,14 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
             calendars: Union[str, Tuple] = (),
             dates: Optional[Iterable[dt.date]] = None,
             roll_to_fwds: bool = True,
-            is_async: bool = False,
-            is_batch: bool = False,
-            use_cache: bool = False,
-            visible_to_gs: bool = False,
+            is_async: bool = None,
+            is_batch: bool = None,
+            use_cache: bool = None,
+            visible_to_gs: bool = None,
             csa_term: str = None,
             market_data_location: Optional[str] = None,
             timeout: Optional[int] = None,
-            show_progress: Optional[bool] = False,
+            show_progress: Optional[bool] = None,
             name: Optional[str] = None):
         """
         A context for producing valuations over multiple dates

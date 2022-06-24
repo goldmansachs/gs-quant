@@ -19,7 +19,7 @@ from typing import Iterable
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.base import get_enum_value
-from gs_quant.backtests.core import Backtest, TradeInMethod, MarketModel
+from gs_quant.backtests.core import Backtest, TradeInMethod
 from gs_quant.errors import MqValueError
 from gs_quant.target.backtests import *
 from gs_quant.instrument import EqOption, EqVarianceSwap
@@ -48,7 +48,7 @@ class StrategySystematic:
                  currency: Union[Currency, str] = Currency.USD,
                  trade_in_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
                  trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
-                 market_model: Union[MarketModel, str] = MarketModel.STICKY_FIXED_STRIKE,
+                 market_model: Union[EquityMarketModel, str] = EquityMarketModel.SFK,
                  roll_date_mode: str = None,
                  expiry_date_mode: str = None):
         self.__cost_netting = cost_netting
@@ -57,7 +57,7 @@ class StrategySystematic:
         self.__backtest_type = BACKTEST_TYPE_NAME
 
         trade_in_method = get_enum_value(TradeInMethod, trade_in_method).value
-        market_model = get_enum_value(MarketModel, market_model).value
+        market_model = get_enum_value(EquityMarketModel, market_model).value
 
         self.__trading_parameters = BacktestTradingParameters(
             quantity=quantity,

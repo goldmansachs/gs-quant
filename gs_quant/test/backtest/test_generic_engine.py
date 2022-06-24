@@ -15,8 +15,9 @@ under the License.
 """
 
 from datetime import date
+from unittest.mock import patch
+
 import pandas as pd
-import pytest
 from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap
 from gs_quant.backtests.triggers import *
 from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction, EnterPositionQuantityScaledAction
@@ -33,7 +34,16 @@ from gs_quant.markets import PricingContext
 from gs_quant.common import Currency, PayReceive
 
 
-@pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
+def mock_pricing_context(self):
+    is_batch = False
+    show_progress = True
+
+    context = PricingContext(is_batch=is_batch, show_progress=show_progress)
+
+    return context
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_generic_engine_simple(mocker):
     with MockCalc(mocker):
 
@@ -49,7 +59,7 @@ def test_generic_engine_simple(mocker):
 
         # trig_req = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency=freq)
         trig_req = DateTriggerRequirements(dates=[start_date])
-        actions = AddTradeAction(call, freq)
+        actions = AddTradeAction(call, freq, name='Action1')
 
         # starting with empty portfolio (first arg to Strategy), apply actions on trig_req
         triggers = DateTrigger(trig_req, actions)
@@ -64,10 +74,10 @@ def test_generic_engine_simple(mocker):
         summary = backtest.result_summary
         assert len(summary) == 3
         assert round(summary[Price].sum()) == 2424
-        assert round(summary['Cumulative Cash'].sum()) == 0
+        assert round(summary['Cumulative Cash'][-1]) == 0
 
 
-@pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_hedge_action_risk_trigger(mocker):
     with MockCalc(mocker):
         start_date = date(2021, 12, 1)
@@ -81,7 +91,7 @@ def test_hedge_action_risk_trigger(mocker):
         fwd_hedge = FXForward(pair='USDJPY', settlement_date='2y', notional_amount=1e5, name='2y_forward')
 
         trig_req = RiskTriggerRequirements(risk=hedge_risk, trigger_level=0, direction=TriggerDirection.ABOVE)
-        action_hedge = HedgeAction(hedge_risk, fwd_hedge, '2b')
+        action_hedge = HedgeAction(hedge_risk, fwd_hedge, '2b', name='HedgeAction1')
 
         triggers = StrategyRiskTrigger(trig_req, action_hedge)
 
@@ -100,11 +110,11 @@ def test_hedge_action_risk_trigger(mocker):
         summary = backtest.result_summary
         assert len(summary) == 3
         assert round(summary[hedge_risk].sum()) == 0
-        assert round(summary['Cumulative Cash'].sum()) == -7090
+        assert round(summary['Cumulative Cash'][-1]) == -7090
         assert Price in summary.columns
 
 
-@pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_mkt_trigger_data_sources(mocker):
     with MockCalc(mocker):
         s = pd.Series({date(2021, 10, 1): 0.984274,
@@ -125,7 +135,7 @@ def test_mkt_trigger_data_sources(mocker):
                        date(2021, 10, 25): 1.033413})
 
         action = AddTradeAction(IRSwaption(notional_currency='USD', expiration_date='1y', termination_date='1y'),
-                                'expiration_date')
+                                'expiration_date', name='Action1')
         data_source = GenericDataSource(s, MissingDataStrategy.fill_forward)
         mkt_trigger = MktTrigger(MktTriggerRequirements(data_source, 1.1, TriggerDirection.ABOVE), action)
         strategy = Strategy(None, mkt_trigger)
@@ -134,17 +144,17 @@ def test_mkt_trigger_data_sources(mocker):
 
         # backtest = engine.run_backtest(strategy, start=date(2021, 10, 1), end=date(2021, 10, 25), frequency='1b',
         #                                show_progress=True)
-        backtest = engine.run_backtest(strategy, states=s.index, show_progress=True)
+        backtest = engine.run_backtest(strategy, states=list(s.index), show_progress=True)
 
         summary = backtest.result_summary
         ledger = backtest.trade_ledger()
         assert len(summary) == 12
         assert len(ledger) == 6
         assert round(summary[Price].sum()) == 25163614
-        assert round(summary['Cumulative Cash'].sum()) == -2153015
+        assert round(summary['Cumulative Cash'][-1]) == -2153015
 
 
-@pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_exit_action_noarg(mocker):
     with MockCalc(mocker):
 
@@ -156,8 +166,8 @@ def test_exit_action_noarg(mocker):
 
         trig_req_add = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b')
         trig_req_exit = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='2b')
-        actions_add = AddTradeAction(irswap)
-        actions_exit = ExitTradeAction()
+        actions_add = AddTradeAction(irswap, name='Action1')
+        actions_exit = ExitTradeAction(name='ExitAction1')
 
         triggers = [PeriodicTrigger(trig_req_add, actions_add), PeriodicTrigger(trig_req_exit, actions_exit)]
         strategy = Strategy(None, triggers)
@@ -177,7 +187,7 @@ def test_exit_action_noarg(mocker):
         assert trade_ledger['Action1_swap_2021-12-07']['Close'] == date(2021, 12, 8)
 
 
-@pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_exit_action_emptyresults(mocker):
     with MockCalc(mocker):
 
@@ -189,8 +199,8 @@ def test_exit_action_emptyresults(mocker):
 
         trig_req_add = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='2b')
         trig_req_exit = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b')
-        actions_add = AddTradeAction(irswap)
-        actions_exit = ExitTradeAction()
+        actions_add = AddTradeAction(irswap, name='Action1')
+        actions_exit = ExitTradeAction(name='ExitAction1')
 
         triggers = [PeriodicTrigger(trig_req_add, actions_add), PeriodicTrigger(trig_req_exit, actions_exit)]
         strategy = Strategy(None, triggers)
@@ -212,7 +222,7 @@ def test_exit_action_emptyresults(mocker):
         assert trade_ledger['Action1_swap_2021-12-10']['Close'] == date(2021, 12, 10)
 
 
-@pytest.mark.skip(reason="requires mocking of data extraction for calendar information")
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_exit_action_bytradename(mocker):
     with MockCalc(mocker):
 
@@ -225,8 +235,8 @@ def test_exit_action_bytradename(mocker):
 
         trig_req_add = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b')
         trig_req_exit = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='2b')
-        actions_add = AddTradeAction([irswap1, irswap2])
-        actions_exit = ExitTradeAction('swap1')
+        actions_add = AddTradeAction([irswap1, irswap2], name='Action1')
+        actions_exit = ExitTradeAction('swap1', name='ExitAction1')
 
         triggers = [PeriodicTrigger(trig_req_add, actions_add), PeriodicTrigger(trig_req_exit, actions_exit)]
         strategy = Strategy(None, triggers)
@@ -249,7 +259,7 @@ def test_exit_action_bytradename(mocker):
         assert trade_ledger['Action1_swap2_2021-12-10']['Status'] == 'open'
 
 
-@pytest.mark.skip(reason="requires is_batch to be set to false in generic_engine.py")
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_quantity_scaled_action(mocker):
     with MockCalc(mocker):
         start_date = date(2021, 12, 6)
@@ -266,7 +276,8 @@ def test_quantity_scaled_action(mocker):
         portfolio = Portfolio(name='portfolio', priceables=[call, put])
 
         # Trade the position monthly without any scaling
-        trade_action = EnterPositionQuantityScaledAction(priceables=portfolio, trade_duration='1m', name='act')
+        trade_action = EnterPositionQuantityScaledAction(priceables=portfolio, trade_duration='1m',
+                                                         name='QuantityScaledAction1')
         trade_trigger = PeriodicTrigger(
             trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
             actions=trade_action)
@@ -282,11 +293,12 @@ def test_quantity_scaled_action(mocker):
         assert len(summary) == 5
         assert len(ledger) == 10
         assert round(summary[Price].sum()) == 2715
-        assert round(summary['Cumulative Cash'].sum()) == -2883
+        assert round(summary['Cumulative Cash'][-1]) == -922
 
         # Trade the position monthly and scale the quantity of the trade
         trade_action_scaled = EnterPositionQuantityScaledAction(priceables=portfolio, trade_duration='1m',
-                                                                trade_quantity=scale_factor, name='scaled_act')
+                                                                trade_quantity=scale_factor,
+                                                                name='QuantityScaledAction2')
         trade_trigger_scaled = PeriodicTrigger(
             trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
             actions=trade_action_scaled)
@@ -303,10 +315,10 @@ def test_quantity_scaled_action(mocker):
         assert len(summary_scaled) == len(summary)
         assert len(ledger_scaled) == len(ledger)
         assert round(summary_scaled[Price].sum()) == round(summary[Price].sum() * scale_factor)
-        assert round(summary_scaled['Cumulative Cash'].sum()) == round(summary['Cumulative Cash'].sum() * scale_factor)
+        assert round(summary_scaled['Cumulative Cash'][-1]) == round(summary['Cumulative Cash'][-1] * scale_factor)
 
 
-@pytest.mark.skip(reason="requires is_batch to be set to false in generic_engine.py")
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_quantity_scaled_action_nav(mocker):
     with MockCalc(mocker):
         start_date = date(2021, 12, 6)
@@ -322,7 +334,7 @@ def test_quantity_scaled_action_nav(mocker):
         trade_action_scaled = EnterPositionQuantityScaledAction(priceables=call, trade_duration='1b',
                                                                 trade_quantity=initial_cash,
                                                                 trade_quantity_type=BacktestTradingQuantityType.NAV,
-                                                                name='nav_act')
+                                                                name='QuantityScaledAction1')
 
         trade_trigger_scaled = PeriodicTrigger(
             trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
@@ -337,11 +349,16 @@ def test_quantity_scaled_action_nav(mocker):
         ledger = backtest.trade_ledger().to_dict('index')
 
         # Start with initial cash and only use sale proceeds to buy new options
-        assert ledger['nav_act_call_2021-12-06']['Open Value'] == -initial_cash
-        assert ledger['nav_act_call_2021-12-07']['Open Value'] == -ledger['nav_act_call_2021-12-06']['Close Value']
-        assert ledger['nav_act_call_2021-12-08']['Open Value'] == -ledger['nav_act_call_2021-12-07']['Close Value']
-        assert ledger['nav_act_call_2021-12-09']['Open Value'] == -ledger['nav_act_call_2021-12-08']['Close Value']
-        assert ledger['nav_act_call_2021-12-10']['Open Value'] == -ledger['nav_act_call_2021-12-09']['Close Value']
+        assert ledger['QuantityScaledAction1_call_2021-12-06']['Open Value'] \
+               == -initial_cash
+        assert ledger['QuantityScaledAction1_call_2021-12-07']['Open Value'] \
+               == -ledger['QuantityScaledAction1_call_2021-12-06']['Close Value']
+        assert ledger['QuantityScaledAction1_call_2021-12-08']['Open Value'] \
+               == -ledger['QuantityScaledAction1_call_2021-12-07']['Close Value']
+        assert ledger['QuantityScaledAction1_call_2021-12-09']['Open Value'] \
+               == -ledger['QuantityScaledAction1_call_2021-12-08']['Close Value']
+        assert ledger['QuantityScaledAction1_call_2021-12-10']['Open Value'] \
+               == -ledger['QuantityScaledAction1_call_2021-12-09']['Close Value']
 
         # Total cash spent is the initial cash throughout the entire strategy
         assert summary['Cumulative Cash'][0] == -initial_cash
