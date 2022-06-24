@@ -37,7 +37,6 @@ class WebsocketUnavailable(Exception):
 
 
 class GsRiskApi(RiskApi):
-
     USE_MSGPACK = True
     POLL_FOR_BATCH_RESULTS = False
 
@@ -76,7 +75,8 @@ class GsRiskApi(RiskApi):
         return '/risk/calculate{}'.format('/bulk' if is_bulk else '')
 
     @classmethod
-    async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
+    async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue,
+                          timeout: Optional[int] = None) -> Optional[str]:
         if cls.POLL_FOR_BATCH_RESULTS:
             return await cls.__get_results_poll(responses, results, timeout=timeout)
         else:
@@ -122,9 +122,10 @@ class GsRiskApi(RiskApi):
                     elif 'result' in result:
                         results.put_nowait((pending_requests.pop(result['requestId']), result['result']))
             except Exception as e:
-                _logger.error(f'Fatal error: {e}')
+                error_str = f'Fatal error polling for results: {e}'
+                _logger.error(error_str)
                 cls.shutdown_queue_listener(results)
-                return
+                return error_str
 
     @classmethod
     async def __get_results_ws(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
@@ -144,7 +145,7 @@ class GsRiskApi(RiskApi):
                 while pending_requests or not all_requests_dispatched:
                     # Continue while we have pending or un-dispatched requests
 
-                    request_listener = asyncio.ensure_future(cls.drain_queue_async(responses))\
+                    request_listener = asyncio.ensure_future(cls.drain_queue_async(responses)) \
                         if not all_requests_dispatched else None
                     result_listener = asyncio.ensure_future(ws.recv())
                     listeners = tuple(filter(None, (request_listener, result_listener)))
@@ -167,7 +168,7 @@ class GsRiskApi(RiskApi):
                             # Unpack the result
 
                             try:
-                                result = msgpack.unpackb(base64.b64decode(result_str), raw=False)\
+                                result = msgpack.unpackb(base64.b64decode(result_str), raw=False) \
                                     if cls.USE_MSGPACK else json.loads(result_str)
                             except Exception as ee:
                                 result = ee
@@ -235,8 +236,9 @@ class GsRiskApi(RiskApi):
                 attempts = max_attempts
 
         if error != '':
-            _logger.error(f'Fatal error: {error}')
+            _logger.error(f'Fatal error with websocket: {error}')
             cls.shutdown_queue_listener(results)
+            return error
 
     @classmethod
     def create_pretrade_execution_optimization(cls, request: OptimizationRequest) -> str:

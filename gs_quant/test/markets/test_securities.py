@@ -216,6 +216,8 @@ class AssetContext:
 
 
 def test_get_security(mocker):
+    mocker.patch.object(GsSession, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+
     mock_response = {
         "results": [
             {

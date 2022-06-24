@@ -105,7 +105,7 @@ class PredefinedAssetEngine(BacktestBaseEngine):
     def __init__(self,
                  data_mgr: DataManager = DataManager(),
                  calendars: Union[str, Tuple[str, ...]] = 'Weekend',
-                 tz: timezone = timezone('America/New_York'),
+                 tz: timezone = timezone('UTC'),
                  valuation_method: ValuationMethod = ValuationMethod(ValuationFixingType.PRICE),
                  action_impl_map=None):
         if action_impl_map is None:

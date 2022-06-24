@@ -249,7 +249,8 @@ def test_get_r_squared(mocker):
                                          assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
                                          format=ReturnFormat.JSON)
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'),
+                                               query, timeout=200)
     assert response == r_squared_response
 
 
@@ -290,7 +291,8 @@ def test_get_fair_value_gap_standard_deviation(mocker):
                                               end_date=dt.date(2022, 4, 6),
                                               assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
                                               format=ReturnFormat.JSON)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'),
+                                               query, timeout=200)
     assert response == fvg_response
 
 
@@ -332,7 +334,8 @@ def test_get_fair_value_gap_percent(mocker):
                                               assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
                                               fair_value_gap_unit=Unit.PERCENT,
                                               format=ReturnFormat.JSON)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'),
+                                               query, timeout=200)
     assert response == fvg_response
 
 
@@ -388,7 +391,8 @@ def test_get_factor_standard_deviation(mocker):
                                                          assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
                                                          format=ReturnFormat.JSON)
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'),
+                                               query, timeout=200)
     assert response == factor_standard_deviation_response
 
 
@@ -443,7 +447,8 @@ def test_get_factor_z_score(mocker):
                                               end_date=dt.date(2022, 4, 6),
                                               assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
                                               format=ReturnFormat.JSON)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'), query)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'),
+                                               query, timeout=200)
     assert response == factor_z_score_response
 
 

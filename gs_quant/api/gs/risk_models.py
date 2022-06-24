@@ -157,7 +157,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
             query['asOfDate'] = as_of_date.strftime('%Y-%m-%d')
         if sort_by_term is not None:
             query['sortByTerm'] = sort_by_term
-        return GsSession.current._post('/risk/models/coverage', query)['results']
+        return GsSession.current._post('/risk/models/coverage', query, timeout=200)['results']
 
     @classmethod
     def upload_risk_model_data(cls,
@@ -174,7 +174,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
             if final_upload is not None:
                 final_upload_flag = 'true' if final_upload else 'false'
                 url += f'&finalUpload={final_upload_flag}'
-        return GsSession.current._post(url, model_data, timeout=85)
+        return GsSession.current._post(url, model_data, timeout=200)
 
     @classmethod
     def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date = None,
@@ -191,4 +191,4 @@ class GsFactorRiskModelApi(GsRiskModelApi):
             query['measures'] = measures
         if limit_factors is not None:
             query['limitFactors'] = limit_factors
-        return GsSession.current._post(f'/risk/models/data/{model_id}/query', query)
+        return GsSession.current._post(f'/risk/models/data/{model_id}/query', query, timeout=200)

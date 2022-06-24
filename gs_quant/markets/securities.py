@@ -1419,7 +1419,7 @@ class SecurityMaster:
                   as_of: Union[dt.date, dt.datetime] = None,
                   exchange_code: ExchangeCode = None,
                   asset_type: AssetType = None,
-                  sort_by_rank: bool = False,
+                  sort_by_rank: bool = True,
                   fields: Optional[List[str]] = None) -> Asset:
         """
         Get an asset by identifier and identifier type
@@ -1429,7 +1429,7 @@ class SecurityMaster:
         :param exchange_code: exchange code
         :param asset_type: asset type
         :param as_of: As of date for query
-        :param sort_by_rank: whether to sort assets by rank.
+        :param sort_by_rank: whether to sort assets by rank. This flag is ignored when using SecMasterContext
         :param fields: asset fields to return
         :return: Asset object or None
 
@@ -1461,7 +1461,7 @@ class SecurityMaster:
         if cls._source == SecurityMasterSource.SECURITY_MASTER:
             if not isinstance(id_type, SecurityIdentifier):
                 raise MqTypeError('expected a security identifier')
-            if exchange_code or asset_type or sort_by_rank:
+            if exchange_code or asset_type:
                 raise NotImplementedError('argument not implemented for Security Master (supported in Asset Service)')
             return cls._get_security_master_asset(id_value, id_type, as_of=as_of, fields=fields)
 

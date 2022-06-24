@@ -133,27 +133,25 @@ def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: Unio
         key.scenario,
         key.risk_measure)
 
-    if isinstance(raw_value, ErrorValue):
-        return raw_value
-    elif isinstance(raw_value, DataFrameWithInfo):
-        raw_df = raw_value.raw_value.set_index('dates')
-        return DataFrameWithInfo(
-            raw_df.reset_index(drop=True) if isinstance(date, dt.date) else raw_df,
-            risk_key=risk_key,
-            unit=result.unit,
-            error=result.error)
-    elif isinstance(raw_value, SeriesWithInfo):
-        return SeriesWithInfo(
-            raw_value.raw_value,
-            risk_key=risk_key,
-            unit=result.unit,
-            error=result.error)
+    unit = result.unit
+    error = result.error
+    if isinstance(raw_value, DataFrameWithInfo):
+        raw_value = raw_value.raw_value.set_index('dates')
+        raw_value = raw_value.reset_index(drop=True) if isinstance(date, dt.date) else raw_value
+    elif isinstance(raw_value, float):
+        unit = result.unit.get(date, result.unit) if unit else None
+    return _get_value_with_info(raw_value, risk_key, unit, error)
+
+
+def _get_value_with_info(value, risk_key, unit, error):
+    if isinstance(value, ErrorValue):
+        return value
+    elif isinstance(value, pd.DataFrame):
+        return DataFrameWithInfo(value, risk_key=risk_key, unit=unit, error=error)
+    elif isinstance(value, pd.Series):
+        return SeriesWithInfo(value.raw_value, risk_key=risk_key, unit=unit, error=error)
     else:
-        return FloatWithInfo(
-            risk_key,
-            raw_value,
-            unit=result.unit.get(date, result.unit) if result.unit else None,
-            error=result.error)
+        return FloatWithInfo(risk_key, value, unit=unit, error=error)
 
 
 def _risk_keys_compatible(lhs, rhs) -> bool:
@@ -365,7 +363,7 @@ class MultipleRiskMeasureResult(dict):
                 return tuple(value.scenarios)
         return tuple()
 
-    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique,
+    def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
                  display_options: DisplayOptions = None):
         df = pd.DataFrame.from_records(self._to_records({}, display_options=display_options))
         if values is None and index is None and columns is None:
@@ -412,7 +410,6 @@ class MultipleRiskMeasureFuture(CompositeResultFuture):
 class MultipleScenarioResult(dict):
     def __init__(self, instrument, dict_values: Iterable):
         super().__init__(dict_values)
-        self.__scenarios = self.keys()
         self.__instrument = instrument
 
     def __getitem__(self, item):
@@ -424,7 +421,7 @@ class MultipleScenarioResult(dict):
                 raise ValueError('Can only index by date on historical results')
         return super().__getitem__(item)
 
-    def to_frame(self, values='default', index='default', columns='default', aggfunc=pd.unique,
+    def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
                  display_options: DisplayOptions = None):
         df = pd.DataFrame.from_records(self._to_records({}, display_options=display_options))
         if values is None and index is None and columns is None:
@@ -446,7 +443,7 @@ class MultipleScenarioResult(dict):
 
     @property
     def scenarios(self):
-        return self.__scenarios
+        return self.keys()
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
         return list(chain.from_iterable(
@@ -578,6 +575,7 @@ class PortfolioRiskResult(CompositeResultFuture):
                         futures.append(PricingFuture(_value_for_measure_or_scen(result, item)))
 
                 return PortfolioRiskResult(self.__portfolio, self.risk_measures, futures)
+
         elif is_instance_or_iterable(item, dt.date):
             for idx, _ in enumerate(self.portfolio):
                 result = self.__result(PortfolioPath(idx))

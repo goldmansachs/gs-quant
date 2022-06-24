@@ -20,7 +20,7 @@ from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedg
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import EqDelta
-from gs_quant.target.backtests import BacktestSignalSeriesItem, BacktestTradingQuantityType
+from gs_quant.target.backtests import BacktestSignalSeriesItem, BacktestTradingQuantityType, EquityMarketModel
 import pandas as pd
 import re
 import copy
@@ -160,8 +160,9 @@ class EquityVolEngine(object):
                     if action.trade_quantity is None or action.trade_quantity_type is None:
                         check_results.append(
                             'Error: EnterPositionQuantityScaledAction trade_quantity or trade_quantity_type is None')
-                    expiry_date_modes = list(map(lambda x: ExpirationDateParser(x.expirationDate).get_mode(),
-                                                 action.priceables))
+                    expiry_date_modes = map(lambda x: ExpirationDateParser(x.expirationDate).get_mode(),
+                                            action.priceables)
+                    expiry_date_modes = list(set(expiry_date_modes))
                     if len(expiry_date_modes) > 1:
                         check_results.append(
                             'Error: EnterPositionQuantityScaledAction all priceable expiration_date modifiers must '
@@ -199,7 +200,7 @@ class EquityVolEngine(object):
         return True
 
     @classmethod
-    def run_backtest(cls, strategy, start, end):
+    def run_backtest(cls, strategy, start, end, market_model=EquityMarketModel.SFK):
         check_result = cls.check_strategy(strategy)
         if len(check_result):
             raise RuntimeError(check_result)
@@ -259,6 +260,7 @@ class EquityVolEngine(object):
                                       roll_frequency=roll_frequency,
                                       trade_in_signals=trade_in_signals,
                                       trade_out_signals=trade_out_signals,
+                                      market_model=market_model,
                                       expiry_date_mode=expiry_date_mode
                                       )
 

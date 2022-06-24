@@ -38,7 +38,8 @@ class RiskApi(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
+    async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue,
+                          timeout: Optional[int] = None) -> Optional[str]:
         ...
 
     @classmethod
@@ -110,7 +111,7 @@ class RiskApi(metaclass=ABCMeta):
     def shutdown_queue_listener(cls,
                                 q: Union[queue.Queue, asyncio.Queue],
                                 loop: Optional[asyncio.AbstractEventLoop] = None):
-        if loop:
+        if loop and not loop.is_closed():
             loop.call_soon_threadsafe(q.put_nowait, cls.__SHUTDOWN_SENTINEL)
         else:
             q.put_nowait(cls.__SHUTDOWN_SENTINEL)
@@ -233,16 +234,13 @@ class RiskApi(metaclass=ABCMeta):
             cls.shutdown_queue_listener(outstanding_requests)
 
             if results_handler:
-                await results_handler
+                results_error = await results_handler
+                if results_error:
+                    # Raise an exception so that pending results can be filled with an error
+                    raise RuntimeError(f'Fatal Error subscribing to results: {results_error}')
 
             if progress_bar:
                 progress_bar.close()
-
-            if result_thread is not None:
-                cls.shutdown_queue_listener(unprocessed_results)
-                result_thread.join()
-
-            cls.shutdown_queue_listener(results)
 
             if result_thread is not None:
                 cls.shutdown_queue_listener(unprocessed_results)

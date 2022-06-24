@@ -16,6 +16,7 @@ under the License.
 
 import datetime as dt
 import logging
+from contextlib import ContextDecorator
 
 import numpy as np
 from gs_quant.errors import *
@@ -58,7 +59,7 @@ class Timer:
                     f'{self.__label} took {self.__elapsed.seconds + self.__elapsed.microseconds / 1000000} seconds')
 
 
-class Tracer:
+class Tracer(ContextDecorator):
     __version = 0
     __stack_depth = 0
     __stack = []

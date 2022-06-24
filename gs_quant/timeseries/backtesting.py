@@ -401,6 +401,18 @@ class Basket:
     def average_forward_vol(self, tenor: str, forward_start_date: str, strike_reference: VolReference,
                             relative_strike: Real, *, real_time: bool = False, request_id: Optional[str] = None,
                             source: Optional[str] = None) -> pd.Series:
+        """
+        Weighted average forward volatility.
+
+        :param tenor: relative date representation of expiration date e.g. 1m
+        :param forward_start_date: forward start date e.g. 2m, 1y
+        :param strike_reference: reference for strike level
+        :param relative_strike: strike relative to reference
+        :param real_time: whether to retrieve intraday data instead of EOD
+        :param request_id: service request id, if any
+        :param source: name of function caller
+        :return: average forward volatility
+        """
         if real_time:
             raise NotImplementedError('real-time basket forward vol not implemented')
 

@@ -190,7 +190,7 @@ def _batch_data_if_present(model_id: str, data, max_asset_size, date):
 
 
 def only_factor_data_is_present(model_type: Type, data: dict) -> bool:
-    if model_type == Type.Macro or Type.Thematic:
+    if model_type == Type.Macro or model_type == Type.Thematic:
         if len(data.keys()) == 2 and 'factorData' in data.keys():
             return True
     else:
@@ -267,11 +267,13 @@ def get_universe_size(data_to_split: dict) -> int:
         return len(data_to_split.get('assetData').get('universe'))
     data_splitted = list(data_to_split.values())
     for data in data_splitted:
+        if isinstance(data, str):
+            continue
         if 'universe' in data.keys():
             return len(data.get('universe'))
         if 'universeId1' in data.keys():
             return len(set(data.get('universeId1') +
-                           data.get('universeId1')))
+                           data.get('universeId2')))
     raise ValueError(f'No universe found for data {data_to_split}')
 
 
