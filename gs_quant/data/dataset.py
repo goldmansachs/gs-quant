@@ -14,11 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import re
 import webbrowser
 from enum import Enum
 from typing import Iterable, Optional, Union, List, Dict
 from urllib.parse import quote
-import re
 
 import inflection
 import numpy as np
@@ -38,6 +38,7 @@ class Dataset:
 
     class GS(Vendor):
         HOLIDAY = 'HOLIDAY'
+        HOLIDAY_CURRENCY = 'HOLIDAY_CURRENCY'
         EDRVOL_PERCENT_INTRADAY = 'EDRVOL_PERCENT_INTRADAY'
         EDRVOL_PERCENT_STANDARD = 'EDRVOL_PERCENT_STANDARD'
         MA_RANK = 'MA_RANK'
@@ -55,7 +56,7 @@ class Dataset:
         CENTRAL_BANK_WATCH = 'CENTRAL_BANK_WATCH_PREMIUM'
         IR_SWAP_RATES_INTRADAY_CALC_BANK = 'IR_SWAP_RATES_INTRADAY_CALC_BANK'
         RETAIL_FLOW_DAILY_V2_PREMIUM = 'RETAIL_FLOW_DAILY_V2_PREMIUM'
-        FX_EVENT_JUMPS = 'FX_EVENTS_JUMP'
+        FX_EVENTS_JUMPS = 'FX_EVENTS_JUMPS'
         FXSPOT_INTRADAY2 = 'FXSPOT_INTRADAY2'
         # Test Datasets
         WEATHER = 'WEATHER'
@@ -304,6 +305,21 @@ class Dataset:
         >>> test_dataset.undelete()
         """
         return self.provider.undelete_dataset(self.id)
+
+    def delete_data(self, delete_query: Dict):
+        """
+        Delete data from dataset. You must have admin access to the dataset to delete data.
+        All data deleted is not recoverable.
+
+        :param delete_query: Query to specify data to be deleted.
+
+        >>> from gs_quant.data import Dataset
+        >>>
+        >>> test_dataset = Dataset('TEST')
+        >>> delete_query = {'startDate': dt.date.today(), 'endDate': dt.date.today(), 'deleteAll': True}
+        >>> test_dataset.delete_data(delete_query)
+        """
+        return self.provider.delete_data(self.id, delete_query)
 
     def upload_data(self, data: Union[pd.DataFrame, list, tuple]) -> Dict:
         """

@@ -167,6 +167,12 @@ def test_rule_p_():
     assert date == dt(2021, 1, 24)
 
 
+# w -> weeks offset
+def test_rule_w():
+    date: dt = RelativeDate('1w', base_date=dt(2022, 3, 30)).apply_rule(holiday_calendar=holiday_calendar)
+    assert date == dt(2022, 4, 6)
+
+
 # k -> Relative years with no implicit USD calendar
 def test_rule_k():
     date: dt = RelativeDate('1k', base_date=dt(2021, 1, 19)).apply_rule(holiday_calendar=holiday_calendar)
@@ -219,17 +225,26 @@ def test_chaining():
 
 def mock_holiday_data(*args, **kwargs):
     dq = args[1]
-    ccies = dq.as_dict()['where']['currency']
+    ccies = dq.as_dict()['where'].get('currency', [])
     base_holidays = [{'date': '2021-12-27', 'currency': 'USD', 'description': "Xmas"}]
     if 'USD' in ccies:
         base_holidays.append({'date': '2022-04-11', 'currency': 'USD', 'description': "Birthday"})
     return base_holidays
 
 
+test_types = {
+    'date': 'date',
+    'exchange': 'string',
+    'currency': 'string',
+    'description': 'string',
+    'updateTime': 'date'}
+
+
 # test holiday calendar logic
-def test_currency_holiday_calendars():
+def test_currency_holiday_calendars(mocker):
     replace = Replacer()
     replace('gs_quant.api.gs.data.GsDataApi.query_data', Mock(side_effect=mock_holiday_data))
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
     rdate = RelativeDate('-1b', base_date=dt(2022, 4, 12))
     assert dt(2022, 4, 11) == rdate.apply_rule(currencies=[])
     assert dt(2022, 4, 11) == rdate.apply_rule(currencies=['GBP'])

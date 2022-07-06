@@ -19,13 +19,12 @@ from typing import Iterable, Optional, Union
 
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.risk.measures import PnlExplain
-from gs_quant.target.measures import EqDelta, EqGamma, EqVega
 
 from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
     sort_values, MQVSValidatorDefnsWithInfo, MQVSValidatorDefn
 
 _logger = logging.getLogger(__name__)
-__scalar_risk_measures = (EqDelta, EqGamma, EqVega)
+__scalar_risk_measures = ('EqDelta', 'EqGamma', 'EqVega')
 
 
 def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey, request_id: Optional[str] = None) \
@@ -187,7 +186,7 @@ def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
                         request_id: Optional[str] = None) -> DataFrameWithInfo:
     assets = result['asset']
     # Handle equity risk measures which are really scalars
-    if len(assets) == 1 and risk_key.risk_measure in __scalar_risk_measures:
+    if len(assets) == 1 and risk_key.risk_measure.name in __scalar_risk_measures:
         return FloatWithInfo(risk_key, assets[0], request_id=request_id)
 
     for points, value in zip(result['points'], assets):

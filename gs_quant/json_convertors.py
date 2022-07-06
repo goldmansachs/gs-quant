@@ -14,9 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from dateutil.parser import isoparse
 import re
-from typing import Optional, Union
+from typing import Optional, Union, Iterable, Dict, Tuple
+
+from dateutil.parser import isoparse
 
 __valid_date_formats = ('%Y-%m-%d',  # '2020-07-28'
                         '%d%b%y',    # '28Jul20'
@@ -35,6 +36,10 @@ def decode_optional_date(value: Optional[str]) -> Optional[dt.date]:
         return dt.datetime.strptime(value, '%Y-%m-%d').date()
 
     raise ValueError(f'Cannot convert {value} to date')
+
+
+def decode_date_tuple(blob: Tuple[str]):
+    return tuple(decode_optional_date(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
 def decode_date_or_str(value: Union[dt.date, float, str]) -> Optional[Union[dt.date, str]]:
@@ -109,6 +114,16 @@ def decode_float_or_str(value: Optional[Union[float, int, str]]) -> Optional[Uni
 def decode_instrument(value: Optional[dict]):
     from gs_quant.instrument import Instrument
     return Instrument.from_dict(value) if value else None
+
+
+def decode_quote_report(value: Optional[dict]):
+    from gs_quant.quote_reports.core import quote_report_from_dict
+    return quote_report_from_dict(value) if value else None
+
+
+def decode_quote_reports(value: Optional[Iterable[Dict]]):
+    from gs_quant.quote_reports.core import quote_reports_from_dicts
+    return quote_reports_from_dicts(value) if value else None
 
 
 def encode_dictable(o):

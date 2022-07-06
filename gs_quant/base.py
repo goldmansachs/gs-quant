@@ -22,15 +22,16 @@ from collections import namedtuple
 from dataclasses import Field, InitVar, MISSING, dataclass, field, fields, replace
 from enum import EnumMeta
 from functools import update_wrapper
-from typing import Iterable, Mapping, Optional, Union
+from typing import Iterable, Mapping, Optional, Union, Tuple
 
 import numpy as np
 from dataclasses_json import config, global_config
 from dataclasses_json.core import _decode_generic, _is_supported_generic
+from inflection import camelize, underscore
+
 from gs_quant.context_base import ContextBase, ContextMeta
 from gs_quant.json_convertors import encode_date_or_str, decode_date_or_str, decode_optional_date, encode_datetime, \
-    decode_datetime, decode_float_or_str, decode_instrument, encode_dictable
-from inflection import camelize, underscore
+    decode_datetime, decode_float_or_str, decode_instrument, encode_dictable, decode_quote_report, decode_quote_reports
 
 _logger = logging.getLogger(__name__)
 
@@ -547,6 +548,11 @@ class Sentinel:
         return self.__name == other.__name
 
 
+@dataclass
+class QuoteReport(Base, ABC):
+    pass
+
+
 def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
     if value in (None,):
         return None
@@ -581,6 +587,8 @@ global_config.decoders[Optional[Union[float, str]]] = decode_float_or_str
 
 global_config.decoders[InstrumentBase] = decode_instrument
 global_config.decoders[Optional[InstrumentBase]] = decode_instrument
+global_config.decoders[QuoteReport] = decode_quote_report
+global_config.decoders[Optional[Tuple[QuoteReport, ...]]] = decode_quote_reports
 
 global_config.encoders[Market] = encode_dictable
 global_config.encoders[Optional[Market]] = encode_dictable

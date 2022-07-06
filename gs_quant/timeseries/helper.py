@@ -20,8 +20,9 @@ import os
 import re
 from enum import Enum, IntEnum
 from functools import wraps, partial
-from typing import Optional, Union, List, Iterable
+from typing import Optional, Union, List, Iterable, Callable
 
+import numpy as np
 import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
@@ -34,6 +35,16 @@ from gs_quant.timeseries.measure_registry import register_measure
 
 ENABLE_DISPLAY_NAME = 'GSQ_ENABLE_MEASURE_DISPLAY_NAME'
 USE_DISPLAY_NAME = os.environ.get(ENABLE_DISPLAY_NAME) == "1"
+_logger = logging.getLogger(__name__)
+
+try:
+    from quant_extensions.timeseries.rolling import rolling_apply
+except ImportError as e:
+    _logger.debug('unable to import rolling_apply extension: %s', e)
+
+    def rolling_apply(s: pd.Series, offset: pd.DateOffset, function: Callable[[np.ndarray], float]) -> pd.Series:
+        values = [function(s.loc[(s.index > idx - offset) & (s.index <= idx)]) for idx in s.index]
+        return pd.Series(values, index=s.index, dtype=np.double)
 
 
 def _create_enum(name, members):
@@ -334,3 +345,43 @@ def _split_where_conditions(where):
                 lb.append(dict(**temp, **{k: v}))
         la = lb
     return la
+
+
+def _pandas_roll(s: pd.Series, window_str: str, method_name: str):
+    return getattr(s.rolling(window_str), method_name)()
+
+
+def rolling_offset(s: pd.Series,
+                   offset: pd.DateOffset,
+                   function: Callable[[np.ndarray], float],
+                   method_name: str = None) -> pd.Series:
+    """
+    Perform rolling window calculations. If offset has a fixed frequency and method name is provided, will use
+    `Series.rolling< https://pandas.pydata.org/docs/reference/api/pandas.Series.rolling.html>`_ for best performance.
+
+    :param s: time series
+    :param offset: window size as a date offset
+    :param function: function to call on each window
+    :param method_name: name of method to call on each window (must be a method on Rolling object)
+    :return: result time series
+    """
+    # frequencies that can be passed to Series.rolling
+    fixed = {
+        'hour': 'H',
+        'hours': 'H',
+        'day': 'D',
+        'days': 'D'
+    }
+
+    if method_name and len(offset.kwds) == 1:
+        freq, count = offset.kwds.popitem()
+        if freq in fixed:
+            window_str = f'{count}{fixed[freq]}'
+            if np.issubdtype(s.index, np.datetime64):
+                return _pandas_roll(s, window_str, method_name)
+            else:
+                t = s.copy(deep=False)
+                t.index = pd.to_datetime(t.index)  # needed for Series.rolling
+                return pd.Series(_pandas_roll(t, window_str, method_name), index=s.index)
+
+    return rolling_apply(s, offset, function)

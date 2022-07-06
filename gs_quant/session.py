@@ -161,7 +161,8 @@ class GsSession(ContextBase):
             try_auth: Optional[bool] = True,
             include_version: Optional[bool] = True,
             timeout: Optional[int] = DEFAULT_TIMEOUT,
-            return_request_id: Optional[bool] = False
+            return_request_id: Optional[bool] = False,
+            use_body: bool = False
     ) -> Union[Base, tuple, dict]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
@@ -172,9 +173,10 @@ class GsSession(ContextBase):
         kwargs = {
             'timeout': timeout
         }
-        if method in ['GET', 'DELETE']:
+
+        if method in ['GET', 'DELETE'] and not use_body:
             kwargs['params'] = payload
-        elif method in ['POST', 'PUT']:
+        elif method in ['POST', 'PUT'] or (method in ['GET', 'DELETE'] and use_body):
             headers = self._session.headers.copy()
 
             if request_headers:
@@ -252,10 +254,11 @@ class GsSession(ContextBase):
     def _delete(self, path: str, payload: Optional[Union[dict, Base]] = None,
                 request_headers: Optional[dict] = None, cls: Optional[type] = None,
                 include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-                return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
+                return_request_id: Optional[bool] = False, use_body: Optional[bool] = False) -> \
+            Union[Base, tuple, dict]:
         return self.__request('DELETE', path, payload=payload, request_headers=request_headers,
                               cls=cls, include_version=include_version, timeout=timeout,
-                              return_request_id=return_request_id)
+                              return_request_id=return_request_id, use_body=use_body)
 
     def _put(self, path: str, payload: Optional[Union[dict, Base]] = None,
              request_headers: Optional[dict] = None, cls: Optional[type] = None, include_version: Optional[bool] = True,

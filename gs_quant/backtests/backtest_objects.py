@@ -314,10 +314,10 @@ class PredefinedAssetBacktest(BaseBacktest):
                     status = 'open'
                 start_dt, open_value = open_order.execution_end_time(), open_order.executed_price
                 long_or_short = np.sign(open_order.quantity)
-                trade_df.append((inst, start_dt, end_dt, open_value, end_value, long_or_short, status,
+                trade_df.append((inst, start_dt, end_dt, open_value, end_value, status,
                                  (end_value - open_value) * long_or_short if status == 'closed' else None))
         return pd.DataFrame(trade_df, columns=['Instrument', 'Open', 'Close', 'Open Value', 'Close Value',
-                                               'Long Short', 'Status', 'Trade PnL'])
+                                               'Status', 'Trade PnL'])
 
     def mark_to_market(self, state: dt.datetime, valuation_method: ValuationMethod):
         epsilon = 1e-12

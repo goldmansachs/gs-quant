@@ -3067,9 +3067,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     return series
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                    *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
@@ -3155,9 +3153,7 @@ def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalM
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def earnings_per_share_positive(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
                                 source: str = None, real_time: bool = False,
                                 request_id: Optional[str] = None) -> Series:
@@ -3200,9 +3196,7 @@ def earnings_per_share_positive(asset: Asset, period: str, period_direction: Fun
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def net_debt_to_ebitda(asset: Asset,
                        period: str,
                        period_direction: FundamentalMetricPeriodDirection,
@@ -3246,9 +3240,7 @@ def net_debt_to_ebitda(asset: Asset,
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
@@ -3290,9 +3282,7 @@ def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetric
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
@@ -3334,9 +3324,7 @@ def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetric
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                       *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
@@ -3378,9 +3366,7 @@ def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMe
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_earnings_positive(asset: Asset,
                                period: str,
                                period_direction: FundamentalMetricPeriodDirection,
@@ -3425,9 +3411,7 @@ def price_to_earnings_positive(asset: Asset,
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                    *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
@@ -3469,9 +3453,7 @@ def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetri
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
@@ -3513,9 +3495,7 @@ def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMet
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                     *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """

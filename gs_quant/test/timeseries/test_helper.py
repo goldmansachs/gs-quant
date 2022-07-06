@@ -19,7 +19,7 @@ from unittest.mock import Mock
 
 import pandas as pd
 import pytest
-from pandas._testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 from testfixtures import Replace, Replacer
 
 import gs_quant.timeseries as ts
@@ -28,8 +28,8 @@ from gs_quant.errors import MqError, MqRequestError
 from unittest.mock import MagicMock
 from gs_quant.session import GsSession
 from gs_quant.test.api.test_thread_manager import NullContextManager
-from gs_quant.timeseries.helper import _create_int_enum, _tenor_to_month, _month_to_tenor, plot_function, plot_measure,\
-    plot_method, normalize_window, Window, apply_ramp, check_forward_looking, get_df_with_retries, \
+from gs_quant.timeseries.helper import _create_int_enum, _tenor_to_month, _month_to_tenor, plot_function, \
+    plot_measure, plot_method, normalize_window, Window, apply_ramp, check_forward_looking, get_df_with_retries, \
     get_dataset_data_with_retries, _split_where_conditions
 
 # TODO test the instance of IntEnum when we have any.
