@@ -191,6 +191,14 @@ def test_mean():
     expected = pd.Series([3.5, 3.0, 3.0, 2.5, 2.0, 4.0], index=dates)
     assert_series_equal(result, expected, obj="Mean of multiple series")
 
+    result = mean([x, y], Window('2d', 0))
+    expected = pd.Series([3.5, 3, 3, 2.5, 2.5, 4], index=dates)
+    assert_series_equal(result, expected, obj="Mean of multiple series by date offset")
+
+    result = mean(y, Window(2, 0))
+    expected = pd.Series([4.0, 4.0, 4.0, 3.0, 2.0, 3.5], index=dates)
+    assert_series_equal(result, expected, obj="Mean of single series with nan")
+
 
 def test_median():
     dates = [
@@ -278,6 +286,10 @@ def test_sum():
     result = sum_([x, y], Window(2, 0))
     expected = pd.Series([5.0, 7.0, 9.0, 13.0, 13.0, 18.0], index=dates)
     assert_series_equal(result, expected, obj="Sum of multiple series")
+
+    result = sum_(y, Window('2d', 0))
+    expected = pd.Series([4, 4, 4, 6, 2, 7], index=dates, dtype=np.double)
+    assert_series_equal(result, expected, obj="Sum with nan input")
 
 
 def test_product():

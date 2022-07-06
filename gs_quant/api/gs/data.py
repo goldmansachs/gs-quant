@@ -21,8 +21,8 @@ from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union, Dict
 
 import cachetools
-import numpy
 import pandas as pd
+import numpy as np
 from cachetools import TTLCache
 
 from gs_quant.api.data import DataApi
@@ -301,6 +301,14 @@ class GsDataApi(DataApi):
         headers = None if 'us-east' in GsSession.current.domain else {'Content-Type': 'application/x-msgpack'}
         result = GsSession.current._post('/data/{}'.format(dataset_id), payload=data, request_headers=headers)
         return result
+
+    @classmethod
+    def delete_data(cls, dataset_id: str, delete_query: Dict) -> Dict:
+        """
+        Delete data from dataset. You must have admin access to the dataset to delete data.
+        All data deleted is not recoverable.
+        """
+        return GsSession.current._delete(f'/data/{dataset_id}', payload=delete_query, use_body=True)
 
     @classmethod
     def get_definition(cls, dataset_id: str) -> DataSetEntity:
@@ -762,7 +770,7 @@ class GsDataApi(DataApi):
             for field_name, type_name in dataset_types.items():
                 if df.get(field_name) is not None and type_name in ('date', 'date-time') and \
                         len(df.get(field_name).value_counts()) > 0:
-                    df = df.astype({field_name: numpy.datetime64})
+                    df = df.astype({field_name: np.datetime64})
 
             field_names = dataset_types.keys()
 

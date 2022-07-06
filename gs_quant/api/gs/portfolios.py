@@ -18,12 +18,13 @@ import logging
 from typing import Tuple, Union, List, Dict
 
 from gs_quant.common import PositionType
+from gs_quant.common import RiskRequest, Currency
 from gs_quant.instrument import Instrument
 from gs_quant.session import GsSession
-from gs_quant.common import RiskRequest, Currency
 from gs_quant.target.portfolios import Portfolio, Position, PositionSet
 from gs_quant.target.reports import Report
 from gs_quant.target.risk_models import RiskModelTerm as Term
+from gs_quant.target.workflow_quote import WorkflowPosition, WorkflowPositionsResponse, SaveQuoteRequest
 
 _logger = logging.getLogger(__name__)
 
@@ -205,6 +206,34 @@ class GsPortfolioApi:
     @classmethod
     def save_quote(cls, request: RiskRequest) -> str:
         return GsSession.current._post('/risk-internal/quote/save', request)['results']
+
+    @classmethod
+    def update_workflow_quote(cls, quote_id: str, request: SaveQuoteRequest):
+        headers = {'Content-Type': 'application/x-msgpack'}
+        return GsSession.current._put('/risk-internal/quote/workflow/save/{id}'.format(id=quote_id), tuple([request]),
+                                      request_headers=headers)
+
+    @classmethod
+    def save_workflow_quote(cls, request: SaveQuoteRequest) -> str:
+        headers = {'Content-Type': 'application/x-msgpack'}
+        return GsSession.current._post('/risk-internal/quote/workflow/save', tuple([request]),
+                                       request_headers=headers)['results']
+
+    @classmethod
+    def share_workflow_quote(cls, request: SaveQuoteRequest) -> str:
+        headers = {'Content-Type': 'application/x-msgpack'}
+        return GsSession.current._post('/risk-internal/quote/workflow/share', tuple([request]),
+                                       request_headers=headers)['results']
+
+    @classmethod
+    def get_workflow_quote(cls, workflow_id: str) -> Tuple[WorkflowPosition]:
+        url = f'/risk-internal/quote/workflow/{workflow_id}'
+        results = GsSession.current._get(url, timeout=181)
+        wf_pos_res = WorkflowPositionsResponse.from_dict(results)
+        if wf_pos_res:
+            return wf_pos_res.results
+        else:
+            return ()
 
     @classmethod
     def save_to_shadowbook(cls, request: RiskRequest, name: str) -> str:

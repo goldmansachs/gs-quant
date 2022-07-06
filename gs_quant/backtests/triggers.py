@@ -162,6 +162,9 @@ class Trigger(object):
         """
         raise RuntimeError('has_triggered to be implemented by subclass')
 
+    def get_trigger_times(self):
+        return []
+
     @property
     def calc_type(self):
         return self._calc_type
@@ -186,7 +189,7 @@ class PeriodicTrigger(Trigger):
         super().__init__(trigger_requirements, actions)
         self._trigger_dates = None
 
-    def get_trigger_dates(self) -> [dt.date]:
+    def get_trigger_times(self) -> [dt.date]:
         if not self._trigger_dates:
             self._trigger_dates = self._trigger_requirements.dates if \
                 hasattr(self._trigger_requirements, 'dates') else \
@@ -198,7 +201,7 @@ class PeriodicTrigger(Trigger):
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         if not self._trigger_dates:
-            self.get_trigger_dates()
+            self.get_trigger_times()
         return TriggerInfo(state in self._trigger_dates)
 
 

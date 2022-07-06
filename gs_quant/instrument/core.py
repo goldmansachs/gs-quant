@@ -21,6 +21,7 @@ from copy import deepcopy
 from typing import Iterable, Optional, Tuple, Union
 
 from dataclasses_json import global_config
+
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.base import get_enum_value, InstrumentBase, Priceable, Scenario
@@ -183,9 +184,10 @@ class Instrument(PriceableImpl, InstrumentBase):
         instrument = cls if hasattr(cls, 'asset_class') else None
         if instrument is None:
             builder_type = values.get('$type') or values.get('builder', values.get('defn', {})).get('$type')
+            values_used = values.get('builder', values.get('defn', values))
             if builder_type:
                 from gs_quant_internal.base import decode_quill_value
-                return decode_quill_value(values)
+                return decode_quill_value(values_used)
 
             asset_class_field = next((f for f in ('asset_class', 'assetClass') if f in values), None)
             if not asset_class_field:
@@ -328,5 +330,9 @@ def encode_instruments(instruments: Optional[Iterable[Instrument]]) -> Optional[
 
 
 global_config.decoders[Instrument] = Instrument.from_dict
+global_config.decoders[InstrumentBase] = Instrument.from_dict
 global_config.encoders[Instrument] = encode_instrument
 global_config.encoders[Priceable] = encode_instrument
+global_config.encoders[Optional[Priceable]] = encode_instrument
+global_config.encoders[Optional[Instrument]] = encode_instrument
+global_config.encoders[Optional[InstrumentBase]] = encode_instrument

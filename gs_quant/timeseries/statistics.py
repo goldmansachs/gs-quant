@@ -287,9 +287,15 @@ def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = [np.nanmean(x.loc[(x.index > idx - w.w) & (x.index <= idx)]) for idx in x.index]
+        if isinstance(x, pd.Series):
+            values = rolling_offset(x, w.w, np.nanmean, 'mean')
+        else:
+            values = [np.nanmean(x.loc[(x.index > idx - w.w) & (x.index <= idx)]) for idx in x.index]
     else:
-        values = [np.nanmean(x.iloc[max(idx - w.w + 1, 0): idx + 1]) for idx in range(0, len(x))]
+        if isinstance(x, pd.Series):
+            values = x.rolling(w.w, 0).mean()  # faster than slicing in Python
+        else:
+            values = [np.nanmean(x.iloc[max(idx - w.w + 1, 0): idx + 1]) for idx in range(0, len(x))]
     return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
 
 
@@ -423,8 +429,9 @@ def sum_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing
     if isinstance(w.w, pd.DateOffset):
-        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].sum() for idx in x.index]
-        return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
+        assert isinstance(x, pd.Series), 'expected a series'
+        values = rolling_offset(x, w.w, np.nansum, 'sum')
+        return apply_ramp(values, w)
     else:
         return apply_ramp(x.rolling(w.w, 0).sum(), w)
 

@@ -29,6 +29,7 @@ RebalanceRequest = Union[CustomBasketsRebalanceInputs, ISelectRebalance, ISelect
 RebalanceResponse = Union[CustomBasketsResponse, ISelectResponse]
 RebalanceCancelRequest = Union[CustomBasketsRebalanceAction, ISelectActionRequest]
 RebalanceCancelResponse = Union[Dict, ISelectResponse]
+ValidatedRequest = Union[CreateRequest, RebalanceRequest]
 
 
 class GsIndexApi:
@@ -43,10 +44,18 @@ class GsIndexApi:
         ISelectActionRequest: ISelectResponse
     }
 
+    @staticmethod
+    def _validate_payload(payload: ValidatedRequest) -> ValidatedRequest:
+        """Target generator defaults fields with only one enum value causing failures"""
+        if type(payload) in [CustomBasketsCreateInputs, CustomBasketsRebalanceInputs]:
+            payload.pricing_parameters.asset_overwrite_data_set_id = None
+        return payload
+
     @classmethod
     def create(cls, inputs: CreateRequest) -> CreateRepsonse:
         """ Create new basket or iselect strategy """
         response_cls = cls._response_cls[type(inputs)]
+        inputs = cls._validate_payload(inputs)
         return GsSession.current._post('/indices', payload=inputs, cls=response_cls)
 
     @classmethod
@@ -61,6 +70,7 @@ class GsIndexApi:
         """ Rebalance existing index with new composition """
         url = f'/indices/{id_}/rebalance'
         response_cls = cls._response_cls[type(inputs)]
+        inputs = cls._validate_payload(inputs)
         inputs = IndicesRebalanceInputs(parameters=inputs) if not isinstance(inputs, ISelectRequest) else inputs
         return GsSession.current._post(url, payload=inputs, cls=response_cls)
 

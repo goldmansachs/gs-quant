@@ -18,6 +18,10 @@ from datetime import date
 from unittest.mock import patch
 
 import pandas as pd
+import pytest
+
+import gs_quant.risk as risk
+
 from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap
 from gs_quant.backtests.triggers import *
 from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction, EnterPositionQuantityScaledAction
@@ -363,3 +367,33 @@ def test_quantity_scaled_action_nav(mocker):
         # Total cash spent is the initial cash throughout the entire strategy
         assert summary['Cumulative Cash'][0] == -initial_cash
         assert (summary['Cumulative Cash'] == summary['Cumulative Cash'][0]).all()
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_hedge_without_risk(mocker):
+    with MockCalc(mocker):
+
+        start_date_trade = date(2021, 12, 1)
+
+        start_date_hedge = date(2021, 11, 15)
+        end_date_hedge = date(2021, 12, 15)
+
+        option = EqOption('.STOXX50E', expiration_date='1m', strike_price='ATM', option_type=OptionType.Call,
+                          option_style=OptionStyle.European, name='call')
+        action = AddTradeAction(option, '1b', name='Action1')
+        trigger = DateTrigger(DateTriggerRequirements(dates=[start_date_trade]), actions=[action])
+
+        hedge = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                         option_style=OptionStyle.European, name='call')
+        hedge_action = HedgeAction(risk.EqDelta, priceables=hedge, trade_duration='1b', name='HedgeAction1')
+        hedge_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date_hedge,
+                                                                                         end_date=end_date_hedge,
+                                                                                         frequency='1b'),
+                                        actions=hedge_action)
+
+        strategy = Strategy(None, [hedge_trigger, trigger])
+
+        engine = GenericEngine()
+
+        with pytest.raises(RuntimeError):
+            engine.run_backtest(strategy, start=start_date_hedge, end=end_date_hedge, show_progress=True)

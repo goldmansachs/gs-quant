@@ -352,6 +352,9 @@ class RebalanceActionImpl(ActionHandler):
         for trade in backtest.portfolio_dict[state]:
             if self.action.priceable.name.split('_')[-1] in trade.name:
                 current_size += getattr(trade, self.action.size_parameter)
+        # if we are already at the required size then do nothing.
+        if new_size - current_size == 0:
+            return backtest
         pos = self.action.priceable.clone(**{self.action.size_parameter: new_size - current_size,
                                              'name': f'{self.action.priceable.name}_{state}'})
         for s in backtest.states:
@@ -412,7 +415,7 @@ class GenericEngine(BacktestBaseEngine):
         context = PricingContext(is_batch=is_batch, show_progress=show_progress, csa_term=csa_term,
                                  market_data_location=market_data_location, request_priority=request_priority)
 
-        context.max_concurrent = 10000
+        context._max_concurrent = 10000
 
         return context
 
@@ -450,10 +453,13 @@ class GenericEngine(BacktestBaseEngine):
         PricingContext.push(self.new_pricing_context())
 
         try:
-            strategy_pricing_dates = RelativeDateSchedule(frequency,
-                                                          start,
-                                                          end).apply_rule(holiday_calendar=holiday_calendar) \
-                if states is None else states
+            strategy_pricing_dates = RelativeDateSchedule(frequency, start, end).apply_rule(
+                holiday_calendar=holiday_calendar) if states is None else states
+
+            for trigger in strategy.triggers:
+                strategy_pricing_dates += trigger.get_trigger_times()
+            strategy_pricing_dates = list(set(strategy_pricing_dates))
+            strategy_pricing_dates.sort()
 
             strategy_start_date = strategy_pricing_dates[0]
             strategy_end_date = strategy_pricing_dates[-1]
@@ -479,7 +485,8 @@ class GenericEngine(BacktestBaseEngine):
                                                effective_date=final_date)
                     backtest.cash_payments[final_date].append(exit_payment)
                 init_port = Portfolio(strategy.initial_portfolio)
-                init_port.resolve()
+                with PricingContext(strategy_start_date):
+                    init_port.resolve()
                 for d in strategy_pricing_dates:
                     backtest.portfolio_dict[d].append(init_port.instruments)
 
@@ -566,6 +573,8 @@ class GenericEngine(BacktestBaseEngine):
 
                 # semi path dependent scaling
                 if d in backtest.scaling_portfolios:
+                    if len(backtest.scaling_portfolios[d]) and d not in backtest.results:
+                        raise RuntimeError(f'No risk found to hedge on {d}')
                     for p in backtest.scaling_portfolios[d]:
                         current_risk = backtest.results[d][p.risk].aggregate(allow_mismatch_risk_keys=True)
                         hedge_risk = p.results[d][p.risk].aggregate()

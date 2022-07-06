@@ -20,19 +20,14 @@ from abc import ABC, abstractmethod
 from datetime import date, timedelta
 from typing import List, Union
 
-from cachetools import TTLCache
-from cachetools.keys import hashkey
 from dateutil.relativedelta import relativedelta, FR, SA, SU, TH, TU, WE, MO
 from numpy import busday_offset
-from pandas import Series, to_datetime, DataFrame
+from pandas import to_datetime
 
-from gs_quant.api.gs.data import GsDataApi
+from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.markets.securities import ExchangeCode
-from gs_quant.target.common import Currency
+from gs_quant.common import Currency
 
-DATE_LOW_LIMIT = date(1952, 1, 1)
-DATE_HIGH_LIMIT = date(2052, 12, 31)
-_cache = TTLCache(maxsize=128, ttl=600)
 _logger = logging.getLogger(__name__)
 
 
@@ -68,29 +63,12 @@ class RDateRule(ABC):
                 return self.holiday_calendar
             return list(set().union(self.holiday_calendar, self.usd_calendar))
         try:
-            holidays = Series(dtype=object)
-            currencies = [] if self.currencies is None else self.currencies
-
-            cached_data = _cache.get(hashkey(str(currencies), str(self.exchanges)))
-            if cached_data:
-                return cached_data
-            if self.exchanges:
-                exchanges = [x.value if isinstance(x, ExchangeCode) else x.upper() for x in self.exchanges]
-                exchange_query = GsDataApi.build_query(start=DATE_LOW_LIMIT, end=DATE_HIGH_LIMIT,
-                                                       exchange=exchanges)
-                data = GsDataApi.query_data(exchange_query, 'HOLIDAY')
-                holidays = holidays.append(Series(to_datetime(DataFrame(data)['date']).dt.date))
-
-            if len(currencies):
-                currencies = [x.value if isinstance(x, Currency) else x.upper() for x in currencies]
-                currency_query = GsDataApi.build_query(start=DATE_LOW_LIMIT, end=DATE_HIGH_LIMIT,
-                                                       currency=currencies)
-                data = GsDataApi.query_data(currency_query, 'HOLIDAY_CURRENCY')
-                holidays = holidays.append(Series(to_datetime(DataFrame(data)['date']).dt.date))
-
-            holidays = holidays.unique().tolist()
-            _cache[hashkey(str(currencies), str(self.exchanges))] = holidays
-            return holidays
+            currencies = [] if self.currencies is None else [self.currencies] if isinstance(self.currencies,
+                                                                                            str) else self.currencies
+            exchanges = [] if self.exchanges is None else [self.exchanges] if isinstance(self.exchanges,
+                                                                                         str) else self.exchanges
+            cal = GsCalendar(exchanges + currencies)
+            return cal.holidays
         except Exception as e:
             _logger.warning('Unable to fetch holiday calendar. Try passing your own when applying a rule.', e)
             return []
@@ -257,7 +235,7 @@ class wRule(RDateRule):
     def handle(self) -> date:
         self.result = self.result + relativedelta(weeks=self.number)
         holidays = self._get_holidays()
-        return self._apply_business_days_logic(holidays)
+        return self._apply_business_days_logic(holidays, offset=0)
 
 
 class xRule(RDateRule):

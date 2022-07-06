@@ -31,6 +31,7 @@ def test_gs_calendar_single(mocker):
     mocker.return_value = pd.DataFrame(index=[datetime.datetime(1999, 9, 12)],
                                        data={'holiday': 'Labor Day'})
     nyc = PricingLocation.NYC
+    GsCalendar.reset()
     days = GsCalendar(nyc).holidays
     assert days
 
