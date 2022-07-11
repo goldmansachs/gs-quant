@@ -78,8 +78,8 @@ class PricingContext(ContextBaseWithDefault):
     def __init__(self,
                  pricing_date: Optional[dt.date] = None,
                  market_data_location: Optional[Union[PricingLocation, str]] = None,
-                 is_async: bool = False,
-                 is_batch: bool = False,
+                 is_async: bool = None,
+                 is_batch: bool = None,
                  use_cache: bool = None,
                  visible_to_gs: Optional[bool] = None,
                  request_priority: Optional[int] = None,
@@ -87,7 +87,7 @@ class PricingContext(ContextBaseWithDefault):
                  timeout: Optional[int] = None,
                  market: Optional[Market] = None,
                  show_progress: Optional[bool] = None,
-                 use_server_cache: Optional[bool] = False,
+                 use_server_cache: Optional[bool] = None,
                  market_behaviour: Optional[str] = 'ContraintsBased'):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
@@ -137,13 +137,6 @@ class PricingContext(ContextBaseWithDefault):
         """
         super().__init__()
 
-        def _set_parameter(parameter, value, default):
-            if value is not None:
-                return value
-            if self.prior_context is not None:
-                return getattr(self.prior_context, parameter)
-            return default
-
         if market and market_data_location and market.location is not \
                 get_enum_value(PricingLocation, market_data_location):
             raise ValueError('market.location and market_data_location cannot be different')
@@ -171,45 +164,119 @@ class PricingContext(ContextBaseWithDefault):
                         'Scenario to roll the pricing_date to a future date')
 
         if not market_data_location:
-            if not market:
-                # use parent context's market_data_location
-                if self != self.active_context:
-                    market_data_location = self.active_context.market_data_location
-                # if no parent but there was a context set previously, use that
-                elif self.prior_context:
-                    market_data_location = self.prior_context.market_data_location
-            else:
+            if market:
                 market_data_location = market.location
 
         market_data_location = get_enum_value(PricingLocation, market_data_location)
 
-        self.__pricing_date = pricing_date or (
-            self.prior_context.pricing_date if self.prior_context else business_day_offset(
-                today(market_data_location), 0, roll='preceding'))
-        self.__csa_term = _set_parameter('csa_term', csa_term, None)
-        self.__market_behaviour = _set_parameter('market_behaviour', market_behaviour, 'ContraintsBased')
-        self.__is_async = is_async  # _set_parameter('is_async', is_async, False)
-        self.__is_batch = is_batch  # _set_parameter('is_batch', is_batch, False)
-        self.__timeout = _set_parameter('timeout', timeout, None)
-        self.__use_cache = _set_parameter('use_cache', use_cache, False)
-        self.__visible_to_gs = _set_parameter('visible_to_gs', visible_to_gs, None)
-        self.__request_priority = _set_parameter('request_priority', request_priority, None)
+        self.__pricing_date = pricing_date
+        self.__csa_term = csa_term
+        self.__market_behaviour = market_behaviour
+        self.__is_async = is_async
+        self.__is_batch = is_batch
+        self.__timeout = timeout
+        self.__use_cache = use_cache
+        self.__visible_to_gs = visible_to_gs
+        self.__request_priority = request_priority
         self.__market_data_location = market_data_location
-        self.__market = market or CloseMarket(
-            date=close_market_date(self.__market_data_location, self.__pricing_date) if pricing_date else None,
-            location=self.__market_data_location if market_data_location else None)
+        self.__market = market
+        self.__show_progress = show_progress
+        self.__use_server_cache = use_server_cache
+        self._max_per_batch = None
+        self._max_concurrent = None
+
         self.__pending = {}
-        self.__show_progress = _set_parameter('show_progress', show_progress, False)
-        self._max_per_batch = self.prior_context._max_per_batch if self.prior_context is not None else 1000
-        self._max_concurrent = self.prior_context._max_concurrent if self.prior_context is not None else 1000
-        self.__use_server_cache = use_server_cache  # _set_parameter('use_server_cache', use_server_cache, False)
         self._group_by_date = True
 
+        self.__attrs_on_entry = {}
+
+    def __save_entry_attrs(self):
+        self.__attrs_on_entry['pricing_date'] = self.__pricing_date
+        self.__attrs_on_entry['csa_term'] = self.__csa_term
+        self.__attrs_on_entry['market_behaviour'] = self.__market_behaviour
+        self.__attrs_on_entry['is_batch'] = self.__is_batch
+        self.__attrs_on_entry['is_async'] = self.__is_async
+        self.__attrs_on_entry['timeout'] = self.__timeout
+        self.__attrs_on_entry['use_cache'] = self.__use_cache
+        self.__attrs_on_entry['visible_to_gs'] = self.__visible_to_gs
+        self.__attrs_on_entry['request_priority'] = self.__request_priority
+        self.__attrs_on_entry['market_data_location'] = self.__market_data_location
+        self.__attrs_on_entry['market'] = self.__market
+        self.__attrs_on_entry['show_progress'] = self.__show_progress
+        self.__attrs_on_entry['use_server_cache'] = self.__use_server_cache
+        self.__attrs_on_entry['_max_concurrent'] = self._max_concurrent
+        self.__attrs_on_entry['_max_per_batch'] = self._max_per_batch
+
+    def _on_enter(self):
+        def _inherited_val(parameter, from_active, from_prior, default):
+            if from_active:
+                if self != self.active_context and getattr(self.active_context, parameter) is not None:
+                    return getattr(self.active_context, parameter)
+            if from_prior:
+                if PricingContext.has_prior and getattr(PricingContext.prior, parameter) is not None:
+                    return getattr(PricingContext.prior, parameter)
+            return default
+
+        def _inherit_if_not_init(parameter, from_active=False, from_prior=True, default=None):
+            on_entry = self.__attrs_on_entry.get(parameter)
+            if on_entry is not None:
+                return on_entry
+            else:
+                return _inherited_val(parameter, from_active, from_prior, default)
+
+        self.__save_entry_attrs()
+
+        self.__market_data_location = _inherit_if_not_init('market_data_location',
+                                                           from_active=True,
+                                                           default=PricingLocation.LDN)
+        default_pricing_date = business_day_offset(today(self.__market_data_location), 0, roll='preceding')
+        self.__pricing_date = _inherit_if_not_init('pricing_date', default=default_pricing_date)
+
+        if self.__attrs_on_entry.get('market') is None:
+            self.__market = CloseMarket(
+                date=close_market_date(self.__market_data_location, self.__pricing_date),
+                location=self.__market_data_location)
+
+        self.__csa_term = _inherit_if_not_init('csa_term')
+        self.__market_behaviour = _inherit_if_not_init('market_behaviour', default='ContraintsBased')
+        self.__is_async = _inherit_if_not_init('is_async', default=False)
+        self.__is_batch = _inherit_if_not_init('is_batch', default=False)
+        self.__timeout = _inherit_if_not_init('timeout')
+        self.__use_cache = _inherit_if_not_init('use_cache', default=False)
+        self.__visible_to_gs = _inherit_if_not_init('visible_to_gs')
+        self.__request_priority = _inherit_if_not_init('request_priority')
+        self.__show_progress = _inherit_if_not_init('show_progress', default=False)
+        self.__use_server_cache = _inherit_if_not_init('use_server_cache', default=False)
+        self._max_concurrent = _inherit_if_not_init('_max_concurrent', default=1000)
+        self._max_per_batch = _inherit_if_not_init('_max_per_batch', default=1000)
+
+    def __reset_atts(self):
+        self.__pricing_date = self.__attrs_on_entry.get('pricing_date')
+        self.__csa_term = self.__attrs_on_entry.get('csa_term')
+        self.__market_behaviour = self.__attrs_on_entry.get('market_behaviour')
+        self.__is_async = self.__attrs_on_entry.get('is_async')
+        self.__is_batch = self.__attrs_on_entry.get('is_batch')
+        self.__timeout = self.__attrs_on_entry.get('timeout')
+        self.__use_cache = self.__attrs_on_entry.get('use_cache')
+        self.__visible_to_gs = self.__attrs_on_entry.get('visible_to_gs')
+        self.__request_priority = self.__attrs_on_entry.get('request_priority')
+        self.__market_data_location = self.__attrs_on_entry.get('market_data_location')
+        self.__market = self.__attrs_on_entry.get('market')
+        self.__show_progress = self.__attrs_on_entry.get('show_progress')
+        self.__use_server_cache = self.__attrs_on_entry.get('use_server_cache')
+        self._max_concurrent = self.__attrs_on_entry.get('_max_concurrent')
+        self._max_per_batch = self.__attrs_on_entry.get('_max_per_batch')
+
+        self.__attrs_on_entry = {}
+
     def _on_exit(self, exc_type, exc_val, exc_tb):
-        if exc_val:
-            raise exc_val
-        else:
-            self.__calc()
+        try:
+            if exc_val:
+                raise exc_val
+            else:
+                self.__calc()
+        finally:
+            self.__reset_atts()
 
     def __calc(self):
         def run_requests(requests_: list, provider_, create_event_loop: bool):
@@ -332,10 +399,6 @@ class PricingContext(ContextBaseWithDefault):
     @property
     def active_context(self):
         return next((c for c in reversed(PricingContext.path) if c.is_entered), self)
-
-    @property
-    def prior_context(self):
-        return PricingContext.path[-1] if len(PricingContext.path) else None
 
     @property
     def is_current(self) -> bool:

@@ -14,22 +14,25 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from .datetime import *
 from .algebra import *
 from .analysis import *
-from .statistics import *
-from .econometrics import *
-from .technicals import *
 from .backtesting import *
+from .datetime import *
+from .econometrics import *
+from .helper import *
 from .measures import *
 from .measures_countries import *
-from .measures_reports import *
-from .measures_risk_models import *
+from .measures_fx_vol import *
+from .measures_inflation import *
 from .measures_portfolios import *
 from .measures_rates import *
-from .measures_inflation import *
+from .measures_reports import *
+from .measures_risk_models import *
 from .measures_xccy import *
-from .measures_fx_vol import *
-from .helper import *
+from .statistics import *
+from .tca import (
+    covariance
+)
+from .technicals import *
 
 __name__ = 'timeseries'

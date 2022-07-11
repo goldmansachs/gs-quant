@@ -15,7 +15,7 @@ under the License.
 """
 import calendar
 import datetime
-import functools
+import datetime as dt
 import json
 import logging
 import threading
@@ -23,17 +23,19 @@ import time
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from enum import auto
+from enum import auto, Enum
 from functools import partial
-from typing import Dict, Tuple, Generator, Iterable
+from typing import Tuple, Generator, Iterable, Optional, Dict, List, Union
 
 import backoff
 import cachetools
+import pandas as pd
 import pytz
 from dateutil.relativedelta import relativedelta
+from pydash import get
 
-from gs_quant.api.gs.assets import GsAsset, AssetParameters, \
-    AssetType as GsAssetType, Currency, GsIdType
+from gs_quant.api.gs.assets import GsAsset, AssetParameters, AssetType as GsAssetType, Currency, GsIdType, GsAssetApi
+from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import get_enum_value
 from gs_quant.common import DateLimit
@@ -45,7 +47,10 @@ from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, Posit
 from gs_quant.errors import MqValueError, MqTypeError, MqRequestError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
-from gs_quant.markets.indices_utils import *
+from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
+from gs_quant.session import GsSession
+from gs_quant.target.common import AssetClass
+from gs_quant.target.data import DataQuery
 
 _logger = logging.getLogger(__name__)
 
@@ -313,7 +318,8 @@ class Asset(Entity, metaclass=ABCMeta):
         :func:`get_asset`
         """
         if not as_of:
-            as_of = PricingContext.current.pricing_date
+            with PricingContext.current as cur:
+                as_of = cur.pricing_date
 
             if isinstance(as_of, dt.datetime):
                 as_of = as_of.date()
@@ -574,8 +580,10 @@ class SecMasterAsset(Asset):
         marquee_id = self.get_identifier(SecurityIdentifier.ASSET_ID)
         self.__id = marquee_id  # Updates Marquee Id in case it changes from context change
         if marquee_id is None:
+            with PricingContext.current as cur:
+                current_pricing_date = cur.pricing_date
             raise MqValueError(
-                f"Current SecMasterAsset does not have a Marquee Id as of {PricingContext.current.pricing_date}. "
+                f"Current SecMasterAsset does not have a Marquee Id as of {current_pricing_date}. "
                 f"Perhaps asset did not exist at that time, or is a not an exchange-level asset.")
         return marquee_id
 
@@ -598,7 +606,8 @@ class SecMasterAsset(Asset):
             self.__load_identifiers()
         # Retrieve from cached identifiers
         if as_of is None:
-            as_of = PricingContext.current.pricing_date
+            with PricingContext.current as cur:
+                as_of = cur.pricing_date
         identifiers = dict()
         for id_type in SecurityIdentifier:
             id_history = self.__cached_identifiers.get(id_type.value)
@@ -1466,7 +1475,8 @@ class SecurityMaster:
             return cls._get_security_master_asset(id_value, id_type, as_of=as_of, fields=fields)
 
         if not as_of:
-            as_of = PricingContext.current.pricing_date
+            with PricingContext.current as cur:
+                as_of = cur.pricing_date
 
         if isinstance(as_of, dt.date):
             as_of = dt.datetime.combine(as_of, dt.time(0, 0), pytz.utc)
@@ -1622,7 +1632,7 @@ class SecurityMaster:
 
         as_of = as_of or datetime.datetime.now()
         if types is not None:
-            p = functools.partial(cls.asset_type_to_str, class_)
+            p = partial(cls.asset_type_to_str, class_)
             types = set(map(p, types))
 
         params = {

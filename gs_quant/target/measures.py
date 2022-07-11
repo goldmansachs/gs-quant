@@ -248,6 +248,9 @@ CommodVega.__doc__ = "Commod Vega"
 CompoundedFixedRate = RiskMeasure(name="CompoundedFixedRate", measure_type=RiskMeasureType("Compounded Fixed Rate"))
 CompoundedFixedRate.__doc__ = "CompoundedFixedRate"
 
+Cross = RiskMeasure(name="Cross", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Cross"))
+Cross.__doc__ = "Cross"
+
 CrossMultiplier = RiskMeasure(name="CrossMultiplier", measure_type=RiskMeasureType("Cross Multiplier"))
 CrossMultiplier.__doc__ = "CrossMultiplier"
 
@@ -268,6 +271,9 @@ EqGamma.__doc__ = "Change in EqDelta for a 1% move in the price of the underlyin
 
 EqSpot = RiskMeasure(name="EqSpot", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Spot"))
 EqSpot.__doc__ = "Equity Spot"
+
+EqTheta = RiskMeasureWithCurrencyParameter(name="EqTheta", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Theta"))
+EqTheta.__doc__ = "Change in Dollar Price over one day"
 
 EqVega = RiskMeasureWithCurrencyParameter(name="EqVega", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Vega"))
 EqVega.__doc__ = "Change in Dollar Price (USD present value) due to individual 1bp moves in the implied volatility of the underlying equity security"
