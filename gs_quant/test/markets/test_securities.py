@@ -18,6 +18,7 @@ import datetime
 
 import pytest
 
+from gs_quant.base import EnumBase
 from gs_quant.markets.securities import *
 from gs_quant.session import *
 

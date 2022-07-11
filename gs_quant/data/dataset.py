@@ -61,6 +61,9 @@ class Dataset:
         # Test Datasets
         WEATHER = 'WEATHER'
 
+        # TCA
+        QES_INTRADAY_COVARIANCE = 'QES_INTRADAY_COVARIANCE_PREMIUM'
+
     class TR(Vendor):
         TREOD = 'TREOD'
         TR = 'TR'

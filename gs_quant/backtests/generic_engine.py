@@ -357,9 +357,26 @@ class RebalanceActionImpl(ActionHandler):
             return backtest
         pos = self.action.priceable.clone(**{self.action.size_parameter: new_size - current_size,
                                              'name': f'{self.action.priceable.name}_{state}'})
+
+        backtest.cash_payments[state].append(CashPayment(pos, effective_date=state, direction=-1))
+        unwind_payment = None
+        cash_payment_dates = backtest.cash_payments.keys()
+        for d in reversed(sorted(cash_payment_dates)):
+            for cp in backtest.cash_payments[d]:
+                if self.action.priceable.name.split('_')[-1] in cp.trade.name and cp.direction == 1:
+                    unwind_payment = CashPayment(pos, effective_date=d)
+                    backtest.cash_payments[d].append(unwind_payment)
+                    break
+            if unwind_payment:
+                break
+
+        if unwind_payment is None:
+            raise ValueError("Found no final cash payment to rebalance for trade.")
+
         for s in backtest.states:
-            if s >= state:
+            if unwind_payment.effective_date > s >= state:
                 backtest.portfolio_dict[s].append(pos)
+
         return backtest
 
 
