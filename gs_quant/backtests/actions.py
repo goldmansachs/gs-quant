@@ -220,6 +220,8 @@ class RebalanceAction(Action):
         self._calc_type = CalcType.path_dependent
         self._size_parameter = size_parameter
         self._method = method
+        if priceable.unresolved is None:
+            raise ValueError("Please specify a resolved priceable to rebalance.")
         if priceable is not None:
             if priceable.name is None:
                 self._priceable = priceable.clone(name=f'{self._name}_Priceable0')

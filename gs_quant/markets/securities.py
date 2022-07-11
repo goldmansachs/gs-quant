@@ -15,7 +15,7 @@ under the License.
 """
 import calendar
 import datetime
-import functools
+import datetime as dt
 import json
 import logging
 import threading
@@ -23,17 +23,19 @@ import time
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from enum import auto
+from enum import auto, Enum
 from functools import partial
-from typing import Dict, Tuple, Generator, Iterable
+from typing import Tuple, Generator, Iterable, Optional, Dict, List, Union
 
 import backoff
 import cachetools
+import pandas as pd
 import pytz
 from dateutil.relativedelta import relativedelta
+from pydash import get
 
-from gs_quant.api.gs.assets import GsAsset, AssetParameters, \
-    AssetType as GsAssetType, Currency, GsIdType
+from gs_quant.api.gs.assets import GsAsset, AssetParameters, AssetType as GsAssetType, Currency, GsIdType, GsAssetApi
+from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import get_enum_value
 from gs_quant.common import DateLimit
@@ -45,7 +47,10 @@ from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, Posit
 from gs_quant.errors import MqValueError, MqTypeError, MqRequestError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
-from gs_quant.markets.indices_utils import *
+from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
+from gs_quant.session import GsSession
+from gs_quant.target.common import AssetClass
+from gs_quant.target.data import DataQuery
 
 _logger = logging.getLogger(__name__)
 
@@ -1622,7 +1627,7 @@ class SecurityMaster:
 
         as_of = as_of or datetime.datetime.now()
         if types is not None:
-            p = functools.partial(cls.asset_type_to_str, class_)
+            p = partial(cls.asset_type_to_str, class_)
             types = set(map(p, types))
 
         params = {

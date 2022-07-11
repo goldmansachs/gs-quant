@@ -272,8 +272,7 @@ def get_universe_size(data_to_split: dict) -> int:
         if 'universe' in data.keys():
             return len(data.get('universe'))
         if 'universeId1' in data.keys():
-            return len(set(data.get('universeId1') +
-                           data.get('universeId2')))
+            return len(data.get('universeId1'))
     raise ValueError(f'No universe found for data {data_to_split}')
 
 
