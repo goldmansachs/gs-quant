@@ -206,7 +206,8 @@ class Basket:
             # If duplicate assets exist, asset_dict will contain a entry for the one with the higher rank (relevant)
             assets_dict = {entry['bbid']: entry['id'] for entry in assets}
             if len(assets_dict) != len(set(self.bbids)):
-                raise MqValueError('Unable to find all stocks')
+                not_found = set(assets_dict).symmetric_difference(self.bbids)
+                raise MqValueError(f'Unable to find stocks: {", ".join(not_found)}')
             self._marquee_ids = [assets_dict[bbid] for bbid in self.bbids]
 
         return self._marquee_ids

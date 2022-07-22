@@ -13,6 +13,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from enum import Enum, EnumMeta
+
 from cachetools import TTLCache
 from cachetools.keys import hashkey
 import datetime as dt
@@ -68,7 +70,7 @@ class GsCalendar:
         cached_data = _calendar_cache.get(hashkey(str(self.__calendars)))
         if cached_data:
             return cached_data
-        exchanges = [x.value if isinstance(x, PricingLocation) else x.upper() for x in self.__calendars]
+        exchanges = [x.value if isinstance(x, (Enum, EnumMeta)) else x.upper() for x in self.__calendars]
         if len(exchanges):
             try:
                 dataset = Dataset(Dataset.GS.HOLIDAY)

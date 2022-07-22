@@ -149,20 +149,21 @@ class GsPortfolioApi:
 
     @classmethod
     def get_instruments_by_workflow_id(cls, workflow_id: str,
-                                       preferInstruments: bool = False) -> Tuple[Instrument, ...]:
+                                       prefer_instruments: bool = False) -> Tuple[Instrument, ...]:
         root = 'quote'
-        url = '/risk{}/{}/{}'.format('-internal' if not preferInstruments else '', root, workflow_id)
+        url = '/risk{}/{}/{}'.format('-internal' if not prefer_instruments else '', root, workflow_id)
         results = GsSession.current._get(url, timeout=181)
 
         instruments = []
-        for position in results.get('workflowPositions').get(workflow_id)[0]['positions']:
-            instrument_values = position['instrument']
-            instrument = Instrument.from_dict(instrument_values)
-            name = instrument_values.get('name')
-            if name:
-                instrument.name = name
+        for position in results.get('workflowPositions').get(workflow_id):
+            for insts in position['positions']:
+                instrument_values = insts['instrument']
+                instrument = Instrument.from_dict(instrument_values)
+                name = instrument_values.get('name')
+                if name:
+                    instrument.name = name
 
-            instruments.append(instrument)
+                instruments.append(instrument)
 
         return tuple(instruments)
 

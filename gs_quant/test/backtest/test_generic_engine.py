@@ -17,11 +17,6 @@ under the License.
 from datetime import date
 from unittest.mock import patch
 
-import pandas as pd
-import pytest
-
-import gs_quant.risk as risk
-
 from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap
 from gs_quant.backtests.triggers import *
 from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction, EnterPositionQuantityScaledAction
@@ -50,7 +45,6 @@ def mock_pricing_context(self):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_generic_engine_simple(mocker):
     with MockCalc(mocker):
-
         start_date = date(2021, 12, 1)
         # end_date = date(2021, 12, 3)
 
@@ -119,6 +113,41 @@ def test_hedge_action_risk_trigger(mocker):
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_hedge_without_risk(mocker):
+    with MockCalc(mocker):
+        # Define trade
+        call = FXOption(buy_sell='Buy', option_type='Call', pair='USDJPY', strike_price='ATMF',
+                        notional_amount=1e5, expiration_date='2y', name='2y_call')
+
+        trig_req = PeriodicTriggerRequirements(start_date=date(2021, 12, 1), end_date=date(2021, 12, 3),
+                                               frequency='1b')
+
+        action = AddTradeAction(call, '1b', name='AddAction1')
+
+        hedge_risk = FXDelta(aggregation_level='Type')
+        fwd_hedge = FXForward(pair='USDJPY', settlement_date='2y', notional_amount=1e5, name='2y_forward')
+
+        hedge_trig_req = PeriodicTriggerRequirements(start_date=date(2021, 11, 1), end_date=date(2022, 1, 1),
+                                                     frequency='1b')
+        action_hedge = HedgeAction(hedge_risk, fwd_hedge, '2b', name='HedgeAction1')
+
+        triggers = [PeriodicTrigger(trig_req, action), PeriodicTrigger(hedge_trig_req, action_hedge)]
+
+        strategy = Strategy(None, triggers)
+
+        # run backtest daily
+        engine = GenericEngine()
+        # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 1), date(2021, 12, 2), date(2021, 12, 3)],
+                                       show_progress=True)
+        summary = backtest.result_summary
+        assert len(summary) == 3
+        assert round(summary[hedge_risk].sum()) == 0
+        assert round(summary['Cumulative Cash'][-1]) == -6579
+        assert Price in summary.columns
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_mkt_trigger_data_sources(mocker):
     with MockCalc(mocker):
         s = pd.Series({date(2021, 10, 1): 0.984274,
@@ -161,7 +190,6 @@ def test_mkt_trigger_data_sources(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_exit_action_noarg(mocker):
     with MockCalc(mocker):
-
         start_date = date(2021, 12, 6)
         end_date = date(2021, 12, 10)
 
@@ -194,7 +222,6 @@ def test_exit_action_noarg(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_exit_action_emptyresults(mocker):
     with MockCalc(mocker):
-
         start_date = date(2021, 12, 6)
         end_date = date(2021, 12, 10)
 
@@ -229,7 +256,6 @@ def test_exit_action_emptyresults(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_exit_action_bytradename(mocker):
     with MockCalc(mocker):
-
         start_date = date(2021, 12, 6)
         end_date = date(2021, 12, 10)
 
@@ -367,33 +393,3 @@ def test_quantity_scaled_action_nav(mocker):
         # Total cash spent is the initial cash throughout the entire strategy
         assert summary['Cumulative Cash'][0] == -initial_cash
         assert (summary['Cumulative Cash'] == summary['Cumulative Cash'][0]).all()
-
-
-@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
-def test_hedge_without_risk(mocker):
-    with MockCalc(mocker):
-
-        start_date_trade = date(2021, 12, 1)
-
-        start_date_hedge = date(2021, 11, 15)
-        end_date_hedge = date(2021, 12, 15)
-
-        option = EqOption('.STOXX50E', expiration_date='1m', strike_price='ATM', option_type=OptionType.Call,
-                          option_style=OptionStyle.European, name='call')
-        action = AddTradeAction(option, '1b', name='Action1')
-        trigger = DateTrigger(DateTriggerRequirements(dates=[start_date_trade]), actions=[action])
-
-        hedge = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                         option_style=OptionStyle.European, name='call')
-        hedge_action = HedgeAction(risk.EqDelta, priceables=hedge, trade_duration='1b', name='HedgeAction1')
-        hedge_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date_hedge,
-                                                                                         end_date=end_date_hedge,
-                                                                                         frequency='1b'),
-                                        actions=hedge_action)
-
-        strategy = Strategy(None, [hedge_trigger, trigger])
-
-        engine = GenericEngine()
-
-        with pytest.raises(RuntimeError):
-            engine.run_backtest(strategy, start=start_date_hedge, end=end_date_hedge, show_progress=True)

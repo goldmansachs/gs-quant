@@ -87,6 +87,9 @@ class GsIdType(Enum):
     mdapi = auto()
     primeId = auto()
     id = auto()
+    gsid = auto()
+    rcic = auto()
+    ticker = auto()
 
 
 class GsAsset(__Asset):

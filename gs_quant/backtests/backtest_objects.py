@@ -18,7 +18,7 @@ from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
 from queue import Queue as FifoQueue
-from typing import Iterable, TypeVar
+from typing import Iterable, TypeVar, Optional
 
 import numpy as np
 import pandas as pd
@@ -42,7 +42,7 @@ class BackTest(BaseBacktest):
     def __init__(self, strategy, states, risks):
         self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
         self._cash_dict = {}  # cash by state
-        self._scaling_portfolios = defaultdict(list)  # list of ScalingPortfolio
+        self._hedges = defaultdict(list)  # list of Hedge by date
         self._cash_payments = defaultdict(list)  # list of cash payments (entry, unwind)
         self._strategy = deepcopy(strategy)  # the strategy definition
         self._states = states  # list of states
@@ -64,20 +64,20 @@ class BackTest(BaseBacktest):
         self._portfolio_dict = portfolio_dict
 
     @property
-    def scaling_portfolios(self):
-        return self._scaling_portfolios
-
-    @scaling_portfolios.setter
-    def scaling_portfolios(self, scaling_portfolios):
-        self._scaling_portfolios = scaling_portfolios
-
-    @property
     def cash_payments(self):
         return self._cash_payments
 
     @cash_payments.setter
     def cash_payments(self, cash_payments):
         self._cash_payments = cash_payments
+
+    @property
+    def hedges(self):
+        return self._hedges
+
+    @hedges.setter
+    def hedges(self, hedges):
+        self._hedges = hedges
 
     @property
     def states(self):
@@ -236,6 +236,16 @@ class CashPayment:
         df['Instrument Name'] = self.trade.name
         df['Pricing Date'] = self.effective_date
         return df
+
+
+class Hedge:
+    def __init__(self,
+                 scaling_portfolio: ScalingPortfolio,
+                 entry_payment: CashPayment,
+                 exit_payment: Optional[CashPayment]):
+        self.scaling_portfolio = scaling_portfolio
+        self.entry_payment = entry_payment
+        self.exit_payment = exit_payment
 
 
 class PredefinedAssetBacktest(BaseBacktest):

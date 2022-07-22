@@ -78,8 +78,8 @@ class PricingContext(ContextBaseWithDefault):
     def __init__(self,
                  pricing_date: Optional[dt.date] = None,
                  market_data_location: Optional[Union[PricingLocation, str]] = None,
-                 is_async: bool = False,
-                 is_batch: bool = False,
+                 is_async: bool = None,
+                 is_batch: bool = None,
                  use_cache: bool = None,
                  visible_to_gs: Optional[bool] = None,
                  request_priority: Optional[int] = None,
@@ -87,8 +87,9 @@ class PricingContext(ContextBaseWithDefault):
                  timeout: Optional[int] = None,
                  market: Optional[Market] = None,
                  show_progress: Optional[bool] = None,
-                 use_server_cache: Optional[bool] = False,
-                 market_behaviour: Optional[str] = 'ContraintsBased'):
+                 use_server_cache: Optional[bool] = None,
+                 market_behaviour: Optional[str] = 'ContraintsBased',
+                 set_parameters_only: bool = False):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
         as per the examples
@@ -137,13 +138,6 @@ class PricingContext(ContextBaseWithDefault):
         """
         super().__init__()
 
-        def _set_parameter(parameter, value, default):
-            if value is not None:
-                return value
-            if self.prior_context is not None:
-                return getattr(self.prior_context, parameter)
-            return default
-
         if market and market_data_location and market.location is not \
                 get_enum_value(PricingLocation, market_data_location):
             raise ValueError('market.location and market_data_location cannot be different')
@@ -171,48 +165,124 @@ class PricingContext(ContextBaseWithDefault):
                         'Scenario to roll the pricing_date to a future date')
 
         if not market_data_location:
-            if not market:
-                # use parent context's market_data_location
-                if self != self.active_context:
-                    market_data_location = self.active_context.market_data_location
-                # if no parent but there was a context set previously, use that
-                elif self.prior_context:
-                    market_data_location = self.prior_context.market_data_location
-            else:
+            if market:
                 market_data_location = market.location
 
         market_data_location = get_enum_value(PricingLocation, market_data_location)
 
-        self.__pricing_date = pricing_date or (
-            self.prior_context.pricing_date if self.prior_context else business_day_offset(
-                today(market_data_location), 0, roll='preceding'))
-        self.__csa_term = _set_parameter('csa_term', csa_term, None)
-        self.__market_behaviour = _set_parameter('market_behaviour', market_behaviour, 'ContraintsBased')
-        self.__is_async = is_async  # _set_parameter('is_async', is_async, False)
-        self.__is_batch = is_batch  # _set_parameter('is_batch', is_batch, False)
-        self.__timeout = _set_parameter('timeout', timeout, None)
-        self.__use_cache = _set_parameter('use_cache', use_cache, False)
-        self.__visible_to_gs = _set_parameter('visible_to_gs', visible_to_gs, None)
-        self.__request_priority = _set_parameter('request_priority', request_priority, None)
+        self.__pricing_date = pricing_date
+        self.__csa_term = csa_term
+        self.__market_behaviour = market_behaviour
+        self.__is_async = is_async
+        self.__is_batch = is_batch
+        self.__timeout = timeout
+        self.__use_cache = use_cache
+        self.__visible_to_gs = visible_to_gs
+        self.__request_priority = request_priority
         self.__market_data_location = market_data_location
-        self.__market = market or CloseMarket(
-            date=close_market_date(self.__market_data_location, self.__pricing_date) if pricing_date else None,
-            location=self.__market_data_location if market_data_location else None)
+        self.__market = market
+        self.__show_progress = show_progress
+        self.__use_server_cache = use_server_cache
+        self._max_per_batch = None
+        self._max_concurrent = None
+
+        self.__set_parameters_only = set_parameters_only
+
         self.__pending = {}
-        self.__show_progress = _set_parameter('show_progress', show_progress, False)
-        self._max_per_batch = self.prior_context._max_per_batch if self.prior_context is not None else 1000
-        self._max_concurrent = self.prior_context._max_concurrent if self.prior_context is not None else 1000
-        self.__use_server_cache = use_server_cache  # _set_parameter('use_server_cache', use_server_cache, False)
         self._group_by_date = True
 
+        self.__attrs_on_entry = {}
+
+    def __save_attrs_to(self, attr_dict):
+        attr_dict['pricing_date'] = self.__pricing_date
+        attr_dict['csa_term'] = self.__csa_term
+        attr_dict['market_behaviour'] = self.__market_behaviour
+        attr_dict['is_batch'] = self.__is_batch
+        attr_dict['is_async'] = self.__is_async
+        attr_dict['timeout'] = self.__timeout
+        attr_dict['use_cache'] = self.__use_cache
+        attr_dict['visible_to_gs'] = self.__visible_to_gs
+        attr_dict['request_priority'] = self.__request_priority
+        attr_dict['market_data_location'] = self.__market_data_location
+        attr_dict['market'] = self.__market
+        attr_dict['show_progress'] = self.__show_progress
+        attr_dict['use_server_cache'] = self.__use_server_cache
+        attr_dict['_max_concurrent'] = self._max_concurrent
+        attr_dict['_max_per_batch'] = self._max_per_batch
+
+    def _on_enter(self):
+        def _inherited_val(parameter, from_active, from_prior, default):
+            if from_active:
+                if self != self.active_context and getattr(self.active_context, parameter) is not None:
+                    return getattr(self.active_context, parameter)
+            if from_prior:
+                if PricingContext.has_prior and getattr(PricingContext.prior, parameter) is not None:
+                    return getattr(PricingContext.prior, parameter)
+            return default
+
+        def _inherit_if_not_init(parameter, from_active=False, from_prior=True, default=None):
+            on_entry = self.__attrs_on_entry.get(parameter)
+            if on_entry is not None:
+                return on_entry
+            else:
+                return _inherited_val(parameter, from_active, from_prior, default)
+
+        self.__save_attrs_to(self.__attrs_on_entry)
+
+        self.__market_data_location = _inherit_if_not_init('market_data_location',
+                                                           from_active=True,
+                                                           default=PricingLocation.LDN)
+        default_pricing_date = business_day_offset(today(self.__market_data_location), 0, roll='preceding')
+        self.__pricing_date = _inherit_if_not_init('pricing_date', default=default_pricing_date)
+
+        if self.__attrs_on_entry.get('market') is None:
+            self.__market = CloseMarket(
+                date=close_market_date(self.__market_data_location, self.__pricing_date),
+                location=self.__market_data_location)
+
+        self.__csa_term = _inherit_if_not_init('csa_term')
+        self.__market_behaviour = _inherit_if_not_init('market_behaviour', default='ContraintsBased')
+        self.__is_async = _inherit_if_not_init('is_async', default=False)
+        self.__is_batch = _inherit_if_not_init('is_batch', default=False)
+        self.__timeout = _inherit_if_not_init('timeout')
+        self.__use_cache = _inherit_if_not_init('use_cache', default=False)
+        self.__visible_to_gs = _inherit_if_not_init('visible_to_gs')
+        self.__request_priority = _inherit_if_not_init('request_priority')
+        self.__show_progress = _inherit_if_not_init('show_progress', default=False)
+        self.__use_server_cache = _inherit_if_not_init('use_server_cache', default=False)
+        self._max_concurrent = _inherit_if_not_init('_max_concurrent', default=1000)
+        self._max_per_batch = _inherit_if_not_init('_max_per_batch', default=1000)
+
+    def __reset_atts(self):
+        self.__pricing_date = self.__attrs_on_entry.get('pricing_date')
+        self.__csa_term = self.__attrs_on_entry.get('csa_term')
+        self.__market_behaviour = self.__attrs_on_entry.get('market_behaviour')
+        self.__is_async = self.__attrs_on_entry.get('is_async')
+        self.__is_batch = self.__attrs_on_entry.get('is_batch')
+        self.__timeout = self.__attrs_on_entry.get('timeout')
+        self.__use_cache = self.__attrs_on_entry.get('use_cache')
+        self.__visible_to_gs = self.__attrs_on_entry.get('visible_to_gs')
+        self.__request_priority = self.__attrs_on_entry.get('request_priority')
+        self.__market_data_location = self.__attrs_on_entry.get('market_data_location')
+        self.__market = self.__attrs_on_entry.get('market')
+        self.__show_progress = self.__attrs_on_entry.get('show_progress')
+        self.__use_server_cache = self.__attrs_on_entry.get('use_server_cache')
+        self._max_concurrent = self.__attrs_on_entry.get('_max_concurrent')
+        self._max_per_batch = self.__attrs_on_entry.get('_max_per_batch')
+
+        self.__attrs_on_entry = {}
+
     def _on_exit(self, exc_type, exc_val, exc_tb):
-        if exc_val:
-            raise exc_val
-        else:
-            self.__calc()
+        try:
+            if exc_val:
+                raise exc_val
+            else:
+                self.__calc()
+        finally:
+            self.__reset_atts()
 
     def __calc(self):
-        def run_requests(requests_: list, provider_, create_event_loop: bool):
+        def run_requests(requests_: list, provider_, create_event_loop: bool, pc_attrs: dict):
             if create_event_loop:
                 asyncio.set_event_loop(asyncio.new_event_loop())
 
@@ -221,7 +291,8 @@ class PricingContext(ContextBaseWithDefault):
 
             try:
                 with session:
-                    provider_.run(requests_, results, self._max_concurrent, progress_bar, timeout=self.__timeout)
+                    provider_.run(requests_, results, pc_attrs['_max_concurrent'], progress_bar,
+                                  timeout=pc_attrs['timeout'])
             except Exception as e:
                 provider_.enqueue(results, ((k, e) for k in self.__pending.keys()))
 
@@ -232,10 +303,10 @@ class PricingContext(ContextBaseWithDefault):
                     if future is not None:
                         future.set_result(result)
 
-                        if self.__use_cache:
+                        if pc_attrs['use_cache']:
                             PricingCache.put(risk_key_, priceable_, result)
 
-            if not self.__is_async:
+            if not pc_attrs['is_async']:
                 # In async mode we can't tell if we've completed, we could be re-used
                 while self.__pending:
                     (risk_key_, _), future = self.__pending.popitem()
@@ -299,13 +370,19 @@ class PricingContext(ContextBaseWithDefault):
                                 file=sys.stdout) if show_status else None
             completion_futures = []
 
+            # Requests might get dispatched asynchronously and the PricingContext gets cleaned up on exit.
+            # We should use a saved state of the object when dispatching async requests, except for self.__pending
+            # All attributes are immutable, so a shared dictionary is sufficient. __pending remains shared.
+            attrs_for_request = {}
+            self.__save_attrs_to(attrs_for_request)
             for provider, requests in requests_for_provider.items():
                 if request_pool:
-                    completion_future = request_pool.submit(run_requests, requests, provider, True)
+                    completion_future = request_pool.submit(run_requests, requests, provider, True,
+                                                            attrs_for_request)
                     if not self.__is_async:
                         completion_futures.append(completion_future)
                 else:
-                    run_requests(requests, provider, False)
+                    run_requests(requests, provider, False, attrs_for_request)
 
             # Wait on results if not async, so exceptions are surfaced
             if request_pool:
@@ -331,11 +408,8 @@ class PricingContext(ContextBaseWithDefault):
 
     @property
     def active_context(self):
-        return next((c for c in reversed(PricingContext.path) if c.is_entered), self)
-
-    @property
-    def prior_context(self):
-        return PricingContext.path[-1] if len(PricingContext.path) else None
+        return next((c for c in reversed(PricingContext.path) if c.is_entered and not c.set_parameters_only),
+                    self)
 
     @property
     def is_current(self) -> bool:
@@ -395,6 +469,10 @@ class PricingContext(ContextBaseWithDefault):
     def visible_to_gs(self) -> Optional[bool]:
         """Request contents visible to GS"""
         return self.__visible_to_gs
+
+    @property
+    def set_parameters_only(self) -> bool:
+        return self.__set_parameters_only
 
     def clone(self, **kwargs):
         clone_kwargs = {k: getattr(self, k, None) for k in signature(self.__init__).parameters.keys()}

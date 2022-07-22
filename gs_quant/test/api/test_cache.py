@@ -59,7 +59,8 @@ def test_cache_addition_removal():
     gc.collect()
 
     p2 = IRSwap('Pay', '10y', 'DKK')
-    p2_price_key = PricingContext.current._PricingContext__risk_key(risk.Price, p2.provider)
+    with PricingContext.current as cur:
+        p2_price_key = cur._PricingContext__risk_key(risk.Price, p2.provider)
     # assert not PricingCache.get(p2_price_key)
 
     with mock.patch('gs_quant.api.gs.risk.GsRiskApi._exec') as mocker:
@@ -131,13 +132,14 @@ def test_cache_subset(mocker):
     price_f.result()
 
     for date in dates:
-        risk_key = PricingContext(pricing_date=date)._PricingContext__risk_key(risk.Price, ir_swap.provider)
+        with PricingContext(pricing_date=date) as pc:
+            risk_key = pc._PricingContext__risk_key(risk.Price, ir_swap.provider)
         cached_scalar = PricingCache.get(risk_key, ir_swap)
         assert cached_scalar
         assert isinstance(cached_scalar, float)
 
-    risk_key = PricingContext(pricing_date=dt.date(2019, 10, 9))._PricingContext__risk_key(risk.Price,
-                                                                                           ir_swap.provider)
+    with PricingContext(pricing_date=dt.date(2019, 10, 9)) as pc:
+        risk_key = pc._PricingContext__risk_key(risk.Price, ir_swap.provider)
     cached2 = PricingCache.get(risk_key, ir_swap)
     assert cached2 is None
 
