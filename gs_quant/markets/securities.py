@@ -318,7 +318,12 @@ class Asset(Entity, metaclass=ABCMeta):
         :func:`get_asset`
         """
         if not as_of:
-            as_of = PricingContext.current.pricing_date
+            current = PricingContext.current
+            if not current.is_entered:
+                with current:
+                    as_of = current.pricing_date
+            else:
+                as_of = current.pricing_date
 
             if isinstance(as_of, dt.datetime):
                 as_of = as_of.date()
@@ -579,8 +584,14 @@ class SecMasterAsset(Asset):
         marquee_id = self.get_identifier(SecurityIdentifier.ASSET_ID)
         self.__id = marquee_id  # Updates Marquee Id in case it changes from context change
         if marquee_id is None:
+            current = PricingContext.current
+            if not current.is_entered:
+                with current:
+                    current_pricing_date = current.pricing_date
+            else:
+                current_pricing_date = current.pricing_date
             raise MqValueError(
-                f"Current SecMasterAsset does not have a Marquee Id as of {PricingContext.current.pricing_date}. "
+                f"Current SecMasterAsset does not have a Marquee Id as of {current_pricing_date}. "
                 f"Perhaps asset did not exist at that time, or is a not an exchange-level asset.")
         return marquee_id
 
@@ -603,7 +614,12 @@ class SecMasterAsset(Asset):
             self.__load_identifiers()
         # Retrieve from cached identifiers
         if as_of is None:
-            as_of = PricingContext.current.pricing_date
+            current = PricingContext.current
+            if not current.is_entered:
+                with current:
+                    as_of = current.pricing_date
+            else:
+                as_of = current.pricing_date
         identifiers = dict()
         for id_type in SecurityIdentifier:
             id_history = self.__cached_identifiers.get(id_type.value)
@@ -1253,6 +1269,23 @@ class XccySwapMTM(Asset):
         return AssetType.XccySwapMTM
 
 
+class MutualFund(Asset):
+    """MutualFund
+
+    Represents a mutual fund asset.
+    """
+
+    def __init__(self,
+                 id_: str,
+                 name: str,
+                 asset_class: AssetClass,
+                 entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class, name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.MUTUAL_FUND
+
+
 class SecurityMasterSource(Enum):
     ASSET_SERVICE = auto()
     SECURITY_MASTER = auto()
@@ -1396,6 +1429,9 @@ class SecurityMaster:
         if asset_type == GsAssetType.XccySwapMTM.value:
             return XccySwapMTM(gs_asset.id, gs_asset.name, entity=asset_entity)
 
+        if asset_type == GsAssetType.Mutual_Fund.value:
+            return MutualFund(gs_asset.id, gs_asset.name, gs_asset.asset_class, entity=asset_entity)
+
         raise TypeError(f'unsupported asset type {asset_type}')
 
     @classmethod
@@ -1471,7 +1507,12 @@ class SecurityMaster:
             return cls._get_security_master_asset(id_value, id_type, as_of=as_of, fields=fields)
 
         if not as_of:
-            as_of = PricingContext.current.pricing_date
+            current = PricingContext.current
+            if not current.is_entered:
+                with current:
+                    as_of = current.pricing_date
+            else:
+                as_of = current.pricing_date
 
         if isinstance(as_of, dt.date):
             as_of = dt.datetime.combine(as_of, dt.time(0, 0), pytz.utc)

@@ -23,9 +23,11 @@ from typing import List
 from unittest import mock
 
 import pytest
+
+from gs_quant import datetime
 from gs_quant.api.gs.risk import GsRiskApi
+from gs_quant.datetime import business_day_offset
 from gs_quant.json_encoder import JSONEncoder
-from gs_quant.markets import PricingContext
 from gs_quant.session import Environment, GsSession
 from gs_quant.target.common import CompositeScenario
 
@@ -99,7 +101,7 @@ def get_risk_request_id(requests):
         identifier += '-'.join([pos.instrument.name for pos in request.positions])
         identifier += '-'.join([r.__repr__() for r in request.measures])
         date = request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
-        today = PricingContext().pricing_date.strftime('%Y%b%d')
+        today = business_day_offset(datetime.date.today(), 0, roll='preceding').strftime('%Y%b%d')
         identifier += 'today' if date == today else date
         if request.scenario is not None:
             if isinstance(request.scenario.scenario, CompositeScenario):

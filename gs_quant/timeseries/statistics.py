@@ -47,7 +47,8 @@ except ImportError:
                 if pd.Timestamp(index[j]) > index[i] - offset:
                     start = j
                     break
-            results[i] = np.std(values[start:i + 1], ddof=1)
+            section = values[start:i + 1]
+            results[i] = np.std(section[section == section], ddof=1)
         return pd.Series(results, index=index, dtype=np.double)
 
 

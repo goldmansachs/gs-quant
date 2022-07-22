@@ -43,8 +43,6 @@ def market_location(location: Optional[PricingLocation] = None) -> PricingLocati
 
     if location is None:
         return default or PricingLocation.LDN
-    elif default and default != location:
-        raise ValueError(f'Inconsistent market locations of {default} and {location} specified')
     else:
         return location
 
