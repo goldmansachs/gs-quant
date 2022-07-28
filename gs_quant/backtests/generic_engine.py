@@ -71,11 +71,7 @@ class AddTradeActionImpl(ActionHandler):
                     orders[s] = (Portfolio(active_portfolio).resolve(in_place=False), ti)
         final_orders = {}
         for d, p in orders.items():
-            new_port = []
-            for t in p[0].result():
-                t.name = f'{t.name}_{d}'
-                new_port.append(t)
-            new_port = Portfolio(new_port)
+            new_port = Portfolio([t.clone(name=f'{t.name}_{d}') for t in p[0].result()])
             final_orders[d] = new_port.scale(None if p[1] is None else p[1].scaling, in_place=False)
 
         return final_orders
@@ -91,8 +87,12 @@ class AddTradeActionImpl(ActionHandler):
         for create_date, portfolio in orders.items():
             for inst in portfolio.all_instruments:
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
+                backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(state, backtest,
+                                                                                                 trigger_info)
                 final_date = get_final_date(inst, create_date, self.action.trade_duration)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
+                backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(state, backtest,
+                                                                                                trigger_info)
 
         for s in backtest.states:
             pos = []
@@ -273,8 +273,12 @@ class HedgeActionImpl(ActionHandler):
                                                      csa_term=self.action.csa_term,
                                                      scaling_parameter=self.action.scaling_parameter)
                 entry_payment = CashPayment(trade=hedge_trade, effective_date=create_date, direction=-1)
+                backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(state, backtest,
+                                                                                                 trigger_info)
                 exit_payment = CashPayment(trade=hedge_trade, effective_date=final_date, scale_date=create_date) \
                     if final_date <= dt.date.today() else None
+                backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(state, backtest,
+                                                                                                trigger_info)
                 hedge = Hedge(scaling_portfolio=scaling_portfolio,
                               entry_payment=entry_payment,
                               exit_payment=exit_payment)
@@ -330,7 +334,11 @@ class ExitTradeActionImpl(ActionHandler):
                         else:
                             cp.effective_date = s
                             backtest.cash_payments[s].append(cp)
+                        backtest.transaction_costs[s] -= self.action.transaction_cost.get_cost(state, backtest,
+                                                                                               trigger_info)
                         del backtest.cash_payments[cp_date][index]
+                        backtest.transaction_costs[cp_date] += self.action.transaction_cost.get_cost(state, backtest,
+                                                                                                     trigger_info)
 
                     if not backtest.cash_payments[cp_date]:
                         del backtest.cash_payments[cp_date]
@@ -359,6 +367,7 @@ class RebalanceActionImpl(ActionHandler):
                                              'name': f'{self.action.priceable.name}_{state}'})
 
         backtest.cash_payments[state].append(CashPayment(pos, effective_date=state, direction=-1))
+        backtest.transaction_costs[state] -= self.action.transaction_cost.get_cost(state, backtest, trigger_info)
         unwind_payment = None
         cash_payment_dates = backtest.cash_payments.keys()
         for d in reversed(sorted(cash_payment_dates)):
@@ -366,6 +375,8 @@ class RebalanceActionImpl(ActionHandler):
                 if self.action.priceable.name.split('_')[-1] in cp.trade.name and cp.direction == 1:
                     unwind_payment = CashPayment(pos, effective_date=d)
                     backtest.cash_payments[d].append(unwind_payment)
+                    backtest.transaction_costs[d] -= self.action.transaction_cost.get_cost(state, backtest,
+                                                                                           trigger_info)
                     break
             if unwind_payment:
                 break
@@ -423,7 +434,7 @@ class GenericEngine(BacktestBaseEngine):
         """
         context_params = self._pricing_context_params
 
-        is_batch = context_params.get('is_batch', True)
+        is_batch = context_params.get('is_batch', False)
         show_progress = context_params.get('show_progress', False)
         csa_term = context_params.get('csa_term')
         market_data_location = context_params.get('market_data_location')

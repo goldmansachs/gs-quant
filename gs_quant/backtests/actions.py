@@ -18,6 +18,7 @@ from collections import namedtuple
 from typing import TypeVar
 
 from gs_quant.backtests.backtest_utils import *
+from gs_quant.backtests.backtest_objects import ConstantTransactionModel, TransactionModel
 from gs_quant.base import Priceable
 from gs_quant.markets.securities import *
 from gs_quant.markets.portfolio import Portfolio
@@ -37,6 +38,7 @@ class Action(object):
             action_count += 1
         else:
             self._name = name
+        self._transaction_cost = ConstantTransactionModel(0)
 
     @property
     def calc_type(self):
@@ -46,6 +48,10 @@ class Action(object):
     def risk(self):
         return self._risk
 
+    @property
+    def transaction_cost(self):
+        return self._transaction_cost
+
 
 TAction = TypeVar('TAction', bound='Action')
 
@@ -54,7 +60,8 @@ class AddTradeAction(Action):
     def __init__(self,
                  priceables: Union[Priceable, Iterable[Priceable]],
                  trade_duration: Union[str, dt.date, dt.timedelta] = None,
-                 name: str = None):
+                 name: str = None,
+                 transaction_cost: TransactionModel = ConstantTransactionModel(0)):
         """
         create an action which adds a trade when triggered.  The trades are resolved on the trigger date (state) and
         last until the trade_duration if specified or for all future dates if not.
@@ -63,12 +70,14 @@ class AddTradeAction(Action):
                                if left as None the
                                trade will be added for all future dates
         :param name: optional additional name to the priceable name
+        :param transaction_cost: optional a cash amount paid for each transaction, paid on both enter and exit
         """
         super().__init__(name)
 
         self._priceables = []
         self._dated_priceables = {}
         self._trade_duration = trade_duration
+        self._transaction_cost = transaction_cost
         for i, p in enumerate(make_list(priceables)):
             if p.name is None:
                 self._priceables.append(p.clone(name=f'{self._name}_Priceable{i}'))
@@ -89,6 +98,10 @@ class AddTradeAction(Action):
     @property
     def dated_priceables(self):
         return self._dated_priceables
+
+    @property
+    def transaction_cost(self):
+        return self._transaction_cost
 
 
 AddTradeActionInfo = namedtuple('AddTradeActionInfo', 'scaling')
@@ -170,7 +183,8 @@ class ExitTradeAction(Action):
 
 class HedgeAction(Action):
     def __init__(self, risk, priceables: Priceable = None, trade_duration: str = None, name: str = None,
-                 csa_term: str = None, scaling_parameter: str = 'notional_amount'):
+                 csa_term: str = None, scaling_parameter: str = 'notional_amount',
+                 transaction_cost: TransactionModel = ConstantTransactionModel(0)):
         super().__init__(name)
         self._calc_type = CalcType.semi_path_dependent
         self._priceable = priceables
@@ -178,6 +192,7 @@ class HedgeAction(Action):
         self._trade_duration = trade_duration
         self._csa_term = csa_term
         self._scaling_parameter = scaling_parameter
+        self._transaction_cost = transaction_cost
         if isinstance(priceables, Portfolio):
             trades = []
             for i, priceable in enumerate(priceables):
@@ -213,13 +228,19 @@ class HedgeAction(Action):
     def scaling_parameter(self):
         return self._scaling_parameter
 
+    @property
+    def transaction_cost(self):
+        return self._transaction_cost
+
 
 class RebalanceAction(Action):
-    def __init__(self, priceable: Priceable, size_parameter, method):
+    def __init__(self, priceable: Priceable, size_parameter, method,
+                 transaction_cost: TransactionModel = ConstantTransactionModel(0)):
         super().__init__()
         self._calc_type = CalcType.path_dependent
         self._size_parameter = size_parameter
         self._method = method
+        self._transaction_cost = transaction_cost
         if priceable.unresolved is None:
             raise ValueError("Please specify a resolved priceable to rebalance.")
         if priceable is not None:
@@ -243,3 +264,7 @@ class RebalanceAction(Action):
     @property
     def args(self):
         return self._args
+
+    @property
+    def transaction_cost(self):
+        return self._transaction_cost
