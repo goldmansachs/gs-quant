@@ -304,11 +304,16 @@ class Portfolio(PriceableImpl):
         if self.portfolios:
             raise ValueError('Cannot save portfolios with nested portfolios')
 
+        pricing_context = self._pricing_context
+        with pricing_context:
+            pricing_date = PricingContext.current.pricing_date
+            market = PricingContext.current.market
+
         request = RiskRequest(
             tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
             (ResolvedInstrumentValues,),
-            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=self._pricing_context.pricing_date,
-                                                                        market=self._pricing_context.market),)
+            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=pricing_date,
+                                                                        market=market),)
         )
 
         if self.__quote_id:
@@ -326,11 +331,16 @@ class Portfolio(PriceableImpl):
         if self.portfolios:
             raise ValueError('Cannot save portfolios with nested portfolios')
 
+        pricing_context = self._pricing_context
+        with pricing_context:
+            pricing_date = PricingContext.current.pricing_date
+            market = PricingContext.current.market
+
         request = RiskRequest(
             tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity) for i in self.instruments),
             (ResolvedInstrumentValues,),
-            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=self._pricing_context.pricing_date,
-                                                                        market=self._pricing_context.market),)
+            pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=pricing_date,
+                                                                        market=market),)
         )
         status = GsPortfolioApi.save_to_shadowbook(request, name)
         print(f'Save to shadowbook status - {status}')

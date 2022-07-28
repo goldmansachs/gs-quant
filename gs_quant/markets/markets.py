@@ -200,11 +200,13 @@ class OverlayMarket(Market):
     TimestampedMarket) with a MarketDataMap (a map of market coordinate to float)
     """
 
-    def __init__(self, market_data: Optional[MarketDataMap] = None, base_market: Optional[Market] = None):
+    def __init__(self, market_data: Optional[MarketDataMap] = None, base_market: Optional[Market] = None,
+                 binary_mkt_data: Optional[str] = None):
         market_data = market_data or {}
 
         self.__base_market = base_market or CloseMarket()
         self.__market_data = dict(filter(lambda elem: elem[1] != 'redacted', market_data.items()))
+        self.__market_model_data = binary_mkt_data
         self.__redacted_coordinates = tuple(key for (key, value) in market_data.items() if value == 'redacted')
 
     def __getitem__(self, item):
@@ -230,6 +232,10 @@ class OverlayMarket(Market):
         return tuple(MarketDataCoordinateValue(coordinate=c, value=v) for c, v in self.__market_data.items())
 
     @property
+    def market_model_data(self) -> str:
+        return self.__market_model_data
+
+    @property
     def market_data_dict(self) -> MarketDataMap:
         return {p.coordinate: p.value for p in self.market_data}
 
@@ -239,7 +245,8 @@ class OverlayMarket(Market):
 
     @property
     def market(self):
-        return _OverlayMarket(base_market=self.__base_market.market, market_data=self.market_data)
+        return _OverlayMarket(base_market=self.__base_market.market, market_data=self.market_data,
+                              market_model_data=self.market_model_data)
 
     @property
     def coordinates(self) -> Coordinates:

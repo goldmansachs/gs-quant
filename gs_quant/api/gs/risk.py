@@ -23,6 +23,8 @@ import msgpack
 from socket import gaierror
 import time
 from typing import Iterable, Optional, Union
+import sys
+import os
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.risk import RiskRequest
@@ -157,9 +159,12 @@ class GsRiskApi(RiskApi):
 
                     if result_listener in complete:
                         # New results have been received
-
-                        request_id, status_result_str = result_listener.result().split(';', 1)
-                        status, result_str = status_result_str[0], status_result_str[1:]
+                        try:
+                            request_id, status_result_str = result_listener.result().split(';', 1)
+                            status, result_str = status_result_str[0], status_result_str[1:]
+                        except Exception as ee:
+                            status = 'E'
+                            result_str = str(ee)
 
                         if status == 'E':
                             # An error
@@ -201,7 +206,9 @@ class GsRiskApi(RiskApi):
                         else:
                             request_listener.cancel()
             except Exception as ee:
-                ret = str(ee)
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                ret = f'{exc_type} {fname} ln:{exc_tb.tb_lineno}' + str(ee)
 
             return ret
 

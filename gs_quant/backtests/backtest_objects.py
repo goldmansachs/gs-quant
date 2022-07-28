@@ -44,6 +44,7 @@ class BackTest(BaseBacktest):
         self._cash_dict = {}  # cash by state
         self._hedges = defaultdict(list)  # list of Hedge by date
         self._cash_payments = defaultdict(list)  # list of cash payments (entry, unwind)
+        self._transaction_costs = defaultdict(int)  # list of transaction costs by date
         self._strategy = deepcopy(strategy)  # the strategy definition
         self._states = states  # list of states
         self._results = defaultdict(list)
@@ -70,6 +71,10 @@ class BackTest(BaseBacktest):
     @cash_payments.setter
     def cash_payments(self, cash_payments):
         self._cash_payments = cash_payments
+
+    @property
+    def transaction_costs(self):
+        return self._transaction_costs
 
     @property
     def hedges(self):
@@ -136,7 +141,10 @@ class BackTest(BaseBacktest):
             raise RuntimeError('Cannot aggregate cash in multiple currencies')
         cash = pd.concat([pd.Series(cash_dict, name='Cumulative Cash')
                           for name, cash_dict in cash_summary.items()], axis=1, sort=True)
-        return pd.concat([summary, cash], axis=1, sort=True).fillna(0)
+        transaction_costs = pd.Series(self.transaction_costs, name='Transaction Costs')
+        df = pd.concat([summary, cash, transaction_costs], axis=1, sort=True).fillna(0)
+        df['Total'] = df.sum(numeric_only=True, axis=1)
+        return df[:self.states[-1]]
 
     def trade_ledger(self):
         # this is a ledger of each instrument when it was entered and when it was closed out.  The cash associated
@@ -246,6 +254,19 @@ class Hedge:
         self.scaling_portfolio = scaling_portfolio
         self.entry_payment = entry_payment
         self.exit_payment = exit_payment
+
+
+class TransactionModel:
+    def get_cost(self, state, backtest, info) -> float:
+        pass
+
+
+class ConstantTransactionModel(TransactionModel):
+    def __init__(self, cost):
+        self._cost = cost
+
+    def get_cost(self, state, backtest, info) -> float:
+        return self._cost
 
 
 class PredefinedAssetBacktest(BaseBacktest):
