@@ -309,6 +309,32 @@ class DataGridComponent(Component):
         return dict_
 
 
+class DataScreenerComponent(Component):
+    def __init__(self,
+                 height: int,
+                 id_: str,
+                 *,
+                 width: int = None,
+                 tooltip: str = None):
+        """
+        Data Screener Component
+        :param height: height of the component
+        :param id_: unique identifier of the Data Screener
+        :param width: width of the component integers 1-12
+        :param tooltip: text to show in a tooltip on the Data Screener name
+        """
+        super().__init__(id_=id_, height=height, width=width)
+        self._type = 'screener'
+        self.tooltip = tooltip
+
+    def as_dict(self) -> Dict:
+        dict_ = super().as_dict()
+        if self.tooltip:
+            dict_['parameters']['tooltip'] = self.tooltip
+
+        return dict_
+
+
 class ArticleComponent(Component):
     def __init__(self,
                  height: int,
@@ -513,7 +539,8 @@ class PromoComponent(Component):
 
         return dict_
 
-    def from_dict(cls, obj, scale: int = None):
+    @classmethod
+    def from_dict(cls, obj: Dict, scale: int = None):
         parameters = obj.get('parameters', {})
         size = parameters.get('size')
         size = PromoSize(size) if size else None
@@ -660,7 +687,7 @@ class RelatedLinksComponent(Component):
     def as_dict(self) -> Dict:
         dict_ = super().as_dict()
         dict_['parameters']['title'] = self.title
-        dict_['parameters']['title'] = [link.as_dict() for link in self.links]
+        dict_['parameters']['links'] = [link.as_dict() for link in self.links]
         return dict_
 
     @classmethod

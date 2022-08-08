@@ -21,7 +21,7 @@ from typing import List, Tuple, Union, Dict
 from pydash import get
 
 from gs_quant.analytics.workspaces.components import Component, TYPE_TO_COMPONENT, RelatedLink, DataGridComponent, \
-    MonitorComponent, PlotComponent
+    MonitorComponent, PlotComponent, DataScreenerComponent
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.session import GsSession
@@ -300,6 +300,7 @@ class Workspace:
         DataGridComponent: '/data/grids',
         MonitorComponent: '/monitors',
         PlotComponent: '/charts',
+        DataScreenerComponent: '/data/screens',
     }
 
     def __init__(self,

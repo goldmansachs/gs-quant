@@ -4465,6 +4465,10 @@ class CurveOverlay(Scenario):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+class DataRow(DictBase):
+    pass
+
+
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
@@ -4597,6 +4601,15 @@ class Op(Base):
     lte: Optional[Union[datetime.date, float]] = field(default=None, metadata=field_metadata)
     lt: Optional[Union[datetime.date, float]] = field(default=None, metadata=field_metadata)
     gt: Optional[Union[datetime.date, float]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class OrderByBody(Base):
+    column_name: Optional[str] = field(default=None, metadata=field_metadata)
+    type_: Optional[str] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5162,6 +5175,31 @@ class Entitlements(Base):
 
 class FieldValueMap(DictBase):
     pass
+
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class FilterRequest(Base):
+    scroll: Optional[str] = field(default=None, metadata=field_metadata)
+    scroll_id: Optional[str] = field(default=None, metadata=field_metadata)
+    include_columns: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    filters: Optional[Tuple[DictBase, ...]] = field(default=None, metadata=field_metadata)
+    order_by: Optional[OrderByBody] = field(default=None, metadata=field_metadata)
+    limit: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class FilteredData(Base):
+    total_results: Optional[float] = field(default=None, metadata=field_metadata)
+    results: Optional[Tuple[DataRow, ...]] = field(default=None, metadata=field_metadata)
+    scroll: Optional[str] = field(default=None, metadata=field_metadata)
+    scroll_id: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 @handle_camel_case_args

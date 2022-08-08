@@ -1189,7 +1189,7 @@ def test_esg_quintiles(mocker):
     # run test
     pm = PortfolioManager('MP')
     quintiles = pm.get_esg_quintiles(measure=ESGMeasure.G_PERCENTILE)
-    assert all(quintiles.columns.values == ['gross', 'long', 'short'])
+    assert all(quintiles.columns.values == ['description', 'gross', 'long', 'short'])
 
 
 def test_esg_by_sector(mocker):
@@ -1199,7 +1199,7 @@ def test_esg_by_sector(mocker):
     # run test
     pm = PortfolioManager('MP')
     breakdown = pm.get_esg_by_region(measure=ESGMeasure.G_PERCENTILE)
-    assert all(breakdown.columns.values == ['gross', 'long', 'short'])
+    assert all(breakdown.columns.values == ['name', 'gross', 'long', 'short'])
 
 
 def test_esg_by_region(mocker):
@@ -1209,7 +1209,7 @@ def test_esg_by_region(mocker):
     # run test
     pm = PortfolioManager('MP')
     breakdown = pm.get_esg_by_region(measure=ESGMeasure.G_PERCENTILE)
-    assert all(breakdown.columns.values == ['gross', 'long', 'short'])
+    assert all(breakdown.columns.values == ['name', 'gross', 'long', 'short'])
 
 
 def test_esg_top_ten(mocker):
@@ -1219,7 +1219,7 @@ def test_esg_top_ten(mocker):
     # run test
     pm = PortfolioManager('MP')
     ranked = pm.get_esg_top_ten(measure=ESGMeasure.G_PERCENTILE)
-    assert ranked.size == 4
+    assert ranked.size == 6
 
 
 def test_esg_bottom_ten(mocker):
@@ -1229,7 +1229,7 @@ def test_esg_bottom_ten(mocker):
     # run test
     pm = PortfolioManager('MP')
     ranked = pm.get_esg_bottom_ten(measure=ESGMeasure.G_PERCENTILE)
-    assert ranked.size == 4
+    assert ranked.size == 6
 
 
 def test_carbon_coverage(mocker):
