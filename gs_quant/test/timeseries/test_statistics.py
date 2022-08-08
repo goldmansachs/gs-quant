@@ -22,6 +22,25 @@ from gs_quant.timeseries import *
 from gs_quant.timeseries.statistics import Direction
 
 
+def _random_series(days=365, nans=10):
+    assert nans < days
+    values = np.random.random(days)
+    nan_indexes = np.floor(np.random.random(nans) * len(values)).astype(np.int_)
+    for i in nan_indexes:
+        values[i] = np.nan
+
+    return pd.Series(values, index=pd.date_range(start="2021-01-01", periods=days, freq='D'))
+
+
+def _rolling_1m_test(fn, pandas_fn: str):
+    x = _random_series()
+    window = normalize_window(x, Window('1m', 0))
+    result = fn(x, window)
+    values = (getattr(x.loc[(x.index > idx - window.w) & (x.index <= idx)], pandas_fn)() for idx in x.index)
+    expected = pd.Series(values, index=x.index)
+    assert_series_equal(result, expected, obj=f"{pandas_fn} with date window 1m")
+
+
 def test_generate_series():
     x = generate_series(100)
 
@@ -46,6 +65,10 @@ def test_min():
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+    z = pd.Series([2.0, 5.0, 4.0, 0.0, 1.0, 3.0], index=dates)
+    result = min_([x, z], Window('2d', 0))
+    expected = pd.Series([2.0, 2.0, 2.0, 0.0, 1.0, 1.0], index=dates)
+    assert_series_equal(result, expected, obj="Minimum list 2d")
 
     result = min_(x)
     expected = pd.Series([3.0, 2.0, 2.0, 1.0, 1.0, 1.0], index=dates)
@@ -82,6 +105,8 @@ def test_min():
     expected = pd.Series([1.0, 1.0, 1.0], index=ranges[3:])
     assert_series_equal(result, expected, obj="Minimum with string window 2h")
 
+    _rolling_1m_test(min_, 'min')
+
 
 def test_max():
     dates = [
@@ -94,6 +119,11 @@ def test_max():
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+    z = pd.Series([1.0, 0.0, 4.0, 3.5, 7.0, 8.0], index=dates)
+
+    result = max_([x, z], Window('2d', 0))
+    expected = pd.Series([3.0, 3.0, 4.0, 4.0, 7.0, 8.0], index=dates)
+    assert_series_equal(result, expected, obj="Maximum list 2d")
 
     result = max_(x)
     expected = pd.Series([3.0, 3.0, 3.0, 3.0, 3.0, 6.0], index=dates)
@@ -127,6 +157,8 @@ def test_max():
     result = max_(y, '1h')
     expected = pd.Series([3.0, 3.0, 3.0, 6.0], index=ranges[2:])
     assert_series_equal(result, expected, obj="Maximum with string window 1h")
+
+    _rolling_1m_test(max_, 'max')
 
 
 def test_range():
@@ -228,6 +260,8 @@ def test_median():
     expected = pd.Series([3.0, 2.5, 3.0, 2.5, 3.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Median window 1w")
 
+    _rolling_1m_test(median, 'median')
+
 
 def test_mode():
     dates = [
@@ -256,6 +290,13 @@ def test_mode():
     result = mode(x, Window('1w', 0))
     expected = pd.Series([3.0, 2.0, 3.0, 3.0, 3.0, 3.0], index=dates)
     assert_series_equal(result, expected, obj="Mode window 1w")
+
+    x = _random_series()
+    window = normalize_window(x, Window('1m', 0))
+    result = mode(x, window)
+    values = (stats.mode(x.loc[(x.index > idx - window.w) & (x.index <= idx)]).mode[0] for idx in x.index)
+    expected = pd.Series(values, index=x.index)
+    assert_series_equal(result, expected, obj="Mode window 1m")
 
 
 def test_sum():
@@ -315,6 +356,8 @@ def test_product():
     result = product(x, Window('1w', 0))
     expected = pd.Series([1.0, 2.0, 6.0, 24.0, 120.0, 720.0], index=dates)
     assert_series_equal(result, expected, obj="Product window 1w")
+
+    _rolling_1m_test(product, 'prod')
 
 
 def test_std():
@@ -401,6 +444,8 @@ def test_var():
     result = var(x, Window('1w', 0))
     expected = pd.Series([np.nan, 0.500000, 0.333333, 0.916666, 0.800000, 3.500000], index=dates)
     assert_series_equal(result, expected, obj="var window 1w")
+
+    _rolling_1m_test(var, 'var')
 
 
 def test_cov():

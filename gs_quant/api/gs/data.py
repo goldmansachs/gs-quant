@@ -244,7 +244,8 @@ class GsDataApi(DataApi):
             limit: int = None,
             offset: int = None,
             fields: List[str] = None,
-            include_history: bool = False
+            include_history: bool = False,
+            **kwargs
     ) -> List[dict]:
         params = {
             'limit': limit or 4000,
@@ -260,6 +261,7 @@ class GsDataApi(DataApi):
         if include_history:
             params['includeHistory'] = 'true'
 
+        params = {**params, **kwargs}
         body = GsSession.current._get(f'/data/{dataset_id}/coverage', payload=params)
         results = scroll_results = body['results']
         total_results = body['totalResults']

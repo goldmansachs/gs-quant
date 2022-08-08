@@ -108,7 +108,7 @@ class SaveQuoteRequest(Base):
     parameters: Optional[RiskRequestParameters] = field(default=None, metadata=field_metadata)
     reports: Optional[Tuple[QuoteReport, ...]] = field(default=None, metadata=field_metadata)
     shared_users: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    comments: Optional[str] = field(default=None, metadata=name_metadata)
+    comments: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -119,7 +119,7 @@ class WorkflowPosition(Base):
     id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
     position_sets: Optional[Tuple[PositionSet, ...]] = field(default=None, metadata=field_metadata)
     reports: Optional[Tuple[QuoteReport, ...]] = field(default=None, metadata=field_metadata)
-    comments: Optional[str] = field(default=None, metadata=name_metadata)
+    comments: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

@@ -370,7 +370,7 @@ class PositionedEntity(metaclass=ABCMeta):
                                   position_type: PositionType = PositionType.CLOSE) -> PositionSet:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_date(self.id, date, position_type)
-            if(len(response) == 0):
+            if len(response) == 0:
                 _logger.info("No positions available for {}".format(date))
                 return PositionSet([], date=date)
             return PositionSet.from_target(response[0])
@@ -387,7 +387,7 @@ class PositionedEntity(metaclass=ABCMeta):
                           position_type: PositionType = PositionType.CLOSE) -> List[PositionSet]:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
-            if(len(response) == 0):
+            if len(response) == 0:
                 _logger.info("No positions available in the date range {} - {}".format(start, end))
                 return []
             return [PositionSet.from_target(position_set) for position_set in response]
@@ -623,8 +623,7 @@ class PositionedEntity(metaclass=ABCMeta):
                                          cards=[ESGCard.QUINTILES],
                                          measures=[measure]).get('quintiles')[0].get('results')
         df = pd.DataFrame(quintile_data)
-        df = df.filter(items=['description', 'gross', 'long', 'short'])
-        return df.set_index('description')
+        return df.filter(items=['description', 'gross', 'long', 'short'])
 
     def get_esg_by_sector(self,
                           measure: ESGMeasure,
@@ -678,8 +677,7 @@ class PositionedEntity(metaclass=ABCMeta):
                                 pricing_date=pricing_date,
                                 cards=[card],
                                 measures=[measure]).get(card.value)[0].get('results')
-        df = pd.DataFrame(data)
-        return df.set_index('assetId')
+        return pd.DataFrame(data)
 
     def _get_esg_breakdown(self,
                            card: ESGCard,
@@ -689,8 +687,7 @@ class PositionedEntity(metaclass=ABCMeta):
                                        pricing_date=pricing_date,
                                        cards=[card],
                                        measures=[measure]).get(card.value)[0].get('results')
-        df = pd.DataFrame(sector_data)
-        return df.set_index('name')
+        return pd.DataFrame(sector_data)
 
     def get_carbon_analytics(self,
                              benchmark_id: str = None,

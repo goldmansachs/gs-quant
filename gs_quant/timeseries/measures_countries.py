@@ -63,10 +63,10 @@ def fci(country_id: str, measure: _FCI_MEASURE = _FCI_MEASURE.FCI, *, source: st
         raise NotImplementedError('real-time FCI data is not available')
 
     type_ = QueryType(inflection.titleize(measure.value))
-    if(measure == _FCI_MEASURE.REAL_FCI or measure == _FCI_MEASURE.REAL_TWI_CONTRIBUTION):
+    if measure == _FCI_MEASURE.REAL_FCI or measure == _FCI_MEASURE.REAL_TWI_CONTRIBUTION:
         ds = Dataset('FCI')
         df = ds.get_data(geographyId=country_id)
-        if(measure == _FCI_MEASURE.REAL_FCI):
+        if measure == _FCI_MEASURE.REAL_FCI:
             measure = 'realFCI'
         else:
             measure = 'realTWIContribution'
