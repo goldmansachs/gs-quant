@@ -34,11 +34,7 @@ from gs_quant.common import Currency, PayReceive
 
 
 def mock_pricing_context(self):
-    is_batch = False
-    show_progress = True
-
-    context = PricingContext(is_batch=is_batch, show_progress=show_progress)
-
+    context = PricingContext(set_parameters_only=True, is_batch=False, show_progress=True)
     return context
 
 

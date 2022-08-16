@@ -671,3 +671,166 @@ def test_get_factor_z_score(mocker):
                                                         limit_factors=False)
     GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == factor_z_score_results
+
+
+def test_get_predicted_beta(mocker):
+    assets = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, assets),
+        'measures': [Measure.Predicted_Beta, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    predicted_beta_results = [
+        {
+            "date": "2022-04-05",
+            "assetData": {
+                "universe": ["904026", "232128", "24985", "160444"],
+                "predictedBeta": [0.4, 1.5, 1.2, 0.5]
+            }
+        }
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=predicted_beta_results)
+
+    # run test
+    response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2022, 4, 4),
+                                                        end_date=dt.date(2022, 4, 6),
+                                                        assets=DataAssetsRequest(UniverseIdentifier.gsid, assets),
+                                                        measures=[Measure.Predicted_Beta, Measure.Asset_Universe],
+                                                        limit_factors=False)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    assert response == predicted_beta_results
+
+
+def test_get_global_predicted_beta(mocker):
+    assets = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, assets),
+        'measures': [Measure.Global_Predicted_Beta, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    global_predicted_beta_results = [
+        {
+            "date": "2022-04-05",
+            "assetData": {
+                "universe": ["904026", "232128", "24985", "160444"],
+                "globalPredictedBeta": [0.4, 1.5, 1.2, 0.5]
+            }
+        }
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=global_predicted_beta_results)
+
+    # run test
+    response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2022, 4, 4),
+                                                        end_date=dt.date(2022, 4, 6),
+                                                        assets=DataAssetsRequest(UniverseIdentifier.gsid, assets),
+                                                        measures=[Measure.Global_Predicted_Beta,
+                                                                  Measure.Asset_Universe],
+                                                        limit_factors=False)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    assert response == global_predicted_beta_results
+
+
+def test_get_daily_return(mocker):
+    assets = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, assets),
+        'measures': [Measure.Daily_Return, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    daily_return_results = [
+        {
+            "date": "2022-04-05",
+            "assetData": {
+                "universe": ["904026", "232128", "24985", "160444"],
+                "dailyReturn": [0.4, 1.5, 1.2, 0.5]
+            }
+        }
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=daily_return_results)
+
+    # run test
+    response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2022, 4, 4),
+                                                        end_date=dt.date(2022, 4, 6),
+                                                        assets=DataAssetsRequest(UniverseIdentifier.gsid, assets),
+                                                        measures=[Measure.Daily_Return,
+                                                                  Measure.Asset_Universe],
+                                                        limit_factors=False)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    assert response == daily_return_results
+
+
+def test_get_specific_return(mocker):
+    assets = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, assets),
+        'measures': [Measure.Specific_Return, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    specific_return_resutls = [
+        {
+            "date": "2022-04-05",
+            "assetData": {
+                "universe": ["904026", "232128", "24985", "160444"],
+                "specificReturn": [0.4, 1.5, 1.2, 0.5]
+            }
+        }
+    ]
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=specific_return_resutls)
+
+    # run test
+    response = GsFactorRiskModelApi.get_risk_model_data(model_id='id', start_date=dt.date(2022, 4, 4),
+                                                        end_date=dt.date(2022, 4, 6),
+                                                        assets=DataAssetsRequest(UniverseIdentifier.gsid, assets),
+                                                        measures=[Measure.Specific_Return,
+                                                                  Measure.Asset_Universe],
+                                                        limit_factors=False)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    assert response == specific_return_resutls

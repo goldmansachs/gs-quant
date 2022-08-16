@@ -536,6 +536,8 @@ class PromoComponent(Component):
             dict_['parameters']['size'] = self.size.value
         if self.hide_border is not None:
             dict_['parameters']['hideBorder'] = self.size
+        if self.transparent is not None:
+            dict_['parameters']['transparent'] = self.transparent
 
         return dict_
 
@@ -709,5 +711,6 @@ TYPE_TO_COMPONENT = {
     'promo': PromoComponent,
     'relatedLinks': RelatedLinksComponent,
     'selector': SelectorComponent,
-    'separator': SeparatorComponent
+    'separator': SeparatorComponent,
+    'screener': DataScreenerComponent
 }
