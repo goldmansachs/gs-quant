@@ -682,7 +682,7 @@ class MarqueeRiskModel(RiskModel):
             consider batching with a smaller max asset batch size
         If upload universe is over max_asset_batch_size, will batch data in chunks of max_asset_batch_size assets
 
-        This function takes risk model data, and if partial requests are necessary, will upload data by:
+        This function takes risk model data, and if partial requests are necessary, will upload data by
             1. factor data (includes covariance matrix if factor model)
             2. asset data in batches of max_asset_batch_size
             3. issuer specific covariance data in batches of max_asset_batch_size / 2 due to the structure of this data
@@ -923,6 +923,151 @@ class FactorRiskModel(MarqueeRiskModel):
         if format == ReturnFormat.DATA_FRAME:
             historical_beta = pd.DataFrame(historical_beta)
         return historical_beta
+
+    def get_predicted_beta(self,
+                           start_date: dt.date,
+                           end_date: dt.date = None,
+                           assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                           format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get predicted beta data for an existing risk model
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: which format to return the results in
+
+        :return: predicted beta for assets requested
+        """
+        results = self.get_data(
+            start_date=start_date,
+            end_date=end_date,
+            assets=assets,
+            measures=[Measure.Predicted_Beta, Measure.Asset_Universe],
+            limit_factors=False
+        ).get('results')
+        universe = pydash.get(results, '0.assetData.universe', [])
+        predicted_beta = build_asset_data_map(results, universe, 'predictedBeta', {})
+        if format == ReturnFormat.DATA_FRAME:
+            predicted_beta = pd.DataFrame(predicted_beta)
+        return predicted_beta
+
+    def get_global_predicted_beta(self,
+                                  start_date: dt.date,
+                                  end_date: dt.date = None,
+                                  assets: DataAssetsRequest = DataAssetsRequest(
+                                      RiskModelUniverseIdentifierRequest.gsid, []),
+                                  format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get global predicted beta data for an existing risk model
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: which format to return the results in
+
+        :return: global predicted beta for assets requested
+        """
+        results = self.get_data(
+            start_date=start_date,
+            end_date=end_date,
+            assets=assets,
+            measures=[Measure.Global_Predicted_Beta, Measure.Asset_Universe],
+            limit_factors=False
+        ).get('results')
+        universe = pydash.get(results, '0.assetData.universe', [])
+        global_predicted_beta = build_asset_data_map(results, universe, 'globalPredictedBeta', {})
+        if format == ReturnFormat.DATA_FRAME:
+            global_predicted_beta = pd.DataFrame(global_predicted_beta)
+        return global_predicted_beta
+
+    def get_daily_return(self,
+                         start_date: dt.date,
+                         end_date: dt.date = None,
+                         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                         format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get daily asset total return data
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Daily asset total return data
+
+        **Usage**
+
+        Get the daily total return for each asset requested over start date and end date
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> daily_returns_df = model.get_daily_return(start_date, end_date,
+        ...                                           DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_specific_risk` :func:`get_universe_factor_exposure` :func: `get_specific_return`
+
+        """
+        results = self.get_data(
+            start_date=start_date,
+            end_date=end_date,
+            assets=assets,
+            measures=[Measure.Daily_Return, Measure.Asset_Universe],
+            limit_factors=False
+        ).get('results')
+        universe = pydash.get(results, '0.assetData.universe', [])
+        daily_return = build_asset_data_map(results, universe, 'dailyReturn', {})
+        if format == ReturnFormat.DATA_FRAME:
+            daily_return = pd.DataFrame(daily_return)
+        return daily_return
+
+    def get_specific_return(self,
+                            start_date: dt.date,
+                            end_date: dt.date = None,
+                            assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                            format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get specific return data for existing risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Specific return data
+
+        **Usage**
+
+        Get the specific return for each asset requested over start date and end date
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> specific_returns_df = model.specific_return(start_date, end_date,
+        ...                                             DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_specific_risk` :func:`get_universe_factor_exposure`
+
+        """
+        results = self.get_data(
+            start_date=start_date,
+            end_date=end_date,
+            assets=assets,
+            measures=[Measure.Specific_Return, Measure.Asset_Universe],
+            limit_factors=False
+        ).get('results')
+        universe = pydash.get(results, '0.assetData.universe', [])
+        specific_return = build_asset_data_map(results, universe, 'specificReturn', {})
+        if format == ReturnFormat.DATA_FRAME:
+            specific_return = pd.DataFrame(specific_return)
+        return specific_return
 
     def get_universe_factor_exposure(self,
                                      start_date: dt.date,

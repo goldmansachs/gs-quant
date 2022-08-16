@@ -42,8 +42,11 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Total_Risk = 'Total Risk'
     Specific_Risk = 'Specific Risk'
     Specific_Return = 'Specific Return'
+    Daily_Return = 'Daily Return'
     Estimation_Universe_Weight = 'Estimation Universe Weight'
     Residual_Variance = 'Residual Variance'
+    Predicted_Beta = 'Predicted Beta'
+    Global_Predicted_Beta = 'Global Predicted Beta'
     Universe_Factor_Exposure = 'Universe Factor Exposure'
     R_Squared = 'R Squared'
     Fair_Value_Gap_Percent = 'Fair Value Gap Percent'
@@ -93,7 +96,8 @@ class RiskModelUniverseIdentifier(EnumBase, Enum):
     sedol = 'sedol'
     bcid = 'bcid'
     cusip = 'cusip'
-    gsid = 'gsid'    
+    gsid = 'gsid'
+    isin = 'isin'    
 
 
 class RiskModelUniverseIdentifierRequest(EnumBase, Enum):    
@@ -106,7 +110,8 @@ class RiskModelUniverseIdentifierRequest(EnumBase, Enum):
     sedol = 'sedol'
     ric = 'ric'
     ticker = 'ticker'
-    primeId = 'primeId'    
+    primeId = 'primeId'
+    isin = 'isin'    
 
 
 @handle_camel_case_args
@@ -181,9 +186,12 @@ class RiskModelAssetData(Base):
     specific_risk: Tuple[float, ...] = field(default=None, metadata=field_metadata)
     factor_exposure: Tuple[RiskModelFactorExposure, ...] = field(default=None, metadata=field_metadata)
     specific_return: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    daily_return: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     estimation_universe_weight: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     residual_variance: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     historical_beta: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    predicted_beta: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    global_predicted_beta: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     total_risk: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     r_squared: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     fair_value_gap_percent: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)

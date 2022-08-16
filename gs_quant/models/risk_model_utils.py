@@ -303,8 +303,9 @@ def _batch_asset_input(input_data: dict, i: int, split_idx: int, split_num: int,
                          'specificRisk': input_data.get('specificRisk')[i * split_idx:end_idx],
                          'factorExposure': input_data.get('factorExposure')[i * split_idx:end_idx]}
 
-    optional_asset_inputs = ['totalRisk', 'historicalBeta', 'specificReturn', 'rSquared', 'fairValueGapPercent',
-                             'fairValueGapStandardDeviation', 'estimationUniverseWeight']
+    optional_asset_inputs = ['totalRisk', 'historicalBeta', 'predictedBeta', 'globalPredictedBeta', 'specificReturn',
+                             'dailyReturn', 'rSquared', 'fairValueGapPercent', 'fairValueGapStandardDeviation',
+                             'estimationUniverseWeight']
 
     for optional_input in optional_asset_inputs:
         if input_data.get(optional_input):

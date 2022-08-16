@@ -203,7 +203,9 @@ class GsSession(ContextBase):
             if not try_auth:
                 raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
             self._authenticate()
-            return self.__request(method, path, payload=payload, cls=cls, try_auth=False)
+            return self.__request(method, path, payload=payload, cls=cls,
+                                  include_version=include_version, return_request_id=return_request_id,
+                                  use_body=use_body, try_auth=False)
         elif not 199 < response.status_code < 300:
             raise MqRequestError(response.status_code, response.text,
                                  context=f'{response.headers.get("")}: {method} {url}')

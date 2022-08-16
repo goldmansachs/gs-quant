@@ -452,5 +452,185 @@ def test_get_factor_z_score(mocker):
     assert response == factor_z_score_response
 
 
+def test_get_predicted_beta(mocker):
+    model = mock_risk_model(mocker)
+    universe = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, universe),
+        'measures': [Measure.Predicted_Beta, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'missingDates': ['2022-04-04', '2022-04-06'],
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["904026", "232128", "24985", "160444"],
+                    "predictedBeta": [0.4, 1.5, 1.2, 0.5]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    predicted_beta_response = {
+        '160444': {'2022-04-05': 0.5},
+        '232128': {'2022-04-05': 1.5},
+        '24985': {'2022-04-05': 1.2},
+        '904026': {'2022-04-05': 0.4}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_predicted_beta(start_date=dt.date(2022, 4, 4),
+                                        end_date=dt.date(2022, 4, 6),
+                                        assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
+                                        format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == predicted_beta_response
+
+
+def test_get_global_predicted_beta(mocker):
+    model = mock_risk_model(mocker)
+    universe = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, universe),
+        'measures': [Measure.Global_Predicted_Beta, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'missingDates': ['2022-04-04', '2022-04-06'],
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["904026", "232128", "24985", "160444"],
+                    "globalPredictedBeta": [0.4, 1.5, 1.2, 0.5]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    global_predicted_beta_response = {
+        '160444': {'2022-04-05': 0.5},
+        '232128': {'2022-04-05': 1.5},
+        '24985': {'2022-04-05': 1.2},
+        '904026': {'2022-04-05': 0.4}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_global_predicted_beta(start_date=dt.date(2022, 4, 4),
+                                               end_date=dt.date(2022, 4, 6),
+                                               assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
+                                               format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == global_predicted_beta_response
+
+
+def test_get_daily_return(mocker):
+    model = mock_risk_model(mocker)
+    universe = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, universe),
+        'measures': [Measure.Daily_Return, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'missingDates': ['2022-04-04', '2022-04-06'],
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["904026", "232128", "24985", "160444"],
+                    "dailyReturn": [-0.4, -1.5, 1.2, 0.5]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    daily_return_response = {
+        '160444': {'2022-04-05': 0.5},
+        '232128': {'2022-04-05': -1.5},
+        '24985': {'2022-04-05': 1.2},
+        '904026': {'2022-04-05': -0.4}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_daily_return(start_date=dt.date(2022, 4, 4),
+                                      end_date=dt.date(2022, 4, 6),
+                                      assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
+                                      format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == daily_return_response
+
+
+def test_get_specific_return(mocker):
+    model = mock_risk_model(mocker)
+    universe = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, universe),
+        'measures': [Measure.Specific_Return, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'missingDates': ['2022-04-04', '2022-04-06'],
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["904026", "232128", "24985", "160444"],
+                    "specificReturn": [0.5, 1.6, 1.4, 0.7]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    specific_return_response = {
+        '160444': {'2022-04-05': 0.7},
+        '232128': {'2022-04-05': 1.6},
+        '24985': {'2022-04-05': 1.4},
+        '904026': {'2022-04-05': 0.5}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_specific_return(start_date=dt.date(2022, 4, 4),
+                                         end_date=dt.date(2022, 4, 6),
+                                         assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
+                                         format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == specific_return_response
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
