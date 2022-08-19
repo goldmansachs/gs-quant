@@ -512,6 +512,13 @@ class InstrumentBase(Base, ABC):
         new_instrument.__resolution_key = resolution_key
         return new_instrument
 
+    def clone(self, **kwargs):
+        new_instrument = super().clone(**kwargs)
+        new_instrument.__unresolved = self.unresolved
+        new_instrument.metadata = self.metadata
+        new_instrument.__resolution_key = self.resolution_key
+        return new_instrument
+
 
 @dataclass
 class Market(ABC):
