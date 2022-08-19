@@ -31,13 +31,54 @@ def test_time_difference_as_string():
         assert expected == actual
 
 
+def test_tracer_tags():
+    Tracer.reset()
+    with Tracer('Some work') as scope:
+        scope.span.set_tag('user', 'martin')
+
+    spans = Tracer.get_spans()
+    assert len(spans) == 1
+    assert 'user' in spans[0].tags
+    assert spans[0].tags['user'] == 'martin'
+
+
+def test_tracer_print():
+    Tracer.reset()
+    with Tracer('A'):
+        with Tracer('B'):
+            pass
+        with Tracer('C'):
+            with Tracer('D'):
+                pass
+    with Tracer('E'):
+        pass
+    # Force elapsed time to 0 to make sure no spurious tiny times
+    for span in Tracer.get_spans():
+        span.finish_time = span.start_time
+    tracer_str, _ = Tracer.print(reset=True)
+    expected = '\n'.join(['A                                                      0.0 ms',
+                          '* B                                                    0.0 ms',
+                          '* C                                                    0.0 ms',
+                          '* * D                                                  0.0 ms',
+                          'E                                                      0.0 ms'])
+    assert tracer_str == expected
+
+
 def test_tracer_wrapped_error():
+    Tracer.reset()
     with pytest.raises(MqError, match='Unable to calculate: Outer Thing'):
         with Tracer('Outer Thing', wrap_exceptions=True):
             with Tracer('Inner Thing', ):
                 raise KeyError('meaningless error')
+    spans = Tracer.get_spans()
+    assert 'error' in spans[0].tags
+    assert 'error' in spans[1].tags
+    Tracer.reset()
 
     with pytest.raises(MqError, match='Unable to calculate: Inner Thing'):
         with Tracer('Outer Thing', wrap_exceptions=True):
             with Tracer('Inner Thing', wrap_exceptions=True):
                 raise KeyError('meaningless error')
+    assert 'error' in spans[0].tags
+    assert 'error' in spans[1].tags
+    Tracer.reset()

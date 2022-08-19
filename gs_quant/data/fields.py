@@ -62,6 +62,17 @@ class DataMeasure(Enum):
     PRICE_TO_SALES = 'Price to Sales'
     RETURN_ON_EQUITY = 'Return on Equity'
     SALES_PER_SHARE = 'Sales per Share'
+    CURRENT_CONSTITUENTS_DIVIDEND_YIELD = 'Current Constituents Dividend Yield'
+    CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE = 'Current Constituents Earnings per Share'
+    CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE_POSITIVE = 'Current Constituents Earnings per Share Positive'
+    CURRENT_CONSTITUENTS_NET_DEBT_TO_EBITDA = 'Current Constituents Net Debt to EBITDA'
+    CURRENT_CONSTITUENTS_PRICE_TO_BOOK = 'Current Constituents Price to Book'
+    CURRENT_CONSTITUENTS_PRICE_TO_CASH = 'Current Constituents Price to Cash'
+    CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS = 'Current Constituents Price to Earnings'
+    CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS_POSITIVE = 'Current Constituents Price to Earnings Positive'
+    CURRENT_CONSTITUENTS_PRICE_TO_SALES = 'Current Constituents Price to Sales'
+    CURRENT_CONSTITUENTS_RETURN_ON_EQUITY = 'Current Constituents Return on Equity'
+    CURRENT_CONSTITUENTS_SALES_PER_SHARE = 'Current Constituents Sales per Share'
     ONE_YEAR = '1y'
     TWO_YEARS = '2y'
     THREE_YEARS = '3y'
@@ -76,7 +87,18 @@ class DataMeasure(Enum):
         return [metric.value for metric in [cls.DIVIDEND_YIELD, cls.EARNINGS_PER_SHARE, cls.EARNINGS_PER_SHARE_POSITIVE,
                                             cls.NET_DEBT_TO_EBITDA, cls.PRICE_TO_BOOK, cls.PRICE_TO_CASH,
                                             cls.PRICE_TO_EARNINGS, cls.PRICE_TO_EARNINGS_POSITIVE,
-                                            cls.PRICE_TO_SALES, cls.RETURN_ON_EQUITY, cls.SALES_PER_SHARE]]
+                                            cls.PRICE_TO_SALES, cls.RETURN_ON_EQUITY, cls.SALES_PER_SHARE,
+                                            cls.CURRENT_CONSTITUENTS_DIVIDEND_YIELD,
+                                            cls.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE,
+                                            cls.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE_POSITIVE,
+                                            cls.CURRENT_CONSTITUENTS_NET_DEBT_TO_EBITDA,
+                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_BOOK,
+                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_CASH,
+                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS,
+                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS_POSITIVE,
+                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_SALES,
+                                            cls.CURRENT_CONSTITUENTS_RETURN_ON_EQUITY,
+                                            cls.CURRENT_CONSTITUENTS_SALES_PER_SHARE]]
 
 
 class DataDimension(Enum):

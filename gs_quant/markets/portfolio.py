@@ -15,6 +15,7 @@ under the License.
 """
 import datetime as dt
 import logging
+import re
 from dataclasses import dataclass
 from itertools import chain
 from typing import Iterable, Optional, Tuple, Union
@@ -378,6 +379,10 @@ class Portfolio(PriceableImpl):
             mappings: Optional[dict] = None
     ):
         data = pd.read_csv(csv_file, skip_blank_lines=True).replace({np.nan: None})
+        reg = re.compile(r'\.[0-9]')
+        dupelist = [re.sub(reg, '', word) for word in data.columns if reg.search(word)]
+        if len(dupelist):
+            raise ValueError(f'Duplicate column values {dupelist}')
         return cls.from_frame(data, mappings)
 
     def scale(self, scaling: int, in_place: bool = True):

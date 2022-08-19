@@ -473,6 +473,23 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
     return series
 
 
+def _fundamentals_md_query(mqid: str, period: str, period_direction: FundamentalMetricPeriodDirection,
+                           metric: str, source: str = None, real_time: bool = False,
+                           request_id: Optional[str] = None) -> Series:
+    q = GsDataApi.build_market_data_query(
+        [mqid],
+        QueryType.FUNDAMENTAL_METRIC,
+        where=dict(metric=metric, period=period, periodDirection=period_direction.value),
+        source=source,
+        real_time=real_time
+    )
+
+    q['queries'][0]['vendor'] = 'Goldman Sachs'
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
+    return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
+
+
 @plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
     id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
     asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
@@ -3535,6 +3552,363 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
+                                        *, source: str = None, real_time: bool = False,
+                                        request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Dividend Yield of the asset-weighted average of dividend yields of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: current constituents dividend yield
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_dividend_yield not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_DIVIDEND_YIELD.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity, ), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_earnings_per_share(asset: Asset, period: str,
+                                            period_direction: FundamentalMetricPeriodDirection, *,
+                                            source: str = None, real_time: bool = False,
+                                            request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Earnings Per Share (EPS) of the asset-weighted average EPS of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: current constituents earnings per share
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_earnings_per_share not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_earnings_per_share_positive(asset: Asset, period: str,
+                                                     period_direction: FundamentalMetricPeriodDirection, *,
+                                                     source: str = None, real_time: bool = False,
+                                                     request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Earnings Per Share Positive of the asset-weighted average EPSP of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: current constituents earnings per share positive
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_earnings_per_share_positive not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE_POSITIVE.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_net_debt_to_ebitda(asset: Asset, period: str,
+                                            period_direction: FundamentalMetricPeriodDirection,
+                                            *, source: str = None, real_time: bool = False,
+                                            request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Net Debt to EBITDA of the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: Current Constituents Net Debt to EBITDA
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_net_debt_to_ebitda not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_NET_DEBT_TO_EBITDA.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_price_to_book(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
+                                       *, source: str = None, real_time: bool = False,
+                                       request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Price to Book of the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: Current Constituents Price to Book
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_price_to_book not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_BOOK.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
+                                       *, source: str = None, real_time: bool = False,
+                                       request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Price to Cash of the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: Current Constituents Price to Cash
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_price_to_cash not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_CASH.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_price_to_earnings(asset: Asset, period: str,
+                                           period_direction: FundamentalMetricPeriodDirection,
+                                           *, source: str = None, real_time: bool = False,
+                                           request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Price to Earnings of the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: Current Constituents Price to Earnings
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_price_to_earnings not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_price_to_earnings_positive(asset: Asset, period: str,
+                                                    period_direction: FundamentalMetricPeriodDirection,
+                                                    *, source: str = None, real_time: bool = False,
+                                                    request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Price to Earnings Positive of the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: Current Constituents Price to Earnings Positive
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_price_to_earnings_positive not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS_POSITIVE.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
+                                        *, source: str = None, real_time: bool = False,
+                                        request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Price to Sales of the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: Current Constituents Price to Sales
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_price_to_sales not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_SALES.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_return_on_equity(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
+                                          *, source: str = None, real_time: bool = False,
+                                          request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Return on Equity of the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: Current Constituents Return on Equity
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_return_on_equity not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_RETURN_ON_EQUITY.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+def current_constituents_sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
+                                         *, source: str = None, real_time: bool = False,
+                                         request_id: Optional[str] = None) -> Series:
+    """
+    Current Constituents Sales per Share of the asset-weighted average value of a composite's underliers.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: Current Constituents Sales per Share
+    """
+    if real_time:
+        raise NotImplementedError('real-time current_constituents_sales_per_share not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.CURRENT_CONSTITUENTS_SALES_PER_SHARE.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF, AssetType.Custom_Basket,

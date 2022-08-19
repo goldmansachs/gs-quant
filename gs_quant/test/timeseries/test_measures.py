@@ -33,7 +33,7 @@ from testfixtures.mock import Mock
 
 import gs_quant.timeseries.measures as tm
 import gs_quant.timeseries.measures_rates as tm_rates
-from gs_quant.api.gs.assets import GsTemporalXRef, GsAssetApi, GsIdType, IdList, GsAsset
+from gs_quant.api.gs.assets import AssetType, GsTemporalXRef, GsAssetApi, GsIdType, IdList, GsAsset
 from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
 from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
@@ -4355,6 +4355,7 @@ def test_weighted_average_valuation_curve_for_calendar_strip():
 def test_fundamental_metrics():
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
+    mock_rb = CustomBasket(GsAsset(AssetClass.Equity, AssetType.Research_Basket, 'GSTEST01'))
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
     period = '1y'
     direction = tm.FundamentalMetricPeriodDirection.FORWARD
@@ -4424,6 +4425,72 @@ def test_fundamental_metrics():
     assert actual.dataset_ids == _test_datasets
     with pytest.raises(NotImplementedError):
         tm.sales_per_share(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_dividend_yield(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_dividend_yield(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_earnings_per_share(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_earnings_per_share(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_earnings_per_share_positive(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_earnings_per_share_positive(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_net_debt_to_ebitda(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_net_debt_to_ebitda(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_price_to_book(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_book(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_price_to_cash(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_cash(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_price_to_earnings(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_earnings(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_price_to_earnings_positive(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_earnings_positive(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_price_to_sales(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_sales(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_return_on_equity(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_return_on_equity(..., period, direction, real_time=True)
+
+    actual = tm.current_constituents_sales_per_share(mock_rb, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_sales_per_share(..., period, direction, real_time=True)
 
     replace.restore()
 

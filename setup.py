@@ -68,6 +68,7 @@ setuptools.setup(
         "more_itertools",
         "msgpack",
         "nest-asyncio",
+        "opentracing",
         "pandas>1.0.0",
         "pydash",
         "python-dateutil>=2.7.0",
