@@ -192,7 +192,7 @@ class GsAssetApi:
     ) -> Tuple[dict, ...]:
         where = dict(identifier=identifier, **kwargs)
         query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
-        return GsSession.current._post('/assets/resolver', payload=query)
+        return GsSession.current._post('/positions/resolver', payload=query)
 
     @classmethod
     @_cached

@@ -61,7 +61,7 @@ class GsCalendar:
         try:
             _ = Currency(currency.upper())
             return True
-        except ValueError:
+        except (ValueError, AttributeError):
             return False
 
     @property

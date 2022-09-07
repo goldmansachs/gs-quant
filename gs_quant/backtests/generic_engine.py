@@ -271,7 +271,8 @@ class HedgeActionImpl(ActionHandler):
             if len(active_dates):
                 scaling_portfolio = ScalingPortfolio(trade=hedge_trade, dates=active_dates, risk=self.action.risk,
                                                      csa_term=self.action.csa_term,
-                                                     scaling_parameter=self.action.scaling_parameter)
+                                                     scaling_parameter=self.action.scaling_parameter,
+                                                     risk_transformation=self.action.risk_transformation)
                 entry_payment = CashPayment(trade=hedge_trade, effective_date=create_date, direction=-1)
                 backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(state, backtest,
                                                                                                  trigger_info)
@@ -440,7 +441,8 @@ class GenericEngine(BacktestBaseEngine):
         request_priority = context_params.get('request_priority', DEFAULT_REQUEST_PRIORITY)
 
         context = PricingContext(set_parameters_only=True, show_progress=show_progress, csa_term=csa_term,
-                                 market_data_location=market_data_location, request_priority=request_priority)
+                                 market_data_location=market_data_location, request_priority=request_priority,
+                                 is_batch=True)
 
         context._max_concurrent = 10000
 
@@ -617,8 +619,11 @@ class GenericEngine(BacktestBaseEngine):
                     continue
                 for hedge in backtest.hedges[d]:
                     p = hedge.scaling_portfolio
-                    current_risk = backtest.results[d][p.risk].aggregate(allow_mismatch_risk_keys=True)
-                    hedge_risk = p.results[d][p.risk].aggregate()
+                    current_risk = backtest.results[d][p.risk]\
+                        .transform(risk_transformation=p.risk_transformation).aggregate(allow_mismatch_risk_keys=True)
+                    hedge_risk = p.results[d][p.risk].transform(risk_transformation=p.risk_transformation).aggregate()
+                    if hedge_risk == 0:
+                        continue
                     if current_risk.unit != hedge_risk.unit:
                         raise RuntimeError('cannot hedge in a different currency')
                     scaling_factor = current_risk / hedge_risk

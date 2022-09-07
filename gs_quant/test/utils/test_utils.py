@@ -13,18 +13,19 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
 import hashlib
+import inspect
 import json
 import os
 import pathlib
 from os.path import exists
+from pathlib import Path
 from typing import List
 from unittest import mock
 
 import pytest
-
 from gs_quant import datetime
+from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.datetime import business_day_offset
 from gs_quant.json_encoder import JSONEncoder
@@ -80,9 +81,6 @@ def mock_request(method, path, payload, test_file_name):
     raise Exception(f'Unhandled request. Method: {method}, Path: {path}, payload: {payload} not recognized.')
 
 
-gs_risk_api_exec = GsRiskApi._exec
-
-
 def get_risk_request_id(requests):
     """
     This is not a formal equality of the risk request as it covers only the names of core components.  When a formal
@@ -116,6 +114,12 @@ def get_risk_request_id(requests):
     return hashlib.md5(identifier.encode('utf-8')).hexdigest()
 
 
+def get_data_request_id(arg):
+    query = arg[0]
+    identifier = arg[1] + '_' + query.where['bbid'] + '_' + str(query.start_date)
+    return hashlib.md5(identifier.encode('utf-8')).hexdigest()
+
+
 @pytest.mark.last
 def test_all_cache_files_used():
     # Important that this test runs last, it asserts all the test files are used so we can cleanup unused ones
@@ -131,57 +135,71 @@ class MockCalc:
     __looked_at_files = {}
     __saved_files = set()
 
-    def __init__(self, mocker, save_files=False, paths=pathlib.Path(__file__).parents[1], application='gs-quant'):
+    def __init__(self, mocker, save_files=False,
+                 paths=Path(next(filter(lambda x: x.code_context and 'MockCalc' in x.code_context[0],
+                                        inspect.stack())).filename).parents[1],
+                 application='gs-quant',
+                 api=GsRiskApi, method='_exec'):
         # do not save tests with save_files = True
         self.save_files = save_files
         self.mocker = mocker
         self.paths = paths
         self.application = application
+        self.api = api
+        self.method = method
+        if self.api == GsRiskApi and self.method == '_exec':
+            self.fn = GsRiskApi._exec
+        elif self.api == GsDataApi and self.method == 'query_data':
+            self.fn = GsDataApi.query_data
+        else:
+            raise NotImplementedError('Unknown GS API and method')
 
     def __enter__(self):
         if self.save_files:
             GsSession.use(Environment.PROD, None, None, application=self.application)
-            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=self.mock_calc_create_new_files if str(
+            self.mocker.patch.object(self.api, self.method, side_effect=self.mock_calc_create_new_files if str(
                 self.save_files).casefold() == 'new' else self.mock_calc_create_files)
         else:
             from gs_quant.session import OAuth2Session
             OAuth2Session.init = mock.MagicMock(return_value=None)
             GsSession.use(Environment.PROD, 'fake_client_id', 'fake_secret', application=self.application)
-            self.mocker.patch.object(GsRiskApi, '_exec', side_effect=self.mock_calc)
+            self.mocker.patch.object(self.api, self.method, side_effect=self.mock_calc)
 
     def mock_calc(self, *args, **kwargs):
-        request = kwargs.get('request') or args[0]
-        request_id = get_risk_request_id(request)
+        request_id = self.get_request_id(args, kwargs)
         file_name = f'request{request_id}.json'
         with open(self.paths / f'calc_cache/{file_name}') as json_data:
             MockCalc.__looked_at_files.setdefault(self.paths, set()).add(file_name)
             return json.load(json_data)
 
     def mock_calc_create_files(self, *args, **kwargs):
+        from orjson import orjson
+
         # never leave a side_effect calling this function.  Call it once to create the files, check them in
         # and switch to mock_calc
         def get_json(*i_args, **i_kwargs):
-            this_json = gs_risk_api_exec(*i_args, **i_kwargs)
-            # Post process the json a bit to remove timing info that makes spurious diffs
-            for d in [d for a in this_json for b in a for c in b for d in c]:
-                for key, val in list(d.items()):
-                    if val is None or key in ['queueingTime', 'calculationTime']:
-                        del d[key]
+            this_json = self.fn(*i_args, **i_kwargs)
+            if self.api == GsRiskApi:
+                # Post process the json a bit to remove timing info that makes spurious diffs
+                for d in [d for a in this_json for b in a for c in b for d in c]:
+                    for key, val in list(d.items()):
+                        if val is None or key in ['queueingTime', 'calculationTime']:
+                            del d[key]
             return this_json
 
-        result_json = get_json(*args, **kwargs)
-        request = kwargs.get('request') or args[0]
-        request_id = get_risk_request_id(request)
+        result = get_json(*args, **kwargs)
+        result_json = orjson.dumps(result,
+                                   option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS)
+        request_id = self.get_request_id(args, kwargs)
         with open(self.paths / f'calc_cache/request{request_id}.json',
                   'w') as json_data:
             MockCalc.__saved_files.add(request_id)
-            json.dump(result_json, json_data)
+            json_data.write(result_json.decode('utf-8'))
 
-        return result_json
+        return result
 
     def mock_calc_create_new_files(self, *args, **kwargs):
-        request = kwargs.get('request') or args[0]
-        request_id = get_risk_request_id(request)
+        request_id = self.get_request_id(args, kwargs)
         file_exists = exists(self.paths / f'calc_cache/request{request_id}.json')
         if file_exists:
             return self.mock_calc(*args, *kwargs)
@@ -203,3 +221,13 @@ class MockCalc:
     @staticmethod
     def get_saved_files() -> List[str]:
         return list(MockCalc.__saved_files)
+
+    def get_request_id(self, args, kwargs):
+        if self.api == GsRiskApi:
+            request = kwargs.get('request') or args[0]
+            request_id = get_risk_request_id(request)
+        elif self.api == GsDataApi:
+            request_id = get_data_request_id(args)
+        else:
+            raise NotImplementedError('Unknown GS API and method')
+        return request_id

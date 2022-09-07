@@ -173,7 +173,7 @@ class FloatWithInfo(ScalarWithInfo, float):
     def __new__(cls,
                 risk_key: RiskKey,
                 value: Union[float, str],
-                unit: Optional[str] = None,
+                unit: dict = None,
                 error: Optional[str] = None,
                 request_id: Optional[str] = None):
         return float.__new__(cls, value)
@@ -264,6 +264,14 @@ class SeriesWithInfo(pd.Series, ResultInfo):
         records = df.to_dict('records')
         records = [dict(item, **{**extra_dict}) for item in records]
         return records
+
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            new_result = self.copy()
+            new_result['value'] = new_result['value'] * other
+            return new_result
+        else:
+            raise ValueError('Can only multiply by an int or float')
 
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):

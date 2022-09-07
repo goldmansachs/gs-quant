@@ -29,6 +29,7 @@ from gs_quant.backtests.core import ValuationMethod
 from gs_quant.backtests.data_handler import DataHandler
 from gs_quant.backtests.event import FillEvent
 from gs_quant.backtests.order import OrderBase, OrderCost
+from gs_quant.risk.transform import Transformer
 
 
 class BaseBacktest(ABC):
@@ -222,12 +223,14 @@ class BackTest(BaseBacktest):
 
 
 class ScalingPortfolio:
-    def __init__(self, trade, dates, risk, csa_term=None, scaling_parameter='notional_amount'):
+    def __init__(self, trade, dates, risk, csa_term=None, scaling_parameter='notional_amount',
+                 risk_transformation: Transformer = None):
         self.trade = trade
         self.dates = dates
         self.risk = risk
         self.csa_term = csa_term
         self.scaling_parameter = scaling_parameter
+        self.risk_transformation = risk_transformation
         self.results = None
 
 

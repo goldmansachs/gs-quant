@@ -542,6 +542,51 @@ def test_get_global_predicted_beta(mocker):
     assert response == global_predicted_beta_response
 
 
+def test_get_estimation_universe_weights(mocker):
+    model = mock_risk_model(mocker)
+    universe = ["904026", "232128", "24985", "160444"]
+    query = {
+        'startDate': '2022-04-04',
+        'endDate': '2022-04-06',
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, universe),
+        'measures': [Measure.Estimation_Universe_Weight, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'missingDates': ['2022-04-04', '2022-04-06'],
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["904026", "232128", "24985", "160444"],
+                    "estimationUniverseWeight": [0.4, None, None, 0.6]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    estu_response = {
+        '160444': {'2022-04-05': 0.6},
+        '232128': {'2022-04-05': None},
+        '24985': {'2022-04-05': None},
+        '904026': {'2022-04-05': 0.4}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_estimation_universe_weights(start_date=dt.date(2022, 4, 4),
+                                                     end_date=dt.date(2022, 4, 6),
+                                                     assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
+                                                     format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == estu_response
+
+
 def test_get_daily_return(mocker):
     model = mock_risk_model(mocker)
     universe = ["904026", "232128", "24985", "160444"]

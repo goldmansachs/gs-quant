@@ -222,13 +222,31 @@ class MarqueeRiskModel(RiskModel):
 
     def get_dates(self, start_date: dt.date = None, end_date: dt.date = None, event_type: RiskModelEventType = None) \
             -> List[dt.date]:
-        """ Get risk model dates for existing risk model
+        """ Get dates between start_date and end_date for which risk model data is present
 
-        :param start_date: list returned including and after start_date
-        :param end_date: list returned up to and including end_date
-        :param event_type: which event type to retrieve
+        :param start_date: List returned including and after start_date
+        :param end_date: List returned up to and including end_date
+        :param event_type: Which event type to retrieve dates for
 
-        :return: list of dates where risk model data is present
+        :return: A list of dates where risk model data is present
+
+        **Usage**
+
+        Get all the dates for which risk model data is present over start_date and end_date (inclusive).
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel, RiskModelEventType
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> dates = model.get_dates(start_date, end_date)
+
+        **See also**
+
+        :func:`get_missing_dates` :func:`get_calendar` :func:`get_most_recent_date_from_calendar`
         """
         return [dt.datetime.strptime(date, "%Y-%m-%d").date() for date in
                 GsRiskModelApi.get_risk_model_dates(self.id, start_date, end_date, event_type=event_type)]
@@ -236,10 +254,28 @@ class MarqueeRiskModel(RiskModel):
     def get_calendar(self, start_date: dt.date = None, end_date: dt.date = None) -> RiskModelCalendar:
         """ Get risk model calendar for existing risk model between start and end date
 
-        :param start_date: list returned including and after start_date
-        :param end_date: list returned up to and including end_date
+        :param start_date: List returned including and after start_date
+        :param end_date: List returned up to and including end_date
 
         :return: RiskModelCalendar for model
+
+        **Usage**
+
+        Get the risk model calendar.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> model_calendar = model.get_calendar(start_date, end_date)
+
+        **See also**
+
+        :func:`get_most_recent_date_from_calendar` :func:`get_dates` :func:`get_missing_dates`
         """
         calendar = GsRiskModelApi.get_risk_model_calendar(self.id)
         if not start_date and not end_date:
@@ -259,11 +295,29 @@ class MarqueeRiskModel(RiskModel):
     def get_missing_dates(self, start_date: dt.date = None, end_date: dt.date = None) -> List[dt.date]:
         """ Get any dates where data is not published according to expected days returned from the risk model calendar
 
-        :param start_date: date to truncate missing dates at
-        :param end_date: date to truncate missing dates at
+        :param start_date: Date to truncate missing dates at
+        :param end_date: Date to truncate missing dates at
 
             If no end_date is provided, end_date defaults to T-1 date according
                 to the risk model calendar
+
+        **Usage**
+
+        Get dates with missing data between start date and end date.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> dates = model.get_missing_dates(start_date, end_date)
+
+        **See also**
+
+        :func:`get_dates` :func:`get_calendar`
         """
 
         posted_dates = self.get_dates()
@@ -306,6 +360,7 @@ class MarqueeRiskModel(RiskModel):
     def get(cls, model_id: str):
         """ Get a risk model from Marquee
         :param model_id: risk model id corresponding to Marquee Risk Model
+
         :return: Risk Model object
         """
         model = GsRiskModelApi.get_risk_model(model_id)
@@ -318,12 +373,35 @@ class MarqueeRiskModel(RiskModel):
                            format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get asset universe data for existing risk model
 
-        :param start_date: start date for data request
-        :param end_date: end date for data request
+        :param start_date: Start date for data request. Must be equal to end_date if universe array
+                           in DataAssetsRequest is empty.
+        :param end_date: End date for data request. Must be equal to start_date if universe array
+                         in DataAssetsRequest is empty.
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
-        :param format: which format to return the results in
+        :param format: Which format to return the results in
 
-        :return: risk model universe
+        :return: Risk model universe data in a pandas dataframe or dict
+
+        **Usage**
+
+        Get the assets covered by the model between start date and end date.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier, ReturnFormat
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> universe = ['GS UN']
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> asset_universe = model.get_asset_universe(start_date, end_date,
+        ...                                           DataAssetsRequest(UniverseIdentifier.bbid, universe))
+
+        **See also**
+
+        :func:`get_specific_risk` :func:`get_universe_factor_exposure` :func:`get_total_risk`
         """
         if not assets.universe and not end_date:
             end_date = start_date
@@ -344,9 +422,9 @@ class MarqueeRiskModel(RiskModel):
     def get_factor(self, name: str, start_date: dt.date = None, end_date: dt.date = None) -> Factor:
         """ Get risk model factor from its name
 
-        :param name: factor name associated with risk model
-        :param start_date: start date of when to search for factor (optional, default to last month)
-        :param end_date: end date of when to search for factor (optional, default to today)
+        :param name: Factor name associated with risk model
+        :param start_date: Start date of when to search for factor (optional, default to last month)
+        :param end_date: End date of when to search for factor (optional, default to today)
 
         :return: Factor object
         """
@@ -372,9 +450,41 @@ class MarqueeRiskModel(RiskModel):
                          factor_names: List[str] = None,
                          factor_ids: List[str] = None,
                          factor_type: FactorType = None) -> List[Factor]:
+        """ Get risk model factors
+        :param start_date: Start date of when to search for factors (optional, default to last month)
+        :param end_date: End date of when to search for factors
+        :param factor_names: The list of names of factors to get. All names must be valid factor names. If both
+                             factor_names and factor_ids are empty, all the factors will be returned.
+        :param factor_ids: The list of ids of factors to get. All ids must be valid factor ids. If both factor_names and
+                          factor_ids are empty, all the factors will be returned
+        :param factor_type: Whether to return factors or factor categories. If unspecified, all the factors of all types
+                            will be returned
+
+        :return: A list of Factor objects
+
+        **Usage**
+
+        Given a list of factor names and/or ids, return the factor objects that represent the factor requested. If no
+        factor names or ids are provided, all the factors will be returned.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel, FactorType
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> many_factors = model.get_many_factors(start_date, end_date, factor_names=["factor1", "factor2"],
+        ...                                       factor_type=FactorType.Factor)
+        >>>
+
+        **See also**
+
+        :func:`get_factor` :func:`get_factor_data`
+        """
         factors_from_model = self.get_factor_data(start_date=start_date, end_date=end_date,
                                                   factor_type=factor_type, format=ReturnFormat.JSON)
-
         name_matches = []
         if not factor_names and not factor_ids:
             name_matches = factors_from_model
@@ -429,16 +539,32 @@ class MarqueeRiskModel(RiskModel):
                         format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get factor data for existing risk model
 
-        :param start_date: start date for data request
-        :param end_date: end date for data request
-        :param identifiers: list of factor ids associated with risk model
-        :param include_performance_curve: request to include the performance curve of the factors
-        :param category_filter: filter the results to those having one of the specified categories. \
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param identifiers: List of factor ids associated with risk model
+        :param include_performance_curve: Include the performance curve of the factors
+        :param category_filter: Filter the results to those having one of the specified categories. \
             Default is to return all results
-        :param factor_type:
+        :param factor_type: The type of factor.
         :param format: which format to return the results in
 
-        :return: risk model factor data
+        :return: Risk model factor data
+
+        **Usage**
+
+        Get factor data for factors whose ids are specified in identifiers.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_factor_data()
+
+        **See also**
+
+        :func:`get_many_factors :func:`get_factor_returns_by_name`
         """
         factor_data = GsFactorRiskModelApi.get_risk_model_factor_data(
             self.id,
@@ -466,13 +592,31 @@ class MarqueeRiskModel(RiskModel):
                                    format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Get factor return data for existing risk model keyed by name
 
-        :param start_date: start date for data request
-        :param end_date: end date for data request
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to limit the factors by
-        :param factors: the factors to get factor return data for. If empty, the data for all factors is returned
-        :param format: which format to return the results in
+        :param factors: The factors to get factor return data for. If empty, the data for all factors is returned
+        :param format: Which format to return the results in
 
-        :return: factor returns by name
+        :return: Factor returns by name
+
+        **Usage**
+
+        Get factor returns between start date and end date.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_returns = model.get_factor_returns_by_name(start_date, end_date)
+
+        **See also**
+
+        :func:`get_factor_returns_by_id` :func:`get_factor_data`
         """
 
         if factors:
@@ -506,12 +650,32 @@ class MarqueeRiskModel(RiskModel):
                                  format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Get factor return data for existing risk model keyed by factor id
 
-        :param start_date: start date for data request
-        :param end_date: end date for data request
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to limit the factors by
-        :param factors: the factors to get factor return data for. If empty, the data for all factors is returned
-        :param format: which format to return the results in
-        :return: factor returns by factor id
+        :param factors: The factors to get factor return data for. If empty, the data for all factors is returned
+        :param format: Which format to return the results in
+
+        :return: Factor returns by factor id
+
+        **Usage**
+
+        Get factor returns between start date and end date.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_returns = model.get_factor_returns_by_id(start_date, end_date)
+
+
+        **See also**
+
+        :func:`get_factor_returns_by_name` :func:`get_factor_data`
         """
 
         if factors:
@@ -547,13 +711,34 @@ class MarqueeRiskModel(RiskModel):
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get universe factor exposure data for existing risk model
 
-        :param start_date: start date for data request
-        :param end_date: end date for data request
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
-        :param get_factors_by_name: return results keyed by factor name instead of ID
-        :param format: which format to return the results in
+        :param get_factors_by_name: Return results keyed by factor name instead of ID
+        :param format: Which format to return the results in
 
-        :return: factor exposure for assets requested
+        :return: Factor exposure for assets requested
+
+        **Usage**
+
+        Given a list of assets, return their exposure to factor between start date and end date.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> universe = ['GS UN']
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> universe_exposure = model.get_universe_exposure(start_date, end_date,
+        ...                                                 DataAssetsRequest(UniverseIdentifier.bbid, universe))
+
+        **See also**
+
+        :func:`get_asset_universe` :func:`get_factor_returns_by_name` :func:`get_covariance_matrix`
         """
         results = self.get_data(
             start_date=start_date,
@@ -584,12 +769,32 @@ class MarqueeRiskModel(RiskModel):
                           format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get specific risk data for existing risk model
 
-        :param start_date: start date for data request
-        :param end_date: end date for data request
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
-        :param format: which format to return the results in
+        :param format: Which format to return the results in
 
-        :return: specific risk for assets requested
+        :return: Specific risk for assets requested
+
+        **Usage**
+
+        Get specific risk data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> specific_risk = model.get_specific_risk(start_date, end_date,
+        ...                                         DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_residual_variance` :func:`get_specific_return` :func:`get_total_risk`
         """
         results = self.get_data(
             start_date=start_date,
@@ -612,12 +817,32 @@ class MarqueeRiskModel(RiskModel):
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get residual variance data for existing risk model
 
-        :param start_date: start date for data request
-        :param end_date: end date for data request
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
-        :param format: which format to return the results in
+        :param format: Which format to return the results in
 
-        :return: residual variance for assets requested
+        :return: Residual variance for assets requested
+
+        **Usage**
+
+        Get residual variance data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> residual_variance = model.get_residual_variance(start_date, end_date,
+        ...                                                 DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_total_risk` :func:`get_historical_beta` :func:`get_specific_return`
          """
         results = self.get_data(
             start_date=start_date,
@@ -722,9 +947,9 @@ class MarqueeRiskModel(RiskModel):
     def upload_asset_coverage_data(self, date: dt.date = None):
         """ Upload to the coverage dataset for given risk model and date
 
-        :param date: date to upload coverage data for, default date is last date from risk model calendar
+        :param date: Date to upload coverage data for, default date is last date from risk model calendar
 
-        Posting to the coverage dataset within in the last 5 days will enable the risk model to be seen in the
+        Posting to the coverage dataset within the last 5 days will enable the risk model to be seen in the
         Marquee UI dropdown for users with "execute" capabilities
         """
         if not date:
@@ -849,7 +1074,7 @@ class FactorRiskModel(MarqueeRiskModel):
                  names: List[str] = None,
                  coverages: List[str] = None,
                  limit: int = None) -> list:
-        """ Get a factor risk model from Marquee
+        """ Get many factor risk models from Marquee
 
         :param ids: list of model identifiers in Marquee
         :param terms: list of model terms
@@ -883,6 +1108,26 @@ class FactorRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: total risk for assets requested
+
+        **Usage**
+
+        Get total risk data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier, ReturnFormat
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> total_risk = model.get_total_risk(start_date, end_date,
+    ...                                       DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_specific_risk` :func:`get_specific_return` :func:`get_historical_beta`
         """
         results = self.get_data(
             start_date=start_date,
@@ -910,6 +1155,26 @@ class FactorRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: historical beta for assets requested
+
+        **Usage**
+
+        Get historical beta data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier, ReturnFormat
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> historical_beta = model.get_historical_beta(start_date, end_date,
+        ...                                             DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_predicted_beta` :func:`get_global_predicted_beta`
         """
         results = self.get_data(
             start_date=start_date,
@@ -937,6 +1202,26 @@ class FactorRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: predicted beta for assets requested
+
+        **Usage**
+
+        Get predicted beta data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MacroRiskModel.get("MODEL_ID")
+        >>> predicted_beta = model.get_predicted_beta(start_date, end_date,
+        ...                                           DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_historical_beta` :func:`get_global_predicted_beta`
         """
         results = self.get_data(
             start_date=start_date,
@@ -965,6 +1250,26 @@ class FactorRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: global predicted beta for assets requested
+
+        **Usage**
+
+        Get global predicted beta for assets specified in `assets` between `start_date` and `end_date`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> global_predicted_beta = model.get_global_predicted_beta(start_date, end_date,
+        ...                                                       DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_predicted_beta` :func:`get_historical_beta`
         """
         results = self.get_data(
             start_date=start_date,
@@ -995,7 +1300,7 @@ class FactorRiskModel(MarqueeRiskModel):
 
         **Usage**
 
-        Get the daily total return for each asset requested over start date and end date
+        Get daily return data for assets specified in `assets` between `start_date` and `end_date`
 
         **Example**
         >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
@@ -1004,8 +1309,8 @@ class FactorRiskModel(MarqueeRiskModel):
         >>> start_date = dt.date(2022, 1, 1)
         >>> end_date = dt.date(2022, 5, 2)
         >>> model = FactorRiskModel.get("MODEL_ID")
-        >>> daily_returns_df = model.get_daily_return(start_date, end_date,
-        ...                                           DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+        >>> daily_returns = model.get_daily_return(start_date, end_date,
+        ...                                        DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
 
         **See also**
         :func:`get_specific_risk` :func:`get_universe_factor_exposure` :func: `get_specific_return`
@@ -1040,7 +1345,7 @@ class FactorRiskModel(MarqueeRiskModel):
 
         **Usage**
 
-        Get the specific return for each asset requested over start date and end date
+        Get specific return data for assets specified in `assets` between `start_date` and `end_date`
 
         **Example**
         >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
@@ -1049,8 +1354,8 @@ class FactorRiskModel(MarqueeRiskModel):
         >>> start_date = dt.date(2022, 1, 1)
         >>> end_date = dt.date(2022, 5, 2)
         >>> model = FactorRiskModel.get("MODEL_ID")
-        >>> specific_returns_df = model.specific_return(start_date, end_date,
-        ...                                             DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+        >>> specific_returns = model.get_specific_return(start_date, end_date,
+        ...                                              DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
 
         **See also**
         :func:`get_specific_risk` :func:`get_universe_factor_exposure`
@@ -1085,6 +1390,27 @@ class FactorRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: factor exposure for assets requested
+
+        **Usage**
+
+        Given a list of assets, return their exposure to factors between start date and end date.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> universe = ['GS UN']
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> universe_exposure = model.get_universe_factor_exposure(start_date, end_date,
+        ...                                                 DataAssetsRequest(UniverseIdentifier.bbid, universe))
+
+        **See also**
+
+        :func:`get_asset_universe` :func:`get_specific_risk`
         """
         return super().get_universe_exposure(start_date, end_date, assets,
                                              get_factors_by_name=get_factors_by_name, format=format)
@@ -1102,6 +1428,26 @@ class FactorRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: covariance matrix of daily factor returns
+
+        **Usage**
+
+        Get the covariance matrix of daily factor returns
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> covariance_matrix = model.get_covariance_matrix(start_date, end_date,
+        ...                                                 DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_factor_returns_by_name` :func:`get_factor_returns_by_id`
         """
 
         limit_factors = True if assets else False
@@ -1118,6 +1464,57 @@ class FactorRiskModel(MarqueeRiskModel):
         covariance_data = results if format == ReturnFormat.JSON else get_covariance_matrix_dataframe(results)
         return covariance_data
 
+    def get_estimation_universe_weights(self,
+                                        start_date: dt.date,
+                                        end_date: dt.date = None,
+                                        assets: DataAssetsRequest = DataAssetsRequest(
+                                            RiskModelUniverseIdentifierRequest.gsid, []),
+                                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """ Get estimation universe data for existing risk model
+
+           :param start_date: Start date for data request. Must be equal to end_date if universe array
+                              in DataAssetsRequest is empty.
+           :param end_date: End date for data request. Must be equal to start_date if universe array
+                            in DataAssetsRequest is empty.
+           :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+           :param format: Which format to return the results in
+
+           :return: Estimation Universe data in a pandas dataframe or dict
+
+           **Usage**
+
+           Get the assets that are in the estimation universe of the model and their weights.
+
+           **Examples**
+
+           >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+           ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+           >>> import datetime as dt
+           >>>
+           >>> start_date = dt.date(2022, 1, 1)
+           >>> end_date = dt.date(2022, 5, 2)
+           >>> universe = ['GS UN']
+           >>> model = FactorRiskModel.get("MODEL_ID")
+           >>> estimation_universe_weights = model.get_estimation_universe_weights(start_date, end_date,
+           ...                                           DataAssetsRequest(UniverseIdentifier.bbid, universe))
+
+           **See also**
+
+           :func:`get_asset_universe` :func:`get_specific_risk`
+           """
+        results = self.get_data(
+            start_date=start_date,
+            end_date=end_date,
+            assets=assets,
+            measures=[Measure.Estimation_Universe_Weight, Measure.Asset_Universe],
+            limit_factors=False
+        ).get('results')
+        universe = pydash.get(results, '0.assetData.universe', [])
+        estimation_universe_weights = build_asset_data_map(results, universe, 'estimationUniverseWeight', {})
+        if format == ReturnFormat.DATA_FRAME:
+            estimation_universe_weights = pd.DataFrame(estimation_universe_weights)
+        return estimation_universe_weights
+
     def get_issuer_specific_covariance(self,
                                        start_date: dt.date,
                                        end_date: dt.date = None,
@@ -1132,6 +1529,26 @@ class FactorRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: issuer specific covariance matrix (covariance of assets with the same issuer)
+
+        **Usage**
+
+        Get the covariance of assets with the same issuer.
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> issuer_specific_covariance = model.get_issuer_specific_covariance(start_date, end_date,
+        ...                                   DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_factor_portfolios`
         """
         isc = self.get_data(
             start_date=start_date,
@@ -1157,6 +1574,26 @@ class FactorRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: factor portfolios data
+
+        **Usage**
+
+        Get the factor portfolios data between `start_date` and `end_date`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_portfolios = model.get_factor_portfolios(start_date, end_date,
+        ...                                                 DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_issuer_specific_covariance`
         """
         results = self.get_data(
             start_date=start_date,
@@ -1252,7 +1689,7 @@ class MacroRiskModel(MarqueeRiskModel):
                  names: List[str] = None,
                  coverages: List[str] = None,
                  limit: int = None):
-        """ Get a Macro risk model from Marquee
+        """ Get many Macro risk models from Marquee
 
         :param ids: list of model identifiers in Marquee
         :param terms: list of model terms
@@ -1286,12 +1723,33 @@ class MacroRiskModel(MarqueeRiskModel):
         :param start_date: start date for data request
         :param end_date: end date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
-        :factor_type: return universe sensitivity to factors if Factor. Otherwise, return universe sensitivity to factor
-        categories
+        :param factor_type: If factor type is factor, return factor sensitivity. Otherwise, return factor category
+        sensitivity.
         :param get_factors_by_name: return results keyed by factor name instead of ID
         :param format: which format to return the results in
 
-        :return: sensitivity for assets requested
+        :return: Factor or Factor Category sensitivity for assets requested
+
+        **Usage**
+
+        Given a list of assets, return their sensitivity to macro factors (when the factor_type is `Factor`)
+         or macro factor categories (when the factor_type is Category).
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MacroRiskModel.get("MODEL_ID")
+        >>> sensitivity = model.get_universe_sensitivity(start_date, end_date,
+        ...                                              DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_r_squared` :func:`factor_standard_deviation` :func:`factor_z_score`
         """
 
         sensitivity_df = super().get_universe_exposure(start_date, end_date, assets,
@@ -1335,14 +1793,34 @@ class MacroRiskModel(MarqueeRiskModel):
                       end_date: dt.date = None,
                       assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
                       format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get R Squared data for existing macro risk model
 
-        """ Get r squared data for existing macro risk model
         :param start_date: start date for data request
         :param end_date: end date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
-        :param format: which format to return the results in
+        :param format: The format to return the results in (Dataframe or Dict)
+        :return: R Squared for assets requested
 
-        :return: r squared for assets requested
+        **Usage**
+
+        Given a list of assets, return the r squared for each asset between `start_date` and `end_date`.
+
+        **Examples**
+
+        >>> start = dt.date(2022, 1, 1)
+        >>> end = dt.date(2022, 5, 2)
+        >>> model = MacroRiskModel.get("MODEL_ID")
+        >>> r_squared_df = model.get_r_squared(start, end, DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        To get the data in dict format, specify the return format to JSON
+
+        >>> r_squared_dict = model.get_r_squared(start, end,
+        ...                                      DataAssetsRequest(RiskModelUniverseIdentifierRequest.bbid, ['GS UN'],
+        ...                                      ReturnFormat.JSON)
+
+        **See also**
+
+        :func:`get_fair_value_gap` :func:`factor_standard_deviation` :func:`factor_z_score`
         """
 
         results = self.get_data(
@@ -1365,14 +1843,43 @@ class MacroRiskModel(MarqueeRiskModel):
                            fair_value_gap_unit: Unit = Unit.STANDARD_DEVIATION,
                            format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
 
-        """ Get fair value gap data for existing macro risk model
-        :param start_date: start date for data request
-        :param end_date: end date for data request
-        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
-        :param fair_value_gap_unit: the unit in which the fair value gap value is expressed in
-        :param format: which format to return the results in
+        """ Get fair value gap data for a list of assets between start date and end date
 
-        :return: fair value gap for assets requested
+        :param start_date: The start date for data request.
+        :param end_date: The end date for data request.
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request.
+        :param fair_value_gap_unit: Return the fair value gap value expressed in this unit. The default is
+                                    standard deviation.
+        :param format: The format to return the data in. The default is pandas Dataframe.
+
+        :return: Fair Value Gap for the assets requested
+
+        **Usage**
+
+        Given a list of assets, return the fair value gap for each asset between `start_date`
+        and `end_date`. The data can be returned as a pandas DataFrame or as a dict.
+
+        **Examples**
+
+        Get the fair value gap data in a dataframe format between start and end.
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier, ReturnFormat
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MacroRiskModel.get("MODEL_ID")
+        >>> fvg_df = model.get_fair_value_gap(start_date, end_date,
+        ...                                   DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        To get the data in percentage, specify the fair_value_gap_unit to PERCENT.
+
+        >>> fvg_df = model.get_fair_value_gap(start_date, end_date,
+        ...                                   DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']), Unit.PERCENT)
+
+        **See also**
+
+        :func:`get_r_squared` :func:`factor_standard_deviation` :func:`factor_z_score`
         """
 
         results = self.get_data(
@@ -1411,6 +1918,25 @@ class MacroRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: factor standard deviation
+
+        **Usage**
+
+        Get the value of one standard deviation of the factors specified in `factors`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MacroRiskModel.get("MODEL_ID")
+        >>> factor_standard_deviation = model.get_factor_standard_deviation(start_date, end_date,
+        ...                                                                 factors=['factor1', 'factor2'])
+
+        **See also**
+
+        :func:`factor_standard_deviation` :func:`factor_z_score`
         """
 
         if factors:
@@ -1457,6 +1983,24 @@ class MacroRiskModel(MarqueeRiskModel):
         :param format: which format to return the results in
 
         :return: factor z score
+
+        **Usage**
+
+        Get the z score of the factors specified in `factors`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MacroRiskModel.get("MODEL_ID")
+        >>> factor_z_score = model.get_factor_z_score(start_date, end_date, factors=['factor1', 'factor2'])
+
+        **See also**
+
+        :func:`get_r_squared` :func:`factor_standard_deviation` :func:`factor_z_score`
         """
 
         if factors:

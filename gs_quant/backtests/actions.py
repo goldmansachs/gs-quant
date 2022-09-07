@@ -19,6 +19,7 @@ from typing import TypeVar
 
 from gs_quant.backtests.backtest_utils import *
 from gs_quant.backtests.backtest_objects import ConstantTransactionModel, TransactionModel
+from gs_quant.risk.transform import Transformer
 from gs_quant.base import Priceable
 from gs_quant.markets.securities import *
 from gs_quant.markets.portfolio import Portfolio
@@ -184,7 +185,8 @@ class ExitTradeAction(Action):
 class HedgeAction(Action):
     def __init__(self, risk, priceables: Priceable = None, trade_duration: str = None, name: str = None,
                  csa_term: str = None, scaling_parameter: str = 'notional_amount',
-                 transaction_cost: TransactionModel = ConstantTransactionModel(0)):
+                 transaction_cost: TransactionModel = ConstantTransactionModel(0),
+                 risk_transformation: Transformer = None):
         super().__init__(name)
         self._calc_type = CalcType.semi_path_dependent
         self._priceable = priceables
@@ -193,6 +195,7 @@ class HedgeAction(Action):
         self._csa_term = csa_term
         self._scaling_parameter = scaling_parameter
         self._transaction_cost = transaction_cost
+        self._risk_transformation = risk_transformation
         if isinstance(priceables, Portfolio):
             trades = []
             for i, priceable in enumerate(priceables):
@@ -231,6 +234,10 @@ class HedgeAction(Action):
     @property
     def transaction_cost(self):
         return self._transaction_cost
+
+    @property
+    def risk_transformation(self):
+        return self._risk_transformation
 
 
 class RebalanceAction(Action):
