@@ -28,6 +28,7 @@ from gs_quant.common import RiskMeasure
 from gs_quant.config import DisplayOptions
 from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
+from gs_quant.risk.transform import Transformer
 
 _logger = logging.getLogger(__name__)
 
@@ -332,7 +333,7 @@ class MultipleRiskMeasureResult(dict):
     def __op(self, operator, operand):
         values = {}
         for key, value in self.items():
-            if isinstance(value, pd.DataFrame):
+            if isinstance(value, pd.DataFrame) or isinstance(value, pd.Series):
                 new_value = value.copy()
                 new_value.value = operator(value.value, operand)
             else:
@@ -735,6 +736,21 @@ class PortfolioRiskResult(CompositeResultFuture):
         paths = tuple(chain.from_iterable((i,) if isinstance(i, PortfolioPath) else self.__paths(i) for i in items))
         sub_portfolio = self.__portfolio.subset(paths, name=name)
         return PortfolioRiskResult(sub_portfolio, self.risk_measures, [p(self.futures) for p in paths])
+
+    def transform(self, risk_transformation: Transformer = None):
+        if risk_transformation is None:
+            return self
+        elif len(self.__risk_measures) > 1:
+            return MultipleRiskMeasureResult(self.portfolio,
+                                             ((r, self[r].transform(risk_transformation)) for r in
+                                              self.__risk_measures))
+        elif len(self.__risk_measures) == 1:
+            transformed_future = PricingFuture()
+            transformed_future.set_result(risk_transformation.apply(self.__results()))
+            transformed_future.done()
+            return PortfolioRiskResult(self.portfolio, self.risk_measures, (transformed_future,))
+        else:
+            return self
 
     def aggregate(self, allow_mismatch_risk_keys=False) -> Union[float, pd.DataFrame, pd.Series,
                                                                  MultipleRiskMeasureResult]:

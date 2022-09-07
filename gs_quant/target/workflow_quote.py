@@ -36,6 +36,7 @@ class OverlayType(EnumBase, Enum):
     Theta = 'Theta'
     RelativeCheapness = 'RelativeCheapness'
     ProbabilityDistribution = 'ProbabilityDistribution'
+    RealisedProbability = 'RealisedProbability'
     MacroEvents = 'MacroEvents'
     _None = 'None'    
 

@@ -114,3 +114,4 @@ class ParameterisedRiskMeasure(RiskMeasure):
 
     def parameter_is_empty(self):
         return self.parameters is None
+

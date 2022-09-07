@@ -70,7 +70,7 @@ class RDateRule(ABC):
             cal = GsCalendar(exchanges + currencies)
             return cal.holidays
         except Exception as e:
-            _logger.warning('Unable to fetch holiday calendar. Try passing your own when applying a rule.', e)
+            _logger.warning('Unable to fetch holiday calendar. Try passing your own when applying a rule. {}'.format(e))
             return []
 
     def _apply_business_days_logic(self, holidays: List[date], offset: int = None, roll: str = 'preceding'):
