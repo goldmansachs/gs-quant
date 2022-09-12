@@ -133,8 +133,7 @@ class GsCarbonApi:
                              use_historical_data: bool = False,
                              normalize_emissions: bool = False,
                              cards: List[CarbonCard] = [],
-                             analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG,
-                             scopes: List[CarbonScope] = []) -> Dict:
+                             analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> Dict:
         url = f'/carbon/{entity_id}?'
         url += urlencode(
             dict(filter(lambda item: item[1] is not None,
@@ -145,8 +144,7 @@ class GsCarbonApi:
                              useHistoricalData=str(use_historical_data).lower(),
                              normalizeEmissions=str(normalize_emissions).lower(),
                              card=[c for c in CarbonCard] if len(cards) == 0 else cards,
-                             analyticsView=analytics_view.value).items())),
-                             scope=[s for s in CarbonScope] if len(scopes) == 0 else scopes, True)
+                             analyticsView=analytics_view.value).items())), True)
 
-
+        # TODO: Add scope as API parameter
         return GsSession.current._get(url)
