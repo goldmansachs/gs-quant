@@ -31,10 +31,9 @@ from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset, today
 from gs_quant.risk import CompositeScenario, DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
     StringWithInfo
-from gs_quant.risk.result_handlers import extract_val_from_dataframe_with_info
-from gs_quant.risk.results import PricingFuture, MultipleScenarioResult
+from gs_quant.risk.results import PricingFuture
 from gs_quant.session import GsSession
-from gs_quant.target.common import PricingDateAndMarketDataAsOf, MultiScenario
+from gs_quant.target.common import PricingDateAndMarketDataAsOf
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
 from tqdm import tqdm
 
@@ -488,22 +487,10 @@ class PricingContext(ContextBaseWithDefault):
 
         future = pending.get((risk_key, instrument))
 
-        multi_scenario = [i for i in Scenario.path if isinstance(i, MultiScenario)]
-
-        def handle_multi_scen_future(result):
-            if isinstance(result.result(), DataFrameWithInfo):
-                # so that we convert the float64 values from dataframe to Floatwithinfos
-                values = extract_val_from_dataframe_with_info(result.result())
-                # replace simplevaltable with futures
-                result.set_result(
-                    MultipleScenarioResult(instrument, {multi_scenario[0].scenarios[v_idx]: v
-                                                        for v_idx, v in enumerate(values)}))
-
         if future is None:
             future = PricingFuture()
             cached_result = PricingCache.get(risk_key, instrument) if self.use_cache else None
-            if len(multi_scenario):
-                future.add_done_callback(handle_multi_scen_future)
+
             if cached_result is not None:
                 future.set_result(cached_result)
             else:

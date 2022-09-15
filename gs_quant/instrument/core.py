@@ -30,7 +30,7 @@ from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, Pri
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, \
     DEPRECATED_MEASURES
-from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, PricingFuture
+from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, PricingFuture, MultipleScenarioFuture
 from gs_quant.target.common import MultiScenario
 
 _logger = logging.getLogger(__name__)
@@ -144,10 +144,18 @@ class Instrument(PriceableImpl, InstrumentBase):
 
         usd_delta_f and eur_delta_f are futures, usd_delta and eur_delta are dataframes
         """
+
+        def get_inst_futures(curr_measure):
+            return MultipleScenarioFuture(self, multi_scenario.scenarios,
+                                          (curr_measure.pricing_context.calc(self, curr_measure),)) \
+                if multi_scenario else curr_measure.pricing_context.calc(self, curr_measure)
+
         single_measure = isinstance(risk_measure, RiskMeasure)
+        multi_scenario = next((i for i in Scenario.path if isinstance(i, MultiScenario)), None)
+
         with self._pricing_context:
-            future = risk_measure.pricing_context.calc(self, risk_measure) if single_measure else \
-                MultipleRiskMeasureFuture(self, {r: r.pricing_context.calc(self, r) for r in risk_measure})
+            future = get_inst_futures(risk_measure) if single_measure else \
+                MultipleRiskMeasureFuture(self, {r: get_inst_futures(r) for r in risk_measure})
 
         # Warn on use of deprecated measures
         def warning_on_one_line(msg, category, _filename, _lineno, _file=None, _line=None):

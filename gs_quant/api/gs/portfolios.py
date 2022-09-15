@@ -237,6 +237,16 @@ class GsPortfolioApi:
             return ()
 
     @classmethod
+    def get_shared_workflow_quote(cls, workflow_id: str) -> Tuple[WorkflowPosition]:
+        url = f'/risk-internal/quote/workflow/shared/{workflow_id}'
+        results = GsSession.current._get(url, timeout=181)
+        wf_pos_res = WorkflowPositionsResponse.from_dict(results)
+        if wf_pos_res:
+            return wf_pos_res.results
+        else:
+            return ()
+
+    @classmethod
     def save_to_shadowbook(cls, request: RiskRequest, name: str) -> str:
         return GsSession.current._put(f'/risk-internal/shadowbook/save/{name}', request)['results']
 

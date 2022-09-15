@@ -327,14 +327,6 @@ def unsupported_handler(_result: dict, risk_key: RiskKey, _instrument: Instrumen
     return UnsupportedValue(risk_key, request_id=request_id)
 
 
-def extract_val_from_dataframe_with_info(df: DataFrameWithInfo, value_key: str = 'value'):
-    result = []
-    for val in df[value_key]:
-        if isinstance(val, float):
-            result.append(FloatWithInfo(value=val, unit=df.unit, risk_key=df.risk_key, request_id=df.request_id))
-    return result
-
-
 result_handlers = {
     'Error': error_handler,
     'IRPCashflowTable': cashflows_handler,
