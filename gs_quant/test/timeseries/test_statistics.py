@@ -13,13 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from datetime import date
 
 import pytest
-from pandas.testing import assert_series_equal
-from scipy.integrate import odeint
 from gs_quant.timeseries import *
 from gs_quant.timeseries.statistics import Direction
+from pandas.testing import assert_series_equal
+from scipy.integrate import odeint
 
 
 def _random_series(days=365, nans=10):
@@ -582,7 +581,7 @@ def test_percentiles():
 
     result = percentiles(x, y)
     expected = pd.Series([100.0, 0.0, 33.333, 25.0, 100.0, 91.667], index=dates)
-    assert_series_equal(result, expected, obj="percentiles without window length")
+    assert_series_equal(result, expected, obj="percentiles without window length", rtol=1e-3)
 
     with pytest.raises(ValueError):
         percentiles(x, pd.Series(dtype=float), Window(6, 1))

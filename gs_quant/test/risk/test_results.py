@@ -25,7 +25,8 @@ from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import MultiScenario
 from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel, PnlExplain
 from gs_quant.risk.core import aggregate_risk, SeriesWithInfo, FloatWithInfo
-from gs_quant.risk.results import MultipleScenarioResult, PricingFuture, HistoricalPricingFuture
+from gs_quant.risk.results import MultipleScenarioFuture
+from gs_quant.risk.results import MultipleScenarioResult
 from gs_quant.target.common import MarketDataPattern
 from gs_quant.test.utils.test_utils import MockCalc
 
@@ -161,13 +162,14 @@ def test_multi_scenario(mocker):
     assert isinstance(swap_res, MultipleScenarioResult)
     assert swap_res == swap_res_idx
 
-    scen_res = r4[curvescen1]
-    assert scen_res._multi_scen_key[0] == curvescen1
+    multi_rm_and_scen_res = r3[curvescen1]
+    multi_scen_res = r4[curvescen1]
+    assert multi_rm_and_scen_res._multi_scen_key[0] == multi_scen_res._multi_scen_key[0] == curvescen1
 
     # test futures
     futures = r1.futures
     assert len(futures) == 2
-    assert isinstance(futures[0], PricingFuture)
+    assert isinstance(futures[0], MultipleScenarioFuture)
     assert isinstance(futures[0].result(), MultipleScenarioResult)
 
 
@@ -183,7 +185,7 @@ def test_historical_multi_scenario(mocker):
 
     # test slicing
     date_res = res[date(2020, 1, 14)]
-    assert all([isinstance(r, float) for r in date_res.futures[0].result().values()])
+    assert all([isinstance(r, FloatWithInfo) for r in date_res.futures[0].result().values()])
     date_res_2 = res_multi_rm[swap_3][risk.Price][date(2020, 1, 14)]
     assert all([isinstance(r, FloatWithInfo) for r in date_res_2.values()])
 
@@ -193,7 +195,7 @@ def test_historical_multi_scenario(mocker):
 
     # test futures
     futures = res.futures
-    assert isinstance(futures[0], HistoricalPricingFuture)
+    assert isinstance(futures[0], MultipleScenarioFuture)
     assert isinstance(futures[0].result(), MultipleScenarioResult)
 
 

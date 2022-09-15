@@ -29,6 +29,7 @@ from gs_quant.config import DisplayOptions
 from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
 from gs_quant.risk.transform import Transformer
+from more_itertools import unique_everseen
 
 _logger = logging.getLogger(__name__)
 
@@ -274,10 +275,12 @@ class MultipleRiskMeasureResult(dict):
             if all(isinstance(v, (DataFrameWithInfo, SeriesWithInfo)) for v in self.values()):
                 return MultipleRiskMeasureResult(self.__instrument, ((k, _value_for_date(v, item))
                                                                      for k, v in self.items()))
+            elif all(isinstance(v, MultipleScenarioResult) for v in self.values()):
+                return MultipleRiskMeasureResult(self.__instrument, ((k, v[item]) for k, v in self.items()))
             else:
                 raise ValueError('Can only index by date on historical results')
         elif is_instance_or_iterable(item, Scenario):
-            if all(isinstance(v, (MultipleScenarioResult)) for v in self.values()):
+            if all(isinstance(v, MultipleScenarioResult) for v in self.values()):
                 return MultipleRiskMeasureResult(self.__instrument, ((k, _value_for_measure_or_scen(v, item))
                                                                      for k, v in self.items()))
             else:
@@ -408,6 +411,21 @@ class MultipleRiskMeasureFuture(CompositeResultFuture):
         return self.__measures_to_futures
 
 
+class MultipleScenarioFuture(CompositeResultFuture):
+    def __init__(self, instrument: InstrumentBase, scenarios: Iterable[Scenario], futures: Iterable[PricingFuture]):
+        self.__instrument = instrument
+        self.__scenarios = scenarios
+        super().__init__(futures)
+
+    def _set_result(self):
+        res = next(iter(self.futures)).result()
+        values = tuple(res[res['label'] == r]['value'] for r in
+                       tuple(unique_everseen(res['label'].values))) if res.index.name == 'date' else tuple(
+            v for v in res['value'])
+        val_w_info = tuple(_get_value_with_info(v, res.risk_key, res.unit, res.error) for v in values)
+        self.set_result(MultipleScenarioResult(self.__instrument, {k: v for k, v in zip(self.__scenarios, val_w_info)}))
+
+
 class MultipleScenarioResult(dict):
     def __init__(self, instrument, dict_values: Iterable):
         super().__init__(dict_values)
@@ -465,9 +483,6 @@ class HistoricalPricingFuture(CompositeResultFuture):
             if isinstance(base, MultipleRiskMeasureResult):
                 result = MultipleRiskMeasureResult(base.instrument,
                                                    {k: base[k].compose(r[k] for r in results) for k in base.keys()})
-            elif isinstance(base, MultipleScenarioResult):
-                result = MultipleScenarioResult(base.instrument,
-                                                {k: base[k].compose(r[k] for r in results) for k in base.keys()})
             else:
                 result = base.compose(results)
             self.set_result(result)
@@ -569,12 +584,13 @@ class PortfolioRiskResult(CompositeResultFuture):
             else:
                 for idx, priceable in enumerate(self.portfolio):
                     result = self.__result(PortfolioPath(idx))
-                    if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
+                    if isinstance(result, PortfolioRiskResult):
                         futures.append(result[item])
+                    elif isinstance(result, MultipleRiskMeasureResult):
+                        futures.append(MultipleRiskMeasureFuture(priceable, {
+                            k: PricingFuture(_value_for_measure_or_scen(result[k], item)) for k in result}))
                     elif isinstance(result, MultipleScenarioResult):
-                        # scenario = tuple(item) if isinstance(item, Iterable) else (item,)
                         futures.append(PricingFuture(_value_for_measure_or_scen(result, item)))
-
                 return PortfolioRiskResult(self.__portfolio, self.risk_measures, futures)
 
         elif is_instance_or_iterable(item, dt.date):
