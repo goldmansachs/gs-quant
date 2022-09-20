@@ -75,7 +75,7 @@ class Dataset:
     class TradingEconomics(Vendor):
         MACRO_EVENTS_CALENDAR = 'MACRO_EVENTS_CALENDAR'
 
-    def __init__(self, dataset_id: Union[str, Vendor], provider: DataApi = None):
+    def __init__(self, dataset_id: Union[str, Vendor], provider: Optional[DataApi] = None):
         """
 
         :param dataset_id: The dataset's identifier
@@ -110,7 +110,7 @@ class Dataset:
             as_of: Optional[dt.datetime] = None,
             since: Optional[dt.datetime] = None,
             fields: Optional[Iterable[Union[str, Fields]]] = None,
-            asset_id_type: str = None,
+            asset_id_type: Optional[str] = None,
             **kwargs
     ) -> pd.DataFrame:
         """
@@ -154,7 +154,7 @@ class Dataset:
             end: Optional[Union[dt.date, dt.datetime]] = None,
             as_of: Optional[dt.datetime] = None,
             since: Optional[dt.datetime] = None,
-            dates: List[dt.date] = None,
+            dates: Optional[List[dt.date]] = None,
             **kwargs
     ) -> pd.Series:
         """
@@ -250,9 +250,9 @@ class Dataset:
 
     def get_coverage(
             self,
-            limit: int = None,
-            offset: int = None,
-            fields: List[str] = None,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            fields: Optional[List[str]] = None,
             include_history: bool = False,
             **kwargs
     ) -> pd.DataFrame:
@@ -377,7 +377,7 @@ class PTPDataset(Dataset):
     >>> dataset.delete()
     """
 
-    def __init__(self, series: Union[pd.Series, pd.DataFrame], name: str = None):
+    def __init__(self, series: Union[pd.Series, pd.DataFrame], name: Optional[str] = None):
         if isinstance(series, pd.Series):
             series = pd.DataFrame({series.attrs.get('name', 'values'): series})
         if not isinstance(series.index, pd.DatetimeIndex):
@@ -404,7 +404,7 @@ class PTPDataset(Dataset):
         self._id = res['dataset']['id']
         super(PTPDataset, self).__init__(self._id, None)
 
-    def plot(self, open_in_browser: bool = True, field: str = None) -> str:
+    def plot(self, open_in_browser: bool = True, field: Optional[str] = None) -> str:
         """
         Generate transient plot expression to view dataset in PTP. Copying and pasting the transient expression
         will show your data in PTP.
