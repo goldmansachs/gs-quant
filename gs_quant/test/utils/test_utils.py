@@ -13,24 +13,23 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import hashlib
-import inspect
 import json
-import os
 import pathlib
-from os.path import exists
-from pathlib import Path
-from typing import List
-from unittest import mock
+from json.encoder import JSONEncoder
 
 import pytest
-from gs_quant import datetime
-from gs_quant.api.gs.data import GsDataApi
-from gs_quant.api.gs.risk import GsRiskApi
-from gs_quant.datetime import business_day_offset
-from gs_quant.json_encoder import JSONEncoder
-from gs_quant.session import Environment, GsSession
-from gs_quant.target.common import CompositeScenario
+from gs_quant.test.utils.mock_request import MockRequest
+
+
+@pytest.mark.last
+def test_all_cache_files_used():
+    # Important that this test runs last, it asserts all the test files are used so we can cleanup unused ones
+    saved_files = MockRequest.get_saved_files()
+    assert [] == saved_files, 'Did you accidentally commit with save_files=True?!'
+
+    unused_files = MockRequest.get_unused_files()
+    print(unused_files)
+    assert unused_files == [], 'Cleanup your unused test files!'
 
 
 def _remove_unwanted(json_text):
@@ -79,155 +78,3 @@ def mock_request(method, path, payload, test_file_name):
             elif payload == _remove_unwanted(queries['dataQuerySPX']):
                 return load_json_from_resource(test_file_name, 'treod_query_response_spx.json')
     raise Exception(f'Unhandled request. Method: {method}, Path: {path}, payload: {payload} not recognized.')
-
-
-def get_risk_request_id(requests):
-    """
-    This is not a formal equality of the risk request as it covers only the names of core components.  When a formal
-    eq function is provided on risk_request then this should be replaced with something derived from that.
-    :param requests: a collection of RiskRequests
-    :type requests: tuple of RiskRequest
-    :return: hash
-    :rtype: str
-    """
-    identifier = str(len(requests))
-    for request in requests:
-        for pos in request.positions:
-            if pos.instrument.name is None:
-                raise ValueError('Positions must have names to be mocked')
-        identifier += '_'
-        identifier += '-'.join([pos.instrument.name for pos in request.positions])
-        identifier += '-'.join([r.__repr__() for r in request.measures])
-        date = request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
-        today = business_day_offset(datetime.date.today(), 0, roll='preceding').strftime('%Y%b%d')
-        identifier += 'today' if date == today else date
-        if request.scenario is not None:
-            if isinstance(request.scenario.scenario, CompositeScenario):
-                underlying_scenarios = request.scenario.scenario.scenarios
-                if any([scen.name is None for scen in underlying_scenarios]):
-                    raise RuntimeError('Please provide unique names for your scenarios for testing')
-                identifier += '+'.join(sorted([r.name for r in underlying_scenarios]))
-            else:
-                if request.scenario.scenario.name is None:
-                    raise RuntimeError('Please provide unique names for your scenarios for testing')
-                identifier += request.scenario.scenario.name
-    return hashlib.md5(identifier.encode('utf-8')).hexdigest()
-
-
-def get_data_request_id(arg):
-    query = arg[0]
-    identifier = arg[1] + '_' + query.where['bbid'] + '_' + str(query.start_date)
-    return hashlib.md5(identifier.encode('utf-8')).hexdigest()
-
-
-@pytest.mark.last
-def test_all_cache_files_used():
-    # Important that this test runs last, it asserts all the test files are used so we can cleanup unused ones
-    saved_files = MockCalc.get_saved_files()
-    assert [] == saved_files, 'Did you accidentally commit with save_files=True?!'
-
-    unused_files = MockCalc.get_unused_files()
-    print(unused_files)
-    assert unused_files == [], 'Cleanup your unused test files!'
-
-
-class MockCalc:
-    __looked_at_files = {}
-    __saved_files = set()
-
-    def __init__(self, mocker, save_files=False,
-                 paths=Path(next(filter(lambda x: x.code_context and 'MockCalc' in x.code_context[0],
-                                        inspect.stack())).filename).parents[1],
-                 application='gs-quant',
-                 api=GsRiskApi, method='_exec'):
-        # do not save tests with save_files = True
-        self.save_files = save_files
-        self.mocker = mocker
-        self.paths = paths
-        self.application = application
-        self.api = api
-        self.method = method
-        if self.api == GsRiskApi and self.method == '_exec':
-            self.fn = GsRiskApi._exec
-        elif self.api == GsDataApi and self.method == 'query_data':
-            self.fn = GsDataApi.query_data
-        else:
-            raise NotImplementedError('Unknown GS API and method')
-
-    def __enter__(self):
-        if self.save_files:
-            GsSession.use(Environment.PROD, None, None, application=self.application)
-            self.mocker.patch.object(self.api, self.method, side_effect=self.mock_calc_create_new_files if str(
-                self.save_files).casefold() == 'new' else self.mock_calc_create_files)
-        else:
-            from gs_quant.session import OAuth2Session
-            OAuth2Session.init = mock.MagicMock(return_value=None)
-            GsSession.use(Environment.PROD, 'fake_client_id', 'fake_secret', application=self.application)
-            self.mocker.patch.object(self.api, self.method, side_effect=self.mock_calc)
-
-    def mock_calc(self, *args, **kwargs):
-        request_id = self.get_request_id(args, kwargs)
-        file_name = f'request{request_id}.json'
-        with open(self.paths / f'calc_cache/{file_name}') as json_data:
-            MockCalc.__looked_at_files.setdefault(self.paths, set()).add(file_name)
-            return json.load(json_data)
-
-    def mock_calc_create_files(self, *args, **kwargs):
-        from orjson import orjson
-
-        # never leave a side_effect calling this function.  Call it once to create the files, check them in
-        # and switch to mock_calc
-        def get_json(*i_args, **i_kwargs):
-            this_json = self.fn(*i_args, **i_kwargs)
-            if self.api == GsRiskApi:
-                # Post process the json a bit to remove timing info that makes spurious diffs
-                for d in [d for a in this_json for b in a for c in b for d in c]:
-                    for key, val in list(d.items()):
-                        if val is None or key in ['queueingTime', 'calculationTime']:
-                            del d[key]
-            return this_json
-
-        result = get_json(*args, **kwargs)
-        result_json = orjson.dumps(result,
-                                   option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS)
-        request_id = self.get_request_id(args, kwargs)
-        with open(self.paths / f'calc_cache/request{request_id}.json',
-                  'w') as json_data:
-            MockCalc.__saved_files.add(request_id)
-            json_data.write(result_json.decode('utf-8'))
-
-        return result
-
-    def mock_calc_create_new_files(self, *args, **kwargs):
-        request_id = self.get_request_id(args, kwargs)
-        file_exists = exists(self.paths / f'calc_cache/request{request_id}.json')
-        if file_exists:
-            return self.mock_calc(*args, *kwargs)
-        else:
-            return self.mock_calc_create_files(*args, *kwargs)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-    @staticmethod
-    def get_unused_files() -> List[str]:
-        unused_files = []
-        for test_path, files_used in MockCalc.__looked_at_files.items():
-            for test_file in os.listdir(test_path / 'calc_cache'):
-                if test_file.endswith('.json') and test_file not in files_used:
-                    unused_files.append(test_file)
-        return unused_files
-
-    @staticmethod
-    def get_saved_files() -> List[str]:
-        return list(MockCalc.__saved_files)
-
-    def get_request_id(self, args, kwargs):
-        if self.api == GsRiskApi:
-            request = kwargs.get('request') or args[0]
-            request_id = get_risk_request_id(request)
-        elif self.api == GsDataApi:
-            request_id = get_data_request_id(args)
-        else:
-            raise NotImplementedError('Unknown GS API and method')
-        return request_id

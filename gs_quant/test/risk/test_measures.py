@@ -16,7 +16,7 @@ under the License.
 from gs_quant import risk
 from gs_quant.instrument import IRSwap
 from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, AggregationLevel
-from gs_quant.test.utils.test_utils import MockCalc
+from gs_quant.test.utils.mock_calc import MockCalc
 
 swap_1 = IRSwap("Pay", "5y", "EUR", fixed_rate=-0.005, name="5y")
 

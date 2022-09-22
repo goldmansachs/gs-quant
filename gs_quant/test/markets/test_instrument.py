@@ -15,7 +15,7 @@ under the License.
 """
 
 from gs_quant.instrument import EqOption, FXMultiCrossBinary, FXMultiCrossBinaryLeg, Instrument
-from gs_quant.test.utils.test_utils import MockCalc
+from gs_quant.test.utils.mock_calc import MockCalc
 
 
 def test_instrument_resolve(mocker):

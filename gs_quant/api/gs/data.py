@@ -159,6 +159,7 @@ class QueryType(Enum):
     RETAIL_SELL_PCT_NOTIONAL = 'impliedRetailSellPctNotional'
     RETAIL_SELL_PCT_SHARES = 'impliedRetailSellPctShares'
     RETAIL_SELL_SHARES = 'impliedRetailSellShares'
+    FWD_POINTS = 'Fwd Points'
 
 
 class GsDataApi(DataApi):

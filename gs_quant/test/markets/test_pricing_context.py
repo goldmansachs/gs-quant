@@ -29,7 +29,7 @@ from gs_quant.markets import PricingContext, CloseMarket, OverlayMarket, MarketD
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import RollFwd
 from gs_quant.target.common import PricingLocation
-from gs_quant.test.utils.test_utils import MockCalc
+from gs_quant.test.utils.mock_calc import MockCalc
 
 WEEKEND_DATE = dt.date(2022, 3, 19)
 

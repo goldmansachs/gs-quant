@@ -28,7 +28,7 @@ from gs_quant.risk.core import aggregate_risk, SeriesWithInfo, FloatWithInfo
 from gs_quant.risk.results import MultipleScenarioFuture
 from gs_quant.risk.results import MultipleScenarioResult
 from gs_quant.target.common import MarketDataPattern
-from gs_quant.test.utils.test_utils import MockCalc
+from gs_quant.test.utils.mock_calc import MockCalc
 
 curvescen1 = CurveScenario(market_data_pattern=MarketDataPattern('IR', 'USD'), parallel_shift=5,
                            name='parallel shift5bp')

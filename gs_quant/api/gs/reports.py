@@ -37,8 +37,10 @@ class OrderType(EnumBase, Enum):
 class FactorRiskTableMode(EnumBase, Enum):
     """Source object for position data"""
 
+    Pnl = 'Pnl'
     Exposure = 'Exposure'
     ZScore = 'ZScore'
+    Mctr = 'Mctr'
 
 
 class GsReportApi:
@@ -167,17 +169,26 @@ class GsReportApi:
                                      mode: FactorRiskTableMode = None,
                                      factors: List[str] = None,
                                      factor_categories: List[str] = None,
+                                     unit: str = None,
                                      currency: Currency = None,
                                      date: dt.date = None,
+                                     start_date: dt.date = None,
+                                     end_date: dt.date = None,
                                      order_by_column: str = None,
                                      order_type: OrderType = None) -> dict:
         url = f'/risk/factors/reports/{risk_report_id}/tables?'
         if mode is not None:
             url += f'&mode={mode.value}'
+        if unit is not None:
+            url += f'&unit={unit}'
         if currency is not None:
             url += f'&currency={currency.value}'
         if date is not None:
             url += f'&date={date.strftime("%Y-%m-%d")}'
+        if start_date is not None:
+            url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
+        if end_date is not None:
+            url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
         if factors is not None:
             factors = map(urllib.parse.quote, factors)
             url += f'&factor={"&factor=".join(factors)}'

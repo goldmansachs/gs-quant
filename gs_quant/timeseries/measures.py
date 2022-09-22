@@ -135,6 +135,8 @@ class CdsVolReference(Enum):
 class VolSmileReference(Enum):
     SPOT = 'spot'
     FORWARD = 'forward'
+    DELTA = 'delta'
+    NORMALIZED = 'normalized'
 
 
 class FXForwardType(Enum):
@@ -796,7 +798,7 @@ def cds_spread(asset: Asset, spread: int, *, source: str = None, real_time: bool
     return _extract_series_from_df(df, qt)
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX,), None,
+@plot_measure((AssetClass.Equity, AssetClass.Commod,), None,
               [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
                                  query_type=QueryType.IMPLIED_VOLATILITY)],
               asset_type_excluded=(AssetType.CommodityNaturalGasHub,))

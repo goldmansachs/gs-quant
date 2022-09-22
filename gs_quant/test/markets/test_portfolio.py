@@ -30,7 +30,7 @@ from gs_quant.risk.results import PortfolioPath, PortfolioRiskResult
 from gs_quant.session import Environment, GsSession
 from gs_quant.target.common import PositionSet
 from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
-from gs_quant.test.utils.test_utils import MockCalc
+from gs_quant.test.utils.mock_calc import MockCalc
 
 
 def set_session():

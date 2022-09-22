@@ -18,10 +18,10 @@ import datetime as dt
 import pandas as pd
 
 from enum import Enum
-from functools import partial
+from functools import partial, reduce
 from pydash import get
 from time import sleep
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 from gs_quant.api.gs.assets import AssetClass, GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
@@ -451,49 +451,46 @@ def get_flagships_constituents(fields: List[str] = [],
 
     coverage_results = ThreadPoolManager.run_async([
         partial(GsAssetApi.get_many_assets_data_scroll, **query, limit=2000, scroll='1m'),
-        partial(GsDataApi.get_coverage, dataset_id=IndicesDatasets.GSCB_FLAGSHIP.value, fields=['type', 'bbid'],
+        partial(GsDataApi.get_coverage, dataset_id=IndicesDatasets.GSCB_FLAGSHIP.value, fields=basket_fields,
                 include_history=True)
     ])
     basket_data, coverage = coverage_results[0], coverage_results[1]
-    basket_map = {get(basket, 'id'): basket for basket in basket_data}
+    all_ids = set([b['id'] for b in basket_data])
+    basket_map = {b['assetId']: {**b, 'constituents': []} for b in coverage if b['assetId'] in all_ids}
+    cbs = [b['assetId'] for b in basket_map.values() if b['type'] == BasketType.CUSTOM_BASKET.value]
+    rbs = [b['assetId'] for b in basket_map.values() if b['type'] == BasketType.RESEARCH_BASKET.value]
 
-    tasks, results = [], []
-    for b in coverage:
-        tasks.append(partial(__get_constituents_data, basket=b, basket_map=basket_map, start=start,
-                             end=end, fields=fields))
-    tasks = [tasks[i * 50:(i + 1) * 50] for i in range((len(tasks) + 50 - 1) // 50)]
+    constituents_data, tasks = [], []
+    # query constituents in batches of 25
+    cb_batches = [cbs[i * 25:(i + 1) * 25] for i in range((len(cbs) + 25 - 1) // 25)]
+    rb_batches = [rbs[i * 25:(i + 1) * 25] for i in range((len(rbs) + 25 - 1) // 25)]
+    for batch in cb_batches:
+        tasks.append(partial(GsDataApi.query_data,
+                             query=DataQuery(where={'assetId': batch}, startDate=start, endDate=end),
+                             dataset_id=IndicesDatasets.GSBASKETCONSTITUENTS.value))
+    for batch in rb_batches:
+        tasks.append(partial(GsDataApi.query_data,
+                             query=DataQuery(where={'assetId': batch}, startDate=start, endDate=end),
+                             dataset_id=IndicesDatasets.GIRBASKETCONSTITUENTS.value))
+
+    # run 5 parallel dataset queries at a time
+    tasks = [tasks[i * 5:(i + 1) * 5] for i in range((len(tasks) + 5 - 1) // 5)]
     for task in tasks:
-        results += ThreadPoolManager.run_async(task)
+        constituents_data += ThreadPoolManager.run_async(task)
         sleep(1)
+    constituents_data = reduce(lambda a, b: a + b, constituents_data)
 
-    return pd.DataFrame([r for r in results if r is not None])
-
-
-def __get_constituents_data(basket: Dict, basket_map: Dict, start: dt.date,
-                            end: dt.date, fields: List[str]) -> List:
-    _id, _type = get(basket, 'assetId'), get(basket, 'type')
-    if _id not in list(basket_map.keys()):
-        return
-    start_date = dt.datetime.strptime(basket['historyStartDate'], '%Y-%m-%d').date()
-    # only query for dates after/on first date with availability
-    start_date = start_date if start < start_date else start
-    # make sure start date is not greater than end date
-    end_date = start_date if start_date > end else end
-
-    dataset_id = IndicesDatasets.GSBASKETCONSTITUENTS.value if _type == BasketType.CUSTOM_BASKET.value\
-        else IndicesDatasets.GIRBASKETCONSTITUENTS.value
-    data = GsDataApi.query_data(query=DataQuery(where=dict(assetId=_id), startDate=start_date,
-                                                endDate=end_date), dataset_id=dataset_id)
-
-    asset_ids = list(set([d['underlyingAssetId'] for d in data]))
-    asset_data = GsAssetApi.get_many_assets_data_scroll(id=asset_ids, fields=fields,
-                                                        limit=2000, scroll='1m')
+    # fetch asset positions data
+    asset_ids = set([row['underlyingAssetId'] for row in constituents_data])
+    asset_data = GsAssetApi.get_many_assets_data_scroll(id=asset_ids, fields=fields, limit=2000, scroll='1m')
     asset_data_map = {get(asset, 'id'): asset for asset in asset_data}
 
-    for d in data:
-        asset_id = get(d, 'underlyingAssetId', '')
+    for row in constituents_data:
+        basket_id = get(row, 'assetId', '')
+        asset_id = get(row, 'underlyingAssetId', '')
         asset_id_map = get(asset_data_map, asset_id, {})
         for f in fields:
-            d[f] = get(asset_id_map, f)
-    basket_map[_id].update(constituents=data)
-    return basket_map[_id]
+            row[f] = get(asset_id_map, f)
+        basket_map[basket_id]['constituents'].append(row)
+
+    return pd.DataFrame([r for r in basket_map.values() if r is not None])
