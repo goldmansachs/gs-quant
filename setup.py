@@ -87,7 +87,7 @@ setuptools.setup(
                    "nest-asyncio", "opentracing", "pandas", "pydash", "python-dateutil", "requests", "scipy",
                    "statsmodels", "tqdm", "websockets"],
     extras_require={
-        "internal": ["gs_quant_internal>=1.4.1"],
+        "internal": ["gs_quant_internal>=1.4.9"],
         "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib", "seaborn", "treelib"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "pytest-ordering", "testfixtures", "nbconvert", "nbformat",

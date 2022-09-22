@@ -709,20 +709,40 @@ class FactorRiskReport(Report):
         )
 
     def get_table(self,
-                  mode: FactorRiskTableMode = None,
+                  mode: FactorRiskTableMode,
                   factors: List[str] = None,
                   factor_categories: List[str] = None,
                   date: dt.date = None,
+                  start_date: dt.date = None,
+                  end_date: dt.date = None,
+                  unit: FactorRiskUnit = None,
                   currency: Currency = None,
                   order_by_column: str = None,
                   order_type: OrderType = None,
                   return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """
+        Get the results associated with the factor risk report formatted for the asset level table on the interface
+        :param mode: tables mode
+        :param factors: optional list of factors to filter by; defaults to all
+        :param factor_categories: optional list of factor categories to filter by; defaults to all
+        :param date: date for modes requiring snapshot data (defaults to the latest available date)
+        :param start_date: start date for modes requiring date range (defaults to 1 month before the end date)
+        :param end_date: end date for modes requiring date range (defaults to the latest available date)
+        :param unit: return the results in terms of notional or percent (defaults to notional)
+        :param currency: currency
+        :param order_by_column: column to order the rows by (defaults to name)
+        :param order_type: order ascending or descending (defaults to ascending)
+        :return: risk report table at asset level
+        """
         table = GsReportApi.get_factor_risk_report_table(risk_report_id=self.id,
                                                          mode=mode,
                                                          factors=factors,
                                                          factor_categories=factor_categories,
+                                                         unit=unit.value if unit else None,
                                                          currency=currency,
                                                          date=date,
+                                                         start_date=start_date,
+                                                         end_date=end_date,
                                                          order_by_column=order_by_column,
                                                          order_type=order_type)
         if return_format == ReturnFormat.DATA_FRAME:
@@ -739,6 +759,7 @@ class FactorRiskReport(Report):
         return table
 
     def get_factor_pnl(self,
+                       mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
                        factor_names: List[str] = None,
                        factor_categories: List[str] = None,
                        start_date: dt.date = None,
@@ -747,6 +768,7 @@ class FactorRiskReport(Report):
                        unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical factor PnL
+        :param mode: results mode; defaults to the portfolio level
         :param factor_names: optional list of factor names; defaults to all of them
         :param factor_categories: optional list of factor categories; defaults to all of them
         :param start_date: start date
@@ -755,7 +777,8 @@ class FactorRiskReport(Report):
         :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: a Pandas DataFrame with the results
         """
-        factor_data = self.get_results(factors=factor_names,
+        factor_data = self.get_results(mode=mode,
+                                       factors=factor_names,
                                        factor_categories=factor_categories,
                                        start_date=start_date,
                                        end_date=end_date,
@@ -766,6 +789,7 @@ class FactorRiskReport(Report):
         return _format_multiple_factor_table(factor_data, 'pnl')
 
     def get_factor_exposure(self,
+                            mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
                             factor_names: List[str] = None,
                             factor_categories: List[str] = None,
                             start_date: dt.date = None,
@@ -774,6 +798,7 @@ class FactorRiskReport(Report):
                             unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical factor exposure
+        :param mode: results mode; defaults to the portfolio level
         :param factor_names: optional list of factor names; defaults to all of them
         :param factor_categories: optional list of factor categories; defaults to all of them
         :param start_date: start date
@@ -782,7 +807,8 @@ class FactorRiskReport(Report):
         :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: a Pandas DataFrame with the results
         """
-        factor_data = self.get_results(factors=factor_names,
+        factor_data = self.get_results(mode=mode,
+                                       factors=factor_names,
                                        factor_categories=factor_categories,
                                        start_date=start_date,
                                        end_date=end_date,

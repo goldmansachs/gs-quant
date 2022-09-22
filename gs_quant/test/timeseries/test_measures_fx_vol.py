@@ -32,10 +32,15 @@ from gs_quant.session import GsSession, Environment
 from gs_quant.target.common import PricingLocation
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import Currency, Cross, Bond, CurrencyEnum, SecurityMaster
-from gs_quant.timeseries.measures_fx_vol import _currencypair_to_tdapi_fxo_asset
+from gs_quant.timeseries.measures_fx_vol import _currencypair_to_tdapi_fxo_asset, _currencypair_to_tdapi_fxfwd_asset
 
 _index = [pd.Timestamp('2021-03-30')]
 _test_datasets = ('TEST_DATASET',)
+
+
+def test_currencypair_to_tdapi_fxfwd_asset():
+    mock_eur = Cross('MAJB366H0VRZEWHG', 'EURUSD')
+    assert _currencypair_to_tdapi_fxfwd_asset(mock_eur) == "MAJB366H0VRZEWHG"
 
 
 def test_currencypair_to_tdapi_fxo_asset(mocker):
@@ -194,6 +199,7 @@ def test_get_tdapi_fxo_assets():
 def mock_curr(_cls, _q):
     d = {
         'impliedVolatility': [1, 2, 3],
+        'fwdPoints': [4, 5, 6]
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
     df.dataset_ids = _test_datasets
@@ -275,6 +281,51 @@ def test_fx_vol_measure(mocker):
     replace.restore()
 
 
+def test_fwd_points(mocker):
+    replace = Replacer()
+    args = dict(settlement_date="6m", location='LDN')
+    mock_eur = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    args['asset'] = mock_eur
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'EURUSD'
+
+    args['settlement_date'] = '1yr'
+    with pytest.raises(MqValueError):
+        tm_fxo.fwd_points(**args)
+    args['settlement_date'] = '6m'
+
+    args['real_time'] = True
+    with pytest.raises(NotImplementedError):
+        tm_fxo.fwd_points(**args)
+    args['real_time'] = False
+
+    args['asset'] = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'EURUSD'
+    identifiers = replace('gs_quant.timeseries.measures_fx_vol._get_tdapi_fxo_assets', Mock())
+    identifiers.return_value = {'MAGZMXVM0J282ZTR'}
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    actual = tm_fxo.fwd_points(**args)
+    expected = tm.ExtendedSeries([4, 5, 6], index=_index * 3, name='fwdPoints')
+    expected.dataset_ids = _test_datasets
+    assert_series_equal(expected, actual)
+    assert actual.dataset_ids == _test_datasets
+
+    args['location'] = None
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'EURUSD'
+    identifiers = replace('gs_quant.timeseries.measures_fx_vol._get_tdapi_fxo_assets', Mock())
+    identifiers.return_value = {'MAGZMXVM0J282ZTR'}
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    actual = tm_fxo.fwd_points(**args)
+    expected = tm.ExtendedSeries([4, 5, 6], index=_index * 3, name='fwdPoints')
+    expected.dataset_ids = _test_datasets
+    assert_series_equal(expected, actual)
+    assert actual.dataset_ids == _test_datasets
+
+    replace.restore()
+
+
 def test_fx_vol_measure_legacy(mocker):
     replace = Replacer()
     args = dict(tenor='1m', strike_reference=tm_fxo.VolReference('delta_neutral'), relative_strike=0,
@@ -284,8 +335,12 @@ def test_fx_vol_measure_legacy(mocker):
     args['asset'] = mock_gbp
     expected = tm.ExtendedSeries([1, 2, 3], index=_index * 3, name='impliedVolatility')
     expected.dataset_ids = _test_datasets
-    mocker.patch.object(tm_rates, 'implied_volatility',
+    mocker.patch.object(tm_rates, 'get_historical_and_last_for_measure',
                         return_value=expected)
+    mocker.patch.object(tm_rates, '_extract_series_from_df',
+                        return_value=expected)
+    xrefs = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
+    xrefs.return_value = 'MA26QSMPX9990G66'
     actual = tm_fxo.implied_volatility_fxvol(**args)
     assert_series_equal(expected, actual)
     replace.restore()
@@ -393,7 +448,7 @@ def test_vol_swap_strike_matches_no_assets():
         assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
         assets.return_value = []
         tm_fxo.vol_swap_strike(base, None, location=PricingLocation.LDN, real_time=False)
-    replace .restore()
+    replace.restore()
 
 
 def test_vol_swap_strike_matches_no_assets_when_expiry_tenor_is_not_none():

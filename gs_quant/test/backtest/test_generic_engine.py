@@ -27,7 +27,7 @@ from gs_quant.markets.portfolio import Portfolio
 from gs_quant.target.backtests import BacktestTradingQuantityType
 from gs_quant.target.common import OptionType, OptionStyle
 from gs_quant.target.instrument import EqOption
-from gs_quant.test.utils.test_utils import MockCalc
+from gs_quant.test.utils.mock_calc import MockCalc
 from gs_quant.risk import Price, FXDelta
 from gs_quant.markets import PricingContext
 from gs_quant.common import Currency, PayReceive

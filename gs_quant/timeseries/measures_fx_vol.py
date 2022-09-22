@@ -27,10 +27,12 @@ from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset, SecurityMaster
 from gs_quant.target.common import AssetClass, AssetType, PricingLocation
 from gs_quant.timeseries import ASSET_SPEC, plot_measure, MeasureDependency
-from gs_quant.timeseries import ExtendedSeries, measures_rates as tm_rates, measures as tm
+from gs_quant.timeseries import ExtendedSeries, measures_rates as tm_rates
+from gs_quant.timeseries import measures as tm
 from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _cross_stored_direction_helper, \
     _preprocess_implied_vol_strikes_fx, _tenor_month_to_year
 from gs_quant.timeseries.measures_helper import VolReference
+from gs_quant.data.log import log_debug
 
 _logger = logging.getLogger(__name__)
 
@@ -287,6 +289,10 @@ CURRENCY_TO_DUMMY_FFO_BBID_VOL_SWAPS = {
 }
 
 
+def _currencypair_to_tdapi_fxfwd_asset(_asset_spec: ASSET_SPEC) -> str:
+    return "MAJB366H0VRZEWHG"
+
+
 def _currencypair_to_tdapi_fxo_asset(asset_spec: ASSET_SPEC) -> str:
     asset = _asset_from_spec(asset_spec)
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
@@ -398,6 +404,39 @@ def _get_fx_vol_swap_data(asset: Asset, expiry_tenor: str, strike_type: str = No
     return df
 
 
+def _get_fxfwd_data(asset: Asset, settlement_date: str,
+                    location: str = None,
+                    source: str = None, real_time: bool = False,
+                    query_type: QueryType = QueryType.FWD_POINTS) \
+        -> pd.DataFrame:
+    if real_time:
+        raise NotImplementedError('realtime inflation swap data not implemented')
+    cross = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+
+    if not (tm_rates._is_valid_relative_date_tenor(settlement_date)):
+        raise MqValueError('invalid settlements date ' + settlement_date)
+
+    kwargs = dict(asset_class='FX', type='Forward',
+                  asset_parameters_pair=cross,
+                  asset_parameters_settlement_date=settlement_date,
+                  )
+
+    rate_mqid = _get_tdapi_fxo_assets(**kwargs)
+
+    if location is None:
+        pricing_location = PricingLocation.NYC
+    else:
+        pricing_location = PricingLocation(location)
+
+    where = dict(pricingLocation=pricing_location.value)
+
+    q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source,
+                                          real_time=real_time)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    return df
+
+
 def _get_fxo_data(asset: Asset, expiry_tenor: str, strike: str, option_type: str = None,
                   expiration_location: str = None,
                   location: PricingLocation = None, premium_payment_date: str = None,
@@ -417,10 +456,8 @@ def _get_fxo_data(asset: Asset, expiry_tenor: str, strike: str, option_type: str
         raise MqValueError('invalid expiry ' + expiry_tenor)
 
     if expiration_location is None:
-        # expirationtime = defaults["expirationTime"]
         _ = defaults["expirationTime"]
     else:
-        # expirationtime = expiration_location
         _ = expiration_location
 
     if premium_payment_date is None:
@@ -439,13 +476,12 @@ def _get_fxo_data(asset: Asset, expiry_tenor: str, strike: str, option_type: str
                   asset_parameters_call_currency=call_ccy,
                   asset_parameters_put_currency=put_ccy,
                   asset_parameters_expiration_date=expiry_tenor,
-                  # asset_parameters_expiration_time=expirationtime,
                   asset_parameters_option_type=option_type,
                   asset_parameters_premium_payment_date=premium_date,
                   asset_parameters_strike_price_relative=strike,
                   )
 
-    rate_mqid = _get_tdapi_fxo_assets(**kwargs)
+    asset_mqid = _get_tdapi_fxo_assets(**kwargs)
 
     if location is None:
         pricing_location = PricingLocation.NYC
@@ -457,7 +493,7 @@ def _get_fxo_data(asset: Asset, expiry_tenor: str, strike: str, option_type: str
     # _logger.debug(f'where asset= {rate_mqid}, swap_tenor={swap_tenor}, index={defaults["index_type"]}, '
     #              f'forward_tenor={forward_tenor}, pricing_location={pricing_location.value}, '
     #              f'clearing_house={clearing_house.value}, notional_currency={currency.name}')
-    q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source,
+    q = GsDataApi.build_market_data_query([asset_mqid], query_type, where=where, source=source,
                                           real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
@@ -498,15 +534,55 @@ def implied_volatility_new(asset: Asset, expiry_tenor: str, strike: str, option_
     return series
 
 
-#
-# @plot_measure((AssetClass.FX,), None,
-#              [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
-#                                 query_type=QueryType.IMPLIED_VOLATILITY)],
-#              display_name="implied_volatility")
-#
+"""
+Legacy implementation
+"""
+
+
+def legacy_implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference = None,
+                              relative_strike: Real = None, *, source: str = None, real_time: bool = False,
+                              request_id: Optional[str] = None) -> Series:
+    """
+    Volatility of an asset implied by observations of market prices.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1m
+            or absolute calendar strips e.g. 'Cal20', 'F20-G20'
+    :param strike_reference: reference for strike level
+    :param relative_strike: strike relative to reference
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: implied volatility curve
+    """
+
+    asset_id = tm.cross_stored_direction_for_fx_vol(asset.get_marquee_id())
+    ref_string, relative_strike = tm._preprocess_implied_vol_strikes_fx(strike_reference, relative_strike)
+
+    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
+              relative_strike)
+    tenor = tm._tenor_month_to_year(tenor)
+    where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
+    # Parallel calls when fetching / appending last results
+    df = tm.get_historical_and_last_for_measure([asset_id], QueryType.IMPLIED_VOLATILITY, where, source=source,
+                                                real_time=real_time, request_id=request_id)
+
+    s = tm._extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
+    return s
+
+
+"""
+New Implementation
+"""
+
+
+@plot_measure((AssetClass.FX,), None,
+              [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
+                                 query_type=QueryType.IMPLIED_VOLATILITY)],
+              display_name="implied_volatility")
 def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolReference = None,
                              relative_strike: Real = None, location: Optional[PricingLocation] = None,
-                             legacy_implementation: bool = True, *,
+                             legacy_implementation: bool = False, *,
                              source: str = None, real_time: bool = False,
                              request_id: Optional[str] = None) -> Series:
     """
@@ -526,8 +602,8 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
     """
 
     if legacy_implementation:
-        return (tm.implied_volatility(asset, tenor, strike_reference, relative_strike,
-                                      source=source, real_time=real_time, request_id=request_id))
+        return (legacy_implied_volatility(asset, tenor, strike_reference, relative_strike,
+                                          source=source, real_time=real_time, request_id=request_id))
 
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     if bbid is not None:
@@ -564,6 +640,31 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
     tenor = _tenor_month_to_year(tenor)
     s = implied_volatility_new(cross_asset, tenor, strike, option_type, location=location)
     return s
+
+
+@plot_measure((AssetClass.FX,), (AssetType.Cross,),
+              [MeasureDependency(id_provider=_currencypair_to_tdapi_fxfwd_asset,
+                                 query_type=QueryType.FWD_POINTS)],
+              display_name=" forward_point")
+def fwd_points(asset: Asset, settlement_date: str,
+               location: str = None, *, source: str = None, real_time: bool = False) -> Series:
+    """
+    GS end-of-day FX vanilla implied volatilities across major crosses.
+
+    :param asset: asset object loaded from security master
+    :param settlement_date: relative date representation of expiration date e.g. 1m
+    :param location: Example - "TKO", "LDN", "NYC"
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: fwd points
+    """
+    df = _get_fxfwd_data(asset=asset, settlement_date=settlement_date,
+                         location=location, source=source,
+                         real_time=real_time, query_type=QueryType.FWD_POINTS)
+
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['fwdPoints'])
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
 
 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,),

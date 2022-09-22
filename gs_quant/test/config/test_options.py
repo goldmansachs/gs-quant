@@ -20,7 +20,7 @@ from gs_quant.config import DisplayOptions
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import IRVega, AggregationLevel
 from gs_quant.instrument import IRSwap
-from gs_quant.test.utils.test_utils import MockCalc
+from gs_quant.test.utils.mock_calc import MockCalc
 
 
 def test_display_options(mocker):
