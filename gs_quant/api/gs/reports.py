@@ -200,3 +200,28 @@ class GsReportApi:
             url += f'&orderType={order_type}'
 
         return GsSession.current._get(url)
+
+    @classmethod
+    def get_brinson_attribution_results(cls,
+                                        portfolio_id: str,
+                                        benchmark: str = None,
+                                        currency: Currency = None,
+                                        include_interaction: bool = None,
+                                        aggregation_type: str = None,
+                                        start_date: dt.date = None,
+                                        end_date: dt.date = None):
+        url = f'/attribution/{portfolio_id}/brinson?'
+        if benchmark is not None:
+            url += f'&benchmark={benchmark}'
+        if currency is not None:
+            url += f'&currency={currency.value}'
+        if include_interaction is not None:
+            url += f'&includeInteraction={str(include_interaction).lower()}'
+        if aggregation_type is not None:
+            url += f'&aggregationType={aggregation_type}'
+        if start_date is not None:
+            url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
+        if end_date is not None:
+            url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
+
+        return GsSession.current._get(url)

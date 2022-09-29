@@ -70,6 +70,11 @@ class FactorRiskUnit(Enum):
     Notional = 'Notional'
 
 
+class AttributionAggregationType(Enum):
+    Arithmetic = 'arithmetic'
+    Geometric = 'geometric'
+
+
 class ReportJobFuture:
     def __init__(self,
                  report_id: str,
@@ -581,6 +586,40 @@ class PerformanceReport(Report):
                    for query in queries]
         results = sum(results, [])
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
+
+    def get_brinson_attribution(self,
+                                benchmark: str = None,
+                                currency: Currency = None,
+                                include_interaction: bool = False,
+                                aggregation_type: AttributionAggregationType = AttributionAggregationType.Arithmetic,
+                                start_date: dt.date = None,
+                                end_date: dt.date = None,
+                                return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """
+        Get PnL analytics called Brinson Attribution
+        :param benchmark: benchmark's unique Marquee identifier
+        :param currency: currency of results; if none passed results default to your portfolio's currency
+        :param include_interaction: show interaction independent of security selection
+        :param aggregation_type: either artihmetic or geometric
+        :param start_date: start date
+        :param end_date: end date
+        :param return_format: return format; defaults to a Pandas DataFrame, but can be manually
+        set to ReturnFormat.JSON
+        :return: Portfolio Brinson Attribution data for the requested date range
+        """
+        results = GsReportApi.get_brinson_attribution_results(portfolio_id=self.position_source_id,
+                                                              benchmark=benchmark,
+                                                              currency=currency,
+                                                              include_interaction=include_interaction,
+                                                              aggregation_type=aggregation_type.value,
+                                                              start_date=start_date,
+                                                              end_date=end_date)
+        if return_format == ReturnFormat.DATA_FRAME:
+            rows = results.get('results')
+            rows_data_frame = pd.DataFrame(rows)
+            rows_data_frame.rename(columns=lambda c: titleize(c), inplace=True)
+            return rows_data_frame
+        return results
 
 
 class FactorRiskReport(Report):
