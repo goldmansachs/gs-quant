@@ -3129,7 +3129,8 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
 
 
 @plot_measure((AssetClass.Equity, ),
-              (AssetType.Research_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
+              (AssetType.Research_Basket, AssetType.Custom_Basket, AssetType.Equity_Basket,
+               AssetType.ETF, AssetType.Index),
               [QueryType.FUNDAMENTAL_METRIC])
 def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:

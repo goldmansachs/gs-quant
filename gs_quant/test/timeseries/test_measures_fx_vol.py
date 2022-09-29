@@ -39,8 +39,8 @@ _test_datasets = ('TEST_DATASET',)
 
 
 def test_currencypair_to_tdapi_fxfwd_asset():
-    mock_eur = Cross('MAJB366H0VRZEWHG', 'EURUSD')
-    assert _currencypair_to_tdapi_fxfwd_asset(mock_eur) == "MAJB366H0VRZEWHG"
+    mock_eur = Cross('MA8RY265Q34P7TWZ', 'EURUSD')
+    assert _currencypair_to_tdapi_fxfwd_asset(mock_eur) == "MA8RY265Q34P7TWZ"
 
 
 def test_currencypair_to_tdapi_fxo_asset(mocker):

@@ -290,7 +290,7 @@ CURRENCY_TO_DUMMY_FFO_BBID_VOL_SWAPS = {
 
 
 def _currencypair_to_tdapi_fxfwd_asset(_asset_spec: ASSET_SPEC) -> str:
-    return "MAJB366H0VRZEWHG"
+    return "MA8RY265Q34P7TWZ"
 
 
 def _currencypair_to_tdapi_fxo_asset(asset_spec: ASSET_SPEC) -> str:
@@ -645,7 +645,7 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
 @plot_measure((AssetClass.FX,), (AssetType.Cross,),
               [MeasureDependency(id_provider=_currencypair_to_tdapi_fxfwd_asset,
                                  query_type=QueryType.FWD_POINTS)],
-              display_name=" forward_point")
+              display_name="forward_point")
 def fwd_points(asset: Asset, settlement_date: str,
                location: str = None, *, source: str = None, real_time: bool = False) -> Series:
     """
