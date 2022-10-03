@@ -1411,6 +1411,8 @@ class IRSwap(Instrument):
     fixed_holidays: Optional[str] = field(default=None, metadata=field_metadata)
     floating_holidays: Optional[str] = field(default=None, metadata=field_metadata)
     roll_convention: Optional[str] = field(default=None, metadata=field_metadata)
+    fixed_rate_accrual_convention: Optional[AccrualConvention] = field(default=None, metadata=field_metadata)
+    floating_rate_accrual_convention: Optional[AccrualConvention] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Rates, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.Swap, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
