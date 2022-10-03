@@ -23,6 +23,11 @@ from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
 
 
+class AccrualConvention(EnumBase, Enum):
+    Adjusted = 'Adjusted'
+    Unadjusted = 'Unadjusted'
+
+
 class AggregationLevel(EnumBase, Enum):    
     
     """Aggregation Level"""

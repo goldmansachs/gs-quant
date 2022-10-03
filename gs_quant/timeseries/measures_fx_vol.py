@@ -500,9 +500,6 @@ def _get_fxo_data(asset: Asset, expiry_tenor: str, strike: str, option_type: str
     return df
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Cross,),
-              [MeasureDependency(id_provider=_currencypair_to_tdapi_fxo_asset,
-                                 query_type=QueryType.IMPLIED_VOLATILITY)])
 def implied_volatility_new(asset: Asset, expiry_tenor: str, strike: str, option_type: str = None,
                            expiration_location: str = None,
                            location: PricingLocation = None, premium_payment_date: str = None, *,
@@ -638,7 +635,8 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
         raise MqValueError('unknown strike_reference and relative_strike combination')
 
     tenor = _tenor_month_to_year(tenor)
-    s = implied_volatility_new(cross_asset, tenor, strike, option_type, location=location)
+    s = implied_volatility_new(cross_asset, tenor, strike, option_type, location=location, source=source,
+                               real_time=real_time, request_id=request_id)
     return s
 
 
