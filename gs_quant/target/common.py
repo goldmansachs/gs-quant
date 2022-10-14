@@ -28,8 +28,8 @@ class AccrualConvention(EnumBase, Enum):
     Unadjusted = 'Unadjusted'
 
 
-class AggregationLevel(EnumBase, Enum):    
-    
+class AggregationLevel(EnumBase, Enum):
+
     """Aggregation Level"""
 
     Type = 'Type'
@@ -3633,7 +3633,7 @@ class KnockoutConvention(EnumBase, Enum):
     
     """Knockout convention"""
 
-    Continuous = 'Continuous'    
+    Continuous = 'Continuous'
 
 
 class LiquidityMeasure(EnumBase, Enum):    
@@ -3744,7 +3744,7 @@ class MarketDataVendor(EnumBase, Enum):
     FactSet_via_AWS_Data_Exchange = 'FactSet via AWS Data Exchange'
     Rearc = 'Rearc'
     FactSet = 'FactSet'
-    WorldScope = 'WorldScope'    
+    WorldScope = 'WorldScope'
 
 
 class NewOrUnwind(EnumBase, Enum):    
@@ -4449,8 +4449,8 @@ class CSLSymCaseNamedParam(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False, order=True)
 class CurrencyParameter(RiskMeasureParameter):
-    parameter_type: Optional[str] = field(default='Currency', metadata=field_metadata)
     value: Optional[str] = field(default=None, metadata=field_metadata)
+    parameter_type: Optional[str] = field(init=False, default='Currency', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -4458,7 +4458,6 @@ class CurrencyParameter(RiskMeasureParameter):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CurveOverlay(Scenario):
-    scenario_type: Optional[str] = field(default='CurveOverlay', metadata=field_metadata)
     dates: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
     discount_factors: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     denominated: Optional[str] = field(default=None, metadata=field_metadata)
@@ -4467,6 +4466,7 @@ class CurveOverlay(Scenario):
     rate_option: Optional[str] = field(default=None, metadata=field_metadata)
     curve_type: Optional[str] = field(default=None, metadata=field_metadata)
     subtract_base: Optional[bool] = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='CurveOverlay', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -4514,11 +4514,11 @@ class Identifier(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class LiborFallbackScenario(Scenario):
-    scenario_type: Optional[str] = field(default='LiborFallbackScenario', metadata=field_metadata)
     date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     fallback_type: Optional[str] = field(default='RFR', metadata=field_metadata)
     discounting: Optional[bool] = field(default=False, metadata=field_metadata)
     cash_flows: Optional[bool] = field(default=True, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='LiborFallbackScenario', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -4545,8 +4545,8 @@ class LiquidityReportParameters(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False, order=True)
 class ListOfNumberParameter(RiskMeasureParameter):
-    parameter_type: Optional[str] = field(default='ListOfNumber', metadata=field_metadata)
     values: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    parameter_type: Optional[str] = field(init=False, default='ListOfNumber', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -4554,8 +4554,8 @@ class ListOfNumberParameter(RiskMeasureParameter):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False, order=True)
 class ListOfStringParameter(RiskMeasureParameter):
-    parameter_type: Optional[str] = field(default='ListOfString', metadata=field_metadata)
     values: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    parameter_type: Optional[str] = field(init=False, default='ListOfString', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -4563,8 +4563,8 @@ class ListOfStringParameter(RiskMeasureParameter):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False, order=True)
 class MapParameter(RiskMeasureParameter):
-    parameter_type: Optional[str] = field(default='Map', metadata=field_metadata)
     value: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    parameter_type: Optional[str] = field(init=False, default='Map', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -4779,8 +4779,8 @@ class SocialDomain(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False, order=True)
 class StringParameter(RiskMeasureParameter):
-    parameter_type: Optional[str] = field(default='String', metadata=field_metadata)
     value: Optional[str] = field(default=None, metadata=field_metadata)
+    parameter_type: Optional[str] = field(init=False, default='String', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5113,11 +5113,11 @@ class CSLStringArray(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CarryScenario(Scenario):
-    scenario_type: Optional[str] = field(default='CarryScenario', metadata=field_metadata)
     date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
     time_shift: Optional[int] = field(default=None, metadata=field_metadata)
     roll_to_fwds: Optional[bool] = field(default=True, metadata=field_metadata)
     holiday_calendar: Optional[PricingLocation] = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='CarryScenario', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5211,7 +5211,6 @@ class FilteredData(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False, order=True)
 class FiniteDifferenceParameter(RiskMeasureParameter):
-    parameter_type: Optional[str] = field(default='FiniteDifference', metadata=field_metadata)
     aggregation_level: Optional[AggregationLevel] = field(default=None, metadata=field_metadata)
     currency: Optional[str] = field(default=None, metadata=field_metadata)
     local_curve: Optional[bool] = field(default=None, metadata=field_metadata)
@@ -5219,6 +5218,7 @@ class FiniteDifferenceParameter(RiskMeasureParameter):
     finite_difference_method: Optional[FiniteDifferenceMethod] = field(default=None, metadata=field_metadata)
     scale_factor: Optional[float] = field(default=None, metadata=field_metadata)
     mkt_marking_options: Optional[MktMarkingOptions] = field(default=None, metadata=field_metadata)
+    parameter_type: Optional[str] = field(init=False, default='FiniteDifference', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5452,10 +5452,10 @@ class PerformanceStatsRequest(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RollFwd(Scenario):
-    scenario_type: Optional[str] = field(default='RollFwd', metadata=field_metadata)
     date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
     realise_fwd: Optional[bool] = field(default=True, metadata=field_metadata)
     holiday_calendar: Optional[PricingLocation] = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='RollFwd', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5465,8 +5465,8 @@ class RollFwd(Scenario):
 class TimestampedMarket(BaseMarket):
     timestamp: datetime.datetime = field(default=None, metadata=field_metadata)
     location: PricingLocation = field(default=None, metadata=field_metadata)
-    market_type: Optional[str] = field(default='TimestampedMarket', metadata=field_metadata)
     base_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    market_type: Optional[str] = field(init=False, default='TimestampedMarket', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5514,7 +5514,6 @@ class CSLSchedule(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CurveScenario(Scenario):
-    scenario_type: Optional[str] = field(default='CurveScenario', metadata=field_metadata)
     market_data_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
     parallel_shift: Optional[float] = field(default=None, metadata=field_metadata)
     curve_shift: Optional[float] = field(default=None, metadata=field_metadata)
@@ -5522,6 +5521,7 @@ class CurveScenario(Scenario):
     tenor_start: Optional[float] = field(default=None, metadata=field_metadata)
     tenor_end: Optional[float] = field(default=None, metadata=field_metadata)
     shock_type: Optional[MarketDataShockType] = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='CurveScenario', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5533,7 +5533,6 @@ class FieldFilterMap(DictBase):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IndexCurveShift(Scenario):
-    scenario_type: Optional[str] = field(default='IndexCurveShift', metadata=field_metadata)
     market_data_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
     freeze_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
     annualised_parallel_shift: Optional[float] = field(default=None, metadata=field_metadata)
@@ -5545,6 +5544,7 @@ class IndexCurveShift(Scenario):
     bucket_shift: Optional[float] = field(default=None, metadata=field_metadata)
     bucket_start: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     bucket_end: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='IndexCurveShift', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5565,7 +5565,7 @@ class MarketDataVolShockScenario(Scenario):
     shock_type: MarketDataShockType = field(default=None, metadata=field_metadata)
     vol_levels: Tuple[MarketDataVolSlice, ...] = field(default=None, metadata=field_metadata)
     ref_spot: float = field(default=None, metadata=field_metadata)
-    scenario_type: Optional[str] = field(default='MarketDataVolShockScenario', metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='MarketDataVolShockScenario', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5674,7 +5674,7 @@ class EntityQuery(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class MarketDataShockBasedScenario(Scenario):
     shocks: Tuple[MarketDataPatternAndShock, ...] = field(default=None, metadata=field_metadata)
-    scenario_type: Optional[str] = field(default='MarketDataShockBasedScenario', metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='MarketDataShockBasedScenario', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5731,8 +5731,8 @@ class DataSetFieldMap(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CompositeScenario(Base):
-    scenario_type: Optional[str] = field(default='CompositeScenario', metadata=field_metadata)
     scenarios: Optional[Tuple[Scenario, ...]] = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='CompositeScenario', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5740,8 +5740,8 @@ class CompositeScenario(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class MultiScenario(Scenario):
-    scenario_type: Optional[str] = field(default='MultiScenario', metadata=field_metadata)
     scenarios: Optional[Tuple[Scenario, ...]] = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='MultiScenario', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

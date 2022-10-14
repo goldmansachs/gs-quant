@@ -21,13 +21,9 @@ RiskModel
 .. currentmodule:: gs_quant.models.risk_model
 
 .. autosummary::
-   :toctree: classes
-   :template: processors.rst
+   :toctree: functions
+   :template: models_functions.rst
 
-   RiskModel
-   FactorRiskModel
-   MacroRiskModel
-   ThematicRiskModel
 
 
 

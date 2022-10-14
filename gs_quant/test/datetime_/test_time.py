@@ -16,6 +16,7 @@ under the License.
 
 import pytest
 from gs_quant.datetime import *
+from gs_quant.tracing import Tracer
 
 
 def test_time_difference_as_string():

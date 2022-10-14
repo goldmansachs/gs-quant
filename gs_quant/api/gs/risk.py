@@ -26,10 +26,13 @@ from typing import Iterable, Optional, Union
 import sys
 import os
 
+from opentracing import Format
+
 from gs_quant.api.risk import RiskApi
 from gs_quant.risk import RiskRequest
 from gs_quant.session import GsSession
 from gs_quant.target.risk import OptimizationRequest
+from gs_quant.tracing import Tracer
 
 _logger = logging.getLogger(__name__)
 
@@ -60,6 +63,7 @@ class GsRiskApi(RiskApi):
     def _exec(cls, request: Union[RiskRequest, Iterable[RiskRequest]]) -> Union[Iterable, dict]:
         use_msgpack = cls.USE_MSGPACK and not isinstance(request, RiskRequest)
         headers = {'Content-Type': 'application/x-msgpack'} if use_msgpack else {}
+        Tracer.inject(Format.HTTP_HEADERS, headers)
         result, request_id = GsSession.current._post(cls.__url(request),
                                                      request,
                                                      request_headers=headers,

@@ -31,7 +31,8 @@ from inflection import camelize, underscore
 
 from gs_quant.context_base import ContextBase, ContextMeta
 from gs_quant.json_convertors import encode_date_or_str, decode_date_or_str, decode_optional_date, encode_datetime, \
-    decode_datetime, decode_float_or_str, decode_instrument, encode_dictable, decode_quote_report, decode_quote_reports
+    decode_datetime, decode_float_or_str, decode_instrument, encode_dictable, decode_quote_report, decode_quote_reports, \
+    decode_custom_comment, decode_custom_comments
 
 _logger = logging.getLogger(__name__)
 
@@ -560,6 +561,11 @@ class QuoteReport(Base, ABC):
     pass
 
 
+@dataclass
+class CustomComments(Base, ABC):
+    pass
+
+
 def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
     if value in (None,):
         return None
@@ -596,6 +602,8 @@ global_config.decoders[InstrumentBase] = decode_instrument
 global_config.decoders[Optional[InstrumentBase]] = decode_instrument
 global_config.decoders[QuoteReport] = decode_quote_report
 global_config.decoders[Optional[Tuple[QuoteReport, ...]]] = decode_quote_reports
+global_config.decoders[CustomComments] = decode_custom_comment
+global_config.decoders[Optional[Tuple[CustomComments, ...]]] = decode_custom_comments
 
 global_config.encoders[Market] = encode_dictable
 global_config.encoders[Optional[Market]] = encode_dictable

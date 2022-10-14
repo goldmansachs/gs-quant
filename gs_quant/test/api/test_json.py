@@ -18,7 +18,10 @@ import datetime as dt
 import json
 
 import pytz
+
 from gs_quant.json_encoder import JSONEncoder
+from gs_quant.target.workflow_quote import BinaryImageComments, ImgType, Encoding, HyperLinkImageComments, \
+    VisualStructuringReport, ChartingParameters, OverlayType
 
 
 def test_datetime_serialisation():
@@ -37,3 +40,15 @@ def test_datetime_serialisation():
     for d, e in zip(dates, expected):
         encoded = json.dumps(d, cls=JSONEncoder)
         assert encoded == e
+
+
+def test_custom_comments():
+    bc = BinaryImageComments(data='blah', img_type=ImgType.JPEG, encoding=Encoding.Base64)
+    hc = HyperLinkImageComments(url='blah')
+    report = VisualStructuringReport(comments=(bc, hc),
+                                     charting_parameters=ChartingParameters(overlay=OverlayType.Vega,
+                                                                            underlay=OverlayType.ProbabilityDistribution
+                                                                            ))
+    json_str = report.to_json()
+    round_trip = VisualStructuringReport.from_json(json_str)
+    assert round_trip == report

@@ -525,7 +525,6 @@ class Portfolio(PriceableImpl):
         >>>
         >>> portfolio = Portfolio(...)
         >>> market = portfolio.market()
-
         """
         pricing_context = self._pricing_context
         instruments = self._get_instruments(self.__position_context.position_date, False, False)

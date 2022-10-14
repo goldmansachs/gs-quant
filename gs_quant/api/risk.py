@@ -28,6 +28,7 @@ from gs_quant.base import RiskKey, Sentinel
 from gs_quant.risk import ErrorValue, RiskRequest
 from gs_quant.risk.result_handlers import result_handlers
 from gs_quant.session import GsSession
+from gs_quant.tracing import Tracer
 
 _logger = logging.getLogger(__name__)
 
@@ -122,7 +123,8 @@ class RiskApi(metaclass=ABCMeta):
             results: queue.Queue,
             max_concurrent: int,
             progress_bar: Optional[tqdm] = None,
-            timeout: Optional[int] = None):
+            timeout: Optional[int] = None,
+            span: Optional[str] = None):
         def _process_results(completed: list):
             chunk_results = tuple(itertools.chain.from_iterable(cls._handle_results(request, result).items()
                                                                 for request, result in completed))
@@ -139,7 +141,10 @@ class RiskApi(metaclass=ABCMeta):
                              responses: asyncio.Queue,
                              raw_results: asyncio.Queue,
                              session: GsSession,
-                             loop: asyncio.AbstractEventLoop):
+                             loop: asyncio.AbstractEventLoop,
+                             active_span):
+            if active_span:
+                Tracer.get_instance().scope_manager.activate(active_span, finish_on_close=False)
             with session:
                 shutdown = False
                 while not shutdown:
@@ -159,7 +164,7 @@ class RiskApi(metaclass=ABCMeta):
                     # If we are in async mode, indicate to the result subscriber that there are no more requests
                     cls.shutdown_queue_listener(responses, loop=loop)
 
-        async def run_async():
+        async def run_async(current_span):
             def num_risk_jobs(request: RiskRequest):
                 # size of calculation job
                 return len(request.pricing_and_market_data_as_of) * len(request.positions)
@@ -179,7 +184,7 @@ class RiskApi(metaclass=ABCMeta):
             # The requests library (which we use for dispatching) is not async, so we need a thread for concurrency
             Thread(daemon=True,
                    target=execute_requests,
-                   args=(outstanding_requests, responses, raw_results, GsSession.current, loop)).start()
+                   args=(outstanding_requests, responses, raw_results, GsSession.current, loop, current_span)).start()
 
             if is_async:
                 # If async we need a task to handle result subscription
@@ -249,7 +254,7 @@ class RiskApi(metaclass=ABCMeta):
             cls.shutdown_queue_listener(results)
 
         if sys.version_info >= (3, 7):
-            asyncio.run(run_async())
+            asyncio.run(run_async(span))
         else:
             try:
                 existing_event_loop = asyncio.get_event_loop()
@@ -263,7 +268,7 @@ class RiskApi(metaclass=ABCMeta):
                 asyncio.set_event_loop(main_loop)
 
             try:
-                main_loop.run_until_complete(run_async())
+                main_loop.run_until_complete(run_async(span))
             except Exception:
                 if not use_existing:
                     main_loop.stop()

@@ -257,6 +257,7 @@ class Report:
         GsReportApi.delete_report(self.id)
 
     def set_position_source(self, entity_id: str):
+        """ Set position source type and position source ID """
         is_portfolio = entity_id.startswith('MP')
         self.position_source_type = 'Portfolio' if is_portfolio else 'Asset'
         self.position_source_id = entity_id
@@ -266,6 +267,7 @@ class Report:
             self.type = ReportType.Portfolio_Thematic_Analytics if is_portfolio else ReportType.Asset_Thematic_Analytics
 
     def get_most_recent_job(self):
+        """ Retrieve the most current report job """
         jobs = GsReportApi.get_report_jobs(self.id)
         most_current_job = sorted(jobs, key=lambda i: i['createdTime'], reverse=True)[0]
         return ReportJobFuture(report_id=self.id,
@@ -280,6 +282,13 @@ class Report:
                  start_date: dt.date = None,
                  end_date: dt.date = None,
                  backcast: bool = None):
+        """
+        Schedule a report with the given date range
+
+        :param start_date: start date (optional)
+        :param end_date: end date (optional)
+        :param backcast: set to true if the report should be backcasted
+        """
         if None in [self.id, self.__position_source_id]:
             raise MqValueError('Can only schedule reports with valid IDs and Position Source IDs.')
         if self.position_source_type != PositionSourceType.Portfolio and None in [start_date, end_date]:
@@ -301,8 +310,16 @@ class Report:
     def run(self,
             start_date: dt.date = None,
             end_date: dt.date = None,
-            backcast: bool = None,
+            backcast: bool = False,
             is_async: bool = True):
+        """
+        Run a report with the given date range
+
+        :param start_date: start date (optional)
+        :param end_date: end date (optional)
+        :param backcast: set to true if the report should be backcasted; defaults to false
+        :param is_async: return immediately (true) or wait for results (false); defaults to true
+        """
         self.schedule(start_date, end_date, backcast)
         counter = 5
         while counter > 0:
@@ -330,6 +347,9 @@ class Report:
 
 
 class PerformanceReport(Report):
+    """
+    Historical analyses on measures like PnL and exposure of a position source over a date range
+    """
 
     def __init__(self,
                  report_id: str = None,
@@ -343,6 +363,27 @@ class PerformanceReport(Report):
                  status: Union[str, ReportStatus] = ReportStatus.new,
                  percentage_complete: float = None,
                  **kwargs):
+        """
+        Historical analyses on measures like PnL and exposure of a portfolio over a date range
+
+        :param report_id: Marquee report ID
+        :param name: report name
+        :param position_source_id: position source ID
+        :param position_source_type: position source (i.e. 'Portfolio', 'Asset', or 'Hedge')
+        :param parameters: parameters of the report
+        :param earliest_start_date: start date of report
+        :param latest_end_date: end date of report
+        :param latest_execution_time: date of the latest execution
+        :param status: status of of report (i.e. 'ready', 'executing', or 'done')
+        :param percentage_complete: percent of the report that is complete
+
+        **Examples**
+
+        >>> performance_report = PerformanceReport(
+        >>>     position_source_type=PositionSourceType.Portfolio,
+        >>>     position_source_id='PORTFOLIOID'
+        >>> )
+        """
         super().__init__(report_id, name, position_source_id, position_source_type,
                          ReportType.Portfolio_Performance_Analytics, parameters, earliest_start_date, latest_end_date,
                          latest_execution_time, status, percentage_complete)
@@ -353,6 +394,7 @@ class PerformanceReport(Report):
             **kwargs):
         """
         Get a performance report from the unique report identifier
+
         :param report_id: Marquee report ID
         :return: returns a PerformanceReport object that correlates to the Marquee report
         """
@@ -380,6 +422,7 @@ class PerformanceReport(Report):
                 end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio PnL
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -391,6 +434,7 @@ class PerformanceReport(Report):
                           end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio long exposure
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -402,6 +446,7 @@ class PerformanceReport(Report):
                            end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio short exposure
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -413,6 +458,7 @@ class PerformanceReport(Report):
                         end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio asset count
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -424,6 +470,7 @@ class PerformanceReport(Report):
                      end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio turnover
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -435,6 +482,7 @@ class PerformanceReport(Report):
                              end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio long asset count
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -447,6 +495,7 @@ class PerformanceReport(Report):
             -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
         """
         Get historical portfolio short asset count
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -458,6 +507,7 @@ class PerformanceReport(Report):
                          end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio net exposure
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -469,6 +519,7 @@ class PerformanceReport(Report):
                            end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio gross exposure
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -480,6 +531,7 @@ class PerformanceReport(Report):
                         end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio trading PnL
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -491,6 +543,7 @@ class PerformanceReport(Report):
                              end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio trading cost PnL
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -502,6 +555,7 @@ class PerformanceReport(Report):
                                     end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio servicing cost long PnL
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -513,6 +567,7 @@ class PerformanceReport(Report):
                                      end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio servicing cost short PnL
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -524,6 +579,7 @@ class PerformanceReport(Report):
                                end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio asset count priced
+
         :param start_date: start date
         :param end_date: end date
         :return: returns a Pandas DataFrame with the results
@@ -535,6 +591,14 @@ class PerformanceReport(Report):
                     start_date: dt.date = None,
                     end_date: dt.date = None,
                     return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """
+        Get historical portfolio metrics
+
+        :param field: the entity property to be returned
+        :param start_date: start date
+        :param end_date: end date
+        :return: returns a Pandas DataFrame with the results
+        """
         fields = (field,)
         where = {'reportId': self.id}
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
@@ -548,6 +612,7 @@ class PerformanceReport(Report):
                           return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """
         Get many historical portfolio metrics
+
         :param measures: a list of metrics
         :param start_date: start date
         :param end_date: end date
@@ -568,6 +633,7 @@ class PerformanceReport(Report):
                                    return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """
         Get historical portfolio constituents
+
         :param fields: list of fields to include in the results
         :param start_date: start date
         :param end_date: end date
@@ -597,6 +663,7 @@ class PerformanceReport(Report):
                                 return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """
         Get PnL analytics called Brinson Attribution
+
         :param benchmark: benchmark's unique Marquee identifier
         :param currency: currency of results; if none passed results default to your portfolio's currency
         :param include_interaction: show interaction independent of security selection
@@ -606,6 +673,16 @@ class PerformanceReport(Report):
         :param return_format: return format; defaults to a Pandas DataFrame, but can be manually
         set to ReturnFormat.JSON
         :return: Portfolio Brinson Attribution data for the requested date range
+
+        **Examples**
+
+        >>> brinson_attribution_results = performance_report.get_brinson_attribution (
+        >>>     benchmark=asset.get_marquee_id(),
+        >>>     include_interaction=True,
+        >>>     start_date=performance_report.earliest_start_date,
+        >>>     end_date=performance_report.latest_end_date,
+        >>> )
+        >>> display(pd.DataFrame(brinson_attribution_results))
         """
         results = GsReportApi.get_brinson_attribution_results(portfolio_id=self.position_source_id,
                                                               benchmark=benchmark,
@@ -623,6 +700,10 @@ class PerformanceReport(Report):
 
 
 class FactorRiskReport(Report):
+    """
+    Historical analyses on both the risk and attribution of a portfolio or asset to various factors determined by the
+    specified risk model
+    """
 
     def __init__(self,
                  risk_model_id: str = None,
@@ -639,6 +720,34 @@ class FactorRiskReport(Report):
                  status: Union[str, ReportStatus] = ReportStatus.new,
                  percentage_complete: float = None,
                  **kwargs):
+        """
+        Historical analyses on both the risk and attribution of a portfolio or asset to various factors determined by
+        the specified risk model
+
+        :param risk_model_id: risk model ID
+        :param fx_hedged: if position source is FX hedged
+        :param benchmark_id: optional benchmark asset ID to include in results
+        :param report_id: Marquee report ID
+        :param name: report name
+        :param position_source_id: position source ID
+        :param position_source_type: position source (i.e. 'Portfolio', 'Asset', or 'Hedge')
+        :param report_type: report type (i.e. 'Asset Factor Risk' or 'Portfolio Factor Risk')
+        :param earliest_start_date: start date of report
+        :param latest_end_date: end date of report
+        :param latest_execution_time: date of the latest execution
+        :param status: status of of report (i.e. 'ready', 'executing', or 'done')
+        :param percentage_complete: percent of the report that is complete
+
+        **Examples**
+
+        >>> risk_report = FactorRiskReport(
+        >>>     risk_model_id='RISKMODELID',
+        >>>     fx_hedged=True,
+        >>>     benchmark_id=benchmark.get_marquee_id(),
+        >>>     position_source_id='PORTFOLIOID',
+        >>>     position_source_type=PositionSourceType.Portfolio
+        >>> )
+        """
         super().__init__(report_id, name, position_source_id, position_source_type,
                          report_type, ReportParameters(risk_model=risk_model_id,
                                                        fx_hedged=fx_hedged,
@@ -650,9 +759,10 @@ class FactorRiskReport(Report):
             report_id: str,
             **kwargs):
         """
-        Get a performance report from the unique report identifier
+        Get a factor risk report from the unique report identifier
+
         :param report_id: Marquee report ID
-        :return: returns a PerfomanceReport object that correlates to the Marquee report
+        :return: returns a FactorRiskReport object that correlates to the Marquee report
         """
         return cls.from_target(GsReportApi.get_report(report_id))
 
@@ -696,6 +806,7 @@ class FactorRiskReport(Report):
                     unit: FactorRiskUnit = FactorRiskUnit.Notional) -> Union[Dict, pd.DataFrame]:
         """
         Get the raw results associated with the factor risk report
+
         :param mode: results mode; defaults to the portfolio level
         :param factors: optional list of factors; defaults to all of them
         :param factor_categories: optional list of factor categories; defaults to all of them
@@ -706,6 +817,15 @@ class FactorRiskReport(Report):
         set to ReturnFormat.JSON
         :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: risk report results
+
+        **Examples**
+
+        >>> factor_and_total_results = risk_report.get_results(
+        >>>     factors=['Factor', 'Specific'],
+        >>>     start_date=dt.date(2022, 1, 1),
+        >>>     end_date=dt.date(2021, 1, 1)
+        >>> )
+        >>> print(factor_and_total_results)
         """
         results = GsReportApi.get_factor_risk_report_results(risk_report_id=self.id,
                                                              view=mode.value,
@@ -727,6 +847,7 @@ class FactorRiskReport(Report):
                  unit: FactorRiskUnit = FactorRiskUnit.Notional) -> Dict:
         """
         Get the results associated with the factor risk report as seen on the Marquee user interface
+
         :param mode: views mode
         :param factor: optional factor name
         :param factor_category: optional factor category
@@ -735,6 +856,24 @@ class FactorRiskReport(Report):
         :param currency: currency
         :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: risk report results
+
+        **Examples**
+
+        >>> category_table = risk_report.get_view(
+        >>>     mode=FactorRiskViewsMode.Risk,
+        >>>     start_date=risk_report.latest_end_date,
+        >>>     end_date=risk_report.latest_end_date,
+        >>>     unit=FactorRiskUnit.Notional
+        >>> ).get('factorCategoriesTable')
+        >>> category_df = pd.DataFrame(category_table).filter(items=[
+        >>>     'name',
+        >>>     'proportionOfRisk',
+        >>>     'marginalContributionToRiskPercent',
+        >>>     'relativeMarginalContributionToRisk',
+        >>>     'exposure',
+        >>>     'avgProportionOfRisk'
+        >>> ])
+        >>> display(category_df)
         """
         return GsReportApi.get_factor_risk_report_view(
             risk_report_id=self.id,
@@ -761,6 +900,7 @@ class FactorRiskReport(Report):
                   return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """
         Get the results associated with the factor risk report formatted for the asset level table on the interface
+
         :param mode: tables mode
         :param factors: optional list of factors to filter by; defaults to all
         :param factor_categories: optional list of factor categories to filter by; defaults to all
@@ -772,6 +912,15 @@ class FactorRiskReport(Report):
         :param order_by_column: column to order the rows by (defaults to name)
         :param order_type: order ascending or descending (defaults to ascending)
         :return: risk report table at asset level
+
+        **Examples**
+
+        >>> pnl_table = risk_report.get_table(
+        >>>     mode=FactorRiskTableMode.Pnl,
+        >>>     start_date=risk_report.earliest_start_date,
+        >>>     end_date=risk_report.latest_end_date
+        >>> )
+        >>> display(pd.DataFrame(pnl_table))
         """
         table = GsReportApi.get_factor_risk_report_table(risk_report_id=self.id,
                                                          mode=mode,
@@ -807,6 +956,7 @@ class FactorRiskReport(Report):
                        unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical factor PnL
+
         :param mode: results mode; defaults to the portfolio level
         :param factor_names: optional list of factor names; defaults to all of them
         :param factor_categories: optional list of factor categories; defaults to all of them
@@ -837,6 +987,7 @@ class FactorRiskReport(Report):
                             unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical factor exposure
+
         :param mode: results mode; defaults to the portfolio level
         :param factor_names: optional list of factor names; defaults to all of them
         :param factor_categories: optional list of factor categories; defaults to all of them
@@ -864,6 +1015,7 @@ class FactorRiskReport(Report):
                                       currency: Currency = None) -> pd.DataFrame:
         """
         Get historical factor proportion of risk
+
         :param factor_names: optional list of factor names; defaults to all of them
         :param factor_categories: optional list of factor categories; defaults to all of them
         :param start_date: start date
@@ -886,6 +1038,7 @@ class FactorRiskReport(Report):
                         currency: Currency = None) -> pd.DataFrame:
         """
         Get historical annual risk
+
         :param factor_names: optional list of factor names; must be from the following: "Factor", "Specific", "Total
         :param start_date: start date
         :param end_date: end date
@@ -906,6 +1059,7 @@ class FactorRiskReport(Report):
                        currency: Currency = None) -> pd.DataFrame:
         """
         Get historical daily risk
+
         :param factor_names: optional list of factor names; must be from the following: "Factor", "Specific", "Total
         :param start_date: start date
         :param end_date: end date
@@ -937,6 +1091,9 @@ def _format_multiple_factor_table(factor_data: List[Dict],
 
 
 class ThematicReport(Report):
+    """
+    Historical analyses on the exposure of a portfolio to various GS Flagship Thematic baskets over a date range
+    """
 
     def __init__(self,
                  report_id: str = None,
@@ -951,6 +1108,30 @@ class ThematicReport(Report):
                  status: Union[str, ReportStatus] = ReportStatus.new,
                  percentage_complete: float = None,
                  **kwargs):
+        """
+        Historical analyses on the exposure of a portfolio to various GS Flagship Thematic baskets over a date range
+
+        :param report_id: Marquee report ID
+        :param name: report name
+        :param position_source_id: position source ID
+        :param parameters: parameters of the report
+        :param position_source_type: position source (i.e. 'Portfolio', 'Asset', or 'Hedge')
+        :param report_type: report type (i.e. 'Portfolio Thematic Analytics' or 'Asset Thematic Analytics')
+        :param earliest_start_date: start date of report
+        :param latest_end_date: end date of report
+        :param latest_execution_time: date of the latest execution
+        :param status: status of of report (i.e. 'ready', 'executing', or 'done')
+        :param percentage_complete: percent of the report that is complete
+
+        **Examples**
+
+        >>> thematic_report = ThematicReport(
+        >>>     report_id='REPORTID',
+        >>>     position_source_type=PositionSourceType.Portfolio,
+        >>>     position_source_id='PORTFOLIOID',
+        >>>     parameters=None
+        >>> )
+        """
         super().__init__(report_id, name, position_source_id, position_source_type,
                          report_type, parameters, earliest_start_date, latest_end_date,
                          latest_execution_time, status, percentage_complete)
@@ -961,6 +1142,7 @@ class ThematicReport(Report):
             **kwargs):
         """
         Get a thematic report from the unique report identifier
+
         :param report_id: Marquee report ID
         :return: returns a ThematicReport object that correlates to the Marquee report
         """
@@ -989,6 +1171,7 @@ class ThematicReport(Report):
                           basket_ids: List[str] = None) -> pd.DataFrame:
         """
         Get all results from the thematic report for a date range
+
         :param start_date: start date
         :param end_date: end date
         :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
@@ -1007,6 +1190,7 @@ class ThematicReport(Report):
                               basket_ids: List[str] = None) -> pd.DataFrame:
         """
         Get portfolio historical exposure to GS Flagship Thematic baskets
+
         :param start_date: start date
         :param end_date: end date
         :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
@@ -1020,6 +1204,7 @@ class ThematicReport(Report):
                            basket_ids: List[str] = None) -> pd.DataFrame:
         """
         Get portfolio historical beta to GS Flagship Thematic baskets
+
         :param start_date: start date
         :param end_date: end date
         :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
@@ -1053,6 +1238,15 @@ class ThematicReport(Report):
                                    end_date: dt.date = None,
                                    basket_ids: List[str] = None,
                                    regions: List[Region] = None) -> pd.DataFrame:
+        """
+        Get all portfolio thematic analytics for GS Flagshop Thematic baskets
+
+        :param start_date: start date
+        :param end_date: end date
+        :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
+        :param regions: regions by which to filter flagship thematic baskets; defaults to all regions
+        :return: a Pandas DataFrame with results
+        """
         results = GsThematicApi.get_thematics(entity_id=self.position_source_id,
                                               start_date=start_date,
                                               end_date=end_date,
@@ -1066,6 +1260,15 @@ class ThematicReport(Report):
                                         end_date: dt.date = None,
                                         basket_ids: List[str] = None,
                                         regions: List[Region] = None) -> pd.DataFrame:
+        """
+        Get portfolio thematic analytics for the five GS Flagship Thematic baskets with the highest thematic exposures
+
+        :param start_date: start date
+        :param end_date: end date
+        :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
+        :param regions: regions by which to filter flagship thematic baskets; defaults to all regions
+        :return: a Pandas DataFrame with the top 5 results
+        """
         results = GsThematicApi.get_thematics(entity_id=self.position_source_id,
                                               start_date=start_date,
                                               end_date=end_date,
@@ -1079,6 +1282,15 @@ class ThematicReport(Report):
                                            end_date: dt.date = None,
                                            basket_ids: List[str] = None,
                                            regions: List[Region] = None) -> pd.DataFrame:
+        """
+        Get portfolio thematic analytics for the five GS Flagship Thematic baskets with the lowest thematic exposures
+
+        :param start_date: start date
+        :param end_date: end date
+        :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
+        :param regions: regions by which to filter flagship thematic baskets; defaults to all regions
+        :return: a Pandas DataFrame with the bottom 5 results
+        """
         results = GsThematicApi.get_thematics(entity_id=self.position_source_id,
                                               start_date=start_date,
                                               end_date=end_date,
@@ -1093,6 +1305,7 @@ class ThematicReport(Report):
         """
         Get a by-asset breakdown of a portfolio or basket's thematic exposure to a particular flagship basket on a
         particular date
+
         :param date: date
         :param basket_id: GS flagship basket's unique Marquee ID
         :return: a Pandas DataFrame with results
@@ -1103,6 +1316,15 @@ class ThematicReport(Report):
 def get_thematic_breakdown_as_df(entity_id: str,
                                  date: dt.date,
                                  basket_id: str) -> pd.DataFrame:
+    """
+    Get a by-asset breakdown of a portfolio or basket's thematic exposure to a particular flagship basket on a
+    particular data and return as a Pandas DataFrame
+
+    :param entity_id: position source ID; i.e. portfolio or basket
+    :param date: date
+    :param basket_id: GS flagship basket's unique Marquee ID
+    :return: a Pandas DataFrame with results
+    """
     results = GsThematicApi.get_thematics(entity_id=entity_id,
                                           start_date=date,
                                           end_date=date,
@@ -1120,6 +1342,12 @@ def get_thematic_breakdown_as_df(entity_id: str,
 
 
 def flatten_results_into_df(results: List):
+    """
+    Flatten a list of thematic data into a Pandas DataFrame
+
+    :param results: a list of thematic data by date
+    :return: Pandas DataFrame with all results formatted
+    """
     all_results = []
     for result in results:
         date = result['date']

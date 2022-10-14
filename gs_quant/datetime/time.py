@@ -15,12 +15,8 @@ under the License.
 """
 import datetime as dt
 import logging
-from contextlib import ContextDecorator
 
 import numpy as np
-from opentracing import Span
-from opentracing import Tracer as OpenTracer
-from opentracing.mocktracer import MockTracer
 
 from gs_quant.errors import *
 
@@ -60,80 +56,6 @@ class Timer:
             if self.__threshold is None or self.__elapsed.seconds > self.__threshold:
                 _logger.warning(
                     f'{self.__label} took {self.__elapsed.seconds + self.__elapsed.microseconds / 1000000} seconds')
-
-
-class TracerFactory:
-    __tracer_instance = None
-
-    def get(self) -> OpenTracer:
-        if TracerFactory.__tracer_instance is None:
-            TracerFactory.__tracer_instance = MockTracer()
-        return TracerFactory.__tracer_instance
-
-
-class Tracer(ContextDecorator):
-    __factory = TracerFactory()
-
-    @staticmethod
-    def get_instance() -> OpenTracer:
-        return Tracer.__factory.get()
-
-    @staticmethod
-    def set_factory(factory: TracerFactory):
-        Tracer.__factory = factory
-
-    def __init__(self, label: str = 'Execution', print_on_exit: bool = False, threshold: int = None,
-                 wrap_exceptions=False):
-        self.__print_on_exit = print_on_exit
-        self.__label = label
-        self.__threshold = threshold
-        self.wrap_exceptions = wrap_exceptions
-
-    def __enter__(self):
-        self.__scope = Tracer.get_instance().start_active_span(operation_name=self.__label)
-        return self.__scope
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        Span._on_error(self.__scope.span, exc_type, exc_value, exc_tb)
-        self.__scope.close()
-        if self.wrap_exceptions and exc_type is not None and not exc_type == MqWrappedError:
-            raise MqWrappedError(f'Unable to calculate: {self.__label}') from exc_value
-
-    @staticmethod
-    def reset():
-        Tracer.get_instance().reset()
-
-    @staticmethod
-    def get_spans():
-        return Tracer.get_instance().finished_spans()
-
-    @staticmethod
-    def print(reset=True):
-        spans = Tracer.get_spans()
-        spans_by_parent = {}
-
-        for span in reversed(spans):
-            spans_by_parent.setdefault(span.parent_id, []).append(span)
-
-        def _build_tree(parent_span, depth):
-            name = f'{"* " * depth}{parent_span.operation_name}'
-            elapsed = (parent_span.finish_time - parent_span.start_time) * 1000 if parent_span.finished else 'N/A'
-            error = " [Error]" if parent_span.tags.get('error', False) else ""
-            lines.append(f'{name:<50}{elapsed:>8.1f} ms{error}')
-            for child_span in reversed(spans_by_parent.get(parent_span.context.span_id, [])):
-                _build_tree(child_span, depth + 1)
-
-        total = 0
-        lines = []
-        for span in reversed(spans_by_parent.get(None, [])):
-            _build_tree(span, 0)
-            total += (span.finish_time - span.start_time) * 1000
-
-        tracing_str = '\n'.join(lines)
-        _logger.warning(f'Tracing Info:\n{tracing_str}\n{"-" * 61}\nTOTAL:{total:>52.1f} ms')
-        if reset:
-            Tracer.reset()
-        return tracing_str, total
 
 
 def to_zulu_string(time: dt.datetime):
