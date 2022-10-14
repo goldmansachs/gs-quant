@@ -71,6 +71,18 @@ Portfolio
    Portfolio
 
 
+Portfolio Manager
+---------
+
+.. currentmodule:: gs_quant.markets.portfolio_manager
+
+.. autosummary::
+   :toctree: classes
+   :templates: portfolio_manager.rst
+
+   PortfolioManager
+
+
 Securities
 ----------
 
@@ -95,7 +107,7 @@ Report
 
 .. autosummary::
    :toctree: classes
-   :template: processors.rst
+   :template: report.rst
 
    ReportJobFuture
    Report

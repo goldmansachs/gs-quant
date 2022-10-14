@@ -17,7 +17,7 @@ from typing import Dict, Any, Iterable
 
 from dataclasses_json.cfg import _GlobalConfig
 
-from gs_quant.target.workflow_quote import VisualStructuringReport
+from gs_quant.target.workflow_quote import VisualStructuringReport, BinaryImageComments, HyperLinkImageComments
 
 global_config = _GlobalConfig()
 
@@ -38,4 +38,26 @@ def quote_reports_from_dicts(quote_report_dicts: Iterable[Dict[str, Any]]):
             report = quote_report_from_dict(quote_report_dict)
             reports.append(report)
         return reports
+    return None
+
+
+def custom_comment_from_dict(in_dict: Dict[str, Any]):
+    if in_dict is not None:
+        type = in_dict.get('commentType')
+        if 'binaryImageComments' == type:
+            out = BinaryImageComments.from_dict(in_dict)
+            return out
+        if 'hyperLinkImageComments' == type:
+            out = HyperLinkImageComments.from_dict(in_dict)
+            return out
+    return None
+
+
+def custom_comments_from_dicts(in_dicts: Iterable[Dict[str, Any]]):
+    if in_dicts is not None:
+        comments = []
+        for in_dict in in_dicts:
+            report = custom_comment_from_dict(in_dict)
+            comments.append(report)
+        return comments
     return None

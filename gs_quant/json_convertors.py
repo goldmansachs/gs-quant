@@ -20,7 +20,7 @@ from typing import Optional, Union, Iterable, Dict, Tuple
 from dateutil.parser import isoparse
 
 __valid_date_formats = ('%Y-%m-%d',  # '2020-07-28'
-                        '%d%b%y',    # '28Jul20'
+                        '%d%b%y',  # '28Jul20'
                         '%d-%b-%y',  # '28-Jul-20'
                         '%d/%m/%Y')  # '28/07/2020
 
@@ -124,6 +124,16 @@ def decode_quote_report(value: Optional[dict]):
 def decode_quote_reports(value: Optional[Iterable[Dict]]):
     from gs_quant.quote_reports.core import quote_reports_from_dicts
     return quote_reports_from_dicts(value) if value else None
+
+
+def decode_custom_comment(value: Optional[dict]):
+    from gs_quant.quote_reports.core import custom_comment_from_dict
+    return custom_comment_from_dict(value) if value else None
+
+
+def decode_custom_comments(value: Optional[Iterable[Dict]]):
+    from gs_quant.quote_reports.core import custom_comments_from_dicts
+    return custom_comments_from_dicts(value) if value else None
 
 
 def encode_dictable(o):

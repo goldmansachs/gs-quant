@@ -636,7 +636,7 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
 
     tenor = _tenor_month_to_year(tenor)
     s = implied_volatility_new(cross_asset, tenor, strike, option_type, location=location, source=source,
-                               real_time=real_time, request_id=request_id)
+                               real_time=real_time)
     return s
 
 

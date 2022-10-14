@@ -35,6 +35,7 @@ from gs_quant.risk.results import PricingFuture
 from gs_quant.session import GsSession
 from gs_quant.target.common import PricingDateAndMarketDataAsOf
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
+from gs_quant.tracing import Tracer
 from tqdm import tqdm
 
 from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket
@@ -281,7 +282,7 @@ class PricingContext(ContextBaseWithDefault):
             self.__reset_atts()
 
     def __calc(self):
-        def run_requests(requests_: list, provider_, create_event_loop: bool, pc_attrs: dict):
+        def run_requests(requests_: list, provider_, create_event_loop: bool, pc_attrs: dict, span):
             if create_event_loop:
                 asyncio.set_event_loop(asyncio.new_event_loop())
 
@@ -291,7 +292,7 @@ class PricingContext(ContextBaseWithDefault):
             try:
                 with session:
                     provider_.run(requests_, results, pc_attrs['_max_concurrent'], progress_bar,
-                                  timeout=pc_attrs['timeout'])
+                                  timeout=pc_attrs['timeout'], span=span)
             except Exception as e:
                 provider_.enqueue(results, ((k, e) for k in self.__pending.keys()))
 
@@ -374,14 +375,15 @@ class PricingContext(ContextBaseWithDefault):
             # All attributes are immutable, so a shared dictionary is sufficient. __pending remains shared.
             attrs_for_request = {}
             self.__save_attrs_to(attrs_for_request)
+            span = Tracer.get_instance().active_span
             for provider, requests in requests_for_provider.items():
                 if request_pool:
                     completion_future = request_pool.submit(run_requests, requests, provider, True,
-                                                            attrs_for_request)
+                                                            attrs_for_request, span)
                     if not self.__is_async:
                         completion_futures.append(completion_future)
                 else:
-                    run_requests(requests, provider, False, attrs_for_request)
+                    run_requests(requests, provider, False, attrs_for_request, span)
 
             # Wait on results if not async, so exceptions are surfaced
             if request_pool:

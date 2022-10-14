@@ -314,7 +314,7 @@ def test_async_behaviour(queue_mock, run_mock):
     sleep(1)
     # threads should see the _max_concurrent property of the PricingContext as 1000 even though it's exited
     assert pc._max_concurrent is None
-    run_mock.assert_called_with(ANY, ANY, 1000, ANY, timeout=ANY)
+    run_mock.assert_called_with(ANY, ANY, 1000, ANY, timeout=ANY, span=ANY)
 
 
 def test_use_context_for_inheritance():

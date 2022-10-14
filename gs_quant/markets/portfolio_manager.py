@@ -82,6 +82,7 @@ class PortfolioManager(PositionedEntity):
                  portfolio_id: str):
         """
         Initialize a Portfolio Manager
+
         :param portfolio_id: Portfolio ID
         """
         self.__portfolio_id = portfolio_id
@@ -96,6 +97,11 @@ class PortfolioManager(PositionedEntity):
         self.__portfolio_id = value
 
     def get_performance_report(self) -> PerformanceReport:
+        """
+        Get performance report associated with a portfolio
+
+        :return: returns the PerformanceReport associated with portfolio if one exists
+        """
         reports = GsReportApi.get_reports(limit=100,
                                           position_source_type='Portfolio',
                                           position_source_id=self.id,
@@ -108,6 +114,18 @@ class PortfolioManager(PositionedEntity):
                          start_date: dt.date = None,
                          end_date: dt.date = None,
                          backcast: bool = False):
+        """
+        Schedule all reports associated with a portfolio
+
+        :param start_date: start date of report job (optional)
+        :param end_date: end date of report job (optional)
+        :param backcast: true if reports should be backcasted; defaults to false
+
+        **Examples**
+
+        >>> pm = PortfolioManager("PORTFOLIO ID")
+        >>> pm.schedule_reports(backcast=False, is_async=True)
+        """
         GsPortfolioApi.schedule_reports(self.__portfolio_id, start_date, end_date, backcast=backcast)
 
     def run_reports(self,
@@ -117,12 +135,18 @@ class PortfolioManager(PositionedEntity):
                     is_async: bool = True) -> List[Union[pd.DataFrame, ReportJobFuture]]:
         """
         Run all reports associated with a portfolio
+
         :param start_date: start date of report job
         :param end_date: end date of report job
         :param backcast: true if reports should be backcasted; defaults to false
         :param is_async: true if reports should run asynchronously; defaults to true
         :return: if is_async is true, returns a list of ReportJobFuture objects; if is_async is false, returns a list
         of dataframe objects containing report results for all portfolio results
+
+        **Examples**
+
+        >>> pm = PortfolioManager("PORTFOLIO ID")
+        >>> report_results = pm.run_reports(backcast=True)
         """
         self.schedule_reports(start_date, end_date, backcast)
         reports = self.get_reports()
@@ -143,7 +167,23 @@ class PortfolioManager(PositionedEntity):
                          entitlements: Entitlements):
         """
         Set the entitlements of a portfolio
+
         :param entitlements: Entitlements object
+
+        **Examples**
+
+        >>> portfolio_admin_emails = ['LIST OF ADMIN EMAILS']
+        >>> portfolio_viewer_emails = ['LIST OF VIEWER EMAILS']
+        >>> admin_entitlements = EntitlementBlock(users=User.get_many(emails=portfolio_admin_emails))
+        >>> view_entitlements = EntitlementBlock(users=User.get_many(emails=portfolio_viewer_emails))
+        >>>
+        >>> entitlements = Entitlements(
+        >>>    view=view_entitlements,
+        >>>    admin=admin_entitlements
+        >>> )
+        >>>
+        >>> pm = PortfolioManager("PORTFOLIO ID")
+        >>> pm.set_entitlements(entitlements)
         """
         entitlements_as_target = entitlements.to_target()
         portfolio_as_target = GsPortfolioApi.get_portfolio(self.__portfolio_id)
@@ -154,6 +194,7 @@ class PortfolioManager(PositionedEntity):
                            backcast: bool = False) -> List[dt.date]:
         """
         Get recommended start and end dates for a portfolio report scheduling job
+
         :param backcast: true if reports should be backcasted
         :return: a list of two dates, the first is the suggested start date and the second is the suggested end date
         """
@@ -162,7 +203,8 @@ class PortfolioManager(PositionedEntity):
     def get_aum_source(self) -> RiskAumSource:
         """
         Get portfolio AUM Source
-        :return: AUM Source
+
+        :return: aum source
         """
         portfolio = GsPortfolioApi.get_portfolio(self.portfolio_id)
         return portfolio.aum_source if portfolio.aum_source is not None else RiskAumSource.Long
@@ -171,8 +213,9 @@ class PortfolioManager(PositionedEntity):
                        aum_source: RiskAumSource):
         """
         Set portfolio AUM Source
+
         :param aum_source: aum source for portfolio
-        :return:
+        :return: aum source
         """
         portfolio = GsPortfolioApi.get_portfolio(self.portfolio_id)
         portfolio.aum_source = aum_source
@@ -183,6 +226,7 @@ class PortfolioManager(PositionedEntity):
                        end_date: dt.date = None) -> List[CustomAUMDataPoint]:
         """
         Get AUM data for portfolio
+
         :param start_date: start date
         :param end_date: end date
         :return: list of AUM data between the specified range
@@ -191,13 +235,16 @@ class PortfolioManager(PositionedEntity):
         return [CustomAUMDataPoint(date=dt.datetime.strptime(data['date'], '%Y-%m-%d'),
                                    aum=data['aum']) for data in aum_data]
 
-    def get_aum(self, start_date: dt.date, end_date: dt.date):
+    def get_aum(self,
+                start_date: dt.date,
+                end_date: dt.date):
         """
         Get AUM data for portfolio
+
         :param start_date: start date
         :param end_date: end date
         :return: dictionary of dates with corresponding AUM values
-         """
+        """
         aum_source = self.get_aum_source()
         if aum_source == RiskAumSource.Custom_AUM:
             aum = self.get_custom_aum(start_date=start_date, end_date=end_date)
@@ -220,10 +267,9 @@ class PortfolioManager(PositionedEntity):
                           clear_existing_data: bool = None):
         """
         Add AUM data for portfolio
+
         :param aum_data: list of AUM data to upload
-        :param clear_existing_data: delete all previously uploaded AUM data for the portfolio
-        (defaults to false)
-        :return:
+        :param clear_existing_data: delete all previously uploaded AUM data for the portfolio (defaults to false)
         """
         formatted_aum_data = [{'date': data.date.strftime('%Y-%m-%d'), 'aum': data.aum} for data in aum_data]
         GsPortfolioApi.upload_custom_aum(self.portfolio_id, formatted_aum_data, clear_existing_data)
@@ -234,6 +280,7 @@ class PortfolioManager(PositionedEntity):
                              currency: Currency = None) -> pd.DataFrame:
         """
         Get PnL Contribution of your portfolio broken down by constituents
+
         :param start_date: optional start date
         :param end_date: optional end date
         :param currency: optional currency; defaults to your portfolio's currency
@@ -253,6 +300,7 @@ class PortfolioManager(PositionedEntity):
                                  ) -> Union[Dict, pd.DataFrame]:
         """
         Get portfolio and asset exposure to macro factors
+
         :param macro_risk_model: the macro risk model
         :param date: date for which to get exposure
         :param factors: macro factors to get portfolio and asset exposure for.
@@ -343,6 +391,7 @@ class PortfolioManager(PositionedEntity):
 
         """
         Get portfolio and asset exposure to macro factors or macro factor categories
+
         :param model: the macro risk model
         :param date: date for which to get exposure
         :param factor_type: whether to get exposure to factor categories or factors.
@@ -352,6 +401,20 @@ class PortfolioManager(PositionedEntity):
         :param get_factors_by_name: whether to identify factors by their name or identifier
         :param return_format: whether to return a dict or a pandas dataframe
         :return: a Pandas Dataframe or a Dict of portfolio exposure to macro factors
+
+        **Examples**
+
+        >>> model = MacroRiskModel.get(\"MODEL\")
+        >>> pm = PortfolioManager("PORTFOLIO ID")
+        >>> exposure_dataframe = pm.get_macro_exposure(
+        >>>     model=model,
+        >>>     date=dt.date(2022, 1, 1),
+        >>>     factor_type=FactorType.Factor
+        >>> ).sort_values(
+        >>>     by=[\"Total Factor Exposure\"],
+        >>>     axis=1,
+        >>>     ascending=False
+        >>> )
         """
         performance_report = self.get_performance_report()
 

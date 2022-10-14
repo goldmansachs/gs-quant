@@ -111,6 +111,10 @@ class HistoricalPricingContext(PricingContext):
 
         return HistoricalPricingFuture(futures)
 
+    @property
+    def date_range(self):
+        return self.__date_range
+
 
 class BackToTheFuturePricingContext(HistoricalPricingContext):
     """

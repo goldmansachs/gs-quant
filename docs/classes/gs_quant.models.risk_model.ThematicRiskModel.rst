@@ -1,9 +1,9 @@
-﻿FactorRiskModel
-===============
+﻿ThematicRiskModel
+=================
 
 .. currentmodule:: gs_quant.models.risk_model
 
-.. autoclass:: FactorRiskModel
+.. autoclass:: ThematicRiskModel
 
    
    
@@ -60,12 +60,6 @@
    .. autosummary::
       :toctree: functions
       :template: models_function.rst
-   get_covariance_matrix
-   
-   
-   .. autosummary::
-      :toctree: functions
-      :template: models_function.rst
    get_data
    
    
@@ -90,12 +84,6 @@
    .. autosummary::
       :toctree: functions
       :template: models_function.rst
-   get_factor_portfolios
-   
-   
-   .. autosummary::
-      :toctree: functions
-      :template: models_function.rst
    get_factor_returns_by_id
    
    
@@ -103,18 +91,6 @@
       :toctree: functions
       :template: models_function.rst
    get_factor_returns_by_name
-   
-   
-   .. autosummary::
-      :toctree: functions
-      :template: models_function.rst
-   get_historical_beta
-   
-   
-   .. autosummary::
-      :toctree: functions
-      :template: models_function.rst
-   get_issuer_specific_covariance
    
    
    .. autosummary::
@@ -156,19 +132,13 @@
    .. autosummary::
       :toctree: functions
       :template: models_function.rst
-   get_total_risk
-   
-   
-   .. autosummary::
-      :toctree: functions
-      :template: models_function.rst
    get_universe_exposure
    
    
    .. autosummary::
       :toctree: functions
       :template: models_function.rst
-   get_universe_factor_exposure
+   get_universe_sensitivity
    
    
    .. autosummary::

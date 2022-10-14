@@ -14,14 +14,34 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Optional, Tuple
-
-from dataclasses_json import LetterCase, config, dataclass_json
-
+from gs_quant.base import *
 from gs_quant.common import *
+import datetime
+from typing import Dict, Optional, Tuple, Union
+from dataclasses import dataclass, field
+from dataclasses_json import LetterCase, config, dataclass_json
+from enum import Enum
+
+
+class Encoding(EnumBase, Enum):    
+    
+    HTML = 'HTML'
+    URL = 'URL'
+    Unicode = 'Unicode'
+    Base64 = 'Base64'
+    Hex = 'Hex'
+    ASCII = 'ASCII'    
+
+
+class ImgType(EnumBase, Enum):    
+    
+    APNG = 'APNG'
+    AVIF = 'AVIF'
+    GIF = 'GIF'
+    JPEG = 'JPEG'
+    PNG = 'PNG'
+    SVG = 'SVG'
+    WEBP = 'WEBP'    
 
 
 class OverlayType(EnumBase, Enum):    
@@ -44,8 +64,9 @@ class OverlayType(EnumBase, Enum):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class ChartingParameters(Base):
-    spot_style: Optional[str] = field(default=None, metadata=field_metadata)
+class HyperLinkImageComments(CustomComments):
+    url: Optional[str] = field(default=None, metadata=field_metadata)
+    comment_type: Optional[str] = field(default='hyperLinkImageComments', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -64,6 +85,28 @@ class MarketDataParameters(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class SolvingTarget(Base):
     constraint: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class BinaryImageComments(CustomComments):
+    data: Optional[str] = field(default=None, metadata=field_metadata)
+    img_type: Optional[ImgType] = field(default=None, metadata=field_metadata)
+    encoding: Optional[Encoding] = field(default=None, metadata=field_metadata)
+    comment_type: Optional[str] = field(default='binaryImageComments', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class ChartingParameters(Base):
+    spot_style: Optional[str] = field(default=None, metadata=field_metadata)
+    overlay: Optional[OverlayType] = field(default=None, metadata=field_metadata)
+    underlay: Optional[OverlayType] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -95,6 +138,7 @@ class VisualStructuringReport(QuoteReport):
     overlay_parameters: Optional[OverlayParameters] = field(default=None, metadata=field_metadata)
     solving_info: Optional[SolvingInfo] = field(default=None, metadata=field_metadata)
     charting_parameters: Optional[ChartingParameters] = field(default=None, metadata=field_metadata)
+    comments: Optional[Tuple[CustomComments, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -111,8 +155,8 @@ class SaveQuoteRequest(Base):
     reports: Optional[Tuple[QuoteReport, ...]] = field(default=None, metadata=field_metadata)
     shared_users: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     comments: Optional[str] = field(default=None, metadata=field_metadata)
-    original_workflow_id: Optional[str] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
+    original_workflow_id: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
