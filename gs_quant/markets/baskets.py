@@ -266,6 +266,7 @@ class Basket(Asset, PositionedEntity):
             raise MqValueError('Unable to upload position history: option must be set during basket creation')
         historical_position_sets = []
         for position_set in position_sets:
+            position_set.resolve()
             positions = [IndicesPositionInput(p.asset_id, p.weight) for p in position_set.positions]
             historical_position_sets.append(IndicesPositionSet(tuple(positions), position_set.date))
         response = GsIndexApi.backcast(self.id, CustomBasketsBackcastInputs(tuple(historical_position_sets)))
@@ -736,6 +737,7 @@ class Basket(Asset, PositionedEntity):
     @position_set.setter
     @_validate(ErrorMessage.NON_ADMIN)
     def position_set(self, value: PositionSet):
+        value.resolve()
         self.__position_set = value
 
     @property
