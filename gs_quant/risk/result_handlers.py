@@ -70,6 +70,7 @@ def __dataframe_handler_unsorted(result: Iterable, mappings: tuple, date_cols: t
 def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
         -> DataFrameWithInfo:
     mappings = (
+        ('currency', 'currency'),
         ('payment_date', 'payDate'),
         ('set_date', 'setDate'),
         ('accrual_start_date', 'accStart'),

@@ -43,8 +43,6 @@ class Position:
         self.__name = name
         self.__asset_id = asset_id
         self.__tags = tags
-        if asset_id is None:
-            self.__resolve_identifier(identifier)
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Position):
@@ -119,13 +117,6 @@ class Position:
                 else None
             return CommonPosition(self.asset_id, quantity=self.quantity, tags=tags_as_target)
         return PositionPriceInput(self.asset_id, quantity=self.quantity, weight=self.weight)
-
-    def __resolve_identifier(self, identifier: str) -> Dict:
-        response = GsAssetApi.resolve_assets(identifier=[identifier], fields=['id', 'name'], limit=1)[identifier]
-        if len(response) == 0:
-            raise MqValueError(f'Asset could not be found using identifier {identifier}')
-        self.__name = get(response, '0.name')
-        self.__asset_id = get(response, '0.id')
 
 
 class PositionSet:
@@ -205,6 +196,20 @@ class PositionSet:
             positions.append(position)
         return pd.DataFrame(positions)
 
+    def resolve(self, **kwargs):
+        """ Resolve any unmapped positions """
+        unresolved_positions = [p.identifier for p in self.positions if p.asset_id is None]
+        if len(unresolved_positions):
+            id_map = self.__resolve_identifiers(unresolved_positions, self.date, **kwargs)
+            resolved_positions = []
+            for p in self.positions:
+                if p.identifier in id_map:
+                    asset = get(id_map, p.identifier)
+                    p.asset_id = get(asset, 'id')
+                    p.name = get(asset, 'name')
+                resolved_positions.append(p)
+            self.positions = resolved_positions
+
     def to_target(self, common: bool = True) -> Union[CommonPositionSet, List[PositionPriceInput]]:
         """ Returns PostionSet type defined in target file for API payloads """
         positions = tuple(p.to_target(common) for p in self.positions)
@@ -226,16 +231,15 @@ class PositionSet:
         return cls(converted_positions, position_set.position_date, position_set.divisor)
 
     @classmethod
-    def from_list(cls, positions: List[str], date: datetime.date = datetime.date.today()):
+    def from_list(cls, positions: List[str], date: datetime.date = datetime.date.today(), **kwargs):
         """ Create equally-weighted PostionSet instance from a list of identifiers """
-        id_map = cls.__resolve_identifiers(positions)
+        id_map = cls.__resolve_identifiers(positions, date, **kwargs)
         converted_positions = []
         weight = 1 / len(positions)
 
         for p in positions:
-            identifier = get(p, 'identifier')
-            asset = get(id_map, identifier)
-            position = Position(identifier=identifier, asset_id=get(asset, 'id'),
+            asset = get(id_map, p)
+            position = Position(identifier=p, asset_id=get(asset, 'id'),
                                 name=get(asset, 'name'), weight=weight)
             converted_positions.append(position)
         return cls(converted_positions, date)
@@ -243,19 +247,21 @@ class PositionSet:
     @classmethod
     def from_dicts(cls, positions: List[Dict],
                    date: datetime.date = datetime.date.today(),
-                   reference_notional: float = None):
+                   reference_notional: float = None,
+                   **kwargs):
         """ Create PostionSet instance from a list of position-object-like dictionaries """
         positions_df = pd.DataFrame(positions)
-        return cls.from_frame(positions_df, date, reference_notional)
+        return cls.from_frame(positions_df, date, reference_notional, **kwargs)
 
     @classmethod
     def from_frame(cls, positions: pd.DataFrame,
                    date: datetime.date = datetime.date.today(),
-                   reference_notional: float = None):
+                   reference_notional: float = None,
+                   **kwargs):
         """ Create PostionSet instance from a list of position-object-like dataframes """
         positions.columns = positions.columns.str.lower()
         positions = positions[~positions['identifier'].isnull()]
-        id_map = cls.__resolve_identifiers(identifiers=positions['identifier'].to_list(), date=date)
+        id_map = cls.__resolve_identifiers(identifiers=positions['identifier'].to_list(), date=date, **kwargs)
         equalize = not ('quantity' in positions.columns or 'weight' in positions.columns)
         equal_weight = 1 / len(positions)
         converted_positions = []
@@ -272,12 +278,13 @@ class PositionSet:
         return cls(converted_positions, date, reference_notional=reference_notional)
 
     @staticmethod
-    def __resolve_identifiers(identifiers: List[str], date: datetime.date) -> Dict:
+    def __resolve_identifiers(identifiers: List[str], date: datetime.date, **kwargs) -> Dict:
         response = GsAssetApi.resolve_assets(
             identifier=identifiers,
             fields=['name', 'id'],
             limit=1,
-            as_of=date
+            as_of=date,
+            **kwargs
         )
         try:
             id_map = dict(zip(response.keys(),
