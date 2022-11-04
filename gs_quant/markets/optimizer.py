@@ -161,6 +161,14 @@ class SectorConstraint:
                  minimum: float = 0,
                  maximum: float = 100,
                  unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+        """
+        Constrain notional held in any particular GICS Sector in the resulting optimization
+
+        :param sector_name: Sector name
+        :param minimum: minimum
+        :param maximum: maximum
+        :param unit: the unit in which the min and max values are passed in with (defaults to percent)
+        """
         if unit not in [OptimizationConstraintUnit.PERCENT, OptimizationConstraintUnit.DECIMAL]:
             raise MqValueError('Sector constraints can only be set by percent or decimal.')
         self.__sector_name = sector_name
@@ -218,6 +226,7 @@ class FactorConstraint:
                  max_exposure: float):
         """
         Constrain a factor by a max exposure
+
         :param factor: the factor to constrain
         :param max_exposure: the maximum exposure to the factor in the final portfolio
         """
@@ -260,6 +269,7 @@ class OptimizerUniverse:
                  max_market_cap: float = None):
         """
         The universe of assets with which to construct an optimization
+
         :param assets: list of assets to include in the universe
         :param explode_composites: explode composites in the universe to include their constituents in the universe
         :param exclude_initial_position_set_assets: exclude assets in the initial holdings
@@ -464,6 +474,7 @@ class OptimizerSettings:
                  max_names: float = 100):
         """
         Optimizer settings
+
         :param notional: the max gross notional of the optimization
         :param allow_long_short: allow a long/short optimization
         :param min_names: minimum number of assets in the optimization
@@ -515,6 +526,44 @@ class OptimizerSettings:
         }
 
 
+class TurnoverConstraint:
+
+    def __init__(self,
+                 positions: List[Position],
+                 max_turnover_percent: float):
+        """
+        Specifying a list of positions and max turnover from those positions in the optimization result
+
+        :param positions: list of positions
+        :param max_turnover_percent: max turnover as a percent (ex: 80 = a minimal overlap of 20% in notional of the
+        specified positions and the optimization
+        """
+        self.__positions = positions
+        self.__max_turnover_percent = max_turnover_percent
+
+    @property
+    def positions(self) -> List[Position]:
+        return self.__positions
+
+    @positions.setter
+    def positions(self, value: List[Position]):
+        self.__positions = value
+
+    @property
+    def max_turnover_percent(self) -> float:
+        return self.__max_turnover_percent
+
+    @max_turnover_percent.setter
+    def max_turnover_percent(self, value: float):
+        self.__max_turnover_percent = value
+
+    def to_dict(self):
+        return {
+            'turnoverPortfolio': [{'assetId': p.asset_id, 'quantity': p.quantity} for p in self.positions],
+            'maxTurnoverPercentage': self.max_turnover_percent
+        }
+
+
 class OptimizerStrategy:
 
     def __init__(self,
@@ -522,14 +571,17 @@ class OptimizerStrategy:
                  universe: OptimizerUniverse,
                  risk_model: FactorRiskModel,
                  constraints: OptimizerConstraints = None,
+                 turnover: TurnoverConstraint = None,
                  settings: OptimizerSettings = None,
                  objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK):
         """
-        A strategy for [..]
+        A strategy that can be passed into the optimizer and run
+
         :param initial_position_set: a position set correlating to your original holdings as of a specific date
         :param universe: universe from which to choose optimization assets
         :param risk_model: risk model with which to calculate risk
         :param constraints: constraints for the optimization
+        :param turnover: turnover constraints for the optimization
         :param settings: settings for the optimization
         :param objective: objective for the optimization
         """
@@ -537,6 +589,7 @@ class OptimizerStrategy:
         self.__universe = universe
         self.__risk_model = risk_model
         self.__constraints = constraints
+        self.__turnover = turnover
         self.__settings = settings
         self.__objective = objective
         self.__result = None
@@ -574,6 +627,14 @@ class OptimizerStrategy:
         self.__constraints = value
 
     @property
+    def turnover(self) -> TurnoverConstraint:
+        return self.__turnover
+
+    @turnover.setter
+    def turnover(self, value: TurnoverConstraint):
+        self.__turnover = value
+
+    @property
     def settings(self) -> OptimizerSettings:
         return self.__settings
 
@@ -596,6 +657,7 @@ class OptimizerStrategy:
             self.settings = OptimizerSettings()
 
         backtest_start_date = self.initial_position_set.date - relativedelta(years=1)
+        self.initial_position_set.resolve()
         positions_as_dict = [{'assetId': p.asset_id, 'quantity': p.quantity}
                              for p in self.initial_position_set.positions]
         parameters = {
@@ -620,6 +682,14 @@ class OptimizerStrategy:
         for key in universe:
             parameters[key] = universe[key]
         parameters['riskModel'] = self.risk_model.id
+        if self.turnover:
+            turnover_position_set = PositionSet(date=self.initial_position_set.date,
+                                                positions=self.turnover.positions)
+            turnover_position_set.resolve()
+            self.turnover.positions = turnover_position_set.positions
+            turnover_dict = self.turnover.to_dict()
+            for key in turnover_dict:
+                parameters[key] = turnover_dict[key]
 
         # Price initial_position_set if needed
         if self.initial_position_set.reference_notional is not None:

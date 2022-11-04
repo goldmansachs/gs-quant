@@ -34,7 +34,9 @@ class BacktestRiskMeasureType(EnumBase, Enum):
     Forward = 'Forward'
     Implied_Volatility = 'Implied Volatility'
     Fair_Variance = 'Fair Variance'
-    Strike_Level = 'Strike Level'    
+    Strike_Level = 'Strike Level'
+    Price_ATMS = 'Price ATMS'
+    Price_ATMF_Volatility = 'Price ATMF Volatility'    
 
 
 class BacktestTradingQuantityType(EnumBase, Enum):    
@@ -45,7 +47,9 @@ class BacktestTradingQuantityType(EnumBase, Enum):
     quantity = 'quantity'
     vega = 'vega'
     gamma = 'gamma'
-    NAV = 'NAV'    
+    NAV = 'NAV'
+    premium = 'premium'
+    vegaNotional = 'vegaNotional'    
 
 
 class BacktestType(EnumBase, Enum):    
@@ -145,9 +149,9 @@ class BuySellRefData(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class DeltaHedgeParameters(Base):
     frequency: str = field(default=None, metadata=field_metadata)
+    delta_type: Optional[str] = field(default='BlackScholes', metadata=field_metadata)
     fixing_time: Optional[str] = field(default=None, metadata=field_metadata)
     notional: Optional[float] = field(default=None, metadata=field_metadata)
-    delta_type: Optional[str] = field(init=False, default='BlackScholes', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -309,10 +313,10 @@ class TradeInTimeRefData(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class VolatilityWeightedWeightingModifier(Base):
+    name: Optional[str] = field(default='Volatility Weighted', metadata=field_metadata)
     em_aalpha: Optional[float] = field(default=None, metadata=config(field_name='EMAalpha', exclude=exclude_none))
     look_back_period: Optional[str] = field(default=None, metadata=field_metadata)
     use_log_return: Optional[bool] = field(default=False, metadata=field_metadata)
-    name: Optional[str] = field(init=False, default='Volatility Weighted', metadata=field_metadata)
 
 
 @handle_camel_case_args
