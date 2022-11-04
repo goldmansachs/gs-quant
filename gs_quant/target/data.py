@@ -464,6 +464,9 @@ class DataQuery(Base):
     snapshot: Optional[bool] = field(default=False, metadata=field_metadata)
     search_until: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
+    offset_to_exchange_close: Optional[str] = field(default=None, metadata=field_metadata)
+    offset_to_exchange_open: Optional[str] = field(default=None, metadata=field_metadata)
+    multi_trading_session: Optional[bool] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args

@@ -42,6 +42,26 @@ def decode_date_tuple(blob: Tuple[str]):
     return tuple(decode_optional_date(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
+def optional_from_isodatetime(datetime: str):
+    return dt.datetime.fromisoformat(datetime.replace('Z', '')) if datetime is not None else None
+
+
+def optional_to_isodatetime(datetime: Optional[dt.datetime]):
+    return f'{dt.datetime.isoformat(datetime, timespec="seconds")}Z' if datetime is not None else None
+
+
+def decode_dict_date_key(value):
+    return {dt.date.fromisoformat(d): v for d, v in value.items()} if value is not None else None
+
+
+def decode_dict_date_value(value):
+    return {k: dt.date.fromisoformat(d) for k, d in value.items()} if value is not None else None
+
+
+def decode_datetime_tuple(blob: Tuple[str]):
+    return tuple(optional_from_isodatetime(s) for s in blob) if isinstance(blob, (tuple, list)) else None
+
+
 def decode_date_or_str(value: Union[dt.date, float, str]) -> Optional[Union[dt.date, str]]:
     if value is None or isinstance(value, dt.date):
         return value

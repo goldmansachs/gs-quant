@@ -76,6 +76,7 @@ class AttributionAggregationType(Enum):
 
 
 class ReportJobFuture:
+    """Report job future that monitors report status and results"""
     def __init__(self,
                  report_id: str,
                  job_id: str,
@@ -128,7 +129,7 @@ class ReportJobFuture:
 
 
 class Report:
-    """"Private variables"""
+    """General report class"""
 
     def __init__(self,
                  report_id: str = None,

@@ -22,9 +22,13 @@ RiskModel
 
 .. autosummary::
    :toctree: functions
-   :template: models_functions.rst
+   :template: models_class.rst
 
-
+   RiskModel
+   MarqueeRiskModel
+   FactorRiskModel
+   MacroRiskModel
+   ThematicRiskModel
 
 
 
