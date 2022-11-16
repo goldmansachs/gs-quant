@@ -65,7 +65,7 @@ class MockCalc(MockRequest):
     def __init__(self, mocker, save_files=False, paths=None, application='gs-quant'):
         super().__init__(mocker, save_files, paths, application)
         self.paths = paths if paths else \
-            Path(next(filter(lambda x: x.code_context and 'MockCalc' in x.code_context[0],
+            Path(next(filter(lambda x: x.code_context and self.__class__.__name__ in x.code_context[0],
                              inspect.stack())).filename).parents[1]
 
     def mock_calc_create_files(self, *args, **kwargs):
