@@ -29,7 +29,7 @@ class MockData(MockRequest):
     def __init__(self, mocker, save_files=False, paths=None, application='gs-quant'):
         super().__init__(mocker, save_files, paths, application)
         self.paths = paths if paths else \
-            Path(next(filter(lambda x: x.code_context and 'MockData' in x.code_context[0],
+            Path(next(filter(lambda x: x.code_context and self.__class__.__name__ in x.code_context[0],
                              inspect.stack())).filename).parents[1]
 
     def mock_calc_create_files(self, *args, **kwargs):
@@ -49,5 +49,16 @@ class MockData(MockRequest):
 
     def get_request_id(self, args, kwargs):
         query = args[0]
-        identifier = args[1] + '_' + query.where['bbid'] + '_' + str(query.start_date)
+        parts = []
+        items = query.as_dict()
+
+        for k in sorted(items.keys()):
+            v = items[k]
+            if isinstance(v, list):
+                v_str = ','.join(v)
+            else:
+                v_str = str(v)
+            parts.append(f'{k}:{v_str}')
+        query_str = '_'.join(parts)
+        identifier = f'{args[1]}_{query_str}'
         return hashlib.md5(identifier.encode('utf-8')).hexdigest()

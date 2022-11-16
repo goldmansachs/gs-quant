@@ -58,6 +58,7 @@ class OverlayType(EnumBase, Enum):
     ProbabilityDistribution = 'ProbabilityDistribution'
     RealisedProbability = 'RealisedProbability'
     MacroEvents = 'MacroEvents'
+    Gamma = 'Gamma'
     _None = 'None'    
 
 
@@ -66,7 +67,7 @@ class OverlayType(EnumBase, Enum):
 @dataclass(unsafe_hash=True, repr=False)
 class HyperLinkImageComments(CustomComments):
     url: Optional[str] = field(default=None, metadata=field_metadata)
-    comment_type: Optional[str] = field(default='hyperLinkImageComments', metadata=field_metadata)
+    comment_type: Optional[str] = field(init=False, default='hyperLinkImageComments', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -91,11 +92,19 @@ class SolvingTarget(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class StrategyDescription(Base):
+    strategy_type: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class BinaryImageComments(CustomComments):
     data: Optional[str] = field(default=None, metadata=field_metadata)
     img_type: Optional[ImgType] = field(default=None, metadata=field_metadata)
     encoding: Optional[Encoding] = field(default=None, metadata=field_metadata)
-    comment_type: Optional[str] = field(default='binaryImageComments', metadata=field_metadata)
+    comment_type: Optional[str] = field(init=False, default='binaryImageComments', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -139,6 +148,7 @@ class VisualStructuringReport(QuoteReport):
     solving_info: Optional[SolvingInfo] = field(default=None, metadata=field_metadata)
     charting_parameters: Optional[ChartingParameters] = field(default=None, metadata=field_metadata)
     comments: Optional[Tuple[CustomComments, ...]] = field(default=None, metadata=field_metadata)
+    strategy_description: Optional[StrategyDescription] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

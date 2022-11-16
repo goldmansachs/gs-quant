@@ -81,11 +81,6 @@ setuptools.setup(
         "typing;python_version<'3.7'",
         "websockets"
     ],
-    tests_require=["astroid==2.9.3", "pytest", "pytest-cov", "pytest-mock", "pytest-ordering", "testfixtures",
-                   "msgpack", "gs_quant_auth", "asteval", "aenum", "backoff", "cachetools", "certifi",
-                   "dataclasses_json", "deprecation", "funcsigs", "inflection", "lmfit", "more_itertools", "msgpack",
-                   "nest-asyncio", "opentracing", "pandas", "pydash", "python-dateutil", "requests", "scipy",
-                   "statsmodels", "tqdm", "websockets"],
     extras_require={
         "internal": ["gs_quant_internal>=1.4.9"],
         "turbo": ["quant-extensions"],

@@ -471,7 +471,8 @@ class OptimizerSettings:
                  notional: float = 10000000,
                  allow_long_short: bool = False,
                  min_names: float = 0,
-                 max_names: float = 100):
+                 max_names: float = 100,
+                 max_adv: float = 15):
         """
         Optimizer settings
 
@@ -479,11 +480,13 @@ class OptimizerSettings:
         :param allow_long_short: allow a long/short optimization
         :param min_names: minimum number of assets in the optimization
         :param max_names: maximum number of assets in the optimization
+        :param max_adv: maximum average daily volume of each constituent in the optimization (in percent)
         """
         self.__notional = notional
         self.__allow_long_short = allow_long_short
         self.__min_names = min_names
         self.__max_names = max_names
+        self.__max_adv = max_adv
 
     @property
     def notional(self) -> float:
@@ -517,12 +520,21 @@ class OptimizerSettings:
     def max_names(self, value: float):
         self.__max_names = value
 
+    @property
+    def max_adv(self) -> float:
+        return self.__max_adv
+
+    @max_adv.setter
+    def max_adv(self, value: float):
+        self.__max_adv = value
+
     def to_dict(self):
         return {
             'hedgeNotional': self.notional,
             'allowLongShort': self.allow_long_short,
             'minNames': self.min_names,
-            'maxNames': self.max_names
+            'maxNames': self.max_names,
+            'maxAdvPercentage': self.max_adv
         }
 
 
@@ -669,8 +681,7 @@ class OptimizerStrategy:
             'backtestEndDate': self.initial_position_set.date.strftime('%Y-%m-%d'),
             'comparisons': [],
             'fxHedged': False,
-            'marketParticipationRate': 10,
-            'maxAdvPercentage': 15
+            'marketParticipationRate': 10
         }
         constraints = self.constraints.to_dict()
         for key in constraints:
