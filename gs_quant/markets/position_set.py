@@ -254,28 +254,46 @@ class PositionSet:
         return cls.from_frame(positions_df, date, reference_notional, **kwargs)
 
     @classmethod
-    def from_frame(cls, positions: pd.DataFrame,
+    def from_frame(cls,
+                   positions: pd.DataFrame,
                    date: datetime.date = datetime.date.today(),
                    reference_notional: float = None,
+                   add_tags: bool = False,
                    **kwargs):
         """ Create PostionSet instance from a list of position-object-like dataframes """
-        positions.columns = positions.columns.str.lower()
+        positions.columns = cls.__normalize_position_columns(positions)
+        tag_columns = cls.__get_tag_columns(positions) if add_tags else []
         positions = positions[~positions['identifier'].isnull()]
         id_map = cls.__resolve_identifiers(identifiers=positions['identifier'].to_list(), date=date, **kwargs)
-        equalize = not ('quantity' in positions.columns or 'weight' in positions.columns)
+        equalize = not ('quantity' in positions.columns.str.lower() or 'weight' in positions.columns.str.lower())
         equal_weight = 1 / len(positions)
-        converted_positions = []
 
+        positions_list = []
         for i, row in positions.iterrows():
             identifier = get(row, 'identifier')
-            tags = get(row, 'tags') if isinstance(get(row, 'tags'), dict) else None
             asset = get(id_map, identifier)
-            weight = get(row, 'weight') if not equalize else equal_weight
-            quantity = get(row, 'quantity') if not equalize else None
-            position = Position(identifier=identifier, asset_id=get(asset, 'id'), name=get(asset, 'name'),
-                                weight=weight, quantity=quantity, tags=tags)
-            converted_positions.append(position)
-        return cls(converted_positions, date, reference_notional=reference_notional)
+            positions_list.append(
+                Position(
+                    identifier=identifier,
+                    asset_id=asset.get('id'),
+                    name=asset.get('name'),
+                    weight=equal_weight if equalize else row.get('weight'),
+                    quantity=None if equalize else row.get('quantity'),
+                    tags={tag: get(row, tag) for tag in tag_columns} if len(tag_columns) else None
+                )
+            )
+        return cls(positions_list, date, reference_notional=reference_notional)
+
+    @staticmethod
+    def __get_tag_columns(positions: pd.DataFrame) -> List[str]:
+        return [c for c in positions.columns if c.lower() not in ['identifier', 'quantity', 'weight', 'date']]
+
+    @staticmethod
+    def __normalize_position_columns(positions: pd.DataFrame) -> List[str]:
+        columns = []
+        for c in positions.columns:
+            columns.append(c.lower() if c.lower() in ['identifier', 'quantity', 'weight', 'date'] else c)
+        return columns
 
     @staticmethod
     def __resolve_identifiers(identifiers: List[str], date: datetime.date, **kwargs) -> Dict:

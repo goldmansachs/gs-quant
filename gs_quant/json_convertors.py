@@ -17,6 +17,7 @@ import datetime as dt
 import re
 from typing import Optional, Union, Iterable, Dict, Tuple
 
+from dataclasses_json import config
 from dateutil.parser import isoparse
 
 __valid_date_formats = ('%Y-%m-%d',  # '2020-07-28'
@@ -48,6 +49,9 @@ def optional_from_isodatetime(datetime: str):
 
 def optional_to_isodatetime(datetime: Optional[dt.datetime]):
     return f'{dt.datetime.isoformat(datetime, timespec="seconds")}Z' if datetime is not None else None
+
+
+optional_datetime_config = config(encoder=optional_to_isodatetime, decoder=optional_from_isodatetime)
 
 
 def decode_dict_date_key(value):
