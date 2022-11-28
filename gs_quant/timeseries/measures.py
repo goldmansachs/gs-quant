@@ -459,9 +459,9 @@ def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = No
     return start, end
 
 
-def _market_data_timed(q, request_id=None):
+def _market_data_timed(q, request_id=None, ignore_errors: bool = False):
     args = [q, request_id] if request_id else [q]
-    return GsDataApi.get_market_data(*args)
+    return GsDataApi.get_market_data(*args, ignore_errors=ignore_errors)
 
 
 def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_missing_column=False):
@@ -4496,7 +4496,7 @@ def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: 
 
 
 def get_last_for_measure(asset_ids: List[str], query_type, where, *, source: str = None,
-                         request_id: Optional[str] = None):
+                         request_id: Optional[str] = None, ignore_errors: bool = False):
     now = datetime.date.today()
     delta = datetime.timedelta(days=2)
     with DataContext(now - delta, now + delta):
@@ -4505,7 +4505,7 @@ def get_last_for_measure(asset_ids: List[str], query_type, where, *, source: str
     log_debug(request_id, _logger, 'q_l %s', q_l)
 
     try:
-        df_l = _market_data_timed(q_l, request_id)
+        df_l = _market_data_timed(q_l, request_id, ignore_errors=ignore_errors)
     except Exception as e:
         log_warning(request_id, _logger, f'unable to get last of {query_type}', exc_info=e)
     else:

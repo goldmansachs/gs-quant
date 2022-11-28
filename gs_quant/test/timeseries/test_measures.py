@@ -19,6 +19,7 @@ import datetime as dt
 import os
 import json
 from typing import Union, Dict
+from unittest import mock
 
 import numpy as np
 import pandas as pd
@@ -573,7 +574,7 @@ def test_check_forward_tenor():
             tm_rates._check_forward_tenor(tenor)
 
 
-def mock_commod(_cls, _q):
+def mock_commod(_cls, _q, ignore_errors=False):
     d = {
         'price': [30, 30, 30, 30, 35.929686, 35.636039, 27.307498, 23.23177, 19.020833, 18.827291, 17.823749, 17.393958,
                   17.824999, 20.307603, 24.311249, 25.160103, 25.245728, 25.736873, 28.425206, 28.779789, 30.519996,
@@ -584,7 +585,7 @@ def mock_commod(_cls, _q):
     return df
 
 
-def mock_commod_dup(_cls, _q):
+def mock_commod_dup(_cls, _q, ignore_errors=False):
     d = {'price': [35.929686, 35]}
     idx = pd.date_range('2019-05-01', periods=1, freq='H', tz=timezone('UTC'))
     df = MarketDataResponseFrame(data=d, index=idx.repeat(2))
@@ -592,7 +593,7 @@ def mock_commod_dup(_cls, _q):
     return df
 
 
-def mock_forward_price(_cls, _q):
+def mock_forward_price(_cls, _q, ignore_errors=False):
     d = {
         'forwardPrice': [
             22.0039,
@@ -678,7 +679,7 @@ def mock_implied_volatility_elec():
     return df
 
 
-def mock_fair_price(_cls, _q):
+def mock_fair_price(_cls, _q, ignore_errors=False):
     d = {
         'fairPrice': [
             2.880,
@@ -696,14 +697,14 @@ def mock_fair_price(_cls, _q):
     return df
 
 
-def mock_eu_natgas_forward_price(_cls, _q):
+def mock_eu_natgas_forward_price(_cls, _q, ignore_errors=False):
     d = {'forwardPrice': [15.65], 'contract': ["H21"]}
     df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2021, 1, 1)]))
     df.dataset_ids = _test_datasets
     return df
 
 
-def mock_natgas_forward_price(_cls, _q):
+def mock_natgas_forward_price(_cls, _q, ignore_errors=False):
     d = {
         'forwardPrice': [
             2.880,
@@ -721,7 +722,7 @@ def mock_natgas_forward_price(_cls, _q):
     return df
 
 
-def mock_natgas_implied_volatility(_cls, _q):
+def mock_natgas_implied_volatility(_cls, _q, ignore_errors=False):
     d = {
         'impliedVolatility': [
             2.880,
@@ -739,14 +740,14 @@ def mock_natgas_implied_volatility(_cls, _q):
     return df
 
 
-def mock_fair_price_swap(_cls, _q):
+def mock_fair_price_swap(_cls, _q, ignore_errors=False):
     d = {'fairPrice': [2.880]}
     df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)]))
     df.dataset_ids = _test_datasets
     return df
 
 
-def mock_implied_volatility(_cls, _q):
+def mock_implied_volatility(_cls, _q, ignore_errors=False):
     d = {
         'impliedVolatility': [
             2.880,
@@ -764,7 +765,7 @@ def mock_implied_volatility(_cls, _q):
     return df
 
 
-def mock_missing_bucket_forward_price(_cls, _q):
+def mock_missing_bucket_forward_price(_cls, _q, ignore_errors=False):
     d = {
         'forwardPrice': [
             22.0039,
@@ -906,7 +907,7 @@ def mock_fx_correlation(*args, **kwargs):
     return df
 
 
-def mock_fx_forecast(_cls, _q):
+def mock_fx_forecast(_cls, _q, ignore_errors=False):
     d = {
         'fxForecast': [1.1, 1.1, 1.1]
     }
@@ -915,7 +916,7 @@ def mock_fx_forecast(_cls, _q):
     return df
 
 
-def mock_fx_delta(_cls, _q):
+def mock_fx_delta(_cls, _q, ignore_errors=False):
     d = {
         'relativeStrike': [25, -25, 0],
         'impliedVolatility': [1, 5, 2],
@@ -927,7 +928,7 @@ def mock_fx_delta(_cls, _q):
     return df
 
 
-def mock_fx_empty(_cls, _q):
+def mock_fx_empty(_cls, _q, ignore_errors=False):
     d = {
         'strikeReference': [],
         'relativeStrike': [],
@@ -938,14 +939,14 @@ def mock_fx_empty(_cls, _q):
     return df
 
 
-def mock_fx_switch(_cls, _q, _n):
+def mock_fx_switch(_cls, _q, _n, ignore_errors=False):
     replace = Replacer()
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_fx_empty)
     replace.restore()
     return Cross('MA1889', 'ABC/XYZ')
 
 
-def mock_curr(_cls, _q):
+def mock_curr(_cls, _q, ignore_errors=False):
     d = {
         'swapAnnuity': [1, 2, 3],
         'swapRate': [1, 2, 3],
@@ -966,7 +967,7 @@ def mock_curr(_cls, _q):
     return df
 
 
-def mock_cross(_cls, _q):
+def mock_cross(_cls, _q, ignore_errors=False):
     d = {
         'basis': [1, 2, 3],
     }
@@ -975,7 +976,7 @@ def mock_cross(_cls, _q):
     return df
 
 
-def mock_eq(_cls, _q):
+def mock_eq(_cls, _q, ignore_errors=False):
     d = {
         'relativeStrike': [0.75, 0.25, 0.5],
         'impliedVolatility': [5, 1, 2],
@@ -1022,7 +1023,7 @@ def mock_eq_vol_last_empty(_cls, asset_ids=None, query_type=None, where=None, so
     return df
 
 
-def mock_eq_norm(_cls, _q):
+def mock_eq_norm(_cls, _q, ignore_errors=False):
     d = {
         'relativeStrike': [-4.0, 4.0, 0],
         'impliedVolatility': [5, 1, 2]
@@ -1032,7 +1033,7 @@ def mock_eq_norm(_cls, _q):
     return df
 
 
-def mock_eq_spot(_cls, _q):
+def mock_eq_spot(_cls, _q, ignore_errors=False):
     d = {
         'relativeStrike': [0.75, 1.25, 1.0],
         'impliedVolatility': [5, 1, 2]
@@ -1042,7 +1043,7 @@ def mock_eq_spot(_cls, _q):
     return df
 
 
-def mock_inc(_cls, _q):
+def mock_inc(_cls, _q, ignore_errors=False):
     d = {
         'relativeStrike': [0.25, 0.75],
         'impliedVolatility': [5, 1]
@@ -1052,7 +1053,7 @@ def mock_inc(_cls, _q):
     return df
 
 
-def mock_esg(_cls, _q):
+def mock_esg(_cls, _q, ignore_errors=False):
     d = {
         "esNumericScore": [2, 4, 6],
         "esNumericPercentile": [81.2, 75.4, 65.7],
@@ -1106,7 +1107,7 @@ def mock_index_positions_data(
     ]
 
 
-def mock_rating(_cls, _q):
+def mock_rating(_cls, _q, ignore_errors=False):
     d = {
         'rating': ['Buy', 'Sell', 'Buy', 'Neutral'],
         'convictionList': [1, 0, 0, 0]
@@ -1128,7 +1129,7 @@ def mock_gsdeer_gsfeer(_cls, assetId, start_date):
     return df
 
 
-def mock_factor_profile(_cls, _q):
+def mock_factor_profile(_cls, _q, ignore_errors=False):
     d = {
         'growthScore': [0.238, 0.234, 0.234, 0.230],
         'financialReturnsScore': [0.982, 0.982, 0.982, 0.982],
@@ -1141,7 +1142,7 @@ def mock_factor_profile(_cls, _q):
     return df
 
 
-def mock_commodity_forecast(_cls, _q):
+def mock_commodity_forecast(_cls, _q, ignore_errors=False):
     d = {
         'forecastPeriod': ['3m', '3m', '3m', '3m'],
         'forecastType': ['spotReturn', 'spotReturn', 'spotReturn', 'spotReturn'],
@@ -1153,7 +1154,7 @@ def mock_commodity_forecast(_cls, _q):
     return df
 
 
-def mock_cds_spread(_cls, _q):
+def mock_cds_spread(_cls, _q, ignore_errors=False):
     d = {
         "spreadAt100": [0.000836],
         "spreadAt250": [0.000436],
@@ -1292,6 +1293,25 @@ def test_get_last_for_measure():
     a = tm.get_last_for_measure(['blah'], QueryType.IMPLIED_VOLATILITY, {})
     assert a is None
     replace.restore()
+
+
+def test_ignore_errors():
+    with mock.patch.object(GsSession.current, '_post') as mocker:
+        mocker.return_value = {
+            'requestId': 'rq1234',
+            'responses': [
+                {
+                    'queryResponse': [
+                        {
+                            'dataSetIds': ['DS1'],
+                            'errorMessages': ['this failed']
+                        }
+                    ]
+                }
+            ]
+        }
+        last_data = tm.get_last_for_measure(['blah'], QueryType.IMPLIED_VOLATILITY, {}, ignore_errors=True)
+        assert last_data is None
 
 
 def test_tenor_month_to_year():
@@ -2576,7 +2596,7 @@ def test_forward_var_term():
     replace.restore()
 
 
-def _mock_var_swap_data(_cls, q):
+def _mock_var_swap_data(_cls, q, ignore_errors=False):
     queries = q.get('queries', [])
     if len(queries) > 0 and 'Last' in queries[0]['measures']:
         return MarketDataResponseFrame({'varSwap': [4]}, index=[pd.Timestamp('2019-01-04T12:00:00Z')])
@@ -2607,7 +2627,7 @@ def test_var_swap():
     replace.restore()
 
 
-def _mock_var_swap_fwd(_cls, q):
+def _mock_var_swap_fwd(_cls, q, ignore_errors=False):
     queries = q.get('queries', [])
     if len(queries) > 0 and 'Last' in queries[0]['measures']:
         return MarketDataResponseFrame({'varSwap': [4, 4.5], 'tenor': ['1y', '13m']},
@@ -2629,7 +2649,7 @@ def _mock_var_swap_fwd(_cls, q):
     return out
 
 
-def _mock_var_swap_1t(_cls, q):
+def _mock_var_swap_1t(_cls, q, ignore_errors=False):
     queries = q.get('queries', [])
     if len(queries) > 0 and 'Last' in queries[0]['measures']:
         return MarketDataResponseFrame({'varSwap': [4, 4.5], 'tenor': ['1y', '13m']},
@@ -2820,7 +2840,7 @@ def _mock_forward_helper():
     return out
 
 
-def _mock_forward_vol_data(_cls, q):
+def _mock_forward_vol_data(_cls, q, ignore_errors=False):
     queries = q.get('queries', [])
     if len(queries) > 0 and 'Last' in queries[0]['measures']:
         return MarketDataResponseFrame()
@@ -2828,7 +2848,7 @@ def _mock_forward_vol_data(_cls, q):
     return _mock_forward_helper()
 
 
-def _mock_forward_vol_data_with_last(_cls, q):
+def _mock_forward_vol_data_with_last(_cls, q, ignore_errors=False):
     queries = q.get('queries', [])
     if len(queries) > 0 and 'Last' in queries[0]['measures']:
         idx = [pd.Timestamp('2020-05-03T12:00:00Z')] * 4
@@ -2844,7 +2864,7 @@ def _mock_forward_vol_data_with_last(_cls, q):
     return _mock_forward_helper()
 
 
-def _mock_forward_vol_data_error(_cls, q):
+def _mock_forward_vol_data_error(_cls, q, ignore_errors=False):
     queries = q.get('queries', [])
     if len(queries) > 0 and 'Last' in queries[0]['measures']:
         raise MqValueError('something happened')
@@ -4849,7 +4869,7 @@ def test_fx_implied_correlation():
     replace.restore()
 
 
-def mock_forward_curve_peak(_cls, _q):
+def mock_forward_curve_peak(_cls, _q, ignore_errors=False):
     d = {
         'forwardPrice': [40.05],
         'quantityBucket': ["PEAK"],
@@ -4860,7 +4880,7 @@ def mock_forward_curve_peak(_cls, _q):
     return df
 
 
-def mock_forward_curve_peak_holiday(_cls, _q):
+def mock_forward_curve_peak_holiday(_cls, _q, ignore_errors=False):
     d = {
         'forwardPrice': [26.567302],
         'quantityBucket': ["PEAK"],
@@ -4871,7 +4891,7 @@ def mock_forward_curve_peak_holiday(_cls, _q):
     return df
 
 
-def mock_forward_curve_offpeak(_cls, _q):
+def mock_forward_curve_offpeak(_cls, _q, ignore_errors=False):
     d = {
         'forwardPrice': [30.9692, 44.9868],
         'quantityBucket': ["7X8", "SUH1X16"],
@@ -4882,7 +4902,7 @@ def mock_forward_curve_offpeak(_cls, _q):
     return df
 
 
-def mock_empty_forward_curve(_cls, _q):
+def mock_empty_forward_curve(_cls, _q, ignore_errors=False):
     df = MarketDataResponseFrame()
     df.dataset_ids = ()
     return df

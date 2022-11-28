@@ -668,10 +668,14 @@ class OptimizerStrategy:
         if self.settings is None:
             self.settings = OptimizerSettings()
 
-        backtest_start_date = self.initial_position_set.date - relativedelta(years=1)
+        backtest_start_date = self.initial_position_set.date - relativedelta(weeks=1)
         self.initial_position_set.resolve()
-        positions_as_dict = [{'assetId': p.asset_id, 'quantity': p.quantity}
-                             for p in self.initial_position_set.positions]
+        if self.initial_position_set.reference_notional is None:
+            positions_as_dict = [{'assetId': p.asset_id, 'quantity': p.quantity}
+                                 for p in self.initial_position_set.positions]
+        else:
+            positions_as_dict = [{'assetId': p.asset_id, 'weight': p.weight}
+                                 for p in self.initial_position_set.positions]
         parameters = {
             'hedgeTarget': {
                 'positions': positions_as_dict
@@ -705,23 +709,28 @@ class OptimizerStrategy:
         # Price initial_position_set if needed
         if self.initial_position_set.reference_notional is not None:
             parameters['targetNotional'] = self.initial_position_set.reference_notional
-        else:
-            payload = {
-                'positions': positions_as_dict,
-                'parameters': {
-                    'currency': 'USD',
-                    'pricingDate': self.initial_position_set.date.strftime('%Y-%m-%d'),
-                    'useUnadjustedClosePrice': True,
-                    'frequency': 'End Of Day'
-                }
+        payload = {
+            'positions': positions_as_dict,
+            'parameters': {
+                'currency': 'USD',
+                'pricingDate': self.initial_position_set.date.strftime('%Y-%m-%d'),
+                'useUnadjustedClosePrice': True,
+                'frequency': 'End Of Day'
             }
-            try:
-                price_results = GsSession.current._post('/price/positions', payload)
-            except Exception as e:
-                raise MqValueError(f'There was an error pricing your positions: {e}')
-            if 'errorMessage' in price_results:
-                raise MqValueError(f'There was an error pricing your positions: {price_results["errorMessage"]}')
+        }
+        if self.initial_position_set.reference_notional is not None:
+            payload['parameters']['targetNotional'] = self.initial_position_set.reference_notional
+        try:
+            price_results = GsSession.current._post('/price/positions', payload)
+        except Exception as e:
+            raise MqValueError(f'There was an error pricing your positions: {e}')
+        if 'errorMessage' in price_results:
+            raise MqValueError(f'There was an error pricing your positions: {price_results["errorMessage"]}')
+        if self.initial_position_set.reference_notional is None:
             parameters['targetNotional'] = price_results.get('actualNotional')
+        else:
+            parameters['hedgeTarget']['positions'] = [{'assetId': p['assetId'], 'quantity': p['quantity']}
+                                                      for p in price_results.get('positions', [])]
 
         return {
             'objective': self.objective.value,
@@ -732,9 +741,12 @@ class OptimizerStrategy:
             optimizer_type: OptimizerType = OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER):
         if optimizer_type is None:
             raise MqValueError('You must pass an optimizer type.')
+        self.initial_position_set.resolve()
         if optimizer_type == OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER:
             optimization_results = GsHedgeApi.calculate_hedge(self.to_dict())
             if optimization_results.get('result') is None:
+                if 'errorMessage' in optimization_results:
+                    raise MqValueError(f'Error calculating an optimization: {optimization_results["errorMessage"]}')
                 raise MqValueError('Error calculating an optimization. Please contact the Marquee team for assistance.')
             self.__result = optimization_results['result']
 

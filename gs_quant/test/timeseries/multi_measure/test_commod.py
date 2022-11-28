@@ -32,7 +32,7 @@ _test_datasets = ('TEST_DATASET',)
 @pytest.mark.skipif(not USE_DISPLAY_NAME, reason="requires certain evnvar to run")
 def test_forward_price():
     # Tests for US NG assets
-    def mock_natgas_forward_price(_cls, _q):
+    def mock_natgas_forward_price(_cls, _q, ignore_errors=False):
         d = {
             'forwardPrice': [
                 2.880,

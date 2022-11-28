@@ -48,16 +48,21 @@ class MockData(MockRequest):
         return result
 
     def get_request_id(self, args, kwargs):
-        query = args[0]
+        query = args[0].as_dict()
         parts = []
-        items = query.as_dict()
+        relevant_data_query_params = [k for k in
+                                      ["start_date", "start_time", "end_date", "end_time", "as_of_time", "since",
+                                       "dates", "where"] if k in query.keys()]
 
-        for k in sorted(items.keys()):
-            v = items[k]
-            if isinstance(v, list):
-                v_str = ','.join(v)
+        def stringify_values(v):
+            return ','.join(v) if isinstance(v, list) else str(v)
+
+        for k in sorted(relevant_data_query_params):
+            v = query[k]
+            if k != 'where':
+                v_str = stringify_values(v)
             else:
-                v_str = str(v)
+                v_str = '_'.join([f'{where_k}:{stringify_values(where_v)}' for where_k, where_v in v.items()])
             parts.append(f'{k}:{v_str}')
         query_str = '_'.join(parts)
         identifier = f'{args[1]}_{query_str}'

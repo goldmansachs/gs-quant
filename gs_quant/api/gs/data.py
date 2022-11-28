@@ -485,7 +485,7 @@ class GsDataApi(DataApi):
         return providers
 
     @classmethod
-    def get_market_data(cls, query, request_id=None) -> pd.DataFrame:
+    def get_market_data(cls, query, request_id=None, ignore_errors: bool = False) -> pd.DataFrame:
         GsSession.current: GsSession
         start = time.perf_counter()
         try:
@@ -502,7 +502,11 @@ class GsDataApi(DataApi):
             container = e['queryResponse'][0]
             ids.extend(container.get('dataSetIds', ()))
             if 'errorMessages' in container:
-                raise MqValueError(f"measure service request {body['requestId']} failed: {container['errorMessages']}")
+                msg = f'measure service request {body["requestId"]} failed: {container["errorMessages"]}'
+                if ignore_errors:
+                    log_warning(request_id, _logger, msg)
+                else:
+                    raise MqValueError(msg)
             if 'response' in container:
                 df = MarketDataResponseFrame(container['response']['data'])
                 df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
