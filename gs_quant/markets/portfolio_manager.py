@@ -113,26 +113,95 @@ class PortfolioManager(PositionedEntity):
     def schedule_reports(self,
                          start_date: dt.date = None,
                          end_date: dt.date = None,
-                         backcast: bool = False):
+                         backcast: bool = False,
+                         months_per_batch: int = None):
         """
-        Schedule all reports associated with a portfolio
+        Schedule all reports associated with a portfolio. If months_per_batch is passed and reports are historical, then
+        schedule them in batches of bathc_period months. Backcasted reported can't be batched.
 
         :param start_date: start date of report job (optional)
         :param end_date: end date of report job (optional)
         :param backcast: true if reports should be backcasted; defaults to false
+        :param months_per_batch: batch size of historical report job schedules in number of months; defaults to false
+        if set, historical reports are scheduled in batches of size less than or equal to the given number of months
 
         **Examples**
 
         >>> pm = PortfolioManager("PORTFOLIO ID")
-        >>> pm.schedule_reports(backcast=False, is_async=True)
+        >>> pm.schedule_reports(backcast=False)
+
+        for a portfolio having hisotry greater than 1 yr, use months_per_batch to schedule reports in batches of
+        6 months
+        >>> pm = PortfolioManager("PORTFOLIO ID")
+        >>> pm.schedule_reports(backcast=False, months_per_batch=6)
         """
-        GsPortfolioApi.schedule_reports(self.__portfolio_id, start_date, end_date, backcast=backcast)
+        if months_per_batch is None or backcast:
+            if backcast:
+                print('Batching of schedule reports is only supported for historical reports. '
+                      'Backcasted reports will be scheduled for the full date range')
+            GsPortfolioApi.schedule_reports(self.__portfolio_id, start_date, end_date, backcast=backcast)
+        else:
+            # Process input
+            if months_per_batch <= 0:
+                raise MqValueError(f'Invalid input, months_per_batch {months_per_batch} should be greater than 0')
+
+            if end_date is None or start_date is None:
+                hints = self.get_schedule_dates(backcast=backcast)
+                start_date = hints[0] if start_date is None else start_date
+                end_date = hints[1] if end_date is None else end_date
+
+            if start_date >= end_date:
+                raise MqValueError(f'Invalid input, start date {start_date} should be before end date {end_date}')
+
+            # Validate input date range against position dates
+            position_dates = self.get_position_dates()
+            position_dates = [p for p in position_dates if end_date >= p >= start_date]
+
+            if len(position_dates) == 0:
+                raise MqValueError('Portfolio does not have any positions in the given date range')
+
+            if start_date not in position_dates:
+                # There should be positions on the start date for historical reports
+                raise MqError('Cannot schedule historical report because the first set of positions within the '
+                              f'scheduling date range need to be on this date {start_date}')
+            else:
+                # preparation for the first batch
+                position_dates.remove(start_date)
+
+            if end_date not in position_dates:
+                # make sure to process the last batch
+                position_dates.append(end_date)
+
+            # Create batches using sliding window
+            batch_boundaries = [start_date]
+            prev_date = start_date
+            for i, d in enumerate(position_dates):
+                current_batch = d - prev_date
+                if current_batch.days > months_per_batch * 30 and i > 0:
+                    # split the current window at the previous date
+                    prev_date = position_dates[i - 1]
+                    batch_boundaries.append(prev_date)
+
+            batch_boundaries.append(end_date)
+
+            # Schedule reports in batches
+            print(f'Scheduling reports from {start_date} to {end_date} in {len(batch_boundaries) - 1} batches')
+
+            for i in range(len(batch_boundaries) - 1):
+                print(f'Scheduling for {batch_boundaries[i]} to {batch_boundaries[i+1]}')
+                GsPortfolioApi.schedule_reports(self.__portfolio_id,
+                                                batch_boundaries[i],
+                                                batch_boundaries[i + 1],
+                                                backcast=backcast)
+                if i > 0 and i % 10 == 0:
+                    sleep(6)
 
     def run_reports(self,
                     start_date: dt.date = None,
                     end_date: dt.date = None,
                     backcast: bool = False,
-                    is_async: bool = True) -> List[Union[pd.DataFrame, ReportJobFuture]]:
+                    is_async: bool = True,
+                    months_per_batch: int = None) -> List[Union[pd.DataFrame, ReportJobFuture]]:
         """
         Run all reports associated with a portfolio
 
@@ -140,6 +209,8 @@ class PortfolioManager(PositionedEntity):
         :param end_date: end date of report job
         :param backcast: true if reports should be backcasted; defaults to false
         :param is_async: true if reports should run asynchronously; defaults to true
+        :param months_per_batch: batch size of historical report job schedules in number of months; defaults to false
+        if set, historical reports are scheduled in batches of size less than or equal to the given number of months
         :return: if is_async is true, returns a list of ReportJobFuture objects; if is_async is false, returns a list
         of dataframe objects containing report results for all portfolio results
 
@@ -147,8 +218,12 @@ class PortfolioManager(PositionedEntity):
 
         >>> pm = PortfolioManager("PORTFOLIO ID")
         >>> report_results = pm.run_reports(backcast=True)
+
+        for longer hisotry, use months_per_batch to schedule reports in batches of 6 months
+        >>> pm = PortfolioManager("PORTFOLIO ID")
+        >>> pm.schedule_reports(backcast=False, months_per_batch=6)
         """
-        self.schedule_reports(start_date, end_date, backcast)
+        self.schedule_reports(start_date, end_date, backcast, months_per_batch)
         reports = self.get_reports()
         report_futures = [report.get_most_recent_job() for report in reports]
         if is_async:

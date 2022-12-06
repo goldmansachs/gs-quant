@@ -1757,7 +1757,7 @@ class MacroRiskModel(MarqueeRiskModel):
             if factor_type == FactorType.Factor else \
             super().get_universe_exposure(start_date, end_date, assets, get_factors_by_name=get_factors_by_name)
 
-        if factor_type == FactorType.Factor:
+        if factor_type == FactorType.Factor or sensitivity_df.empty:
             return sensitivity_df
 
         factor_data = self.get_factor_data(start_date, end_date)

@@ -266,12 +266,9 @@ class SeriesWithInfo(pd.Series, ResultInfo):
         return records
 
     def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            new_result = self.copy()
-            new_result['value'] = new_result['value'] * other
-            return new_result
-        else:
-            raise ValueError('Can only multiply by an int or float')
+        new_result = pd.Series.__mul__(self, other)
+        ResultInfo.__init__(new_result, risk_key=self.risk_key, unit=self.unit, error=self.error, request_id=self.request_id)
+        return new_result
 
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):

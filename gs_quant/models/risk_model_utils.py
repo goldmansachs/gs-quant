@@ -17,7 +17,7 @@ import datetime as dt
 import logging
 import math
 from time import sleep
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import pandas as pd
 
@@ -205,17 +205,23 @@ def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int
     date = data.get('date')
     _upload_factor_data_if_present(model_id, data, date)
     sleep(2)
-    _batch_data_v2(model_id, data, max_asset_size, date)
+    _repeat_try_catch_request(_batch_data_v2, model_id=model_id, data=data, max_asset_size=max_asset_size, date=date)
 
 
-def _batch_data_v2(model_id: str, data, max_asset_size, date):
+def _batch_data_v2(model_id: str, data: dict, max_asset_size: int, date: Union[str, dt.date]):
     if data.get('assetData'):
         asset_data_list, target_size = _batch_input_data({'assetData': data.get('assetData')}, max_asset_size)
         for i in range(len(asset_data_list)):
             final_upload = True if i == len(asset_data_list) - 1 else False
-            _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
-                                      model_data={'assetData': asset_data_list[i], 'date': date}, partial_upload=True,
-                                      final_upload=final_upload)
+            try:
+                res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
+                                                                  model_data={'assetData': asset_data_list[i],
+                                                                              'date': date},
+                                                                  partial_upload=True,
+                                                                  final_upload=final_upload)
+                logging.info(res)
+            except (MqRequestError, Exception) as e:
+                raise e
 
     if 'issuerSpecificCovariance' in data.keys() or 'factorPortfolios' in data.keys():
         for optional_input_key in ['issuerSpecificCovariance', 'factorPortfolios']:
@@ -226,9 +232,16 @@ def _batch_data_v2(model_id: str, data, max_asset_size, date):
                 logging.info(f'{optional_input_key} being uploaded for {date}...')
                 for i in range(len(optional_data_list)):
                     final_upload = True if i == len(optional_data_list) - 1 else False
-                    _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
-                                              model_data={optional_input_key: optional_data_list[i], 'date': date},
-                                              partial_upload=True, final_upload=final_upload)
+                    try:
+                        res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
+                                                                          model_data={
+                                                                              optional_input_key: optional_data_list[i],
+                                                                              'date': date},
+                                                                          partial_upload=True,
+                                                                          final_upload=final_upload)
+                        logging.info(res)
+                    except (MqRequestError, Exception) as e:
+                        raise e
 
 
 def batch_and_upload_coverage_data(date: dt.date, gsid_list: list, model_id: str):
@@ -340,7 +353,8 @@ def _repeat_try_catch_request(input_function, number_retries: int = 5, **kwargs)
     for i in range(number_retries):
         try:
             result = input_function(**kwargs)
-            logging.info(result)
+            if result:
+                logging.info(result)
             errors.clear()
             break
         except MqRequestError as e:

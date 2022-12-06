@@ -1172,6 +1172,81 @@ def test_run_reports(mocker):
     pm.run_reports(is_async=False)
 
 
+# noinspection DuplicatedCode
+def test_batched_schedule_reports(mocker):
+    mocker.patch.object(GsPortfolioApi, 'get_position_dates',
+                        return_value=[dt.date(2022, 2, 1), dt.date(2022, 8, 1),
+                                      dt.date(2022, 10, 1), dt.date(2022, 11, 1)])
+
+    mocker.patch.object(GsPortfolioApi, 'schedule_reports')
+    schedule_spy = mocker.spy(GsPortfolioApi, 'schedule_reports')
+
+    pid = 'MP'
+    pm = PortfolioManager(pid)
+
+    pm.schedule_reports(start_date=dt.date(2022, 2, 1), end_date=dt.date(2022, 11, 10),
+                        backcast=False, months_per_batch=2)
+    assert schedule_spy.call_count == 3, 'For the given positions, batch period of 2 months should result in 3 batches'
+    batch_boundaries = [dt.date(2022, 2, 1), dt.date(2022, 8, 1), dt.date(2022, 10, 1), dt.date(2022, 11, 10)]
+    for i in range(len(batch_boundaries) - 1):
+        schedule_spy.assert_any_call(pid, batch_boundaries[i], batch_boundaries[i + 1], backcast=False)
+
+    schedule_spy.reset_mock()
+    pm.schedule_reports(start_date=dt.date(2022, 2, 1), end_date=dt.date(2022, 11, 10),
+                        backcast=False, months_per_batch=4)
+    assert schedule_spy.call_count == 2, 'For the given positions, batch period of 4 months should result in 2 batches'
+    batch_boundaries = [dt.date(2022, 2, 1), dt.date(2022, 8, 1), dt.date(2022, 11, 10)]
+    for i in range(len(batch_boundaries) - 1):
+        schedule_spy.assert_any_call(pid, batch_boundaries[i], batch_boundaries[i + 1], backcast=False)
+
+
+# noinspection DuplicatedCode
+def test_batched_schedule_reports_wo_dates(mocker):
+    mocker.patch.object(GsPortfolioApi, 'get_position_dates',
+                        return_value=[dt.date(2022, 2, 1), dt.date(2022, 8, 1),
+                                      dt.date(2022, 10, 1), dt.date(2022, 11, 1)])
+    mocker.patch.object(GsPortfolioApi, 'get_schedule_dates',
+                        return_value=[dt.date(2022, 2, 1), dt.date(2022, 11, 10)])
+
+    mocker.patch.object(GsPortfolioApi, 'schedule_reports')
+    schedule_spy = mocker.spy(GsPortfolioApi, 'schedule_reports')
+
+    pid = 'MP'
+    pm = PortfolioManager(pid)
+
+    pm.schedule_reports(backcast=False, months_per_batch=2)
+    assert schedule_spy.call_count == 3, 'For the given positions, batch period of 2 months should result in 3 batches'
+    batch_boundaries = [dt.date(2022, 2, 1), dt.date(2022, 8, 1), dt.date(2022, 10, 1), dt.date(2022, 11, 10)]
+    for i in range(len(batch_boundaries) - 1):
+        schedule_spy.assert_any_call(pid, batch_boundaries[i], batch_boundaries[i + 1], backcast=False)
+
+
+def test_batched_schedule_validations(mocker):
+    pm = PortfolioManager('PM')
+
+    # start date should be before end date
+    with pytest.raises(Exception):
+        pm.schedule_reports(backcast=False, start_date=dt.date(2022, 2, 1), end_date=dt.date(2022, 1, 1))
+
+    mocker.patch.object(GsPortfolioApi, 'get_schedule_dates',
+                        return_value=[dt.date(2022, 2, 1), dt.date(2022, 11, 5)])
+
+    # start date should be before maximum possible end date
+    with pytest.raises(Exception):
+        pm.schedule_reports(backcast=False, start_date=dt.date(2022, 12, 1))
+
+    # end date should be after first possible start date
+    with pytest.raises(Exception):
+        pm.schedule_reports(backcast=False, end_date=dt.date(2022, 1, 1))
+
+    mocker.patch.object(GsPortfolioApi, 'get_position_dates',
+                        return_value=[dt.date(2022, 2, 1), dt.date(2022, 8, 1),
+                                      dt.date(2022, 10, 1), dt.date(2022, 11, 1)])
+    # start date should be on a position date
+    with pytest.raises(Exception):
+        pm.schedule_reports(backcast=False, start_date=dt.date(2022, 3, 1))
+
+
 def test_esg_summary(mocker):
     mocker.patch.object(GsEsgApi, 'get_esg',
                         return_value=esg_data)
