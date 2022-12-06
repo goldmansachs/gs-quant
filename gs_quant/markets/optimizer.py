@@ -472,6 +472,8 @@ class OptimizerSettings:
                  allow_long_short: bool = False,
                  min_names: float = 0,
                  max_names: float = 100,
+                 min_weight_per_constituent: float = None,
+                 max_weight_per_constituent: float = None,
                  max_adv: float = 15):
         """
         Optimizer settings
@@ -480,12 +482,16 @@ class OptimizerSettings:
         :param allow_long_short: allow a long/short optimization
         :param min_names: minimum number of assets in the optimization
         :param max_names: maximum number of assets in the optimization
+        :param min_weight_per_constituent: minimum weight of each constituent in the optimization
+        :param max_weight_per_constituent: maximum weight of each constituent in the optimization
         :param max_adv: maximum average daily volume of each constituent in the optimization (in percent)
         """
         self.__notional = notional
         self.__allow_long_short = allow_long_short
         self.__min_names = min_names
         self.__max_names = max_names
+        self.__min_weight_per_constituent = min_weight_per_constituent
+        self.__max_weight_per_constituent = max_weight_per_constituent
         self.__max_adv = max_adv
 
     @property
@@ -513,6 +519,22 @@ class OptimizerSettings:
         self.__min_names = value
 
     @property
+    def min_weight_per_constituent(self) -> float:
+        return self.__min_weight_per_constituent
+
+    @min_weight_per_constituent.setter
+    def min_weight_per_constituent(self, value: float):
+        self.__min_weight_per_constituent = value
+
+    @property
+    def max_weight_per_constituent(self) -> float:
+        return self.__max_weight_per_constituent
+
+    @max_weight_per_constituent.setter
+    def max_weight_per_constituent(self, value: float):
+        self.__max_weight_per_constituent = value
+
+    @property
     def max_names(self) -> float:
         return self.__max_names
 
@@ -529,13 +551,18 @@ class OptimizerSettings:
         self.__max_adv = value
 
     def to_dict(self):
-        return {
+        as_dict = {
             'hedgeNotional': self.notional,
             'allowLongShort': self.allow_long_short,
             'minNames': self.min_names,
             'maxNames': self.max_names,
             'maxAdvPercentage': self.max_adv
         }
+        if self.min_weight_per_constituent:
+            as_dict['minWeight'] = self.min_weight_per_constituent * 100
+        if self.max_weight_per_constituent:
+            as_dict['maxWeight'] = self.max_weight_per_constituent * 100
+        return as_dict
 
 
 class TurnoverConstraint:
