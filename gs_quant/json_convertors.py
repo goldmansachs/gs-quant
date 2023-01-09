@@ -52,6 +52,7 @@ def optional_to_isodatetime(datetime: Optional[dt.datetime]):
 
 
 optional_datetime_config = config(encoder=optional_to_isodatetime, decoder=optional_from_isodatetime)
+optional_date_config = config(encoder=encode_date_or_str, decoder=decode_optional_date)
 
 
 def decode_dict_date_key(value):

@@ -16,8 +16,8 @@ under the License.
 
 import datetime
 import datetime as dt
-import os
 import json
+import os
 from typing import Union, Dict
 from unittest import mock
 
@@ -867,7 +867,8 @@ def mock_fx_spot_fwd_3m(*args, **kwargs):
         'spot': [1.18250, 1.18566, 1.18511],
         'forwardPoint': [0.00234, 0.00234, 0.00235],
         'tenor': ['3m', '3m', '3m'],
-        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)]
+        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
+        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
     })
     d = d.set_index('date')
     df = MarketDataResponseFrame(d)
@@ -880,9 +881,38 @@ def mock_fx_spot_fwd_2y(*args, **kwargs):
         'spot': [1.18250, 1.18566, 1.18511],
         'forwardPoint': [0.02009, 0.02015, 0.02064],
         'tenor': ['2y', '2y', '2y'],
-        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)]
+        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
+        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
     })
     d = d.set_index('date')
+    df = MarketDataResponseFrame(d)
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_fx_spot_fwd_3m_rt(*args, **kwargs):
+    d = pd.DataFrame({
+        'spot': [1.18250, 1.18566, 1.18511],
+        'forwardPoint': [0.00234, 0.00234, 0.00235],
+        'tenor': ['3m', '3m', '3m'],
+        'time': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
+        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
+    })
+    d = d.set_index('time')
+    df = MarketDataResponseFrame(d)
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_fx_spot_fwd_2y_rt(*args, **kwargs):
+    d = pd.DataFrame({
+        'spot': [1.18250, 1.18566, 1.18511],
+        'forwardPoint': [0.02009, 0.02015, 0.02064],
+        'tenor': ['2y', '2y', '2y'],
+        'time': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
+        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
+    })
+    d = d.set_index('time')
     df = MarketDataResponseFrame(d)
     df.dataset_ids = _test_datasets
     return df
@@ -3560,6 +3590,7 @@ def test_measure_request_safe():
     def error(raise_error):
         if raise_error:
             raise MqValueError()
+
     with pytest.raises(MqValueError):
         tm.measure_request_safe('error', Index('MA123', AssetClass.Equity, '123'), error, None, True)
     tm.measure_request_safe('error', Index('MA123', AssetClass.Equity, '123'), error, None, False)
@@ -4736,18 +4767,18 @@ def test_spot_carry():
     mock = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
     assets = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
     assets.return_value = mock.get_marquee_id()
-
     df = pd.DataFrame({
         '3m': [0.001978858350951374, 0.0019735843327766817, 0.00198293829264794],
         '2y': [0.016989429175475686, 0.016994753976688093, 0.017416104834150414],
-        '3m_ann': [0.007915433403805495, 0.007894337331106727, 0.00793175317059176],
-        'date': [pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-03'), pd.Timestamp('2020-09-04')]
+        '3m_ann': [0.007660096842392416, 0.007400941247912555, 0.0075142924774027195],
+        'date': [pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-03'), pd.Timestamp('2020-09-04')],
+        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
     })
     df = df.set_index('date')
 
     with DataContext(dt.date(2020, 9, 2), dt.date(2020, 9, 4)):
         # tenors in terms of months
-        replace('gs_quant.timeseries.measures._market_data_timed', mock_fx_spot_fwd_3m)
+        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_fwd_3m)
         actual_3m = tm.spot_carry(mock, '3m')
         assert_series_equal(df['3m'], pd.Series(actual_3m, name='3m'))
 
@@ -4759,10 +4790,22 @@ def test_spot_carry():
             tm.spot_carry(mock, '13m')
 
         # tenors in terms of years
-        replace('gs_quant.timeseries.measures._market_data_timed', mock_fx_spot_fwd_2y)
+        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_fwd_2y)
         actual_2y = tm.spot_carry(mock, '2y')
         assert_series_equal(df['2y'], pd.Series(actual_2y, name='2y'))
-        replace.restore()
+
+    with DataContext(pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-04')):
+        df.index.names = ['time']
+
+        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_fwd_3m_rt)
+        actual_3m = tm.spot_carry(mock, '3m', real_time=True)
+        assert_series_equal(df['3m'], pd.Series(actual_3m, name='3m'))
+
+        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_fwd_2y_rt)
+        actual_2y = tm.spot_carry(mock, '2y', real_time=True)
+        assert_series_equal(df['2y'], pd.Series(actual_2y, name='2y'))
+
+    replace.restore()
 
 
 def test_fx_implied_correlation():

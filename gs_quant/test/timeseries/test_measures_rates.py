@@ -1291,7 +1291,7 @@ def test_policy_rate_expectation_rt(mocker):
             tm_rates.policy_rate_expectation_rt(mock_eur, tm_rates.EventType.SPOT, tm_rates.RateType.RELATIVE)
 
         mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
-        mock_get_data.return_value = pd.Series()
+        mock_get_data.return_value = pd.Series(dtype=float)
         with pytest.raises(MqError):
             tm_rates.policy_rate_expectation_rt(mock_eur, tm_rates.EventType.MEETING, tm_rates.RateType.RELATIVE)
 

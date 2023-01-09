@@ -33,7 +33,7 @@ class MockData(MockRequest):
                              inspect.stack())).filename).parents[1]
 
     def mock_calc_create_files(self, *args, **kwargs):
-        from orjson import orjson
+        import orjson
 
         def get_json(*i_args, **i_kwargs):
             this_json = self.api_method(*i_args, **i_kwargs)

@@ -81,7 +81,7 @@ class Tracer(ContextDecorator):
         return Tracer.get_instance().finished_spans()
 
     @staticmethod
-    def print(reset=True):
+    def gather_data():
         spans = Tracer.get_spans()
         spans_by_parent = {}
 
@@ -103,6 +103,11 @@ class Tracer(ContextDecorator):
             total += (span.finish_time - span.start_time) * 1000
 
         tracing_str = '\n'.join(lines)
+        return tracing_str, total
+
+    @staticmethod
+    def print(reset=True):
+        tracing_str, total = Tracer.gather_data()
         _logger.warning(f'Tracing Info:\n{tracing_str}\n{"-" * 61}\nTOTAL:{total:>52.1f} ms')
         if reset:
             Tracer.reset()

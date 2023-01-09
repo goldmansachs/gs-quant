@@ -1200,7 +1200,9 @@ class SIRModel:
         self.beta_fixed = not (self.fit or (self.beta_init is None))
         self.gamma_fixed = not (self.fit or (self.gamma_init is None))
 
-        data = np.array([self.s, self.i, self.r]).T
+        lens = [len(x) for x in (self.s, self.i, self.r)]
+        dtype = float if max(lens) == min(lens) else object
+        data = np.array([self.s, self.i, self.r], dtype=dtype).T
 
         beta_init = self.beta_init if self.beta_init is not None else 0.9
         gamma_init = self.gamma_init if self.gamma_init is not None else 0.01
@@ -1386,7 +1388,9 @@ class SEIRModel(SIRModel):
         self.gamma_fixed = not (self.fit or (self.gamma is None))
         self.sigma_fixed = not (self.fit or (self.sigma is None))
 
-        data = np.array([self.s, self.e, self.i, self.r]).T
+        lens = [len(x) for x in (self.s, self.e, self.i, self.r)]
+        dtype = float if max(lens) == min(lens) else object
+        data = np.array([self.s, self.e, self.i, self.r], dtype=dtype).T
 
         beta_init = self.beta_init if self.beta_init is not None else 0.9
         gamma_init = self.gamma_init if self.gamma_init is not None else 0.01

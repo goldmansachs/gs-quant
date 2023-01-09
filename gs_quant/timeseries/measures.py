@@ -4390,26 +4390,28 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
                      '2y']:
         raise MqValueError('tenor not included in dataset')
     asset_id = cross_stored_direction_for_fx_vol(asset)
-    where = dict(tenor=tenor)
-    q_1 = GsDataApi.build_market_data_query([asset_id], QueryType.FORWARD_POINT, where=where, source=source,
-                                            real_time=real_time)
-    log_debug(request_id, _logger, 'q_1 %s', q_1)
-    df_fwd = _market_data_timed(q_1, request_id)
-
-    q_2 = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT, source=source, real_time=real_time)
-    log_debug(request_id, _logger, 'q %s', q_2)
-    df_spot = _market_data_timed(q_2, request_id)
-
-    if 'm' in tenor:
-        ann_factor = 12 / int(tenor.replace('m', ''))
+    if real_time:
+        start, end = DataContext.current.start_time, DataContext.current.end_time
+        ds = Dataset(Dataset.GS.FXFORWARDPOINTS_INTRADAY)
+        mq_df = ds.get_data(asset_id=asset_id, start=start, end=end, tenor=tenor)
+        if 'm' in tenor:
+            mq_df['ann_factor'] = 12 / int(tenor.replace('m', ''))
+        else:
+            mq_df['ann_factor'] = 1 / int(tenor.replace('y', ''))
     else:
-        ann_factor = 1 / int(tenor.replace('y', ''))
+        start, end = DataContext.current.start_date, DataContext.current.end_date
+        ds = Dataset(Dataset.GS.FXFORWARDPOINTS_PREMIUM)
+        mq_df = ds.get_data(asset_id=asset_id, start=start, end=end, tenor=tenor)
+        mq_df.reset_index(inplace=True)
+        mq_df['ann_factor'] = mq_df.apply(lambda x: 360 / (x.settlementDate - x.date).days, axis=1)
+        mq_df.set_index('date', inplace=True)
 
-    df_carry = df_fwd['forwardPoint'] / df_spot['spot']
     if annualized == FXSpotCarry.ANNUALIZED:
-        df_carry = df_carry * ann_factor
-    series = ExtendedSeries(df_carry, name='spotCarry')
-    series.dataset_ids = getattr(df_fwd, 'dataset_ids', ())
+        mq_df['carry'] = mq_df['ann_factor'] * mq_df['forwardPoint'] / mq_df['spot']
+    else:
+        mq_df['carry'] = mq_df['forwardPoint'] / mq_df['spot']
+    series = ExtendedSeries(mq_df['carry'], name='spotCarry')
+    series.dataset_ids = ds.id
     return series
 
 

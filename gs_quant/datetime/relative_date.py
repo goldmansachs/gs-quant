@@ -131,12 +131,14 @@ class RelativeDate:
                       exchanges: List[Union[ExchangeCode, str]] = None,
                       holiday_calendar: List[date] = None,
                       **kwargs) -> date:
+        roll = None
         if rule.startswith('-'):
             index = 1
             while index != len(rule) and rule[index].isdigit():
                 index += 1
             number = int(rule[1:index]) * -1 if index < len(rule) else 0
             rule_str = rule[index]
+            roll = "preceding"
         else:
             index = 0
             if not rule[0].isdigit():
@@ -164,7 +166,8 @@ class RelativeDate:
                               currencies=currencies,
                               exchanges=exchanges,
                               holiday_calendar=holiday_calendar,
-                              usd_calendar=kwargs.get('usd_calendar')).handle()
+                              usd_calendar=kwargs.get('usd_calendar'),
+                              roll=roll).handle()
         except AttributeError:
             raise NotImplementedError(f'Rule {rule} not implemented')
 

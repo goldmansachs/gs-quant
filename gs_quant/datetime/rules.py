@@ -201,9 +201,16 @@ class TRule(RDateRule):
 
 
 class uRule(RDateRule):
+    def __init__(self, result: date, **params):
+        super().__init__(result, **params)
+        self.roll = params.get('roll')
+
     def handle(self) -> date:
         holidays = self._get_holidays()
-        roll = 'forward' if self.number <= 0 else 'preceding'
+        if self.number == 0 and self.roll:
+            roll = self.roll
+        else:
+            roll = 'forward' if self.number <= 0 else 'preceding'
         return self._apply_business_days_logic(holidays, offset=self.number, roll=roll)
 
 

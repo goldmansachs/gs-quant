@@ -258,6 +258,14 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     def raw_value(self) -> pd.Series:
         return pd.Series(self)
 
+    @staticmethod
+    def compose(components: Iterable):
+        dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
+        return SeriesWithInfo(pd.Series(index=pd.DatetimeIndex(dates).date, data=values),
+                              risk_key=risk_key,
+                              unit=unit,
+                              error=errors)
+
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
         df = pd.DataFrame(self).reset_index()
         df.columns = ['dates', 'value']

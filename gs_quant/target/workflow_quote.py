@@ -167,6 +167,7 @@ class SaveQuoteRequest(Base):
     comments: Optional[str] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
     original_workflow_id: Optional[str] = field(default=None, metadata=field_metadata)
+    is_sharing_parent: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

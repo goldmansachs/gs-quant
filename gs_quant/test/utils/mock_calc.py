@@ -69,7 +69,7 @@ class MockCalc(MockRequest):
                              inspect.stack())).filename).parents[1]
 
     def mock_calc_create_files(self, *args, **kwargs):
-        from orjson import orjson
+        import orjson
 
         # never leave a side_effect calling this function.  Call it once to create the files, check them in
         # and switch to mock_calc
