@@ -695,7 +695,6 @@ class Hedge:
         Calculates the hedge
         :return: a dictionary with calculation results
         """
-        self.parameters.initial_portfolio.resolve()
         params = self.parameters.to_dict()
         calculation_results = GsHedgeApi.calculate_hedge({'objective': self.objective.value,
                                                           'parameters': params}).get('result')

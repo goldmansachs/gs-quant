@@ -14,13 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.base import *
-from gs_quant.common import *
 import datetime
-from typing import Dict, Optional, Tuple, Union
 from dataclasses import dataclass, field
-from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
+from typing import Optional, Tuple
+
+from dataclasses_json import LetterCase, config, dataclass_json
+
+from gs_quant.common import *
 
 
 class Encoding(EnumBase, Enum):    
@@ -100,6 +101,15 @@ class StrategyDescription(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class WorkflowEntitlement(Base):
+    type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    value: str = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class BinaryImageComments(CustomComments):
     data: Optional[str] = field(default=None, metadata=field_metadata)
     img_type: Optional[ImgType] = field(default=None, metadata=field_metadata)
@@ -138,6 +148,16 @@ class SolvingInfo(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class WorkflowEntitlements(Base):
+    version: Optional[int] = field(default=None, metadata=field_metadata)
+    readers: Optional[Tuple[WorkflowEntitlement, ...]] = field(default=None, metadata=field_metadata)
+    writers: Optional[Tuple[WorkflowEntitlement, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class VisualStructuringReport(QuoteReport):
     report_type: Optional[str] = field(default='VisualStructuringReport', metadata=field_metadata)
     position_set_id: Optional[str] = field(default=None, metadata=field_metadata)
@@ -168,6 +188,7 @@ class SaveQuoteRequest(Base):
     description: Optional[str] = field(default=None, metadata=field_metadata)
     original_workflow_id: Optional[str] = field(default=None, metadata=field_metadata)
     is_sharing_parent: Optional[bool] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[WorkflowEntitlements] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -181,6 +202,7 @@ class WorkflowPosition(Base):
     comments: Optional[str] = field(default=None, metadata=field_metadata)
     original_workflow_id: Optional[str] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[WorkflowEntitlements] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

@@ -568,25 +568,25 @@ class OptimizerSettings:
 class TurnoverConstraint:
 
     def __init__(self,
-                 positions: List[Position],
+                 turnover_portfolio: PositionSet,
                  max_turnover_percent: float):
         """
         Specifying a list of positions and max turnover from those positions in the optimization result
 
-        :param positions: list of positions
+        :param turnover_portfolio: turnover portfolio
         :param max_turnover_percent: max turnover as a percent (ex: 80 = a minimal overlap of 20% in notional of the
         specified positions and the optimization
         """
-        self.__positions = positions
+        self.__turnover_portfolio = turnover_portfolio
         self.__max_turnover_percent = max_turnover_percent
 
     @property
-    def positions(self) -> List[Position]:
-        return self.__positions
+    def turnover_portfolio(self) -> PositionSet:
+        return self.__turnover_portfolio
 
-    @positions.setter
-    def positions(self, value: List[Position]):
-        self.__positions = value
+    @turnover_portfolio.setter
+    def turnover_portfolio(self, value: PositionSet):
+        self.__turnover_portfolio = value
 
     @property
     def max_turnover_percent(self) -> float:
@@ -597,8 +597,9 @@ class TurnoverConstraint:
         self.__max_turnover_percent = value
 
     def to_dict(self):
+        positions = self.turnover_portfolio.positions
         return {
-            'turnoverPortfolio': [{'assetId': p.asset_id, 'quantity': p.quantity} for p in self.positions],
+            'turnoverPortfolio': [{'assetId': p.asset_id, 'quantity': p.quantity} for p in positions],
             'maxTurnoverPercentage': self.max_turnover_percent
         }
 
@@ -689,14 +690,13 @@ class OptimizerStrategy:
     def objective(self, value: OptimizerObjective):
         self.__objective = value
 
-    def to_dict(self):
+    def to_dict(self, fail_on_unpriced_positions: bool = True):
         if self.constraints is None:
             self.constraints = OptimizerConstraints()
         if self.settings is None:
             self.settings = OptimizerSettings()
 
         backtest_start_date = self.initial_position_set.date - relativedelta(weeks=1)
-        self.initial_position_set.resolve()
         if self.initial_position_set.reference_notional is None:
             positions_as_dict = [{'assetId': p.asset_id, 'quantity': p.quantity}
                                  for p in self.initial_position_set.positions]
@@ -725,10 +725,6 @@ class OptimizerStrategy:
             parameters[key] = universe[key]
         parameters['riskModel'] = self.risk_model.id
         if self.turnover:
-            turnover_position_set = PositionSet(date=self.initial_position_set.date,
-                                                positions=self.turnover.positions)
-            turnover_position_set.resolve()
-            self.turnover.positions = turnover_position_set.positions
             turnover_dict = self.turnover.to_dict()
             for key in turnover_dict:
                 parameters[key] = turnover_dict[key]
@@ -742,7 +738,8 @@ class OptimizerStrategy:
                 'currency': 'USD',
                 'pricingDate': self.initial_position_set.date.strftime('%Y-%m-%d'),
                 'useUnadjustedClosePrice': True,
-                'frequency': 'End Of Day'
+                'frequency': 'End Of Day',
+                'priceRegardlessOfAssetsMissingPrices': not fail_on_unpriced_positions
             }
         }
         if self.initial_position_set.reference_notional is not None:
@@ -753,6 +750,9 @@ class OptimizerStrategy:
             raise MqValueError(f'There was an error pricing your positions: {e}')
         if 'errorMessage' in price_results:
             raise MqValueError(f'There was an error pricing your positions: {price_results["errorMessage"]}')
+        if len(price_results.get('assetIdsMissingPrices', [])) > 0:
+            logging.info(f'Error in resolving the following Marquee assets: {price_results["assetIdsMissingPrices"]}. '
+                         f'Sifting them out and optimizing the rest...')
         if self.initial_position_set.reference_notional is None:
             parameters['targetNotional'] = price_results.get('actualNotional')
         else:
@@ -765,17 +765,38 @@ class OptimizerStrategy:
         }
 
     def run(self,
-            optimizer_type: OptimizerType = OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER):
+            optimizer_type: OptimizerType = OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER,
+            fail_on_unpriced_positions: bool = True):
+        """
+        Run an optimization strategy, after which you can use the .get_optimization or get_optimized_position_set
+        functions to pull results
+
+        :param optimizer_type: optimizer type
+        :param fail_on_unpriced_positions: whether or
+        not to fail the calculations if some of the portfolio positions do not have pricing data in Marquee. If set
+        to false, unpriced assets will be sifted out before the optimization is run
+        """
         if optimizer_type is None:
             raise MqValueError('You must pass an optimizer type.')
-        self.initial_position_set.resolve()
         if optimizer_type == OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER:
-            optimization_results = GsHedgeApi.calculate_hedge(self.to_dict())
-            if optimization_results.get('result') is None:
-                if 'errorMessage' in optimization_results:
-                    raise MqValueError(f'Error calculating an optimization: {optimization_results["errorMessage"]}')
-                raise MqValueError('Error calculating an optimization. Please contact the Marquee team for assistance.')
-            self.__result = optimization_results['result']
+            strategy_as_dict = self.to_dict(fail_on_unpriced_positions)
+            counter = 5
+            while counter > 0:
+                try:
+                    optimization_results = GsHedgeApi.calculate_hedge(strategy_as_dict)
+                    if optimization_results.get('result') is None:
+                        if 'errorMessage' in optimization_results or counter == 1:
+                            raise MqValueError(
+                                'Error calculating an optimization. Please contact the Marquee team for assistance.')
+                        counter -= 1
+                    else:
+                        self.__result = optimization_results['result']
+                        counter = 0
+                except Exception:
+                    if counter == 1:
+                        raise MqValueError(
+                            'Error calculating an optimization. Please contact the Marquee team for assistance.')
+                    counter -= 1
 
     def get_optimization(self):
         if self.__result is None:

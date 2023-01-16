@@ -266,7 +266,7 @@ class Basket(Asset, PositionedEntity):
             raise MqValueError('Unable to upload position history: option must be set during basket creation')
         historical_position_sets = []
         for position_set in position_sets:
-            position_set.resolve()
+            self.__validate_position_set(position_set)
             positions = [IndicesPositionInput(p.asset_id, p.weight) for p in position_set.positions]
             historical_position_sets.append(IndicesPositionSet(tuple(positions), position_set.date))
         response = GsIndexApi.backcast(self.id, CustomBasketsBackcastInputs(tuple(historical_position_sets)))
@@ -737,7 +737,7 @@ class Basket(Asset, PositionedEntity):
     @position_set.setter
     @_validate(ErrorMessage.NON_ADMIN)
     def position_set(self, value: PositionSet):
-        value.resolve()
+        self.__validate_position_set(value)
         self.__position_set = value
 
     @property
@@ -975,6 +975,13 @@ class Basket(Asset, PositionedEntity):
             if not any(t in user_tokens for t in tokens):
                 errors.append(ErrorMessage.NON_ADMIN)
         self.__error_messages = set(errors)
+
+    @staticmethod
+    def __validate_position_set(position_set: PositionSet):
+        position_set.resolve()
+        if position_set.unresolved_identifiers is not None and len(position_set.unresolved_identifiers):
+            raise MqValueError(f'Error in resolving the following identifiers for date {position_set.date}: \
+            {position_set.unresolved_identifiers}')
 
     def __validate_ticker(self, ticker: str):
         """ Blocks ticker setter if entry is invalid """

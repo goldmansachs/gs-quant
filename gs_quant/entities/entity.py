@@ -404,8 +404,6 @@ class PositionedEntity(metaclass=ABCMeta):
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             if not position_sets:
                 return
-            for ps in position_sets:
-                ps.resolve()
             currency = GsPortfolioApi.get_portfolio(self.id).currency
             new_sets = []
             for pos_set in position_sets:

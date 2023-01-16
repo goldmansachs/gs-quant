@@ -130,7 +130,8 @@ class PositionSet:
                  positions: List[Position],
                  date: datetime.date = datetime.date.today(),
                  divisor: float = None,
-                 reference_notional: float = None):
+                 reference_notional: float = None,
+                 unresolved_identifiers: List[str] = None):
         if reference_notional is not None:
             for p in positions:
                 if p.weight is None:
@@ -141,6 +142,7 @@ class PositionSet:
         self.__date = date
         self.__divisor = divisor
         self.__reference_notional = reference_notional
+        self.__unresolved_identifiers = unresolved_identifiers if unresolved_identifiers is not None else []
 
     @property
     def positions(self) -> List[Position]:
@@ -169,6 +171,10 @@ class PositionSet:
     @reference_notional.setter
     def reference_notional(self, value: float):
         self.__reference_notional = value
+
+    @property
+    def unresolved_identifiers(self) -> List[str]:
+        return self.__unresolved_identifiers
 
     def get_positions(self) -> pd.DataFrame:
         """ Retrieve formatted positions """
@@ -200,14 +206,16 @@ class PositionSet:
         """ Resolve any unmapped positions """
         unresolved_positions = [p.identifier for p in self.positions if p.asset_id is None]
         if len(unresolved_positions):
-            id_map = self.__resolve_identifiers(unresolved_positions, self.date, **kwargs)
+            [id_map, unresolved_identifiers] = self.__resolve_identifiers(unresolved_positions, self.date, **kwargs)
+            self.__unresolved_identifiers = unresolved_identifiers
             resolved_positions = []
             for p in self.positions:
                 if p.identifier in id_map:
                     asset = get(id_map, p.identifier)
                     p.asset_id = get(asset, 'id')
                     p.name = get(asset, 'name')
-                resolved_positions.append(p)
+                if p.asset_id is not None:
+                    resolved_positions.append(p)
             self.positions = resolved_positions
 
     def to_target(self, common: bool = True) -> Union[CommonPositionSet, List[PositionPriceInput]]:
@@ -231,57 +239,46 @@ class PositionSet:
         return cls(converted_positions, position_set.position_date, position_set.divisor)
 
     @classmethod
-    def from_list(cls, positions: List[str], date: datetime.date = datetime.date.today(), **kwargs):
+    def from_list(cls, positions: List[str], date: datetime.date = datetime.date.today()):
         """ Create equally-weighted PostionSet instance from a list of identifiers """
-        id_map = cls.__resolve_identifiers(positions, date, **kwargs)
-        converted_positions = []
         weight = 1 / len(positions)
-
-        for p in positions:
-            asset = get(id_map, p)
-            position = Position(identifier=p, asset_id=get(asset, 'id'),
-                                name=get(asset, 'name'), weight=weight)
-            converted_positions.append(position)
+        converted_positions = [Position(identifier=p, weight=weight) for p in positions]
         return cls(converted_positions, date)
 
     @classmethod
     def from_dicts(cls, positions: List[Dict],
                    date: datetime.date = datetime.date.today(),
-                   reference_notional: float = None,
-                   **kwargs):
+                   reference_notional: float = None):
         """ Create PostionSet instance from a list of position-object-like dictionaries """
         positions_df = pd.DataFrame(positions)
-        return cls.from_frame(positions_df, date, reference_notional, **kwargs)
+        return cls.from_frame(positions_df, date, reference_notional)
 
     @classmethod
     def from_frame(cls,
                    positions: pd.DataFrame,
                    date: datetime.date = datetime.date.today(),
                    reference_notional: float = None,
-                   add_tags: bool = False,
-                   **kwargs):
+                   add_tags: bool = False):
         """ Create PostionSet instance from a list of position-object-like dataframes """
         positions.columns = cls.__normalize_position_columns(positions)
         tag_columns = cls.__get_tag_columns(positions) if add_tags else []
         positions = positions[~positions['identifier'].isnull()]
-        id_map = cls.__resolve_identifiers(identifiers=positions['identifier'].to_list(), date=date, **kwargs)
         equalize = not ('quantity' in positions.columns.str.lower() or 'weight' in positions.columns.str.lower())
         equal_weight = 1 / len(positions)
 
         positions_list = []
         for i, row in positions.iterrows():
-            identifier = get(row, 'identifier')
-            asset = get(id_map, identifier)
             positions_list.append(
                 Position(
-                    identifier=identifier,
-                    asset_id=asset.get('id'),
-                    name=asset.get('name'),
+                    identifier=row.get('identifier'),
+                    asset_id=row.get('id'),
+                    name=row.get('name'),
                     weight=equal_weight if equalize else row.get('weight'),
                     quantity=None if equalize else row.get('quantity'),
                     tags={tag: get(row, tag) for tag in tag_columns} if len(tag_columns) else None
                 )
             )
+
         return cls(positions_list, date, reference_notional=reference_notional)
 
     @staticmethod
@@ -296,7 +293,7 @@ class PositionSet:
         return columns
 
     @staticmethod
-    def __resolve_identifiers(identifiers: List[str], date: datetime.date, **kwargs) -> Dict:
+    def __resolve_identifiers(identifiers: List[str], date: datetime.date, **kwargs) -> List:
         response = GsAssetApi.resolve_assets(
             identifier=identifiers,
             fields=['name', 'id'],
@@ -304,13 +301,20 @@ class PositionSet:
             as_of=date,
             **kwargs
         )
-        try:
-            id_map = dict(zip(response.keys(),
-                          [dict(id=asset[0]['id'], name=asset[0]['name']) for asset in response.values()]))
-        except IndexError:
-            unmapped_assets = {_id for _id, asset in response.items() if not asset}
-            raise MqValueError(f'Error in resolving the following identifiers: {unmapped_assets}')
-        return id_map
+        unmapped_assets = []
+        id_map = {}
+
+        for identifier in response:
+            if len(response[identifier]) > 0:
+                id_map[identifier] = {'id': response[identifier][0]['id'], 'name': response[identifier][0]['name']}
+            else:
+                unmapped_assets.append(identifier)
+
+        if len(unmapped_assets) > 0:
+            logging.info(f'Error in resolving the following identifiers: {unmapped_assets}. Sifting them out and '
+                         f'resolving the rest...')
+
+        return [id_map, unmapped_assets]
 
     @staticmethod
     def __get_positions_data(mqids: List[str]) -> Dict:
