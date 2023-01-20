@@ -131,7 +131,7 @@ class PositionSet:
                  date: datetime.date = datetime.date.today(),
                  divisor: float = None,
                  reference_notional: float = None,
-                 unresolved_identifiers: List[str] = None):
+                 unresolved_identifiers: List[Position] = None):
         if reference_notional is not None:
             for p in positions:
                 if p.weight is None:
@@ -173,12 +173,17 @@ class PositionSet:
         self.__reference_notional = value
 
     @property
-    def unresolved_identifiers(self) -> List[str]:
+    def unresolved_identifiers(self) -> List[Position]:
         return self.__unresolved_identifiers
 
     def get_positions(self) -> pd.DataFrame:
         """ Retrieve formatted positions """
         positions = [p.as_dict() for p in self.positions]
+        return pd.DataFrame(positions)
+
+    def get_unresolved_positions(self) -> pd.DataFrame:
+        """ Retrieve formatted unresolved positions """
+        positions = [p.as_dict() for p in self.unresolved_identifiers]
         return pd.DataFrame(positions)
 
     def equalize_position_weights(self):
@@ -207,7 +212,7 @@ class PositionSet:
         unresolved_positions = [p.identifier for p in self.positions if p.asset_id is None]
         if len(unresolved_positions):
             [id_map, unresolved_identifiers] = self.__resolve_identifiers(unresolved_positions, self.date, **kwargs)
-            self.__unresolved_identifiers = unresolved_identifiers
+            self.__unresolved_identifiers = [p for p in self.positions if p.identifier in unresolved_identifiers]
             resolved_positions = []
             for p in self.positions:
                 if p.identifier in id_map:

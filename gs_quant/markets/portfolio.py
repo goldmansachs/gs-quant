@@ -547,7 +547,7 @@ class Portfolio(PriceableImpl):
 
             for result in results:
                 if market_data is not None:
-                    update_market_data(market_data, result.base_market.market_data_dict)
+                    update_market_data(market_data, result.market_data_dict)
                 else:
                     for market in result.values():
                         update_market_data(overlay_markets.setdefault(market, {}), market.market_data)
