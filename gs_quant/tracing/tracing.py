@@ -73,6 +73,15 @@ class Tracer(ContextDecorator):
             raise MqWrappedError(f'Unable to calculate: {self.__label}') from exc_value
 
     @staticmethod
+    def record_exception(e):
+        span = Tracer.get_instance().active_span
+        if span is not None:
+            try:
+                Span._on_error(span, type(e), e, e.__traceback__)
+            except Exception:
+                pass
+
+    @staticmethod
     def reset():
         Tracer.get_instance().reset()
 
