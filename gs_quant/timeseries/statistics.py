@@ -899,7 +899,7 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
         return pd.Series(dtype=float)
 
     res = pd.Series(dtype=np.dtype(float))
-    for idx, val in y.iteritems():
+    for idx, val in y.items():
         sample = x.loc[(x.index > idx - w.w) & (x.index <= idx)] if isinstance(w.w, pd.DateOffset) else x[:idx][-w.w:]
         res.loc[idx] = percentileofscore(sample, val, kind='mean')
 

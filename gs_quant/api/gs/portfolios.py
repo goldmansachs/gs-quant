@@ -212,7 +212,7 @@ class GsPortfolioApi:
     def update_workflow_quote(cls, quote_id: str, request: SaveQuoteRequest):
         headers = {'Content-Type': 'application/x-msgpack'}
         return GsSession.current._put('/risk-internal/quote/workflow/save/{id}'.format(id=quote_id), tuple([request]),
-                                      request_headers=headers)
+                                      request_headers=headers)['results']
 
     @classmethod
     def save_workflow_quote(cls, request: SaveQuoteRequest) -> str:
