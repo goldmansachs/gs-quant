@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import logging
+import traceback
 from contextlib import ContextDecorator
 
 from opentracing import Span, UnsupportedFormatException
@@ -67,7 +68,8 @@ class Tracer(ContextDecorator):
         return self.__scope
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        Span._on_error(self.__scope.span, exc_type, exc_value, exc_tb)
+        if exc_value:
+            Span._on_error(self.__scope.span, exc_type, exc_value, Tracer.__format_traceback(exc_type, exc_value))
         self.__scope.close()
         if self.wrap_exceptions and exc_type is not None and not exc_type == MqWrappedError:
             raise MqWrappedError(f'Unable to calculate: {self.__label}') from exc_value
@@ -77,9 +79,13 @@ class Tracer(ContextDecorator):
         span = Tracer.get_instance().active_span
         if span is not None:
             try:
-                Span._on_error(span, type(e), e, e.__traceback__)
+                Span._on_error(span, type(e), e, Tracer.__format_traceback(e, type(e)))
             except Exception:
                 pass
+
+    @staticmethod
+    def __format_traceback(exc_type, exc_value):
+        return '' if exc_value is None else ''.join(traceback.format_exception(exc_type, exc_value, None, limit=10))
 
     @staticmethod
     def reset():

@@ -4407,9 +4407,9 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
         mq_df.set_index('date', inplace=True)
 
     if annualized == FXSpotCarry.ANNUALIZED:
-        mq_df['carry'] = mq_df['ann_factor'] * mq_df['forwardPoint'] / mq_df['spot']
+        mq_df['carry'] = -1 * mq_df['ann_factor'] * mq_df['forwardPoint'] / mq_df['spot']
     else:
-        mq_df['carry'] = mq_df['forwardPoint'] / mq_df['spot']
+        mq_df['carry'] = -1 * mq_df['forwardPoint'] / mq_df['spot']
     series = ExtendedSeries(mq_df['carry'], name='spotCarry')
     series.dataset_ids = ds.id
     return series

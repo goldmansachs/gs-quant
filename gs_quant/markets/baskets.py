@@ -979,9 +979,9 @@ class Basket(Asset, PositionedEntity):
     @staticmethod
     def __validate_position_set(position_set: PositionSet):
         position_set.resolve()
-        if position_set.unresolved_identifiers is not None and len(position_set.unresolved_identifiers):
+        if position_set.unresolved_positions is not None and len(position_set.unresolved_positions):
             raise MqValueError(f'Error in resolving the following identifiers for date {position_set.date}: \
-            {[p.identifier for p in position_set.unresolved_identifiers]}')
+            {[p.identifier for p in position_set.unresolved_positions]}')
 
     def __validate_ticker(self, ticker: str):
         """ Blocks ticker setter if entry is invalid """

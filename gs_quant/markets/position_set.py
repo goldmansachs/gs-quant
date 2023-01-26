@@ -131,7 +131,7 @@ class PositionSet:
                  date: datetime.date = datetime.date.today(),
                  divisor: float = None,
                  reference_notional: float = None,
-                 unresolved_identifiers: List[Position] = None):
+                 unresolved_positions: List[Position] = None):
         if reference_notional is not None:
             for p in positions:
                 if p.weight is None:
@@ -142,7 +142,7 @@ class PositionSet:
         self.__date = date
         self.__divisor = divisor
         self.__reference_notional = reference_notional
-        self.__unresolved_identifiers = unresolved_identifiers if unresolved_identifiers is not None else []
+        self.__unresolved_positions = unresolved_positions if unresolved_positions is not None else []
 
     @property
     def positions(self) -> List[Position]:
@@ -173,8 +173,8 @@ class PositionSet:
         self.__reference_notional = value
 
     @property
-    def unresolved_identifiers(self) -> List[Position]:
-        return self.__unresolved_identifiers
+    def unresolved_positions(self) -> List[Position]:
+        return self.__unresolved_positions
 
     def get_positions(self) -> pd.DataFrame:
         """ Retrieve formatted positions """
@@ -183,7 +183,7 @@ class PositionSet:
 
     def get_unresolved_positions(self) -> pd.DataFrame:
         """ Retrieve formatted unresolved positions """
-        positions = [p.as_dict() for p in self.unresolved_identifiers]
+        positions = [p.as_dict() for p in self.unresolved_positions]
         return pd.DataFrame(positions)
 
     def equalize_position_weights(self):
@@ -211,8 +211,8 @@ class PositionSet:
         """ Resolve any unmapped positions """
         unresolved_positions = [p.identifier for p in self.positions if p.asset_id is None]
         if len(unresolved_positions):
-            [id_map, unresolved_identifiers] = self.__resolve_identifiers(unresolved_positions, self.date, **kwargs)
-            self.__unresolved_identifiers = [p for p in self.positions if p.identifier in unresolved_identifiers]
+            [id_map, unresolved_positions] = self.__resolve_identifiers(unresolved_positions, self.date, **kwargs)
+            self.__unresolved_positions = [p for p in self.positions if p.identifier in unresolved_positions]
             resolved_positions = []
             for p in self.positions:
                 if p.identifier in id_map:
