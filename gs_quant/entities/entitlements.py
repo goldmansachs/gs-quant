@@ -16,6 +16,7 @@ under the License.
 
 import logging
 import pandas as pd
+from pydash import get
 from typing import List, Dict
 
 from gs_quant.api.gs.groups import GsGroupsApi
@@ -328,6 +329,15 @@ class EntitlementBlock:
         self.__groups = list(set(groups)) if groups else []
         self.__roles = list(set(roles)) if roles else []
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, EntitlementBlock):
+            return False
+        for prop in ['users', 'groups', 'roles']:
+            slf, oth = get(self, prop), get(other, prop)
+            if not (slf is None and oth is None) and not slf == oth:
+                return False
+        return True
+
     @property
     def users(self):
         return self.__users
@@ -395,6 +405,16 @@ class Entitlements:
         self.__rebalance = rebalance if rebalance else EntitlementBlock()
         self.__trade = trade if trade else EntitlementBlock()
         self.__view = view if view else EntitlementBlock()
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Entitlements):
+            return False
+        for prop in ['admin', 'delete', 'display', 'upload', 'edit', 'execute', 'plot', 'query',
+                     'rebalance', 'view', 'trade']:
+            slf, oth = get(self, prop), get(other, prop)
+            if not (slf is None and oth is None) and not slf == oth:
+                return False
+        return True
 
     @property
     def admin(self):

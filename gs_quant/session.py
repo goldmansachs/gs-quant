@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import logging
 from abc import abstractmethod
 import backoff
 import certifi
@@ -36,6 +36,8 @@ from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
 from gs_quant.json_encoder import JSONEncoder, encode_default
+
+logger = logging.getLogger(__name__)
 
 API_VERSION = 'v1'
 DEFAULT_APPLICATION = 'gs-quant'
@@ -197,18 +199,20 @@ class GsSession(ContextBase):
 
         response = self._session.request(method, url, **kwargs)
         request_id = response.headers.get('x-dash-requestid')
+        logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
 
         if response.status_code == 401:
             # Expired token or other authorization issue
             if not try_auth:
-                raise MqRequestError(response.status_code, response.text, context='{} {}'.format(method, url))
+                raise MqRequestError(response.status_code, response.text,
+                                     context=f'{request_id}: {method} {url}')
             self._authenticate()
             return self.__request(method, path, payload=payload, cls=cls,
                                   include_version=include_version, return_request_id=return_request_id,
                                   use_body=use_body, try_auth=False)
         elif not 199 < response.status_code < 300:
             raise MqRequestError(response.status_code, response.text,
-                                 context=f'{response.headers.get("")}: {method} {url}')
+                                 context=f'{request_id}: {method} {url}')
         elif 'Content-Type' in response.headers:
             if 'application/x-msgpack' in response.headers['Content-Type']:
                 res = msgpack.unpackb(response.content, raw=False)

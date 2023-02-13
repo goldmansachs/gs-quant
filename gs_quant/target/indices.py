@@ -107,6 +107,16 @@ class ApprovalComment(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class CryptoBasketParameters(Base):
+    initial_price: float = field(default=None, metadata=field_metadata)
+    target_notional: float = field(default=None, metadata=field_metadata)
+    divisor: float = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class CustomBasketRiskParams(Base):
     risk_model: Optional[str] = field(default=None, metadata=field_metadata)
     fx_hedged: Optional[bool] = field(default=None, metadata=field_metadata)
@@ -181,6 +191,15 @@ class IndicesPositionInput(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class Link(Base):
+    title: Optional[str] = field(default=None, metadata=field_metadata)
+    source: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class PositionPriceInput(Base):
     asset_id: str = field(default=None, metadata=field_metadata)
     quantity: Optional[float] = field(default=None, metadata=field_metadata)
@@ -216,6 +235,16 @@ class CreditCustomBasketPricingParameters(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class CryptoBasketRebalanceInputs(IndicesRebalanceInputTypes):
+    asset_class: AssetClass = field(default='Digital Asset', metadata=field_metadata)
+    position_set: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
+    parameters: CryptoBasketParameters = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsPricingParameters(Base):
     currency: Optional[IndicesCurrency] = field(default=None, metadata=field_metadata)
     asset_data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
@@ -226,9 +255,9 @@ class CustomBasketsPricingParameters(Base):
     target_notional: Optional[float] = field(default=None, metadata=field_metadata)
     pricing_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     vendor: Optional[MarketDataVendor] = field(default=None, metadata=field_metadata)
-    weighting_strategy: Optional[str] = field(default=None, metadata=field_metadata)
+    weighting_strategy: Optional[PositionSetWeightingStrategy] = field(default=None, metadata=field_metadata)
     reweight: Optional[bool] = field(default=False, metadata=field_metadata)
-    asset_overwrite_data_set_id: Optional[str] = field(default='BASKET_EOD_OVERWRITE', metadata=field_metadata)
+    asset_overwrite_data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -237,6 +266,14 @@ class CustomBasketsPricingParameters(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsRiskScheduleInputs(Base):
     risk_models: Optional[Tuple[CustomBasketRiskParams, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class GIRDomain(Base):
+    document_links: Optional[Tuple[Link, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -307,6 +344,18 @@ class CreditCustomBasketRebalanceInputs(IndicesRebalanceInputTypes):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class CryptoBasketCreateInputs(IndicesConstructRequestTypes):
+    ticker: str = field(default=None, metadata=field_metadata)
+    name: str = field(default=None, metadata=field_metadata)
+    position_set: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
+    asset_class: AssetClass = field(default='Digital Asset', metadata=field_metadata)
+    parameters: CryptoBasketParameters = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsBackcastInputs(Base):
     position_set: Tuple[IndicesPositionSet, ...] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
@@ -368,6 +417,7 @@ class CustomBasketsRebalanceInputs(Base):
     hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
     portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
     save_as_draft: Optional[bool] = field(default=False, metadata=field_metadata)
+    allow_in_position_rebalance: Optional[bool] = field(default=False, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

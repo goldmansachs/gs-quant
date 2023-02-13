@@ -45,6 +45,7 @@ class ComponentType(EnumBase, Enum):
     rates = 'rates'
     relatedLinks = 'relatedLinks'
     research = 'research'
+    screener = 'screener'
     selector = 'selector'
     separator = 'separator'
     stackedBarChart = 'stackedBarChart'
@@ -292,6 +293,15 @@ class ResearchComponentParameters(Base):
     tooltip: Optional[str] = field(default=None, metadata=field_metadata)
     commentary_channels: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     commentary_to_desktop_link: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class ScreenerComponentParameters(Base):
+    height: float = field(default=None, metadata=field_metadata)
+    tooltip: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

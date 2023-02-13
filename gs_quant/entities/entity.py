@@ -40,11 +40,11 @@ from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError, MqValueError
+from gs_quant.markets.factor import Factor
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
-from gs_quant.markets.position_set import PositionSet, Position
+from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport, \
     flatten_results_into_df, get_thematic_breakdown_as_df
-from gs_quant.markets.factor import Factor
 from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
@@ -414,47 +414,13 @@ class PositionedEntity(metaclass=ABCMeta):
                                            'every position must have a quantity and cannot have a weight.')
                     new_sets.append(pos_set)
                 else:
-                    new_sets.append(self._convert_pos_set_with_weights(pos_set, currency))
+                    pos_set.price(currency)
+                    new_sets.append(pos_set)
             GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in new_sets],
                                             net_positions=net_positions)
             time.sleep(3)
         else:
             raise NotImplementedError
-
-    @staticmethod
-    def _convert_pos_set_with_weights(position_set: PositionSet, currency: Currency) -> PositionSet:
-        positions_to_price = []
-        for position in position_set.positions:
-            if position.weight is None:
-                raise MqValueError('If you are uploading a position set with a notional value, every position in that '
-                                   'set must have a weight')
-            if position.quantity is not None:
-                raise MqValueError('If you are uploading a position set with a notional value, no position in that '
-                                   'set can have a quantity')
-            positions_to_price.append({
-                'assetId': position.asset_id,
-                'weight': position.weight
-            })
-        payload = {
-            'positions': positions_to_price,
-            'parameters': {
-                'targetNotional': position_set.reference_notional,
-                'currency': currency.value,
-                'pricingDate': position_set.date.strftime('%Y-%m-%d'),
-                'assetDataSetId': 'GSEOD',
-                'notionalType': 'Gross'
-            }
-        }
-        try:
-            price_results = GsSession.current._post('/price/positions', payload)
-        except Exception as e:
-            raise MqValueError('There was an error pricing your positions. Please try uploading your positions as '
-                               f'quantities instead: {e}')
-        positions = [Position(identifier=p['assetId'],
-                              asset_id=p['assetId'],
-                              quantity=p['quantity']) for p in price_results['positions']]
-        return PositionSet(date=position_set.date,
-                           positions=positions)
 
     def get_positions_data(self,
                            start: dt.date = DateLimit.LOW_LIMIT.value,

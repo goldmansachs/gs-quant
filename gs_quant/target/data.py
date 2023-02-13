@@ -23,6 +23,13 @@ from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
 
 
+class DataSetType(EnumBase, Enum):    
+    
+    """Type of the dataset"""
+
+    PlotTool_Pro = 'PlotTool Pro'    
+
+
 class DelayExclusionType(EnumBase, Enum):    
     
     """Type of the delay exclusion"""
@@ -221,6 +228,17 @@ class ParserEntity(Base):
     trades: Optional[bool] = field(default=None, metadata=field_metadata)
     only_mqtick_fields: Optional[bool] = field(default=None, metadata=field_metadata)
     include_trd_flg_proc: Optional[bool] = field(default=None, metadata=field_metadata)
+    keep_raw_fields: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class QueryProcessor(Base):
+    processor_name: Optional[str] = field(default=None, metadata=field_metadata)
+    manual_processor_name: Optional[str] = field(default=None, metadata=field_metadata)
+    params: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -331,6 +349,8 @@ class DataSetParameters(Base):
     apply_entity_entitlements: Optional[bool] = field(default=None, metadata=field_metadata)
     development_status: Optional[DevelopmentStatus] = field(default=None, metadata=field_metadata)
     internal_owned: Optional[bool] = field(default=None, metadata=field_metadata)
+    cr_limit_read: Optional[int] = field(default=None, metadata=field_metadata)
+    cr_limit_write: Optional[int] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -390,6 +410,8 @@ class ProcessorEntity(Base):
     parsers: Optional[Tuple[ParserEntity, ...]] = field(default=None, metadata=field_metadata)
     deduplicate: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     enum_type: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    fill_fwd: Optional[str] = field(default=None, metadata=field_metadata)
+    additional_processors: Optional[Tuple[QueryProcessor, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -463,10 +485,14 @@ class DataQuery(Base):
     use_project_processor: Optional[bool] = field(default=False, metadata=field_metadata)
     snapshot: Optional[bool] = field(default=False, metadata=field_metadata)
     search_until: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-    offset_to_exchange_close: Optional[str] = field(default=None, metadata=field_metadata)
+    markout: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
     offset_to_exchange_open: Optional[str] = field(default=None, metadata=field_metadata)
+    offset_to_exchange_close: Optional[str] = field(default=None, metadata=field_metadata)
     multi_trading_session: Optional[bool] = field(default=None, metadata=field_metadata)
+    multi_session: Optional[bool] = field(default=None, metadata=field_metadata)
+    quote_consolidation: Optional[bool] = field(default=None, metadata=field_metadata)
+    time_index: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 @handle_camel_case_args
@@ -648,3 +674,4 @@ class DataSetEntity(Base):
     last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
     last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    type_: Optional[DataSetType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))

@@ -267,7 +267,7 @@ class GsAssetApi:
         periods = (end_date - start_date).days // 30
         start_date_str = start_date.isoformat()
 
-        if periods > 0:
+        if periods > 1:
             end_dates = pd.date_range(start=start_date, end=end_date, periods=periods, closed='right')
             for date in end_dates:
                 end_date_str = date.date().isoformat()

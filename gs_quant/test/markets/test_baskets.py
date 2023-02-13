@@ -101,7 +101,7 @@ def test_basket_error_messages(mocker):
 
     # test non internal errors
     with pytest.raises(MqError, match=ErrorMessage.NON_INTERNAL.value):
-        basket.flagship
+        basket.flagship = False
 
     # test unmodifiable errors
     with pytest.raises(MqError, match=ErrorMessage.UNMODIFIABLE.value):

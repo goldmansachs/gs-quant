@@ -270,7 +270,7 @@ def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
         raw_point = r['coordinate'].get('point', '')
         point = ';'.join(raw_point) if isinstance(raw_point, list) else raw_point
         r['coordinate'].update({'point': point})
-        r['coordinate'].update({'value': r['value']})
+        r['coordinate'].update({'value': r.get('value', None)})
         r['coordinate'].update({'permissions': r['permissions']})
         coordinates.append(r['coordinate'])
 

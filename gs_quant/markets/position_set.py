@@ -22,7 +22,8 @@ from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.errors import MqValueError
-from gs_quant.target.common import Position as CommonPosition, PositionTag
+from gs_quant.session import GsSession
+from gs_quant.target.common import Position as CommonPosition, PositionTag, Currency
 from gs_quant.target.common import PositionSet as CommonPositionSet
 from gs_quant.target.indices import PositionPriceInput
 
@@ -222,6 +223,42 @@ class PositionSet:
                 if p.asset_id is not None:
                     resolved_positions.append(p)
             self.positions = resolved_positions
+
+    def price(self, currency: Currency = Currency.USD):
+        """
+        Price position set positions and convert weights into quantities
+        :param currency: reference notional currency (defaults to USD if not passed in)
+        """
+        positions_to_price = []
+        for position in self.positions:
+            if position.weight is None:
+                raise MqValueError('If you are uploading a position set with a notional value, every position in that '
+                                   'set must have a weight')
+            if position.quantity is not None:
+                raise MqValueError('If you are uploading a position set with a notional value, no position in that '
+                                   'set can have a quantity')
+            positions_to_price.append({
+                'assetId': position.asset_id,
+                'weight': position.weight
+            })
+        payload = {
+            'positions': positions_to_price,
+            'parameters': {
+                'targetNotional': self.reference_notional,
+                'currency': currency.value,
+                'pricingDate': self.date.strftime('%Y-%m-%d'),
+                'assetDataSetId': 'GSEOD',
+                'notionalType': 'Gross'
+            }
+        }
+        try:
+            price_results = GsSession.current._post('/price/positions', payload)
+        except Exception as e:
+            raise MqValueError('There was an error pricing your positions. Please try uploading your positions as '
+                               f'quantities instead: {e}')
+        self.positions = [Position(identifier=p['assetId'],
+                                   asset_id=p['assetId'],
+                                   quantity=p['quantity']) for p in price_results['positions']]
 
     def to_target(self, common: bool = True) -> Union[CommonPositionSet, List[PositionPriceInput]]:
         """ Returns PostionSet type defined in target file for API payloads """

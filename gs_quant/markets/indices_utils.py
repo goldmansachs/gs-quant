@@ -107,6 +107,7 @@ class IndicesDatasets(EnumBase, Enum):
     GIRBASKETCONSTITUENTS = 'GIRBASKETCONSTITUENTS'
     GSBASKETCONSTITUENTS = 'GSBASKETCONSTITUENTS'
     GSCB_FLAGSHIP = 'GSCB_FLAGSHIP'
+    GSCREDITBASKETCONSTITUENTS = 'GSCREDITBASKETCONSTITUENTS'
     STS_FUNDAMENTALS = 'STS_FUNDAMENTALS'
     STS_INDICATIVE_LEVELS = 'STS_INDICATIVE_LEVELS'
 
@@ -494,3 +495,40 @@ def get_flagships_constituents(fields: List[str] = [],
         basket_map[basket_id]['constituents'].append(row)
 
     return pd.DataFrame([r for r in basket_map.values() if r is not None])
+
+
+def get_constituents_dataset_coverage(basket_type: BasketType = BasketType.CUSTOM_BASKET,
+                                      asset_class: AssetClass = AssetClass.Equity,
+                                      as_of: dt.datetime = None) -> pd.DataFrame:
+    """
+    Retrieve a list of baskets covered by constituents datasets
+
+    :param basket_type: Basket type
+    :param asset_class: Asset class (defaults to Equity)
+    :param as_of: Date for which to retrieve coverage
+    :return: baskets covered by the constituents dataset
+
+    **Usage**
+
+    Retrieve a list of baskets covered by constituents datasets
+
+    **Examples**
+
+    Retrieve basket constituent dataset coverage
+
+    >>> from gs_quant.markets.indices_utils import *
+    >>>
+    >>> GSBASKETCONSTITUENTS_COVERAGE = get_constituents_dataset_coverage()
+    >>> GIRBASKETCONSTITUENTS_COVERAGE = get_constituents_dataset_coverage(basket_type=BasketType.RESEARCH_BASKET)
+    >>> GSCREDITBASKETCONSTITUENTS_COVERAGE = get_constituents_dataset_coverage(asset_class=AssetClass.Credit)
+
+    **See also**
+
+    :func:`get_flagships_constituents`
+    """
+    query = dict(fields=['id', 'name', 'region', 'ticker', 'type', 'assetClass'], type=[basket_type],
+                 asset_class=[asset_class], is_pair_basket=[False], listed=[True])
+    if asset_class != AssetClass.Equity:
+        query.pop('is_pair_basket')
+    response = GsAssetApi.get_many_assets_data_scroll(**query, as_of=as_of, limit=2000, scroll='1m')
+    return pd.DataFrame(response)

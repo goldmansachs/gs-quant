@@ -1914,10 +1914,10 @@ def test_avg_realized_vol():
     with pytest.raises(MqValueError):
         tm.average_realized_volatility(mock_spx, '1w', composition_date='1d')
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(MqValueError):
         tm.average_realized_volatility(mock_spx, '1w', Returns.SIMPLE)
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(MqValueError):
         tm.average_realized_volatility(mock_spx, '1w', Returns.SIMPLE, 201)
 
     replace.restore()
@@ -2582,35 +2582,37 @@ def test_var_swap_tenors():
 
 
 def test_forward_var_term():
-    idx = pd.DatetimeIndex([datetime.date(2020, 4, 1), datetime.date(2020, 4, 2)] * 6)
     data = {
-        'varSwap': [1.1, 1, 2.1, 2, 3.1, 3, 4.1, 4, 5.1, 5, 6.1, 6],
-        'tenor': ['1w', '1w', '1m', '1m', '5w', '5w', '2m', '2m', '3m', '3m', '5m', '5m']
+        'varSwap': [21, 20.5, 20, 19.7, 20.3],
+        'date': [datetime.date(2023, 2, 15), datetime.date(2023, 2, 22), datetime.date(2023, 3, 1),
+                 datetime.date(2023, 3, 8), datetime.date(2023, 3, 15)]
     }
-    out = MarketDataResponseFrame(data=data, index=idx)
+    out = ExtendedSeries(data=data['varSwap'], name='varSwap',
+                         index=[pd.Timestamp(d) for d in data['date']])
     out.dataset_ids = _test_datasets
+    out.attrs = dict(latest=datetime.date(2023, 1, 31))
 
     replace = Replacer()
-    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock = replace('gs_quant.timeseries.measures.var_term', Mock())
     market_mock.return_value = out
 
     # Equity
-    expected = pd.Series([np.nan, 5.29150, 6.55744], name='forwardVarTerm',
-                         index=pd.DatetimeIndex(['2020-05-01', '2020-06-02', '2020-07-02'], name='expirationDate'))
-    with DataContext('2020-01-01', '2020-07-31'):
-        actual = tm.forward_var_term(Index('MA123', AssetClass.Equity, '123'), datetime.date(2020, 4, 2))
+    expected = pd.Series([np.nan, 19.05194455628533, 18.02476051953111, 18.088723159586152, 22.74345522665404],
+                         name='forwardVarTerm',
+                         index=pd.DatetimeIndex(['2023-02-15', '2023-02-22', '2023-03-01', '2023-03-08', '2023-03-15']))
+    with DataContext('2023-01-31', '2024-07-31'):
+        actual = tm.forward_var_term(Index('MA123', AssetClass.Equity, '123'))
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     market_mock.assert_called_once()
 
     # FX
-    expected_fx = pd.Series([np.nan, 5.29150, 6.55744, 7.24569], name='forwardVarTerm',
-                            index=pd.DatetimeIndex(['2020-05-01', '2020-06-02', '2020-07-02', '2020-09-02'],
-                                                   name='expirationDate'))
+    cross_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
+    cross_mock.return_value = 'EURUSD'
 
-    with DataContext('2020-01-01', '2020-09-02'):
+    with DataContext('2023-01-31', '2024-07-31'):
         actual_fx = tm.forward_var_term(Cross('ABCDE', 'EURUSD'))
-    assert_series_equal(expected_fx, pd.Series(actual_fx))
+    assert_series_equal(expected, pd.Series(actual_fx))
     assert actual_fx.dataset_ids == _test_datasets
 
     # no data
@@ -2619,11 +2621,10 @@ def test_forward_var_term():
     actual = tm.forward_var_term(Index('MA123', AssetClass.Equity, '123'))
     assert actual.empty
 
+    replace.restore()
     # real-time
     with pytest.raises(NotImplementedError):
         tm.forward_var_term(..., real_time=True)
-
-    replace.restore()
 
 
 def _mock_var_swap_data(_cls, q, ignore_errors=False):
@@ -2976,24 +2977,27 @@ def test_forward_vol():
 
 
 def test_forward_vol_term():
-    idx = pd.DatetimeIndex([datetime.date(2020, 4, 1), datetime.date(2020, 4, 2)] * 6)
     data = {
-        'impliedVolatility': [1.1, 1, 2.1, 2, 3.1, 3, 4.1, 4, 5.1, 5, 6.1, 6],
-        'tenor': ['1w', '1w', '1m', '1m', '5w', '5w', '2m', '2m', '3m', '3m', '5m', '5m']
+        'impliedVolatility': [31, 27, 28, 21, 21.5],
+        'date': [datetime.date(2023, 2, 1), datetime.date(2023, 2, 2), datetime.date(2023, 2, 3),
+                 datetime.date(2023, 2, 6), datetime.date(2023, 2, 7)]
     }
-    out = MarketDataResponseFrame(data=data, index=idx)
+    out = ExtendedSeries(data=data['impliedVolatility'], name='impliedVolatility',
+                         index=[pd.Timestamp(d) for d in data['date']])
     out.dataset_ids = _test_datasets
+    out.attrs = dict(latest=datetime.date(2023, 1, 31))
 
     replace = Replacer()
-    market_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    market_mock = replace('gs_quant.timeseries.measures.vol_term', Mock())
     market_mock.return_value = out
 
     # Equity
-    expected = pd.Series([np.nan, 5.29150, 6.55744], name='forwardVolTerm',
-                         index=pd.DatetimeIndex(['2020-05-01', '2020-06-02', '2020-07-02'], name='expirationDate'))
-    with DataContext('2020-01-01', '2020-07-31'):
+    expected = pd.Series([np.nan, 18.51754260110053, 24.835557737474247, 14.242257163702778, 20.171543580777623],
+                         name='forwardVolTerm',
+                         index=pd.DatetimeIndex(['2023-02-01', '2023-02-02', '2023-02-03', '2023-02-06', '2023-02-07']))
+    with DataContext('2023-01-31', '2024-07-31'):
         actual = tm.forward_vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100,
-                                     datetime.date(2020, 4, 2))
+                                     datetime.date(2023, 1, 31))
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
     market_mock.assert_called_once()
@@ -3001,13 +3005,10 @@ def test_forward_vol_term():
     # FX
     cross_mock = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
     cross_mock.return_value = 'EURUSD'
-    expected_fx = pd.Series([np.nan, 5.29150, 6.55744, 7.24569], name='forwardVolTerm',
-                            index=pd.DatetimeIndex(['2020-05-01', '2020-06-02', '2020-07-02', '2020-09-02'],
-                                                   name='expirationDate'))
 
-    with DataContext('2020-01-01', '2020-09-02'):
+    with DataContext('2023-01-31', '2024-07-31'):
         actual_fx = tm.forward_vol_term(Cross('ABCDE', 'EURUSD'), tm.VolReference.SPOT, 100)
-    assert_series_equal(expected_fx, pd.Series(actual_fx))
+    assert_series_equal(expected, pd.Series(actual_fx))
     assert actual_fx.dataset_ids == _test_datasets
 
     # no data
@@ -3016,11 +3017,10 @@ def test_forward_vol_term():
     actual = tm.forward_vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100)
     assert actual.empty
 
+    replace.restore()
     # real-time
     with pytest.raises(NotImplementedError):
         tm.forward_vol_term(..., tm.VolReference.SPOT, 100, real_time=True)
-
-    replace.restore()
 
 
 def test_get_latest_term_structure_data():

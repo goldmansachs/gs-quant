@@ -276,6 +276,11 @@ class Base(ABC):
         """The public property names of this class"""
         return set(f[:-1] if f[-1] == '_' else f for f in cls._fields_by_name().keys())
 
+    @classmethod
+    def properties_init(cls) -> set:
+        """The public property names of this class"""
+        return set(f[:-1] if f[-1] == '_' else f for f, v in cls._fields_by_name().items() if v.init)
+
     def as_dict(self, as_camel_case: bool = False) -> dict:
         """Dictionary of the public, non-null properties and values"""
 

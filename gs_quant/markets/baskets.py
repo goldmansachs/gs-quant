@@ -213,10 +213,11 @@ class Basket(Asset, PositionedEntity):
 
         """
         edit_inputs, rebal_inputs = self.__get_updates()
-        entitlements = self.__entitlements.to_target()
         response = None
-        if not entitlements == self.__initial_entitlements:
-            response = GsAssetApi.update_asset_entitlements(self.id, entitlements)
+
+        init_entitlements = BasketEntitlements.from_target(self.__initial_entitlements)
+        if not init_entitlements == self.__entitlements:
+            response = GsAssetApi.update_asset_entitlements(self.id, self.__entitlements.to_target())
         if edit_inputs is None and rebal_inputs is None:
             if response:
                 return response.as_dict()
@@ -666,7 +667,6 @@ class Basket(Asset, PositionedEntity):
         self.__entitlements = value
 
     @property
-    @_validate(ErrorMessage.NON_INTERNAL)
     def flagship(self) -> Optional[bool]:
         """ If the basket is flagship (internal only) """
         return self.__flagship

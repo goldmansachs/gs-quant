@@ -127,6 +127,15 @@ class FactorExposure(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class FactorMCTRByGroupConstraint(Base):
+    factors: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    max_: float = field(default=None, metadata=config(field_name='max', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class HedgerComparisonProperties(Base):
     hedge_value_type: str = field(default=None, metadata=field_metadata)
     hedge_value: float = field(default=None, metadata=field_metadata)
@@ -326,9 +335,12 @@ class FactorHedgeParameters(Base):
     max_weight: Optional[float] = field(default=None, metadata=field_metadata)
     min_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
     max_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
+    max_factor_mctr: Optional[float] = field(default=None, metadata=config(field_name='maxFactorMCTR', exclude=exclude_none))
+    max_factor_mctr_by_group: Optional[Tuple[FactorMCTRByGroupConstraint, ...]] = field(default=None, metadata=config(field_name='maxFactorMCTRByGroup', exclude=exclude_none))
     market_participation_rate: Optional[float] = field(default=10, metadata=field_metadata)
     asset_constraints: Optional[Tuple[AssetConstraint, ...]] = field(default=None, metadata=field_metadata)
     constrain_assets_by_notional: Optional[bool] = field(default=None, metadata=field_metadata)
+    allow_long_short: Optional[bool] = field(default=None, metadata=field_metadata)
     factor_constraints: Optional[Tuple[FactorConstraint, ...]] = field(default=None, metadata=field_metadata)
     classification_constraints: Optional[Tuple[ClassificationConstraint, ...]] = field(default=None, metadata=field_metadata)
     esg_constraints: Optional[Tuple[ESGConstraint, ...]] = field(default=None, metadata=field_metadata)

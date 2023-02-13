@@ -45,6 +45,18 @@ class AssetScreenerCarbonRequestFilter(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class AssetScreenerESGRequestFilter(Base):
+    g_percentile: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    g_regional_percentile: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    es_percentile: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    es_disclosure_percentage: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    es_momentum_percentile: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCreditRequestFilters(Base):
     face_value: Optional[float] = field(default=None, metadata=field_metadata)
     direction: Optional[str] = field(default=None, metadata=field_metadata)
@@ -53,6 +65,7 @@ class AssetScreenerCreditRequestFilters(Base):
     gs_charge_dollars: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     duration: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     carbon_data: Optional[AssetScreenerCarbonRequestFilter] = field(default=None, metadata=field_metadata)
+    esg_data: Optional[AssetScreenerESGRequestFilter] = field(default=None, metadata=field_metadata)
     issue_date: Optional[AssetScreenerRequestFilterDateLimits] = field(default=None, metadata=field_metadata)
     yield_: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=config(field_name='yield', exclude=exclude_none))
     spread: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
@@ -61,7 +74,7 @@ class AssetScreenerCreditRequestFilters(Base):
     mid_price: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     maturity: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     amount_outstanding: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    rating: Optional[AssetScreenerCreditStandardAndPoorsRatingOptions] = field(default=None, metadata=field_metadata)
+    rating_standard_and_poors: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
     seniority: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
     ticker: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
     cusip: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
@@ -77,6 +90,7 @@ class AssetScreenerCreditRequestFilters(Base):
     gs_indicative_sell_yield: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     region: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
     sector: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    industry: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -93,6 +107,7 @@ class AssetScreenerCreditResponseItem(Base):
     bbid: Optional[str] = field(default=None, metadata=field_metadata)
     currency: Optional[Currency] = field(default=None, metadata=field_metadata)
     region: Optional[Region] = field(default=None, metadata=field_metadata)
+    industry: Optional[str] = field(default=None, metadata=field_metadata)
     seniority: Optional[str] = field(default=None, metadata=field_metadata)
     ticker: Optional[str] = field(default=None, metadata=field_metadata)
     rating_standard_and_poors: Optional[str] = field(default=None, metadata=field_metadata)
@@ -121,6 +136,11 @@ class AssetScreenerCreditResponseItem(Base):
     net_zero_emissions_target: Optional[str] = field(default=None, metadata=field_metadata)
     emissions_intensity_enterprise_value: Optional[float] = field(default=None, metadata=field_metadata)
     emissions_intensity_revenue: Optional[float] = field(default=None, metadata=field_metadata)
+    g_percentile: Optional[float] = field(default=None, metadata=field_metadata)
+    g_regional_percentile: Optional[float] = field(default=None, metadata=field_metadata)
+    es_percentile: Optional[float] = field(default=None, metadata=field_metadata)
+    es_disclosure_percentage: Optional[float] = field(default=None, metadata=field_metadata)
+    es_momentum_percentile: Optional[float] = field(default=None, metadata=field_metadata)
     direction: Optional[str] = field(default=None, metadata=field_metadata)
     face_value: Optional[float] = field(default=None, metadata=field_metadata)
 

@@ -725,6 +725,8 @@ class OptimizerStrategy:
             parameters[key] = universe[key]
         parameters['riskModel'] = self.risk_model.id
         if self.turnover:
+            if self.turnover.turnover_portfolio.reference_notional is not None:
+                self.turnover.turnover_portfolio.price()
             turnover_dict = self.turnover.to_dict()
             for key in turnover_dict:
                 parameters[key] = turnover_dict[key]

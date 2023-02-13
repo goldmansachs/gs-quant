@@ -27,10 +27,10 @@ class RiskModelCoverage(EnumBase, Enum):
     
     """Allowed risk model coverages"""
 
+    Country = 'Country'
     Global = 'Global'
-    Region = 'Region'
-    Region_Excluding_Countries = 'Region Excluding Countries'
-    Country = 'Country'    
+    Market_Type = 'Market Type'
+    Region = 'Region'    
 
 
 class RiskModelDataMeasure(EnumBase, Enum):    
@@ -83,7 +83,7 @@ class RiskModelTerm(EnumBase, Enum):
     """Allowed risk model terms"""
 
     Trading = 'Trading'
-    Day = 'Day'
+    Daily = 'Daily'
     Short = 'Short'
     Medium = 'Medium'
     Long = 'Long'    
@@ -272,6 +272,7 @@ class RiskModelDataRequest(Base):
     measures: Tuple[RiskModelDataMeasure, ...] = field(default=None, metadata=field_metadata)
     assets: Optional[RiskModelDataAssetsRequest] = field(default=None, metadata=field_metadata)
     limit_factors: Optional[bool] = field(default=True, metadata=field_metadata)
+    base_currency_factor: Optional[str] = field(default=None, metadata=field_metadata)
     format_: Optional[str] = field(default='Json', metadata=config(field_name='format', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 

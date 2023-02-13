@@ -401,7 +401,9 @@ class MqexsOtcSettlementType(EnumBase, Enum):
     Calendar_Month_Average = 'Calendar Month Average'
     Trade_Month_Average = 'Trade Month Average'
     Physical = 'Physical'
-    CalMonth_Avg_No_Roll_Adjust = 'CalMonth Avg No Roll Adjust'    
+    CalMonth_Avg_No_Roll_Adjust = 'CalMonth Avg No Roll Adjust'
+    Heren_Month_Ahead = 'Heren Month Ahead'
+    Heren_Day_Ahead = 'Heren Day Ahead'    
 
 
 class MqexsPricingType(EnumBase, Enum):    
@@ -417,10 +419,14 @@ class MqexsPricingType(EnumBase, Enum):
     OneDeltaStream = 'OneDeltaStream'
     OptionChain = 'OptionChain'
     RFQ = 'RFQ'
+    RFQSales = 'RFQSales'
     Roll = 'Roll'
+    RFQRollSales = 'RFQRollSales'
     Swap = 'Swap'
+    RFQSwapSales = 'RFQSwapSales'
     TradableStream = 'TradableStream'
-    UnifiedRFQ = 'UnifiedRFQ'    
+    UnifiedRFQ = 'UnifiedRFQ'
+    PCORFQ = 'PCORFQ'    
 
 
 class MqexsSide(EnumBase, Enum):    

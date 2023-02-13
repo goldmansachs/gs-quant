@@ -102,35 +102,8 @@ class ReportType(EnumBase, Enum):
     Backtest_Run = 'Backtest Run'
     Analytics = 'Analytics'
     Risk_Calculation = 'Risk Calculation'
+    Factor_Overview_Email = 'Factor Overview Email'
     PCO = 'PCO'    
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class Report(Base):
-    position_source_id: str = field(default=None, metadata=field_metadata)
-    position_source_type: PositionSourceType = field(default=None, metadata=field_metadata)
-    type_: ReportType = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
-    parameters: ReportParameters = field(default=None, metadata=field_metadata)
-    calculation_time: Optional[float] = field(default=None, metadata=field_metadata)
-    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
-    asset_id: Optional[str] = field(default=None, metadata=field_metadata)
-    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
-    earliest_start_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
-    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
-    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    measures: Optional[Tuple[ReportMeasures, ...]] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=field_metadata)
-    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
-    status: Optional[ReportStatus] = field(default=None, metadata=field_metadata)
-    latest_execution_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    latest_end_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    percentage_complete: Optional[float] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -179,6 +152,34 @@ class ReportToggleEntityRequest(Base):
     user: Optional[User] = field(default=None, metadata=field_metadata)
     is_delete: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class Report(Base):
+    position_source_id: str = field(default=None, metadata=field_metadata)
+    position_source_type: PositionSourceType = field(default=None, metadata=field_metadata)
+    type_: ReportType = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    parameters: ReportParameters = field(default=None, metadata=field_metadata)
+    calculation_time: Optional[float] = field(default=None, metadata=field_metadata)
+    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
+    asset_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    earliest_start_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    measures: Optional[Tuple[ReportMeasures, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    status: Optional[ReportStatus] = field(default=None, metadata=field_metadata)
+    latest_execution_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    latest_end_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    percentage_complete: Optional[float] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args

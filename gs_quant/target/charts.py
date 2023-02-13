@@ -47,6 +47,14 @@ class ChartAnnotationLineType(EnumBase, Enum):
     solid = 'solid'    
 
 
+class ChartAnnotationRangeLabelType(EnumBase, Enum):    
+    
+    """Type of the range label."""
+
+    withPct = 'withPct'
+    withoutPct = 'withoutPct'    
+
+
 class ChartAnnotationTextAlign(EnumBase, Enum):    
     
     """Alignment of the text."""
@@ -134,6 +142,7 @@ class ChartType(EnumBase, Enum):
     
     """Chart Type"""
 
+    bar = 'bar'
     line = 'line'
     scatter = 'scatter'    
 
@@ -143,6 +152,8 @@ class ChartType(EnumBase, Enum):
 @dataclass(unsafe_hash=True, repr=False)
 class ChartDisplaySettings(Base):
     scatter_fill: Optional[bool] = field(default=None, metadata=field_metadata)
+    bar_chart_type: Optional[str] = field(default=None, metadata=field_metadata)
+    bar_padding: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -201,6 +212,7 @@ class ParameterField(Base):
 class XAxisSettings(Base):
     auto_fit_range_to_data: Optional[bool] = field(default=None, metadata=field_metadata)
     show_grid_lines: Optional[bool] = field(default=None, metadata=field_metadata)
+    ignore_nil_date: Optional[bool] = field(default=None, metadata=field_metadata)
     x_axis_date_format: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
@@ -217,6 +229,7 @@ class YAxisSettings(Base):
     min_: Optional[int] = field(default=None, metadata=config(field_name='min', exclude=exclude_none))
     show_grid_lines: Optional[bool] = field(default=None, metadata=field_metadata)
     hide: Optional[bool] = field(default=None, metadata=field_metadata)
+    invert_axis: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -242,6 +255,7 @@ class ChartAnnotation(Base):
     line_type: Optional[ChartAnnotationLineType] = field(default=None, metadata=field_metadata)
     line_width: Optional[float] = field(default=None, metadata=field_metadata)
     radius: Optional[float] = field(default=None, metadata=field_metadata)
+    range_label_type: Optional[ChartAnnotationRangeLabelType] = field(default=None, metadata=field_metadata)
     text_align: Optional[ChartAnnotationTextAlign] = field(default=None, metadata=field_metadata)
     text_decoration: Optional[ChartAnnotationTextDecoration] = field(default=None, metadata=field_metadata)
     text_width: Optional[float] = field(default=None, metadata=field_metadata)
@@ -306,6 +320,7 @@ class TemplateVariable(Base):
     display_name: str = field(default=None, metadata=field_metadata)
     constructor_type: str = field(default=None, metadata=field_metadata)
     parameters: ConstructorParameter = field(default=None, metadata=field_metadata)
+    default_value: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
     hide: Optional[bool] = field(default=False, metadata=field_metadata)
     tooltip: Optional[str] = field(default=None, metadata=field_metadata)
 

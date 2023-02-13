@@ -1084,7 +1084,7 @@ def _format_multiple_factor_table(factor_data: List[Dict],
             formatted_data[date][data['factor']] = data[key]
         else:
             formatted_data[date] = {
-                'date': date,
+                'Date': date,
                 data['factor']: data[key]
             }
 

@@ -452,6 +452,15 @@ PricePips.__doc__ = "Present value in pips"
 ProbabilityOfExercise = RiskMeasure(name="ProbabilityOfExercise", measure_type=RiskMeasureType("Probability Of Exercise"))
 ProbabilityOfExercise.__doc__ = "Probability Of Exercise"
 
+RFRFXRate = RiskMeasure(name="RFRFXRate", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("RFRFXRate"))
+RFRFXRate.__doc__ = "RFRFXRate"
+
+RFRFXSprExSpkRate = RiskMeasure(name="RFRFXSprExSpkRate", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("RFRFXSpreadRateExcludingSpikes"))
+RFRFXSprExSpkRate.__doc__ = "RFRFXSprExSpkRate"
+
+RFRFXSprRate = RiskMeasure(name="RFRFXSprRate", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("RFRFXSpreadRate"))
+RFRFXSprRate.__doc__ = "RFRFXSprRate"
+
 ResolvedInstrumentValues = RiskMeasure(name="ResolvedInstrumentValues", measure_type=RiskMeasureType("Resolved Instrument Values"))
 ResolvedInstrumentValues.__doc__ = "Resolved InstrumentBase Values"
 

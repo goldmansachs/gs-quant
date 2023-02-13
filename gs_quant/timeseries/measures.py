@@ -30,6 +30,7 @@ from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.data.core import DataContext
 from gs_quant.data.fields import Fields
 from gs_quant.data.log import log_debug, log_warning
+from gs_quant.datetime import DAYS_IN_YEAR
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.datetime.point import relative_date_add
 from gs_quant.markets.securities import *
@@ -1283,13 +1284,11 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         raise MqValueError('Specify top_n_of_index to get the average realized volatility of top constituents')
 
     if top_n_of_index is None and returns_type is not Returns.LOGARITHMIC:
-        raise NotImplementedError('top_n_of_index argument must be specified when using returns type {}'
-                                  .format(returns_type))
+        raise MqValueError(f'top_n_of_index argument must be specified when using returns type {returns_type.value}')
 
     _check_top_n(top_n_of_index)
     if top_n_of_index is not None and top_n_of_index > 200:
-        raise NotImplementedError('Maximum number of constituents exceeded. Do not use top_n_of_index to calculate on '
-                                  'the full list')
+        raise MqValueError('Maximum number of 200 constituents exceeded')
 
     if top_n_of_index is not None:
         constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
@@ -1687,25 +1686,27 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
     return series
 
 
-def _process_forward_vol_term(asset: Asset, df: pd.DataFrame, name: str) -> pd.Series:
-    if df.empty:
-        return pd.Series(dtype='float64')
+def _process_forward_vol_term(asset: Asset, vol_series: pd.Series, vol_col: str, series_name: str) -> pd.Series:
+    if vol_series.empty:
+        return ExtendedSeries(dtype=float, name=series_name)
     else:
-        latest = df.index.max()
-        _logger.info('selected pricing date %s', latest)
-        df = df.loc[latest]
-
-        tenors = [t for t in df[Fields.TENOR.value].values if re.fullmatch('([1-9]\\d*)([my])', t)]
-        df = pd.DataFrame(df[df['tenor'].isin(tenors)])
         cbd = _get_custom_bd(asset.exchange)
-        df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
-        df = df.set_index('expirationDate')
-        df.sort_index(inplace=True)
-
-        df = df.assign(tenorInMonth=df['tenor'].map(_tenor_to_month))
-        series = sqrt((df['tenorInMonth'] * df[name] ** 2 - df['tenorInMonth'].shift(1) * df[name].shift(1) ** 2) /
-                      (df['tenorInMonth'] - df['tenorInMonth'].shift(1)))
-        return series.loc[DataContext.current.start_date: DataContext.current.end_date]
+        vol_df = pd.DataFrame(vol_series)
+        latest = vol_series.attrs['latest'].date() if isinstance(vol_series.attrs['latest'],
+                                                                 pd.Timestamp) else vol_series.attrs['latest']
+        vol_df['calTimeToExp'] = vol_df.apply(lambda row: (row.name.date() - latest).days / DAYS_IN_YEAR, axis=1)
+        vol_df['timeToExp'] = vol_df.apply(lambda row: np.busday_count(latest, row.name.date(), weekmask=cbd.weekmask,
+                                                                       holidays=cbd.holidays) / 252, axis=1)
+        vol_df['multiplier'] = sqrt(vol_df['calTimeToExp'] / vol_df['timeToExp'])
+        vol_df['fwdVol'] = sqrt(
+            (vol_df['timeToExp'] * (vol_df[vol_col] * vol_df['multiplier']) ** 2 -
+             vol_df['timeToExp'].shift(1) * (vol_df[vol_col].shift(1) * vol_df['multiplier'].shift(1)) ** 2) /
+            (vol_df['timeToExp'] - vol_df['timeToExp'].shift(1)))
+        ext_series = ExtendedSeries(vol_df['fwdVol'], name=series_name)[DataContext.current.start_date:
+                                                                        DataContext.current.end_date]
+        ext_series.dataset_ids = getattr(vol_series, 'dataset_ids', ())
+        ext_series.sort_index(inplace=True)
+        return ext_series
 
 
 @plot_measure((AssetClass.Equity, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
@@ -1724,31 +1725,9 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
     :param request_id: service request id, if any
     :return: forward volatility term structure
     """
-    if real_time:
-        raise NotImplementedError('real-time forward vol term not implemented')
-
-    check_forward_looking(pricing_date, source, 'forward_vol_term')
-    if asset.asset_class == AssetClass.FX:
-        sr_string, relative_strike = _preprocess_implied_vol_strikes_fx(strike_reference, relative_strike)
-        asset_id = cross_stored_direction_for_fx_vol(asset)
-        buffer = 1  # FX vol data is loaded later
-    else:
-        sr_string, relative_strike = preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
-        asset_id = asset.get_marquee_id()
-        buffer = 0
-
-    start, end = _range_from_pricing_date(asset.exchange, pricing_date, buffer=buffer)
-    with DataContext(start, end):
-        _logger.debug('where strikeReference=%s, relativeStrike=%s', sr_string, relative_strike)
-        where = dict(strikeReference=sr_string, relativeStrike=relative_strike)
-        q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
-                                              real_time=real_time)
-        log_debug(request_id, _logger, 'q %s', q)
-        df = _market_data_timed(q, request_id)
-
-    series = _process_forward_vol_term(asset, df, "impliedVolatility")
-    series = ExtendedSeries(series, name='forwardVolTerm')
-    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    vt = vol_term(asset=asset, strike_reference=strike_reference, relative_strike=relative_strike,
+                  pricing_date=pricing_date, source=source, real_time=real_time, request_id=request_id)
+    series = _process_forward_vol_term(asset, vt, 'impliedVolatility', 'forwardVolTerm')
     return series
 
 
@@ -2028,6 +2007,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
     series.sort_index(inplace=True)
     series = series.loc[DataContext.current.start_date: DataContext.current.end_date]
     series = ExtendedSeries(series)
+    series.attrs = dict(latest=latest)
     series.dataset_ids = tuple(dataset_ids)
     return series
 
@@ -2287,20 +2267,8 @@ def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, 
     :param request_id: service request id, if any
     :return: forward variance swap term structure
     """
-    if real_time:
-        raise NotImplementedError('real-time forward var term not implemented')
-
-    check_forward_looking(pricing_date, source, 'forward_var_term')
-    start, end = _range_from_pricing_date(asset.exchange, pricing_date)
-    with DataContext(start, end):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP, source=source,
-                                              real_time=real_time)
-        log_debug(request_id, _logger, 'q %s', q)
-        df = _market_data_timed(q, request_id)
-
-    series = _process_forward_vol_term(asset, df, Fields.VAR_SWAP.value)
-    series = ExtendedSeries(series, name='forwardVarTerm')
-    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    vt = var_term(asset=asset, pricing_date=pricing_date, source=source, real_time=real_time, request_id=request_id)
+    series = _process_forward_vol_term(asset, vt, Fields.VAR_SWAP.value, 'forwardVarTerm')
     return series
 
 
@@ -2405,6 +2373,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
         df.sort_index(inplace=True)
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
+        series.attrs = dict(latest=latest)
 
     series.dataset_ids = tuple(dataset_ids)
     return series

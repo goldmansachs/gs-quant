@@ -188,3 +188,4 @@ class Portfolio(Base):
     type_: Optional[PortfolioType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     parameters: Optional[DictBase] = field(default=None, metadata=field_metadata)
     aum_source: Optional[RiskAumSource] = field(default=None, metadata=field_metadata)
+    tag_name_hierarchy: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)

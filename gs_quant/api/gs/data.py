@@ -419,11 +419,12 @@ class GsDataApi(DataApi):
             raise NotImplementedError('Unsupported return type')
 
     @staticmethod
-    def build_market_data_query(asset_ids: List[str], query_type: QueryType, where: Union[FieldFilterMap, Dict] = None,
+    def build_market_data_query(asset_ids: List[str], query_type: Union[QueryType, str],
+                                where: Union[FieldFilterMap, Dict] = None,
                                 source: Union[str] = None, real_time: bool = False, measure='Curve'):
         inner = {
             'entityIds': asset_ids,
-            'queryType': query_type.value,
+            'queryType': query_type.value if isinstance(query_type, QueryType) else query_type,
             'where': where or {},
             'source': source or 'any',
             'frequency': 'Real Time' if real_time else 'End Of Day',
