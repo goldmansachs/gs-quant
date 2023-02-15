@@ -14,13 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.base import *
-from gs_quant.common import *
 import datetime
-from typing import Dict, Optional, Tuple, Union
 from dataclasses import dataclass, field
-from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
+from typing import Optional, Tuple
+
+from dataclasses_json import LetterCase, config, dataclass_json
+
+from gs_quant.common import *
 
 
 class Encoding(EnumBase, Enum):    
@@ -202,6 +203,8 @@ class WorkflowPosition(Base):
     original_workflow_id: Optional[str] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
     entitlements: Optional[WorkflowEntitlements] = field(default=None, metadata=field_metadata)
+    is_read_only: Optional[bool] = field(default=None, metadata=field_metadata)
+    creator: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
