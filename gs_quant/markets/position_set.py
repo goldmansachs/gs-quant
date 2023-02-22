@@ -132,7 +132,8 @@ class PositionSet:
                  date: datetime.date = datetime.date.today(),
                  divisor: float = None,
                  reference_notional: float = None,
-                 unresolved_positions: List[Position] = None):
+                 unresolved_positions: List[Position] = None,
+                 unpriced_positions: List[Position] = None):
         if reference_notional is not None:
             for p in positions:
                 if p.weight is None:
@@ -144,6 +145,7 @@ class PositionSet:
         self.__divisor = divisor
         self.__reference_notional = reference_notional
         self.__unresolved_positions = unresolved_positions if unresolved_positions is not None else []
+        self.__unpriced_positions = unpriced_positions if unpriced_positions is not None else []
 
     @property
     def positions(self) -> List[Position]:
@@ -177,6 +179,10 @@ class PositionSet:
     def unresolved_positions(self) -> List[Position]:
         return self.__unresolved_positions
 
+    @property
+    def unpriced_positions(self) -> List[Position]:
+        return self.__unpriced_positions
+
     def get_positions(self) -> pd.DataFrame:
         """ Retrieve formatted positions """
         positions = [p.as_dict() for p in self.positions]
@@ -185,6 +191,11 @@ class PositionSet:
     def get_unresolved_positions(self) -> pd.DataFrame:
         """ Retrieve formatted unresolved positions """
         positions = [p.as_dict() for p in self.unresolved_positions]
+        return pd.DataFrame(positions)
+
+    def get_unpriced_positions(self) -> pd.DataFrame:
+        """ Retrieve formatted unpriced positions """
+        positions = [p.as_dict() for p in self.unpriced_positions]
         return pd.DataFrame(positions)
 
     def equalize_position_weights(self):
@@ -217,7 +228,7 @@ class PositionSet:
             resolved_positions = []
             for p in self.positions:
                 if p.identifier in id_map:
-                    asset = get(id_map, p.identifier)
+                    asset = get(id_map, p.identifier.replace('.', '\.'))
                     p.asset_id = get(asset, 'id')
                     p.name = get(asset, 'name')
                 if p.asset_id is not None:
@@ -237,6 +248,10 @@ class PositionSet:
             if position.quantity is not None:
                 raise MqValueError('If you are uploading a position set with a notional value, no position in that '
                                    'set can have a quantity')
+            if position.asset_id is None:
+                raise MqValueError('Some of your positions are missing asset IDs. '
+                                   'Please resolve the position set before pricing it.')
+
             positions_to_price.append({
                 'assetId': position.asset_id,
                 'weight': position.weight
@@ -248,7 +263,8 @@ class PositionSet:
                 'currency': currency.value,
                 'pricingDate': self.date.strftime('%Y-%m-%d'),
                 'assetDataSetId': 'GSEOD',
-                'notionalType': 'Gross'
+                'notionalType': 'Gross',
+                'priceRegardlessOfAssetsMissingPrices': True
             }
         }
         try:
@@ -256,9 +272,17 @@ class PositionSet:
         except Exception as e:
             raise MqValueError('There was an error pricing your positions. Please try uploading your positions as '
                                f'quantities instead: {e}')
-        self.positions = [Position(identifier=p['assetId'],
-                                   asset_id=p['assetId'],
-                                   quantity=p['quantity']) for p in price_results['positions']]
+        asset_id_to_quantity_map = {p['assetId']: p['quantity'] for p in price_results['positions']}
+        priced_positions = []
+        unpriced_positions = []
+        for p in self.positions:
+            if p.asset_id in asset_id_to_quantity_map:
+                p.quantity = asset_id_to_quantity_map[p.asset_id]
+                priced_positions.append(p)
+            else:
+                unpriced_positions.append(p)
+        self.positions = priced_positions
+        self.__unpriced_positions = unpriced_positions
 
     def to_target(self, common: bool = True) -> Union[CommonPositionSet, List[PositionPriceInput]]:
         """ Returns PostionSet type defined in target file for API payloads """

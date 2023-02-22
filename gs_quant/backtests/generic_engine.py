@@ -411,8 +411,9 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
 
 class GenericEngine(BacktestBaseEngine):
 
-    def __init__(self, action_impl_map={}):
+    def __init__(self, action_impl_map={}, price_measure=Price):
         self.action_impl_map = action_impl_map
+        self.price_measure = price_measure
         self._pricing_context_params = None
         self._initial_pricing_context = None
 
@@ -448,7 +449,7 @@ class GenericEngine(BacktestBaseEngine):
 
         return context
 
-    def run_backtest(self, strategy, start=None, end=None, frequency='1m', states=None, risks=Price,
+    def run_backtest(self, strategy, start=None, end=None, frequency='1m', states=None, risks=None,
                      show_progress=True, csa_term=None, visible_to_gs=False, initial_value=0, result_ccy=None,
                      holiday_calendar=None, market_data_location=None):
         """
@@ -504,10 +505,18 @@ class GenericEngine(BacktestBaseEngine):
         strategy_pricing_dates.sort()
 
         risks = list(set(make_list(risks) + strategy.risks))
+        risks = risks if self.price_measure in risks else risks + [self.price_measure]
         if result_ccy is not None:
             risks = [(r(currency=result_ccy) if isinstance(r, ParameterisedRiskMeasure)
                       else raiser(f'Unparameterised risk: {r}')) for r in risks]
-        price_risk = Price(currency=result_ccy) if result_ccy is not None else Price
+
+        if result_ccy is not None:
+            if isinstance(self.price_measure, ParameterisedRiskMeasure):
+                price_risk = self.price_measure(currency=result_ccy)
+            else:
+                raiser(f'Unparameterised price measure: {self.price_measure}')
+        else:
+            price_risk = self.price_measure
 
         backtest = BackTest(strategy, strategy_pricing_dates, risks)
 

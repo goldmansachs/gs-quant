@@ -28,7 +28,7 @@ from gs_quant.target.backtests import BacktestTradingQuantityType
 from gs_quant.target.common import OptionType, OptionStyle
 from gs_quant.target.instrument import EqOption
 from gs_quant.test.utils.mock_calc import MockCalc
-from gs_quant.risk import Price, FXDelta
+from gs_quant.risk import Price, FXDelta, DollarPrice
 from gs_quant.markets import PricingContext
 from gs_quant.common import Currency, PayReceive
 
@@ -389,3 +389,25 @@ def test_quantity_scaled_action_nav(mocker):
         # Total cash spent is the initial cash throughout the entire strategy
         assert summary['Cumulative Cash'][0] == -initial_cash
         assert (summary['Cumulative Cash'] == summary['Cumulative Cash'][0]).all()
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_generic_engine_custom_price_measure(mocker):
+    with MockCalc(mocker):
+        trig_date = date(2021, 12, 1)
+        call = EqOption('.STOXX50E', expiration_date='1y', strike_price='ATM', option_type=OptionType.Call,
+                        option_style=OptionStyle.European, name='call')
+        freq = '1m'
+        trig_req = DateTriggerRequirements(dates=[trig_date])
+        actions = AddTradeAction(call, freq, name='Action1')
+
+        triggers = DateTrigger(trig_req, actions)
+        strategy = Strategy(None, triggers)
+
+        engine = GenericEngine(price_measure=DollarPrice)
+        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 1), date(2021, 12, 2), date(2021, 12, 3)],
+                                       show_progress=True)
+        summary = backtest.result_summary
+        assert len(summary) == 3
+        assert round(summary[DollarPrice].sum()) == 804
+        assert round(summary['Cumulative Cash'][-1]) == -291

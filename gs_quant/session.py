@@ -134,7 +134,7 @@ class GsSession(ContextBase):
     @staticmethod
     def __ssl_context() -> ssl.SSLContext:
         if GsSession.__ssl_ctx is None:
-            GsSession.__ssl_ctx = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
+            GsSession.__ssl_ctx = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
             GsSession.__ssl_ctx.load_default_certs()
             GsSession.__ssl_ctx.load_verify_locations(certifi.where())
 
