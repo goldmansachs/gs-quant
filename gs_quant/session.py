@@ -13,24 +13,24 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import logging
-from abc import abstractmethod
-import backoff
-import certifi
-from configparser import ConfigParser
-from enum import Enum, auto, unique
 import inspect
 import itertools
 import json
-import msgpack
+import logging
 import os
+import ssl
+from abc import abstractmethod
+from configparser import ConfigParser
+from enum import Enum, auto, unique
+from typing import Optional, Union, Iterable
+
+import backoff
+import certifi
+import msgpack
 import pandas as pd
 import requests
 import requests.adapters
 import requests.cookies
-import ssl
-from typing import Optional, Union, Iterable
-
 from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
@@ -134,7 +134,9 @@ class GsSession(ContextBase):
     @staticmethod
     def __ssl_context() -> ssl.SSLContext:
         if GsSession.__ssl_ctx is None:
-            GsSession.__ssl_ctx = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
+            GsSession.__ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            GsSession.__ssl_ctx.check_hostname = False
+            GsSession.__ssl_ctx.verify_mode = 0
             GsSession.__ssl_ctx.load_default_certs()
             GsSession.__ssl_ctx.load_verify_locations(certifi.where())
 
