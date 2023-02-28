@@ -26,7 +26,7 @@ import pandas as pd
 from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_instance_or_iterable, is_iterable, Scenario
 from gs_quant.common import RiskMeasure
 from gs_quant.config import DisplayOptions
-from gs_quant.risk import DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo, ResultInfo, \
+from gs_quant.risk import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, ResultInfo, \
     ScalarWithInfo, aggregate_results
 from gs_quant.risk.transform import Transformer
 from more_itertools import unique_everseen
@@ -474,7 +474,7 @@ class HistoricalPricingFuture(CompositeResultFuture):
 
     def _set_result(self):
         results = [f.result() for f in self.futures]
-        base = next((r for r in results if not isinstance(r, (ErrorValue, Exception))), None)
+        base = next((r for r in results if not isinstance(r, (ErrorValue, UnsupportedValue, Exception))), None)
 
         if base is None:
             _logger.error(f'Historical pricing failed: {results[0]}')

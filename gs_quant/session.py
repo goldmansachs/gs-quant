@@ -31,6 +31,7 @@ import pandas as pd
 import requests
 import requests.adapters
 import requests.cookies
+import urllib3
 from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
@@ -49,6 +50,18 @@ class Environment(Enum):
     DEV = auto()
     QA = auto()
     PROD = auto()
+
+
+class CustomHttpAdapter(requests.adapters.HTTPAdapter):
+    # "Transport adapter" that allows us to use custom ssl_context.
+
+    def __init__(self, ssl_context=None, **kwargs):
+        self.ssl_context = ssl_context
+        super().__init__(**kwargs)
+
+    def init_poolmanager(self, connections, maxsize=100, block=False):
+        self.poolmanager = urllib3.poolmanager.PoolManager(num_pools=connections, maxsize=maxsize, block=block,
+                                                           ssl_context=self.ssl_context)
 
 
 class GsSession(ContextBase):
@@ -84,7 +97,7 @@ class GsSession(ContextBase):
         self.api_version = api_version
         self.application = application
         self.verify = verify
-        self.http_adapter = requests.adapters.HTTPAdapter(pool_maxsize=100) if http_adapter is None else http_adapter
+        self.http_adapter = CustomHttpAdapter(GsSession.__ssl_context()) if http_adapter is None else http_adapter
         self.application_version = application_version
         self.proxies = proxies
 
@@ -137,6 +150,7 @@ class GsSession(ContextBase):
             GsSession.__ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             GsSession.__ssl_ctx.check_hostname = False
             GsSession.__ssl_ctx.verify_mode = 0
+            GsSession.__ssl_ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
             GsSession.__ssl_ctx.load_default_certs()
             GsSession.__ssl_ctx.load_verify_locations(certifi.where())
 
