@@ -97,7 +97,13 @@ class GsSession(ContextBase):
         self.api_version = api_version
         self.application = application
         self.verify = verify
-        self.http_adapter = CustomHttpAdapter(GsSession.__ssl_context()) if http_adapter is None else http_adapter
+        if http_adapter is None:
+            if ssl.OPENSSL_VERSION_INFO >= (3, 0, 0):
+                self.http_adapter = CustomHttpAdapter(self.__ssl_context())
+            else:
+                self.http_adapter = requests.adapters.HTTPAdapter(pool_maxsize=100)
+        else:
+            self.http_adapter = http_adapter
         self.application_version = application_version
         self.proxies = proxies
 
