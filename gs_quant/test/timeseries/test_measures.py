@@ -1845,6 +1845,32 @@ def test_avg_impl_vol(mocker):
     expected.index.freq = None
     assert_series_equal(expected, pd.Series(actual), check_names=False)
 
+    # Test weight_threshold paths
+
+    mock_implied_vol = MarketDataResponseFrame(pd.concat([df2, df3], join='inner'))
+    mock_implied_vol.dataset_ids = _test_datasets
+    market_data_mock.return_value = mock_implied_vol
+    with pytest.raises(MqValueError):
+        tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75, top_n_of_index=3)
+
+    # Working case where MA3 is dropped
+    mock_implied_vol = MarketDataResponseFrame(pd.concat([df1, df2], join='inner'))
+    mock_implied_vol.dataset_ids = _test_datasets
+    market_data_mock.return_value = mock_implied_vol
+    last_mock.return_value = None
+    tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75, top_n_of_index=3,
+                                  weight_threshold=0.11)
+
+    mock_implied_vol = MarketDataResponseFrame(pd.concat([df1, df2], join='inner'))
+    mock_implied_vol.dataset_ids = _test_datasets
+    market_data_mock.return_value = mock_implied_vol
+    with pytest.raises(MqValueError):
+        tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75, top_n_of_index=3,
+                                      weight_threshold=0.01)
+
+    with pytest.raises(MqValueError):
+        tm.average_implied_volatility(mock_spx, '1m', tm.EdrDataReference.DELTA_PUT, 75, top_n_of_index=3)
+
     with pytest.raises(NotImplementedError):
         tm.average_implied_volatility(..., '1m', tm.EdrDataReference.DELTA_PUT, 75, real_time=True)
 

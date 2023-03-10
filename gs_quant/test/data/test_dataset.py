@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import copy
 import datetime as dt
 
 import numpy as np
@@ -209,6 +210,19 @@ def test_construct_dataframe_with_types(mocker):
     assert df['adjustedBidPrice'].dtype == float64
     assert df['assetId'].dtype == object  # https://pbpython.com/pandas_dtypes.html python str == dtype object
     assert np.issubdtype(df['updateTime'].dtype, datetime64)
+
+
+def test_construct_dataframe_var_schema(mocker):
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
+    var_schema = copy.deepcopy(test_data)
+    for i in range(len(var_schema)):
+        if i % 2 == 1:
+            prev = var_schema[i - 1]
+            curr = var_schema[i]
+            curr['difference_tradePrice'] = curr['tradePrice'] - prev['tradePrice']
+
+    df = GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), var_schema, True)
+    assert np.issubdtype(df['difference_tradePrice'].dtype, np.floating)
 
 
 def test_data_series_format(mocker):

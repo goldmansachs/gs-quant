@@ -136,6 +136,8 @@ class Dataset:
         """
 
         field_names = None if fields is None else list(map(lambda f: f if isinstance(f, str) else f.value, fields))
+        # check whether a function is called e.g. difference(tradePrice)
+        schema_varies = field_names is not None and any(map(lambda s: re.match("\\w+\\(", s), field_names))
 
         query = self.provider.build_query(
             start=start,
@@ -147,7 +149,7 @@ class Dataset:
         )
         data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
 
-        return self.provider.construct_dataframe_with_types(self.id, data)
+        return self.provider.construct_dataframe_with_types(self.id, data, schema_varies)
 
     def get_data_series(
             self,

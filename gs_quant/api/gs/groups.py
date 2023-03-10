@@ -95,4 +95,4 @@ class GsGroupsApi:
     def delete_users_from_group(cls,
                                 group_id: str,
                                 user_ids: List[str]):
-        GsSession.current._delete(f'/groups/{group_id}/users', {'userIds': user_ids})
+        GsSession.current._delete(f'/groups/{group_id}/users', {'userIds': user_ids}, use_body=True)

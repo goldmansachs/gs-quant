@@ -336,7 +336,10 @@ class MultipleRiskMeasureResult(dict):
     def __op(self, operator, operand):
         values = {}
         for key, value in self.items():
-            if isinstance(value, pd.DataFrame) or isinstance(value, pd.Series):
+            if isinstance(value, SeriesWithInfo) or isinstance(value, DataFrameWithInfo):
+                new_value = value.copy_with_resultinfo()
+                new_value.value = operator(value.value, operand)
+            elif isinstance(value, pd.DataFrame) or isinstance(value, pd.Series):
                 new_value = value.copy()
                 new_value.value = operator(value.value, operand)
             else:

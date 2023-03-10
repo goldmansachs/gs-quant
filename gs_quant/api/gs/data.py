@@ -21,8 +21,8 @@ from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union, Dict
 
 import cachetools
-import pandas as pd
 import numpy as np
+import pandas as pd
 from cachetools import TTLCache
 
 from gs_quant.api.data import DataApi
@@ -419,9 +419,12 @@ class GsDataApi(DataApi):
             raise NotImplementedError('Unsupported return type')
 
     @staticmethod
-    def build_market_data_query(asset_ids: List[str], query_type: Union[QueryType, str],
+    def build_market_data_query(asset_ids: List[str],
+                                query_type: Union[QueryType, str],
                                 where: Union[FieldFilterMap, Dict] = None,
-                                source: Union[str] = None, real_time: bool = False, measure='Curve'):
+                                source: Union[str] = None,
+                                real_time: bool = False,
+                                measure='Curve'):
         inner = {
             'entityIds': asset_ids,
             'queryType': query_type.value if isinstance(query_type, QueryType) else query_type,
@@ -494,8 +497,8 @@ class GsDataApi(DataApi):
         except Exception as e:
             log_warning(request_id, _logger, f'Market data query {query} failed due to {e}')
             raise e
-        log_debug(request_id, _logger, 'market data query (%s) ran in %.3f ms', body.get('requestId'),
-                  (time.perf_counter() - start) * 1000)
+        log_debug(request_id, _logger, 'market data query (%s) with payload (%s) ran in %.3f ms', body.get('requestId'),
+                  query, (time.perf_counter() - start) * 1000)
 
         ids = []
         parts = []
@@ -761,17 +764,20 @@ class GsDataApi(DataApi):
         raise RuntimeError(f"Unable to get Dataset schema for {dataset_id}")
 
     @classmethod
-    def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, List, Tuple]) -> pd.DataFrame:
+    def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, List, Tuple],
+                                       schema_varies=False) -> pd.DataFrame:
         """
         Constructs a dataframe with correct date types.
         :param dataset_id: id of the dataset
         :param data: data to convert with correct types
+        :param schema_varies: if set, method will not assume that all rows have the same columns
         :return: dataframe with correct types
         """
         if len(data):
             dataset_types = cls.get_types(dataset_id)
             # Use first row to infer fields from data
-            incoming_data_data_types = pd.DataFrame([data[0]]).dtypes.to_dict()
+            sample = data if schema_varies else [data[0]]
+            incoming_data_data_types = pd.DataFrame(sample).dtypes.to_dict()
 
             df = pd.DataFrame(data, columns={**dataset_types, **incoming_data_data_types})
 

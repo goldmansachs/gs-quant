@@ -407,15 +407,10 @@ class PositionedEntity(metaclass=ABCMeta):
             currency = GsPortfolioApi.get_portfolio(self.id).currency
             new_sets = []
             for pos_set in position_sets:
-                if pos_set.reference_notional is None:
-                    incorrect_set = any([pos.quantity is None or pos.weight is not None for pos in pos_set.positions])
-                    if incorrect_set:
-                        raise MqValueError('If you would like to upload position sets without notionals, '
-                                           'every position must have a quantity and cannot have a weight.')
-                    new_sets.append(pos_set)
-                else:
+                positions_are_missing_quantities = len([p for p in pos_set.positions if p.quantity is None]) > 0
+                if positions_are_missing_quantities:
                     pos_set.price(currency)
-                    new_sets.append(pos_set)
+                new_sets.append(pos_set)
             GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in new_sets],
                                             net_positions=net_positions)
             time.sleep(3)

@@ -265,6 +265,16 @@ class PortfolioManager(PositionedEntity):
         portfolio_as_target.entitlements = entitlements_as_target
         GsPortfolioApi.update_portfolio(portfolio_as_target)
 
+    def set_currency(self, currency: Currency):
+        """
+        Set the currency of a portfolio
+
+        :param currency: Currency
+        """
+        portfolio_as_target = GsPortfolioApi.get_portfolio(self.__portfolio_id)
+        portfolio_as_target.currency = currency
+        GsPortfolioApi.update_portfolio(portfolio_as_target)
+
     def get_schedule_dates(self,
                            backcast: bool = False) -> List[dt.date]:
         """

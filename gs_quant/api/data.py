@@ -47,7 +47,8 @@ class DataApi(metaclass=ABCMeta):
         raise NotImplementedError('Must implement time_field')
 
     @classmethod
-    def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, list, tuple, pd.Series]) -> pd.DataFrame:
+    def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, list, tuple, pd.Series],
+                                       schema_varies=False) -> pd.DataFrame:
         raise NotImplementedError('Must implement time_field')
 
     @staticmethod

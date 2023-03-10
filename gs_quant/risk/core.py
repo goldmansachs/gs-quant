@@ -278,6 +278,9 @@ class SeriesWithInfo(pd.Series, ResultInfo):
         ResultInfo.__init__(new_result, risk_key=self.risk_key, unit=self.unit, error=self.error, request_id=self.request_id)
         return new_result
 
+    def copy_with_resultinfo(self, deep=True):
+        return SeriesWithInfo(self.raw_value.copy(deep=deep), risk_key=self.risk_key, unit=self.unit, error=self.error, request_id=self.request_id)
+
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     _internal_names = pd.DataFrame._internal_names + \
@@ -341,6 +344,9 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
             return [{**extra_dict, 'value': None}] if show_na else []
 
         return [dict(item, **{**extra_dict}) for item in self.raw_value.to_dict('records')]
+
+    def copy_with_resultinfo(self, deep=True):
+        return DataFrameWithInfo(self.raw_value.copy(deep=deep), risk_key=self.risk_key, unit=self.unit, error=self.error, request_id=self.request_id)
 
 
 @dataclass_json

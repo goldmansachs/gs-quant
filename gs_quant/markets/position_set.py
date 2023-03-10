@@ -240,14 +240,13 @@ class PositionSet:
         Price position set positions and convert weights into quantities
         :param currency: reference notional currency (defaults to USD if not passed in)
         """
+        if self.reference_notional is None:
+            raise MqValueError('Cannot price a position set without a reference notional.')
         positions_to_price = []
         for position in self.positions:
             if position.weight is None:
                 raise MqValueError('If you are uploading a position set with a notional value, every position in that '
                                    'set must have a weight')
-            if position.quantity is not None:
-                raise MqValueError('If you are uploading a position set with a notional value, no position in that '
-                                   'set can have a quantity')
             if position.asset_id is None:
                 raise MqValueError('Some of your positions are missing asset IDs. '
                                    'Please resolve the position set before pricing it.')

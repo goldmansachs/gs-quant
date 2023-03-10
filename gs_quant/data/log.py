@@ -23,3 +23,7 @@ def log_debug(request_id, logger, fmt_str, *args, **kwargs):
 
 def log_warning(request_id, logger, fmt_str, *args, **kwargs):
     logger.warning(f'{request_id or NO_REQUEST_ID}: {fmt_str}', *args, **kwargs)
+
+
+def log_info(request_id, logger, fmt_str, *args, **kwargs):
+    logger.info(f'{request_id or NO_REQUEST_ID}: {fmt_str}', *args, **kwargs)

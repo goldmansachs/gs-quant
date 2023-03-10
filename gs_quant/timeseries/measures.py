@@ -1137,7 +1137,8 @@ def realized_correlation_with_basket(asset: Asset, tenor: str, basket: Basket, *
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.AVERAGE_IMPLIED_VOLATILITY,
                                                                         QueryType.IMPLIED_VOLATILITY])
 def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
-                               top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None, *,
+                               top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None,
+                               weight_threshold: Optional[Real] = None, *,
                                source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Historical weighted average implied volatility of the top constituents of an equity index. If top_n_of_index and
@@ -1152,6 +1153,8 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
     :param top_n_of_index: the number of top constituents to take into account
     :param composition_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y; defaults to the most recent date
         available
+    :param weight_threshold threshold of total constituent weights to drop if data is missing and top_n_of_index is
+        passed in
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -1180,7 +1183,31 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
 
         asset_ids = constituents.index.to_list()
         df = get_historical_and_last_for_measure(asset_ids=asset_ids, query_type=QueryType.IMPLIED_VOLATILITY,
-                                                 where=where, source=source, real_time=real_time, request_id=request_id)
+                                                 where=where, source=source, real_time=real_time, request_id=request_id,
+                                                 ignore_errors=True)
+
+        if not df.empty:
+            asset_to_weight = constituents['netWeight'].to_dict()
+            missing_assets = set(asset_ids).difference(set(df['assetId'].unique()))
+            if len(missing_assets) and not weight_threshold:
+                msg = ''
+                for asset in missing_assets:
+                    msg += f'{asset} ({asset_to_weight[asset]:.2f})'
+                raise MqValueError(
+                    f'Unable to calculate average_implied_volatility due to missing implied vols for assets {msg}. '
+                    f'Try adding a weight_threshold to skip these assets.')
+
+            if weight_threshold:
+                total_missing_weight = sum(asset_to_weight[missing_asset] for missing_asset in missing_assets)
+                if total_missing_weight > weight_threshold:
+                    msg = ''
+                    for asset in missing_assets:
+                        msg += f'{asset} ({asset_to_weight[asset]:.2f})'
+                    raise MqValueError(
+                        f'Unable to calculate average_implied_volatility due to missing implied vols for assets {msg}. '
+                        f'Try increasing the weight_threshold to skip these assets.')
+
+                constituents.drop(index=list(missing_assets))
 
         def calculate_avg_vol(group, weights):
             assets, vols = group['assetId'], group['impliedVolatility']
@@ -1767,7 +1794,7 @@ def _get_skew_strikes(asset: Asset, strike_reference: SkewReference, distance: R
     return q_strikes, buffer
 
 
-def _skew(df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes, normalization_mode: NormalizationMode)\
+def _skew(df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes, normalization_mode: NormalizationMode) \
         -> ExtendedSeries:
     """
     Calculates skew using the data in df and returns it as a series.
@@ -3097,7 +3124,7 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity, ),
+@plot_measure((AssetClass.Equity,),
               (AssetType.Research_Basket, AssetType.Custom_Basket, AssetType.Equity_Basket,
                AssetType.ETF, AssetType.Index),
               [QueryType.FUNDAMENTAL_METRIC])
@@ -3558,7 +3585,7 @@ def current_constituents_dividend_yield(asset: Asset, period: str, period_direct
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity, ), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_earnings_per_share(asset: Asset, period: str,
                                             period_direction: FundamentalMetricPeriodDirection, *,
                                             source: str = None, real_time: bool = False,
@@ -4520,7 +4547,8 @@ def get_historical_and_last_for_measure(asset_ids: List[str],
                                         source: str = None,
                                         real_time: bool = False,
                                         request_id: Optional[str] = None,
-                                        chunk_size: int = 5):
+                                        chunk_size: int = 5,
+                                        ignore_errors: bool = False):
     tasks = []
     for i, chunked_assets in enumerate(chunk(asset_ids, chunk_size)):
         query = GsDataApi.build_market_data_query(
@@ -4530,13 +4558,13 @@ def get_historical_and_last_for_measure(asset_ids: List[str],
             source=source,
             real_time=real_time)
 
-        tasks.append(partial(_market_data_timed, query, request_id))
+        tasks.append(partial(_market_data_timed, query, request_id, ignore_errors=ignore_errors))
 
     if not real_time and DataContext.current.end_date >= datetime.date.today():
         where_list = _split_where_conditions(where)
         for w in where_list:
             tasks.append(partial(get_last_for_measure, asset_ids=asset_ids, query_type=query_type, where=w,
-                                 source=source, request_id=request_id))
+                                 source=source, request_id=request_id, ignore_errors=ignore_errors))
 
     results = ThreadPoolManager.run_async(tasks)
     return merge_dataframes(results)

@@ -64,6 +64,11 @@ class CustomHttpAdapter(requests.adapters.HTTPAdapter):
                                                            ssl_context=self.ssl_context)
 
 
+class Domain:
+    MDS_US_EAST = "MdsDomainEast"
+    APP = "AppDomain"
+
+
 class GsSession(ContextBase):
     __config = None
     __ssl_ctx = None
@@ -327,10 +332,14 @@ class GsSession(ContextBase):
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION,
             http_adapter: requests.adapters.HTTPAdapter = None,
-            use_mds: bool = False
+            use_mds: bool = False,
+            domain: Domain = Domain.APP
     ) -> None:
         environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain,
                                                                          Environment) else environment_or_domain
+        if domain is None:
+            raise MqError("None is not a valid domain.")
+        domain = Domain.MDS_US_EAST if use_mds else domain
         session = cls.get(
             environment_or_domain,
             client_id=client_id,
@@ -339,7 +348,7 @@ class GsSession(ContextBase):
             api_version=api_version,
             application=application,
             http_adapter=http_adapter,
-            use_mds=use_mds
+            domain=domain
         )
 
         session.init()
@@ -358,7 +367,7 @@ class GsSession(ContextBase):
             application: str = DEFAULT_APPLICATION,
             http_adapter: requests.adapters.HTTPAdapter = None,
             application_version: str = APP_VERSION,
-            use_mds: bool = False
+            domain: Domain = Domain.APP
     ) -> 'GsSession':
         """ Return an instance of the appropriate session type for the given credentials"""
 
@@ -373,7 +382,7 @@ class GsSession(ContextBase):
             scopes = tuple(set(itertools.chain(scopes, cls.Scopes.get_default())))
 
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
-                                 application=application, http_adapter=http_adapter, use_mds=use_mds)
+                                 application=application, http_adapter=http_adapter, domain=domain)
         elif token:
             if is_gssso:
                 try:
@@ -398,14 +407,14 @@ class GsSession(ContextBase):
 class OAuth2Session(GsSession):
 
     def __init__(self, environment, client_id, client_secret, scopes, api_version=API_VERSION,
-                 application=DEFAULT_APPLICATION, http_adapter=None, use_mds=False):
+                 application=DEFAULT_APPLICATION, http_adapter=None, domain=Domain.APP):
 
         if environment not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
             env_config = self._config_for_environment(Environment.DEV.name)
             url = environment
         else:
             env_config = self._config_for_environment(environment)
-            url = env_config['MdsDomain'] if use_mds else env_config['AppDomain']
+            url = env_config[domain]
 
         super().__init__(url, api_version=api_version, application=application, http_adapter=http_adapter)
         self.auth_url = env_config['AuthURL']
@@ -413,7 +422,7 @@ class OAuth2Session(GsSession):
         self.client_secret = client_secret
         self.scopes = scopes
 
-        if environment == Environment.DEV.name or (url != env_config['AppDomain'] and not use_mds):
+        if environment == Environment.DEV.name or (url != env_config['AppDomain'] and not domain == Domain.MDS_US_EAST):
             import urllib3
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             self.verify = False
