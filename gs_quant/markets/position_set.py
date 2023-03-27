@@ -15,17 +15,17 @@ under the License.
 """
 import datetime
 import logging
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 import pandas as pd
 from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
+from gs_quant.api.gs.price import GsPriceApi
 from gs_quant.errors import MqValueError
-from gs_quant.session import GsSession
-from gs_quant.target.common import Position as CommonPosition, PositionTag, Currency
-from gs_quant.target.common import PositionSet as CommonPositionSet
-from gs_quant.target.indices import PositionPriceInput
+from gs_quant.target.common import Position as CommonPosition, PositionPriceInput, PositionSet as CommonPositionSet, \
+    PositionTag, Currency, PositionSetWeightingStrategy
+from gs_quant.target.price import PriceParameters, PositionSetPriceInput
 
 _logger = logging.getLogger(__name__)
 
@@ -235,48 +235,54 @@ class PositionSet:
                     resolved_positions.append(p)
             self.positions = resolved_positions
 
-    def price(self, currency: Currency = Currency.USD):
-        """
-        Price position set positions and convert weights into quantities
-        :param currency: reference notional currency (defaults to USD if not passed in)
-        """
-        if self.reference_notional is None:
-            raise MqValueError('Cannot price a position set without a reference notional.')
-        positions_to_price = []
-        for position in self.positions:
-            if position.weight is None:
-                raise MqValueError('If you are uploading a position set with a notional value, every position in that '
-                                   'set must have a weight')
-            if position.asset_id is None:
-                raise MqValueError('Some of your positions are missing asset IDs. '
-                                   'Please resolve the position set before pricing it.')
-
-            positions_to_price.append({
-                'assetId': position.asset_id,
-                'weight': position.weight
-            })
-        payload = {
-            'positions': positions_to_price,
-            'parameters': {
-                'targetNotional': self.reference_notional,
-                'currency': currency.value,
-                'pricingDate': self.date.strftime('%Y-%m-%d'),
-                'assetDataSetId': 'GSEOD',
-                'notionalType': 'Gross',
-                'priceRegardlessOfAssetsMissingPrices': True
-            }
-        }
-        try:
-            price_results = GsSession.current._post('/price/positions', payload)
-        except Exception as e:
-            raise MqValueError('There was an error pricing your positions. Please try uploading your positions as '
-                               f'quantities instead: {e}')
-        asset_id_to_quantity_map = {p['assetId']: p['quantity'] for p in price_results['positions']}
-        priced_positions = []
-        unpriced_positions = []
+    def redistribute_weights(self):
+        """ Redistribute position weights proportionally for a one-sided position set """
+        total_weight = 0
+        new_weights, unweighted = [], []
         for p in self.positions:
-            if p.asset_id in asset_id_to_quantity_map:
-                p.quantity = asset_id_to_quantity_map[p.asset_id]
+            if p.weight is None:
+                unweighted.append(p.identifier)
+            else:
+                total_weight += p.weight
+        if len(unweighted):
+            raise MqValueError(f'Cannot reweight as some positions are missing weights: {unweighted}')
+
+        weight_to_distribute = 1 - total_weight if total_weight < 0 else total_weight - 1
+        for p in self.positions:
+            p.weight = p.weight - (p.weight / total_weight) * weight_to_distribute
+            p.quantity = None
+            new_weights.append(p)
+        self.positions = new_weights
+
+    def price(self, currency: Optional[Currency] = Currency.USD,
+              weighting_strategy: Optional[PositionSetWeightingStrategy] = None, **kwargs):
+        """
+        Fetch positions weights from quantities, or vice versa
+
+        :param currency: Reference notional currency (defaults to USD if not passed in)
+        :param weighting_strategy: Quantity or Weighted weighting strategy (defaults based on positions info)
+        """
+        weighting_strategy = self.__get_default_weighting_strategy(self.positions,
+                                                                   self.reference_notional,
+                                                                   weighting_strategy)
+        positions = self.__convert_positions_for_pricing(self.positions, weighting_strategy)
+        price_parameters = PriceParameters(currency=currency,
+                                           divisor=self.divisor,
+                                           asset_data_set_id='GSEOD',
+                                           target_notional=self.reference_notional,
+                                           notional_type='Gross',
+                                           pricing_date=self.date,
+                                           price_regardless_of_assets_missing_prices=True,
+                                           weighting_strategy=weighting_strategy)
+        for k, v in kwargs.items():
+            price_parameters[k] = v
+        results = GsPriceApi.price_positions(PositionSetPriceInput(positions=positions, parameters=price_parameters))
+        position_result_map = {p.asset_id: p for p in results.positions}
+        priced_positions, unpriced_positions = [], []
+        for p in self.positions:
+            if p.asset_id in position_result_map:
+                p.weight = position_result_map.get(p.asset_id).weight
+                p.quantity = position_result_map.get(p.asset_id).quantity
                 priced_positions.append(p)
             else:
                 unpriced_positions.append(p)
@@ -388,3 +394,43 @@ class PositionSet:
         for asset in response:
             data[get(asset, 'id')] = dict(name=get(asset, 'name'), bbid=get(asset, 'bbid'))
         return data
+
+    @staticmethod
+    def __get_default_weighting_strategy(positions: List[Position],
+                                         reference_notional: float = None,
+                                         weighting_strategy: Optional[PositionSetWeightingStrategy] = None
+                                         ) -> PositionSetWeightingStrategy:
+        missing_weights = [p.identifier for p in positions if p.weight is None]
+        missing_quantities = [p.identifier for p in positions if p.quantity is None]
+        if weighting_strategy is None:
+            if len(missing_weights) and len(missing_quantities):
+                raise MqValueError(f'Unable to determine weighting strategy due to missing weights for \
+                {missing_weights} and missing quantities for {missing_quantities}')
+            if not len(missing_weights) and (reference_notional is not None or len(missing_quantities)):
+                weighting_strategy = PositionSetWeightingStrategy.Weight
+            else:
+                weighting_strategy = PositionSetWeightingStrategy.Quantity
+        use_weight = weighting_strategy == PositionSetWeightingStrategy.Weight
+        if (use_weight and len(missing_weights)) or (not use_weight and len(missing_quantities)):
+            raise MqValueError(f'You must input a {weighting_strategy.value} for the following positions: \
+            {missing_weights if use_weight else missing_quantities}')
+        if use_weight and reference_notional is None:
+            raise MqValueError('You must specify a reference notional in order to price by weight.')
+        return weighting_strategy
+
+    @staticmethod
+    def __convert_positions_for_pricing(positions: List[Position],
+                                        weighting_strategy: PositionSetWeightingStrategy) -> List[PositionPriceInput]:
+        position_inputs, missing_ids = [], []
+        use_weight = weighting_strategy == PositionSetWeightingStrategy.Weight
+        for p in positions:
+            if p.asset_id is None:
+                missing_ids.append(p.identifier)
+            else:
+                position_inputs.append(PositionPriceInput(asset_id=p.asset_id,
+                                                          weight=p.weight if use_weight else None,
+                                                          quantity=None if use_weight else p.quantity))
+        if len(missing_ids):
+            raise MqValueError(f'Positions: {missing_ids} are missing asset ids. Resolve your position \
+            set or remove unmapped identifiers.')
+        return position_inputs

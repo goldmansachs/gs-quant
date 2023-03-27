@@ -299,6 +299,9 @@ FXCalcDeltaNoPremAdj.__doc__ = "FXCalcDeltaNoPremAdj"
 FXDelta = RiskMeasureWithFiniteDifferenceParameter(name="FXDelta", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Delta"))
 FXDelta.__doc__ = "Dollar Price sensitivity of the instrument to a move in the underlying spot such that dSpot * FXDelta = PnL"
 
+FXDeltaHedge = RiskMeasure(name="FXDeltaHedge", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Hedge Delta"))
+FXDeltaHedge.__doc__ = "Size of the spot trade in the underlying currency needed to hedge the USD delta on a per-cross basis"
+
 FXDiscountFactorOver = RiskMeasure(name="FXDiscountFactorOver", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Discount Factor Over"))
 FXDiscountFactorOver.__doc__ = "Discount Factor to Maturity in the Over Currency of the FX Pair"
 
@@ -310,6 +313,9 @@ FXFwd.__doc__ = "FXFwd"
 
 FXGamma = RiskMeasure(name="FXGamma", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Gamma"))
 FXGamma.__doc__ = "FXDelta sensitivity of the instrument to a move in the underlying spot such that dSpot * FXGamma = dDelta"
+
+FXImpliedCorrelation = RiskMeasure(name="FXImpliedCorrelation", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Correlation"))
+FXImpliedCorrelation.__doc__ = "Correlation and Vol information"
 
 FXPoints = RiskMeasure(name="FXPoints", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Points"))
 FXPoints.__doc__ = "FXPoints"
@@ -338,8 +344,11 @@ FXSpot.__doc__ = "FX spot reference"
 FXVega = RiskMeasureWithFiniteDifferenceParameter(name="FXVega", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Vega"))
 FXVega.__doc__ = "Change in Dollar Price due to a 1 vol move in the implied volatility of ATM instruments used to build the volatility surface"
 
-FairPremium = RiskMeasureWithCurrencyParameter(name="FairPremium", measure_type=RiskMeasureType("FairPremium"))
+FairPremium = RiskMeasure(name="FairPremium", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FairPremium"))
 FairPremium.__doc__ = "Fair Premium is the instrument present value discounted to the premium settlement date"
+
+FairPremiumInPercent = RiskMeasure(name="FairPremiumInPercent", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FairPremiumPct"), unit=RiskMeasureUnit("Percent"))
+FairPremiumInPercent.__doc__ = "The instrument present value discounted to the premium settlement excluding any embedded premium date as a percentage"
 
 FairPrice = RiskMeasure(name="FairPrice", asset_class=AssetClass("Commod"), measure_type=RiskMeasureType("Fair Price"))
 FairPrice.__doc__ = "FairPrice"

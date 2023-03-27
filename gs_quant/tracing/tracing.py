@@ -85,7 +85,12 @@ class Tracer(ContextDecorator):
 
     @staticmethod
     def __format_traceback(exc_type, exc_value):
-        return '' if exc_value is None else ''.join(traceback.format_exception(exc_type, exc_value, None, limit=10))
+        if exc_value is None:
+            return ''
+        try:
+            return ''.join(traceback.format_exception(exc_type, exc_value, None, limit=10))
+        except Exception:
+            return ''
 
     @staticmethod
     def reset():

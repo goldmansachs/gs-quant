@@ -807,7 +807,8 @@ class OptimizerStrategy:
         return PositionSet(date=self.initial_position_set.date,
                            positions=[Position(identifier=asset.get('bbid', asset['name']),
                                                asset_id=asset['assetId'],
-                                               quantity=asset['shares']) for asset in optimization['constituents']])
+                                               quantity=asset['shares'],
+                                               weight=asset['weight']) for asset in optimization['constituents']])
 
     def get_optimized_position_set(self):
         if self.__result is None:
@@ -816,4 +817,5 @@ class OptimizerStrategy:
         return PositionSet(date=self.initial_position_set.date,
                            positions=[Position(identifier=asset.get('bbid', asset['name']),
                                                asset_id=asset['assetId'],
-                                               quantity=asset['shares']) for asset in optimization['constituents']])
+                                               quantity=asset['shares'],
+                                               weight=asset['weight']) for asset in optimization['constituents']])

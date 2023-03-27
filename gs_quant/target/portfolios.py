@@ -58,6 +58,15 @@ class RefreshInterval(EnumBase, Enum):
     End_Of_Month = 'End Of Month'    
 
 
+class ReturnType(EnumBase, Enum):    
+    
+    """Return Type for Report Parameters"""
+
+    Gross_Total_Return = 'Gross Total Return'
+    Net_Total_Return = 'Net Total Return'
+    Price_Return = 'Price Return'    
+
+
 class RiskAumSource(EnumBase, Enum):    
     
     """Source of AUM for portfolio risk calculations."""
@@ -128,6 +137,7 @@ class PCOTrade(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class TemporalPortfolioParameters(Base):
+    return_type: Optional[ReturnType] = field(default=None, metadata=field_metadata)
     refresh_interval: Optional[RefreshInterval] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 

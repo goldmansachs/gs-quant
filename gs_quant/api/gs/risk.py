@@ -193,8 +193,9 @@ class GsRiskApi(RiskApi):
 
                             all_requests_dispatched, items = request_listener.result()
                             if items:
-                                if not isinstance(items[0][1], dict):
-                                    raise RuntimeError(items[0][1][0][0][0]['errorString'])
+                                if not all([isinstance(i[1], dict) for i in items]):
+                                    error = next(i[1] for i in items if not isinstance(i[1], dict))
+                                    raise RuntimeError(error[0][0][0]['errorString'])
 
                                 # ... extract the request IDs ...
                                 request_ids = [i[1]['reportId'] for i in items]

@@ -749,11 +749,17 @@ class FactorRiskReport(Report):
         >>>     position_source_type=PositionSourceType.Portfolio
         >>> )
         """
-        super().__init__(report_id, name, position_source_id, position_source_type,
-                         report_type, ReportParameters(risk_model=risk_model_id,
-                                                       fx_hedged=fx_hedged,
-                                                       benchmark=benchmark_id), earliest_start_date,
-                         latest_end_date, latest_execution_time, status, percentage_complete)
+        if position_source_id and not position_source_type:
+            position_source_type = PositionSourceType.Portfolio if position_source_id.startswith('MP') else \
+                PositionSourceType.Asset
+
+        if position_source_type and not report_type:
+            report_type = ReportType.Portfolio_Factor_Risk if position_source_type is PositionSourceType.Portfolio \
+                else ReportType.Asset_Factor_Risk
+
+        super().__init__(report_id, name, position_source_id, position_source_type, report_type,
+                         ReportParameters(risk_model=risk_model_id, fx_hedged=fx_hedged, benchmark=benchmark_id),
+                         earliest_start_date, latest_end_date, latest_execution_time, status, percentage_complete)
 
     @classmethod
     def get(cls,
@@ -1133,6 +1139,14 @@ class ThematicReport(Report):
         >>>     parameters=None
         >>> )
         """
+        if position_source_id and not position_source_type:
+            position_source_type = PositionSourceType.Portfolio if position_source_id.startswith('MP') else \
+                PositionSourceType.Asset
+
+        if position_source_type and not report_type:
+            report_type = ReportType.Portfolio_Thematic_Analytics if position_source_type is \
+                PositionSourceType.Portfolio else ReportType.Asset_Thematic_Analytics
+
         super().__init__(report_id, name, position_source_id, position_source_type,
                          report_type, parameters, earliest_start_date, latest_end_date,
                          latest_execution_time, status, percentage_complete)

@@ -264,6 +264,10 @@ class ChartAnnotation(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+class ChartControls(DictBase):
+    pass
+
+
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
@@ -338,6 +342,7 @@ class Chart(Base):
     last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
     entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    title: Optional[str] = field(default=None, metadata=field_metadata)
     rank: Optional[int] = field(default=None, metadata=field_metadata)
     folder_name: Optional[str] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
@@ -347,6 +352,7 @@ class Chart(Base):
     chart_properties: Optional[Tuple[ChartProperties, ...]] = field(default=None, metadata=field_metadata)
     regression_properties: Optional[Tuple[ChartRegression, ...]] = field(default=None, metadata=field_metadata)
     real_time: Optional[bool] = field(default=None, metadata=field_metadata)
+    show_controls_toolbar: Optional[bool] = field(default=None, metadata=field_metadata)
     interval: Optional[str] = field(default=None, metadata=field_metadata)
     relative_start_date: Optional[str] = field(default=None, metadata=field_metadata)
     relative_end_date: Optional[str] = field(default=None, metadata=field_metadata)
@@ -367,3 +373,5 @@ class Chart(Base):
     y_axes_settings: Optional[Tuple[YAxisSettings, ...]] = field(default=None, metadata=field_metadata)
     annotations: Optional[Tuple[ChartAnnotation, ...]] = field(default=None, metadata=field_metadata)
     template_variables: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    parameters: Optional[ChartControls] = field(default=None, metadata=field_metadata)
+    controls: Optional[Tuple[DictBase, ...]] = field(default=None, metadata=field_metadata)
