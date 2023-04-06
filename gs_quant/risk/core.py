@@ -18,7 +18,7 @@ import itertools
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from copy import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Iterable, Optional, Tuple, Union, Dict
 
 import pandas as pd
@@ -346,7 +346,19 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
         return [dict(item, **{**extra_dict}) for item in self.raw_value.to_dict('records')]
 
     def copy_with_resultinfo(self, deep=True):
-        return DataFrameWithInfo(self.raw_value.copy(deep=deep), risk_key=self.risk_key, unit=self.unit, error=self.error, request_id=self.request_id)
+        return DataFrameWithInfo(self.raw_value.copy(deep=deep), risk_key=self.risk_key, unit=self.unit,
+                                 error=self.error, request_id=self.request_id)
+
+    def filter_by_coord(self, coordinate):
+        from gs_quant.markets import MarketDataCoordinate
+        df = self.copy_with_resultinfo()
+        for att in [i.name for i in fields(MarketDataCoordinate)]:
+            if getattr(coordinate, att) is not None:
+                if isinstance(getattr(coordinate, att), str):
+                    df = df[getattr(df, att) == getattr(coordinate, att)]
+                else:
+                    df = df[getattr(df, att).isin(getattr(coordinate, att))]
+        return df
 
 
 @dataclass_json
@@ -547,8 +559,8 @@ def combine_risk_key(key_1: RiskKey, key_2: RiskKey) -> RiskKey:
     :type key_2: RiskKey
     """
 
-    def get_field_value(field_name: str): getattr(key_1, field_name) \
-        if getattr(key_1, field_name) == getattr(key_2, field_name) else None
+    def get_field_value(field_name: str):
+        return getattr(key_1, field_name) if getattr(key_1, field_name) == getattr(key_2, field_name) else None
 
     return RiskKey(get_field_value("provider"), get_field_value("date"), get_field_value("market"),
                    get_field_value("params"), get_field_value("scenario"), get_field_value("risk_measure"))

@@ -104,6 +104,10 @@ class GsReportApi:
         return GsSession.current._get('/reports/jobs/{report_job_id}'.format(report_job_id=report_job_id))
 
     @classmethod
+    def reschedule_report_job(cls, report_job_id: str):
+        return GsSession.current._post(f'/reports/jobs/{report_job_id}/reschedule', {})
+
+    @classmethod
     def cancel_report_job(cls, report_job_id: str) -> dict:
         return GsSession.current._post('/reports/jobs/{report_job_id}/cancel'.format(report_job_id=report_job_id))
 

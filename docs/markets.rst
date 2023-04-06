@@ -83,6 +83,18 @@ Portfolio Manager
    PortfolioManager
 
 
+PositionSet
+----------
+
+.. currentmodule:: gs_quant.markets.position_set
+
+.. autosummary::
+   :toctree: classes
+
+   Position
+   PositionSet
+
+
 Securities
 ----------
 

@@ -17,7 +17,7 @@ under the License.
 from abc import ABC, abstractmethod
 from typing import Generic, Callable, Sequence, Any, TypeVar, Iterable, Union
 
-from gs_quant.risk.core import ResultType, DataFrameWithInfo, SeriesWithInfo, FloatWithInfo, combine_risk_key
+from gs_quant.risk.core import ResultType, DataFrameWithInfo, SeriesWithInfo, FloatWithInfo
 
 _InputT = TypeVar('_InputT')
 _ResultT = TypeVar('_ResultT')
@@ -38,32 +38,42 @@ class GenericResultWithInfoTransformer(Transformer[ResultType, ResultType]):
 
 
 class ResultWithInfoAggregator(Transformer[Iterable[ResultType], FloatWithInfo]):
-    def __init__(self, risk_col: str = 'value'):
+    def __init__(self, risk_col: str = 'value', filter_coord=None):
         self.__risk_col = risk_col
+        self.__filter_coord = filter_coord
 
     def apply(self, results: Iterable[Union[float, FloatWithInfo, SeriesWithInfo, DataFrameWithInfo]],
-              *args, **kwargs) -> FloatWithInfo:
-        val = 0
+              *args, **kwargs) -> Iterable[Union[float, FloatWithInfo]]:
         risk_key = None
-        units = set()
+        flattened_results = set()
 
         for result in results:
             if isinstance(result, float):
-                val += result
-            elif isinstance(result, (FloatWithInfo, SeriesWithInfo, DataFrameWithInfo)):
-                if isinstance(result, FloatWithInfo):
-                    val += result.raw_value
-                else:
-                    val += getattr(result, self.risk_col).sum()
-                risk_key = result.risk_key if risk_key is None else combine_risk_key(risk_key, result.risk_key)
-                units.add(result.unit)
+                flattened_results.add(result)
             else:
-                raise ValueError(f'Aggregation of {type(result).__name__} not currently supported')
+                if isinstance(result, FloatWithInfo):
+                    val = result.raw_value
+                elif isinstance(result, SeriesWithInfo):
+                    val = getattr(result, self.risk_col).sum()
+                elif isinstance(result, DataFrameWithInfo):
+                    if self.filter_coord is not None:
+                        df = result.filter_by_coord(self.filter_coord)
+                        val = getattr(df, self.risk_col).sum()
+                    else:
+                        val = getattr(result, self.risk_col).sum()
+                else:
+                    raise ValueError(f'Aggregation of {type(result).__name__} not currently supported')
+                risk_key = result.risk_key
+                unit = result.unit
+                error = result.error
+                flattened_results.add(FloatWithInfo(value=val, risk_key=risk_key, unit=unit, error=error))
 
-        if len(units) != 1:
-            raise ValueError(f'Aggregation of {len(units)} units not currently supported. 1 unit expected.')
-        return FloatWithInfo(value=val, risk_key=risk_key, unit=(list(units))[0])
+        return flattened_results
 
     @property
     def risk_col(self):
         return self.__risk_col
+
+    @property
+    def filter_coord(self):
+        return self.__filter_coord

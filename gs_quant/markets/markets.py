@@ -14,6 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import re
+from typing import Mapping, Optional, Tuple, Union
+
 from gs_quant.base import Market, RiskKey
 from gs_quant.common import PricingLocation
 from gs_quant.datetime.date import prev_business_date
@@ -22,8 +25,6 @@ from gs_quant.target.common import CloseMarket as _CloseMarket, LiveMarket as _L
     RefMarket as _RefMarket
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate, \
     MarketDataCoordinateValue as __MarketDataCoordinateValue
-import re
-from typing import Mapping, Optional, Tuple, Union
 
 
 def historical_risk_key(risk_key: RiskKey) -> RiskKey:

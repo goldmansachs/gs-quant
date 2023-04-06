@@ -184,22 +184,165 @@ class PositionSet:
         return self.__unpriced_positions
 
     def get_positions(self) -> pd.DataFrame:
-        """ Retrieve formatted positions """
+        """
+        Retrieve formatted positions
+
+        :return: DataFrame of positions for position set
+
+        **Usage**
+
+        View position set position info
+
+        **Examples**
+
+        Get position set positions:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW'), Position(identifier='MSFT UW')]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.get_positions()
+
+        **See also**
+
+        :func:`get_unresolved_positions` :func:`get_unpriced_positions` :func:`resolve` :func:`price`
+        """
         positions = [p.as_dict() for p in self.positions]
         return pd.DataFrame(positions)
 
     def get_unresolved_positions(self) -> pd.DataFrame:
-        """ Retrieve formatted unresolved positions """
+        """
+        Retrieve formatted unresolved positions
+
+        :return: DataFrame of unresolved positions for position set
+
+        **Usage**
+
+        View position set unresolved position info
+
+        **Examples**
+
+        Get position set unresolved positions:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW'), Position(identifier='MSFT UW')]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+        >>> position_set.get_unresolved_positions()
+
+        **See also**
+
+        :func:`get_positions` :func:`get_unpriced_positions` :func:`resolve` :func:`price`
+        """
         positions = [p.as_dict() for p in self.unresolved_positions]
         return pd.DataFrame(positions)
 
+    def remove_unresolved_positions(self):
+        """
+        Remove unresolved positions from your position set
+
+        **Usage**
+
+        Remove unresolved positions from your position set
+
+        **Examples**
+
+        Remove unresolved positions from your position set:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW'), Position(identifier='MSFT UW')]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+        >>> position_set.remove_unresolved_positions()
+
+        **See also**
+
+        :func:`get_positions` :func:`get_unpriced_positions` :func:`resolve` :func:`price`
+        :func:`remove_unpriced_positions` :func:`get_unresolved_positions`
+        """
+        self.positions = [p for p in self.positions if p.asset_id is not None]
+        self.__unresolved_positions = None
+
     def get_unpriced_positions(self) -> pd.DataFrame:
-        """ Retrieve formatted unpriced positions """
+        """
+        Retrieve formatted unpriced positions
+
+        :return: DataFrame of unpriced positions for position set
+
+        **Usage**
+
+        View position set unpriced position info
+
+        **Examples**
+
+        Get position set unpriced positions:
+
+        >>> import datetime as dt
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW', quantity=100), Position(identifier='MSFT UW', quantity=100)]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+        >>> position_set.price()
+        >>> position_set.get_unpriced_positions()
+
+        **See also**
+
+        :func:`get_positions` :func:`get_unresolved_positions` :func:`resolve` :func:`price`
+        """
         positions = [p.as_dict() for p in self.unpriced_positions]
         return pd.DataFrame(positions)
 
+    def remove_unpriced_positions(self):
+        """
+        Remove unpriced positions from your position set
+
+        **Usage**
+
+        Remove unpriced positions from your position set
+
+        **Examples**
+
+        Remove unpriced positions from your position set:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW'), Position(identifier='MSFT UW')]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+        >>> position_set.remove_unpriced_positions()
+
+        **See also**
+
+        :func:`get_positions` :func:`get_unpriced_positions` :func:`resolve` :func:`price`
+        :func:`get_unresolved_positions` :func:`remove_unresolved_positions`
+        """
+        self.__unpriced_positions = None
+
     def equalize_position_weights(self):
-        """ Assigns equal weight to each position in position set """
+        """
+        Assigns equal weight to each position in position set
+
+        **Usage**
+
+        Assigns equal weight to each position in position set
+
+        **Examples**
+
+        Assign equal weight to each position in position set:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW'), Position(identifier='MSFT UW')]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.equalize_position_weights()
+
+        **See also**
+
+        :func:`get_positions` :func:`redistribute_weights`
+        """
         weight = 1 / len(self.positions)
         equally_weighted_positions = []
         for p in self.positions:
@@ -209,7 +352,29 @@ class PositionSet:
         self.positions = equally_weighted_positions
 
     def to_frame(self) -> pd.DataFrame:
-        """ Retrieve formatted position set """
+        """
+        Retrieve formatted position set
+
+        :return: DataFrame of position set info
+
+        **Usage**
+
+        View position set info
+
+        **Examples**
+
+        Retrieve formatted position set:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW', quantity=100), Position(identifier='MSFT UW', quantity=100)]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.get_unpriced_positions()
+
+        **See also**
+
+        :func:`from_frame` :func:`from_dicts` :func:`from_list`
+        """
         positions = []
         for p in self.positions:
             position = dict(date=self.date.isoformat())
@@ -220,7 +385,27 @@ class PositionSet:
         return pd.DataFrame(positions)
 
     def resolve(self, **kwargs):
-        """ Resolve any unmapped positions """
+        """
+        Resolve any unmapped positions
+
+        **Usage**
+
+        Resolve any unmapped positions
+
+        **Examples**
+
+        Resolve any unmapped positions:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW'), Position(identifier='MSFT UW')]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+
+        **See also**
+
+        :func:`get_positions` :func:`get_unresolved_positions` :func:`get_unpriced_positions` :func:`price`
+        """
         unresolved_positions = [p.identifier for p in self.positions if p.asset_id is None]
         if len(unresolved_positions):
             [id_map, unresolved_positions] = self.__resolve_identifiers(unresolved_positions, self.date, **kwargs)
@@ -236,7 +421,27 @@ class PositionSet:
             self.positions = resolved_positions
 
     def redistribute_weights(self):
-        """ Redistribute position weights proportionally for a one-sided position set """
+        """
+        Redistribute position weights proportionally for a one-sided position set
+
+        **Usage**
+
+        Redistribute position weights proportionally for a one-sided position set
+
+        **Examples**
+
+        Redistribute position weights proportionally for a one-sided position set:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW', weight=0.3), Position(identifier='MSFT UW', weight=0.3)]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.redistribute_weights()
+
+        **See also**
+
+        :func:`get_positions` :func:`equalize_position_weights` :func:`get_unpriced_positions` :func:`price`
+        """
         total_weight = 0
         new_weights, unweighted = [], []
         for p in self.positions:
@@ -261,6 +466,35 @@ class PositionSet:
 
         :param currency: Reference notional currency (defaults to USD if not passed in)
         :param weighting_strategy: Quantity or Weighted weighting strategy (defaults based on positions info)
+
+        **Usage**
+
+        Fetch positions weights from quantities, or vice versa
+
+        **Examples**
+
+        Fetch position weights from quantities:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet, PositionSetWeightingStrategy
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW', quantity=100), Position(identifier='MSFT UW', quantity=100)]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+        >>> position_set.price(weighting_strategy=PositionSetWeightingStrategy.Quantity)
+
+        Fetch position quantities from weights:
+
+        >>> import datetime as dt
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW', weight=0.5), Position(identifier='MSFT UW', weight=0.5)]
+        >>> position_set = PositionSet(positions=my_positions, date= dt.date(2023, 3, 16), reference_notional=10000000)
+        >>> position_set.resolve()
+        >>> position_set.price(weighting_strategy=PositionSetWeightingStrategy.Weight)
+
+        **See also**
+
+        :func:`get_unpriced_positions` :func:`get_unresolved_positions` :func:`resolve`
         """
         weighting_strategy = self.__get_default_weighting_strategy(self.positions,
                                                                    self.reference_notional,
@@ -311,7 +545,26 @@ class PositionSet:
 
     @classmethod
     def from_list(cls, positions: List[str], date: datetime.date = datetime.date.today()):
-        """ Create equally-weighted PostionSet instance from a list of identifiers """
+        """
+        Create equally-weighted PostionSet instance from a list of identifiers
+
+        **Usage**
+
+        Create equally-weighted PostionSet instance from a list of identifiers
+
+        **Examples**
+
+        Create equally-weighted PostionSet instance from a list of identifiers:
+
+        >>> from gs_quant.markets.position_set import PositionSet
+        >>>
+        >>> identifiers = ['AAPL UW', 'MSFT UW']
+        >>> position_set = PositionSet.from_list(positions=identifiers)
+
+        **See also**
+
+        :func:`get_positions` :func:`resolve` :func:`from_dicts` :func:`from_frame` :func:`to_frame`
+        """
         weight = 1 / len(positions)
         converted_positions = [Position(identifier=p, weight=weight) for p in positions]
         return cls(converted_positions, date)
@@ -320,7 +573,26 @@ class PositionSet:
     def from_dicts(cls, positions: List[Dict],
                    date: datetime.date = datetime.date.today(),
                    reference_notional: float = None):
-        """ Create PostionSet instance from a list of position-object-like dictionaries """
+        """
+        Create PostionSet instance from a list of position-object-like dictionaries
+
+        **Usage**
+
+        Create PostionSet instance from a list of position-object-like dictionaries
+
+        **Examples**
+
+        Create PostionSet instance from a list of position-object-like dictionaries:
+
+        >>> from gs_quant.markets.position_set import PositionSet
+        >>>
+        >>> my_positions = [{'identifier': 'AAPL UW', 'weight': 0.5}, {'identifier': 'AAPL UW', 'weight': 0.5}]
+        >>> position_set = PositionSet.from_dicts(positions=my_positions)
+
+        **See also**
+
+        :func:`get_positions` :func:`resolve` :func:`from_list` :func:`from_frame` :func:`to_frame`
+        """
         positions_df = pd.DataFrame(positions)
         return cls.from_frame(positions_df, date, reference_notional)
 
@@ -330,7 +602,28 @@ class PositionSet:
                    date: datetime.date = datetime.date.today(),
                    reference_notional: float = None,
                    add_tags: bool = False):
-        """ Create PostionSet instance from a list of position-object-like dataframes """
+        """
+        Create PostionSet instance from a dataframe of positions
+
+        **Usage**
+
+        Create PostionSet instance from a dataframe of positions
+
+        **Examples**
+
+        Create PostionSet instance from a dataframe of positions:
+
+        >>> import pandas as pd
+        >>> from gs_quant.markets.position_set import PositionSet
+        >>>
+        >>> my_positions = [{'identifier': 'AAPL UW', 'weight': 0.5}, {'identifier': 'AAPL UW', 'weight': 0.5}]
+        >>> positions_df = pd.DataFrame(my_positions)
+        >>> position_set = PositionSet.from_frame(positions=positions_df)
+
+        **See also**
+
+        :func:`get_positions` :func:`resolve` :func:`from_list` :func:`from_dicts` :func:`to_frame`
+        """
         positions.columns = cls.__normalize_position_columns(positions)
         tag_columns = cls.__get_tag_columns(positions) if add_tags else []
         positions = positions[~positions['identifier'].isnull()]

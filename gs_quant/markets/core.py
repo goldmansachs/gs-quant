@@ -103,12 +103,13 @@ class PricingContext(ContextBaseWithDefault):
         :param visible_to_gs: are the contents of risk requests visible to GS (defaults to False)
         :param request_priority: the priority of risk requests
         :param csa_term: the csa under which the calculations are made. Default is local ccy ois index
-        :param market_data_location: the location for sourcing market data ('NYC', 'LDN' or 'HKG' (defaults to LDN)
         :param timeout: the timeout for batch operations
+        :param market: a Market object
         :param show_progress: add a progress bar (tqdm)
         :param use_server_cache: cache query results on the GS servers
         :param market_behaviour: the behaviour to build the curve for pricing ('ContraintsBased' or 'Calibrated'
             (defaults to ContraintsBased))
+        :param set_parameters_only: if true don't stop embedded pricing contexts submitting their jobs.
 
         **Examples**
 

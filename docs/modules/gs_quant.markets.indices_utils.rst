@@ -30,9 +30,6 @@
       BasketType
       CorporateActionType
       CustomBasketStyles
-      FundamentalMetricPeriod
-      FundamentalMetricPeriodDirection
-      FundamentalsMetrics
       IndicesDatasets
       PriceType
       Region

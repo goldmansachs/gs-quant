@@ -20,13 +20,14 @@ import gs_quant.risk as risk
 import numpy as np
 import pytest
 from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg
-from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMarket
+from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMarket, MarketDataCoordinate
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import MultiScenario
 from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel, PnlExplain
 from gs_quant.risk.core import aggregate_risk, SeriesWithInfo, FloatWithInfo
 from gs_quant.risk.results import MultipleScenarioFuture
 from gs_quant.risk.results import MultipleScenarioResult
+from gs_quant.risk.transform import ResultWithInfoAggregator
 from gs_quant.target.common import MarketDataPattern
 from gs_quant.test.utils.mock_calc import MockCalc
 
@@ -633,3 +634,22 @@ def test_aggregation_with_empty_measures(mocker):
         risk_swaption_2 = result_explain[1]['value'].sum()
 
         assert total_risk == risk_swaption_1 + risk_swaption_2
+
+
+def test_filter_risk(mocker):
+    with MockCalc(mocker):
+        result = swap_1.calc(risk.IRDelta)
+
+    coord = MarketDataCoordinate.from_string('IR_EUR_SWAP_5Y')
+
+    df = result.filter_by_coord(coord)
+    assert len(result) > 1
+    assert len(df) == 1
+
+
+def test_transformation(mocker):
+    with MockCalc(mocker):
+        ladder_res = usd_port.calc(risk.IRDelta)
+
+    transformed_res = ladder_res.transform(ResultWithInfoAggregator())
+    np.testing.assert_almost_equal(transformed_res.aggregate(), ladder_res.to_frame()['value'].sum())

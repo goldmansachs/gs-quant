@@ -764,10 +764,14 @@ class PortfolioRiskResult(CompositeResultFuture):
                                              ((r, self[r].transform(risk_transformation)) for r in
                                               self.__risk_measures))
         elif len(self.__risk_measures) == 1:
-            transformed_future = PricingFuture()
-            transformed_future.set_result(risk_transformation.apply(self.__results()))
-            transformed_future.done()
-            return PortfolioRiskResult(self.portfolio, self.risk_measures, (transformed_future,))
+            flattened_results = risk_transformation.apply(self.__results())
+            futures = []
+            for result in flattened_results:
+                transformed_future = PricingFuture()
+                transformed_future.set_result(result)
+                transformed_future.done()
+                futures.append(transformed_future)
+            return PortfolioRiskResult(self.portfolio, self.risk_measures, futures)
         else:
             return self
 
