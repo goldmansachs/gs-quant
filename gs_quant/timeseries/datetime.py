@@ -15,7 +15,9 @@
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
 from datetime import date, time, timedelta
+from enum import Enum
 from numbers import Real
+from typing import Any, Union
 
 import numpy as np
 
@@ -30,7 +32,10 @@ Date and time manipulation for timeseries, including date or time shifting, cale
 interpolation operations. Includes sampling operations based on daif dates[0]te or time manipulation
 """
 
-AggregateFunction = _create_enum('AggregateFunction', ['max', 'min', 'mean', 'sum'])
+AggregateFunction: Union[Union[type, Enum], Any] = _create_enum(
+    'AggregateFunction',
+    ['max', 'min', 'mean', 'sum', 'first', 'last']
+)
 AggregatePeriod = _create_enum('AggregatePeriod', ['week', 'month', 'year'])
 
 

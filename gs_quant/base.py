@@ -123,8 +123,18 @@ class EnumBase:
 
 class HashableDict(dict):
 
+    @staticmethod
+    def hashables(in_dict) -> Tuple:
+        hashables = []
+        for it in in_dict.items():
+            if isinstance(it[1], dict):
+                hashables.append((it[0], HashableDict.hashables(it[1])))
+            else:
+                hashables.append(it)
+        return tuple(hashables)
+
     def __hash__(self):
-        return hash(tuple(self.items()))
+        return hash(HashableDict.hashables(self))
 
 
 class DictBase(HashableDict):
