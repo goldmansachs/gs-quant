@@ -70,12 +70,12 @@ def structured_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
 
     result = priceable.calc(measure)
     assert result.raw_value.equals(expected)
-    with PricingContext.current as cur:
-        default_date = cur.pricing_date
-        default_mkt = cur.market
+    default_date = PricingContext.current.pricing_date
+    default_mkt = PricingContext.current.market
     risk_requests = (risk.RiskRequest(
         positions=(RiskPosition(instrument=priceable, quantity=1),),
         measures=(measure,),
+        use_cache=PricingContext.current.use_server_cache,
         pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=default_date,
                                                                     market=default_mkt),),
         parameters=RiskRequestParameters(raw_results=True),
@@ -89,12 +89,12 @@ def scalar_calc(mocker, priceable: Priceable, measure: risk.RiskMeasure):
 
     result = priceable.calc(measure)
     assert result == 0.01
-    with PricingContext.current as cur:
-        default_date = cur.pricing_date
-        default_mkt = cur.market
+    default_date = PricingContext.current.pricing_date
+    default_mkt = PricingContext.current .market
     risk_requests = (risk.RiskRequest(
         positions=(RiskPosition(instrument=priceable, quantity=1),),
         measures=(measure,),
+        use_cache=PricingContext.current.use_server_cache,
         pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=default_date,
                                                                     market=default_mkt),),
         parameters=RiskRequestParameters(raw_results=True),
@@ -108,12 +108,12 @@ def price(mocker, priceable: Priceable):
 
     result = priceable.dollar_price()
     assert result == 0.01
-    with PricingContext.current as cur:
-        default_date = cur.pricing_date
-        default_mkt = cur.market
+    default_date = PricingContext.current.pricing_date
+    default_mkt = PricingContext.current.market
     risk_requests = (risk.RiskRequest(
         positions=(RiskPosition(instrument=priceable, quantity=1),),
         measures=(risk.DollarPrice,),
+        use_cache=PricingContext.current.use_server_cache,
         pricing_and_market_data_as_of=(PricingDateAndMarketDataAsOf(pricing_date=default_date,
                                                                     market=default_mkt),),
         parameters=RiskRequestParameters(raw_results=True),

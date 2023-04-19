@@ -282,7 +282,7 @@ class ReturnsProcessor(BaseProcessor):
                 data = a_data.data
                 if self.observations is None:
                     if len(data) > 1:
-                        self.value = ProcessorResult(True, Series([(data.iloc[-1] - data.iloc[0]) / data.iloc[-1]]))
+                        self.value = ProcessorResult(True, Series([(data.iloc[-1] - data.iloc[0]) / data.iloc[0]]))
                     else:
                         self.value = ProcessorResult(True, 'Series has is less than 2.')
                 else:

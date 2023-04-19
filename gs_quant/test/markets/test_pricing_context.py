@@ -133,12 +133,13 @@ def test_pricing_context_metadata():
 
 def test_creation():
     c1 = PricingContext(pricing_date=datetime.date(2022, 6, 15))
-    # All props except for the initialised one are None. Context is not useable as-is
-    assert c1.market is None
-    assert c1.market_data_location is None
-    assert c1.is_batch is None
-    assert c1.use_cache is None
-    assert c1._max_concurrent is None
+
+    # All props except for the initialised one are defaulted. Context is not useable as-is
+    assert c1.market == CloseMarket(c1.pricing_date, 'LDN')
+    assert c1.market_data_location == PricingLocation.LDN
+    assert c1.is_batch is False
+    assert c1.use_cache is False
+    assert c1._max_concurrent == 1000
 
     assert c1.pricing_date == datetime.date(2022, 6, 15)
 
@@ -169,9 +170,29 @@ def test_inheritance():
                 assert c3._max_concurrent == 1000
 
 
+def test_max_concurrent():
+    a = PricingContext()
+    assert a._max_concurrent == 1000  # Default value
+
+    b = PricingContext()
+    b._max_concurrent = 2000
+
+    c = PricingContext()
+    c._max_concurrent = 3000
+
+    assert b._max_concurrent == 2000  # setter working?
+    with b:
+        assert a._max_concurrent == 2000  # a was unset so defaults to inheriting b's value
+        assert c._max_concurrent == 3000  # c was explicitly set so keep's it's value
+        with a:
+            assert PricingContext.current._max_concurrent == 2000  # should be same as above property accessor
+        with c:
+            assert PricingContext.current._max_concurrent == 3000  # should be same as above property accessor
+
+
 def test_current_inheritance():
     cur = PricingContext.current
-    assert cur.market_data_location is None
+    assert cur.market_data_location == PricingLocation.LDN
 
     with PricingContext() as pc:
         assert pc.market_data_location == PricingLocation.LDN
@@ -182,8 +203,7 @@ def test_current_inheritance():
     new_cur = PricingContext.current
     assert new_cur.market_data_location == PricingLocation.TKO
 
-    with PricingContext() as pc:
-        assert pc.market_data_location == new_cur.market_data_location
+    assert PricingContext().market_data_location == new_cur.market_data_location
 
     with PricingContext():
         with PricingContext() as pc2:
@@ -196,6 +216,7 @@ def test_current_inheritance():
 def test_cleanup():
     c1 = PricingContext(pricing_date=datetime.date(2022, 4, 6))
     c2 = PricingContext(request_priority=5000)
+    default_date = c2.pricing_date
 
     with c1:
         with c2:
@@ -203,12 +224,15 @@ def test_cleanup():
             # pricing_date is inherited from c1
             assert c2.pricing_date is not None
             assert c2.pricing_date == c1.pricing_date
-        # pricing date is cleaned up on exit from c2. request priority remains set
-        assert c2.request_priority == 5000
-        assert c2.pricing_date is None
+        # on exit from c2, the pricing date would still show what it would be as inside c1 still
+        assert c2.pricing_date == c1.pricing_date
+    # pricing date is cleaned up on exit from c1. request priority remains set
+    assert c2.request_priority == 5000
+    assert c2.pricing_date == default_date
 
 
 def test_market_props():
+    PricingContext.current = PricingContext()  # Reset
     # market_data_location cannot conflict with market.location
     with pytest.raises(ValueError):
         PricingContext(market=CloseMarket(date=datetime.date(2022, 4, 6), location='NYC'),
@@ -230,11 +254,9 @@ def test_market_props():
 
     # if market is not specified, it is inferred from pricing_date and market_data_location
     pc = PricingContext(pricing_date=datetime.date(2022, 7, 4), market_data_location='TKO')
-    assert pc.market is None
-    with pc:
-        cm = CloseMarket(date=pc.pricing_date, location=pc.market_data_location)
-        assert pc.market.date == cm.date
-        assert pc.market.location == cm.location
+    cm = CloseMarket(date=pc.pricing_date, location=pc.market_data_location)
+    assert pc.market.date == cm.date
+    assert pc.market.location == cm.location
 
     # market is not inherited
     pc = PricingContext(market=CloseMarket(date=datetime.date(2022, 4, 6), location='NYC'))
@@ -264,7 +286,7 @@ def test_pricing_does_not_affect_context(mocker):
         assert pc.market_data_location == PricingLocation.TKO
         assert pc.pricing_date == datetime.date(2022, 4, 6)
         assert pc.market == cm
-        assert pc.is_batch is None
+        assert pc.is_batch is False
 
         with pc:
             assert pc.is_batch is False
@@ -282,7 +304,7 @@ def test_pricing_does_not_affect_context(mocker):
         assert pc.market_data_location == PricingLocation.TKO
         assert pc.pricing_date == datetime.date(2022, 4, 6)
         assert pc.market == cm
-        assert pc.is_batch is None
+        assert pc.is_batch is False
 
 
 def test_different_nested_locations(mocker):
@@ -308,12 +330,11 @@ def test_async_behaviour(queue_mock, run_mock):
     # queue to drain should hence be empty
     queue_mock.return_value = True, []
 
-    with PricingContext(is_async=True) as pc:
+    with PricingContext(is_async=True):
         s.price()
     # sleep to give spawned threads time to call RiskApi.run
     sleep(1)
     # threads should see the _max_concurrent property of the PricingContext as 1000 even though it's exited
-    assert pc._max_concurrent is None
     run_mock.assert_called_with(ANY, ANY, 1000, ANY, timeout=ANY, span=ANY)
 
 

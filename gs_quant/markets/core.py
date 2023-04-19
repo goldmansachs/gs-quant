@@ -22,7 +22,7 @@ import weakref
 from abc import ABCMeta
 from concurrent.futures import ThreadPoolExecutor
 from inspect import signature
-from itertools import zip_longest
+from itertools import zip_longest, takewhile
 from typing import Optional, Union
 
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
@@ -184,8 +184,8 @@ class PricingContext(ContextBaseWithDefault):
         self.__market = market
         self.__show_progress = show_progress
         self.__use_server_cache = use_server_cache
-        self._max_per_batch = None
-        self._max_concurrent = None
+        self.__max_per_batch = None
+        self.__max_concurrent = None
 
         self.__set_parameters_only = set_parameters_only
 
@@ -208,51 +208,45 @@ class PricingContext(ContextBaseWithDefault):
         attr_dict['market'] = self.__market
         attr_dict['show_progress'] = self.__show_progress
         attr_dict['use_server_cache'] = self.__use_server_cache
-        attr_dict['_max_concurrent'] = self._max_concurrent
-        attr_dict['_max_per_batch'] = self._max_per_batch
+        attr_dict['_max_concurrent'] = self.__max_concurrent
+        attr_dict['_max_per_batch'] = self.__max_per_batch
+
+    def _inherited_val(self, parameter, default=None, from_active=False):
+        if from_active:
+            # some properties are inherited from the active context
+            if self != self.active_context and getattr(self.active_context, parameter) is not None:
+                return getattr(self.active_context, parameter)
+        if not self.is_entered and (not PricingContext.has_prior or self is not PricingContext.prior):
+            # if not yet entered, get property from current (would-be prior) so that getters still display correctly
+            if PricingContext.current is not self and PricingContext.current and getattr(PricingContext.current,
+                                                                                         parameter) is not None:
+                return getattr(PricingContext.current, parameter)
+        else:
+            # if entered, inherit from the prior
+            if PricingContext.has_prior and PricingContext.prior is not self and getattr(PricingContext.prior,
+                                                                                         parameter) is not None:
+                return getattr(PricingContext.prior, parameter)
+        # default if nothing to inherit
+        return default
 
     def _on_enter(self):
-        def _inherited_val(parameter, from_active, from_prior, default):
-            if from_active:
-                if self != self.active_context and getattr(self.active_context, parameter) is not None:
-                    return getattr(self.active_context, parameter)
-            if from_prior:
-                if PricingContext.has_prior and getattr(PricingContext.prior, parameter) is not None:
-                    return getattr(PricingContext.prior, parameter)
-            return default
-
-        def _inherit_if_not_init(parameter, from_active=False, from_prior=True, default=None):
-            on_entry = self.__attrs_on_entry.get(parameter)
-            if on_entry is not None:
-                return on_entry
-            else:
-                return _inherited_val(parameter, from_active, from_prior, default)
-
         self.__save_attrs_to(self.__attrs_on_entry)
 
-        self.__market_data_location = _inherit_if_not_init('market_data_location',
-                                                           from_active=True,
-                                                           default=PricingLocation.LDN)
-        default_pricing_date = business_day_offset(today(self.__market_data_location), 0, roll='preceding')
-        self.__pricing_date = _inherit_if_not_init('pricing_date', default=default_pricing_date)
-
-        if self.__attrs_on_entry.get('market') is None:
-            self.__market = CloseMarket(
-                date=close_market_date(self.__market_data_location, self.__pricing_date),
-                location=self.__market_data_location)
-
-        self.__csa_term = _inherit_if_not_init('csa_term')
-        self.__market_behaviour = _inherit_if_not_init('market_behaviour', default='ContraintsBased')
-        self.__is_async = _inherit_if_not_init('is_async', default=False)
-        self.__is_batch = _inherit_if_not_init('is_batch', default=False)
-        self.__timeout = _inherit_if_not_init('timeout')
-        self.__use_cache = _inherit_if_not_init('use_cache', default=False)
-        self.__visible_to_gs = _inherit_if_not_init('visible_to_gs')
-        self.__request_priority = _inherit_if_not_init('request_priority')
-        self.__show_progress = _inherit_if_not_init('show_progress', default=False)
-        self.__use_server_cache = _inherit_if_not_init('use_server_cache', default=False)
-        self._max_concurrent = _inherit_if_not_init('_max_concurrent', default=1000)
-        self._max_per_batch = _inherit_if_not_init('_max_per_batch', default=1000)
+        self.__market_data_location = self.market_data_location
+        self.__pricing_date = self.pricing_date
+        self.__market = self.market
+        self.__csa_term = self.csa_term
+        self.__market_behaviour = self.market_behaviour
+        self.__is_async = self.is_async
+        self.__is_batch = self.is_batch
+        self.__timeout = self.timeout
+        self.__use_cache = self.use_cache
+        self.__visible_to_gs = self.visible_to_gs
+        self.__request_priority = self.request_priority
+        self.__show_progress = self.show_progress
+        self.__use_server_cache = self.use_server_cache
+        self.__max_concurrent = self._max_concurrent
+        self.__max_per_batch = self._max_per_batch
 
     def __reset_atts(self):
         self.__pricing_date = self.__attrs_on_entry.get('pricing_date')
@@ -268,8 +262,8 @@ class PricingContext(ContextBaseWithDefault):
         self.__market = self.__attrs_on_entry.get('market')
         self.__show_progress = self.__attrs_on_entry.get('show_progress')
         self.__use_server_cache = self.__attrs_on_entry.get('use_server_cache')
-        self._max_concurrent = self.__attrs_on_entry.get('_max_concurrent')
-        self._max_per_batch = self.__attrs_on_entry.get('_max_per_batch')
+        self.__max_concurrent = self.__attrs_on_entry.get('_max_concurrent')
+        self.__max_per_batch = self.__attrs_on_entry.get('_max_per_batch')
 
         self.__attrs_on_entry = {}
 
@@ -364,7 +358,7 @@ class PricingContext(ContextBaseWithDefault):
                 requests_for_provider[provider] = requests
 
             show_status = self.__show_progress and \
-                (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
+                          (len(requests_for_provider) > 1 or len(next(iter(requests_for_provider.values()))) > 1)
             request_pool = ThreadPoolExecutor(len(requests_for_provider)) \
                 if len(requests_for_provider) > 1 or self.__is_async else None
             progress_bar = tqdm(total=len(self.__pending), position=0, maxinterval=1,
@@ -406,71 +400,98 @@ class PricingContext(ContextBaseWithDefault):
             return None
 
         return MarketDataScenario(scenario=scenarios[0] if len(scenarios) == 1 else
-                                  CompositeScenario(scenarios=tuple(reversed(scenarios))))
+        CompositeScenario(scenarios=tuple(reversed(scenarios))))
 
     @property
     def active_context(self):
-        return next((c for c in reversed(PricingContext.path) if c.is_entered and not c.set_parameters_only),
-                    self)
+        # active context cannot be below self on the stack - this also prevents infinite recursion when inheriting
+        path = takewhile(lambda x: x != self, reversed(PricingContext.path))
+        return next((c for c in path if c.is_entered and not c.set_parameters_only), self)
 
     @property
     def is_current(self) -> bool:
         return self == PricingContext.current
 
     @property
+    def _max_concurrent(self) -> int:
+        return self.__max_concurrent if self.__max_concurrent else self._inherited_val('_max_concurrent', default=1000)
+
+    @_max_concurrent.setter
+    def _max_concurrent(self, value):
+        self.__max_concurrent = value
+
+    @property
+    def _max_per_batch(self) -> int:
+        return self.__max_per_batch if self.__max_per_batch else self._inherited_val('_max_per_batch', default=1000)
+
+    @_max_per_batch.setter
+    def _max_per_batch(self, value):
+        self.__max_per_batch = value
+
+    @property
     def is_async(self) -> bool:
-        return self.__is_async
+        if self.__is_async is not None:
+            return self.__is_async
+        return self._inherited_val('is_async', default=False)
 
     @property
     def is_batch(self) -> bool:
-        return self.__is_batch
+        return self.__is_batch if self.__is_batch else self._inherited_val('is_batch', default=False)
 
     @property
     def market(self) -> Market:
-        return self.__market
+        return self.__market if self.__market else CloseMarket(
+            date=close_market_date(self.market_data_location, self.pricing_date),
+            location=self.market_data_location)
 
     @property
     def market_data_location(self) -> PricingLocation:
-        return self.__market_data_location
+        return self.__market_data_location if self.__market_data_location else self._inherited_val(
+            'market_data_location', from_active=True, default=PricingLocation.LDN)
 
     @property
     def csa_term(self) -> str:
-        return self._parameters.csa_term
+        return self.__csa_term if self.__csa_term else self._inherited_val('csa_term')
 
     @property
     def show_progress(self) -> bool:
-        return self.__show_progress
+        return self.__show_progress if self.__show_progress else self._inherited_val('show_progress', default=False)
 
     @property
     def timeout(self) -> int:
-        return self.__timeout
+        return self.__timeout if self.__timeout else self._inherited_val('timeout')
 
     @property
     def request_priority(self) -> int:
-        return self.__request_priority
+        return self.__request_priority if self.__request_priority else self._inherited_val('request_priority')
 
     @property
     def use_server_cache(self) -> bool:
-        return self.__use_server_cache
+        return self.__use_server_cache if self.__use_server_cache is not None else self._inherited_val(
+            'use_server_cache', False)
 
     @property
     def market_behaviour(self) -> str:
-        return self._parameters.market_behaviour
+        return self.__market_behaviour if self.__market_behaviour else self._inherited_val(
+            'market_behaviour', default='ContraintsBased')
 
     @property
     def pricing_date(self) -> dt.date:
         """Pricing date"""
-        return self.__pricing_date
+        if self.__pricing_date is not None:
+            return self.__pricing_date
+        default_pricing_date = business_day_offset(today(self.market_data_location), 0, roll='preceding')
+        return self._inherited_val('pricing_date', default=default_pricing_date)
 
     @property
     def use_cache(self) -> bool:
         """Cache results"""
-        return self.__use_cache
+        return self.__use_cache if self.__use_cache else self._inherited_val('use_cache', default=False)
 
     @property
     def visible_to_gs(self) -> Optional[bool]:
         """Request contents visible to GS"""
-        return self.__visible_to_gs
+        return self.__visible_to_gs if self.__visible_to_gs else self._inherited_val('visible_to_gs')
 
     @property
     def set_parameters_only(self) -> bool:

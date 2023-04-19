@@ -17,6 +17,7 @@ under the License.
 from typing import Optional, Union
 
 import pandas as pd
+from pandas import Series
 
 from gs_quant.analytics.core.processor import BaseProcessor, DataCoordinateOrProcessor, DateOrDatetimeOrRDate
 from gs_quant.analytics.core.processor_result import ProcessorResult
@@ -487,6 +488,45 @@ class StdMoveProcessor(BaseProcessor):
                 self.value = ProcessorResult(False, "StdMoveProcessor does not have 'a' series values yet")
         else:
             self.value = ProcessorResult(False, "StdMoveProcessor does not have 'a' series yet")
+        return self.value
+
+    def get_plot_expression(self):
+        pass
+
+
+class CompoundGrowthRate(BaseProcessor):
+    def __init__(self,
+                 a: DataCoordinateOrProcessor,
+                 *,
+                 start: Optional[DateOrDatetimeOrRDate] = None,
+                 end: Optional[DateOrDatetimeOrRDate] = None,
+                 n: Optional[float] = None,
+                 **kwargs):
+        """ CompoundGrowthRate: indicates the growth rate over given time period n
+
+        :param a: DataCoordinate or BaseProcessor of series
+        :param start: start date or time used in the underlying data query
+        :param end: end date or time used in the underlying data query
+        :param n: Number of time
+        """
+        super().__init__(**kwargs)
+        self.children['a'] = a
+
+        self.start = start
+        self.end = end
+        self.n = n
+
+    def process(self):
+        a_data = self.children_data.get('a')
+        if isinstance(a_data, ProcessorResult):
+            if a_data.success:
+                data_series = a_data.data
+                self.value = ProcessorResult(True,
+                                             Series([(data_series.iloc[-1] / data_series.iloc[0]) ** (1 / self.n) - 1]))
+            else:
+                self.value = ProcessorResult(False, "CompoundGrowthRate does not have 'a' series values yet")
+        else:
+            self.value = ProcessorResult(False, "CompoundGrowthRate does not have 'a' series yet")
         return self.value
 
     def get_plot_expression(self):

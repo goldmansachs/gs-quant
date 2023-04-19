@@ -494,6 +494,7 @@ class DataQuery(Base):
     quote_consolidation: Optional[bool] = field(default=None, metadata=field_metadata)
     time_index: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
+    adjust_as_of: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args

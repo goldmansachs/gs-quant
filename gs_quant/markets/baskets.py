@@ -833,7 +833,7 @@ class Basket(Asset, PositionedEntity):
         self.__latest_create_report = GsReportApi.get_report(response.report_id)
         report_status = self.poll_report(report_id, timeout=600, step=15)
         if report_status != ReportStatus.done:
-            raise MqError(f'The basket edit report\'s status is {status}. The current rebalance request will \
+            raise MqError(f'The basket edit report\'s status is {report_status}. The current rebalance request will \
                             not be submitted in the meantime.')
         _logger.info('Your basket edits have completed successfuly. Submitting rebalance request now...')
         response = GsIndexApi.rebalance(self.id, rebal_inputs)
@@ -979,6 +979,10 @@ class Basket(Asset, PositionedEntity):
     @staticmethod
     def __validate_position_set(position_set: PositionSet):
         position_set.resolve()
+        neg_pos = [p.identifier for p in position_set.positions if (p.weight or 1) < 0 or (p.quantity or 1) < 0]
+        if len(neg_pos):
+            raise MqValueError(f'Position weights/quantities must be positive. Found negative values for date \
+            {position_set.date}: {neg_pos}')
         if position_set.unresolved_positions is not None and len(position_set.unresolved_positions):
             raise MqValueError(f'Error in resolving the following identifiers for date {position_set.date}: \
             {[p.identifier for p in position_set.unresolved_positions]}')
