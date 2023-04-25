@@ -2240,7 +2240,9 @@ def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
     with DataContext(start, end):
         q = GsDataApi.build_market_data_query([asset_id], QueryType.FORWARD_POINT, where={}, source=source,
                                               real_time=real_time)
-        q_spot = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT, where={}, source=source,
+        # setting pricing location as NYC as we have forward points only for NYC close
+        q_spot = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT, where={'pricingLocation': 'NYC'},
+                                                   source=source,
                                                    real_time=real_time)
         data_requests = [partial(_market_data_timed, q, request_id),
                          partial(_market_data_timed, q_spot, request_id)]
@@ -2252,15 +2254,19 @@ def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
-        df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
+        df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
+
         df = df.set_index('expirationDate')
         df.sort_index(inplace=True)
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         spot = spot_df.loc[latest]['spot']
-        df[forward_col_name] = df[forward_col_name] / spot
+
         if annualized == FXSpotCarry.ANNUALIZED:
-            df[forward_col_name] = df[forward_col_name] * np.sqrt((df.index.to_series() - latest).dt.days / 252)
-        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[forward_col_name])
+            df['carry'] = df[forward_col_name] * np.sqrt((df.index.to_series() - latest).dt.days / 252) / spot
+        else:
+            df['carry'] = df[forward_col_name] / spot
+
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['carry'])
     series.name = 'carry'
     series.dataset_ids = tuple(dataset_ids)
     return series

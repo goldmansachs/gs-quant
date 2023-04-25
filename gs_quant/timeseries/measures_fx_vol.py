@@ -289,8 +289,17 @@ CURRENCY_TO_DUMMY_FFO_BBID_VOL_SWAPS = {
 }
 
 
-def _currencypair_to_tdapi_fxfwd_asset(_asset_spec: ASSET_SPEC) -> str:
-    return "MA8RY265Q34P7TWZ"
+def _currencypair_to_tdapi_fxfwd_asset(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
+    bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+
+    kwargs = dict(asset_class='FX', type='Forward',
+                  asset_parameters_pair=bbid,
+                  asset_parameters_settlement_date='1y',
+                  )
+
+    mqid = _get_tdapi_fxo_assets(**kwargs)
+    return mqid
 
 
 def _currencypair_to_tdapi_fxo_asset(asset_spec: ASSET_SPEC) -> str:
@@ -321,6 +330,47 @@ def _get_tdapi_fxo_assets(**kwargs) -> Union[str, list]:
         raise MqValueError('Specified arguments did not match any asset in the dataset' + str(kwargs))
     else:
         return assets[0].id
+
+
+def get_fxo_asset(asset: Asset, expiry_tenor: str, strike: str, option_type: str = None,
+                  expiration_location: str = None, premium_payment_date: str = None) -> str:
+    cross = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+
+    if cross not in FX_DEFAULTS.keys():
+        raise NotImplementedError('Data not available for {} FX Vanilla options'.format(cross))
+
+    defaults = _get_fxo_defaults(cross)
+
+    if not (tm_rates._is_valid_relative_date_tenor(expiry_tenor)):
+        raise MqValueError('invalid expiry ' + expiry_tenor)
+
+    if expiration_location is None:
+        _ = defaults["expirationTime"]
+    else:
+        _ = expiration_location
+
+    if premium_payment_date is None:
+        premium_date = defaults["premiumPaymentDate"]
+    else:
+        premium_date = premium_payment_date
+
+    if option_type == "Put":
+        call_ccy = defaults["over"]
+        put_ccy = defaults["under"]
+    else:
+        call_ccy = defaults["under"]
+        put_ccy = defaults["over"]
+
+    kwargs = dict(asset_class='FX', type='Option',
+                  asset_parameters_call_currency=call_ccy,
+                  asset_parameters_put_currency=put_ccy,
+                  asset_parameters_expiration_date=expiry_tenor,
+                  asset_parameters_option_type=option_type,
+                  asset_parameters_premium_payment_date=premium_date,
+                  asset_parameters_strike_price_relative=strike,
+                  )
+
+    return _get_tdapi_fxo_assets(**kwargs)
 
 
 def _get_tdapi_fxo_assets_vol_swaps(**kwargs) -> Union[str, list]:
@@ -376,7 +426,7 @@ def _get_fx_vol_swap_data(asset: Asset, expiry_tenor: str, strike_type: str = No
                           query_type: QueryType = QueryType.STRIKE_VOL) \
         -> pd.DataFrame:
     if real_time:
-        raise NotImplementedError('realtime inflation swap data not implemented')
+        raise NotImplementedError('realtime FX Vol swap data not implemented')
 
     cross = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
 
@@ -410,7 +460,13 @@ def _get_fxfwd_data(asset: Asset, settlement_date: str,
                     query_type: QueryType = QueryType.FWD_POINTS) \
         -> pd.DataFrame:
     if real_time:
-        raise NotImplementedError('realtime inflation swap data not implemented')
+        mqid = asset.get_identifier(AssetIdentifier.MARQUEE_ID)
+        q = GsDataApi.build_market_data_query([mqid], QueryType.FORWARD_POINT, source=source,
+                                              real_time=real_time, where={'tenor': settlement_date})
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
+        return df
+
     cross = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
 
     if not (tm_rates._is_valid_relative_date_tenor(settlement_date)):
@@ -421,7 +477,7 @@ def _get_fxfwd_data(asset: Asset, settlement_date: str,
                   asset_parameters_settlement_date=settlement_date,
                   )
 
-    rate_mqid = _get_tdapi_fxo_assets(**kwargs)
+    mqid = _get_tdapi_fxo_assets(**kwargs)
 
     if location is None:
         pricing_location = PricingLocation.NYC
@@ -430,7 +486,7 @@ def _get_fxfwd_data(asset: Asset, settlement_date: str,
 
     where = dict(pricingLocation=pricing_location.value)
 
-    q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source,
+    q = GsDataApi.build_market_data_query([mqid], query_type, where=where, source=source,
                                           real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
@@ -444,44 +500,10 @@ def _get_fxo_data(asset: Asset, expiry_tenor: str, strike: str, option_type: str
                   query_type: QueryType = QueryType.IMPLIED_VOLATILITY) \
         -> pd.DataFrame:
     if real_time:
-        raise NotImplementedError('realtime inflation swap data not implemented')
-    cross = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+        raise NotImplementedError('realtime FX Option data not implemented')
 
-    if cross not in FX_DEFAULTS.keys():
-        raise NotImplementedError('Data not available for {} FX Vanilla options'.format(cross))
-
-    defaults = _get_fxo_defaults(cross)
-
-    if not (tm_rates._is_valid_relative_date_tenor(expiry_tenor)):
-        raise MqValueError('invalid expiry ' + expiry_tenor)
-
-    if expiration_location is None:
-        _ = defaults["expirationTime"]
-    else:
-        _ = expiration_location
-
-    if premium_payment_date is None:
-        premium_date = defaults["premiumPaymentDate"]
-    else:
-        premium_date = premium_payment_date
-
-    if option_type == "Put":
-        call_ccy = defaults["over"]
-        put_ccy = defaults["under"]
-    else:
-        call_ccy = defaults["under"]
-        put_ccy = defaults["over"]
-
-    kwargs = dict(asset_class='FX', type='Option',
-                  asset_parameters_call_currency=call_ccy,
-                  asset_parameters_put_currency=put_ccy,
-                  asset_parameters_expiration_date=expiry_tenor,
-                  asset_parameters_option_type=option_type,
-                  asset_parameters_premium_payment_date=premium_date,
-                  asset_parameters_strike_price_relative=strike,
-                  )
-
-    asset_mqid = _get_tdapi_fxo_assets(**kwargs)
+    asset_mqid = get_fxo_asset(asset=asset, expiry_tenor=expiry_tenor, strike=strike, option_type=option_type,
+                               expiration_location=expiration_location, premium_payment_date=premium_payment_date)
 
     if location is None:
         pricing_location = PricingLocation.NYC
@@ -573,7 +595,7 @@ New Implementation
 """
 
 
-@plot_measure((AssetClass.FX,), None,
+@plot_measure((AssetClass.FX,), (AssetType.Cross,),
               [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
                                  query_type=QueryType.IMPLIED_VOLATILITY)],
               display_name="implied_volatility")
@@ -607,6 +629,10 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
         cross = _cross_stored_direction_helper(bbid)
         if cross != bbid:
             cross_asset = SecurityMaster.get_asset(cross, AssetIdentifier.BLOOMBERG_ID)
+            if strike_reference.value == VolReference.DELTA_CALL.value:
+                strike_reference = VolReference.DELTA_PUT
+            elif strike_reference.value == VolReference.DELTA_PUT.value:
+                strike_reference = VolReference.DELTA_CALL
         else:
             cross_asset = asset
     else:
@@ -659,8 +685,10 @@ def fwd_points(asset: Asset, settlement_date: str,
     df = _get_fxfwd_data(asset=asset, settlement_date=settlement_date,
                          location=location, source=source,
                          real_time=real_time, query_type=QueryType.FWD_POINTS)
-
-    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['fwdPoints'])
+    if real_time:
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['forwardPoint'])
+    else:
+        series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['fwdPoints'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 

@@ -20,8 +20,10 @@ import warnings
 from gs_quant.backtests.actions import Action, AddTradeAction, AddTradeActionInfo
 from gs_quant.backtests.backtest_objects import BackTest, PredefinedAssetBacktest
 from gs_quant.backtests.backtest_utils import make_list, CalcType
-from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.backtests.data_sources import *
+from gs_quant.datetime.relative_date import RelativeDateSchedule
+from gs_quant.risk.transform import Transformer
+from gs_quant.risk import RiskMeasure
 
 
 class TriggerDirection(Enum):
@@ -41,7 +43,8 @@ class TriggerRequirements(object):
 
 
 class PeriodicTriggerRequirements(TriggerRequirements):
-    def __init__(self, start_date=None, end_date=None, frequency=None, calendar=None):
+    def __init__(self, start_date: dt.date = None, end_date: dt.date = None, frequency: str = None,
+                 calendar: str = None):
         super().__init__()
         self.start_date = start_date
         self.end_date = end_date
@@ -50,7 +53,7 @@ class PeriodicTriggerRequirements(TriggerRequirements):
 
 
 class IntradayTriggerRequirements(TriggerRequirements):
-    def __init__(self, start_time, end_time, frequency):
+    def __init__(self, start_time: dt.datetime, end_time: dt.datetime, frequency: str):
         super().__init__()
         self.start_time = start_time
         self.end_time = end_time
@@ -58,7 +61,7 @@ class IntradayTriggerRequirements(TriggerRequirements):
 
 
 class MktTriggerRequirements(TriggerRequirements):
-    def __init__(self, data_source, trigger_level, direction):
+    def __init__(self, data_source: DataSource, trigger_level: float, direction: TriggerDirection):
         super().__init__()
         self.data_source = data_source
         self.trigger_level = trigger_level
@@ -66,11 +69,13 @@ class MktTriggerRequirements(TriggerRequirements):
 
 
 class RiskTriggerRequirements(TriggerRequirements):
-    def __init__(self, risk, trigger_level, direction):
+    def __init__(self, risk: RiskMeasure, trigger_level: float, direction: TriggerDirection,
+                 risk_transformation: Optional[Transformer] = None):
         super().__init__()
         self.risk = risk
         self.trigger_level = trigger_level
         self.direction = direction
+        self.risk_transformation = risk_transformation
 
 
 class AggregateTriggerRequirements(TriggerRequirements):
@@ -258,7 +263,12 @@ class StrategyRiskTrigger(Trigger):
         self._risks += [trigger_requirements.risk]
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
-        risk_value = backtest.results[state][self._trigger_requirements.risk].aggregate()
+        if self.trigger_requirements.risk_transformation is None:
+            risk_value = backtest.results[state][self._trigger_requirements.risk].aggregate()
+        else:
+            risk_value = backtest.results[state][self._trigger_requirements.risk].transform(
+                risk_transformation=self.trigger_requirements.risk_transformation).aggregate(
+                allow_mismatch_risk_keys=True)
         if self._trigger_requirements.direction == TriggerDirection.ABOVE:
             if risk_value > self._trigger_requirements.trigger_level:
                 return TriggerInfo(True)
