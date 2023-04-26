@@ -13,6 +13,7 @@
 
    .. autosummary::
    
+      get_constituents_dataset_coverage
       get_flagship_baskets
       get_flagships_constituents
       get_flagships_performance

@@ -235,6 +235,20 @@ class GsDataApi(DataApi):
         return definition.dimensions.timeField
 
     # GS-specific functionality
+    @classmethod
+    def _build_params(cls, scroll: str, scroll_id: Optional[str], limit: int, offset: int, fields: List[str],
+                      include_history: bool, **kwargs) -> dict:
+        params = {'limit': limit or 4000, 'scroll': scroll}
+        if scroll_id:
+            params['scrollId'] = scroll_id
+        if offset:
+            params['offset'] = offset
+        if fields:
+            params['fields'] = fields
+        if include_history:
+            params['includeHistory'] = 'true'
+        params = {**params, **kwargs}
+        return params
 
     @classmethod
     def get_coverage(
@@ -248,21 +262,7 @@ class GsDataApi(DataApi):
             include_history: bool = False,
             **kwargs
     ) -> List[dict]:
-        params = {
-            'limit': limit or 4000,
-            'scroll': scroll
-        }
-
-        if scroll_id:
-            params['scrollId'] = scroll_id
-        if offset:
-            params['offset'] = offset
-        if fields:
-            params['fields'] = fields
-        if include_history:
-            params['includeHistory'] = 'true'
-
-        params = {**params, **kwargs}
+        params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
         body = GsSession.current._get(f'/data/{dataset_id}/coverage', payload=params)
         results = scroll_results = body['results']
         total_results = body['totalResults']
@@ -272,6 +272,30 @@ class GsDataApi(DataApi):
             scroll_results = body['results']
             results += scroll_results
 
+        return results
+
+    @classmethod
+    async def get_coverage_async(
+            cls,
+            dataset_id: str,
+            scroll: str = DEFAULT_SCROLL,
+            scroll_id: Optional[str] = None,
+            limit: int = None,
+            offset: int = None,
+            fields: List[str] = None,
+            include_history: bool = False,
+            **kwargs
+    ) -> List[dict]:
+        params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
+        body = await GsSession.current._get_async(f'/data/{dataset_id}/coverage', payload=params)
+        results = scroll_results = body['results']
+        total_results = body['totalResults']
+        while len(scroll_results) and len(results) < total_results:
+            params['scrollId'] = body['scrollId']
+            body = await GsSession.current._get_async(f'/data/{dataset_id}/coverage', payload=params)
+            scroll_results = body['results']
+            if scroll_results:
+                results += scroll_results
         return results
 
     @classmethod

@@ -18,11 +18,10 @@ from unittest import mock
 
 from gs_quant.models.risk_model import FactorRiskModel, MacroRiskModel, ReturnFormat, Unit
 from gs_quant.session import *
-from gs_quant.target.risk_models import RiskModel as Risk_Model, RiskModelCoverage, RiskModelTerm,\
+from gs_quant.target.risk_models import RiskModel as Risk_Model, RiskModelCoverage, RiskModelTerm, \
     RiskModelUniverseIdentifier, RiskModelType, RiskModelDataAssetsRequest as DataAssetsRequest, \
     RiskModelDataMeasure as Measure, RiskModelUniverseIdentifierRequest as UniverseIdentifier
 import datetime as dt
-
 
 empty_entitlements = {
     "execute": [],
@@ -675,6 +674,126 @@ def test_get_specific_return(mocker):
     GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
                                                query, timeout=200)
     assert response == specific_return_response
+
+
+def test_upload_risk_model_data(mocker):
+    model = mock_risk_model(mocker)
+    risk_model_data = {
+        'date': '2023-04-14',
+        'assetData': {
+            'universe': ['2407966', '2046251', 'USD'],
+            'specificRisk': [12.09, 45.12, 3.09],
+            'factorExposure': [
+                {'1': 0.23, '2': 0.023},
+                {'1': 0.23},
+                {'3': 0.23, '2': 0.023}
+            ],
+            'totalRisk': [0.12, 0.45, 1.2]
+        },
+        'factorData': [
+            {
+                'factorId': '1',
+                'factorName': 'USD',
+                'factorCategory': 'Currency',
+                'factorCategoryId': 'CUR'
+            },
+            {
+                'factorId': '2',
+                'factorName': 'ST',
+                'factorCategory': 'ST',
+                'factorCategoryId': 'ST'
+            },
+            {
+                'factorId': '3',
+                'factorName': 'IND',
+                'factorCategory': 'IND',
+                'factorCategoryId': 'IND'
+            }
+        ],
+        'covarianceMatrix': [[0.089, 0.0123, 0.345],
+                             [0.0123, 3.45, 0.345],
+                             [0.345, 0.345, 1.23]],
+        'issuerSpecificCovariance': {
+            'universeId1': ['2407966'],
+            'universeId2': ['2046251'],
+            'covariance': [0.03754]
+        },
+        'factorPortfolios': {
+            'universe': ['2407966', '2046251'],
+            'portfolio': [{'factorId': 1, 'weights': [0.25, 0.75]},
+                          {'factorId': 2, 'weights': [0.25, 0.75]},
+                          {'factorId': 3, 'weights': [0.25, 0.75]}]
+        }
+    }
+
+    base_url = f"/risk/models/data/{model.id}?partialUpload=true"
+    date = risk_model_data.get("date")
+    max_asset_batch_size = 2
+
+    batched_asset_data = [
+        {"assetData": {key: value[i:i + max_asset_batch_size] for key, value in
+                       risk_model_data.get("assetData").items()}, "date": date,
+         } for i in range(0, len(risk_model_data.get("assetData").get("universe")), max_asset_batch_size)
+    ]
+
+    max_asset_batch_size //= 2
+    batched_factor_portfolios = [
+        {"factorPortfolios":
+            {key: (value[i:i + max_asset_batch_size] if key in "universe" else
+                   [{"factorId": factor_weights.get("factorId"),
+                     "weights": factor_weights.get("weights")[i:i + max_asset_batch_size]} for factor_weights in value])
+             for key, value in risk_model_data.get("factorPortfolios").items()},
+         "date": date
+         } for i in range(0, len(risk_model_data.get("factorPortfolios").get("universe")), max_asset_batch_size)
+    ]
+
+    expected_factor_data_calls = [
+        mock.call(base_url, {"date": date, "factorData": risk_model_data.get("factorData"),
+                             "covarianceMatrix": risk_model_data.get("covarianceMatrix")}, timeout=200)
+    ]
+
+    expected_asset_data_calls = []
+    for batch_num, batch_asset_payload in enumerate(batched_asset_data):
+        final_upload_flag = 'true' if batch_num == len(batched_asset_data) - 1 else 'false'
+        expected_asset_data_calls.append(
+            mock.call(f"{base_url}&finalUpload={final_upload_flag}", batch_asset_payload, timeout=200)
+        )
+
+    expected_factor_portfolios_data_calls = []
+    for batch_num, batched_fp_payload in enumerate(batched_factor_portfolios):
+        final_upload_flag = 'true' if batch_num == len(batched_factor_portfolios) - 1 else 'false'
+        expected_factor_portfolios_data_calls.append(
+            mock.call(f"{base_url}&finalUpload={final_upload_flag}", batched_fp_payload, timeout=200)
+        )
+
+    expected_isc_data_calls = [
+        mock.call(f"{base_url}&finalUpload=true",
+                  {"issuerSpecificCovariance": risk_model_data.get("issuerSpecificCovariance"), "date": date},
+                  timeout=200)
+    ]
+
+    expected_calls = expected_factor_data_calls + expected_asset_data_calls + \
+        expected_isc_data_calls + expected_factor_portfolios_data_calls
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value='Upload Successful')
+
+    max_asset_batch_size = 2
+    model.upload_data(risk_model_data, max_asset_batch_size=max_asset_batch_size)
+
+    call_args_list = GsSession.current._post.call_args_list
+
+    assert len(call_args_list) == len(expected_calls)
+    assert call_args_list == expected_calls
+
+    GsSession.current._post.assert_has_calls(expected_calls, any_order=False)
 
 
 if __name__ == "__main__":

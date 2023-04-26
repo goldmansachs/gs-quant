@@ -1,4 +1,4 @@
-gs\_quant.markets.position\_set.PositionSet
+﻿gs\_quant.markets.position\_set.PositionSet
 ===========================================
 
 .. currentmodule:: gs_quant.markets.position_set

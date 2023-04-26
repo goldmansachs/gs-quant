@@ -20,6 +20,7 @@ from os.path import exists
 from typing import List
 from unittest import mock
 
+from gs_quant.errors import MqUninitialisedError
 from gs_quant.session import GsSession, Environment
 
 
@@ -45,9 +46,12 @@ class MockRequest:
             self.mocker.patch.object(self.api, self.method, side_effect=self.mock_calc_create_new_files if str(
                 self.save_files).casefold() == 'new' else self.mock_calc_create_files)
         else:
-            from gs_quant.session import OAuth2Session
-            OAuth2Session.init = mock.MagicMock(return_value=None)
-            GsSession.use(Environment.PROD, 'fake_client_id', 'fake_secret', application=self.application)
+            try:
+                _ = GsSession.current
+            except MqUninitialisedError:
+                from gs_quant.session import OAuth2Session
+                OAuth2Session._authenticate = mock.MagicMock(return_value=None)
+                GsSession.use(Environment.PROD, 'fake_client_id', 'fake_secret', application=self.application)
             self.mocker.patch.object(self.api, self.method, side_effect=self.mock_calc)
 
     def mock_calc(self, *args, **kwargs):
