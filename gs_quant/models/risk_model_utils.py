@@ -205,43 +205,27 @@ def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int
     date = data.get('date')
     _upload_factor_data_if_present(model_id, data, date)
     sleep(2)
-    _repeat_try_catch_request(_batch_data_v2, model_id=model_id, data=data, max_asset_size=max_asset_size, date=date)
+    for risk_model_data_type in ["assetData", "issuerSpecificCovariance", "factorPortfolios"]:
+        _repeat_try_catch_request(_batch_data_v2, model_id=model_id, data=data.get(risk_model_data_type),
+                                  data_type=risk_model_data_type, max_asset_size=max_asset_size, date=date)
+        sleep(2)
 
 
-def _batch_data_v2(model_id: str, data: dict, max_asset_size: int, date: Union[str, dt.date]):
-    if data.get('assetData'):
-        asset_data_list, target_size = _batch_input_data({'assetData': data.get('assetData')}, max_asset_size)
-        for i in range(len(asset_data_list)):
-            final_upload = True if i == len(asset_data_list) - 1 else False
+def _batch_data_v2(model_id: str, data: dict, data_type: str, max_asset_size: int, date: Union[str, dt.date]):
+    if data:
+        if data_type in ["issuerSpecificCovariance", "factorPortfolios"]:
+            max_asset_size //= 2
+        data_list, _ = _batch_input_data({data_type: data}, max_asset_size)
+        for i in range(len(data_list)):
+            final_upload = True if i == len(data_list) - 1 else False
             try:
                 res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
-                                                                  model_data={'assetData': asset_data_list[i],
-                                                                              'date': date},
+                                                                  model_data={data_type: data_list[i], 'date': date},
                                                                   partial_upload=True,
                                                                   final_upload=final_upload)
                 logging.info(res)
             except (MqRequestError, Exception) as e:
                 raise e
-
-    if 'issuerSpecificCovariance' in data.keys() or 'factorPortfolios' in data.keys():
-        for optional_input_key in ['issuerSpecificCovariance', 'factorPortfolios']:
-            if data.get(optional_input_key):
-                optional_data = data.get(optional_input_key)
-                optional_data_list, target_size = _batch_input_data({optional_input_key: optional_data},
-                                                                    max_asset_size // 2)
-                logging.info(f'{optional_input_key} being uploaded for {date}...')
-                for i in range(len(optional_data_list)):
-                    final_upload = True if i == len(optional_data_list) - 1 else False
-                    try:
-                        res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
-                                                                          model_data={
-                                                                              optional_input_key: optional_data_list[i],
-                                                                              'date': date},
-                                                                          partial_upload=True,
-                                                                          final_upload=final_upload)
-                        logging.info(res)
-                    except (MqRequestError, Exception) as e:
-                        raise e
 
 
 def batch_and_upload_coverage_data(date: dt.date, gsid_list: list, model_id: str):

@@ -70,6 +70,36 @@ def test_basket_series():
         index=dates)
     assert_series_equal(mreb, basket_series([mreb], [1], rebal_freq=RebalFreq.MONTHLY))
 
+    dates = [
+        datetime.datetime(2019, 1, 1),
+        datetime.datetime(2019, 1, 2),
+        datetime.datetime(2019, 1, 3),
+        datetime.datetime(2019, 1, 4),
+        datetime.datetime(2019, 1, 5),
+        datetime.datetime(2019, 1, 8),
+        datetime.datetime(2019, 1, 9),
+        datetime.datetime(2019, 1, 10),
+        datetime.datetime(2019, 1, 11),
+        datetime.datetime(2019, 1, 12),
+        datetime.datetime(2019, 1, 13)
+    ]
+    wreb = pd.Series(
+        [100.0, 105, 110, 115, 120, 125,
+         130, 135, 140, 145, 150],
+        index=dates)
+
+    wreb_2 = pd.Series(
+        [100.0, 105, 110, 115, 120, 125,
+         130, 135, 140, 145, 150],
+        index=dates)
+
+    ret_wreb = pd.Series(
+        [100.0, 110.0, 120.0, 130.0, 140.0, 150.0,
+         162.0, 174.0, 186.0, 198.0, 210.0],
+        index=dates)
+
+    assert_series_equal(ret_wreb, basket_series([wreb, wreb_2], [1, 1], rebal_freq=RebalFreq.WEEKLY))
+
 
 def _mock_spot_data():
     dates = pd.date_range(start='2021-01-01', periods=6)

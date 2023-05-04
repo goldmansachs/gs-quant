@@ -72,6 +72,7 @@ setuptools.setup(
         "pydash",
         "python-dateutil>=2.7.0",
         "requests",
+        "httpx>=0.23.3;python_version>'3.6'",
         "scipy>=1.2.0;python_version>'3.8'",
         "scipy>=1.2.0,<1.6.0;python_version<'3.7'",
         "scipy>=1.2.0,<1.8.0;python_version<'3.8'",

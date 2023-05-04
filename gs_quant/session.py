@@ -22,7 +22,7 @@ import ssl
 from abc import abstractmethod
 from configparser import ConfigParser
 from enum import Enum, auto, unique
-from typing import Optional, Union, Iterable
+from typing import Optional, Union, Iterable, Tuple
 
 import backoff
 import certifi
@@ -31,6 +31,7 @@ import pandas as pd
 import requests
 import requests.adapters
 import requests.cookies
+import asyncio
 import urllib3
 from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
@@ -98,6 +99,7 @@ class GsSession(ContextBase):
                  http_adapter: requests.adapters.HTTPAdapter = None, application_version=APP_VERSION, proxies=None):
         super().__init__()
         self._session = None
+        self._session_async = None
         self.domain = domain
         self.api_version = api_version
         self.application = application
@@ -122,6 +124,16 @@ class GsSession(ContextBase):
     def _authenticate(self):
         raise NotImplementedError("Must implement _authenticate")
 
+    def _authenticate_async(self):
+        if self._session_async:
+            self._session_async.headers.update([(k, v) for k, v in self._session.headers.items()])
+            for cookie in self._session.cookies:
+                self._session_async.cookies.set(cookie.name, cookie.value, domain=cookie.domain)
+
+    def _authenticate_all_sessions(self):
+        self._authenticate()
+        self._authenticate_async()
+
     def _on_enter(self):
         self.__close_on_exit = self._session is None
         if not self._session:
@@ -130,6 +142,26 @@ class GsSession(ContextBase):
     def _on_exit(self, exc_type, exc_val, exc_tb):
         if self.__close_on_exit:
             self._session = None
+            self._session_async = None
+
+    def _init_async(self):
+        import httpx
+        if not self._session_async:
+            self._session_async = httpx.AsyncClient(follow_redirects=True, verify=self.verify, proxies=self.proxies)
+            self._session_async.headers.update({'X-Application': self.application})
+            self._session_async.headers.update({'X-Version': self.application_version})
+            self._authenticate_async()
+
+    async def _on_aenter(self):
+        self.__close_on_exit = self._session is None
+        if not self._session_async:
+            self.init()
+            self._init_async()
+
+    async def _on_aexit(self, exc_type, exc_val, exc_tb):
+        if self.__close_on_exit:
+            self._session = None
+            self._session_async = None
 
     def init(self):
         if not self._session:
@@ -145,12 +177,21 @@ class GsSession(ContextBase):
 
     def close(self):
         self._session: requests.Session
-
         if self._session:
             # don't close a shared adapter
             if self.http_adapter is None:
                 self._session.close()
             self._session = None
+        if self._session_async:
+            try:
+                asyncio.run(self._close_async())
+            except Exception:
+                pass
+
+    async def _close_async(self):
+        if self._session_async:
+            await self._session_async.aclose()
+            self._session_async = None
 
     def __del__(self):
         self.close()
@@ -180,29 +221,24 @@ class GsSession(ContextBase):
             else:
                 return cls(**results)
 
-    def __request(
+    def _build_request_params(
             self,
             method: str,
             path: str,
-            payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]] = None,
-            request_headers: Optional[dict] = None,
-            cls: Optional[type] = None,
-            try_auth: Optional[bool] = True,
-            include_version: Optional[bool] = True,
-            timeout: Optional[int] = DEFAULT_TIMEOUT,
-            return_request_id: Optional[bool] = False,
-            use_body: bool = False
-    ) -> Union[Base, tuple, dict]:
+            payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]],
+            request_headers: Optional[dict],
+            include_version: Optional[bool],
+            timeout: Optional[int],
+            use_body: bool,
+            data_key: str
+    ) -> Tuple[dict, str]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
             payload = payload or {}
-
         url = '{}{}{}'.format(self.domain, '/' + self.api_version if include_version else '', path)
-
         kwargs = {
             'timeout': timeout
         }
-
         if method in ['GET', 'DELETE'] and not use_body:
             kwargs['params'] = payload
         elif method in ['POST', 'PUT'] or (method in ['GET', 'DELETE'] and use_body):
@@ -218,88 +254,157 @@ class GsSession(ContextBase):
             kwargs['headers'] = headers
 
             if is_dataframe or payload:
-                kwargs['data'] = payload if isinstance(payload, (str, bytes)) else \
+                kwargs[data_key] = payload if isinstance(payload, (str, bytes)) else \
                     msgpack.dumps(payload, default=encode_default) if use_msgpack else \
                     json.dumps(payload, cls=JSONEncoder)
         else:
             raise MqError('not implemented')
+        return kwargs, url
 
-        response = self._session.request(method, url, **kwargs)
-        request_id = response.headers.get('x-dash-requestid')
-        logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
-
-        if response.status_code == 401:
-            # Expired token or other authorization issue
-            if not try_auth:
-                raise MqRequestError(response.status_code, response.text,
-                                     context=f'{request_id}: {method} {url}')
-            self._authenticate()
-            return self.__request(method, path, payload=payload, cls=cls,
-                                  include_version=include_version, return_request_id=return_request_id,
-                                  use_body=use_body, try_auth=False)
-        elif not 199 < response.status_code < 300:
-            raise MqRequestError(response.status_code, response.text,
-                                 context=f'{request_id}: {method} {url}')
+    def _parse_response(self, request_id, response, method: str, url: str,
+                        cls: Optional[type], return_request_id: Optional[bool]):
+        ret = {}
+        if not 199 < response.status_code < 300:
+            raise MqRequestError(response.status_code, response.text, context=f'{request_id}: {method} {url}')
         elif 'Content-Type' in response.headers:
             if 'application/x-msgpack' in response.headers['Content-Type']:
-                res = msgpack.unpackb(response.content, raw=False)
-
-                if cls:
-                    if isinstance(res, dict) and 'results' in res:
-                        res['results'] = self.__unpack(res['results'], cls)
-                    else:
-                        res = self.__unpack(res, cls)
-
-                return (res, request_id) if return_request_id else res
+                ret = msgpack.unpackb(response.content, raw=False)
             elif 'application/json' in response.headers['Content-Type']:
-                res = json.loads(response.text)
-
-                if cls:
-                    if isinstance(res, dict) and 'results' in res:
-                        res['results'] = self.__unpack(res['results'], cls)
-                    else:
-                        res = self.__unpack(res, cls)
-
-                return (res, request_id) if return_request_id else res
+                ret = json.loads(response.text)
+            if cls and ret:
+                if isinstance(ret, dict) and 'results' in ret:
+                    ret['results'] = self.__unpack(ret['results'], cls)
+                else:
+                    ret = self.__unpack(ret, cls)
+            return (ret, request_id) if return_request_id else ret
         else:
             ret = {'raw': response}
             if return_request_id:
                 ret['request_id'] = request_id
-
             return ret
+
+    def __request(
+            self,
+            method: str,
+            path: str,
+            payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]] = None,
+            request_headers: Optional[dict] = None,
+            cls: Optional[type] = None,
+            try_auth: Optional[bool] = True,
+            include_version: Optional[bool] = True,
+            timeout: Optional[int] = DEFAULT_TIMEOUT,
+            return_request_id: Optional[bool] = False,
+            use_body: bool = False
+    ) -> Union[Base, tuple, dict]:
+        kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
+                                                 use_body, "data")
+        response = self._session.request(method, url, **kwargs)
+        request_id = response.headers.get('x-dash-requestid')
+        logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
+        if response.status_code == 401:
+            # Expired token or other authorization issue
+            if not try_auth:
+                raise MqRequestError(response.status_code, response.text, context=f'{request_id}: {method} {url}')
+            self._authenticate()
+            return self.__request(method, path, payload=payload, cls=cls, include_version=include_version,
+                                  return_request_id=return_request_id, use_body=use_body, try_auth=False)
+        return self._parse_response(request_id, response, method, url, cls, return_request_id)
+
+    async def __request_async(
+            self,
+            method: str,
+            path: str,
+            payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]] = None,
+            request_headers: Optional[dict] = None,
+            cls: Optional[type] = None,
+            try_auth: Optional[bool] = True,
+            include_version: Optional[bool] = True,
+            timeout: Optional[int] = DEFAULT_TIMEOUT,
+            return_request_id: Optional[bool] = False,
+            use_body: bool = False
+    ) -> Union[Base, tuple, dict]:
+        self._init_async()
+        kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
+                                                 use_body, "content")
+        response = await self._session_async.request(method, url, **kwargs)
+        request_id = response.headers.get('x-dash-requestid')
+        logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
+        if response.status_code == 401:
+            # Expired token or other authorization issue
+            if not try_auth:
+                raise MqRequestError(response.status_code, response.text, context=f'{request_id}: {method} {url}')
+            self._authenticate_all_sessions()
+            res = await self.__request_async(method, path, payload=payload, cls=cls, include_version=include_version,
+                                             return_request_id=return_request_id, use_body=use_body, try_auth=False)
+            return res
+        return self._parse_response(request_id, response, method, url, cls, return_request_id)
 
     def _get(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict] = None,
              cls: Optional[type] = None, include_version: Optional[bool] = True,
              timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False) \
             -> Union[Base, tuple, dict]:
-        return self.__request('GET', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version, timeout=timeout,
-                              return_request_id=return_request_id)
+        return self.__request('GET', path, payload=payload, request_headers=request_headers, cls=cls,
+                              include_version=include_version, timeout=timeout, return_request_id=return_request_id)
+
+    async def _get_async(self, path: str, payload: Optional[Union[dict, Base]] = None,
+                         request_headers: Optional[dict] = None, cls: Optional[type] = None,
+                         include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
+                         return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
+        ret = await self.__request_async('GET', path, payload=payload, request_headers=request_headers, cls=cls,
+                                         include_version=include_version, timeout=timeout,
+                                         return_request_id=return_request_id)
+        return ret
 
     def _post(self, path: str, payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
               request_headers: Optional[dict] = None, cls: Optional[type] = None,
               include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
               return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
-        return self.__request('POST', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version, timeout=timeout,
-                              return_request_id=return_request_id)
+        return self.__request('POST', path, payload=payload, request_headers=request_headers, cls=cls,
+                              include_version=include_version, timeout=timeout, return_request_id=return_request_id)
+
+    async def _post_async(self, path: str, payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
+                          request_headers: Optional[dict] = None, cls: Optional[type] = None,
+                          include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
+                          return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
+        ret = await self.__request_async('POST', path, payload=payload, request_headers=request_headers, cls=cls,
+                                         include_version=include_version, timeout=timeout,
+                                         return_request_id=return_request_id)
+        return ret
 
     def _delete(self, path: str, payload: Optional[Union[dict, Base]] = None,
                 request_headers: Optional[dict] = None, cls: Optional[type] = None,
                 include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-                return_request_id: Optional[bool] = False, use_body: Optional[bool] = False) -> \
-            Union[Base, tuple, dict]:
-        return self.__request('DELETE', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version, timeout=timeout,
-                              return_request_id=return_request_id, use_body=use_body)
+                return_request_id: Optional[bool] = False, use_body: Optional[bool] = False) \
+            -> Union[Base, tuple, dict]:
+        return self.__request('DELETE', path, payload=payload, request_headers=request_headers, cls=cls,
+                              include_version=include_version, timeout=timeout, return_request_id=return_request_id,
+                              use_body=use_body)
+
+    async def _delete_async(self, path: str, payload: Optional[Union[dict, Base]] = None,
+                            request_headers: Optional[dict] = None, cls: Optional[type] = None,
+                            include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
+                            return_request_id: Optional[bool] = False, use_body: Optional[bool] = False) \
+            -> Union[Base, tuple, dict]:
+        ret = await self.__request_async('DELETE', path, payload=payload, request_headers=request_headers, cls=cls,
+                                         include_version=include_version, timeout=timeout,
+                                         return_request_id=return_request_id, use_body=use_body)
+        return ret
 
     def _put(self, path: str, payload: Optional[Union[dict, Base]] = None,
              request_headers: Optional[dict] = None, cls: Optional[type] = None, include_version: Optional[bool] = True,
              timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False) \
             -> Union[Base, tuple, dict]:
-        return self.__request('PUT', path, payload=payload, request_headers=request_headers,
-                              cls=cls, include_version=include_version, timeout=timeout,
-                              return_request_id=return_request_id)
+        return self.__request('PUT', path, payload=payload, request_headers=request_headers, cls=cls,
+                              include_version=include_version, timeout=timeout, return_request_id=return_request_id)
+
+    async def _put_async(self, path: str, payload: Optional[Union[dict, Base]] = None,
+                         request_headers: Optional[dict] = None, cls: Optional[type] = None,
+                         include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
+                         return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
+        ret = await self.__request_async('PUT', path, payload=payload, request_headers=request_headers, cls=cls,
+                                         include_version=include_version, timeout=timeout,
+                                         return_request_id=return_request_id)
+        return ret
 
     def _connect_websocket(self, path: str, headers: Optional[dict] = None):
         import websockets

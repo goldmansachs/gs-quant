@@ -30,7 +30,7 @@ from ..data.log import log_debug
 
 _logger = logging.getLogger(__name__)
 
-RebalFreq = _create_enum('RebalFreq', ['Daily', 'Monthly'])
+RebalFreq = _create_enum('RebalFreq', ['Daily', 'Weekly', 'Monthly'])
 ReturnType = _create_enum('ReturnType', ['excess_return'])
 
 
@@ -70,12 +70,17 @@ def backtest_basket(
     if rebal_freq == RebalFreq.DAILY:
         rebal_dates = cal
     else:
-        # Get hypothetical monthly rebalances
-        num_rebals = (cal[-1].year - cal[0].year) * 12 + cal[-1].month - cal[0].month
-        rebal_dates = [cal[0] + i * rdelta(months=1) for i in range(num_rebals + 1)]
-        # Convert these to actual calendar days
-        rebal_dates = [d for d in rebal_dates if d < max(cal)]
-        rebal_dates = [min(cal[cal >= date]) for date in rebal_dates]
+        if rebal_freq == RebalFreq.WEEKLY:
+            # Get hypothetical weekly rebalances
+            num_rebals = ((cal[-1] - cal[0]).days) // 7
+            rebal_dates = [cal[0] + i * rdelta(weeks=1) for i in range(num_rebals + 1)]
+        else:
+            # Get hypothetical monthly rebalances
+            num_rebals = (cal[-1].year - cal[0].year) * 12 + cal[-1].month - cal[0].month
+            rebal_dates = [cal[0] + i * rdelta(months=1) for i in range(num_rebals + 1)]
+
+        # Convert the hypothetical weekly/monthly rebalance dates to actual calendar days
+        rebal_dates = [min(cal[cal >= date]) for date in rebal_dates if date < max(cal)]
 
     # Create Units dataframe
     units = pd.DataFrame(index=cal, columns=series.columns)
@@ -140,7 +145,7 @@ def basket_series(
     :param series: list of time series of instrument prices
     :param weights: list of weights (defaults to evenly weight series)
     :param costs: list of execution costs in decimal (defaults to costs of 0)
-    :param rebal_freq: rebalancing frequency - Daily or Monthly (defaults to Daily)
+    :param rebal_freq: rebalancing frequency - Daily, Weekly or Monthly (defaults to Daily)
     :param return_type: return type of underlying instruments - only excess return is supported
     :return: time series of the resulting basket
 

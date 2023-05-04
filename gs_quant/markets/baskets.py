@@ -217,10 +217,11 @@ class Basket(Asset, PositionedEntity):
 
         init_entitlements = BasketEntitlements.from_target(self.__initial_entitlements)
         if not init_entitlements == self.__entitlements:
-            response = GsAssetApi.update_asset_entitlements(self.id, self.__entitlements.to_target())
+            response = GsAssetApi.update_asset_entitlements(self.id,
+                                                            self.__entitlements.to_target(include_all_tokens=True))
         if edit_inputs is None and rebal_inputs is None:
             if response:
-                return response.as_dict()
+                return response
             raise MqValueError('Update failed: Nothing on the basket was changed')
         elif edit_inputs is not None and rebal_inputs is None:
             response = GsIndexApi.edit(self.id, edit_inputs)

@@ -48,7 +48,7 @@ class Position:
     def __eq__(self, other) -> bool:
         if not isinstance(other, Position):
             return False
-        for prop in ['asset_id', 'weight', 'quantity']:
+        for prop in ['asset_id', 'weight', 'quantity', 'tags']:
             slf = get(self, prop)
             oth = get(other, prop)
             if not (slf is None and oth is None) and not slf == oth:
@@ -146,6 +146,22 @@ class PositionSet:
         self.__reference_notional = reference_notional
         self.__unresolved_positions = unresolved_positions if unresolved_positions is not None else []
         self.__unpriced_positions = unpriced_positions if unpriced_positions is not None else []
+
+    def __eq__(self, other) -> bool:
+        if len(self.positions) != len(other.positions):
+            return False
+        if self.date != other.date:
+            return False
+        if self.reference_notional != other.reference_notional:
+            return False
+        positions = self.positions
+        positions.sort(key=lambda position: position.asset_id)
+        other_positions = other.positions
+        other_positions.sort(key=lambda position: position.asset_id)
+        for i in range(0, len(positions)):
+            if positions[i] != other_positions[i]:
+                return False
+        return True
 
     @property
     def positions(self) -> List[Position]:
