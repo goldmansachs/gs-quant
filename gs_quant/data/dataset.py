@@ -148,8 +148,11 @@ class Dataset:
             **kwargs
         )
         data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
-
-        return self.provider.construct_dataframe_with_types(self.id, data, schema_varies)
+        if type(data) is tuple:
+            df = self.provider.construct_dataframe_with_types(self.id, data[0], schema_varies)
+            return df.groupby(data[1], group_keys=True).apply(lambda x: x)
+        else:
+            return self.provider.construct_dataframe_with_types(self.id, data, schema_varies)
 
     def get_data_series(
             self,
@@ -277,6 +280,41 @@ class Dataset:
         >>> cities = weather.get_coverage()
         """
         coverage = self.provider.get_coverage(
+            self.id,
+            limit=limit,
+            offset=offset,
+            fields=fields,
+            include_history=include_history,
+            **kwargs
+        )
+
+        return pd.DataFrame(coverage)
+
+    async def get_coverage_async(
+            self,
+            limit: Optional[int] = None,
+            offset: Optional[int] = None,
+            fields: Optional[List[str]] = None,
+            include_history: bool = False,
+            **kwargs
+    ) -> pd.DataFrame:
+        """
+        Get the assets covered by this DataSet
+
+        :param limit: The maximum number of assets to return
+        :param offset: The offset
+        :param fields: The fields to return, e.g. assetId
+        :param include_history: Return column for historyStartDate
+        :return: A Dataframe of the assets covered
+
+        **Examples**
+
+        >>> from gs_quant.data import Dataset
+        >>>
+        >>> weather = Dataset('WEATHER')
+        >>> cities = await weather.get_coverage_async()
+        """
+        coverage = await self.provider.get_coverage_async(
             self.id,
             limit=limit,
             offset=offset,

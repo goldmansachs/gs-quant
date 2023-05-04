@@ -150,6 +150,21 @@ class GsAssetApi:
 
     @classmethod
     @_cached
+    async def get_many_assets_async(
+            cls,
+            fields: IdList = None,
+            as_of: dt.datetime = None,
+            limit: int = 100,
+            return_type: Optional[type] = GsAsset,
+            order_by: List[str] = None,
+            **kwargs
+    ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
+        query = cls.__create_query(fields, as_of, limit, order_by=order_by, **kwargs)
+        response = await GsSession.current._post_async('/assets/query', payload=query, cls=return_type)
+        return response['results']
+
+    @classmethod
+    @_cached
     def get_many_assets_data(
             cls,
             fields: IdList = None,

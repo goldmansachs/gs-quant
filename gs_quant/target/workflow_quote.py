@@ -58,6 +58,7 @@ class OverlayType(EnumBase, Enum):
     ProbabilityDistribution = 'ProbabilityDistribution'
     RealisedProbability = 'RealisedProbability'
     MacroEvents = 'MacroEvents'
+    MicroEvents = 'MicroEvents'
     Gamma = 'Gamma'
     _None = 'None'    
 

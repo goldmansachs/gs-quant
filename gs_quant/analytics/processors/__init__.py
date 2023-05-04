@@ -19,7 +19,8 @@ from .econometrics_processors import SharpeRatioProcessor, VolatilityProcessor, 
     ReturnsProcessor, BetaProcessor, FXImpliedCorrProcessor
 from .special_processors import EntityProcessor, CoordinateProcessor
 from .statistics_processors import PercentilesProcessor, PercentileProcessor, StdMoveProcessor, \
-    CovarianceProcessor, ZscoresProcessor, MeanProcessor, VarianceProcessor, SumProcessor, StdDevProcessor
+    CovarianceProcessor, ZscoresProcessor, MeanProcessor, VarianceProcessor, SumProcessor, StdDevProcessor, \
+    CompoundGrowthRate
 from .utility_processors import LastProcessor, AppendProcessor, AdditionProcessor, SubtractionProcessor, \
     MultiplicationProcessor, DivisionProcessor, MinProcessor, MaxProcessor, NthLastProcessor, OneDayProcessor
 from .scale_processors import ScaleProcessor, BarMarkerProcessor, SpotMarkerProcessor, ScaleShape

@@ -118,6 +118,19 @@ class ContextBase(metaclass=ContextMeta):
             self._cls.pop()
             setattr(thread_local, self.__entered_key, False)
 
+    async def __aenter__(self):
+        self._cls.push(self)
+        setattr(thread_local, self.__entered_key, True)
+        await self._on_aenter()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        try:
+            await self._on_aexit(exc_type, exc_val, exc_tb)
+        finally:
+            self._cls.pop()
+            setattr(thread_local, self.__entered_key, False)
+
     @property
     def __entered_key(self) -> str:
         return '{}_entered'.format(id(self))
@@ -148,6 +161,12 @@ class ContextBase(metaclass=ContextMeta):
         pass
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
+        pass
+
+    async def _on_aenter(self):
+        pass
+
+    async def _on_aexit(self, exc_type, exc_val, exc_tb):
         pass
 
 

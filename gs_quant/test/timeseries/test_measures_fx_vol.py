@@ -40,7 +40,13 @@ _test_datasets = ('TEST_DATASET',)
 
 def test_currencypair_to_tdapi_fxfwd_asset():
     mock_eur = Cross('MA8RY265Q34P7TWZ', 'EURUSD')
+    replace = Replacer()
+    xrefs = replace('gs_quant.timeseries.measures_fx_vol._get_tdapi_fxo_assets', Mock())
+    xrefs.return_value = 'MA8RY265Q34P7TWZ'
+    bbid_mock = replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock())
+    bbid_mock.return_value = {'EURUSD'}
     assert _currencypair_to_tdapi_fxfwd_asset(mock_eur) == "MA8RY265Q34P7TWZ"
+    replace.restore()
 
 
 def test_currencypair_to_tdapi_fxo_asset(mocker):
@@ -153,7 +159,9 @@ def test_get_tdapi_fxo_assets():
     replace = Replacer()
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1]
-    assert 'MAW8SAXPSKYA94E2' == tm_fxo._get_tdapi_fxo_assets()
+    kwargs = dict(asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD',
+                  asset_parameters_put_currency='EUR')
+    assert 'MAW8SAXPSKYA94E2' == tm_fxo._get_tdapi_fxo_assets(**kwargs)
     replace.restore()
 
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
@@ -199,7 +207,8 @@ def test_get_tdapi_fxo_assets():
 def mock_curr(_cls, _q):
     d = {
         'impliedVolatility': [1, 2, 3],
-        'fwdPoints': [4, 5, 6]
+        'fwdPoints': [4, 5, 6],
+        'forwardPoint': [7, 8, 9]
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
     df.dataset_ids = _test_datasets
@@ -295,8 +304,16 @@ def test_fwd_points(mocker):
     args['settlement_date'] = '6m'
 
     args['real_time'] = True
-    with pytest.raises(NotImplementedError):
-        tm_fxo.fwd_points(**args)
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'EURUSD'
+    identifiers = replace('gs_quant.timeseries.measures_fx_vol._get_tdapi_fxo_assets', Mock())
+    identifiers.return_value = {'MAGZMXVM0J282ZTR'}
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    actual = tm_fxo.fwd_points(**args)
+    expected = tm.ExtendedSeries([7, 8, 9], index=_index * 3, name='forwardPoint')
+    expected.dataset_ids = _test_datasets
+    assert_series_equal(expected, actual)
+    assert actual.dataset_ids == _test_datasets
     args['real_time'] = False
 
     args['asset'] = Cross('MAGZMXVM0J282ZTR', 'EURUSD')

@@ -324,10 +324,13 @@ class EntitlementBlock:
     def __init__(self,
                  users: List[User] = None,
                  groups: List[Group] = None,
-                 roles: List[str] = None):
+                 roles: List[str] = None,
+                 unconverted_tokens: List[str] = None,
+                 ):
         self.__users = list(set(users)) if users else []
         self.__groups = list(set(groups)) if groups else []
         self.__roles = list(set(roles)) if roles else []
+        self.__unconverted_tokens = unconverted_tokens
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, EntitlementBlock):
@@ -362,10 +365,14 @@ class EntitlementBlock:
     def roles(self, value: List[str]):
         self.__roles = list(set(value))
 
+    @property
+    def unconverted_tokens(self) -> List[str]:
+        return self.__unconverted_tokens
+
     def is_empty(self):
         return len(self.users + self.groups + self.roles) == 0
 
-    def to_list(self, as_dicts: bool = False, action: str = None):
+    def to_list(self, as_dicts: bool = False, action: str = None, include_all_tokens: bool = False):
         if as_dicts:
             all_entitled = []
             for user in self.users:
@@ -376,9 +383,10 @@ class EntitlementBlock:
                 all_entitled.append(dict(action=action, type='role', name=role, id=role))
             return all_entitled
         else:
+            unconverted_tokens = self.unconverted_tokens or [] if include_all_tokens else []
             return [f'guid:{user.id}' for user in self.users] + \
                    [f'group:{group.id}' for group in self.groups] + \
-                   [f'role:{role}' for role in self.roles]
+                   [f'role:{role}' for role in self.roles] + unconverted_tokens
 
 
 class Entitlements:
@@ -504,34 +512,34 @@ class Entitlements:
     def view(self, value: EntitlementBlock):
         self.__view = value
 
-    def to_target(self) -> TargetEntitlements:
+    def to_target(self, include_all_tokens: bool = False) -> TargetEntitlements:
         """
         Return Entitlement object as a target object
         :return: Entitlements as a target object
         """
         target_entitlements = TargetEntitlements.default_instance()
         if not self.admin.is_empty():
-            target_entitlements.admin = self.admin.to_list()
+            target_entitlements.admin = self.admin.to_list(include_all_tokens=include_all_tokens)
         if not self.delete.is_empty():
-            target_entitlements.delete = self.delete.to_list()
+            target_entitlements.delete = self.delete.to_list(include_all_tokens=include_all_tokens)
         if not self.display.is_empty():
-            target_entitlements.display = self.display.to_list()
+            target_entitlements.display = self.display.to_list(include_all_tokens=include_all_tokens)
         if not self.upload.is_empty():
-            target_entitlements.upload = self.upload.to_list()
+            target_entitlements.upload = self.upload.to_list(include_all_tokens=include_all_tokens)
         if not self.edit.is_empty():
-            target_entitlements.edit = self.edit.to_list()
+            target_entitlements.edit = self.edit.to_list(include_all_tokens=include_all_tokens)
         if not self.execute.is_empty():
-            target_entitlements.execute = self.execute.to_list()
+            target_entitlements.execute = self.execute.to_list(include_all_tokens=include_all_tokens)
         if not self.plot.is_empty():
-            target_entitlements.plot = self.plot.to_list()
+            target_entitlements.plot = self.plot.to_list(include_all_tokens=include_all_tokens)
         if not self.query.is_empty():
-            target_entitlements.query = self.query.to_list()
+            target_entitlements.query = self.query.to_list(include_all_tokens=include_all_tokens)
         if not self.rebalance.is_empty():
-            target_entitlements.rebalance = self.rebalance.to_list()
+            target_entitlements.rebalance = self.rebalance.to_list(include_all_tokens=include_all_tokens)
         if not self.trade.is_empty():
-            target_entitlements.trade = self.trade.to_list()
+            target_entitlements.trade = self.trade.to_list(include_all_tokens=include_all_tokens)
         if not self.view.is_empty():
-            target_entitlements.view = self.view.to_list()
+            target_entitlements.view = self.view.to_list(include_all_tokens=include_all_tokens)
         return target_entitlements
 
     def to_dict(self) -> Dict:
@@ -573,19 +581,36 @@ class Entitlements:
         :param entitlements: Entitlements as a dictionary object
         :return: A new Entitlements object with all specified entitlements
         """
-        entitlement_kwargs = {}
-        for action_info in entitlements:
-            users, groups, roles = [], [], []
-            for user in entitlements[action_info]:
-                if user.startswith('guid:'):
-                    users.append(user)
-                elif user.startswith('group:'):
-                    groups.append(user)
-                elif user.startswith('role:'):
-                    roles.append(user[5:])
-            if users or groups or roles:
-                entitlement_kwargs[action_info] = EntitlementBlock(
-                    users=User.get_many(user_ids=users),
-                    groups=Group.get_many(group_ids=groups),
-                    roles=roles)
+        entitlement_kwargs, token_map = {}, {}
+        user_ids, group_ids = set(), set()
+        for token_set in entitlements.values():
+            for t in token_set:
+                if t.startswith('guid:'):
+                    user_ids.add(t)
+                elif t.startswith('group:'):
+                    group_ids.add(t)
+                elif t.startswith('role:'):
+                    token_map[t] = t[5:]
+        all_users = User.get_many(user_ids=list(user_ids))
+        all_groups = Group.get_many(group_ids=list(group_ids))
+        for u in all_users:
+            token_map[f'guid:{u.id}'] = u
+        for g in all_groups:
+            token_map[f'group:{g.id}'] = g
+        for action, token_set in entitlements.items():
+            users, groups, roles, unconverted_tokens = [], [], [], []
+            for t in token_set:
+                if t in token_map.keys():
+                    if t in user_ids:
+                        users.append(token_map.get(t))
+                    elif t in group_ids:
+                        groups.append(token_map.get(t))
+                    else:
+                        roles.append(token_map.get(t))
+                else:
+                    unconverted_tokens.append(t)
+            unconverted_tokens = unconverted_tokens if len(unconverted_tokens) else None
+            if users or groups or roles or unconverted_tokens:
+                entitlement_kwargs[action] = EntitlementBlock(users=users, groups=groups, roles=roles,
+                                                              unconverted_tokens=unconverted_tokens)
         return Entitlements(**entitlement_kwargs)
