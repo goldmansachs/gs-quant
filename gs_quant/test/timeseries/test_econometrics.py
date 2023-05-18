@@ -16,10 +16,10 @@ under the License.
 from unittest.mock import Mock
 
 import pytest
-from pandas.testing import assert_series_equal
-from testfixtures import Replacer
 from gs_quant.timeseries import *
 from gs_quant.timeseries.econometrics import _get_ratio
+from pandas.testing import assert_series_equal
+from testfixtures import Replacer
 
 
 def test_returns():
@@ -355,7 +355,7 @@ def test_correlation():
     assert_series_equal(result, expected, obj="Correlation strdate as window")
 
     result = correlation(x, y, "3m")
-    expected = pd.Series(dtype=float)
+    expected = pd.Series(dtype=float, index=[])
     assert_series_equal(result, expected, obj="Correlation strdate as window with too large of window")
 
 
@@ -432,6 +432,8 @@ def test_max_drawdown():
     expected = pd.Series([0.0, 0.0, 0.0, -0.2, -0.2, -0.75], index=daily_dates)
     assert_series_equal(result, expected, obj="Max drawdown window 2")
 
+    with pytest.raises(TypeError):
+        max_drawdown(pd.Series([1, 5, 5, 4, 4, 1]), Window('2d', 0))
     result = max_drawdown(series, Window('2d', 0))
     expected = pd.Series([0.0, 0.0, 0.0, -0.2, 0.0, -0.75], index=daily_dates)
     assert_series_equal(result, expected, obj="Max drawdown window 2d")

@@ -514,7 +514,7 @@ def test_zscores():
     assert_series_equal(result, expected, obj='z-score window string 1w')
 
     result = zscores(x, '1m')
-    expected = pd.Series(dtype=float)
+    expected = pd.Series(dtype=float, index=[])
     assert_series_equal(result, expected, obj="z-score window too large")
 
 

@@ -265,7 +265,8 @@ class GsSession(ContextBase):
                         cls: Optional[type], return_request_id: Optional[bool]):
         ret = {}
         if not 199 < response.status_code < 300:
-            raise MqRequestError(response.status_code, response.text, context=f'{request_id}: {method} {url}')
+            raise MqRequestError(response.status_code, f'{response.reason}: {response.text}',
+                                 context=f'{request_id}: {method} {url}')
         elif 'Content-Type' in response.headers:
             if 'application/x-msgpack' in response.headers['Content-Type']:
                 ret = msgpack.unpackb(response.content, raw=False)

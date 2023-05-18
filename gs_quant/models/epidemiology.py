@@ -14,11 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 from abc import ABC, abstractmethod
-from typing import Type
+from typing import Type, Union
 
 import numpy as np
-from scipy.integrate import odeint
 from lmfit import minimize, Parameters, report_fit
+from scipy.integrate import odeint
 
 """
 Statistical models for the transmission of infectious diseases
@@ -44,7 +44,7 @@ class SIR(CompartmentalModel):
     """SIR Model"""
 
     @classmethod
-    def calibrate(cls, xs: tuple, t: float, parameters: [Parameters, tuple]) -> tuple:
+    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple]) -> tuple:
         """
         SIR model derivatives at t.
 
@@ -74,7 +74,7 @@ class SIR(CompartmentalModel):
     def get_parameters(cls, S0: float, I0: float, R0: float, N: float, beta: float = 0.2, gamma: float = 0.1,
                        beta_max: float = 10, gamma_max: float = 1, S0_fixed: bool = True, S0_max: float = 1e6,
                        beta_fixed: bool = False, gamma_fixed: bool = False, R0_fixed: bool = True, R0_max: float = 1e6,
-                       I0_fixed: bool = True, I0_max: float = 1e6)\
+                       I0_fixed: bool = True, I0_max: float = 1e6) \
             -> tuple:
         """
         Produce a set of parameters for the SIR model.
@@ -111,7 +111,7 @@ class SEIR(CompartmentalModel):
     """SEIR Model"""
 
     @classmethod
-    def calibrate(cls, xs: tuple, t: float, parameters: [Parameters, tuple]) -> tuple:
+    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple]) -> tuple:
         """
         SEIR model derivatives at t.
 
@@ -214,7 +214,7 @@ class SEIRCM(CompartmentalModel):
         with cumulative cases (C) and cumulative fatalities (M) """
 
     @classmethod
-    def calibrate(cls, xs: tuple, t: float, parameters: [Parameters, tuple]) -> tuple:
+    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple]) -> tuple:
         """
         SEIRCM model derivatives at t.
 
@@ -454,7 +454,6 @@ class SEIRCMAgeStratified(CompartmentalModel):
 
 
 class EpidemicModel:
-
     """Class to perform solutions and parameter-fitting of epidemic models"""
 
     def __init__(self, model: Type[CompartmentalModel], parameters: tuple = None, data: np.array = None,
@@ -482,7 +481,7 @@ class EpidemicModel:
         self.result = None
         self.fitted_parameters = None
 
-    def solve(self, time_range: np.ndarray, initial_conditions: [list, tuple], parameters) -> np.ndarray:
+    def solve(self, time_range: np.ndarray, initial_conditions: Union[list, tuple], parameters) -> np.ndarray:
         """
         Integrate the model ODEs to get a solution.
 
@@ -519,7 +518,8 @@ class EpidemicModel:
 
         return residual.ravel()
 
-    def fit(self, time_range: np.arange = None, parameters: [Parameters, tuple] = None, initial_conditions: list = None,
+    def fit(self, time_range: np.arange = None, parameters: Union[Parameters, tuple] = None,
+            initial_conditions: list = None,
             residual=None, verbose: bool = False, data: np.array = None, fit_period: float = None):
         """
         Fit the model based on data in the form np.array([X1,...,Xn])

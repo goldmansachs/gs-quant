@@ -58,8 +58,8 @@ def test_parse_meeting_date():
     today.return_value = pd.Timestamp(2019, 5, 25)
     # cases
     assert tm_rates.parse_meeting_date() == dt.date(2019, 5, 24)
-    assert tm_rates.parse_meeting_date('3m') == pd.Timestamp(2019, 2, 24)
-    assert tm_rates.parse_meeting_date('3b') == pd.Timestamp(2019, 5, 22)
+    assert tm_rates.parse_meeting_date('3m') == dt.date(2019, 2, 24)
+    assert tm_rates.parse_meeting_date('3b') == dt.date(2019, 5, 22)
     # restore
     replace.restore()
 
@@ -1127,6 +1127,8 @@ def test_policy_rate_term_structure_rt(mocker):
 
         mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
         mock_get_data.return_value = mock_policy_term_rt_meeting()
+        mock_get_data_coverage = replace('gs_quant.data.dataset.Dataset.get_coverage', Mock())
+        mock_get_data_coverage.return_value = pd.DataFrame(columns=['exchange'])
 
         actual_abs = tm_rates.policy_rate_term_structure_rt(
             mock_eur,

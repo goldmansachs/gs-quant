@@ -19,11 +19,6 @@ import cachetools.func
 import inflection
 import numpy as np
 from dateutil import tz
-from pandas import Series, DatetimeIndex
-from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
-    sunday_to_monday
-from pydash import chunk, flatten
-
 from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.api.gs.data import QueryType
 from gs_quant.api.gs.indices import GsIndexApi
@@ -46,6 +41,10 @@ from gs_quant.timeseries.helper import (
     get_dataset_data_with_retries, _tenor_to_month, _month_to_tenor, _split_where_conditions
 )
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
+from pandas import Series, DatetimeIndex
+from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
+    sunday_to_monday
+from pydash import chunk, flatten
 
 GENERIC_DATE = Union[datetime.date, str]
 ASSET_SPEC = Union[Asset, str]
@@ -2974,10 +2973,8 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
 
 def get_contract_range(start_contract_range, end_contract_range, timezone):
     if timezone:
-        df = pd.date_range(start=start_contract_range,
-                           end=end_contract_range + datetime.timedelta(days=1), freq='H',
-                           closed='left',
-                           tz=timezone).to_frame()
+        df = pd.date_range(start_contract_range, end_contract_range + datetime.timedelta(days=1), None, 'H',
+                           timezone, False, None, 'left').to_frame()
 
         df['hour'] = df.index.hour
         df['day'] = df.index.dayofweek
@@ -3068,7 +3065,8 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
             raise MqValueError('Duplicate data rows probable for this period')
         # checking missing data points
         ref_hour_range = pd.date_range(str(start_date), str(end_date + datetime.timedelta(days=1)),
-                                       freq=str(freq) + "S", tz=timezone, closed='left')
+                                       None, str(freq) + "S", timezone, False, None, 'left')
+
         missing_hours = ref_hour_range[~ref_hour_range.isin(df.index)]
         missing_dates = np.unique(missing_hours.date)
         missing_months = np.unique(np.array(missing_dates, dtype='M8[D]').astype('M8[M]')).astype('str')

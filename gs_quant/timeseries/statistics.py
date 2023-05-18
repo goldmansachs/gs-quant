@@ -17,6 +17,7 @@
 
 import datetime
 import numpy
+import pandas as pd
 import scipy.stats.mstats as stats
 from scipy.stats import percentileofscore
 from statsmodels.regression.rolling import RollingOLS
@@ -128,7 +129,7 @@ def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = rolling_offset(x, w.w, np.nanmin, 'min') if isinstance(x, pd.Series) else [
-            x.loc[(x.index > idx - w.w) & (x.index <= idx)].min() for idx in x.index]
+            x.loc[(x.index > (idx - w.w).datetime()) & (x.index <= idx)].min() for idx in x.index]
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).min(), w)
@@ -293,7 +294,7 @@ def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
         if isinstance(x, pd.Series):
             values = rolling_offset(x, w.w, np.nanmean, 'mean')
         else:
-            values = [np.nanmean(x.loc[(x.index > idx - w.w) & (x.index <= idx)]) for idx in x.index]
+            values = [np.nanmean(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]) for idx in x.index]
     else:
         if isinstance(x, pd.Series):
             values = x.rolling(w.w, 0).mean()  # faster than slicing in Python
@@ -341,7 +342,7 @@ def median(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Ser
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = rolling_offset(x, w.w, np.nanmedian, 'median') if isinstance(x, pd.Series) else [
-            x.loc[(x.index > idx - w.w) & (x.index <= idx)].median() for idx in x.index]
+            x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].median() for idx in x.index]
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).median(), w)
@@ -381,7 +382,7 @@ def mode(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Serie
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = rolling_apply(x, w.w, lambda a: stats.mode(a).mode[0]) if isinstance(x, pd.Series) else [
-            stats.mode(x.loc[(x.index > idx - w.w) & (x.index <= idx)]).mode[0] for idx in x.index]
+            stats.mode(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]).mode[0] for idx in x.index]
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).apply(lambda y: stats.mode(y).mode, raw=True), w)
@@ -476,7 +477,7 @@ def product(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Se
     assert x.index.is_monotonic_increasing
     if isinstance(w.w, pd.DateOffset):
         values = rolling_offset(x, w.w, np.nanprod, 'prod') if isinstance(x, pd.Series) else [
-            x.loc[(x.index > idx - w.w) & (x.index <= idx)].prod() for idx in x.index]
+            x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].prod() for idx in x.index]
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).agg(pd.Series.prod), w)
@@ -616,7 +617,7 @@ def var(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = rolling_offset(x, w.w, lambda a: np.nanvar(a, ddof=1), 'var') if isinstance(x, pd.Series) else [
-            x.loc[(x.index > idx - w.w) & (x.index <= idx)].var() for idx in x.index]
+            x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].var() for idx in x.index]
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).var(), w)
@@ -664,7 +665,7 @@ def cov(x: pd.Series, y: pd.Series, w: Union[Window, int, str] = Window(None, 0)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].cov(y) for idx in x.index]
+        values = [x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].cov(y) for idx in x.index]
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).cov(y), w)
@@ -730,7 +731,7 @@ def zscores(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Se
         return interpolate(zscore_series, x, Interpolate.NAN)
     if not isinstance(w.w, int):
         w = normalize_window(x, w)
-        values = [_zscore(x.loc[(x.index > idx - w.w) & (x.index <= idx)]) for idx in x.index]
+        values = [_zscore(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]) for idx in x.index]
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).apply(_zscore, raw=False), w)
@@ -900,11 +901,12 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
 
     res = pd.Series(dtype=np.dtype(float))
     for idx, val in y.items():
-        sample = x.loc[(x.index > idx - w.w) & (x.index <= idx)] if isinstance(w.w, pd.DateOffset) else x[:idx][-w.w:]
+        sample = x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)] if isinstance(w.w, pd.DateOffset) \
+            else x[:idx][-w.w:]
         res.loc[idx] = percentileofscore(sample, val, kind='mean')
 
     if isinstance(w.r, pd.DateOffset):
-        return res.loc[res.index[0] + w.r:]
+        return res.loc[(res.index[0] + w.r).date():]
     else:
         return res[w.r:]
 
@@ -945,7 +947,10 @@ def percentile(x: pd.Series, n: float, w: Union[Window, int, str] = None) -> Uni
     w = normalize_window(x, w)
     if isinstance(w.w, pd.DateOffset):
         try:
-            values = [x.loc[(x.index > idx - w.w) & (x.index <= idx)].quantile(n) for idx in x.index]
+            if isinstance(x.index, pd.DatetimeIndex):
+                values = [x.loc[(x.index > (idx - w.w)) & (x.index <= idx)].quantile(n) for idx in x.index]
+            else:
+                values = [x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].quantile(n) for idx in x.index]
         except TypeError:
             raise MqTypeError(f'cannot use relative dates with index {x.index}')
         res = pd.Series(values, index=x.index, dtype=np.dtype(float))
@@ -987,7 +992,7 @@ class LinearRegression:
         df = sm.add_constant(df) if fit_intercept else df
         df.columns = range(len(df.columns)) if fit_intercept else range(1, len(df.columns) + 1)
 
-        df = df[~df.isin([np.nan, np.inf, -np.inf]).any(1)]  # filter out nan and inf
+        df = df[~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)]  # filter out nan and inf
         y = y[~y.isin([np.nan, np.inf, -np.inf])]
         df_aligned, y_aligned = df.align(y, 'inner', axis=0)  # align series
 
@@ -1084,7 +1089,7 @@ class RollingLinearRegression:
         if w <= len(df.columns):
             raise MqValueError('Window length must be larger than the number of explanatory variables')
 
-        df = df[~df.isin([np.nan, np.inf, -np.inf]).any(1)]  # filter out nan and inf
+        df = df[~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)]  # filter out nan and inf
         y = y[~y.isin([np.nan, np.inf, -np.inf])]
         df_aligned, y_aligned = df.align(y, 'inner', axis=0)  # align series
 

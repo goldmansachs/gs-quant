@@ -1,5 +1,6 @@
 from .components import (ArticleComponent,
                          CommentaryComponent,
+                         Component,
                          ContainerComponent,
                          DataGridComponent,
                          LegendComponent,

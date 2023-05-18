@@ -343,7 +343,7 @@ def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.
             y.index += pd.DateOffset(years=int(match.group(1)))
             y = y.groupby(y.index).first()
         else:
-            y.index += pd.DateOffset(relative_date_add(obs))
+            y.index = pd.DatetimeIndex([(i + pd.DateOffset(relative_date_add(obs))).date() for i in y.index])
 
         if mode == LagMode.EXTEND:
             return y

@@ -13,19 +13,35 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+import logging
 from enum import Enum, EnumMeta
+from typing import Tuple, Union, List
 
+import numpy as np
 from cachetools import TTLCache
 from cachetools.keys import hashkey
-import datetime as dt
-import numpy as np
-from typing import Tuple, Union
 
+from gs_quant.common import PricingLocation, Currency
 from gs_quant.data import Dataset
 from gs_quant.errors import MqRequestError
-from gs_quant.common import PricingLocation, Currency
+
+_logger = logging.getLogger(__name__)
 
 _calendar_cache = TTLCache(maxsize=128, ttl=600)
+_coverage_cache = TTLCache(maxsize=128, ttl=3600)
+
+
+def _split_list(items, predicate) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
+    true_res = []
+    false_res = []
+    for item in items:
+        item_str = item.value if isinstance(item, (Enum, EnumMeta)) else item.upper()
+        if predicate(item):
+            true_res.append(item_str)
+        else:
+            false_res.append(item_str)
+    return tuple(true_res), tuple(false_res)
 
 
 class GsCalendar:
@@ -33,17 +49,18 @@ class GsCalendar:
     DATE_HIGH_LIMIT = dt.date(2052, 12, 31)
     DEFAULT_WEEK_MASK = '1111100'  # Default to Sat, Sun weekend days
 
-    def __init__(self, calendars: Union[str, PricingLocation, Currency, Tuple[str, ...]] = ()):
+    def __init__(self, calendars: Union[str, PricingLocation, Currency, Tuple[str, ...]] = (), skip_valid_check=True):
         if isinstance(calendars, (str, PricingLocation, Currency)):
             calendars = (calendars,)
         if calendars is None:
             calendars = ()
         self.__calendars = calendars
         self.__business_day_calendars = {}
+        self._skip_valid_check = skip_valid_check
 
     @staticmethod
-    def get(calendars: Union[str, Tuple]):
-        return GsCalendar(calendars)
+    def get(calendars: Union[str, Tuple], skip_valid_check=True):
+        return GsCalendar(calendars, skip_valid_check)
 
     @staticmethod
     def reset():
@@ -64,32 +81,37 @@ class GsCalendar:
         except (ValueError, AttributeError):
             return False
 
+    def holidays_from_dataset(self, dataset: Dataset, query_key: str, query_values: Tuple[str]) -> List[dt.date]:
+        if not len(query_values):
+            return []
+        coverage = _coverage_cache.get(dataset.id, default=None)
+        if coverage is None:
+            coverage_df = dataset.get_coverage()
+            coverage = set() if coverage_df.empty else set(coverage_df[query_key])
+            _coverage_cache[dataset.id] = coverage
+        for item in query_values:
+            if item not in coverage:
+                if self._skip_valid_check:
+                    _logger.warning(
+                        f'Ignoring invalid calendar {item}. This will throw in future versions of gs-quant.')
+                else:
+                    raise ValueError(f'Invalid calendar {item}')
+        try:
+            data = dataset.get_data(**{query_key: query_values}, start=self.DATE_LOW_LIMIT, end=self.DATE_HIGH_LIMIT)
+            if not data.empty:
+                return [d.date() for d in data.index.to_pydatetime()]
+        except MqRequestError:
+            pass
+        return []
+
     @property
     def holidays(self) -> Tuple[dt.date]:
-        holidays = []
         cached_data = _calendar_cache.get(hashkey(str(self.__calendars)))
         if cached_data:
             return cached_data
-        exchanges = [x.value if isinstance(x, (Enum, EnumMeta)) else x.upper() for x in self.__calendars]
-        if len(exchanges):
-            try:
-                dataset = Dataset(Dataset.GS.HOLIDAY)
-                data = dataset.get_data(exchange=exchanges, start=self.DATE_LOW_LIMIT, end=self.DATE_HIGH_LIMIT)
-                if not data.empty:
-                    holidays = holidays + [d.date() for d in data.index.to_pydatetime()]
-            except MqRequestError:
-                pass
-
-        currencies = [x.value if isinstance(x, Currency) else x.upper() for x in self.__calendars
-                      if GsCalendar.is_currency(x)]
-        if len(currencies):
-            try:
-                dataset = Dataset(Dataset.GS.HOLIDAY_CURRENCY)
-                data = dataset.get_data(currency=currencies, start=self.DATE_LOW_LIMIT, end=self.DATE_HIGH_LIMIT)
-                if not data.empty:
-                    holidays = holidays + [d.date() for d in data.index.to_pydatetime()]
-            except MqRequestError:
-                pass
+        currencies, exchanges = _split_list(self.__calendars, GsCalendar.is_currency)
+        holidays = self.holidays_from_dataset(Dataset(Dataset.GS.HOLIDAY), 'exchange', exchanges)
+        holidays = holidays + self.holidays_from_dataset(Dataset(Dataset.GS.HOLIDAY_CURRENCY), 'currency', currencies)
 
         holidays = tuple(set(holidays))
         _calendar_cache[hashkey(str(self.__calendars))] = holidays

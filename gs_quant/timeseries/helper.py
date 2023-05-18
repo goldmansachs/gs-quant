@@ -43,7 +43,10 @@ except ImportError as e:
     _logger.debug('unable to import rolling_apply extension: %s', e)
 
     def rolling_apply(s: pd.Series, offset: pd.DateOffset, function: Callable[[np.ndarray], float]) -> pd.Series:
-        values = [function(s.loc[(s.index > idx - offset) & (s.index <= idx)]) for idx in s.index]
+        if isinstance(s.index, pd.DatetimeIndex):
+            values = [function(s.loc[(s.index > (idx - offset)) & (s.index <= idx)]) for idx in s.index]
+        else:
+            values = [function(s.loc[(s.index > (idx - offset).date()) & (s.index <= idx)]) for idx in s.index]
         return pd.Series(values, index=s.index, dtype=np.double)
 
 
@@ -145,7 +148,10 @@ def apply_ramp(x: pd.Series, window: Window) -> pd.Series:
     if isinstance(window.w, int) and window.w > len(x):  # does not restrict window size when it is a DataOffset
         return pd.Series(dtype=float)
     if isinstance(window.r, pd.DateOffset):
-        return x.loc[x.index[0] + window.r:]
+        if np.issubdtype(x.index, dt.date):
+            return x.loc[(x.index[0] + window.r).date():]
+        else:
+            return x.loc[(x.index[0] + window.r).to_pydatetime():]
     else:
         return x[window.r:]
 

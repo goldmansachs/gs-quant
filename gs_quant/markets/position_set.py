@@ -37,7 +37,7 @@ class Position:
                  quantity: float = None,
                  name: str = None,
                  asset_id: str = None,
-                 tags: Dict = None):
+                 tags: List[PositionTag] = None):
         self.__identifier = identifier
         self.__weight = weight
         self.__quantity = quantity
@@ -99,11 +99,11 @@ class Position:
         self.__asset_id = value
 
     @property
-    def tags(self) -> Dict:
+    def tags(self) -> List[PositionTag]:
         return self.__tags
 
     @tags.setter
-    def tags(self, value: Dict):
+    def tags(self, value: List[PositionTag]):
         self.__tags = value
 
     def as_dict(self) -> Dict:
@@ -112,10 +112,9 @@ class Position:
         return {k: v for k, v in position_dict.items() if v is not None}
 
     def to_target(self, common: bool = True) -> Union[CommonPosition, PositionPriceInput]:
-        """ Returns Postion type defined in target file for API payloads """
+        """ Returns Position type defined in target file for API payloads """
         if common:
-            tags_as_target = tuple(PositionTag(name=key, value=self.tags[key]) for key in self.tags) if self.tags \
-                else None
+            tags_as_target = self.tags if self.tags else None
             return CommonPosition(self.asset_id, quantity=self.quantity, tags=tags_as_target)
         return PositionPriceInput(self.asset_id, quantity=self.quantity, weight=self.weight)
 
@@ -482,6 +481,7 @@ class PositionSet:
 
         :param currency: Reference notional currency (defaults to USD if not passed in)
         :param weighting_strategy: Quantity or Weighted weighting strategy (defaults based on positions info)
+        :param use_tags: Determines if tags are used to index the position response for non-netted positions
 
         **Usage**
 
@@ -527,12 +527,13 @@ class PositionSet:
         for k, v in kwargs.items():
             price_parameters[k] = v
         results = GsPriceApi.price_positions(PositionSetPriceInput(positions=positions, parameters=price_parameters))
-        position_result_map = {p.asset_id: p for p in results.positions}
+        position_result_map = {f'{p.asset_id}{self.__hash_position_tag_list(p.tags)}': p for p in results.positions}
         priced_positions, unpriced_positions = [], []
         for p in self.positions:
-            if p.asset_id in position_result_map:
-                p.weight = position_result_map.get(p.asset_id).weight
-                p.quantity = position_result_map.get(p.asset_id).quantity
+            asset_key = f'{p.asset_id}{self.__hash_position_tag_list(p.tags)}'
+            if asset_key in position_result_map:
+                p.weight = position_result_map.get(asset_key).weight
+                p.quantity = position_result_map.get(asset_key).quantity
                 priced_positions.append(p)
             else:
                 unpriced_positions.append(p)
@@ -647,7 +648,7 @@ class PositionSet:
         equal_weight = 1 / len(positions)
 
         positions_list = []
-        for i, row in positions.iterrows():
+        for row in positions.to_dict(orient='records'):
             positions_list.append(
                 Position(
                     identifier=row.get('identifier'),
@@ -655,7 +656,7 @@ class PositionSet:
                     name=row.get('name'),
                     weight=equal_weight if equalize else row.get('weight'),
                     quantity=None if equalize else row.get('quantity'),
-                    tags={tag: get(row, tag) for tag in tag_columns} if len(tag_columns) else None
+                    tags=tuple(PositionTag(tag, get(row, tag)) for tag in tag_columns) if len(tag_columns) else None
                 )
             )
 
@@ -738,8 +739,17 @@ class PositionSet:
             else:
                 position_inputs.append(PositionPriceInput(asset_id=p.asset_id,
                                                           weight=p.weight if use_weight else None,
-                                                          quantity=None if use_weight else p.quantity))
+                                                          quantity=None if use_weight else p.quantity,
+                                                          tags=p.tags))
         if len(missing_ids):
             raise MqValueError(f'Positions: {missing_ids} are missing asset ids. Resolve your position \
             set or remove unmapped identifiers.')
         return position_inputs
+
+    @staticmethod
+    def __hash_position_tag_list(position_tags: List[PositionTag]) -> str:
+        hashed_results = ''
+        if position_tags is not None:
+            for tag in position_tags:
+                hashed_results = hashed_results + tag.name + '-' + tag.value
+        return hashed_results

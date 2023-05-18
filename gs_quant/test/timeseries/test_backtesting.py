@@ -107,7 +107,7 @@ def _mock_spot_data():
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 100, 100, 100, 100, 100]}, index=dates)
     y['assetId'] = 'MA4B66MW5E27UAL9SUX'
-    return x.append(y)
+    return pd.concat([x, y])
 
 
 def _mock_spot_data_feb():
@@ -116,7 +116,7 @@ def _mock_spot_data_feb():
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 101.5, 100.02, 98.1, 95.3, 93.9]}, index=dates_feb)
     y['assetId'] = 'MA4B66MW5E27UAL9SUX'
-    return x.append(y)
+    return pd.concat([x, y])
 
 
 def test_basket_price():
@@ -169,7 +169,7 @@ def test_basket_average_implied_vol():
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'impliedVolatility': [20.0, 20.2, 20.3, 20.6, 21.1, 20.0]}, index=dates)
     y['assetId'] = 'MA4B66MW5E27UAL9SUX'
-    implied_vol = x.append(y)
+    implied_vol = pd.concat([x, y])
     implied_vol.index.name = 'date'
 
     mock_spot = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
@@ -255,7 +255,7 @@ def _mock_data_simple():
     y['assetId'] = 'XLB_MOCK_MQID'
     z = pd.DataFrame({'spot': (a ** 3).tolist()}, index=a.index)
     z['assetId'] = 'SPX_MOCK_MQID'
-    return x.append(y).append(z)
+    return pd.concat([x, y, z])
 
 
 def _mock_spot_data_identical():
@@ -264,7 +264,7 @@ def _mock_spot_data_identical():
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
     y['assetId'] = 'MA4B66MW5E27UAL9SUX'
-    return x.append(y)
+    return pd.concat([x, y])
 
 
 def _mock_spot_data_corr():
@@ -272,7 +272,7 @@ def _mock_spot_data_corr():
     x = pd.DataFrame({'spot': [78, 9, 1003, 17, -12, 5], 'assetId': 'MA4B66MW5E27U9VBB94'}, index=dates)
     y = pd.DataFrame({'spot': [-33, 33, 15, 21, -3, 2], 'assetId': 'MA4B66MW5E27UAL9SUX'}, index=dates)
     z = pd.DataFrame({'spot': [86, 86, 56, 86, 86, 9], 'assetId': 'MA4B66MW5E27UANZH2M'}, index=dates)
-    return x.append(y).append(z)
+    return pd.concat([x, y, z])
 
 
 def test_basket_average_realized_vol_wts():

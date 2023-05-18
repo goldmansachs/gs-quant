@@ -15,14 +15,14 @@
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
 from datetime import date, time, timedelta
-from enum import Enum
 from numbers import Real
-from typing import Any, Union
+from typing import Any
 
-import numpy as np
+from pandas.tseries.offsets import CustomBusinessDay
 
 from .helper import *
 from .helper import _create_enum
+from ..datetime import GsCalendar
 from ..datetime.date import DayCountConvention, PaymentFrequency, day_count_fraction
 from ..datetime.date import date_range as _date_range
 from ..errors import MqValueError, MqTypeError
@@ -46,13 +46,13 @@ def __interpolate_step(x: pd.Series, dates: pd.Series = None) -> pd.Series:
     first_date = pd.Timestamp(dates.index[0]) if isinstance(x.index[0], pd.Timestamp) else dates.index[0]
 
     # locate previous valid date or take first value from series
-    prev = x.index[0] if first_date < x.index[0] else x.index[x.index.get_loc(first_date, 'pad')]
+    prev = x.index[0] if first_date < x.index[0] else x.index[x.index.get_indexer([first_date], method='pad')]
 
     current = x[prev]
 
     curve = x.align(dates, 'right', )[0]  # only need values from dates
 
-    for knot in curve.iteritems():
+    for knot in curve.items():
         if np.isnan(knot[1]):
             curve[knot[0]] = current
         else:
@@ -280,7 +280,7 @@ def day(x: pd.Series) -> pd.Series:
     :func:`month` :func:`year`
 
     """
-    return pd.to_datetime(x.index.to_series()).dt.day
+    return pd.Series(pd.to_datetime(x.index.to_series()).dt.day, dtype=np.int64)
 
 
 @plot_function
@@ -311,7 +311,7 @@ def month(x: pd.Series) -> pd.Series:
     :func:`day` :func:`year`
 
     """
-    return pd.to_datetime(x.index.to_series()).dt.month
+    return pd.Series(pd.to_datetime(x.index.to_series()).dt.month, dtype=np.int64)
 
 
 @plot_function
@@ -342,7 +342,7 @@ def year(x: pd.Series) -> pd.Series:
     :func:`day` :func:`month`
 
     """
-    return pd.to_datetime(x.index.to_series()).dt.year
+    return pd.Series(pd.to_datetime(x.index.to_series()).dt.year, dtype=np.int64)
 
 
 @plot_function
@@ -373,7 +373,7 @@ def quarter(x: pd.Series) -> pd.Series:
     :func:`day` :func:`month`
 
     """
-    return pd.to_datetime(x.index.to_series()).dt.quarter
+    return pd.Series(pd.to_datetime(x.index.to_series()).dt.quarter, dtype=np.int64)
 
 
 @plot_function
@@ -404,7 +404,7 @@ def weekday(x: pd.Series) -> pd.Series:
     :func:`day` :func:`month`
 
     """
-    return pd.to_datetime(x.index.to_series()).dt.weekday
+    return pd.Series(pd.to_datetime(x.index.to_series()).dt.weekday, dtype=np.int64)
 
 
 @plot_function
@@ -499,7 +499,7 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
     """
     if not isinstance(weekdays_only, bool):
         raise MqTypeError('expected a boolean value for "weekdays_only"')
-    if not (x.index.is_all_dates or all(map(lambda a: isinstance(a, date), x.index.values))):
+    if not (isinstance(x.index, pd.DatetimeIndex) or all(map(lambda a: isinstance(a, date), x.index.values))):
         raise MqValueError('input is not a time series')
 
     if isinstance(start_date, int):
@@ -521,7 +521,7 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
     else:
         week_mask = tuple([True] * 7)
 
-    return x.loc[x.index.intersection(list(_date_range(start_date, end_date, week_mask=week_mask)))]
+    return x.loc[x.index.isin(list(_date_range(start_date, end_date, week_mask=week_mask)))]
 
 
 @plot_function
@@ -556,7 +556,7 @@ def append(series: List[pd.Series]) -> pd.Series:
     for i in range(1, len(series)):
         cur = series[i]
         start = res.index[-1]
-        res = res.append(cur.loc[cur.index > start])
+        res = pd.concat([res, cur.loc[cur.index > start]])
     return res
 
 
@@ -591,9 +591,9 @@ def prepend(x: List[pd.Series]) -> pd.Series:
     for i in range(len(x)):
         this = x[i]
         if i == len(x) - 1:
-            return res.append(this)
+            return pd.concat([res, this])
         end = x[i + 1].index[0]
-        res = res.append(this.loc[this.index < end])
+        res = pd.concat([res, this.loc[this.index < end]])
     return res
 
 
@@ -681,3 +681,26 @@ def day_count(first: date, second: date) -> int:
     if not (isinstance(first, date) and isinstance(second, date)):
         raise MqValueError('inputs must be dates')
     return np.busday_count(first, second)
+
+
+@plot_function
+def align_calendar(series: pd.Series, calendar: str) -> pd.Series:
+    """
+    Aligns a series to a given calendar removing values in the holiday calendar and the week mask (i.e. remove Saturday
+    and Sunday)
+
+    :param series: data series to align
+    :param calendar: calendar to align the series (i.e. NYC, NYSE, USD)
+
+    :return: timeseries of the data aligned to a calendar
+
+    **Examples**
+
+    >>> x = generate_series(100)
+    >>> align_calendar(x, 'NYC')
+    """
+    gs_calendar = GsCalendar.get(calendar)
+    cbd = CustomBusinessDay(calendar=gs_calendar.business_day_calendar())
+    filtered_series = series[
+        series.index.isin(pd.date_range(start=series.first_valid_index(), end=series.last_valid_index(), freq=cbd))]
+    return filtered_series

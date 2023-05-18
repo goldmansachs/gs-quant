@@ -948,7 +948,7 @@ class FactorRiskReport(Report):
             for column_group in column_info:
                 sorted_columns = sorted_columns + column_group.get('columns')
             rows_data_frame = pd.DataFrame(rows)
-            rows_data_frame = rows_data_frame[sorted_columns]
+            rows_data_frame = rows_data_frame.reindex(columns=sorted_columns)
             rows_data_frame = rows_data_frame.set_index('name')
             return rows_data_frame
         return table

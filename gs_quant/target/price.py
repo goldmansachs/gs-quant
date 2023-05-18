@@ -54,6 +54,7 @@ class PositionPriceResponse(Base):
     adv22_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
     median_daily_volume22_day: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
+    tags: Optional[Tuple[PositionTag, ...]] = field(default=None, metadata=name_metadata)
 
 
 @handle_camel_case_args

@@ -193,7 +193,6 @@ def test_relative_strength_index():
     expected = pd.Series(data=np.ones(7) * 100, index=dates[15:])
     result = relative_strength_index(increasing_series, w)
     assert_series_equal(result, expected, check_names=False, obj="Relative Strength Index")
-
     result = relative_strength_index(SPX, "2w")
     print(result)
 

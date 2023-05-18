@@ -14,10 +14,8 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
-from .analysis import LagMode, lag
-from .statistics import *
-from ..errors import *
 from typing import Union
+
 import numpy as np
 import pandas as pd
 from gs_quant.api.gs.data import GsDataApi
@@ -26,6 +24,10 @@ from gs_quant.datetime.date import DayCountConvention
 from gs_quant.markets.securities import Asset
 from gs_quant.target.common import Currency
 from gs_quant.timeseries.datetime import align
+
+from .analysis import LagMode, lag
+from .statistics import *
+from ..errors import *
 
 """
 Econometrics timeseries library is for standard economic and time series analytics operations, including returns,
@@ -636,8 +638,13 @@ def correlation(x: pd.Series, y: pd.Series,
     clean_ret2 = ret_2.dropna()
 
     if isinstance(w.w, pd.DateOffset):
-        values = [clean_ret1.loc[(clean_ret1.index > idx - w.w) & (clean_ret1.index <= idx)].corr(clean_ret2)
-                  for idx in clean_ret1.index]
+        if isinstance(clean_ret1.index, pd.DatetimeIndex):
+            values = [clean_ret1.loc[(clean_ret1.index > idx - w.w) & (clean_ret1.index <= idx)].corr(clean_ret2)
+                      for idx in clean_ret1.index]
+        else:
+            values = [clean_ret1.loc[(clean_ret1.index > (idx - w.w).date()) &
+                                     (clean_ret1.index <= idx)].corr(clean_ret2)
+                      for idx in clean_ret1.index]
         corr = pd.Series(values, index=clean_ret1.index)
     else:
         corr = clean_ret1.rolling(w.w, 0).corr(clean_ret2)
@@ -718,7 +725,7 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0
         offset = w.w
         start = 0
         for i in range(1, size):
-            min_index_value = series_index[i] - offset
+            min_index_value = (series_index[i] - offset).date()
             for idx in range(start, i + 1):
                 if series_index[idx] > min_index_value:
                     start = idx
@@ -765,10 +772,13 @@ def max_drawdown(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> 
     """
     w = normalize_window(x, w)
     if isinstance(w.w, pd.DateOffset):
-        scores = pd.Series([x[idx] / x.loc[(x.index > idx - w.w) & (x.index <= idx)].max() - 1 for idx in x.index],
-                           index=x.index)
-        result = pd.Series([scores.loc[(scores.index > idx - w.w) & (scores.index <= idx)].min()
-                            for idx in scores.index], index=scores.index)
+        if np.issubdtype(x.index, dt.date):
+            scores = pd.Series([x[idx] / x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].max() - 1
+                                for idx in x.index], index=x.index)
+            result = pd.Series([scores.loc[(scores.index > (idx - w.w).date()) & (scores.index <= idx)].min()
+                                for idx in scores.index], index=scores.index)
+        else:
+            raise TypeError('Please pass in list of dates as index')
     else:
         rolling_max = x.rolling(w.w, 0).max()
         result = (x / rolling_max - 1).rolling(w.w, 0).min()

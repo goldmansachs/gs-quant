@@ -20,6 +20,7 @@ import json
 import os
 from typing import Union, Dict
 from unittest import mock
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -1539,13 +1540,13 @@ def test_implied_corr_basket():
     y['assetId'] = 'MA4B66MW5E27UAL9SUX'
     z = pd.DataFrame({'impliedVolatility': [0.13, 0.21, 0.3, 0.31, 0.23, 0.24]}, index=dates)
     z['assetId'] = 'MA4B66MW5E27U8P32SB'
-    implied_vol = x.append(y).append(z)
+    implied_vol = pd.concat([x, y, z])
 
     x = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 100, 100, 100, 100, 100]}, index=dates)
     y['assetId'] = 'MA4B66MW5E27UAL9SUX'
-    spot_data = x.append(y)
+    spot_data = pd.concat([x, y])
 
     mock_data = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     mock_data.side_effect = [implied_vol, spot_data]
@@ -1578,7 +1579,7 @@ def test_realized_corr_basket():
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 99.5, 100.1, 101, 100.7, 100.6]}, index=dates)
     y['assetId'] = 'MA4B66MW5E27UAL9SUX'
-    constituents_spot = x.append(y)
+    constituents_spot = pd.concat([x, y])
 
     index_spot = pd.DataFrame({'spot': [100.0, 101, 102, 103, 103.3, 104]}, index=dates)
     index_spot['assetId'] = 'MA4B66MW5E27U8P32SB'
@@ -1597,7 +1598,7 @@ def test_realized_corr_basket():
     actual = tm.realized_correlation_with_basket(spx, '2d', a_basket)
     expected = pd.Series([np.nan, np.nan, -501.344109, -108.318770, -168.132382, 109.044958], index=dates)
     expected = ExtendedSeries(expected)
-    assert_series_equal(actual, expected)
+    assert_series_equal(actual, expected, check_dtype=False)
 
     with pytest.raises(NotImplementedError):
         tm.realized_correlation_with_basket(spx, '2d', a_basket, real_time=True)
@@ -2286,6 +2287,12 @@ def test_swap_term_structure():
     expected.dataset_ids = _test_datasets
     assert_series_equal(expected, actual, check_names=False)
     assert actual.dataset_ids == expected.dataset_ids
+
+    with patch('gs_quant.datetime.GsCalendar.holidays', (dt.date(2023, 1, 1),)):
+        args['pricing_date'] = dt.date(2023, 1, 1)
+        with pytest.raises(MqValueError):
+            tm_rates.swap_term_structure(**args)
+
     replace.restore()
 
 
@@ -2417,6 +2424,12 @@ def test_basis_swap_term_structure():
     expected.dataset_ids = _test_datasets
     assert_series_equal(expected, actual, check_names=False)
     assert actual.dataset_ids == expected.dataset_ids
+
+    with patch('gs_quant.datetime.GsCalendar.holidays', (dt.date(2023, 1, 1),)):
+        args['pricing_date'] = dt.date(2023, 1, 1)
+        with pytest.raises(MqValueError):
+            tm_rates.basis_swap_term_structure(**args)
+
     replace.restore()
 
 
@@ -3595,7 +3608,7 @@ def _carry_term_typical():
     expected = pd.Series([0.001667, 0.004714, 0.036105, 0.05621], name='carry', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
-    assert_series_equal(expected, pd.Series(actual), check_exact=False, check_less_precise=3)
+    assert_series_equal(expected, pd.Series(actual), check_exact=False, atol=0.00001)
     assert actual.dataset_ids == _test_datasets
 
     with pytest.raises(NotImplementedError):
@@ -3885,7 +3898,7 @@ def test_forward_price():
                                   bucket='7x24'
                                   )
 
-        assert_series_equal(pd.Series(dtype=float), pd.Series(actual), check_names=False)
+        assert_series_equal(pd.Series(dtype=float, index=[]), pd.Series(actual), check_names=False)
 
         actual = tm.forward_price(mock_spp,
                                   price_method='LMP',
@@ -4093,7 +4106,7 @@ def test_implied_volatility_elec():
                                             bucket='7x24'
                                             )
 
-        assert_series_equal(pd.Series(dtype=float), pd.Series(actual), check_names=False)
+        assert_series_equal(pd.Series(dtype=float, index=[]), pd.Series(actual), check_names=False)
 
         actual = tm.implied_volatility_elec(mock_spp,
                                             price_method='LMP',

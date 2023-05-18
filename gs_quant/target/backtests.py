@@ -35,6 +35,7 @@ class BacktestRiskMeasureType(EnumBase, Enum):
     Implied_Volatility = 'Implied Volatility'
     Fair_Variance = 'Fair Variance'
     Strike_Level = 'Strike Level'
+    Spot = 'Spot'
     Price_ATMS = 'Price ATMS'
     Price_ATMF_Volatility = 'Price ATMF Volatility'    
 

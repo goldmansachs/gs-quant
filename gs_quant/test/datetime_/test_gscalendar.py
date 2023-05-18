@@ -25,8 +25,9 @@ import datetime
 
 
 # Test GsCalendar initiated with single PricingLocation
+@mock.patch.object(Dataset, 'get_coverage', return_value=pd.DataFrame())
 @mock.patch.object(Dataset, 'get_data')
-def test_gs_calendar_single(mocker):
+def test_gs_calendar_single(mocker, mocker_cov):
     set_session()
     mocker.return_value = pd.DataFrame(index=[datetime.datetime(1999, 9, 12)],
                                        data={'holiday': 'Labor Day'})
@@ -38,7 +39,8 @@ def test_gs_calendar_single(mocker):
 
 # Test GsCalendar initiated with tuple
 @mock.patch.object(Dataset, 'get_data')
-def test_gs_calendar_tuple(mocker):
+@mock.patch.object(Dataset, 'get_coverage', return_value=pd.DataFrame())
+def test_gs_calendar_tuple(mocker_coverage, mocker):
     set_session()
     mocker.return_value = pd.DataFrame(index=[datetime.datetime(1999, 9, 12)],
                                        data={'holiday': 'Labor Day'})

@@ -17,9 +17,11 @@ under the License.
 from datetime import date as dt
 from unittest.mock import Mock
 
+import pandas as pd
 import pytest
-from gs_quant.datetime.relative_date import RelativeDate
 from testfixtures import Replacer
+
+from gs_quant.datetime.relative_date import RelativeDate
 
 holiday_calendar = [dt(2021, 1, 18)]
 
@@ -244,6 +246,8 @@ test_types = {
 def test_currency_holiday_calendars(mocker):
     replace = Replacer()
     replace('gs_quant.api.gs.data.GsDataApi.query_data', Mock(side_effect=mock_holiday_data))
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_coverage",
+                 return_value=pd.DataFrame([['USD'], ['GBP']], columns=['currency']))
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
     rdate = RelativeDate('-1b', base_date=dt(2022, 4, 12))
     assert dt(2022, 4, 11) == rdate.apply_rule(currencies=[])

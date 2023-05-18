@@ -185,7 +185,7 @@ def smoothed_moving_average(x: pd.Series, w: Union[Window, int, str] = Window(No
         if isinstance(window_size, int):
             window_num_elem = window_size
         else:
-            window_num_elem = len(x[(x.index > (x.index[i] - window_size)) & (x.index <= x.index[i])])
+            window_num_elem = len(x[(x.index > (x.index[i] - window_size).date()) & (x.index <= x.index[i])])
         smoothed_moving_averages[i] = ((window_num_elem - 1) * smoothed_moving_averages[i - 1] + x[i]) / window_num_elem
     return smoothed_moving_averages
 
@@ -420,10 +420,7 @@ def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEAR):
     if not isinstance(x.index, pd.DatetimeIndex):
         raise MqValueError("Series must have a pandas.DateTimeIndex.")
     pfreq = getattr(getattr(x, 'index', None), 'inferred_freq', None)
-    try:
-        period = statsmodels.tsa.seasonal.freq_to_period(pfreq)
-    except (ValueError, AttributeError):
-        period = None
+    period = None if pfreq is None else statsmodels.tsa.seasonal.freq_to_period(pfreq)
     if period in [7, None]:  # daily
         x = x.asfreq('D', method='ffill')
         if freq == Frequency.YEAR:

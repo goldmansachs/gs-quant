@@ -200,6 +200,13 @@ def test_historical_multi_scenario(mocker):
     assert isinstance(futures[0].result(), MultipleScenarioResult)
 
 
+def test_series_with_info_arithmetics(mocker):
+    series_info = SeriesWithInfo([2.0, 4.0], [dt.date(2021, 4, 11), dt.date(2022, 4, 11)])
+    scaled = series_info * 100
+    assert isinstance(scaled, SeriesWithInfo)
+    assert tuple(scaled.values) == (200., 400.)
+
+
 def test_composite_multi_scenario(mocker):
     with MockCalc(mocker):
         c, res1, _ = get_attributes(usd_port, risk.Price, resolve=True, ctx='Composite')

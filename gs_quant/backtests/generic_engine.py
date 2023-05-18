@@ -231,9 +231,11 @@ class EnterPositionQuantityScaledActionImpl(ActionHandler):
         # record entry and unwind cashflows
         for create_date, portfolio in orders.items():
             for inst in portfolio.all_instruments:
-                backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
+                backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1,
+                                                                       scaling_parameter=self.action.trade_quantity))
                 final_date = get_final_date(inst, create_date, self.action.trade_duration)
-                backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
+                backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date,
+                                                                      scaling_parameter=self.action.trade_quantity))
 
         for s in backtest.states:
             pos = []
@@ -273,10 +275,12 @@ class HedgeActionImpl(ActionHandler):
                                                      csa_term=self.action.csa_term,
                                                      scaling_parameter=self.action.scaling_parameter,
                                                      risk_transformation=self.action.risk_transformation)
-                entry_payment = CashPayment(trade=hedge_trade, effective_date=create_date, direction=-1)
+                entry_payment = CashPayment(trade=hedge_trade, effective_date=create_date, direction=-1,
+                                            scaling_parameter=self.action.scaling_parameter)
                 backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(state, backtest,
                                                                                                  trigger_info)
-                exit_payment = CashPayment(trade=hedge_trade, effective_date=final_date, scale_date=create_date) \
+                exit_payment = CashPayment(trade=hedge_trade, effective_date=final_date, scale_date=create_date,
+                                           scaling_parameter=self.action.scaling_parameter) \
                     if final_date <= dt.date.today() else None
                 backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(state, backtest,
                                                                                                 trigger_info)
@@ -367,14 +371,15 @@ class RebalanceActionImpl(ActionHandler):
         pos = self.action.priceable.clone(**{self.action.size_parameter: new_size - current_size,
                                              'name': f'{self.action.priceable.name}_{state}'})
 
-        backtest.cash_payments[state].append(CashPayment(pos, effective_date=state, direction=-1))
+        backtest.cash_payments[state].append(CashPayment(pos, effective_date=state, direction=-1,
+                                                         scaling_parameter=self.action.size_parameter))
         backtest.transaction_costs[state] -= self.action.transaction_cost.get_cost(state, backtest, trigger_info)
         unwind_payment = None
         cash_payment_dates = backtest.cash_payments.keys()
         for d in reversed(sorted(cash_payment_dates)):
             for cp in backtest.cash_payments[d]:
                 if self.action.priceable.name.split('_')[-1] in cp.trade.name and cp.direction == 1:
-                    unwind_payment = CashPayment(pos, effective_date=d)
+                    unwind_payment = CashPayment(pos, effective_date=d, scaling_parameter=self.action.size_parameter)
                     backtest.cash_payments[d].append(unwind_payment)
                     backtest.transaction_costs[d] -= self.action.transaction_cost.get_cost(state, backtest,
                                                                                            trigger_info)
@@ -749,9 +754,9 @@ class GenericEngine(BacktestBaseEngine):
                             if ccy not in backtest.cash_dict[d]:
                                 backtest.cash_dict[d][ccy] = 0
                             if cp.scale_date:
-                                scale_notional = backtest.portfolio_dict[cp.scale_date][cp.trade.name]. \
-                                    notional_amount
-                                scale_date_adj = scale_notional / cp.trade.notional_amount
+                                scale_notional = getattr(backtest.portfolio_dict[cp.scale_date][cp.trade.name],
+                                                         cp.scaling_parameter)
+                                scale_date_adj = scale_notional / getattr(cp.trade, cp.scaling_parameter)
                                 cp.cash_paid[ccy] += value * scale_date_adj * cp.direction
                             else:
                                 cp.cash_paid[ccy] += value * cp.direction

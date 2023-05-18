@@ -235,12 +235,13 @@ class ScalingPortfolio:
 
 
 class CashPayment:
-    def __init__(self, trade, effective_date=None, scale_date=None, direction=1):
+    def __init__(self, trade, effective_date=None, scale_date=None, direction=1, scaling_parameter='notional_amount'):
         self.trade = trade
         self.effective_date = effective_date
         self.scale_date = scale_date
         self.direction = direction
         self.cash_paid = defaultdict(float)
+        self.scaling_parameter = scaling_parameter
 
     def to_frame(self):
         df = pd.DataFrame(self.cash_paid.items(), columns=['Cash Ccy', 'Cash Amount'])

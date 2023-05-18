@@ -13,10 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+from unittest import mock
 
 import pytest
 from pandas.testing import assert_series_equal
 
+from gs_quant.test.api.test_risk import set_session
 from gs_quant.timeseries.datetime import *
 
 
@@ -409,7 +411,7 @@ def test_append():
 
     actual = append([x, y])
     expected = pd.Series([3.1, 4.1, 5.1, 7.0], index=pd.date_range('2019-01-01 02:00', periods=4, freq='H'))
-    assert_series_equal(actual, expected, obj='prepend two real-time series')
+    assert_series_equal(actual, expected, obj='append two real-time series')
 
 
 def test_prepend():
@@ -472,6 +474,26 @@ def test_day_count():
 
     with pytest.raises(MqValueError):
         day_count(dt.date(2021, 5, 7), '2021-05-10')
+
+
+@mock.patch.object(Dataset, 'get_data')
+def test_align_calendar(mocker):
+    dates = pd.date_range(start='1/1/2023', end='1/31/2023')
+    series = pd.Series(range(len(dates)), index=dates)
+
+    set_session()
+    mocker.return_value = pd.DataFrame(index=[dt.datetime(2023, 1, 3)],
+                                       data={'holiday': 'New Year'})
+
+    GsCalendar.reset()
+
+    aligned_series = align_calendar(series, 'NYC')
+    # Check if the holiday was removed
+    assert dt.datetime(2023, 1, 3) not in aligned_series
+    # Check the first saturday was removed
+    assert dt.datetime(2023, 1, 7) not in aligned_series
+    # Check full series length is correct
+    assert aligned_series.size == 21
 
 
 if __name__ == "__main__":
