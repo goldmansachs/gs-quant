@@ -614,6 +614,8 @@ class GenericEngine(BacktestBaseEngine):
                 with PricingContext(pricing_date=d):
                     results = Portfolio(port).calc(tuple(risks))
 
+                backtest.add_results(d, results)
+
             for hedge in backtest.hedges[d]:
                 sp = hedge.scaling_portfolio
                 if sp.results is None:
@@ -621,10 +623,6 @@ class GenericEngine(BacktestBaseEngine):
                         backtest.calculations += len(risks) * len(sp.dates)
                         port_sp = sp.trade if isinstance(sp.trade, Portfolio) else Portfolio([sp.trade])
                         sp.results = port_sp.calc(tuple(risks))
-
-            # results should be added outside of pricing context and not in the same call as valuating them
-            if len(port):
-                backtest.add_results(d, results)
 
             # semi path dependent scaling
             if d in backtest.hedges:

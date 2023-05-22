@@ -8,7 +8,7 @@ you read our [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md) before y
 
 gs-quant's development environment relies on the following:
 
-### 1) Python 3.6+
+### 1) Python 3.7+
 Available at [Python.org](https://www.python.org/downloads/) or from your OS's package manager.
 
 

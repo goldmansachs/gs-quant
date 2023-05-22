@@ -25,7 +25,7 @@ import versioneer
 if "sdist" in sys.argv:
     reference = os.path.dirname(__file__)
     doc_dir = os.path.join(reference, "docs")
-    p = subprocess.Popen(["make", "html"], cwd=doc_dir, shell=True)
+    p = subprocess.Popen("sphinx-build -M help . _build", cwd=doc_dir, shell=True)
     p.wait(30)
     if p.returncode != 0:
         raise RuntimeError("unable to make docs")
@@ -53,7 +53,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
-        "asteval<0.9.24",  # temporary, until interal PyPI mirror catches up
+        "asteval<0.9.24",
         "aenum",
         "backoff",
         "cachetools",
@@ -63,12 +63,13 @@ setuptools.setup(
         "deprecation",
         "funcsigs",
         "inflection",
-        "lmfit<=1.0.2",  # version 1.0.3 requires a newer version of pip (21.3 works, but 18.1 doesn't)
+        "lmfit",
         "more_itertools",
         "msgpack",
         "nest-asyncio",
         "opentracing",
-        "pandas>1.0.0,<2.0.0",
+        "pandas>1.0.0,<2.0.0;python_version<'3.7'",
+        "pandas>=2.0;python_version>'3.7'",
         "pydash",
         "python-dateutil>=2.7.0",
         "requests",
@@ -87,14 +88,17 @@ setuptools.setup(
         "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib", "seaborn", "treelib"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "pytest-ordering", "testfixtures", "nbconvert", "nbformat",
-                 "jupyter_client"],
+                 "jupyter_client", "pipreqs"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
                     "pytest-mock", "pytest-ordering", "testfixtures"]
     },
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent",
         "License :: OSI Approved :: Apache Software License"
     ],

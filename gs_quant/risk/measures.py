@@ -20,11 +20,7 @@ from gs_quant.common import AssetClass, AggregationLevel, RiskMeasure
 from gs_quant.target.common import RiskMeasureType, RiskMeasureUnit
 from gs_quant.target.measures import IRBasis, IRVega, IRDelta, IRXccyDelta, InflationDelta
 
-DEPRECATED_MEASURES = {'IRDeltaParallelLocalCcy': 'IRDelta',
-                       'InflationDeltaParallelLocalCcy': 'InflationDelta',
-                       'IRXccyDeltaParallelLocalCurrency': 'IRXccyDelta',
-                       'IRVegaParallelLocalCcy': 'IRVega',
-                       }
+DEPRECATED_MEASURES = {}
 
 
 class __RelativeRiskMeasure(RiskMeasure):
@@ -78,16 +74,8 @@ class PnlPredictLive(__RelativeRiskMeasure):
 # Defining Parameterised Risk Measures
 IRBasisParallel = IRBasis(aggregation_level=AggregationLevel.Asset, name='IRBasisParallel')
 InflationDeltaParallel = InflationDelta(aggregation_level=AggregationLevel.Type, name='InflationDeltaParallel')
-InflationDeltaParallelLocalCcy = InflationDelta(aggregation_level=AggregationLevel.Type, currency='local',
-                                                name='InflationDeltaParallelLocalCcy')
 IRDeltaParallel = IRDelta(aggregation_level=AggregationLevel.Asset, name='IRDeltaParallel')
 IRDeltaLocalCcy = IRDelta(currency='local', name='IRDeltaLocalCcy')
-IRDeltaParallelLocalCcy = IRDelta(aggregation_level=AggregationLevel.Type, currency='local',
-                                  name='IRDeltaParallelLocalCcy')
 IRXccyDeltaParallel = IRXccyDelta(aggregation_level=AggregationLevel.Type, name='IRXccyDeltaParallel')
-IRXccyDeltaParallelLocalCurrency = IRXccyDelta(aggregation_level=AggregationLevel.Type, currency='local',
-                                               name='IRXccyDeltaParallelLocalCurrency')
 IRVegaParallel = IRVega(aggregation_level=AggregationLevel.Asset, name='IRVegaParallel')
 IRVegaLocalCcy = IRVega(currency='local', name='IRVegaLocalCcy')
-IRVegaParallelLocalCcy = IRVega(aggregation_level=AggregationLevel.Type, currency='local',
-                                name='IRVegaParallelLocalCcy')
