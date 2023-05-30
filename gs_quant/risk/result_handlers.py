@@ -312,6 +312,36 @@ def mmapi_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
 
 
+def mmapi_pca_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                            request_id: Optional[str] = None) -> DataFrameWithInfo:
+    coordinates = []
+    for r in result['rows']:
+        raw_point = r['coordinate'].get('point', '')
+        point = ';'.join(raw_point) if isinstance(raw_point, list) else raw_point
+        r['coordinate'].update({'point': point})
+        r['coordinate'].update({'value': r['value']})
+        r['coordinate'].update({'layer1': r['layer1']})
+        r['coordinate'].update({'layer2': r['layer2']})
+        r['coordinate'].update({'layer3': r['layer3']})
+        r['coordinate'].update({'level': r['level']})
+        r['coordinate'].update({'sensitivity': r['sensitivity']})
+        coordinates.append(r['coordinate'])
+
+    mappings = (('mkt_type', 'type'),
+                ('mkt_asset', 'asset'),
+                ('mkt_class', 'assetClass'),
+                ('mkt_point', 'point'),
+                ('mkt_quoting_style', 'quotingStyle'),
+                ('value', 'value'),
+                ('layer1', 'layer1'),
+                ('layer2', 'layer2'),
+                ('layer3', 'layer3'),
+                ('level', 'level'),
+                ('sensitivity', 'sensitivity'))
+
+    return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
+
+
 def mqvs_validators_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                             request_id: Optional[str] = None) -> MQVSValidatorDefnsWithInfo:
     validators = [MQVSValidatorDefn.from_dict(r) for r in result['validators']]
@@ -335,6 +365,7 @@ result_handlers = {
     'Message': message_handler,
     'MDAPITable': mdapi_table_handler,
     'MMAPITable': mmapi_table_handler,
+    'MMAPIPCA': mmapi_pca_table_handler,
     'MQVSValidators': mqvs_validators_handler,
     'NumberAndUnit': number_and_unit_handler,
     'RequireAssets': required_assets_handler,

@@ -404,13 +404,16 @@ class MQVSValidatorDefnsWithInfo(ResultInfo):
         return self.validators
 
 
-def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshold: Optional[float] = None) \
+def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]],
+                   threshold: Optional[float] = None,
+                   allow_heterogeneous_types: bool = False) \
         -> pd.DataFrame:
     """
     Combine the results of multiple InstrumentBase.calc() calls, into a single result
 
     :param results: An iterable of Dataframes and/or Futures (returned by InstrumentBase.calc())
     :param threshold: exclude values whose absolute value falls below this threshold
+    :param allow_heterogeneous_types: allow Series to be converted to DataFrames before aggregating
     :return: A Dataframe with the aggregated results
 
     **Examples**
@@ -433,7 +436,14 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
     delta_f and vega_f are lists of futures, where the result will be a Dataframe
     delta and vega are Dataframes, representing the merged risk of the individual instruments
     """
-    dfs = [r.result().raw_value if isinstance(r, Future) else r.raw_value for r in results]
+    def get_df(result_obj):
+        if isinstance(result_obj, Future):
+            result_obj = result_obj.result()
+        if isinstance(result_obj, pd.Series) and allow_heterogeneous_types:
+            return pd.DataFrame(result_obj.raw_value).T
+        return result_obj.raw_value
+
+    dfs = [get_df(r) for r in results]
     result = pd.concat(dfs).fillna(0)
     result = result.groupby([c for c in result.columns if c != 'value'], as_index=False).sum()
 
@@ -446,7 +456,8 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]], threshol
 ResultType = Union[None, dict, tuple, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]
 
 
-def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=False) -> ResultType:
+def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=False,
+                      allow_heterogeneous_types=False) -> ResultType:
     unit = None
     risk_key = None
     results = tuple(results)
@@ -461,7 +472,7 @@ def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=Fa
         if result.error:
             raise ValueError('Cannot aggregate results in error')
 
-        if not isinstance(result, type(results[0])):
+        if not allow_heterogeneous_types and not isinstance(result, type(results[0])):
             raise ValueError(f'Cannot aggregate heterogeneous types: {type(result)} vs {type(results[0])}')
 
         if result.unit:
@@ -485,7 +496,8 @@ def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=Fa
     elif isinstance(inst, SeriesWithInfo):
         return SeriesWithInfo(sum(results), risk_key=risk_key, unit=unit)
     elif isinstance(inst, DataFrameWithInfo):
-        return DataFrameWithInfo(aggregate_risk(results), risk_key=risk_key, unit=unit)
+        return DataFrameWithInfo(aggregate_risk(results, allow_heterogeneous_types=allow_heterogeneous_types),
+                                 risk_key=risk_key, unit=unit)
 
 
 def subtract_risk(left: DataFrameWithInfo, right: DataFrameWithInfo) -> pd.DataFrame:

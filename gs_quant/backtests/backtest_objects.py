@@ -132,7 +132,7 @@ class BackTest(BaseBacktest):
         :rtype: pandas.dataframe
         """
         dates_with_results = list(filter(lambda x: len(x[1]), self._results.items()))
-        summary = pd.DataFrame({date: {risk: results[risk].aggregate(True)
+        summary = pd.DataFrame({date: {risk: results[risk].aggregate(True, True)
                                        for risk in results.risk_measures} for date, results in dates_with_results}).T
         cash_summary = defaultdict(dict)
         for date, results in self._cash_dict.items():

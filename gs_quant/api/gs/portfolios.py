@@ -30,18 +30,28 @@ _logger = logging.getLogger(__name__)
 
 
 class GsPortfolioApi:
-    """GS Asset API client implementation"""
+    """GS Asset API client implementation.
+
+    To pass additional query parameters, use kwargs."""
 
     @classmethod
     def get_portfolios(cls,
                        portfolio_ids: List[str] = None,
                        portfolio_names: List[str] = None,
-                       limit: int = 100) -> Tuple[Portfolio, ...]:
+                       limit: int = 100,
+                       **kwargs) -> Tuple[Portfolio, ...]:
         url = '/portfolios?'
         if portfolio_ids:
             url += f'&id={"&id=".join(portfolio_ids)}'
         if portfolio_names:
             url += f'&name={"&name=".join(portfolio_names)}'
+        for k, v in kwargs.items():
+            if isinstance(v, list):
+                for i in v:
+                    # in case v is not a list of strings
+                    url += f'&{k}={i}'
+            else:
+                url += f'&{k}={v}'
         return GsSession.current._get(f'{url}&limit={limit}', cls=Portfolio)['results']
 
     @classmethod

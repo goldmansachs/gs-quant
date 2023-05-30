@@ -602,7 +602,7 @@ def test_leg_valuations(mocker):
     assert 'path' in f1.columns
 
 
-def test_aggregation_with_diff_risk_keys(mocker):
+def test_aggregation_with_heterogeous_types(mocker):
     with MockCalc(mocker):
         portfolio1 = Portfolio([IRSwaption('Pay', '10y', 'EUR', expiration_date='3m', name='EUR3m10ypayer')])
         portfolio2 = Portfolio([IRSwaption('Pay', '10y', 'EUR', expiration_date='6m', name='EUR6m10ypayer')])

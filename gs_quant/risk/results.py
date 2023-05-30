@@ -775,12 +775,13 @@ class PortfolioRiskResult(CompositeResultFuture):
         else:
             return self
 
-    def aggregate(self, allow_mismatch_risk_keys=False) -> Union[float, pd.DataFrame, pd.Series,
-                                                                 MultipleRiskMeasureResult]:
+    def aggregate(self, allow_mismatch_risk_keys=False,
+                  allow_heterogeneous_types=False) -> Union[float, pd.DataFrame, pd.Series, MultipleRiskMeasureResult]:
         if len(self.__risk_measures) > 1:
             return MultipleRiskMeasureResult(self.portfolio, ((r, self[r].aggregate()) for r in self.__risk_measures))
         else:
-            return aggregate_results(self.__results(), allow_mismatch_risk_keys=allow_mismatch_risk_keys)
+            return aggregate_results(self.__results(), allow_mismatch_risk_keys=allow_mismatch_risk_keys,
+                                     allow_heterogeneous_types=allow_heterogeneous_types)
 
     def _to_records(self, display_options: DisplayOptions = None):
         def get_records(rec):
