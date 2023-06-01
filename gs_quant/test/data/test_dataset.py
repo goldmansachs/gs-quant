@@ -17,14 +17,14 @@ import copy
 import datetime as dt
 
 import numpy as np
-from numpy import int64, float64, datetime64
 import pandas as pd
 import pytest
+from numpy import int64, float64, datetime64
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data import Dataset
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.data import Format
+from gs_quant.target.data import Format, DataQuery
 
 test_types = {
     'date': 'date',
@@ -148,15 +148,105 @@ test_data = [
     }
 ]
 
+tr_types = {
+    'time': 'date-time',
+    'assetId': 'string',
+    'askPrice': 'number',
+    'adjustedAskPrice': 'number',
+    'bidPrice': 'number',
+    'adjustedBidPrice': 'number',
+    'tradePrice': 'number',
+    'adjustedTradePrice': 'number',
+    'openPrice': 'number',
+    'adjustedOpenPrice': 'number',
+    'highPrice': 'number',
+    'adjustedLowPrice': 'number',
+    'lowPrice': 'number',
+    'adjustedHighPrice': 'number'
+}
+tr_data = [
+    {
+        'time': dt.datetime(2023, 5, 31, 14),
+        'assetId': 'MA4B66MW5E27U8P32SB',
+        'askPrice': 2529,
+        'adjustedAskPrice': 2529,
+        'bidPrice': 2442.55,
+        'adjustedBidPrice': 2442.55,
+        'tradePrice': 2510.03,
+        'adjustedTradePrice': 2510.03,
+        'openPrice': 2476.96,
+        'adjustedOpenPrice': 2476.96,
+        'highPrice': 2519.49,
+        'lowPrice': 2467.47,
+        'adjustedHighPrice': 2519.49,
+        'adjustedLowPrice': 2467.47
+    },
+    {
+        'time': dt.datetime(2023, 5, 31, 15),
+        'assetId': 'MA4B66MW5E27U8P32SB',
+        'askPrice': 2502.34,
+        'adjustedAskPrice': 2502.34,
+        'bidPrice': 2418.09,
+        'adjustedBidPrice': 2418.09,
+        'tradePrice': 2447.89,
+        'adjustedTradePrice': 2447.89,
+        'openPrice': 2491.92,
+        'adjustedOpenPrice': 2491.92,
+        'highPrice': 2493.14,
+        'lowPrice': 2443.96,
+        'adjustedHighPrice': 2493.14,
+        'adjustedLowPrice': 2443.96
+    },
+    {
+        'time': dt.datetime(2023, 5, 31, 16),
+        'assetId': 'MA4B66MW5E27U8P32SB'
+    },
+    {
+        'time': dt.datetime(2023, 5, 31, 17),
+        'assetId': 'MA4B66MW5E27U8P32SB',
+        'askPrice': 2566.52,
+        'adjustedAskPrice': 2566.52,
+        'bidPrice': 2487.8,
+        'adjustedBidPrice': 2487.8,
+        'tradePrice': 2531.94,
+        'adjustedTradePrice': 2531.94,
+        'openPrice': 2474.33,
+        'adjustedOpenPrice': 2474.33,
+        'highPrice': 2538.07,
+        'lowPrice': 2474.33,
+        'adjustedHighPrice': 2538.07,
+        'adjustedLowPrice': 2474.33
+    }
+]
+
 test_coverage_data = {'results': [{'gsid': 'gsid1'}]}
 
 
 def test_query_data(mocker):
-    mocker.patch("gs_quant.api.gs.data.GsDataApi.query_data", return_value=test_data)
+    mock = mocker.patch("gs_quant.api.gs.data.GsDataApi.query_data", return_value=test_data)
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
     dataset = Dataset(Dataset.TR.TREOD)
     data = dataset.get_data(dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB')
     assert data.equals(GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), test_data))
+
+    assert mock.call_count == 1
+    query = mock.call_args[0][0]
+    assert type(query) == DataQuery
+    assert query.empty_intervals is None
+
+
+def test_query_data_intervals(mocker):
+    mock = mocker.patch("gs_quant.api.gs.data.GsDataApi.query_data", return_value=tr_data)
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=tr_types)
+    dataset = Dataset(Dataset.TR.TREOD)
+    data = dataset.get_data(dt.datetime(2023, 5, 31, 13), dt.datetime(2023, 5, 31, 17), assetId='MA4B66MW5E27U8P32SB',
+                            intervals=4, empty_intervals=True)
+    assert data.equals(GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TR), tr_data))
+
+    assert mock.call_count == 1
+    query = mock.call_args[0][0]
+    assert type(query) == DataQuery
+    assert query.empty_intervals is True
 
 
 def test_query_data_types(mocker):
@@ -223,6 +313,16 @@ def test_construct_dataframe_var_schema(mocker):
 
     df = GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), var_schema, True)
     assert np.issubdtype(df['difference_tradePrice'].dtype, np.floating)
+
+
+def test_dataframe_with_mixed_date_type(mocker):
+    mocker.patch.object(GsDataApi, 'get_types', return_value={'updateTime': 'date-time'})
+
+    df = GsDataApi.construct_dataframe_with_types('BBG_PER_SECURITY',
+                                                  [{'updateTime': '2022-02-24T19:25:28Z'},
+                                                   {'updateTime': '2022-11-10T17:18:23.021494Z'}])
+
+    assert df.empty is False
 
 
 def test_data_series_format(mocker):

@@ -60,6 +60,7 @@ class DataApi(metaclass=ABCMeta):
             restrict_fields: bool = False,
             format: str = 'MessagePack',
             dates: List[dt.date] = None,
+            empty_intervals: Optional[bool] = None,
             **kwargs
     ):
         end_is_time = isinstance(end, dt.datetime)
@@ -91,7 +92,8 @@ class DataApi(metaclass=ABCMeta):
                 as_of_time=as_of,
                 since=since,
                 format=format,
-                dates=dates
+                dates=dates,
+                empty_intervals=empty_intervals
             )
 
         query_properties = query.properties()
