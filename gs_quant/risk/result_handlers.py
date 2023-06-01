@@ -365,7 +365,7 @@ result_handlers = {
     'Message': message_handler,
     'MDAPITable': mdapi_table_handler,
     'MMAPITable': mmapi_table_handler,
-    'MMAPIPCA': mmapi_pca_table_handler,
+    'MMAPIPCATable': mmapi_pca_table_handler,
     'MQVSValidators': mqvs_validators_handler,
     'NumberAndUnit': number_and_unit_handler,
     'RequireAssets': required_assets_handler,
