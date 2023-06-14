@@ -124,6 +124,9 @@ def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: Unio
         Union[DataFrameWithInfo, ErrorValue, FloatWithInfo, SeriesWithInfo]:
     from gs_quant.markets import CloseMarket
 
+    if result.empty:
+        return result
+
     raw_value = result.loc[date]
     key = result.risk_key
 
@@ -338,7 +341,8 @@ class MultipleRiskMeasureResult(dict):
         for key, value in self.items():
             if isinstance(value, SeriesWithInfo) or isinstance(value, DataFrameWithInfo):
                 new_value = value.copy_with_resultinfo()
-                new_value.value = operator(value.value, operand)
+                if not value.empty:
+                    new_value.value = operator(value.value, operand)
             elif isinstance(value, pd.DataFrame) or isinstance(value, pd.Series):
                 new_value = value.copy()
                 new_value.value = operator(value.value, operand)

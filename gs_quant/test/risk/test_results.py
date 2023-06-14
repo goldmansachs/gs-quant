@@ -660,3 +660,16 @@ def test_transformation(mocker):
 
     transformed_res = ladder_res.transform(ResultWithInfoAggregator())
     np.testing.assert_almost_equal(transformed_res.aggregate(), ladder_res.to_frame()['value'].sum())
+
+
+def test_aggregation_with_identical_trades(mocker):
+    with MockCalc(mocker):
+        swaptions = (IRSwaption(notional_currency='EUR', termination_date='7y', expiration_date='1y',
+                                pay_or_receive='Receive', strike='ATM+35', name='trade_1'),
+                     IRSwaption(notional_currency='EUR', termination_date='7y', expiration_date='1y',
+                                pay_or_receive='Receive', strike='ATM+35', name='trade_2'))
+        portfolio = Portfolio(swaptions)
+
+        delta = portfolio.calc(risk.IRDelta)
+        transformed_res = delta.transform(ResultWithInfoAggregator())
+        np.testing.assert_almost_equal(transformed_res.aggregate(), delta.to_frame()['value'].sum())

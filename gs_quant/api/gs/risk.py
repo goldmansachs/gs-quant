@@ -150,7 +150,7 @@ class GsRiskApi(RiskApi):
 
                 while pending_requests or not all_requests_dispatched:
                     # Continue while we have pending or un-dispatched requests
-
+                    _logger.debug(f'waiting for {", ".join(pending_requests.keys())}')
                     request_listener = asyncio.ensure_future(cls.drain_queue_async(responses)) \
                         if not all_requests_dispatched else None
                     result_listener = asyncio.ensure_future(ws.recv())

@@ -449,6 +449,70 @@ def test_filter():
         filter_(zero_neg_pos, 0)
 
 
+def test_filter_dates():
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4)
+    ]
+
+    all_pos = pd.Series([1.0, 1.0, 1.0, 1.0], index=dates)
+    with_null = pd.Series([1.0, np.nan, 1.0, 1.0], index=dates)
+
+    result = algebra.filter_dates(all_pos)
+    expected = all_pos
+    assert_series_equal(result, expected, obj="zap: remove nulls when no nulls are in TS")
+
+    result = algebra.filter_dates(with_null)
+    expected = pd.Series([1.0, 1.0, 1.0],
+                         index=[date(2019, 1, 1),
+                                date(2019, 1, 3), date(2019, 1, 4)])
+    assert_series_equal(result, expected, obj="zap: remove nulls in TS")
+
+    result = algebra.filter_dates(all_pos, FilterOperator.EQUALS, date(2019, 1, 2))
+    expected = pd.Series([1.0, 1.0, 1.0],
+                         index=[date(2019, 1, 1),
+                                date(2019, 1, 3), date(2019, 1, 4)])
+    assert_series_equal(result, expected, obj="zap: remove date in TS")
+
+    result = algebra.filter_dates(all_pos, FilterOperator.EQUALS, [date(2019, 1, 2), date(2019, 1, 4)])
+    expected = pd.Series([1.0, 1.0],
+                         index=[date(2019, 1, 1), date(2019, 1, 3)])
+    assert_series_equal(result, expected, obj="zap: remove dates in TS")
+
+    result = algebra.filter_dates(all_pos, FilterOperator.GREATER, date(2019, 1, 2))
+    expected = pd.Series([1.0, 1.0], index=[date(2019, 1, 1), date(2019, 1, 2)])
+    assert_series_equal(result, expected, obj="zap: remove dates after certain date in TS")
+
+    result = algebra.filter_dates(all_pos, FilterOperator.LESS, date(2019, 1, 3))
+    expected = pd.Series([1.0, 1.0], index=[date(2019, 1, 3), date(2019, 1, 4)])
+    assert_series_equal(result, expected, obj="zap: remove dates before certain date in TS")
+
+    result = algebra.filter_dates(all_pos, FilterOperator.L_EQUALS, date(2019, 1, 2))
+    expected = pd.Series([1.0, 1.0], index=[date(2019, 1, 3), date(2019, 1, 4)])
+    assert_series_equal(result, expected, obj="zap: remove dates on or before certain date in TS")
+
+    result = algebra.filter_dates(all_pos, FilterOperator.G_EQUALS, date(2019, 1, 3))
+    expected = pd.Series([1.0, 1.0], index=[date(2019, 1, 1), date(2019, 1, 2)])
+    assert_series_equal(result, expected, obj="zap: remove dates on or after certain date in TS")
+
+    result = algebra.filter_dates(all_pos, FilterOperator.N_EQUALS, date(2019, 1, 2))
+    expected = pd.Series([1.0], index=[date(2019, 1, 2)])
+    assert_series_equal(result, expected, obj="zap: remove all dates other than certain date in TS")
+
+    result = algebra.filter_dates(all_pos, FilterOperator.N_EQUALS, [date(2019, 1, 2), date(2019, 1, 4)])
+    expected = pd.Series([1.0, 1.0], index=[date(2019, 1, 2), date(2019, 1, 4)])
+    assert_series_equal(result, expected, obj="zap: remove all dates other than certain dates in TS")
+
+    with pytest.raises(MqValueError):
+        algebra.filter_dates(all_pos, 0, 0)
+    with pytest.raises(MqValueError):
+        algebra.filter_dates(all_pos, 0)
+    with pytest.raises(MqValueError):
+        algebra.filter_dates(all_pos, FilterOperator.GREATER, [date(2019, 1, 2), date(2019, 1, 4)])
+
+
 def test_smooth_spikes():
     s = pd.Series([1, 3])
     actual = smooth_spikes(s, 0.5)

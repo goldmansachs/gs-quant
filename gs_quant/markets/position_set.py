@@ -656,7 +656,7 @@ class PositionSet:
                     name=row.get('name'),
                     weight=equal_weight if equalize else row.get('weight'),
                     quantity=None if equalize else row.get('quantity'),
-                    tags=tuple(PositionTag(tag, get(row, tag)) for tag in tag_columns) if len(tag_columns) else None
+                    tags=list(PositionTag(tag, get(row, tag)) for tag in tag_columns) if len(tag_columns) else None
                 )
             )
 

@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
 
+import deprecation
 import pandas as pd
 from pydash import get
 
@@ -40,12 +41,10 @@ from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError, MqValueError
-from gs_quant.markets.factor import Factor
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport, \
     flatten_results_into_df, get_thematic_breakdown_as_df
-from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
 from gs_quant.target.reports import ReportStatus, ReportType
@@ -421,15 +420,12 @@ class PositionedEntity(metaclass=ABCMeta):
                            start: dt.date = DateLimit.LOW_LIMIT.value,
                            end: dt.date = dt.date.today(),
                            fields: [str] = None,
-                           position_type: PositionType = PositionType.CLOSE,
-                           include_all_business_days: bool = False) -> List[Dict]:
+                           position_type: PositionType = PositionType.CLOSE) -> List[Dict]:
         if self.positioned_entity_type == EntityType.ASSET:
-            if include_all_business_days:
-                raise MqError('"include_all_business_days" cannot be set to true for assets')
             return GsIndexApi.get_positions_data(self.id, start, end, fields, position_type)
         if self.positioned_entity_type == EntityType.PORTFOLIO:
-            return GsPortfolioApi.get_positions_data(self.id, start, end, fields,
-                                                     position_type, include_all_business_days)
+            raise MqError('Please use the get_positions_data function on the portfolio performance report using the '
+                          'PerformanceReport class')
         raise NotImplementedError
 
     def get_position_dates(self) -> Tuple[dt.date, ...]:
@@ -439,9 +435,9 @@ class PositionedEntity(metaclass=ABCMeta):
             return GsAssetApi.get_position_dates(asset_id=self.id)
         raise NotImplementedError
 
-    def get_reports(self) -> List[Report]:
+    def get_reports(self, tags: Dict = None) -> List[Report]:
         if self.positioned_entity_type == EntityType.PORTFOLIO:
-            reports_as_target = GsPortfolioApi.get_reports(portfolio_id=self.id)
+            reports_as_target = GsPortfolioApi.get_reports(portfolio_id=self.id, tags=tags)
         elif self.positioned_entity_type == EntityType.ASSET:
             reports_as_target = GsAssetApi.get_reports(asset_id=self.id)
         else:
@@ -452,12 +448,14 @@ class PositionedEntity(metaclass=ABCMeta):
                 report_objects.append(PerformanceReport.from_target(report))
             elif report.type in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
                 report_objects.append(FactorRiskReport.from_target(report))
+            elif report.type in [ReportType.Portfolio_Thematic_Analytics, ReportType.Asset_Thematic_Analytics]:
+                report_objects.append(ThematicReport.from_target(report))
             else:
                 report_objects.append(Report.from_target(report))
         return report_objects
 
-    def get_status_of_reports(self) -> pd.DataFrame:
-        reports = self.get_reports()
+    def get_status_of_reports(self, tags: Dict = None) -> pd.DataFrame:
+        reports = self.get_reports(tags)
         reports_dict = {
             'Name': [r.name for r in reports],
             'ID': [r.id for r in reports],
@@ -469,13 +467,14 @@ class PositionedEntity(metaclass=ABCMeta):
 
         return pd.DataFrame.from_dict(reports_dict)
 
-    def get_factor_risk_reports(self, fx_hedged: bool = None) -> List[FactorRiskReport]:
+    def get_factor_risk_reports(self, fx_hedged: bool = None, tags: Dict = None) -> List[FactorRiskReport]:
         if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
             position_source_type = self.positioned_entity_type.value.capitalize()
             reports = GsReportApi.get_reports(limit=100,
                                               position_source_type=position_source_type,
                                               position_source_id=self.id,
-                                              report_type=f'{position_source_type} Factor Risk')
+                                              report_type=f'{position_source_type} Factor Risk',
+                                              tags=tags)
             if fx_hedged:
                 reports = [report for report in reports if report.parameters.fx_hedged == fx_hedged]
             if len(reports) == 0:
@@ -486,9 +485,10 @@ class PositionedEntity(metaclass=ABCMeta):
     def get_factor_risk_report(self,
                                risk_model_id: str = None,
                                fx_hedged: bool = None,
-                               benchmark_id: str = None) -> FactorRiskReport:
+                               benchmark_id: str = None,
+                               tags: Dict = None) -> FactorRiskReport:
         position_source_type = self.positioned_entity_type.value.capitalize()
-        reports = self.get_factor_risk_reports(fx_hedged=fx_hedged)
+        reports = self.get_factor_risk_reports(fx_hedged=fx_hedged, tags=tags)
         if risk_model_id:
             reports = [report for report in reports if report.parameters.risk_model == risk_model_id]
         reports = [report for report in reports if report.parameters.benchmark == benchmark_id]
@@ -502,13 +502,14 @@ class PositionedEntity(metaclass=ABCMeta):
                           'function parameters.')
         return reports[0]
 
-    def get_thematic_report(self) -> ThematicReport:
+    def get_thematic_report(self, tags: Dict = None) -> ThematicReport:
         if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
             position_source_type = self.positioned_entity_type.value.capitalize()
             reports = GsReportApi.get_reports(limit=100,
                                               position_source_type=position_source_type,
                                               position_source_id=self.id,
-                                              report_type=f'{position_source_type} Thematic Analytics')
+                                              report_type=f'{position_source_type} Thematic Analytics',
+                                              tags=tags)
             if len(reports) == 0:
                 raise MqError(f'This {position_source_type} has no thematic analytics report.')
             return ThematicReport.from_target(reports[0])
@@ -812,6 +813,8 @@ class PositionedEntity(metaclass=ABCMeta):
         df = pd.DataFrame(df)
         return df.set_index('date')
 
+    @deprecation.deprecated(deprecated_in="0.9.110",
+                            details="Please use the same function using the ThematicReport class")
     def get_all_thematic_exposures(self,
                                    start_date: dt.date = None,
                                    end_date: dt.date = None,
@@ -825,6 +828,8 @@ class PositionedEntity(metaclass=ABCMeta):
                                               measures=[ThematicMeasure.ALL_THEMATIC_EXPOSURES])
         return flatten_results_into_df(results)
 
+    @deprecation.deprecated(deprecated_in="0.9.110",
+                            details="Please use the same function using the ThematicReport class")
     def get_top_five_thematic_exposures(self,
                                         start_date: dt.date = None,
                                         end_date: dt.date = None,
@@ -838,6 +843,8 @@ class PositionedEntity(metaclass=ABCMeta):
                                               measures=[ThematicMeasure.TOP_FIVE_THEMATIC_EXPOSURES])
         return flatten_results_into_df(results)
 
+    @deprecation.deprecated(deprecated_in="0.9.110",
+                            details="Please use the same function using the ThematicReport class")
     def get_bottom_five_thematic_exposures(self,
                                            start_date: dt.date = None,
                                            end_date: dt.date = None,
@@ -862,13 +869,3 @@ class PositionedEntity(metaclass=ABCMeta):
         :return: a Pandas DataFrame with results
         """
         return get_thematic_breakdown_as_df(entity_id=self.id, date=date, basket_id=basket_id)
-
-    def get_macro_exposure(self,
-                           model: MacroRiskModel,
-                           date: dt.date,
-                           factor_type: FactorType,
-                           factor_categories: List[Factor] = [],
-                           get_factors_by_name: bool = True,
-                           return_format: ReturnFormat = ReturnFormat.DATA_FRAME
-                           ) -> Union[Dict, pd.DataFrame]:
-        raise NotImplementedError

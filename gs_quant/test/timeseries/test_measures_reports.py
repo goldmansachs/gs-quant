@@ -985,5 +985,30 @@ def test_thematic_beta():
     replace.restore()
 
 
+def test_aum():
+    replace = Replacer()
+
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+    mock.return_value = PerformanceReport(report_id='RP1',
+                                          position_source_type='Portfolio',
+                                          position_source_id='MP1',
+                                          report_type='Portfolio Performance Analytics',
+                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_aum', Mock())
+    mock.return_value = {
+        '2022-07-01': 100,
+        '2022-07-02': 200
+    }
+
+    with DataContext(datetime.date(2022, 7, 1), datetime.date(2022, 7, 3)):
+        actual = mr.aum('RP1')
+        assert all(actual.values == [100, 200])
+
+    replace.restore()
+
+
 if __name__ == '__main__':
     pytest.main(args=[__file__])

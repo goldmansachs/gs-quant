@@ -19,7 +19,7 @@ from typing import Union, Iterable, Optional
 from gs_quant import risk
 from gs_quant.backtests.actions import Action, AddTradeAction, HedgeAction, EnterPositionQuantityScaledAction, \
     AddTradeActionInfo, HedgeActionInfo, ExitTradeAction, ExitTradeActionInfo, EnterPositionQuantityScaledActionInfo, \
-    RebalanceAction, RebalanceActionInfo
+    RebalanceAction, RebalanceActionInfo, ExitAllPositionsAction
 from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date
@@ -307,25 +307,41 @@ class ExitTradeActionImpl(ActionHandler):
 
             fut_dates = list(filter(lambda d: d >= s and type(d) is dt.date, backtest.states))
             for port_date in fut_dates:
+                res_fut = []
+                res_futures = []
                 pos_fut = list(backtest.portfolio_dict[port_date].all_instruments)
+                if backtest.results[port_date]:  # there are results in future dates which need removing
+                    res_fut = list(backtest.results[port_date].portfolio.all_instruments)
+                    res_futures = list(backtest.results[port_date].futures)
 
                 # We expect tradable names to be defined as <ActionName>_<TradeName>_<TradeDate>
                 if self.action.priceable_names:
                     # List of trade names provided -> TradeDate <= exit trigger date and TradeName is present in list
-                    indexes_to_remove = [i for i, x in enumerate(pos_fut) if
-                                         dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s and
-                                         x.name.split('_')[-2] in self.action.priceable_names]
+                    port_indexes_to_remove = [i for i, x in enumerate(pos_fut) if
+                                              dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s and
+                                              x.name.split('_')[-2] in self.action.priceable_names]
+                    result_indexes_to_remove = [i for i, x in enumerate(res_fut) if
+                                                dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s and
+                                                x.name.split('_')[-2] in self.action.priceable_names]
                 else:
                     # List of trade names not provided -> TradeDate <= exit trigger date
-                    indexes_to_remove = [i for i, x in enumerate(pos_fut) if
-                                         dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s]
+                    port_indexes_to_remove = [i for i, x in enumerate(pos_fut) if
+                                              dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s]
+                    result_indexes_to_remove = [i for i, x in enumerate(res_fut) if
+                                                dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s]
 
-                for index in sorted(indexes_to_remove, reverse=True):
+                for index in sorted(port_indexes_to_remove, reverse=True):
                     # Get list of trades' names that have been removed to check for their future cash flow date
                     if pos_fut[index].name not in trades_to_remove:
                         trades_to_remove.append(pos_fut[index].name)
                     del pos_fut[index]
+                for index in sorted(result_indexes_to_remove, reverse=True):
+                    del res_futures[index]
                 backtest.portfolio_dict[port_date] = Portfolio(tuple(pos_fut))
+                if result_indexes_to_remove:
+                    backtest.results[port_date] = PortfolioRiskResult(backtest.portfolio_dict[port_date],
+                                                                      backtest.results[port_date].risk_measures,
+                                                                      res_futures)
 
             for cp_date, cp_list in list(backtest.cash_payments.items()):
                 if cp_date > s:
@@ -404,6 +420,7 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
             EnterPositionQuantityScaledAction: EnterPositionQuantityScaledActionImpl,
             HedgeAction: HedgeActionImpl,
             ExitTradeAction: ExitTradeActionImpl,
+            ExitAllPositionsAction: ExitTradeActionImpl,
             RebalanceAction: RebalanceActionImpl
         }
         self.action_impl_map.update(action_impl_map)
@@ -445,10 +462,11 @@ class GenericEngine(BacktestBaseEngine):
         csa_term = context_params.get('csa_term')
         market_data_location = context_params.get('market_data_location')
         request_priority = context_params.get('request_priority', DEFAULT_REQUEST_PRIORITY)
+        is_batch = context_params.get('is_batch', True)
 
         context = PricingContext(set_parameters_only=True, show_progress=show_progress, csa_term=csa_term,
                                  market_data_location=market_data_location, request_priority=request_priority,
-                                 is_batch=True)
+                                 is_batch=is_batch)
 
         context._max_concurrent = 10000
 
@@ -456,7 +474,7 @@ class GenericEngine(BacktestBaseEngine):
 
     def run_backtest(self, strategy, start=None, end=None, frequency='1m', states=None, risks=None,
                      show_progress=True, csa_term=None, visible_to_gs=False, initial_value=0, result_ccy=None,
-                     holiday_calendar=None, market_data_location=None):
+                     holiday_calendar=None, market_data_location=None, is_batch=True):
         """
         run the backtest following the triggers and actions defined in the strategy.  If states are entered run on
         those dates otherwise build a schedule from the start, end, frequency
@@ -474,6 +492,7 @@ class GenericEngine(BacktestBaseEngine):
         :param result_ccy: ccy of all risks, pvs and cash
         :param holiday_calendar for date maths - list of dates
         :param market_data_location: location for the market data
+        :param is_batch: use websockets to reduce timeout issues
         :return: a backtest object containing the portfolios on each day and results which show all risks on all days
 
         """
@@ -483,7 +502,8 @@ class GenericEngine(BacktestBaseEngine):
         self._pricing_context_params = {'show_progress': show_progress,
                                         'csa_term': csa_term,
                                         'visible_to_gs': visible_to_gs,
-                                        'market_data_location': market_data_location}
+                                        'market_data_location': market_data_location,
+                                        'is_batch': is_batch}
 
         with self.new_pricing_context():
             return self.__run(strategy, start, end, frequency, states, risks, initial_value,

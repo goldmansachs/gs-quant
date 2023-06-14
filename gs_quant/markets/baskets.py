@@ -404,7 +404,7 @@ class Basket(Asset, PositionedEntity):
 
         :func:`get_rebalance_approval_status` :func:`update`
         """
-        return GsIndexApi.cancel_rebalance(self.id)
+        return GsIndexApi.cancel_rebalance(self.id, CustomBasketsRebalanceAction.default_instance())
 
     @_validate(ErrorMessage.UNINITIALIZED)
     def get_corporate_actions(self,

@@ -182,6 +182,17 @@ class ExitTradeAction(Action):
         return self._priceables_names
 
 
+class ExitAllPositionsAction(ExitTradeAction):
+    def __init__(self, name: str = None):
+        """
+        Fully exit all held positions
+        :param name: optional name of the action
+        """
+        super().__init__([], name)
+
+        self._calc_type = CalcType.path_dependent
+
+
 class HedgeAction(Action):
     def __init__(self, risk, priceables: Priceable = None, trade_duration: str = None, name: str = None,
                  csa_term: str = None, scaling_parameter: str = 'notional_amount',

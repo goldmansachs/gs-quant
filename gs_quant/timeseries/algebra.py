@@ -611,6 +611,65 @@ def filter_(x: pd.Series, operator: Optional[FilterOperator] = None, value: Opti
     return x
 
 
+@plot_function
+def filter_dates(x: pd.Series, operator: Optional[FilterOperator] = None,
+                 dates: Union[List[date], date] = None) -> pd.Series:
+    """
+    Removes dates where comparison with the operator and dates combination results in true, defaults to removing
+    missing values from the series
+
+    :param x: timeseries
+    :param operator: FilterOperator describing logic for date removal, e.g 'less_than'
+    :param dates: date or list of dates to remove from the series
+    :return: timeseries with specified dates removed
+
+
+    **Usage**
+
+    Remove each date determined by operator and date from timeseries where that expression yields true
+
+    **Examples**
+
+    Remove today from time series
+
+    >>> prices = generate_series(100)
+    >>> filter_dates(prices, FilterOperator.EQUALS, date.today())
+
+    Remove dates before today from time series
+
+    >>> prices = generate_series(100)
+    >>> filter_dates(prices, FilterOperator.LESS, date.today())
+
+    """
+
+    if dates is None and operator is None:
+        x = x.dropna(axis=0, how='any')
+    elif dates is None:
+        raise MqValueError('No date is specified for the operator')
+    elif isinstance(dates, list) and operator not in [FilterOperator.EQUALS, FilterOperator.N_EQUALS]:
+        raise MqValueError('Operator does not work for list of dates')
+    else:
+        if operator == FilterOperator.EQUALS:
+            dates = dates if isinstance(dates, list) else [dates]
+            x = x.loc[~x.index.isin(dates)]
+        elif operator == FilterOperator.N_EQUALS:
+            dates = dates if isinstance(dates, list) else [dates]
+            x = x.loc[x.index.isin(dates)]
+        elif operator == FilterOperator.GREATER:
+            x = x.loc[x.index <= dates]
+        elif operator == FilterOperator.LESS:
+            x = x.loc[x.index >= dates]
+        elif operator == FilterOperator.L_EQUALS:
+            x = x.loc[x.index > dates]
+        elif operator == FilterOperator.G_EQUALS:
+            x = x.loc[x.index < dates]
+        else:
+            if not isinstance(operator, str):
+                operator = str(operator)
+            raise MqValueError('Unexpected operator: ' + operator)
+    return x
+
+
 def _sum_boolean_series(*series):
     if not 2 <= len(series) <= 100:
         raise MqValueError('expected between 2 and 100 arguments')

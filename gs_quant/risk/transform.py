@@ -44,12 +44,11 @@ class ResultWithInfoAggregator(Transformer[Iterable[ResultType], FloatWithInfo])
 
     def apply(self, results: Iterable[Union[float, FloatWithInfo, SeriesWithInfo, DataFrameWithInfo]],
               *args, **kwargs) -> Iterable[Union[float, FloatWithInfo]]:
-        risk_key = None
-        flattened_results = set()
+        flattened_results = []
 
         for result in results:
             if isinstance(result, float):
-                flattened_results.add(result)
+                flattened_results.append(result)
             else:
                 if isinstance(result, FloatWithInfo):
                     val = result.raw_value
@@ -59,6 +58,8 @@ class ResultWithInfoAggregator(Transformer[Iterable[ResultType], FloatWithInfo])
                     if self.filter_coord is not None:
                         df = result.filter_by_coord(self.filter_coord)
                         val = getattr(df, self.risk_col).sum()
+                    elif result.empty:
+                        val = 0
                     else:
                         val = getattr(result, self.risk_col).sum()
                 else:
@@ -66,7 +67,7 @@ class ResultWithInfoAggregator(Transformer[Iterable[ResultType], FloatWithInfo])
                 risk_key = result.risk_key
                 unit = result.unit
                 error = result.error
-                flattened_results.add(FloatWithInfo(value=val, risk_key=risk_key, unit=unit, error=error))
+                flattened_results.append(FloatWithInfo(value=val, risk_key=risk_key, unit=unit, error=error))
 
         return flattened_results
 

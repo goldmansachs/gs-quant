@@ -281,6 +281,33 @@ def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
     return _extract_series_from_df(df, QueryType.THEMATIC_BETA)
 
 
+@plot_measure_entity(EntityType.REPORT, [QueryType.AUM])
+def aum(report_id: str, *, source: str = None,
+        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    AUM of the portfolio
+
+    :param report_id: id of performance report
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio long pnl
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    performance_report = PerformanceReport.get(report_id)
+    portfolio_id = performance_report.position_source_id
+    aum_curve = PortfolioManager(portfolio_id).get_aum(start_date=start_date, end_date=end_date)
+    aum_dict = [{'date': key, 'aum': aum_curve[key]} for key in aum_curve]
+
+    # Create and return timeseries
+    df = pd.DataFrame(aum_dict)
+    if not df.empty:
+        df.set_index('date', inplace=True)
+        df.index = pd.to_datetime(df.index)
+    return _extract_series_from_df(df, QueryType.AUM)
+
+
 def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, unit: Unit = Unit.NOTIONAL) -> pd.Series:
     # Check params
     report = FactorRiskReport.get(report_id)

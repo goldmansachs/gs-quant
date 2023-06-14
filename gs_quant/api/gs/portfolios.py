@@ -15,6 +15,7 @@ under the License.
 """
 import datetime as dt
 import logging
+from time import sleep
 from typing import Tuple, Union, List, Dict
 
 from gs_quant.common import PositionType
@@ -196,6 +197,7 @@ class GsPortfolioApi:
                            start_date: dt.date,
                            end_date: dt.date,
                            fields: List[str] = None,
+                           performance_report_id: str = None,
                            position_type: PositionType = None,
                            include_all_business_days: bool = False) -> List[dict]:
         start_date_str = start_date.isoformat()
@@ -203,6 +205,8 @@ class GsPortfolioApi:
         url = f'/portfolios/{portfolio_id}/positions/data?startDate={start_date_str}&endDate={end_date_str}'
         if fields is not None:
             url += '&fields='.join([''] + fields)
+        if performance_report_id is not None:
+            url += f'&reportId={performance_report_id}'
         if position_type is not None:
             url += '&type=' + position_type.value
         if include_all_business_days:
@@ -265,8 +269,12 @@ class GsPortfolioApi:
         return GsSession.current._get(f'/portfolios/{portfolio_id}/models?sortByTerm={term.value}')['results']
 
     @classmethod
-    def get_reports(cls, portfolio_id: str) -> Tuple[Report, ...]:
-        return GsSession.current._get('/portfolios/{id}/reports'.format(id=portfolio_id), cls=Report)['results']
+    def get_reports(cls, portfolio_id: str, tags: Dict) -> Tuple[Report, ...]:
+        results = GsSession.current._get('/portfolios/{id}/reports'.format(id=portfolio_id), cls=Report)['results']
+        if tags is not None:
+            tags_as_list = [{'name': key, 'value': tags[key]} for key in tags]
+            results = [r for r in results if r.parameters.tags == tags_as_list]
+        return results
 
     @classmethod
     def schedule_reports(cls,
@@ -279,7 +287,18 @@ class GsPortfolioApi:
             payload['startDate'] = start_date.isoformat()
         if end_date is not None:
             payload['endDate'] = end_date.isoformat()
-        return GsSession.current._post('/portfolios/{id}/schedule'.format(id=portfolio_id), payload)
+        portfolio = cls.get_portfolio(portfolio_id)
+        if portfolio.tag_name_hierarchy is None or len(portfolio.tag_name_hierarchy) == 0:
+            GsSession.current._post(f'/portfolios/{portfolio_id}/schedule', payload)
+        else:
+            count = 10
+            for report_id in portfolio.report_ids:
+                if count == 0:
+                    sleep(2)
+                    count = 10
+                else:
+                    GsSession.current._post(f'/reports/{report_id}/schedule', payload)
+                    count -= 1
 
     @classmethod
     def get_schedule_dates(cls,
@@ -313,16 +332,23 @@ class GsPortfolioApi:
         return GsSession.current._post(url, payload)
 
     @classmethod
+    def update_portfolio_tree(cls, portfolio_id: str):
+        return GsSession.current._post(f'/portfolios/{portfolio_id}/tree', {})
+
+    @classmethod
     def get_attribution(cls,
                         portfolio_id: str,
                         start_date: dt.date = None,
                         end_date: dt.date = None,
-                        currency: Currency = None) -> Dict:
+                        currency: Currency = None,
+                        performance_report_id: str = None) -> Dict:
         url = f'/attribution/{portfolio_id}?'
         if start_date:
             url += f"&startDate={start_date.strftime('%Y-%m-%d')}"
         if end_date:
             url += f"&endDate={end_date.strftime('%Y-%m-%d')}"
         if currency:
-            url += f"currency={currency.value}"
+            url += f"&currency={currency.value}"
+        if performance_report_id:
+            url += f'&reportId={performance_report_id}'
         return GsSession.current._get(url)['results']

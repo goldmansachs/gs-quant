@@ -627,6 +627,19 @@ class PerformanceReport(Report):
         results = GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
+    def get_positions_data(self,
+                           start: dt.date = None,
+                           end: dt.date = dt.date.today(),
+                           fields: [str] = None,
+                           include_all_business_days: bool = False) -> List[Dict]:
+        return GsPortfolioApi.get_positions_data(self.position_source_id,
+                                                 start,
+                                                 end,
+                                                 fields,
+                                                 performance_report_id=self.id,
+                                                 include_all_business_days=include_all_business_days)
+        raise NotImplementedError
+
     def get_portfolio_constituents(self,
                                    fields: List[str] = None,
                                    start_date: dt.date = None,
@@ -653,6 +666,21 @@ class PerformanceReport(Report):
                    for query in queries]
         results = sum(results, [])
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
+
+    def get_pnl_contribution(self,
+                             start_date: dt.date = None,
+                             end_date: dt.date = None,
+                             currency: Currency = None) -> pd.DataFrame:
+        """
+        Get PnL Contribution broken down by constituents
+
+        :param start_date: optional start date
+        :param end_date: optional end date
+        :param currency: optional currency; defaults to your portfolio's currency
+        :return: a Pandas DataFrame of results
+        """
+        return pd.DataFrame(GsPortfolioApi.get_attribution(self.position_source_id, start_date, end_date,
+                                                           currency, self.id))
 
     def get_brinson_attribution(self,
                                 benchmark: str = None,

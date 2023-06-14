@@ -944,10 +944,11 @@ class MarqueeRiskModel(RiskModel):
         """
         upload_model_data(self.id, data, partial_upload=True, final_upload=final_upload)
 
-    def upload_asset_coverage_data(self, date: dt.date = None):
+    def upload_asset_coverage_data(self, date: dt.date = None, batch_size: int = 100):
         """ Upload to the coverage dataset for given risk model and date
 
         :param date: Date to upload coverage data for, default date is last date from risk model calendar
+        :param batch_size: Number of assets to upload in one request
 
         Posting to the coverage dataset within the last 5 days will enable the risk model to be seen in the
         Marquee UI dropdown for users with "execute" capabilities
@@ -959,7 +960,7 @@ class MarqueeRiskModel(RiskModel):
                                             format=ReturnFormat.JSON).get(date)
         if not gsid_list:
             raise MqRequestError(404, f'No asset data found on {date}')
-        batch_and_upload_coverage_data(date, gsid_list, self.id)
+        batch_and_upload_coverage_data(date, gsid_list, self.id, batch_size)
 
     @classmethod
     def from_target(cls, model):

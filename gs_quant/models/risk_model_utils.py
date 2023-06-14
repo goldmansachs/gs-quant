@@ -228,15 +228,15 @@ def _batch_data_v2(model_id: str, data: dict, data_type: str, max_asset_size: in
                 raise e
 
 
-def batch_and_upload_coverage_data(date: dt.date, gsid_list: list, model_id: str):
+def batch_and_upload_coverage_data(date: dt.date, gsid_list: list, model_id: str, batch_size: int):
     update_time = dt.datetime.today().strftime("%Y-%m-%dT%H:%M:%SZ")
     request_array = [{'date': date.strftime('%Y-%m-%d'),
                       'gsid': gsid,
                       'riskModel': model_id,
                       'updateTime': update_time} for gsid in set(gsid_list)]
     logging.info(f"Uploading {len(request_array)} gsids to asset coverage dataset")
-    list_of_requests = list(divide_request(request_array, 1000))
-    logging.info(f"Uploading in {len(list_of_requests)} batches of 1000 gsids")
+    list_of_requests = list(divide_request(request_array, batch_size))
+    logging.info(f"Uploading in {len(list_of_requests)} batches of {batch_size} gsids")
     [_repeat_try_catch_request(GsDataApi.upload_data, data=data, dataset_id="RISK_MODEL_ASSET_COVERAGE") for data in
      list_of_requests]
 
