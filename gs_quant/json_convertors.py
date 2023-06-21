@@ -59,6 +59,11 @@ def decode_dict_date_key(value):
     return {dt.date.fromisoformat(d): v for d, v in value.items()} if value is not None else None
 
 
+def decode_dict_dict_date_key(value):
+    return {k: {dt.date.fromisoformat(d): v for d, v in val.items()} if val is not None else None
+            for k, val in value.items()} if value is not None else None
+
+
 def decode_dict_date_value(value):
     return {k: dt.date.fromisoformat(d) for k, d in value.items()} if value is not None else None
 

@@ -331,9 +331,9 @@ class ExitTradeActionImpl(ActionHandler):
                                                 dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s]
 
                 for index in sorted(port_indexes_to_remove, reverse=True):
-                    # Get list of trades' names that have been removed to check for their future cash flow date
+                    # Get list of trades that have been removed to check for their future cash flow date
                     if pos_fut[index].name not in trades_to_remove:
-                        trades_to_remove.append(pos_fut[index].name)
+                        trades_to_remove.append(pos_fut[index])
                     del pos_fut[index]
                 for index in sorted(result_indexes_to_remove, reverse=True):
                     del res_futures[index]
@@ -345,7 +345,8 @@ class ExitTradeActionImpl(ActionHandler):
 
             for cp_date, cp_list in list(backtest.cash_payments.items()):
                 if cp_date > s:
-                    indexes_to_remove = [i for i, cp in enumerate(cp_list) if cp.trade.name in trades_to_remove]
+                    indexes_to_remove = [i for i, cp in enumerate(cp_list)
+                                         if cp.trade.name in [x.name for x in trades_to_remove]]
                     for index in sorted(indexes_to_remove, reverse=True):
                         cp = cp_list[index]
                         prev_pos = [i for i, x in enumerate(backtest.cash_payments[s]) if cp.trade.name == x.trade.name]
@@ -363,6 +364,10 @@ class ExitTradeActionImpl(ActionHandler):
 
                     if not backtest.cash_payments[cp_date]:
                         del backtest.cash_payments[cp_date]
+
+            for trade in trades_to_remove:
+                if trade.name not in [x.trade.name for x in backtest.cash_payments[s]]:
+                    backtest.cash_payments[s].append(CashPayment(trade, effective_date=s))
 
         return backtest
 

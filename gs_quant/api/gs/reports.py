@@ -124,6 +124,29 @@ class GsReportApi:
                                        status_body)
 
     @classmethod
+    def get_custom_aum(cls,
+                       report_id: str,
+                       start_date: dt.date = None,
+                       end_date: dt.date = None) -> dict:
+        url = f'/reports/{report_id}/aum?'
+        if start_date:
+            url += f"&startDate={start_date.strftime('%Y-%m-%d')}"
+        if end_date:
+            url += f"&endDate={end_date.strftime('%Y-%m-%d')}"
+        return GsSession.current._get(url)['data']
+
+    @classmethod
+    def upload_custom_aum(cls,
+                          report_id: str,
+                          aum_data: List[dict],
+                          clear_existing_data: bool = None) -> dict:
+        url = f'/reports/{report_id}/aum'
+        payload = {'data': aum_data}
+        if clear_existing_data:
+            url += '?clearExistingData=true'
+        return GsSession.current._post(url, payload)
+
+    @classmethod
     def get_factor_risk_report_results(cls,
                                        risk_report_id: str,
                                        view: str = None,

@@ -30,8 +30,7 @@ from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.portfolio_manager_utils import build_exposure_df, build_portfolio_constituents_df, \
     build_sensitivity_df
-from gs_quant.markets.report import PerformanceReport
-from gs_quant.markets.report import ReportJobFuture
+from gs_quant.markets.report import PerformanceReport, ReportJobFuture
 from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType
 from gs_quant.target.common import Currency
 from gs_quant.target.portfolios import RiskAumSource
@@ -39,6 +38,9 @@ from gs_quant.target.portfolios import RiskAumSource
 _logger = logging.getLogger(__name__)
 
 
+@deprecation.deprecated(deprecated_in='1.0.10',
+                        details='portfolio_manager.CustomAUMDataPoint is now deprecated, please use '
+                                'report.CustomAUMDataPoint instead.')
 class CustomAUMDataPoint:
     """
 
@@ -328,6 +330,9 @@ class PortfolioManager(PositionedEntity):
         """
         return GsPortfolioApi.get_schedule_dates(self.id, backcast)
 
+    @deprecation.deprecated(deprecated_in='1.0.10',
+                            details='PortfolioManager.get_aum_source is now deprecated, please use '
+                                    'PerformanceReport.get_aum_source instead.')
     def get_aum_source(self) -> RiskAumSource:
         """
         Get portfolio AUM Source
@@ -337,6 +342,9 @@ class PortfolioManager(PositionedEntity):
         portfolio = GsPortfolioApi.get_portfolio(self.portfolio_id)
         return portfolio.aum_source if portfolio.aum_source is not None else RiskAumSource.Long
 
+    @deprecation.deprecated(deprecated_in='1.0.10',
+                            details='PortfolioManager.set_aum_source is now deprecated, please use '
+                                    'PerformanceReport.set_aum_source instead.')
     def set_aum_source(self,
                        aum_source: RiskAumSource):
         """
@@ -349,6 +357,9 @@ class PortfolioManager(PositionedEntity):
         portfolio.aum_source = aum_source
         GsPortfolioApi.update_portfolio(portfolio)
 
+    @deprecation.deprecated(deprecated_in='1.0.10',
+                            details='PortfolioManager.get_custom_aum is now deprecated, please use '
+                                    'PerformanceReport.get_custom_aum instead.')
     def get_custom_aum(self,
                        start_date: dt.date = None,
                        end_date: dt.date = None) -> List[CustomAUMDataPoint]:
@@ -363,6 +374,9 @@ class PortfolioManager(PositionedEntity):
         return [CustomAUMDataPoint(date=dt.datetime.strptime(data['date'], '%Y-%m-%d'),
                                    aum=data['aum']) for data in aum_data]
 
+    @deprecation.deprecated(deprecated_in='1.0.10',
+                            details='PortfolioManager.get_aum is now deprecated, please use '
+                                    'PerformanceReport.get_aum instead.')
     def get_aum(self,
                 start_date: dt.date,
                 end_date: dt.date):
@@ -390,6 +404,9 @@ class PortfolioManager(PositionedEntity):
             aum = self.get_performance_report().get_net_exposure(start_date=start_date, end_date=end_date)
             return {row['date']: row['netExposure'] for index, row in aum.iterrows()}
 
+    @deprecation.deprecated(deprecated_in='1.0.10',
+                            details='PortfolioManager.upload_custom_aum is now deprecated, please use '
+                                    'PerformanceReport.upload_custom_aum instead.')
     def upload_custom_aum(self,
                           aum_data: List[CustomAUMDataPoint],
                           clear_existing_data: bool = None):

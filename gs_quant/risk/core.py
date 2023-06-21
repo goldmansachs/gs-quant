@@ -366,11 +366,11 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
 class MQVSValidationTarget:
     env: Optional[str] = None
     operator: Optional[str] = None
-    mqGroups: Optional[Tuple[str]] = None
+    mqGroups: Optional[Tuple[str, ...]] = None
     users: Optional[Tuple[str]] = None
-    assetClasses: Optional[Tuple[str]] = None
-    assets: Optional[Tuple[str]] = None
-    legTypes: Optional[Tuple[str]] = None
+    assetClasses: Optional[Tuple[str, ...]] = None
+    assets: Optional[Tuple[str, ...]] = None
+    legTypes: Optional[Tuple[str, ...]] = None
     legFields: Optional[Dict[str, str]] = None
 
 
@@ -378,7 +378,7 @@ class MQVSValidationTarget:
 @dataclass
 class MQVSValidatorDefn:
     validatorType: str
-    targets: Tuple[MQVSValidationTarget]
+    targets: Tuple[MQVSValidationTarget, ...]
     args: Dict[str, str]
     groupId: Optional[str] = None
     groupIndex: Optional[int] = None

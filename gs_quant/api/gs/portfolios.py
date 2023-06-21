@@ -15,6 +15,7 @@ under the License.
 """
 import datetime as dt
 import logging
+import deprecation
 from time import sleep
 from typing import Tuple, Union, List, Dict
 
@@ -309,6 +310,9 @@ class GsPortfolioApi:
                 dt.datetime.strptime(results['endDate'], '%Y-%m-%d').date()]
 
     @classmethod
+    @deprecation.deprecated(deprecated_in='1.0.10',
+                            details='GsPortfolioApi.get_custom_aum is now deprecated, please use '
+                                    'GsReportApi.get_custom_aum instead.')
     def get_custom_aum(cls,
                        portfolio_id: str,
                        start_date: dt.date = None,
@@ -321,6 +325,9 @@ class GsPortfolioApi:
         return GsSession.current._get(url)['data']
 
     @classmethod
+    @deprecation.deprecated(deprecated_in='1.0.10',
+                            details='GsPortfolioApi.upload_custom_aum is now deprecated, please use '
+                                    'GsReportApi.upload_custom_aum instead.')
     def upload_custom_aum(cls,
                           portfolio_id: str,
                           aum_data: List[Dict],

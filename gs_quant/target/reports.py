@@ -103,7 +103,7 @@ class ReportType(EnumBase, Enum):
     Analytics = 'Analytics'
     Risk_Calculation = 'Risk Calculation'
     Factor_Overview_Email = 'Factor Overview Email'
-    PCO = 'PCO'    
+    PCO = 'PCO'
 
 
 @handle_camel_case_args

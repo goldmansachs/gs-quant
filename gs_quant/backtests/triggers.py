@@ -411,6 +411,7 @@ class MeanReversionTrigger(Trigger):
                 return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=1)})
         else:
             raise RuntimeWarning(f'unexpected current position: {self._current_position}')
+        return TriggerInfo(False)
 
 
 class OrdersGeneratorTrigger(Trigger):

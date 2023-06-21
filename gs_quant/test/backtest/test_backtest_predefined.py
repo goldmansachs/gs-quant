@@ -116,7 +116,7 @@ def test_backtest_predefined_timezone_aware():
     # instantiate a new strategy
     strategy = Strategy(None, triggers=simple_date_trigger)
 
-    engine = PredefinedAssetEngine(data_mgr=data_manager, tz=timezone(tz), calendars='Weekend')
+    engine = PredefinedAssetEngine(data_mgr=data_manager, tz=timezone(tz))
     backtest = engine.run_backtest(strategy=strategy, start=states[0], end=states[-1], states=states)
     assert len(backtest.trade_ledger()) == 364
 

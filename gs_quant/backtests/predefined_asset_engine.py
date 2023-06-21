@@ -104,7 +104,7 @@ class PredefinedAssetEngine(BacktestBaseEngine):
 
     def __init__(self,
                  data_mgr: DataManager = DataManager(),
-                 calendars: Union[str, Tuple[str, ...]] = 'Weekend',
+                 calendars: Union[str, Tuple[str, ...]] = None,
                  tz: timezone = timezone('UTC'),
                  valuation_method: ValuationMethod = ValuationMethod(ValuationFixingType.PRICE),
                  action_impl_map=None):
@@ -143,13 +143,13 @@ class PredefinedAssetEngine(BacktestBaseEngine):
 
         for d in dates:
             if isinstance(d, dt.datetime):
-                if self.calendars == 'Weekend' or is_business_day(d.date(), self.calendars):
+                if self.calendars is None or is_business_day(d.date(), self.calendars):
                     all_times.append(d)
                     for t in times:
                         if d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None:
                             all_times.append(d.tzinfo.localize(dt.datetime.combine(d.date(), t)))
             else:
-                if self.calendars == 'Weekend' or is_business_day(d, self.calendars):
+                if self.calendars is None or is_business_day(d, self.calendars):
                     for t in times:
                         all_times.append(dt.datetime.combine(d, t))
         all_times = list(set(all_times))

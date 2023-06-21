@@ -554,7 +554,7 @@ class PositionSet:
         converted_positions = []
         for p in positions:
             asset = get(position_data, p.asset_id)
-            tags = {t.name: t.value for t in p.tags} if p.tags else None
+            tags = p.tags if p.tags else None
             position = Position(identifier=get(asset, 'bbid'), name=get(asset, 'name'),
                                 asset_id=p.asset_id, quantity=p.quantity, tags=tags)
             converted_positions.append(position)

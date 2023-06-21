@@ -20,9 +20,11 @@ import pytest
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.thematics import GsThematicApi
+from gs_quant.api.gs.portfolios import Portfolio
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport, flatten_results_into_df
 from gs_quant.session import *
-from gs_quant.target.reports import ReportStatus, PositionSourceType, ReportType, ReportParameters, Report
+from gs_quant.target.reports import *
+from gs_quant.target.portfolios import RiskAumSource
 
 fake_pfr = FactorRiskReport(risk_model_id='AXUS4M',
                             fx_hedged=True,
@@ -117,6 +119,55 @@ thematic_results = [
     }
 ]
 
+custom_aum = {
+    'data': [
+        {
+            'date': '2023-06-01',
+            'aum': 100
+        },
+        {
+            'date': '2023-06-02',
+            'aum': 100
+        },
+        {
+            'date': '2023-06-05',
+            'aum': 100
+        },
+        {
+            'date': '2023-06-06',
+            'aum': 100
+        }
+    ]
+}
+
+ppa_data = [
+    {
+        'date': "2023-06-01",
+        'reportId': "PPAID",
+        'netExposure': 2414214.74
+    },
+    {
+        'date': "2023-06-02",
+        'reportId': "PPAID",
+        'netExposure': 2414214.74
+    },
+    {
+        'date': "2023-06-05",
+        'reportId': "PPAID",
+        'netExposure': 2414214.74
+    },
+    {
+        'date': "2023-06-06",
+        'reportId': "PPAID",
+        'netExposure': 2414214.74
+    },
+    {
+        'date': "2023-06-07",
+        'reportId': "PPAID",
+        'netExposure': 2414214.74
+    }
+]
+
 
 def test_get_performance_report(mocker):
     # mock GsSession
@@ -137,6 +188,57 @@ def test_get_performance_report(mocker):
     # run test
     response = PerformanceReport.get('PPAID')
     assert response.type == ReportType.Portfolio_Performance_Analytics
+
+
+def test_get_aum_source(mocker):
+    portfolio = Portfolio(id='MP123', currency='USD', name='Example Port', aum_source=RiskAumSource.Gross)
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=portfolio)
+
+    # run test
+    response = fake_ppa.get_aum_source()
+    assert response == RiskAumSource.Gross
+
+
+def test_get_custom_aum(mocker):
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=custom_aum)
+
+    # run test
+    response = fake_ppa.get_custom_aum()
+    assert len(response) == 4
+
+
+def test_get_aum(mocker):
+    portfolio = Portfolio(id='MP123', currency='USD', name='Example Port', aum_source=RiskAumSource.Net)
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=portfolio)
+    mocker.patch.object(GsDataApi, 'query_data', return_value=ppa_data)
+
+    # run test
+    response = fake_ppa.get_aum(start_date=dt.date(2023, 6, 1), end_date=dt.date(2023, 6, 7))
+    assert len(response) == 5
 
 
 def test_get_risk_model_id():

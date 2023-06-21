@@ -296,8 +296,7 @@ def aum(report_id: str, *, source: str = None,
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     performance_report = PerformanceReport.get(report_id)
-    portfolio_id = performance_report.position_source_id
-    aum_curve = PortfolioManager(portfolio_id).get_aum(start_date=start_date, end_date=end_date)
+    aum_curve = performance_report.get_aum(start_date=start_date, end_date=end_date)
     aum_dict = [{'date': key, 'aum': aum_curve[key]} for key in aum_curve]
 
     # Create and return timeseries
@@ -334,9 +333,10 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
         if report.position_source_type != PositionSourceType.Portfolio:
             raise MqValueError('Unit can only be set to percent for portfolio reports')
         pm = PortfolioManager(report.position_source_id)
+        performance_report = pm.get_performance_report()
         if query_type == QueryType.FACTOR_PNL:
             last_date = dt.datetime.strptime(max([d['date'] for d in factor_data]), '%Y-%m-%d').date()
-            aum = pm.get_aum(start_date=last_date, end_date=last_date)
+            aum = performance_report.get_aum(start_date=last_date, end_date=last_date)
             last_aum = aum.get(last_date.strftime('%Y-%m-%d'))
             if last_aum is None:
                 raise MqValueError('Cannot convert to percent: Missing AUM on the last date in the date range')
@@ -344,7 +344,7 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
         else:
             start_date = dt.datetime.strptime(min([d['date'] for d in factor_data]), '%Y-%m-%d').date()
             end_date = dt.datetime.strptime(max([d['date'] for d in factor_data]), '%Y-%m-%d').date()
-            aum = pm.get_aum(start_date=start_date, end_date=end_date)
+            aum = performance_report.get_aum(start_date=start_date, end_date=end_date)
             for data in factor_data:
                 if aum.get(data['date']) is None:
                     raise MqValueError('Cannot convert to percent: Missing AUM on some dates in the date range')

@@ -26,8 +26,7 @@ from gs_quant.api.gs.assets import GsTemporalXRef
 from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
-from gs_quant.markets.portfolio_manager import CustomAUMDataPoint
-from gs_quant.markets.report import PerformanceReport, ThematicReport
+from gs_quant.markets.report import PerformanceReport, ThematicReport, CustomAUMDataPoint
 from gs_quant.markets.securities import Stock
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
 from gs_quant.target.common import ReportParameters, XRef
@@ -53,12 +52,12 @@ asset_factor_risk_report = Report(position_source_id='position source id',
                                   parameters=ReportParameters(risk_model='risk_model_id'),
                                   status='new')
 
-ppa_report = Report(position_source_id='position source id',
-                    position_source_type=PositionSourceType.Portfolio,
-                    type_=ReportType.Portfolio_Performance_Analytics,
-                    id_='report_id',
-                    parameters=ReportParameters(risk_model='risk_model_id'),
-                    status='new')
+ppa_report = PerformanceReport(position_source_id='position source id',
+                               position_source_type=PositionSourceType.Portfolio,
+                               type_=ReportType.Portfolio_Performance_Analytics,
+                               id_='report_id',
+                               parameters=ReportParameters(risk_model='risk_model_id'),
+                               status='new')
 
 factor_data = [
     {
@@ -413,13 +412,17 @@ def test_factor_exposure_percent():
         'factorCategory': 'Factor Name'
     }]
 
+    # mock getting performance report
+    mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
+    mock.return_value = ppa_report
+
     # mock getting aum source
-    mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_aum_source', Mock())
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
     mock.return_value = RiskAumSource.Custom_AUM
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum
-        mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_custom_aum', Mock())
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_custom_aum', Mock())
         mock.return_value = [CustomAUMDataPoint(date=datetime.date(2020, 11, 23), aum=2),
                              CustomAUMDataPoint(date=datetime.date(2020, 11, 24), aum=2),
                              CustomAUMDataPoint(date=datetime.date(2020, 11, 25), aum=2)]
@@ -428,7 +431,7 @@ def test_factor_exposure_percent():
 
     with pytest.raises(MqValueError):
         # mock getting aum with missing data
-        mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_custom_aum', Mock())
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_custom_aum', Mock())
         mock.return_value = [CustomAUMDataPoint(date=datetime.date(2020, 11, 23), aum=2),
                              CustomAUMDataPoint(date=datetime.date(2020, 11, 25), aum=2)]
         mr.factor_exposure('report_id', 'Factor Name', 'Percent')
@@ -521,7 +524,7 @@ def test_factor_pnl_percent():
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
-        mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_aum_source', Mock())
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
         mock.return_value = RiskAumSource.Long
 
         # mock getting performance report
@@ -536,7 +539,7 @@ def test_factor_pnl_percent():
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
-        mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_aum_source', Mock())
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
         mock.return_value = RiskAumSource.Short
 
         # mock getting performance report
@@ -551,7 +554,7 @@ def test_factor_pnl_percent():
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
-        mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_aum_source', Mock())
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
         mock.return_value = RiskAumSource.Gross
 
         # mock getting performance report
@@ -566,7 +569,7 @@ def test_factor_pnl_percent():
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
-        mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_aum_source', Mock())
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
         mock.return_value = RiskAumSource.Net
 
         # mock getting performance report
@@ -581,7 +584,7 @@ def test_factor_pnl_percent():
 
     with pytest.raises(MqValueError):
         # mock getting aum source
-        mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_aum_source', Mock())
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
         mock.return_value = RiskAumSource.Net
 
         # mock getting performance report
@@ -997,7 +1000,7 @@ def test_aum():
                                           parameters=ReportParameters(transaction_cost_model='FIXED'))
 
     # mock PerformanceReport.get()
-    mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_aum', Mock())
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = {
         '2022-07-01': 100,
         '2022-07-02': 200
