@@ -116,7 +116,7 @@ class GenericDataSource(DataSource):
         :return: pd.Series
         """
         if isinstance(end, int):
-            return self._data_set.loc[:start].tail(end)
+            return self._data_set.loc[self._data_set.index < start].tail(end)
         return self._data_set.loc[(start < self._data_set.index) & (self._data_set.index <= end)]
 
 

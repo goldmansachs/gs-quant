@@ -27,6 +27,7 @@ from gs_quant.datetime import is_business_day, prev_business_date, business_day_
 from pandas import bdate_range, to_datetime
 from pandas.tseries.offsets import BDay
 from collections import deque
+from itertools import compress
 from pytz import timezone
 from functools import reduce
 import datetime as dt
@@ -141,27 +142,29 @@ class PredefinedAssetEngine(BacktestBaseEngine):
         times.append(self._eod_valuation_time())
         times = list(dict.fromkeys(times))
 
+        if self.calendars is not None:
+            dates = list(compress(dates, is_business_day(dates, (None if self.calendars.lower() == 'weekend'
+                                                                 else self.calendars))))
+
         for d in dates:
             if isinstance(d, dt.datetime):
-                if self.calendars is None or is_business_day(d.date(), self.calendars):
-                    all_times.append(d)
-                    for t in times:
-                        if d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None:
-                            all_times.append(d.tzinfo.localize(dt.datetime.combine(d.date(), t)))
+                all_times.append(d)
+                for t in times:
+                    if d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None:
+                        all_times.append(d.tzinfo.localize(dt.datetime.combine(d.date(), t)))
             else:
-                if self.calendars is None or is_business_day(d, self.calendars):
-                    for t in times:
-                        all_times.append(dt.datetime.combine(d, t))
+                for t in times:
+                    all_times.append(dt.datetime.combine(d, t))
         all_times = list(set(all_times))
         all_times.sort()
         return all_times
 
     def _adjust_date(self, date):
         date = (date + BDay(1) - BDay(1)).date()  # 1st move to latest weekday.
-        if self.calendars == 'Weekend' or is_business_day(date, self.calendars):
+        if self.calendars is None or self.calendars.lower() == 'weekend' or is_business_day(date, self.calendars):
             return date
         else:
-            return prev_business_date(date, self.calendars)
+            return prev_business_date(date, None if self.calendars.lower() == 'weekend' else self.calendars)
 
     def run_backtest(self, strategy, start, end, frequency="B", states=None, initial_value=100):
         # initialize backtest object
@@ -179,8 +182,9 @@ class PredefinedAssetEngine(BacktestBaseEngine):
             backtest.set_start_date(adjusted_start)
 
             # create timer
-            timer_start = (adjusted_start + BDay(1)).date() if self.calendars == 'Weekend' \
-                else business_day_offset(adjusted_start, 1, roll='forward', calendars=self.calendars)
+            timer_start = (adjusted_start + BDay(1)).date() if self.calendars is None \
+                else business_day_offset(adjusted_start, 1, roll='forward',
+                                         calendars=None if self.calendars.lower() == 'weekend' else self.calendars)
             timer_end = self._adjust_date(end)
             timer = self._timer(strategy, timer_start, timer_end, frequency)
         self._run(strategy, timer, backtest)

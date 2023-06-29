@@ -17,6 +17,7 @@ Algebra
    divide
    exp
    filter_
+   filter_dates
    floor
    floordiv
    if_

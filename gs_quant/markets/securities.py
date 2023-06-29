@@ -796,12 +796,12 @@ class Stock(Asset):
         if _type not in BasketType.to_list():
             raise MqValueError(f'Asset {basket_identifier} of type {_type} is not a Custom or Research Basket.')
 
-        query = DataQuery(where={'assetId': self.get_marquee_id(), 'basketId': _id},
+        query = DataQuery(where={'gsid': self.get_identifier(AssetIdentifier.GSID, end), 'basketId': _id},
                           start_date=start, end_date=end)
-        response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.THEMATIC_FACTOR_BETAS_V1_STANDARD.value)
+        response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.THEMATIC_FACTOR_BETAS_STANDARD.value)
         df = []
         for r in response:
-            df.append({'date': r['date'], 'assetId': r['assetId'], 'basketId': r['basketId'],
+            df.append({'date': r['date'], 'gsid': r['gsid'], 'basketId': r['basketId'],
                        'thematicBeta': r['beta']})
         df = pd.DataFrame(df)
         return df.set_index('date')

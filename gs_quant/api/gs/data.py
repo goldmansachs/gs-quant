@@ -816,7 +816,9 @@ class GsDataApi(DataApi):
             for field_name, type_name in dataset_types.items():
                 if df.get(field_name) is not None and type_name in ('date', 'date-time') and \
                         len(df.get(field_name).value_counts()) > 0:
-                    df[field_name] = pd.to_datetime(df[field_name], format='mixed', infer_datetime_format=True)
+                    df[field_name] = pd.to_datetime(df[field_name],
+                                                    format='ISO8601' if int(
+                                                        pd.__version__.split('.')[0]) == 2 else None)
 
             field_names = dataset_types.keys()
 

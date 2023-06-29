@@ -589,7 +589,8 @@ class PositionSet:
     @classmethod
     def from_dicts(cls, positions: List[Dict],
                    date: datetime.date = datetime.date.today(),
-                   reference_notional: float = None):
+                   reference_notional: float = None,
+                   add_tags: bool = False):
         """
         Create PostionSet instance from a list of position-object-like dictionaries
 
@@ -611,7 +612,7 @@ class PositionSet:
         :func:`get_positions` :func:`resolve` :func:`from_list` :func:`from_frame` :func:`to_frame`
         """
         positions_df = pd.DataFrame(positions)
-        return cls.from_frame(positions_df, date, reference_notional)
+        return cls.from_frame(positions_df, date, reference_notional, add_tags)
 
     @classmethod
     def from_frame(cls,
