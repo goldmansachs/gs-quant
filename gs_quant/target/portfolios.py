@@ -23,6 +23,14 @@ from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
 
 
+class ActiveWeightType(EnumBase, Enum):    
+    
+    """Weight type used to calculate active holdings."""
+
+    Net = 'Net'
+    Gross = 'Gross'    
+
+
 class ClientPositionFilter(EnumBase, Enum):    
     
     """Filter used to select client positions from GRDB. 'oeId' selects all positions
@@ -56,15 +64,6 @@ class RefreshInterval(EnumBase, Enum):
     End_Of_Week = 'End Of Week'
     Start_Of_Month = 'Start Of Month'
     End_Of_Month = 'End Of Month'    
-
-
-class ReturnType(EnumBase, Enum):    
-    
-    """Return Type for Report Parameters"""
-
-    Gross_Total_Return = 'Gross Total Return'
-    Net_Total_Return = 'Net Total Return'
-    Price_Return = 'Price Return'    
 
 
 class RiskAumSource(EnumBase, Enum):    
@@ -139,6 +138,7 @@ class PCOTrade(Base):
 class TemporalPortfolioParameters(Base):
     return_type: Optional[ReturnType] = field(default=None, metadata=field_metadata)
     refresh_interval: Optional[RefreshInterval] = field(default=None, metadata=field_metadata)
+    active_weight_type: Optional[ActiveWeightType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -172,6 +172,7 @@ class PCOPortfolioParameters(Base):
     investment_ratio: Optional[str] = field(default=None, metadata=field_metadata)
     roll_currency: Optional[Tuple[PCOParameterValues, ...]] = field(default=None, metadata=field_metadata)
     param_version: Optional[str] = field(default=None, metadata=field_metadata)
+    security_breakdown: Optional[PCOSecurityBreakdown] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

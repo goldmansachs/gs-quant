@@ -53,31 +53,7 @@ class PositionPriceResponse(Base):
     adv10_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
     adv22_day_pct: Optional[float] = field(default=None, metadata=field_metadata)
     median_daily_volume22_day: Optional[float] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-    tags: Optional[Tuple[PositionTag, ...]] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class PositionSetPriceResponse(Base):
-    positions: Optional[Tuple[PositionPriceResponse, ...]] = field(default=None, metadata=field_metadata)
-    divisor: Optional[float] = field(default=None, metadata=field_metadata)
-    initial_price: Optional[float] = field(default=None, metadata=field_metadata)
-    target_notional: Optional[float] = field(default=None, metadata=field_metadata)
-    actual_notional: Optional[float] = field(default=None, metadata=field_metadata)
-    long_notional: Optional[float] = field(default=None, metadata=field_metadata)
-    short_notional: Optional[float] = field(default=None, metadata=field_metadata)
-    gross_notional: Optional[float] = field(default=None, metadata=field_metadata)
-    net_notional: Optional[float] = field(default=None, metadata=field_metadata)
-    type_: Optional[str] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
-    error_message: Optional[str] = field(default=None, metadata=field_metadata)
-    asset_ids_missing_prices: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    asset_ids_missing_fx_fixings: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    asset_ids_missing_market_caps: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    unsupported_currencies: Optional[Tuple[Currency, ...]] = field(default=None, metadata=field_metadata)
-    asset_ids_missing_multiplier: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    pricing_engine: Optional[BasketPricingEngine] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[PositionTag, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -109,4 +85,28 @@ class PriceParameters(Base):
 class PositionSetPriceInput(Base):
     positions: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
     parameters: PriceParameters = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class PositionSetPriceResponse(Base):
+    positions: Optional[Tuple[PositionPriceResponse, ...]] = field(default=None, metadata=field_metadata)
+    divisor: Optional[float] = field(default=None, metadata=field_metadata)
+    initial_price: Optional[float] = field(default=None, metadata=field_metadata)
+    target_notional: Optional[float] = field(default=None, metadata=field_metadata)
+    actual_notional: Optional[float] = field(default=None, metadata=field_metadata)
+    long_notional: Optional[float] = field(default=None, metadata=field_metadata)
+    short_notional: Optional[float] = field(default=None, metadata=field_metadata)
+    gross_notional: Optional[float] = field(default=None, metadata=field_metadata)
+    net_notional: Optional[float] = field(default=None, metadata=field_metadata)
+    type_: Optional[str] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    error_message: Optional[str] = field(default=None, metadata=field_metadata)
+    asset_ids_missing_prices: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    asset_ids_missing_fx_fixings: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    asset_ids_missing_market_caps: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    unsupported_currencies: Optional[Tuple[Currency, ...]] = field(default=None, metadata=field_metadata)
+    asset_ids_missing_multiplier: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    pricing_engine: Optional[BasketPricingEngine] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)

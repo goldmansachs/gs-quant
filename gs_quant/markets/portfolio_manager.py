@@ -73,9 +73,7 @@ class CustomAUMDataPoint:
 
 class PortfolioManager(PositionedEntity):
     """
-
     Portfolio Manager is used to manage Marquee portfolios (setting entitlements, running and retrieving reports, etc)
-
     """
 
     def __init__(self,

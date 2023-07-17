@@ -103,7 +103,24 @@ class ReportType(EnumBase, Enum):
     Analytics = 'Analytics'
     Risk_Calculation = 'Risk Calculation'
     Factor_Overview_Email = 'Factor Overview Email'
-    PCO = 'PCO'
+    PCO = 'PCO'    
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class AumTimeseriesDataPoint(Base):
+    date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    aum: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class AumTimeseries(Base):
+    data: Optional[Tuple[AumTimeseriesDataPoint, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 @handle_camel_case_args

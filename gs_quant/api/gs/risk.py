@@ -19,14 +19,14 @@ import datetime as dt
 import json
 import logging
 import math
-import msgpack
-from socket import gaierror
-import time
-from typing import Iterable, Optional, Union
-import sys
 import os
+import sys
+import time
+from socket import gaierror
+from typing import Iterable, Optional, Union
 
-from opentracing import Format
+import msgpack
+from opentracing import Format, Span
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.risk import RiskRequest
@@ -82,20 +82,24 @@ class GsRiskApi(RiskApi):
 
     @classmethod
     async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue,
-                          timeout: Optional[int] = None) -> Optional[str]:
+                          timeout: Optional[int] = None, span: Optional[Span] = None) -> Optional[str]:
         if cls.POLL_FOR_BATCH_RESULTS:
-            return await cls.__get_results_poll(responses, results, timeout=timeout)
+            return await cls.__get_results_poll(responses, results, timeout=timeout, span=span)
         else:
             try:
-                return await cls.__get_results_ws(responses, results, timeout=timeout)
+                return await cls.__get_results_ws(responses, results, timeout=timeout, span=span)
             except WebsocketUnavailable:
-                return await cls.__get_results_poll(responses, results, timeout=timeout)
+                return await cls.__get_results_poll(responses, results, timeout=timeout, span=span)
 
     @classmethod
-    async def __get_results_poll(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
+    async def __get_results_poll(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None,
+                                 span: Optional[Span] = None):
         run = True
         pending_requests = {}
         end_time = dt.datetime.now() + dt.timedelta(seconds=timeout) if timeout else None
+
+        if span:
+            Tracer.get_instance().scope_manager.activate(span, finish_on_close=False)
 
         while pending_requests or run:
             # Check for timeout
@@ -134,7 +138,8 @@ class GsRiskApi(RiskApi):
                 return error_str
 
     @classmethod
-    async def __get_results_ws(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None):
+    async def __get_results_ws(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None,
+                               span: Optional[Span] = None):
         async def handle_websocket():
             ret = ''
 
@@ -231,8 +236,14 @@ class GsRiskApi(RiskApi):
                 _logger.error(f'{error} error, retrying (attempt {attempts + 1} of {max_attempts})')
 
             try:
-                async with GsSession.current._connect_websocket('/risk/calculate/results/subscribe') as ws:
-                    error = await handle_websocket()
+                ws_url = '/risk/calculate/results/subscribe'
+                async with GsSession.current._connect_websocket(ws_url) as ws:
+                    if span:
+                        Tracer.get_instance().scope_manager.activate(span, finish_on_close=False)
+                        with Tracer(f'wss:/{ws_url}'):
+                            error = await handle_websocket()
+                    else:
+                        error = await handle_websocket()
 
                 attempts = max_attempts
             except ConnectionClosedError as cce:

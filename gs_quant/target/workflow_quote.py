@@ -63,6 +63,29 @@ class OverlayType(EnumBase, Enum):
     _None = 'None'    
 
 
+@dataclass
+class HedgeTypes(Base):
+    pass
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CustomDeltaHedge(HedgeTypes):
+    amount: float = field(default=None, metadata=field_metadata)
+    type_: Optional[str] = field(init=False, default='CustomDeltaHedge', metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class DeltaHedge(HedgeTypes):
+    model: Optional[object] = field(default=None, metadata=field_metadata)
+    type_: Optional[str] = field(init=False, default='DeltaHedge', metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
@@ -79,6 +102,15 @@ class MarketDataParameters(Base):
     max_history: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     timestamp: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     spot_ref: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class SalesPremiumAdjustment(Base):
+    value: Optional[float] = field(default=None, metadata=field_metadata)
+    unit: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -169,6 +201,9 @@ class VisualStructuringReport(QuoteReport):
     charting_parameters: Optional[ChartingParameters] = field(default=None, metadata=field_metadata)
     comments: Optional[Tuple[CustomComments, ...]] = field(default=None, metadata=field_metadata)
     strategy_description: Optional[StrategyDescription] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[str] = field(default=None, metadata=field_metadata)
+    hedge_instruction: Optional[HedgeTypes] = field(default=None, metadata=field_metadata)
+    sales_premium_adjustment: Optional[SalesPremiumAdjustment] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

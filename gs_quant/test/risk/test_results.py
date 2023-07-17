@@ -22,7 +22,7 @@ import pytest
 from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg
 from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMarket, MarketDataCoordinate
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import MultiScenario
+from gs_quant.risk import MultiScenario, ResolvedInstrumentValues
 from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel, PnlExplain
 from gs_quant.risk.core import aggregate_risk, SeriesWithInfo, FloatWithInfo
 from gs_quant.risk.results import MultipleScenarioFuture
@@ -570,6 +570,19 @@ def test_unsupported_error_datums(mocker):
 
     # assert that errorvalue appears in to_frame()
     assert isinstance(f4['value'].values[0], ErrorValue)
+
+
+def test_resolution_of_error_trade(mocker):
+    with MockCalc(mocker):
+        error_trade = IRSwap(notional_currency='EUR', termination_date='10y', fixed_rate='bob')
+        resolved_trade = error_trade.calc(ResolvedInstrumentValues)
+        assert isinstance(resolved_trade, ErrorValue)
+
+        try:
+            _ = resolved_trade.fixed_rate  # this should fail
+            assert 1 == 2
+        except AttributeError as e:
+            assert 'Error was' in str(e)
 
 
 def test_resolve_to_frame(mocker):

@@ -25,19 +25,19 @@ from dataclasses_json import LetterCase, config, dataclass_json
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class PositionsPricingParameters(Base):
-    currency: str = field(default=None, metadata=field_metadata)
-    weighting_strategy: str = field(default=None, metadata=field_metadata)
-    carryover_positions_for_missing_dates: Optional[bool] = field(default=False, metadata=field_metadata)
+class PositionsRequest(Base):
+    asset_id: str = field(default=None, metadata=field_metadata)
+    weight: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class PositionsRequest(Base):
-    asset_id: str = field(default=None, metadata=field_metadata)
-    weight: Optional[float] = field(default=None, metadata=field_metadata)
+class PricingParameters(Base):
+    currency: str = field(default=None, metadata=field_metadata)
+    weighting_strategy: str = field(default=None, metadata=field_metadata)
+    carryover_positions_for_missing_dates: Optional[bool] = field(default=False, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -54,7 +54,7 @@ class PositionSetRequest(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class PositionsPricingRequest(Base):
-    parameters: PositionsPricingParameters = field(default=None, metadata=field_metadata)
+class PricingRequest(Base):
+    parameters: PricingParameters = field(default=None, metadata=field_metadata)
     position_sets: Tuple[PositionSetRequest, ...] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)

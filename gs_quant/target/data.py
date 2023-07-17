@@ -229,6 +229,7 @@ class ParserEntity(Base):
     only_mqtick_fields: Optional[bool] = field(default=None, metadata=field_metadata)
     include_trd_flg_proc: Optional[bool] = field(default=None, metadata=field_metadata)
     keep_raw_fields: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    include_mmt: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -460,6 +461,7 @@ class DataQuery(Base):
     end_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     relative_start_date: Optional[str] = field(default=None, metadata=field_metadata)
     relative_end_date: Optional[str] = field(default=None, metadata=field_metadata)
+    adjust_as_of: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     as_of_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     id_as_of_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     use_temporal_x_ref: Optional[bool] = field(default=False, metadata=field_metadata)
@@ -473,7 +475,6 @@ class DataQuery(Base):
     limit: Optional[int] = field(default=None, metadata=field_metadata)
     polling_interval: Optional[int] = field(default=None, metadata=field_metadata)
     grouped: Optional[bool] = field(default=None, metadata=field_metadata)
-    group_by: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     fields: Optional[Tuple[Union[DictBase, str], ...]] = field(default=None, metadata=field_metadata)
     restrict_fields: Optional[bool] = field(default=False, metadata=field_metadata)
     entity_filter: Optional[FieldFilterMapDataQuery] = field(default=None, metadata=field_metadata)
@@ -492,10 +493,10 @@ class DataQuery(Base):
     multi_trading_session: Optional[bool] = field(default=None, metadata=field_metadata)
     multi_session: Optional[bool] = field(default=None, metadata=field_metadata)
     quote_consolidation: Optional[bool] = field(default=None, metadata=field_metadata)
+    consolidation: Optional[bool] = field(default=None, metadata=field_metadata)
     time_index: Optional[str] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-    adjust_as_of: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     empty_intervals: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 @handle_camel_case_args

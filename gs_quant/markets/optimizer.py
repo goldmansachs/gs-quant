@@ -716,20 +716,24 @@ class OptimizerStrategy:
         }
         constraints = self.constraints.to_dict()
         for key in constraints:
-            parameters[key] = constraints[key]
+            if constraints[key] is not None:
+                parameters[key] = constraints[key]
         settings = self.settings.to_dict()
         for key in settings:
-            parameters[key] = settings[key]
+            if settings[key] is not None:
+                parameters[key] = settings[key]
         universe = self.universe.to_dict()
         for key in universe:
-            parameters[key] = universe[key]
+            if universe[key] is not None:
+                parameters[key] = universe[key]
         parameters['riskModel'] = self.risk_model.id
         if self.turnover:
             if self.turnover.turnover_portfolio.reference_notional is not None:
                 self.turnover.turnover_portfolio.price()
             turnover_dict = self.turnover.to_dict()
             for key in turnover_dict:
-                parameters[key] = turnover_dict[key]
+                if turnover_dict[key] is not None:
+                    parameters[key] = turnover_dict[key]
 
         # Price initial_position_set if needed
         if self.initial_position_set.reference_notional is not None:

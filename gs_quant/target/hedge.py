@@ -348,6 +348,7 @@ class FactorHedgeParameters(Base):
     comparisons: Optional[Tuple[HedgerComparison, ...]] = field(default=None, metadata=field_metadata)
     turnover_portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
     max_turnover_percentage: Optional[float] = field(default=None, metadata=field_metadata)
+    return_type: Optional[ReturnType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -384,6 +385,7 @@ class PerformanceHedgeParameters(Base):
     use_machine_learning: Optional[bool] = field(default=False, metadata=field_metadata)
     lasso_weight: Optional[float] = field(default=None, metadata=field_metadata)
     ridge_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    return_type: Optional[ReturnType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

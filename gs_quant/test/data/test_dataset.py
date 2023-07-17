@@ -25,6 +25,9 @@ from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data import Dataset
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.data import Format, DataQuery
+from gs_quant.target.data import DataSetEntity
+from gs_quant.target.data import DataSetParameters
+from gs_quant.target.data import DataSetDimensions
 
 test_types = {
     'date': 'date',
@@ -361,6 +364,59 @@ def test_data_series_format(mocker):
     assert kwargs['payload'].format == Format.Json
     assert 'request_headers' not in kwargs
     assert args[0] == '/data/TREOD/query'
+
+
+def test_get_data_bulk(mocker):
+
+    df2 = pd.DataFrame()
+    test_df = {
+        'date': {pd.Timestamp('20230302'): dt.date(2023, 3, 2)},
+        'clusterRegion': {pd.Timestamp('20230302'): 'Asia Pacific'},
+        'clusterClass': {pd.Timestamp('20230302'): '13'},
+        'assetId': {pd.Timestamp('20230302'): 'MA4B66MW5E27U8P4ZFX'},
+        'clusterDescription': {pd.Timestamp('20230302'): 'Small Trd Count, Hard to Complete'},
+        'updateTime': {pd.Timestamp('20230302'): dt.datetime.strptime('2023-03-05T00:40:54.000Z',
+                                                                      '%Y-%m-%dT%H:%M:%S.%fZ')}
+    }
+
+    df = pd.DataFrame(test_df)
+    df.set_index('date', inplace=True)
+
+    coverage = pd.DataFrame({'clusterRegion': ['Asia Pacific']})
+    symbol_dimension = ('clusterRegion',)
+    dataset_definition = DataSetEntity()
+    dataset_definition.parameters = DataSetParameters()
+    dataset_definition.parameters.history_date = dt.datetime(2017, 1, 2)
+    dataset_definition.dimensions = DataSetDimensions()
+    dataset_definition.dimensions.time_field = 'date'
+
+    # mock GsSession
+    mocker.patch.object(GsSession.__class__, 'default_value',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+
+    # mock fetch_data function in utilities.py
+    mock = mocker.patch("gs_quant.data.utilities.Utilities.fetch_data", return_value=df)
+
+    # mock granular functions in get_dataset_parameter in utilities.py
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.symbol_dimensions", return_value=symbol_dimension)
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_definition", return_value=dataset_definition)
+
+    # mock get_dataset_coverage function in utilities.py
+    mocker.patch("gs_quant.data.dataset.Dataset.get_coverage", return_value=coverage)
+
+    def handler(data_frame):
+        nonlocal df2
+        df2 = data_frame.head(1)
+
+    dataset_id = "EQTRADECLUSTERS"
+    original_start = dt.datetime(2023, 3, 2, 0, 0, 0)
+    final_end = dt.datetime(2023, 3, 2, 0, 0, 0)
+    c = Dataset(dataset_id)
+    c.get_data_bulk(original_start=original_start, final_end=final_end, request_batch_size=4,
+                    identifier="clusterRegion", handler=handler)
+
+    assert mock.call_count == 1
+    assert df.equals(df2)
 
 
 if __name__ == "__main__":

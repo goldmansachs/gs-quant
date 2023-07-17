@@ -71,8 +71,8 @@ Portfolio
    Portfolio
 
 
-Portfolio Manager
----------
+PortfolioManager
+----------------
 
 .. currentmodule:: gs_quant.markets.portfolio_manager
 
@@ -84,7 +84,7 @@ Portfolio Manager
 
 
 PositionSet
-----------
+-----------
 
 .. currentmodule:: gs_quant.markets.position_set
 
@@ -107,7 +107,6 @@ Securities
    AssetClass
    AssetIdentifier
    AssetType
-   Index
    Stock
    SecurityMaster
 

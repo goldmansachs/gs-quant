@@ -227,6 +227,9 @@ class SecMasterGetActionsRequestPathSchema(Base):
     event_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     corp_action_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     effective_date: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
+    as_of_time: Optional[Tuple[datetime.datetime, ...]] = field(default=None, metadata=field_metadata)
+    effective_date_from: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
+    effective_date_to: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -247,7 +250,8 @@ class SecMasterGetRequestPathSchema(Base):
     type_: Optional[Tuple[str, ...]] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     exchange: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     fields: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    as_of_date: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
+    as_of_time: Optional[Tuple[datetime.datetime, ...]] = field(default=None, metadata=field_metadata)
+    effective_date: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
     limit: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     offset: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     offset_key: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
@@ -340,4 +344,5 @@ class SecMasterResponseAssets(Base):
     offset_key: Optional[str] = field(default=None, metadata=field_metadata)
     limit: Optional[int] = field(default=None, metadata=field_metadata)
     offset: Optional[int] = field(default=None, metadata=field_metadata)
+    update_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)

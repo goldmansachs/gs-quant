@@ -411,6 +411,7 @@ class WorkspaceParameters(Base):
     date: Optional[WorkspaceDate] = field(default=None, metadata=field_metadata)
     disclaimer: Optional[str] = field(default=None, metadata=field_metadata)
     maintainers: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    parent_collection_id: Optional[str] = field(default=None, metadata=field_metadata)
     tabs: Optional[Tuple[WorkspaceTab, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 

@@ -215,6 +215,33 @@ CDFwdSpread.__doc__ = "Credit Forward Spread"
 CDGamma = RiskMeasure(name="CDGamma", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("Gamma"))
 CDGamma.__doc__ = "CDIndexGamma"
 
+CDIForward = RiskMeasure(name="CDIForward", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("CDIForward"))
+CDIForward.__doc__ = "CDS Index Forward Quote in the Prevailing Quoting Style."
+
+CDIIndexDelta = RiskMeasure(name="CDIIndexDelta", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("CDIIndexDelta"))
+CDIIndexDelta.__doc__ = "CDS Index Delta."
+
+CDIIndexVega = RiskMeasure(name="CDIIndexVega", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("CDIIndexVega"))
+CDIIndexVega.__doc__ = "CDS Index Vega."
+
+CDIOptionPremium = RiskMeasure(name="CDIOptionPremium", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("CDIOptionPremium"))
+CDIOptionPremium.__doc__ = "CDS Index Option Premium"
+
+CDIOptionPremiumFlatFwd = RiskMeasure(name="CDIOptionPremiumFlatFwd", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("CDIOptionPremiumFlatFwd"))
+CDIOptionPremiumFlatFwd.__doc__ = "CDS Index Option Premium assuming Flat Forwards."
+
+CDIOptionPremiumFlatVol = RiskMeasure(name="CDIOptionPremiumFlatVol", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("CDIOptionPremiumFlatVol"))
+CDIOptionPremiumFlatVol.__doc__ = "CDS Index Option Premium assuming Flat Volatilities."
+
+CDISpot = RiskMeasure(name="CDISpot", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("CDISpot"))
+CDISpot.__doc__ = "CDS Index Spot Quote in the Prevailing Quoting Style."
+
+CDISpreadDV01 = RiskMeasure(name="CDISpreadDV01", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("CDISpreadDV01"))
+CDISpreadDV01.__doc__ = "CDS Index Rates DV01."
+
+CDIUpfrontPrice = RiskMeasure(name="CDIUpfrontPrice", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("CDIUpfrontPrice"))
+CDIUpfrontPrice.__doc__ = "CDS Index Upfront Price."
+
 CDImpliedVolatility = RiskMeasure(name="CDImpliedVolatility", asset_class=AssetClass("Credit"), measure_type=RiskMeasureType("Implied Volatility"))
 CDImpliedVolatility.__doc__ = "CDImpliedVolatility"
 
@@ -277,6 +304,9 @@ EqTheta.__doc__ = "Change in Dollar Price over one day"
 
 EqVega = RiskMeasureWithCurrencyParameter(name="EqVega", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Vega"))
 EqVega.__doc__ = "Change in Dollar Price (USD present value) due to individual 1bp moves in the implied volatility of the underlying equity security"
+
+ExpiryInYears = RiskMeasure(name="ExpiryInYears", measure_type=RiskMeasureType("ExpiryInYears"))
+ExpiryInYears.__doc__ = "Time to Expiry expressed in fractional Years."
 
 FXAnnualATMImpliedVol = RiskMeasure(name="FXAnnualATMImpliedVol", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Annual ATM Implied Volatility"), unit=RiskMeasureUnit("Percent"))
 FXAnnualATMImpliedVol.__doc__ = "FX Annual ATM Implied Volatility"

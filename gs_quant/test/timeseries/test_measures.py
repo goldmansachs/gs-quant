@@ -1348,6 +1348,7 @@ def test_ignore_errors():
 def test_tenor_month_to_year():
     assert tm._tenor_month_to_year('1y') == '1y'
     assert tm._tenor_month_to_year('11m') == '11m'
+    assert tm._tenor_month_to_year('12m') == '1y'
     assert tm._tenor_month_to_year('24m') == '2y'
 
 

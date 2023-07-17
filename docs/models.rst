@@ -21,8 +21,8 @@ RiskModel
 .. currentmodule:: gs_quant.models.risk_model
 
 .. autosummary::
-   :toctree: functions
-   :template: models_class.rst
+   :toctree: classes
+   :template: report.rst
 
    RiskModel
    MarqueeRiskModel

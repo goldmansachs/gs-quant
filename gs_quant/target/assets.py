@@ -34,6 +34,7 @@ class AllocatorType(EnumBase, Enum):
     Family_Office_Single = 'Family Office (Single)'
     Foundation = 'Foundation'
     Fund_of_Funds = 'Fund of Funds'
+    Healthcare_System = 'Healthcare System'
     Insurance_Company = 'Insurance Company'
     Outsourced_CIO = 'Outsourced CIO'
     Pension_Private = 'Pension (Private)'

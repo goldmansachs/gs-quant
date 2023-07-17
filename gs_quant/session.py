@@ -13,6 +13,8 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import asyncio
+import contextlib
 import inspect
 import itertools
 import json
@@ -31,13 +33,15 @@ import pandas as pd
 import requests
 import requests.adapters
 import requests.cookies
-import asyncio
 import urllib3
+from opentracing.tags import HTTP_URL, HTTP_METHOD, HTTP_STATUS_CODE
+
 from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
 from gs_quant.json_encoder import JSONEncoder, encode_default
+from gs_quant.tracing import Tracer
 
 logger = logging.getLogger(__name__)
 
@@ -299,9 +303,21 @@ class GsSession(ContextBase):
     ) -> Union[Base, tuple, dict]:
         kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
                                                  use_body, "data")
-        response = self._session.request(method, url, **kwargs)
-        request_id = response.headers.get('x-dash-requestid')
-        logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
+        span = Tracer.get_instance().active_span
+        tracer = Tracer(f'http:/{path}') if span else contextlib.nullcontext()
+        with tracer as scope:
+            if scope:
+                scope.span.set_tag('path', path)
+                scope.span.set_tag('timeout', timeout)
+                scope.span.set_tag(HTTP_URL, url)
+                scope.span.set_tag(HTTP_METHOD, method)
+                scope.span.set_tag('span.kind', 'client')
+            response = self._session.request(method, url, **kwargs)
+            request_id = response.headers.get('x-dash-requestid')
+            logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
+            if scope:
+                scope.span.set_tag(HTTP_STATUS_CODE, response.status_code)
+                scope.span.set_tag('dash.request.id', request_id)
         if response.status_code == 401:
             # Expired token or other authorization issue
             if not try_auth:

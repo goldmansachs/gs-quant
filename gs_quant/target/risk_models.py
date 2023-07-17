@@ -58,6 +58,7 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Factor_Return = 'Factor Return'
     Factor_Standard_Deviation = 'Factor Standard Deviation'
     Factor_Z_Score = 'Factor Z Score'
+    Factor_Volatility = 'Factor Volatility'
     Covariance_Matrix = 'Covariance Matrix'
     Issuer_Specific_Covariance = 'Issuer Specific Covariance'
     Factor_Portfolios = 'Factor Portfolios'    
@@ -206,6 +207,7 @@ class RiskModelCoverageRequest(Base):
     asset_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     as_of_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     sort_by_term: Optional[RiskModelTerm] = field(default=None, metadata=field_metadata)
+    vendor: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

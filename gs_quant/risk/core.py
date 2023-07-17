@@ -110,6 +110,10 @@ class ErrorValue(ResultInfo):
     def __repr__(self):
         return self.error
 
+    def __getattr__(self, item):
+        # only called if self.item doesn't exist
+        raise AttributeError(f'ErrorValue object has no attribute {item}.  Error was {self.error}')
+
     @property
     def raw_value(self):
         return None

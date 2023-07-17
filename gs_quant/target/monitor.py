@@ -238,6 +238,7 @@ class Function(Base):
     end_date: Optional[str] = field(default=None, metadata=field_metadata)
     start_time: Optional[str] = field(default=None, metadata=field_metadata)
     end_time: Optional[str] = field(default=None, metadata=field_metadata)
+    should_use_search_until: Optional[bool] = field(default=None, metadata=field_metadata)
     fields: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     parameters: Optional[FieldMap] = field(default=None, metadata=field_metadata)
     where: Optional[FieldMap] = field(default=None, metadata=field_metadata)

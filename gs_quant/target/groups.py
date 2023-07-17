@@ -41,6 +41,17 @@ class UpdateGroupMembershipRequest(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class UserCoverage(Base):
+    name: str = field(default=None, metadata=field_metadata)
+    email: str = field(default=None, metadata=field_metadata)
+    app: Optional[str] = field(default=None, metadata=field_metadata)
+    phone: Optional[str] = field(default=None, metadata=field_metadata)
+    guid: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class GroupResponse(Base):
     results: Tuple[GroupWithMembersCount, ...] = field(default=None, metadata=field_metadata)
     total_results: int = field(default=None, metadata=field_metadata)

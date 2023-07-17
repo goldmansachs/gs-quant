@@ -19,8 +19,12 @@ import cachetools.func
 import inflection
 import numpy as np
 from dateutil import tz
-from gs_quant.api.gs.data import MarketDataResponseFrame
-from gs_quant.api.gs.data import QueryType
+from pandas import DatetimeIndex, Series
+from pandas.tseries.holiday import AbstractHolidayCalendar, Holiday, USLaborDay, USMemorialDay, USThanksgivingDay, \
+    sunday_to_monday
+from pydash import chunk, flatten
+
+from gs_quant.api.gs.data import MarketDataResponseFrame, QueryType
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.data.core import DataContext
 from gs_quant.data.fields import Fields
@@ -29,22 +33,13 @@ from gs_quant.datetime import DAYS_IN_YEAR
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.datetime.point import relative_date_add
 from gs_quant.markets.securities import *
-from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster, AssetType as SecAssetType
+from gs_quant.markets.securities import Asset, AssetIdentifier, AssetType as SecAssetType, SecurityMaster
 from gs_quant.target.common import AssetClass, AssetType
-from gs_quant.timeseries import volatility, Window, Returns, sqrt, Basket, RelativeDate
-from gs_quant.timeseries.helper import (
-    log_return,
-    plot_measure,
-    _to_offset,
-    check_forward_looking,
-    get_df_with_retries,
-    get_dataset_data_with_retries, _tenor_to_month, _month_to_tenor, _split_where_conditions
-)
+from gs_quant.timeseries import Basket, RelativeDate, Returns, Window, sqrt, volatility
+from gs_quant.timeseries.helper import (_month_to_tenor, _split_where_conditions, _tenor_to_month, _to_offset,
+                                        check_forward_looking, get_dataset_data_with_retries, get_df_with_retries,
+                                        log_return, plot_measure)
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
-from pandas import Series, DatetimeIndex
-from pandas.tseries.holiday import Holiday, AbstractHolidayCalendar, USMemorialDay, USLaborDay, USThanksgivingDay, \
-    sunday_to_monday
-from pydash import chunk, flatten
 
 GENERIC_DATE = Union[datetime.date, str]
 ASSET_SPEC = Union[Asset, str]
@@ -271,7 +266,8 @@ CURRENCY_TO_OIS_RATE_BENCHMARK = {
     'CAD': 'CAD OIS',
     'NOK': 'NOK OIS',
     'NZD': 'NZD OIS',
-    'SEK': 'SEK OIS'
+    'SEK': 'SEK OIS',
+    'CHF': 'CHF OIS'
 }
 
 CURRENCY_TO_DEFAULT_RATE_BENCHMARK = {
@@ -1175,7 +1171,7 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
 
         ref_string, relative_strike = preprocess_implied_vol_strikes_eq(VolReference(strike_reference.value),
                                                                         relative_strike)
-
+        tenor = _tenor_month_to_year(tenor)
         log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
                   relative_strike)
         where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
@@ -2825,7 +2821,7 @@ def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = '
         Us Power Forward Prices
 
         :param asset: asset object loaded from security master
-        :param price_method: price method between LMP, MCP, SPP: Default value = LMP
+        :param price_method: price method between LMP, MCP, SPP, Physical: Default value = LMP
         :param bucket: bucket type among '7x24', 'peak', 'offpeak', '2x16h', '7x16' and '7x8': Default value = 7x24
         :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
         :param source: name of function caller: default source = None
@@ -2843,11 +2839,19 @@ def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = '
 
     where = dict(priceMethod=price_method.upper(), quantityBucket=quantitybuckets_to_query, contract=contracts_to_query)
     with DataContext(start, end):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
-                                              where=where, source=None,
-                                              real_time=False)
-        _logger.debug('q %s', q)
-        forwards_data = _market_data_timed(q)
+        def _query_fwd(asset_, where_):
+            q = GsDataApi.build_market_data_query([asset_.get_marquee_id()], QueryType.FORWARD_PRICE,
+                                                  where=where_, source=None,
+                                                  real_time=False)
+            _logger.debug('q %s', q)
+            return _market_data_timed(q)
+
+        forwards_data = _query_fwd(asset, where)
+        if forwards_data.empty:
+            # For cases where uppercase priceMethod dont fetch data, try user input as is
+            where['priceMethod'] = price_method
+            forwards_data = _query_fwd(asset, where)
+
         dataset_ids = getattr(forwards_data, 'dataset_ids', ())
 
     if forwards_data.empty:
