@@ -30,10 +30,15 @@ class Encoding(EnumBase, Enum):
     Unicode = 'Unicode'
     Base64 = 'Base64'
     Hex = 'Hex'
-    ASCII = 'ASCII'    
+    ASCII = 'ASCII'
 
 
-class ImgType(EnumBase, Enum):    
+class HedgeModel(EnumBase, Enum):
+    Smile = 'Smile'
+    BlackScholes = 'BlackScholes'
+
+
+class ImgType(EnumBase, Enum):
     
     APNG = 'APNG'
     AVIF = 'AVIF'
@@ -81,7 +86,7 @@ class CustomDeltaHedge(HedgeTypes):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DeltaHedge(HedgeTypes):
-    model: Optional[object] = field(default=None, metadata=field_metadata)
+    model: Optional[HedgeModel] = field(default=None, metadata=field_metadata)
     type_: Optional[str] = field(init=False, default='DeltaHedge', metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
