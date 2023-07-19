@@ -17,7 +17,8 @@ from typing import Dict, Any, Iterable
 
 from dataclasses_json.cfg import _GlobalConfig
 
-from gs_quant.target.workflow_quote import VisualStructuringReport, BinaryImageComments, HyperLinkImageComments
+from gs_quant.target.workflow_quote import VisualStructuringReport, BinaryImageComments, HyperLinkImageComments, \
+    CustomDeltaHedge, DeltaHedge
 
 global_config = _GlobalConfig()
 
@@ -60,4 +61,26 @@ def custom_comments_from_dicts(in_dicts: Iterable[Dict[str, Any]]):
             report = custom_comment_from_dict(in_dict)
             comments.append(report)
         return comments
+    return None
+
+
+def hedge_type_from_dict(hedge_type_dict: Dict[str, Any]):
+    if hedge_type_dict is not None:
+        type = hedge_type_dict.get('type')
+        if 'CustomDeltaHedge' == type:
+            hedge_type = CustomDeltaHedge.from_dict(hedge_type_dict)
+            return hedge_type
+        if 'DeltaHedge' == type:
+            hedge_type = DeltaHedge.from_dict(hedge_type_dict)
+            return hedge_type
+    return None
+
+
+def hedge_type_from_dicts(in_dicts: Iterable[Dict[str, Any]]):
+    if in_dicts is not None:
+        hedge_types = []
+        for in_dict in in_dicts:
+            hedge_type = hedge_type_from_dict(in_dict)
+            hedge_types.append(hedge_type)
+        return hedge_types
     return None

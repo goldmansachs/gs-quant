@@ -65,12 +65,7 @@ class OverlayType(EnumBase, Enum):
     MacroEvents = 'MacroEvents'
     MicroEvents = 'MicroEvents'
     Gamma = 'Gamma'
-    _None = 'None'    
-
-
-@dataclass
-class HedgeTypes(Base):
-    pass
+    _None = 'None'
 
 
 @handle_camel_case_args

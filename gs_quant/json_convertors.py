@@ -166,5 +166,15 @@ def decode_custom_comments(value: Optional[Iterable[Dict]]):
     return custom_comments_from_dicts(value) if value else None
 
 
+def decode_hedge_type(value: Optional[dict]):
+    from gs_quant.quote_reports.core import hedge_type_from_dict
+    return hedge_type_from_dict(value) if value else None
+
+
+def decode_hedge_types(value: Optional[Iterable[Dict]]):
+    from gs_quant.quote_reports.core import hedge_type_from_dicts
+    return hedge_type_from_dicts(value) if value else None
+
+
 def encode_dictable(o):
     return o if o is None else o.to_dict()
