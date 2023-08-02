@@ -234,7 +234,7 @@ def test_query_data(mocker):
 
     assert mock.call_count == 1
     query = mock.call_args[0][0]
-    assert type(query) == DataQuery
+    assert type(query) is DataQuery
     assert query.empty_intervals is None
 
 
@@ -248,7 +248,7 @@ def test_query_data_intervals(mocker):
 
     assert mock.call_count == 1
     query = mock.call_args[0][0]
-    assert type(query) == DataQuery
+    assert type(query) is DataQuery
     assert query.empty_intervals is True
 
 

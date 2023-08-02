@@ -464,6 +464,7 @@ class ISelectRequest(IndicesRebalanceInputTypes):
     index_parameters: Optional[Tuple[ISelectIndexParameter, ...]] = field(default=None, metadata=field_metadata)
     new_weights: Optional[Tuple[ISelectNewWeight, ...]] = field(default=None, metadata=field_metadata)
     new_units: Optional[Tuple[ISelectNewUnit, ...]] = field(default=None, metadata=field_metadata)
+    observation_date: Optional[str] = field(default=None, metadata=field_metadata)
     entry_type: Optional[str] = field(default=None, metadata=field_metadata)
     waiver_requested: Optional[bool] = field(default=None, metadata=field_metadata)
     presubmit: Optional[bool] = field(default=None, metadata=field_metadata)

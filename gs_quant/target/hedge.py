@@ -77,6 +77,14 @@ class HedgerConstraintPrioritySetting(EnumBase, Enum):
     _5 = '5'    
 
 
+class SamplingPeriod(EnumBase, Enum):    
+    
+    """The length of time in between return samples."""
+
+    Daily = 'Daily'
+    Weekly = 'Weekly'    
+
+
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
@@ -363,7 +371,7 @@ class PerformanceHedgeParameters(Base):
     observation_end_date: datetime.date = field(default=None, metadata=field_metadata)
     backtest_start_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     backtest_end_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    sampling_period: Optional[str] = field(default='Weekly', metadata=field_metadata)
+    sampling_period: Optional[SamplingPeriod] = field(default=SamplingPeriod.Weekly, metadata=field_metadata)
     max_leverage: Optional[float] = field(default=None, metadata=field_metadata)
     percentage_in_cash: Optional[float] = field(default=None, metadata=field_metadata)
     explode_universe: Optional[bool] = field(default=None, metadata=field_metadata)

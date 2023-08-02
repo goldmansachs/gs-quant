@@ -275,7 +275,7 @@ class RiskModelDataRequest(Base):
     assets: Optional[RiskModelDataAssetsRequest] = field(default=None, metadata=field_metadata)
     limit_factors: Optional[bool] = field(default=True, metadata=field_metadata)
     base_currency_factor: Optional[str] = field(default=None, metadata=field_metadata)
-    format_: Optional[str] = field(default='Json', metadata=config(field_name='format', exclude=exclude_none))
+    format_: Optional[Format] = field(default=Format.Json, metadata=config(field_name='format', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

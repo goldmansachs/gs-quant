@@ -34,6 +34,7 @@ import requests
 import requests.adapters
 import requests.cookies
 import urllib3
+from opentracing import Format
 from opentracing.tags import HTTP_URL, HTTP_METHOD, HTTP_STATUS_CODE
 
 from gs_quant import version as APP_VERSION
@@ -250,6 +251,8 @@ class GsSession(ContextBase):
 
             if request_headers:
                 headers.update(request_headers)
+
+            Tracer.inject(Format.HTTP_HEADERS, headers)
 
             if 'Content-Type' not in headers:
                 headers.update({'Content-Type': 'application/json; charset=utf-8'})

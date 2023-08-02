@@ -308,6 +308,12 @@ EqVega.__doc__ = "Change in Dollar Price (USD present value) due to individual 1
 ExpiryInYears = RiskMeasure(name="ExpiryInYears", measure_type=RiskMeasureType("ExpiryInYears"))
 ExpiryInYears.__doc__ = "Time to Expiry expressed in fractional Years."
 
+FX25DeltaButterflyVolatility = RiskMeasure(name="FX25DeltaButterflyVolatility", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX BF 25 Vol"))
+FX25DeltaButterflyVolatility.__doc__ = "The volatility of a 25 delta butterfly"
+
+FX25DeltaRiskReversalVolatility = RiskMeasure(name="FX25DeltaRiskReversalVolatility", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX RR 25 Vol"))
+FX25DeltaRiskReversalVolatility.__doc__ = "The volatility of a 25 delta risk reversal"
+
 FXAnnualATMImpliedVol = RiskMeasure(name="FXAnnualATMImpliedVol", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Annual ATM Implied Volatility"), unit=RiskMeasureUnit("Percent"))
 FXAnnualATMImpliedVol.__doc__ = "FX Annual ATM Implied Volatility"
 

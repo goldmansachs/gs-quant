@@ -2689,12 +2689,12 @@ def _weighted_average_valuation_curve_for_calendar_strip(asset, contract_range, 
     :return:
     """
     start_date_interval = _string_to_date_interval(contract_range.split("-")[0])
-    if type(start_date_interval) == str:
+    if isinstance(start_date_interval, str):
         raise MqValueError(start_date_interval)
     start_contract_range = start_date_interval['start_date']
     if "-" in contract_range:
         end_date_interval = _string_to_date_interval(contract_range.split("-")[1])
-        if type(end_date_interval) == str:
+        if isinstance(end_date_interval, str):
             raise MqValueError(end_date_interval)
         end_contract_range = end_date_interval['end_date']
     else:
@@ -2758,12 +2758,12 @@ def fair_price(asset: Asset, tenor: str = None, *,
 
 def _get_start_and_end_dates(contract_range: str) -> (int, int):
     start_date_interval = _string_to_date_interval(contract_range.split("-")[0])
-    if type(start_date_interval) == str:
+    if isinstance(start_date_interval, str):
         raise MqValueError(start_date_interval)
     start_contract_range = start_date_interval['start_date']
     if "-" in contract_range:
         end_date_interval = _string_to_date_interval(contract_range.split("-")[1])
-        if type(end_date_interval) == str:
+        if isinstance(end_date_interval, str):
             raise MqValueError(end_date_interval)
         end_contract_range = end_date_interval['end_date']
     else:
@@ -3043,10 +3043,18 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
 
     where = dict(priceMethod=price_method.upper())
     with DataContext(start_time, end_time):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.PRICE, where=where, source=source,
-                                              real_time=True)
-        log_debug(request_id, _logger, 'q %s', q)
-        df = _market_data_timed(q, request_id)
+        def _query_prices(asset_, where_):
+            q = GsDataApi.build_market_data_query([asset_.get_marquee_id()], QueryType.PRICE, where=where_,
+                                                  source=source,
+                                                  real_time=True)
+            log_debug(request_id, _logger, 'q %s', q)
+            return _market_data_timed(q, request_id)
+
+        df = _query_prices(asset, where)
+        if df.empty:
+            # For cases where uppercase priceMethod dont fetch data, try user input as is
+            where['priceMethod'] = price_method
+            df = _query_prices(asset, where)
 
     dataset_ids = getattr(df, 'dataset_ids', ())
 
@@ -4232,7 +4240,7 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
 
     # Validations for date inputs
     start, end = DataContext.current.start_date, DataContext.current.end_date
-    if type(market_date) != str:
+    if not isinstance(market_date, str):
         raise MqTypeError('Market date should be of string data type as \'YYYYMMDD\'')
     # If no date entered by user, assign last weekday or convert entered string format to date object
     if len(market_date) == 0:

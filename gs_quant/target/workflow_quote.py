@@ -30,15 +30,16 @@ class Encoding(EnumBase, Enum):
     Unicode = 'Unicode'
     Base64 = 'Base64'
     Hex = 'Hex'
-    ASCII = 'ASCII'
+    ASCII = 'ASCII'    
 
 
-class HedgeModel(EnumBase, Enum):
+class HedgeModel(EnumBase, Enum):    
+    
     Smile = 'Smile'
-    BlackScholes = 'BlackScholes'
+    BlackScholes = 'BlackScholes'    
 
 
-class ImgType(EnumBase, Enum):
+class ImgType(EnumBase, Enum):    
     
     APNG = 'APNG'
     AVIF = 'AVIF'
@@ -65,7 +66,12 @@ class OverlayType(EnumBase, Enum):
     MacroEvents = 'MacroEvents'
     MicroEvents = 'MicroEvents'
     Gamma = 'Gamma'
-    _None = 'None'
+    _None = 'None'    
+
+
+@dataclass
+class HedgeTypes(Base):
+    pass
 
 
 @handle_camel_case_args
@@ -74,15 +80,6 @@ class OverlayType(EnumBase, Enum):
 class CustomDeltaHedge(HedgeTypes):
     amount: float = field(default=None, metadata=field_metadata)
     type_: Optional[str] = field(init=False, default='CustomDeltaHedge', metadata=config(field_name='type', exclude=exclude_none))
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class DeltaHedge(HedgeTypes):
-    model: Optional[HedgeModel] = field(default=None, metadata=field_metadata)
-    type_: Optional[str] = field(init=False, default='DeltaHedge', metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -158,6 +155,15 @@ class ChartingParameters(Base):
     overlay: Optional[OverlayType] = field(default=None, metadata=field_metadata)
     underlay: Optional[OverlayType] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class DeltaHedge(HedgeTypes):
+    model: Optional[HedgeModel] = field(default=None, metadata=field_metadata)
+    type_: Optional[str] = field(init=False, default='DeltaHedge', metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

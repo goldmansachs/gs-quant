@@ -916,7 +916,7 @@ class MarqueeRiskModel(RiskModel):
         In the case of repeat identifiers on a given data, the repeated data will replace existing data
         """
 
-        data = data.as_dict() if type(data) == RiskModelData else data
+        data = data.as_dict() if type(data) is RiskModelData else data
         full_data_present = 'factorData' in data.keys() and 'assetData' in data.keys()
         only_factor_data_present = only_factor_data_is_present(self.type, data)
         target_universe_size = 0 if only_factor_data_present else get_universe_size(data)
