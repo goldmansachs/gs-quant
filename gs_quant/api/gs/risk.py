@@ -26,7 +26,7 @@ from socket import gaierror
 from typing import Iterable, Optional, Union
 
 import msgpack
-from opentracing import Format, Span
+from opentracing import Span
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.risk import RiskRequest
@@ -63,7 +63,6 @@ class GsRiskApi(RiskApi):
     def _exec(cls, request: Union[RiskRequest, Iterable[RiskRequest]]) -> Union[Iterable, dict]:
         use_msgpack = cls.USE_MSGPACK and not isinstance(request, RiskRequest)
         headers = {'Content-Type': 'application/x-msgpack'} if use_msgpack else {}
-        Tracer.inject(Format.HTTP_HEADERS, headers)
         result, request_id = GsSession.current._post(cls.__url(request),
                                                      request,
                                                      request_headers=headers,

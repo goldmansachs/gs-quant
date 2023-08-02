@@ -584,11 +584,6 @@ class CustomComments(Base, ABC):
     pass
 
 
-@dataclass
-class HedgeTypes(Base):
-    pass
-
-
 def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
     if value in (None,):
         return None
@@ -627,8 +622,5 @@ global_config.decoders[QuoteReport] = decode_quote_report
 global_config.decoders[Optional[Tuple[QuoteReport, ...]]] = decode_quote_reports
 global_config.decoders[CustomComments] = decode_custom_comment
 global_config.decoders[Optional[Tuple[CustomComments, ...]]] = decode_custom_comments
-global_config.decoders[Optional[HedgeTypes]] = decode_hedge_type
-global_config.decoders[HedgeTypes] = decode_hedge_type
-global_config.decoders[Optional[Tuple[HedgeTypes, ...]]] = decode_hedge_types
 global_config.encoders[Market] = encode_dictable
 global_config.encoders[Optional[Market]] = encode_dictable

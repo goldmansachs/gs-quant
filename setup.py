@@ -59,7 +59,7 @@ setuptools.setup(
         "cachetools",
         "certifi",
         "dataclasses;python_version<'3.7'",
-        "dataclasses_json==0.5.8",
+        "dataclasses_json",
         "deprecation",
         "funcsigs",
         "inflection",

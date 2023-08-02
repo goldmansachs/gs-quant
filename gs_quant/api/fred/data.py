@@ -75,7 +75,7 @@ class FredDataApi(DataApi):
         """
 
         if start is not None and end is not None:
-            if type(start) != type(end):
+            if type(start) is not type(end):
                 raise ValueError('Start and end types must match!')
 
         request = FredQuery(observation_start=start, observation_end=end, realtime_end=as_of, realtime_start=since)

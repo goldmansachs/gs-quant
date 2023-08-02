@@ -75,6 +75,6 @@ class DataHandler(object):
 
     def get_data_range(self, start: Union[dt.date, dt.datetime], end: Union[dt.date, dt.datetime], *key):
         self._clock.time_check(end)
-        if type(start) != type(end):
+        if type(start) is not type(end):
             raise RuntimeError('expect same type for start and end when asking for data range')
         return self._data_mgr.get_data_range(self._utc_time(start), self._utc_time(end), *key)

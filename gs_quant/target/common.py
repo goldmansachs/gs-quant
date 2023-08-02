@@ -795,6 +795,7 @@ class Currency(EnumBase, Enum):
     MNT = 'MNT'
     MOP = 'MOP'
     MRO = 'MRO'
+    MTL = 'MTL'
     MTP = 'MTP'
     MUR = 'MUR'
     MVR = 'MVR'
@@ -814,6 +815,7 @@ class Currency(EnumBase, Enum):
     NGI = 'NGI'
     NGN = 'NGN'
     NIC = 'NIC'
+    NIO = 'NIO'
     NLG = 'NLG'
     NOK = 'NOK'
     NOZ = 'NOZ'
@@ -854,6 +856,7 @@ class Currency(EnumBase, Enum):
     SGS = 'SGS'
     SHP = 'SHP'
     SIL = 'SIL'
+    SIT = 'SIT'
     SKK = 'SKK'
     SLL = 'SLL'
     SRG = 'SRG'
@@ -931,6 +934,7 @@ class Currency(EnumBase, Enum):
     ZRN = 'ZRN'
     ZRZ = 'ZRZ'
     ZWD = 'ZWD'
+    ZWL = 'ZWL'
     AUd = 'AUd'
     BWp = 'BWp'
     EUr = 'EUr'
@@ -981,6 +985,14 @@ class DayCountFraction(EnumBase, Enum):
     ACT_OVER_ACT_ISMA = 'ACT/ACT ISMA'
     _30_OVER_360 = '30/360'
     _30E_OVER_360 = '30E/360'    
+
+
+class FallbackType(EnumBase, Enum):    
+    
+    """Different Rules for Libor Fallback"""
+
+    RFR = 'RFR'
+    LastFixing = 'LastFixing'    
 
 
 class Field(EnumBase, Enum):    
@@ -3722,7 +3734,7 @@ class KnockoutConvention(EnumBase, Enum):
     Continuous = 'Continuous'
     Brazil = 'Brazil'
     INR = 'INR'
-    Korea = 'Korea'
+    Korean = 'Korean'
     Malaysia = 'Malaysia'
     Philippines = 'Philippines'
     Taipei = 'Taipei'    
@@ -3762,6 +3774,12 @@ class LongShort(EnumBase, Enum):
 
     Long = 'Long'
     Short = 'Short'    
+
+
+class MarketBehaviour(EnumBase, Enum):    
+    
+    ContraintsBased = 'ContraintsBased'
+    Calibrated = 'Calibrated'    
 
 
 class MarketDataFrequency(EnumBase, Enum):    
@@ -3954,6 +3972,12 @@ class PayReceive(EnumBase, Enum):
     Rec = 'Rec'    
 
 
+class PaymentFrequency(EnumBase, Enum):    
+    
+    Every_Return = 'Every Return'
+    Maturity = 'Maturity'    
+
+
 class PayoutType(EnumBase, Enum):    
     
     """Delayed or Immediate payout"""
@@ -4121,13 +4145,20 @@ class ReportJobPriority(EnumBase, Enum):
     Normal = 'Normal'    
 
 
+class ReturnStyle(EnumBase, Enum):    
+    
+    """Return calculation style"""
+
+    Rate_of_Return = 'Rate of Return'
+    Price_Return = 'Price Return'    
+
+
 class ReturnType(EnumBase, Enum):    
     
-    """Return Type for Report Parameters"""
+    """Sum or Product of periodic return, relevant only if paying at maturity"""
 
-    Gross_Total_Return = 'Gross Total Return'
-    Net_Total_Return = 'Net Total Return'
-    Price_Return = 'Price Return'    
+    Sum = 'Sum'
+    Product = 'Product'    
 
 
 class RiskMeasureType(EnumBase, Enum):    
@@ -4174,6 +4205,7 @@ class RiskMeasureType(EnumBase, Enum):
     Forward_Price = 'Forward Price'
     Forward_Rate = 'Forward Rate'
     Forward_Spread = 'Forward Spread'
+    FX_BF_25_Vol = 'FX BF 25 Vol'
     FX_Calculated_Delta = 'FX Calculated Delta'
     FX_Calculated_Delta_No_Premium_Adjustment = 'FX Calculated Delta No Premium Adjustment'
     FX_Discount_Factor_Over = 'FX Discount Factor Over'
@@ -4184,6 +4216,7 @@ class RiskMeasureType(EnumBase, Enum):
     FX_Premium_Pct_Flat_Fwd = 'FX Premium Pct Flat Fwd'
     FX_Quoted_Delta_No_Premium_Adjustment = 'FX Quoted Delta No Premium Adjustment'
     FX_Quoted_Vega = 'FX Quoted Vega'
+    FX_RR_25_Vol = 'FX RR 25 Vol'
     Price = 'Price'
     Gamma = 'Gamma'
     GammaLocalCcy = 'GammaLocalCcy'
@@ -4365,6 +4398,14 @@ class StrikeMethodType(EnumBase, Enum):
     Fixed = 'Fixed'    
 
 
+class StrikeType(EnumBase, Enum):    
+    
+    """Style type, either spread of price"""
+
+    Spread = 'Spread'
+    Price = 'Price'    
+
+
 class SwapClearingHouse(EnumBase, Enum):    
     
     """Swap Clearing House"""
@@ -4384,6 +4425,16 @@ class SwapSettlement(EnumBase, Enum):
     Physical = 'Physical'
     Cash_CollatCash = 'Cash.CollatCash'
     Cash_PYU = 'Cash.PYU'    
+
+
+class SwapType(EnumBase, Enum):    
+    
+    Eq_CFD_Standard = 'Eq CFD Standard'
+    Eq_Swap = 'Eq Swap'
+    Eq_Swap_OET_Asymmetric = 'Eq Swap OET Asymmetric'
+    Eq_Swap_OET_Simple = 'Eq Swap OET Simple'
+    Eq_Swap_Term = 'Eq Swap Term'
+    Eq_Synthetic_OET = 'Eq Synthetic OET'    
 
 
 class TargetPaymentType(EnumBase, Enum):    
@@ -4662,18 +4713,6 @@ class Identifier(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class LiborFallbackScenario(Scenario):
-    date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    fallback_type: Optional[str] = field(default='RFR', metadata=field_metadata)
-    discounting: Optional[bool] = field(default=False, metadata=field_metadata)
-    cash_flows: Optional[bool] = field(default=True, metadata=field_metadata)
-    scenario_type: Optional[str] = field(init=False, default='LiborFallbackScenario', metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class LiquidityReportParameters(Base):
     title: Optional[str] = field(default=None, metadata=field_metadata)
     email: Optional[str] = field(default=None, metadata=field_metadata)
@@ -4895,17 +4934,6 @@ class ReportSubscriptionParameters(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class RiskRequestParameters(Base):
-    csa_term: Optional[str] = field(default=None, metadata=field_metadata)
-    raw_results: Optional[bool] = field(default=False, metadata=field_metadata)
-    use_historical_diddles_only: Optional[bool] = field(default=False, metadata=field_metadata)
-    market_behaviour: Optional[str] = field(default='ContraintsBased', metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class SimpleParty(Base):
     party_type: Optional[str] = field(default=None, metadata=field_metadata)
     party_name: Optional[str] = field(default=None, metadata=field_metadata)
@@ -4934,20 +4962,6 @@ class TimeFilter(Base):
     end_hours: str = field(default=None, metadata=field_metadata)
     time_zone: str = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class UserTag(Base):
-    name: str = field(default=None, metadata=field_metadata)
-    added_on: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    added_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    removed: Optional[bool] = field(default=None, metadata=field_metadata)
-    removed_on: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    removed_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    removal_reason: Optional[str] = field(default=None, metadata=field_metadata)
-    category: Optional[str] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -5434,6 +5448,18 @@ class ISelectNewParameter(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class LiborFallbackScenario(Scenario):
+    date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    fallback_type: Optional[FallbackType] = field(default=FallbackType.RFR, metadata=field_metadata)
+    discounting: Optional[bool] = field(default=False, metadata=field_metadata)
+    cash_flows: Optional[bool] = field(default=True, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='LiborFallbackScenario', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class LiveMarket(BaseMarket):
     location: PricingLocation = field(default=None, metadata=field_metadata)
     market_type: Optional[str] = field(init=False, default='LiveMarket', metadata=field_metadata)
@@ -5598,6 +5624,17 @@ class PositionPriceInput(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class RiskRequestParameters(Base):
+    csa_term: Optional[str] = field(default=None, metadata=field_metadata)
+    raw_results: Optional[bool] = field(default=False, metadata=field_metadata)
+    use_historical_diddles_only: Optional[bool] = field(default=False, metadata=field_metadata)
+    market_behaviour: Optional[MarketBehaviour] = field(default=MarketBehaviour.ContraintsBased, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class RollFwd(Scenario):
     date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
     realise_fwd: Optional[bool] = field(default=True, metadata=field_metadata)
@@ -5673,7 +5710,7 @@ class CurveScenario(Scenario):
 
 
 class FieldFilterMap(DictBase):
-    _PROPERTIES = {'internal_index_calc_region', 'issue_status_date', 'pl_id', 'last_returns_start_date', 'amount_outstanding', 'asset_classifications_gics_sub_industry', 'mdapi_class', 'data_set_ids', 'call_first_date', 'pb_client_id', 'asset_parameters_start', 'owner_id', 'economic_terms_hash', 'sec_db', 'objective', 'simon_intl_asset_tags', 'private_placement_type', 'hedge_notional', 'rank', 'data_set_category', 'pair_calculation', 'asset_parameters_index_family', 'created_by_id', 'vehicle_type', 'market_data_type', 'asset_parameters_payer_day_count_fraction', 'point_class', 'asset_parameters_underlier_type', 'asset_parameters_cap_floor', 'minimum_increment', 'asset_parameters_payer_currency', 'settlement_date', 'hedge_volatility', 'version', 'tags', 'asset_classifications_gics_industry_group', 'market_data_asset', 'asset_classifications_is_primary', 'styles', 'asset_parameters_total_quantity', 'short_name', 'asset_classifications_underliers_asset_class', 'calculation_region', 'eid', 'jsn', 'mkt_quoting_style', 'hurdle_type', 'mic', 'ps_id', 'issue_status', 'region_code', 'dollar_cross', 'portfolio_type', 'vendor', 'popularity', 'currency', 'term', 'real_time_restriction_status', 'asset_parameters_clearing_house', 'rating_fitch', 'non_symbol_dimensions', 'asset_parameters_option_style', 'share_class_type', 'asset_parameters_put_amount', 'asset_parameters_underlier', 'next_rebalance_date', 'asset_parameters_floating_rate_designated_maturity', 'target_notional', 'asset_parameters_tenor', 'mkt_class', 'delisted', 'asset_classifications_digital_asset_class', 'last_updated_since', 'regional_focus', 'asset_parameters_payer_designated_maturity', 'tsdb_shortname', 'seasonal_adjustment_short', 'asset_parameters_exchange_currency', 'asset_classifications_country_name', 'management_fee', 'asset_parameters_settlement_date', 'rating_moodys', 'simon_id', 'development_status', 'cusip', 'notes', 'tags_to_exclude', 'asset_parameters_floating_rate_option', 'internal_index_calc_agent', 'last_rebalance_date', 'rating_second_highest', 'asset_classifications_country_code', 'frequency', 'option_type', 'data_set_sub_category', 'is_live', 'is_legacy_pair_basket', 'issuer_type', 'asset_parameters_pricing_location', 'plot_id', 'asset_parameters_coupon', 'asset_parameters_identifier', 'asset_parameters_last_fixing_date', 'data_product', 'mq_symbol', 'asset_parameters_method_of_settlement', 'sectors', 'redemption_notice_period', 'multiplier', 'asset_parameters_payer_rate_option', 'market_data_point', 'external', 'wpk', 'sts_fx_currency', 'hedge_annualized_volatility', 'fix_order_routing_region', 'name', 'asset_parameters_expiration_date', 'aum', 'exchange', 'folder_name', 'region', 'cid', 'onboarded', 'live_date', 'issue_price', 'sink_factor', 'underlying_data_set_id', 'asset_parameters_notional_amount_in_other_currency', 'asset_parameters_payer_frequency', 'prime_id', 'asset_classifications_gics_sector', 'asset_parameters_pair', 'sts_asset_name', 'description', 'asset_classifications_is_country_primary', 'title', 'net_exposure_classification', 'asset_parameters_strike_price', 'coupon_type', 'last_updated_by_id', 'asset_parameters_forward_price', 'clone_parent_id', 'company', 'gate_type', 'issue_date', 'expiration_date', 'coverage', 'ticker', 'asset_parameters_receiver_rate_option', 'coin_metrics_id', 'call_last_date', 'asset_parameters_payer_spread', 'sts_rates_country', 'asset_parameters_premium_payment_date', 'latest_execution_time', 'asset_parameters_forward_rate', 'asset_parameters_receiver_designated_maturity', 'asset_classifications_digital_asset_industry', 'gate', 'multi_tags', 'gsn', 'gss', 'rating_linear', 'asset_class', 'asset_parameters_index', 'cm_id', 'asset_classifications_vendor', 'type', 'gsideid', 'mdapi', 'ric', 'issuer', 'position_source_id', 'measures', 'asset_parameters_floating_rate_day_count_fraction', 'asset_parameters_notional_amount', 'strategy_aum', 'action', 'id', 'asset_parameters_call_amount', 'asset_parameters_seniority', 'redemption_date', 'identifier', 'index_create_source', 'sec_name', 'sub_region', 'asset_parameters_receiver_day_count_fraction', 'asset_parameters_index2_tenor', 'asset_parameters_notional_currency', 'sedol', 'mkt_asset', 'rating_standard_and_poors', 'asset_types', 'bcid', 'asset_parameters_credit_index_series', 'gsid', 'tdapi', 'asset_classifications_digital_asset_subsector', 'last_updated_message', 'rcic', 'trading_restriction', 'status', 'name_raw', 'asset_parameters_pay_or_receive', 'domains_data', 'client_name', 'asset_parameters_index_series', 'asset_classifications_gics_industry', 'on_behalf_of', 'increment', 'accrued_interest_standard', 'enabled', 'sts_commodity', 'sectors_raw', 'sts_commodity_sector', 'asset_parameters_receiver_frequency', 'position_source_name', 'gsid_equivalent', 'categories', 'symbol_dimensions', 'ext_mkt_asset', 'asset_parameters_fixed_rate_frequency', 'coupon', 'side_pocket', 'compliance_restricted_status', 'quoting_style', 'is_entity', 'scenario_group_id', 'asset_parameters_trade_as', 'redemption_period', 'asset_parameters_issuer_type', 'sts_credit_market', 'bbid', 'asset_classifications_risk_country_code', 'asset_parameters_receiver_currency', 'sts_em_dm', 'asset_classifications_digital_asset_sector', 'issue_size', 'returns_enabled', 'seniority', 'asset_parameters_settlement', 'asset_parameters_expiration_time', 'primary_country_ric', 'is_pair_basket', 'asset_parameters_index_version', 'asset_parameters_commodity_reference_price', 'asset_classifications_digital_asset_market', 'default_backcast', 'asset_parameters_number_of_shares', 'use_machine_learning', 'performance_fee', 'report_type', 'lockup_type', 'lockup', 'underlying_asset_ids', 'asset_parameters_fee_currency', 'encoded_stats', 'pnode_id', 'backtest_type', 'asset_parameters_issuer', 'exchange_code', 'asset_parameters_strike', 'oe_id', 'asset_parameters_termination_date', 'resource', 'asset_parameters_receiver_spread', 'bbid_equivalent', 'hurdle', 'asset_parameters_effective_date', 'valoren', 'asset_parameters_number_of_options', 'asset_parameters_fixed_rate_day_count_fraction', 'auto_tags', 'short_description', 'ext_mkt_class', 'mkt_point1', 'portfolio_managers', 'asset_parameters_commodity_sector', 'hedge_tracking_error', 'asset_parameters_put_currency', 'asset_parameters_coupon_type', 'supra_strategy', 'term_status', 'wi_id', 'market_cap_category', 'asset_parameters_call_currency', 'mkt_point3', 'display_id', 'mkt_point2', 'strike_price', 'mkt_point4', 'risk_packages', 'units', 'em_id', 'sts_credit_region', 'country_id', 'ext_mkt_point3', 'asset_classifications_risk_country_name', 'asset_parameters_vendor', 'asset_parameters_index1_tenor', 'mkt_type', 'is_public', 'alias', 'ext_mkt_point1', 'product_type', 'ext_mkt_point2', 'sub_region_code', 'asset_parameters_option_type', 'asset_parameters_fixed_rate', 'last_returns_end_date', 'tsdb_synced_symbol', 'position_source_type', 'asset_parameters_multiplier', 'minimum_denomination', 'flagship', 'lms_id', 'cross', 'in_code', 'asset_parameters_strike_price_relative', 'sts_rates_maturity', 'sts_include_sstk_analytics', 'position_source', 'listed', 'non_owner_id', 'latest_end_date', 'shock_style', 'g10_currency', 'strategy', 'methodology', 'isin', 'asset_parameters_strike_type'}
+    _PROPERTIES = {'internal_index_calc_region', 'issue_status_date', 'pl_id', 'last_returns_start_date', 'amount_outstanding', 'asset_classifications_gics_sub_industry', 'mdapi_class', 'data_set_ids', 'call_first_date', 'pb_client_id', 'asset_parameters_start', 'owner_id', 'economic_terms_hash', 'sec_db', 'objective', 'simon_intl_asset_tags', 'private_placement_type', 'hedge_notional', 'rank', 'data_set_category', 'pair_calculation', 'asset_parameters_index_family', 'created_by_id', 'vehicle_type', 'market_data_type', 'asset_parameters_payer_day_count_fraction', 'point_class', 'asset_parameters_underlier_type', 'asset_parameters_cap_floor', 'minimum_increment', 'asset_parameters_payer_currency', 'settlement_date', 'hedge_volatility', 'version', 'tags', 'asset_classifications_gics_industry_group', 'market_data_asset', 'asset_classifications_is_primary', 'styles', 'asset_parameters_total_quantity', 'short_name', 'asset_classifications_underliers_asset_class', 'calculation_region', 'eid', 'jsn', 'mkt_quoting_style', 'hurdle_type', 'mic', 'ps_id', 'issue_status', 'region_code', 'dollar_cross', 'portfolio_type', 'vendor', 'popularity', 'term', 'currency', 'real_time_restriction_status', 'asset_parameters_clearing_house', 'rating_fitch', 'non_symbol_dimensions', 'asset_parameters_option_style', 'share_class_type', 'asset_parameters_put_amount', 'asset_parameters_underlier', 'next_rebalance_date', 'asset_parameters_floating_rate_designated_maturity', 'target_notional', 'asset_parameters_tenor', 'mkt_class', 'delisted', 'asset_classifications_digital_asset_class', 'last_updated_since', 'regional_focus', 'asset_parameters_payer_designated_maturity', 'tsdb_shortname', 'seasonal_adjustment_short', 'asset_parameters_exchange_currency', 'asset_classifications_country_name', 'management_fee', 'asset_parameters_settlement_date', 'rating_moodys', 'simon_id', 'development_status', 'cusip', 'notes', 'tags_to_exclude', 'asset_parameters_floating_rate_option', 'internal_index_calc_agent', 'last_rebalance_date', 'rating_second_highest', 'asset_classifications_country_code', 'frequency', 'option_type', 'data_set_sub_category', 'is_live', 'is_legacy_pair_basket', 'issuer_type', 'asset_parameters_pricing_location', 'plot_id', 'asset_parameters_coupon', 'asset_parameters_identifier', 'asset_parameters_last_fixing_date', 'data_product', 'mq_symbol', 'asset_parameters_method_of_settlement', 'sectors', 'redemption_notice_period', 'multiplier', 'asset_parameters_payer_rate_option', 'market_data_point', 'external', 'wpk', 'sts_fx_currency', 'hedge_annualized_volatility', 'fix_order_routing_region', 'name', 'asset_parameters_expiration_date', 'aum', 'exchange', 'folder_name', 'region', 'cid', 'onboarded', 'live_date', 'issue_price', 'sink_factor', 'underlying_data_set_id', 'asset_parameters_notional_amount_in_other_currency', 'asset_parameters_payer_frequency', 'prime_id', 'asset_classifications_gics_sector', 'asset_parameters_pair', 'sts_asset_name', 'description', 'asset_classifications_is_country_primary', 'title', 'net_exposure_classification', 'asset_parameters_strike_price', 'coupon_type', 'last_updated_by_id', 'asset_parameters_forward_price', 'clone_parent_id', 'company', 'gate_type', 'issue_date', 'expiration_date', 'coverage', 'ticker', 'asset_parameters_receiver_rate_option', 'coin_metrics_id', 'call_last_date', 'asset_parameters_payer_spread', 'sts_rates_country', 'asset_parameters_premium_payment_date', 'latest_execution_time', 'asset_parameters_forward_rate', 'asset_parameters_receiver_designated_maturity', 'asset_classifications_digital_asset_industry', 'gate', 'multi_tags', 'gsn', 'gss', 'rating_linear', 'asset_class', 'asset_parameters_index', 'cm_id', 'asset_classifications_vendor', 'type', 'gsideid', 'mdapi', 'ric', 'issuer', 'position_source_id', 'measures', 'asset_parameters_floating_rate_day_count_fraction', 'asset_parameters_notional_amount', 'strategy_aum', 'action', 'id', 'asset_parameters_call_amount', 'asset_parameters_seniority', 'redemption_date', 'identifier', 'index_create_source', 'sec_name', 'sub_region', 'asset_parameters_receiver_day_count_fraction', 'asset_parameters_index2_tenor', 'asset_parameters_notional_currency', 'sedol', 'mkt_asset', 'rating_standard_and_poors', 'asset_types', 'bcid', 'asset_parameters_credit_index_series', 'gsid', 'tdapi', 'asset_classifications_digital_asset_subsector', 'last_updated_message', 'rcic', 'trading_restriction', 'status', 'name_raw', 'asset_parameters_pay_or_receive', 'domains_data', 'client_name', 'asset_parameters_index_series', 'asset_classifications_gics_industry', 'on_behalf_of', 'increment', 'accrued_interest_standard', 'enabled', 'sts_commodity', 'sectors_raw', 'sts_commodity_sector', 'asset_parameters_receiver_frequency', 'position_source_name', 'gsid_equivalent', 'categories', 'symbol_dimensions', 'ext_mkt_asset', 'asset_parameters_fixed_rate_frequency', 'coupon', 'side_pocket', 'compliance_restricted_status', 'quoting_style', 'is_entity', 'scenario_group_id', 'asset_parameters_trade_as', 'redemption_period', 'asset_parameters_issuer_type', 'sts_credit_market', 'bbid', 'asset_classifications_risk_country_code', 'asset_parameters_receiver_currency', 'sts_em_dm', 'asset_classifications_digital_asset_sector', 'issue_size', 'returns_enabled', 'seniority', 'asset_parameters_settlement', 'asset_parameters_expiration_time', 'primary_country_ric', 'is_pair_basket', 'asset_parameters_index_version', 'asset_parameters_commodity_reference_price', 'asset_classifications_digital_asset_market', 'default_backcast', 'asset_parameters_number_of_shares', 'use_machine_learning', 'performance_fee', 'report_type', 'lockup_type', 'lockup', 'underlying_asset_ids', 'asset_parameters_fee_currency', 'encoded_stats', 'pnode_id', 'backtest_type', 'asset_parameters_issuer', 'exchange_code', 'asset_parameters_strike', 'oe_id', 'asset_parameters_termination_date', 'resource', 'asset_parameters_receiver_spread', 'bbid_equivalent', 'hurdle', 'asset_parameters_effective_date', 'valoren', 'asset_parameters_number_of_options', 'asset_parameters_fixed_rate_day_count_fraction', 'auto_tags', 'short_description', 'ext_mkt_class', 'mkt_point1', 'portfolio_managers', 'asset_parameters_commodity_sector', 'hedge_tracking_error', 'asset_parameters_put_currency', 'asset_parameters_coupon_type', 'supra_strategy', 'term_status', 'wi_id', 'market_cap_category', 'asset_parameters_call_currency', 'mkt_point3', 'display_id', 'mkt_point2', 'strike_price', 'mkt_point4', 'risk_packages', 'units', 'em_id', 'sts_credit_region', 'country_id', 'ext_mkt_point3', 'asset_classifications_risk_country_name', 'asset_parameters_vendor', 'asset_parameters_index1_tenor', 'mkt_type', 'is_public', 'alias', 'ext_mkt_point1', 'product_type', 'sub_region_code', 'ext_mkt_point2', 'asset_parameters_option_type', 'asset_parameters_fixed_rate', 'last_returns_end_date', 'tsdb_synced_symbol', 'position_source_type', 'asset_parameters_multiplier', 'minimum_denomination', 'flagship', 'lms_id', 'cross', 'in_code', 'asset_parameters_strike_price_relative', 'sts_rates_maturity', 'sts_include_sstk_analytics', 'position_source', 'listed', 'non_owner_id', 'latest_end_date', 'shock_style', 'g10_currency', 'strategy', 'methodology', 'isin', 'asset_parameters_strike_type'}
 
 
 @handle_camel_case_args
