@@ -38,6 +38,7 @@ class ActionHandler:
             self,
             state: Union[date, Iterable[date]],
             backtest: TBaseBacktest,
+            trigger_info: Any,
     ) -> Any:
         pass
 

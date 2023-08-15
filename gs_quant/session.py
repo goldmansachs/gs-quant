@@ -304,11 +304,11 @@ class GsSession(ContextBase):
             return_request_id: Optional[bool] = False,
             use_body: bool = False
     ) -> Union[Base, tuple, dict]:
-        kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
-                                                 use_body, "data")
         span = Tracer.get_instance().active_span
         tracer = Tracer(f'http:/{path}') if span else contextlib.nullcontext()
         with tracer as scope:
+            kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
+                                                     use_body, "data")
             if scope:
                 scope.span.set_tag('path', path)
                 scope.span.set_tag('timeout', timeout)
