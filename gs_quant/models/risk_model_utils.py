@@ -16,6 +16,7 @@ under the License.
 import datetime as dt
 import logging
 import math
+import pydash
 from time import sleep
 from typing import List, Dict, Union
 
@@ -27,9 +28,11 @@ from gs_quant.errors import MqRequestError, MqValueError
 from gs_quant.target.risk_models import RiskModelData, RiskModelType as Type
 
 
-def build_asset_data_map(results: List, universe: List, measure: str, factor_map: dict) -> dict:
+def build_asset_data_map(results: List, req_universe: tuple, measure: str, factor_map: dict) -> dict:
+    # if full universe is requested then pull the universe from the results.
     if not results:
         return {}
+    universe = pydash.get(results, '0.assetData.universe', []) if len(req_universe) == 0 else list(req_universe)
     data_map = {}
     for asset in universe:
         date_list = {}

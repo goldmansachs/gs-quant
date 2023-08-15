@@ -33,7 +33,8 @@ from gs_quant.models.risk_model_utils import build_asset_data_map, build_factor_
 from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModelEventType, RiskModelData, \
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
     RiskModelCoverage as CoverageType, RiskModelUniverseIdentifier as UniverseIdentifier, Entitlements, \
-    RiskModelTerm as Term, RiskModelUniverseIdentifierRequest, Factor as RiskModelFactor, RiskModelType
+    RiskModelTerm as Term, RiskModelUniverseIdentifierRequest, Factor as RiskModelFactor, RiskModelType, \
+    RiskModelDataMeasure
 
 
 class ReturnFormat(Enum):
@@ -702,6 +703,34 @@ class MarqueeRiskModel(RiskModel):
             factor_data = pd.DataFrame(factor_data)
         return factor_data
 
+    def _get_asset_data_measure(self,
+                                requested_measure: RiskModelDataMeasure,
+                                start_date: dt.date,
+                                end_date: dt.date = None,
+                                assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
+                                                                              []),
+                                format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        measure_to_key = {
+            Measure.Specific_Risk: 'specificRisk',
+            Measure.Total_Risk: 'totalRisk',
+            Measure.Historical_Beta: 'historicalBeta',
+            Measure.Predicted_Beta: 'predictedBeta',
+            Measure.Global_Predicted_Beta: 'globalPredictedBeta',
+            Measure.Daily_Return: 'dailyReturn',
+            Measure.Estimation_Universe_Weight: 'estimationUniverseWeight',
+        }
+        results = self.get_data(
+            start_date=start_date,
+            end_date=end_date,
+            assets=assets,
+            measures=[requested_measure, Measure.Asset_Universe],
+            limit_factors=False
+        ).get('results')
+        measure_data = build_asset_data_map(results, assets.universe, measure_to_key.get(requested_measure, ''), {})
+        if format == ReturnFormat.DATA_FRAME:
+            measure_data = pd.DataFrame(measure_data)
+        return measure_data
+
     def get_universe_exposure(self,
                               start_date: dt.date,
                               end_date: dt.date = None,
@@ -747,12 +776,11 @@ class MarqueeRiskModel(RiskModel):
             measures=[Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
         factor_map = {}
         if get_factors_by_name:
             model_factors = self.get_factor_data(start_date=start_date, end_date=end_date, format=ReturnFormat.JSON)
             factor_map = {factor.get('identifier'): factor.get('name') for factor in model_factors}
-        factor_exposure = build_asset_data_map(results, universe, 'factorExposure', factor_map)
+        factor_exposure = build_asset_data_map(results, assets.universe, 'factorExposure', factor_map)
         if format == ReturnFormat.DATA_FRAME:
             factor_exposure = pd.DataFrame.from_dict(
                 {(i, j): factor_exposure[i][j]
@@ -794,68 +822,9 @@ class MarqueeRiskModel(RiskModel):
 
         **See also**
 
-        :func:`get_residual_variance` :func:`get_specific_return` :func:`get_total_risk`
+        :func:`get_specific_return` :func:`get_total_risk`
         """
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Specific_Risk, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        specific_risk = build_asset_data_map(results, universe, 'specificRisk', {})
-        if format == ReturnFormat.DATA_FRAME:
-            specific_risk = pd.DataFrame(specific_risk)
-        return specific_risk
-
-    def get_residual_variance(self,
-                              start_date: dt.date,
-                              end_date: dt.date = None,
-                              assets: DataAssetsRequest = DataAssetsRequest(
-                                  RiskModelUniverseIdentifierRequest.gsid, []),
-                              format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Get residual variance data for existing risk model
-
-        :param start_date: Start date for data request
-        :param end_date: End date for data request
-        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
-        :param format: Which format to return the results in
-
-        :return: Residual variance for assets requested
-
-        **Usage**
-
-        Get residual variance data for assets specified in `assets` between `start_date` and `end_date`
-
-        **Examples**
-
-        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
-        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
-        >>> import datetime as dt
-        >>>
-        >>> start_date = dt.date(2022, 1, 1)
-        >>> end_date = dt.date(2022, 5, 2)
-        >>> model = FactorRiskModel.get("MODEL_ID")
-        >>> residual_variance = model.get_residual_variance(start_date, end_date,
-        ...                                                 DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
-
-        **See also**
-
-        :func:`get_total_risk` :func:`get_historical_beta` :func:`get_specific_return`
-         """
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Residual_Variance, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        residual_variance = build_asset_data_map(results, universe, 'residualVariance', {})
-        if format == ReturnFormat.DATA_FRAME:
-            residual_variance = pd.DataFrame(residual_variance)
-        return residual_variance
+        return self._get_asset_data_measure(Measure.Specific_Risk, start_date, end_date, assets, format)
 
     def get_data(self,
                  measures: List[Measure],
@@ -1130,18 +1099,7 @@ class FactorRiskModel(MarqueeRiskModel):
 
         :func:`get_specific_risk` :func:`get_specific_return` :func:`get_historical_beta`
         """
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Total_Risk, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        total_risk = build_asset_data_map(results, universe, 'totalRisk', {})
-        if format == ReturnFormat.DATA_FRAME:
-            total_risk = pd.DataFrame(total_risk)
-        return total_risk
+        return self._get_asset_data_measure(Measure.Total_Risk, start_date, end_date, assets, format)
 
     def get_historical_beta(self,
                             start_date: dt.date,
@@ -1177,18 +1135,7 @@ class FactorRiskModel(MarqueeRiskModel):
 
         :func:`get_predicted_beta` :func:`get_global_predicted_beta`
         """
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Historical_Beta, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        historical_beta = build_asset_data_map(results, universe, 'historicalBeta', {})
-        if format == ReturnFormat.DATA_FRAME:
-            historical_beta = pd.DataFrame(historical_beta)
-        return historical_beta
+        return self._get_asset_data_measure(Measure.Historical_Beta, start_date, end_date, assets, format)
 
     def get_predicted_beta(self,
                            start_date: dt.date,
@@ -1224,18 +1171,7 @@ class FactorRiskModel(MarqueeRiskModel):
 
         :func:`get_historical_beta` :func:`get_global_predicted_beta`
         """
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Predicted_Beta, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        predicted_beta = build_asset_data_map(results, universe, 'predictedBeta', {})
-        if format == ReturnFormat.DATA_FRAME:
-            predicted_beta = pd.DataFrame(predicted_beta)
-        return predicted_beta
+        return self._get_asset_data_measure(Measure.Predicted_Beta, start_date, end_date, assets, format)
 
     def get_global_predicted_beta(self,
                                   start_date: dt.date,
@@ -1272,18 +1208,7 @@ class FactorRiskModel(MarqueeRiskModel):
 
         :func:`get_predicted_beta` :func:`get_historical_beta`
         """
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Global_Predicted_Beta, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        global_predicted_beta = build_asset_data_map(results, universe, 'globalPredictedBeta', {})
-        if format == ReturnFormat.DATA_FRAME:
-            global_predicted_beta = pd.DataFrame(global_predicted_beta)
-        return global_predicted_beta
+        return self._get_asset_data_measure(Measure.Global_Predicted_Beta, start_date, end_date, assets, format)
 
     def get_daily_return(self,
                          start_date: dt.date,
@@ -1317,18 +1242,7 @@ class FactorRiskModel(MarqueeRiskModel):
         :func:`get_specific_risk` :func:`get_universe_factor_exposure` :func: `get_specific_return`
 
         """
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Daily_Return, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        daily_return = build_asset_data_map(results, universe, 'dailyReturn', {})
-        if format == ReturnFormat.DATA_FRAME:
-            daily_return = pd.DataFrame(daily_return)
-        return daily_return
+        return self._get_asset_data_measure(Measure.Daily_Return, start_date, end_date, assets, format)
 
     def get_specific_return(self,
                             start_date: dt.date,
@@ -1369,8 +1283,7 @@ class FactorRiskModel(MarqueeRiskModel):
             measures=[Measure.Specific_Return, Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        specific_return = build_asset_data_map(results, universe, 'specificReturn', {})
+        specific_return = build_asset_data_map(results, assets.universe, 'specificReturn', {})
         if format == ReturnFormat.DATA_FRAME:
             specific_return = pd.DataFrame(specific_return)
         return specific_return
@@ -1503,18 +1416,7 @@ class FactorRiskModel(MarqueeRiskModel):
 
            :func:`get_asset_universe` :func:`get_specific_risk`
            """
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Estimation_Universe_Weight, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        estimation_universe_weights = build_asset_data_map(results, universe, 'estimationUniverseWeight', {})
-        if format == ReturnFormat.DATA_FRAME:
-            estimation_universe_weights = pd.DataFrame(estimation_universe_weights)
-        return estimation_universe_weights
+        return self._get_asset_data_measure(Measure.Estimation_Universe_Weight, start_date, end_date, assets, format)
 
     def get_issuer_specific_covariance(self,
                                        start_date: dt.date,
@@ -1771,8 +1673,8 @@ class MacroRiskModel(MarqueeRiskModel):
         factor_categories = list(set(sensitivity_df.columns.get_level_values(0).values))
         factor_category_sens_df = pd.concat(
             [sensitivity_df[factor_category].agg(np.sum, axis=1)
-                                            .to_frame()
-                                            .rename(columns={0: factor_category})
+             .to_frame()
+             .rename(columns={0: factor_category})
              for factor_category in factor_categories], axis=1
         )
 
