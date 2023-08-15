@@ -429,6 +429,8 @@ class Asset(Entity, metaclass=ABCMeta):
         coordinate = self.get_data_coordinate(measure, dimensions, frequency)
         if coordinate is None:
             raise MqValueError(f"No data coordinate found for parameters: {measure, dimensions, frequency}")
+        elif coordinate.dataset_id is None:
+            raise MqValueError(f"Measure '{measure.value}' not found for asset: {self.__id}")
         return coordinate.get_series(start=start, end=end, dates=dates, operator=operator)
 
     def get_latest_close_price(self) -> float:

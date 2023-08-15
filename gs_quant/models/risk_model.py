@@ -416,7 +416,7 @@ class MarqueeRiskModel(RiskModel):
         universe = [data.get('assetData').get('universe') for data in results]
         dates_to_universe = dict(zip(dates, universe))
         if format == ReturnFormat.DATA_FRAME:
-            dates_to_universe = pd.DataFrame(dates_to_universe)
+            return pd.DataFrame.from_dict(dates_to_universe, orient='index').T
         return dates_to_universe
 
     def get_factor(self, name: str, start_date: dt.date = None, end_date: dt.date = None) -> Factor:

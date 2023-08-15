@@ -14,12 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime as dt
-
 from gs_quant.target.common import *
 from gs_quant.target.common import PayReceive as _PayReceive
 from gs_quant.target.common import RiskMeasure as __RiskMeasure
 from gs_quant.target.common import RiskMeasureType, AssetClass
+from gs_quant.target.workflow_quote import HedgeTypes
 
 
 class PositionType(Enum):
@@ -35,14 +34,12 @@ class PositionType(Enum):
 
 
 class DateLimit(Enum):
-    
     """ Datetime date constants """
 
     LOW_LIMIT = dt.date(1952, 1, 1)
 
 
 class PayReceive(EnumBase, Enum):
-
     """Pay or receive fixed"""
 
     Pay = 'Pay'
@@ -107,3 +104,7 @@ class ParameterisedRiskMeasure(RiskMeasure):
     def parameter_is_empty(self):
         return self.parameters is None
 
+
+global_config.decoders[Optional[HedgeTypes]] = decode_hedge_type
+global_config.decoders[HedgeTypes] = decode_hedge_type
+global_config.decoders[Optional[Tuple[HedgeTypes, ...]]] = decode_hedge_types

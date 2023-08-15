@@ -14,32 +14,33 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Union, Iterable, Optional
-
-from gs_quant import risk
-from gs_quant.backtests.actions import Action, AddTradeAction, HedgeAction, EnterPositionQuantityScaledAction, \
-    AddTradeActionInfo, HedgeActionInfo, ExitTradeAction, ExitTradeActionInfo, EnterPositionQuantityScaledActionInfo, \
-    RebalanceAction, RebalanceActionInfo, ExitAllPositionsAction
-from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
-from gs_quant.backtests.backtest_engine import BacktestBaseEngine
-from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date
-from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment, Hedge
-from gs_quant.datetime.relative_date import RelativeDateSchedule
-from gs_quant.instrument import Instrument
-from gs_quant.markets.portfolio import Portfolio
-from gs_quant.markets import PricingContext, HistoricalPricingContext
-from gs_quant.risk import Price
-from gs_quant.risk.results import PortfolioRiskResult
-from gs_quant.target.backtests import BacktestTradingQuantityType
-from gs_quant.common import ParameterisedRiskMeasure
-from functools import reduce
-from datetime import date
-from collections import defaultdict
-from itertools import zip_longest
 import copy
 import datetime as dt
 import logging
+from collections import defaultdict
+from datetime import date
+from functools import reduce
+from itertools import zip_longest
+from typing import Union, Iterable, Optional
 
+from gs_quant import risk
+from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
+from gs_quant.backtests.actions import Action, AddTradeAction, HedgeAction, EnterPositionQuantityScaledAction, \
+    AddTradeActionInfo, HedgeActionInfo, ExitTradeAction, ExitTradeActionInfo, EnterPositionQuantityScaledActionInfo, \
+    RebalanceAction, RebalanceActionInfo, ExitAllPositionsAction
+from gs_quant.backtests.backtest_engine import BacktestBaseEngine
+from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment, Hedge
+from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date
+from gs_quant.common import ParameterisedRiskMeasure
+from gs_quant.context_base import nullcontext
+from gs_quant.datetime.relative_date import RelativeDateSchedule
+from gs_quant.instrument import Instrument
+from gs_quant.markets import PricingContext, HistoricalPricingContext
+from gs_quant.markets.portfolio import Portfolio
+from gs_quant.risk import Price
+from gs_quant.risk.results import PortfolioRiskResult
+from gs_quant.target.backtests import BacktestTradingQuantityType
+from gs_quant.tracing import Tracer
 
 # priority set to contexts making requests to the pricing API (min. 1 - max. 10)
 DEFAULT_REQUEST_PRIORITY = 5
@@ -430,7 +431,7 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
         }
         self.action_impl_map.update(action_impl_map)
 
-    def get_action_handler(self, action: Action) -> Action:
+    def get_action_handler(self, action: Action) -> ActionHandler:
         if type(action) in self.action_impl_map:
             return self.action_impl_map[type(action)](action)
         raise RuntimeError(f'Action {type(action)} not supported by engine')
@@ -443,8 +444,9 @@ class GenericEngine(BacktestBaseEngine):
         self.price_measure = price_measure
         self._pricing_context_params = None
         self._initial_pricing_context = None
+        self._tracing_enabled = False
 
-    def get_action_handler(self, action: Action) -> Action:
+    def get_action_handler(self, action: Action) -> ActionHandler:
         handler_factory = GenericEngineActionFactory(self.action_impl_map)
         return handler_factory.get_action_handler(action)
 
@@ -503,7 +505,7 @@ class GenericEngine(BacktestBaseEngine):
         """
 
         logging.info(f'Starting Backtest: Building Date Schedule - {dt.datetime.now()}')
-
+        self._tracing_enabled = Tracer.get_instance().active_span is not None
         self._pricing_context_params = {'show_progress': show_progress,
                                         'csa_term': csa_term,
                                         'visible_to_gs': visible_to_gs,
@@ -514,13 +516,19 @@ class GenericEngine(BacktestBaseEngine):
             return self.__run(strategy, start, end, frequency, states, risks, initial_value,
                               result_ccy, holiday_calendar)
 
+    def _trace(self, label: str):
+        if self._tracing_enabled:
+            return Tracer(label)
+        else:
+            return nullcontext()
+
     def __run(self, strategy, start, end, frequency, states, risks, initial_value, result_ccy, holiday_calendar):
         """
         Run the backtest strategy using the ambient pricing context
         """
-
-        strategy_pricing_dates = RelativeDateSchedule(frequency, start, end).apply_rule(
-            holiday_calendar=holiday_calendar) if states is None else states
+        with self._trace('Relative Schedule'):
+            strategy_pricing_dates = RelativeDateSchedule(frequency, start, end).apply_rule(
+                holiday_calendar=holiday_calendar) if states is None else states
 
         strategy_pricing_dates.sort()
 
@@ -551,6 +559,43 @@ class GenericEngine(BacktestBaseEngine):
         backtest = BackTest(strategy, strategy_pricing_dates, risks)
 
         logging.info('Resolving initial portfolio')
+        with self._trace('Resolve initial portfolio'):
+            self._resolve_initial_portfolio(strategy, backtest, strategy_start_date,
+                                            strategy_pricing_dates)
+
+        logging.info('Building simple and semi-deterministic triggers and actions')
+        self._build_simple_and_semi_triggers_and_actions(strategy, backtest, strategy_pricing_dates)
+
+        logging.info(f'Filtering strategy calculations to run from {strategy_start_date} to {strategy_end_date}')
+        backtest.portfolio_dict = defaultdict(Portfolio, {k: backtest.portfolio_dict[k]
+                                                          for k in backtest.portfolio_dict
+                                                          if strategy_start_date <= k <= strategy_end_date})
+        backtest.hedges = defaultdict(list, {k: backtest.hedges[k]
+                                             for k in backtest.hedges
+                                             if strategy_start_date <= k <= strategy_end_date})
+
+        logging.info('Pricing simple and semi-deterministic triggers and actions')
+        with self._trace('Pricing semi-det Triggers'):
+            self._price_semi_det_triggers(backtest, risks)
+
+        logging.info('Scaling semi-deterministic triggers and actions and calculating path dependent triggers '
+                     'and actions')
+        for d in strategy_pricing_dates:
+            with self._trace('Process date') as scope:
+                if scope:
+                    scope.span.set_tag('date', str(d))
+                self._process_triggers_and_actions_for_date(d, strategy, backtest, risks)
+
+        with self._trace('Calc New Trades'):
+            self._calc_new_trades(backtest, risks)
+
+        with self._trace('Handle Cash'):
+            self._handle_cash(backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value)
+
+        logging.info(f'Finished Backtest:- {dt.datetime.now()}')
+        return backtest
+
+    def _resolve_initial_portfolio(self, strategy, backtest, strategy_start_date, strategy_pricing_dates):
         if len(strategy.initial_portfolio):
             for index in range(len(strategy.initial_portfolio)):
                 old_name = strategy.initial_portfolio[index].name
@@ -568,35 +613,37 @@ class GenericEngine(BacktestBaseEngine):
             for d in strategy_pricing_dates:
                 backtest.portfolio_dict[d].append(init_port.instruments)
 
-        logging.info('Building simple and semi-deterministic triggers and actions')
+    def _build_simple_and_semi_triggers_and_actions(self, strategy, backtest, strategy_pricing_dates):
         for trigger in strategy.triggers:
             if trigger.calc_type != CalcType.path_dependent:
                 triggered_dates = []
                 trigger_infos = defaultdict(list)
-                for d in strategy_pricing_dates:
-                    t_info = trigger.has_triggered(d, backtest)
-                    if t_info:
-                        triggered_dates.append(d)
-                        if t_info.info_dict:
-                            for k, v in t_info.info_dict.items():
-                                trigger_infos[k].append(v)
+                with self._trace('Build semi-det trigger') as scope:
+                    for d in strategy_pricing_dates:
+                        t_info = trigger.has_triggered(d, backtest)
+                        if t_info:
+                            triggered_dates.append(d)
+                            if t_info.info_dict:
+                                for k, v in t_info.info_dict.items():
+                                    trigger_infos[k].append(v)
+                    if scope:
+                        scope.span.set_tag('trigger.type', type(trigger).__name__)
+                        scope.span.set_tag('dates.triggered', len(triggered_dates))
+                        scope.span.set_tag('action.count', len(trigger.actions))
 
-                for action in trigger.actions:
-                    if action.calc_type != CalcType.path_dependent:
-                        self.get_action_handler(action).apply_action(triggered_dates,
-                                                                     backtest,
-                                                                     trigger_infos[type(action)]
-                                                                     if type(action) in trigger_infos else None)
+                    for action in trigger.actions:
+                        if action.calc_type != CalcType.path_dependent:
+                            with self._trace('Build semi-det action') as scope:
+                                if scope:
+                                    scope.span.set_tag('action.type', type(action).__name__)
+                                self.get_action_handler(action).apply_action(
+                                    triggered_dates,
+                                    backtest,
+                                    trigger_infos[type(action)]
+                                    if type(action) in trigger_infos else None
+                                )
 
-        logging.info(f'Filtering strategy calculations to run from {strategy_start_date} to {strategy_end_date}')
-        backtest.portfolio_dict = defaultdict(Portfolio, {k: backtest.portfolio_dict[k]
-                                                          for k in backtest.portfolio_dict
-                                                          if strategy_start_date <= k <= strategy_end_date})
-        backtest.hedges = defaultdict(list, {k: backtest.hedges[k]
-                                             for k in backtest.hedges
-                                             if strategy_start_date <= k <= strategy_end_date})
-
-        logging.info('Pricing simple and semi-deterministic triggers and actions')
+    def _price_semi_det_triggers(self, backtest, risks):
         with PricingContext():
             backtest.calc_calls += 1
             for day, portfolio in backtest.portfolio_dict.items():
@@ -614,92 +661,91 @@ class GenericEngine(BacktestBaseEngine):
                         port = p.trade if isinstance(p.trade, Portfolio) else Portfolio([p.trade])
                         p.results = port.calc(tuple(risks))
 
-        logging.info('Scaling semi-deterministic triggers and actions and calculating path dependent triggers '
-                     'and actions')
-        for d in strategy_pricing_dates:
-            logging.info(f'{d}: Processing triggers and actions')
-            # path dependent
-            for trigger in strategy.triggers:
-                if trigger.calc_type == CalcType.path_dependent:
-                    if trigger.has_triggered(d, backtest):
-                        for action in trigger.actions:
-                            self.get_action_handler(action).apply_action(d, backtest)
-                else:
+    def _process_triggers_and_actions_for_date(self, d, strategy, backtest, risks):
+        logging.info(f'{d}: Processing triggers and actions')
+        # path dependent
+        for trigger in strategy.triggers:
+            if trigger.calc_type == CalcType.path_dependent:
+                if trigger.has_triggered(d, backtest):
                     for action in trigger.actions:
-                        if action.calc_type == CalcType.path_dependent:
-                            if trigger.has_triggered(d, backtest):
-                                self.get_action_handler(action).apply_action(d, backtest)
-            # test to see if new trades have been added and calc
-            port = []
-            for t in backtest.portfolio_dict[d]:
-                if t.name not in backtest.results[d].portfolio:
-                    port.append(t)
+                        self.get_action_handler(action).apply_action(d, backtest)
+            else:
+                for action in trigger.actions:
+                    if action.calc_type == CalcType.path_dependent:
+                        if trigger.has_triggered(d, backtest):
+                            self.get_action_handler(action).apply_action(d, backtest)
+        # test to see if new trades have been added and calc
+        port = []
+        for t in backtest.portfolio_dict[d]:
+            if t.name not in backtest.results[d].portfolio:
+                port.append(t)
 
-            if len(port):
-                with PricingContext(pricing_date=d):
-                    results = Portfolio(port).calc(tuple(risks))
+        if len(port):
+            with PricingContext(pricing_date=d):
+                results = Portfolio(port).calc(tuple(risks))
 
-                backtest.add_results(d, results)
+            backtest.add_results(d, results)
 
+        for hedge in backtest.hedges[d]:
+            sp = hedge.scaling_portfolio
+            if sp.results is None:
+                with HistoricalPricingContext(dates=sp.dates):
+                    backtest.calculations += len(risks) * len(sp.dates)
+                    port_sp = sp.trade if isinstance(sp.trade, Portfolio) else Portfolio([sp.trade])
+                    sp.results = port_sp.calc(tuple(risks))
+
+        # semi path dependent scaling
+        if d in backtest.hedges:
+            if len(backtest.hedges[d]) and d not in backtest.results:
+                # No risk found to hedge, proceed to the next date
+                return
             for hedge in backtest.hedges[d]:
-                sp = hedge.scaling_portfolio
-                if sp.results is None:
-                    with HistoricalPricingContext(dates=sp.dates):
-                        backtest.calculations += len(risks) * len(sp.dates)
-                        port_sp = sp.trade if isinstance(sp.trade, Portfolio) else Portfolio([sp.trade])
-                        sp.results = port_sp.calc(tuple(risks))
-
-            # semi path dependent scaling
-            if d in backtest.hedges:
-                if len(backtest.hedges[d]) and d not in backtest.results:
-                    # No risk found to hedge, proceed to the next date
+                p = hedge.scaling_portfolio
+                current_risk = backtest.results[d][p.risk] \
+                    .transform(risk_transformation=p.risk_transformation).aggregate(allow_mismatch_risk_keys=True)
+                hedge_risk = p.results[d][p.risk].transform(risk_transformation=p.risk_transformation).aggregate()
+                if hedge_risk == 0:
                     continue
-                for hedge in backtest.hedges[d]:
-                    p = hedge.scaling_portfolio
-                    current_risk = backtest.results[d][p.risk]\
-                        .transform(risk_transformation=p.risk_transformation).aggregate(allow_mismatch_risk_keys=True)
-                    hedge_risk = p.results[d][p.risk].transform(risk_transformation=p.risk_transformation).aggregate()
-                    if hedge_risk == 0:
-                        continue
-                    if current_risk.unit != hedge_risk.unit:
-                        raise RuntimeError('cannot hedge in a different currency')
-                    scaling_factor = current_risk / hedge_risk
-                    if isinstance(p.trade, Portfolio):
-                        # Scale the portfolio by risk target
-                        scaled_portfolio_position = copy.deepcopy(p.trade)
-                        scaled_portfolio_position.name = f'Scaled_{scaled_portfolio_position.name}'
-                        for instrument in scaled_portfolio_position.all_instruments:
-                            instrument.name = f'Scaled_{instrument.name}'
+                if current_risk.unit != hedge_risk.unit:
+                    raise RuntimeError('cannot hedge in a different currency')
+                scaling_factor = current_risk / hedge_risk
+                if isinstance(p.trade, Portfolio):
+                    # Scale the portfolio by risk target
+                    scaled_portfolio_position = copy.deepcopy(p.trade)
+                    scaled_portfolio_position.name = f'Scaled_{scaled_portfolio_position.name}'
+                    for instrument in scaled_portfolio_position.all_instruments:
+                        instrument.name = f'Scaled_{instrument.name}'
 
-                        # trade hedge in opposite direction
-                        scale_direction = -1
-                        scaled_portfolio_position.scale(scaling_factor * scale_direction)
+                    # trade hedge in opposite direction
+                    scale_direction = -1
+                    scaled_portfolio_position.scale(scaling_factor * scale_direction)
 
-                        for day in p.dates:
-                            # add scaled hedge position to portfolio for day.
-                            # NOTE this adds leaves, not the portfolio
-                            backtest.portfolio_dict[day] += copy.deepcopy(scaled_portfolio_position)
+                    for day in p.dates:
+                        # add scaled hedge position to portfolio for day.
+                        # NOTE this adds leaves, not the portfolio
+                        backtest.portfolio_dict[day] += copy.deepcopy(scaled_portfolio_position)
 
-                        # scale trade in hedge cash payments
-                        hedge.entry_payment.trade = copy.deepcopy(scaled_portfolio_position)
-                        if hedge.exit_payment is not None:
-                            hedge.exit_payment.trade = copy.deepcopy(scaled_portfolio_position)
-                            hedge.exit_payment.scale_date = None
-                    else:
-                        new_notional = getattr(p.trade, p.scaling_parameter) * -scaling_factor
-                        scaled_trade = p.trade.as_dict()
-                        scaled_trade[p.scaling_parameter] = new_notional
-                        scaled_trade = Instrument.from_dict(scaled_trade)
-                        scaled_trade.name = p.trade.name
-                        for day in p.dates:
-                            backtest.add_results(day, p.results[day] * -scaling_factor)
-                            backtest.portfolio_dict[day] += Portfolio(scaled_trade)
-                    # Add payments to backtest cash payments
-                    # Scaled if portfolio, otherwise picked up from scaled results or scaled via scale_date
-                    backtest.cash_payments[hedge.entry_payment.effective_date].append(hedge.entry_payment)
+                    # scale trade in hedge cash payments
+                    hedge.entry_payment.trade = copy.deepcopy(scaled_portfolio_position)
                     if hedge.exit_payment is not None:
-                        backtest.cash_payments[hedge.exit_payment.effective_date].append(hedge.exit_payment)
+                        hedge.exit_payment.trade = copy.deepcopy(scaled_portfolio_position)
+                        hedge.exit_payment.scale_date = None
+                else:
+                    new_notional = getattr(p.trade, p.scaling_parameter) * -scaling_factor
+                    scaled_trade = p.trade.as_dict()
+                    scaled_trade[p.scaling_parameter] = new_notional
+                    scaled_trade = Instrument.from_dict(scaled_trade)
+                    scaled_trade.name = p.trade.name
+                    for day in p.dates:
+                        backtest.add_results(day, p.results[day] * -scaling_factor)
+                        backtest.portfolio_dict[day] += Portfolio(scaled_trade)
+                # Add payments to backtest cash payments
+                # Scaled if portfolio, otherwise picked up from scaled results or scaled via scale_date
+                backtest.cash_payments[hedge.entry_payment.effective_date].append(hedge.entry_payment)
+                if hedge.exit_payment is not None:
+                    backtest.cash_payments[hedge.exit_payment.effective_date].append(hedge.exit_payment)
 
+    def _calc_new_trades(self, backtest, risks):
         logging.info('Calculating and scaling newly added portfolio positions')
         # test to see if new trades have been added and calc
         with PricingContext():
@@ -728,6 +774,7 @@ class GenericEngine(BacktestBaseEngine):
         for day, leaves in leaves_by_date.items():
             backtest.add_results(day, leaves)
 
+    def _handle_cash(self, backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value):
         logging.info('Calculating prices for cash payments')
         # run any additional calcs to handle cash scaling (e.g. unwinds)
         cash_results = {}
@@ -790,6 +837,3 @@ class GenericEngine(BacktestBaseEngine):
                     current_value = backtest.cash_dict[d]
 
                 current_value = copy.deepcopy(current_value)
-
-        logging.info(f'Finished Backtest:- {dt.datetime.now()}')
-        return backtest
