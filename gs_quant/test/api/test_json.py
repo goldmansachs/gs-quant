@@ -20,7 +20,7 @@ import json
 import pytz
 
 from gs_quant.json_encoder import JSONEncoder
-from gs_quant.target.workflow_quote import BinaryImageComments, ImgType, Encoding, HyperLinkImageComments, \
+from gs_quant.workflow import BinaryImageComments, ImgType, Encoding, HyperLinkImageComments, \
     VisualStructuringReport, ChartingParameters, OverlayType
 
 

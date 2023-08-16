@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 import asyncio
-import contextlib
 import inspect
 import itertools
 import json
@@ -39,7 +38,7 @@ from opentracing.tags import HTTP_URL, HTTP_METHOD, HTTP_STATUS_CODE
 
 from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
-from gs_quant.context_base import ContextBase
+from gs_quant.context_base import ContextBase, nullcontext
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
 from gs_quant.json_encoder import JSONEncoder, encode_default
 from gs_quant.tracing import Tracer
@@ -235,7 +234,8 @@ class GsSession(ContextBase):
             include_version: Optional[bool],
             timeout: Optional[int],
             use_body: bool,
-            data_key: str
+            data_key: str,
+            tracing_scope: Optional[dict]
     ) -> Tuple[dict, str]:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
@@ -244,15 +244,28 @@ class GsSession(ContextBase):
         kwargs = {
             'timeout': timeout
         }
+
+        if tracing_scope:
+            tracing_scope.span.set_tag('path', path)
+            tracing_scope.span.set_tag('timeout', timeout)
+            tracing_scope.span.set_tag(HTTP_URL, url)
+            tracing_scope.span.set_tag(HTTP_METHOD, method)
+            tracing_scope.span.set_tag('span.kind', 'client')
+
         if method in ['GET', 'DELETE'] and not use_body:
             kwargs['params'] = payload
+            if tracing_scope:
+                headers = self._session.headers.copy()
+                Tracer.inject(Format.HTTP_HEADERS, headers)
+                kwargs['headers'] = headers
         elif method in ['POST', 'PUT'] or (method in ['GET', 'DELETE'] and use_body):
             headers = self._session.headers.copy()
 
             if request_headers:
                 headers.update(request_headers)
 
-            Tracer.inject(Format.HTTP_HEADERS, headers)
+            if tracing_scope:
+                Tracer.inject(Format.HTTP_HEADERS, headers)
 
             if 'Content-Type' not in headers:
                 headers.update({'Content-Type': 'application/json; charset=utf-8'})
@@ -305,16 +318,10 @@ class GsSession(ContextBase):
             use_body: bool = False
     ) -> Union[Base, tuple, dict]:
         span = Tracer.get_instance().active_span
-        tracer = Tracer(f'http:/{path}') if span else contextlib.nullcontext()
+        tracer = Tracer(f'http:/{path}') if span else nullcontext()
         with tracer as scope:
             kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
-                                                     use_body, "data")
-            if scope:
-                scope.span.set_tag('path', path)
-                scope.span.set_tag('timeout', timeout)
-                scope.span.set_tag(HTTP_URL, url)
-                scope.span.set_tag(HTTP_METHOD, method)
-                scope.span.set_tag('span.kind', 'client')
+                                                     use_body, "data", scope)
             response = self._session.request(method, url, **kwargs)
             request_id = response.headers.get('x-dash-requestid')
             logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
@@ -344,10 +351,17 @@ class GsSession(ContextBase):
             use_body: bool = False
     ) -> Union[Base, tuple, dict]:
         self._init_async()
-        kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
-                                                 use_body, "content")
-        response = await self._session_async.request(method, url, **kwargs)
-        request_id = response.headers.get('x-dash-requestid')
+        span = Tracer.get_instance().active_span
+        tracer = Tracer(f'http:/{path}') if span else nullcontext()
+        with tracer as scope:
+            kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
+                                                     use_body, "content", scope)
+            response = await self._session_async.request(method, url, **kwargs)
+            request_id = response.headers.get('x-dash-requestid')
+            if scope:
+                scope.span.set_tag(HTTP_STATUS_CODE, response.status_code)
+                scope.span.set_tag('dash.request.id', request_id)
+
         logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
         if response.status_code == 401:
             # Expired token or other authorization issue

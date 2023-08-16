@@ -26,7 +26,7 @@ from gs_quant.session import GsSession
 from gs_quant.target.portfolios import Portfolio, Position, PositionSet
 from gs_quant.target.reports import Report
 from gs_quant.target.risk_models import RiskModelTerm as Term
-from gs_quant.target.workflow_quote import WorkflowPosition, WorkflowPositionsResponse, SaveQuoteRequest
+from gs_quant.workflow import WorkflowPosition, WorkflowPositionsResponse, SaveQuoteRequest
 
 _logger = logging.getLogger(__name__)
 

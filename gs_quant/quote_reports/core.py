@@ -17,7 +17,7 @@ from typing import Dict, Any, Iterable
 
 from dataclasses_json.cfg import _GlobalConfig
 
-from gs_quant.target.workflow_quote import VisualStructuringReport, BinaryImageComments, HyperLinkImageComments, \
+from gs_quant.workflow import VisualStructuringReport, BinaryImageComments, HyperLinkImageComments, \
     CustomDeltaHedge, DeltaHedge
 
 global_config = _GlobalConfig()
