@@ -20,7 +20,7 @@ from contextlib import ContextDecorator
 from typing import Tuple, Optional
 
 import pandas as pd
-from opentracing import Span, UnsupportedFormatException
+from opentracing import Span, UnsupportedFormatException, SpanContextCorruptedException
 from opentracing import Tracer as OpenTracer
 from opentracing.mocktracer import MockTracer
 
@@ -54,6 +54,14 @@ class Tracer(ContextDecorator):
                 instance.inject(span.context, format, carrier)
             except UnsupportedFormatException:
                 pass
+
+    @staticmethod
+    def extract(format, carrier):
+        instance = Tracer.get_instance()
+        try:
+            return instance.extract(format, carrier)
+        except (UnsupportedFormatException, SpanContextCorruptedException):
+            pass
 
     @staticmethod
     def set_factory(factory: TracerFactory):
@@ -148,7 +156,7 @@ class Tracer(ContextDecorator):
         fig.show()
 
     @staticmethod
-    def gather_data(as_string: bool = True):
+    def gather_data(as_string: bool = True, root_id: Optional[str] = None):
         spans = Tracer.get_spans()
         spans_by_parent = {}
 
@@ -168,7 +176,8 @@ class Tracer(ContextDecorator):
 
         total = 0
         lines = []
-        for span in reversed(spans_by_parent.get(None, [])):
+        # By default, we look for the span with no parent, but this might not always be what we want
+        for span in reversed(spans_by_parent.get(root_id, [])):
             _build_tree(span, 0)
             total += (span.finish_time - span.start_time) * 1000
 
@@ -179,8 +188,8 @@ class Tracer(ContextDecorator):
             return lines, total
 
     @staticmethod
-    def print(reset=True):
-        tracing_str, total = Tracer.gather_data()
+    def print(reset=True, root_id=None):
+        tracing_str, total = Tracer.gather_data(root_id=root_id)
         _logger.warning(f'Tracing Info:\n{tracing_str}\n{"-" * 61}\nTOTAL:{total:>52.1f} ms')
         if reset:
             Tracer.reset()
