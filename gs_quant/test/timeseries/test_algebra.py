@@ -625,5 +625,20 @@ def test_weighted_average():
     assert_series_equal(actual, expected)
 
 
+def test_geometrically_aggregate():
+    dates = [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+    ]
+
+    x = pd.Series([0.05, 0.04, -0.03, 0.12], index=dates)
+
+    result = geometrically_aggregate(x)
+    expected = pd.Series([0.05, 0.09200000000000008, 0.05923999999999996, 0.18634879999999998], index=dates)
+    assert_series_equal(result, expected)
+
+
 if __name__ == '__main__':
     pytest.main(args=["test_algebra.py"])

@@ -131,3 +131,23 @@ class GsIndexApi:
 
         results = GsSession.current._get(url)['results']
         return results
+
+    @staticmethod
+    def get_last_positions_data(
+            asset_id: str,
+            fields: IdList = None,
+            position_type: PositionType = None,
+    ) -> List[dict]:
+        url = f'/indices/{asset_id}/positions/last/data'
+        params = ''
+        if fields is not None:
+            params += '&fields='.join([''] + fields)
+
+        if position_type is not None:
+            params += '&type=' + position_type.value
+
+        if len(params):
+            url = f'{url}?{params}'
+
+        results = GsSession.current._get(url)['results']
+        return results

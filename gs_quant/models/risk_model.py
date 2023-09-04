@@ -536,6 +536,7 @@ class MarqueeRiskModel(RiskModel):
                         identifiers: List[str] = None,
                         include_performance_curve: bool = False,
                         category_filter: List[str] = None,
+                        name_filter: List[str] = None,
                         factor_type: FactorType = None,
                         format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get factor data for existing risk model
@@ -548,7 +549,7 @@ class MarqueeRiskModel(RiskModel):
             Default is to return all results
         :param factor_type: The type of factor.
         :param format: which format to return the results in
-
+        :param name_filter: Filter the results based on factor name.
         :return: Risk model factor data
 
         **Usage**
@@ -557,30 +558,84 @@ class MarqueeRiskModel(RiskModel):
 
         **Examples**
 
+        This will get the factor data for the past 1 month.
+
         >>> from gs_quant.models.risk_model import FactorRiskModel
         >>> import datetime as dt
         >>>
         >>> model = FactorRiskModel.get("MODEL_ID")
         >>> factor_data = model.get_factor_data()
 
+        This will get the factor data within the range start_date and end_date
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_factor_data(start_date=dt.date("2023-01-01"), end_date=dt.date("2023-02-03"))
+
+        This will return factor data for factors with the specified identifiers
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_factor_data(identifiers=["1", "2", "3"])
+
+        This will filter factor data based on factor names
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_factor_data(name_filter=["Factor name a", "Factor name b", "Factor name c"])
+
+        This will return factor data for factors in the specified factor categories
+
+         >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_factor_data(category_filter=["Factor category 1", "Factor category 2"])
+
+        This will return all the factors of type "Factor" (won't return data on factor categories)
+
+         >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_factor_data(factor_type=FactorType.Factor)
+
+        This will only return higher level factor category data.
+
+         >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_factor_data(factor_type=FactorType.Category)
+
         **See also**
 
         :func:`get_many_factors :func:`get_factor_returns_by_name`
         """
+        factor_categories = category_filter if category_filter else []
+        if factor_type == FactorType.Category:
+            if factor_categories:
+                raise ValueError('Category filter is not applicable while requesting the FactorType as Category')
+            factor_categories = ['Aggregations']
         factor_data = GsFactorRiskModelApi.get_risk_model_factor_data(
             self.id,
             start_date,
             end_date,
             identifiers,
-            include_performance_curve
+            include_performance_curve,
+            factor_categories,
+            name_filter,
         )
-        if factor_type:
+        if factor_type == FactorType.Factor:
+            if 'Aggregations' in factor_categories:
+                raise ValueError("Aggregations should not be passed while requesting the FactorType as Factor")
             factor_data = [factor for factor in factor_data if factor['type'] == factor_type.value]
-        if category_filter:
-            if factor_type == FactorType.Category:
-                print('Category filter is not applicable for the Category FactorType')
-            else:
-                factor_data = [factor for factor in factor_data if factor['factorCategory'] in category_filter]
         if format == ReturnFormat.DATA_FRAME:
             factor_data = pd.DataFrame(factor_data)
         return factor_data

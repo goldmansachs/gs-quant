@@ -113,7 +113,7 @@ class RiskModelUniverseIdentifierRequest(EnumBase, Enum):
     ticker = 'ticker'
     primeId = 'primeId'
     isin = 'isin'    
-
+    bcid = "bcid"
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)

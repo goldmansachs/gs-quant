@@ -44,6 +44,7 @@ class Position:
         self.__name = name
         self.__asset_id = asset_id
         self.__tags = tags
+        self.__restricted, self.__hard_to_borrow = None, None
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Position):
@@ -105,6 +106,22 @@ class Position:
     @tags.setter
     def tags(self, value: List[PositionTag]):
         self.__tags = value
+
+    @property
+    def hard_to_borrow(self) -> bool:
+        return self.__hard_to_borrow
+
+    @hard_to_borrow.setter
+    def _hard_to_borrow(self, value: bool):
+        self.__hard_to_borrow = value
+
+    @property
+    def restricted(self) -> bool:
+        return self.__restricted
+
+    @restricted.setter
+    def _restricted(self, value: bool):
+        self.__restricted = value
 
     def as_dict(self) -> Dict:
         position_dict = dict(identifier=self.identifier, weight=self.weight,
@@ -336,6 +353,120 @@ class PositionSet:
         """
         self.__unpriced_positions = None
 
+    def get_restricted_positions(self) -> pd.DataFrame:
+        """
+        Retrieve formatted RTL positions
+
+        :return: DataFrame of RTL positions for position set
+
+        **Usage**
+
+        View position set RTL position info
+
+        **Examples**
+
+        Get position set RTL positions:
+
+        >>> import datetime as dt
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW', quantity=100), Position(identifier='MSFT UW', quantity=100)]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+        >>> position_set.get_restricted_positions()
+
+        **See also**
+
+        :func:`get_positions` :func:`resolve` :func:`price` :func:`remove_restricted_positions`
+        :func:`get_hard_to_borrow_positions` :func:`remove_hard_to_borrow_positions`
+        """
+        positions = [p.as_dict() for p in self.positions if p.restricted]
+        return pd.DataFrame(positions)
+
+    def remove_restricted_positions(self):
+        """
+        Remove RTL positions from your position set
+
+        **Usage**
+
+        Remove RTL positions from your position set
+
+        **Examples**
+
+        Remove RTL positions from your position set:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW'), Position(identifier='MSFT UW')]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+        >>> position_set.remove_restricted_positions()
+
+        **See also**
+
+        :func:`get_positions` :func:`resolve` :func:`price` :func:`get_restricted_positions`
+        :func:`get_hard_to_borrow_positions` :func:`remove_hard_to_borrow_positions`
+        """
+        self.positions = [p for p in self.positions if p.restricted is not True]
+
+    def get_hard_to_borrow_positions(self) -> pd.DataFrame:
+        """
+        Retrieve formatted htb positions
+
+        :return: DataFrame of htb positions for position set
+
+        **Usage**
+
+        View position set htb position info
+
+        **Examples**
+
+        Get position set htb positions:
+
+        >>> import datetime as dt
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW', quantity=100), Position(identifier='MSFT UW', quantity=100)]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+        >>> position_set.price()
+        >>> position_set.get_hard_to_borrow_positions()
+
+        **See also**
+
+        :func:`get_positions` :func:`resolve` :func:`price` :func:`get_restricted_positions`
+        :func:`remove_restricted_positions` :func:`remove_hard_to_borrow_positions`
+        """
+        positions = [p.as_dict() for p in self.positions if p.hard_to_borrow]
+        return pd.DataFrame(positions)
+
+    def remove_hard_to_borrow_positions(self):
+        """
+        Remove hard to borrow positions from your position set
+
+        **Usage**
+
+        Remove hard to borrow positions from your position set
+
+        **Examples**
+
+        Remove hard to borrow positions from your position set:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW'), Position(identifier='MSFT UW')]
+        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set.resolve()
+        >>> position_set.price()
+        >>> position_set.remove_hard_to_borrow_positions()
+
+        **See also**
+
+        :func:`get_positions` :func:`resolve` :func:`price` :func:`get_restricted_positions`
+        :func:`remove_restricted_positions` :func:`get_hard_to_borrow_positions`
+        """
+        self.positions = [p for p in self.positions if p.hard_to_borrow is not True]
+
     def equalize_position_weights(self):
         """
         Assigns equal weight to each position in position set
@@ -431,6 +562,7 @@ class PositionSet:
                     asset = get(id_map, p.identifier.replace('.', '\.'))
                     p.asset_id = get(asset, 'id')
                     p.name = get(asset, 'name')
+                    p._restricted = get(asset, 'restricted')
                 if p.asset_id is not None:
                     resolved_positions.append(p)
             self.positions = resolved_positions
@@ -534,6 +666,7 @@ class PositionSet:
             if asset_key in position_result_map:
                 p.weight = position_result_map.get(asset_key).weight
                 p.quantity = position_result_map.get(asset_key).quantity
+                p._hard_to_borrow = position_result_map.get(asset_key).hard_to_borrow
                 priced_positions.append(p)
             else:
                 unpriced_positions.append(p)
@@ -678,7 +811,7 @@ class PositionSet:
     def __resolve_identifiers(identifiers: List[str], date: datetime.date, **kwargs) -> List:
         response = GsAssetApi.resolve_assets(
             identifier=identifiers,
-            fields=['name', 'id'],
+            fields=['name', 'id', 'tradingRestriction'],
             limit=1,
             as_of=date,
             **kwargs
@@ -688,7 +821,9 @@ class PositionSet:
 
         for identifier in response:
             if len(response[identifier]) > 0:
-                id_map[identifier] = {'id': response[identifier][0]['id'], 'name': response[identifier][0]['name']}
+                id_map[identifier] = {'id': response[identifier][0]['id'],
+                                      'name': response[identifier][0]['name'],
+                                      'restricted': response[identifier][0].get('tradingRestriction')}
             else:
                 unmapped_assets.append(identifier)
 

@@ -19,7 +19,6 @@
 import math
 from functools import reduce
 
-from gs_quant.errors import MqTypeError
 from .datetime import *
 from .helper import plot_function
 
@@ -468,7 +467,7 @@ def abs_(x: pd.Series) -> pd.Series:
 
     :math:`R_t = |X_t|`
 
-    Equivalent to :math:`R_t = \sqrt{X_t^2}`
+    Equivalent to :math:`R_t = sqrt{X_t^2}`
 
     **Examples**
 
@@ -808,3 +807,21 @@ def weighted_sum(series: List[pd.Series], weights: list) -> pd.Series:
     series = [s.reindex(cal) for s in series]
     weights = [pd.Series(w, index=cal) for w in weights]
     return sum(series[i] * weights[i] for i in range(len(series))) / sum(weights)
+
+
+@plot_function
+def geometrically_aggregate(series: pd.Series) -> pd.Series:
+    """
+    Geometrically aggregate a series.
+
+    :param series: list of time series
+    :return: time series of geometrically aggregated results
+
+    **Usage**
+
+    Used to aggregate daily returns when expressed as weights
+    """
+    er = [series.iloc[0]]
+    for i in range(1, len(series)):
+        er.append((1 + er[i - 1]) * (1 + series.iloc[i]) - 1)
+    return pd.Series(er, index=series.index)

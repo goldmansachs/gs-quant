@@ -428,6 +428,16 @@ class PositionedEntity(metaclass=ABCMeta):
                           'PerformanceReport class')
         raise NotImplementedError
 
+    def get_last_positions_data(self,
+                                fields: [str] = None,
+                                position_type: PositionType = PositionType.CLOSE) -> List[Dict]:
+        if self.positioned_entity_type == EntityType.ASSET:
+            return GsIndexApi.get_last_positions_data(self.id, fields, position_type)
+        if self.positioned_entity_type == EntityType.PORTFOLIO:
+            raise MqError('Please use the get_positions_data function on the portfolio performance report using the '
+                          'PerformanceReport class')
+        raise NotImplementedError
+
     def get_position_dates(self) -> Tuple[dt.date, ...]:
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             return GsPortfolioApi.get_position_dates(portfolio_id=self.id)

@@ -16,15 +16,16 @@
 # a 1-line description. Type annotations should be provided for parameters.
 
 import datetime
+
 import numpy
-import pandas as pd
 import scipy.stats.mstats as stats
+import statsmodels.api as sm
 from scipy.stats import percentileofscore
 from statsmodels.regression.rolling import RollingOLS
+
 from .algebra import *
-import statsmodels.api as sm
-from ..models.epidemiology import SIR, SEIR, EpidemicModel
 from ..data import DataContext
+from ..models.epidemiology import SIR, SEIR, EpidemicModel
 
 """
 Stats library is for basic arithmetic and statistical operations on timeseries.
@@ -731,7 +732,8 @@ def zscores(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Se
         return interpolate(zscore_series, x, Interpolate.NAN)
     if not isinstance(w.w, int):
         w = normalize_window(x, w)
-        values = [_zscore(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]) for idx in x.index]
+        dt_idx = pd.DatetimeIndex(x.index).date
+        values = [_zscore(x.loc[(dt_idx > (idx - w.w).date()) & (dt_idx <= idx)]) for idx in dt_idx]
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).apply(_zscore, raw=False), w)

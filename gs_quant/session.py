@@ -274,9 +274,9 @@ class GsSession(ContextBase):
             kwargs['headers'] = headers
 
             if is_dataframe or payload:
-                kwargs[data_key] = payload if isinstance(payload, (str, bytes)) else \
-                    msgpack.dumps(payload, default=encode_default) if use_msgpack else \
-                    json.dumps(payload, cls=JSONEncoder)
+                kwargs[data_key] = (payload if isinstance(payload, (str, bytes)) else
+                                    msgpack.dumps(payload, default=encode_default) if use_msgpack else
+                                    json.dumps(payload, cls=JSONEncoder))
         else:
             raise MqError('not implemented')
         return kwargs, url
@@ -285,13 +285,16 @@ class GsSession(ContextBase):
                         cls: Optional[type], return_request_id: Optional[bool]):
         ret = {}
         if not 199 < response.status_code < 300:
-            raise MqRequestError(response.status_code, f'{response.reason}: {response.text}',
+            reason = response.reason if hasattr(response, 'reason') else response.reason_phrase
+            raise MqRequestError(response.status_code, f'{reason}: {response.text}',
                                  context=f'{request_id}: {method} {url}')
         elif 'Content-Type' in response.headers:
             if 'application/x-msgpack' in response.headers['Content-Type']:
                 ret = msgpack.unpackb(response.content, raw=False)
             elif 'application/json' in response.headers['Content-Type']:
                 ret = json.loads(response.text)
+            else:
+                ret = {'raw': response}
             if cls and ret:
                 if isinstance(ret, dict) and 'results' in ret:
                     ret['results'] = self.__unpack(ret['results'], cls)

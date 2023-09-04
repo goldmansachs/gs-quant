@@ -16,6 +16,8 @@ under the License.
 
 from aenum import Enum, extend_enum
 from typing import Optional
+from dataclasses_json import LetterCase, dataclass_json
+from dataclasses import dataclass, field
 
 
 class DataMeasure(Enum):
@@ -136,3 +138,11 @@ for enum in DataMeasure:
 
 for enum in DataDimension:
     extend_enum(Fields, enum.name, enum.value)
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(frozen=True)
+class AssetMeasure():
+    dataset_field: str = field(default=None)
+    frequency: str = field(default=None)
+    type: str = field(default=None)

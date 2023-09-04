@@ -15,7 +15,7 @@ under the License.
 """
 import logging
 from enum import Enum
-from typing import List
+from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
 
@@ -43,6 +43,15 @@ class OptimizerObjective(Enum):
 
 class OptimizerType(Enum):
     AXIOMA_PORTFOLIO_OPTIMIZER = 'Axioma Portfolio Optimizer'
+
+
+class PrioritySetting(Enum):
+    ZERO = '0'
+    ONE = '1'
+    TWO = '2'
+    THREE = '3'
+    FOUR = '4'
+    FIVE = '5'
 
 
 class AssetConstraint:
@@ -104,6 +113,14 @@ class CountryConstraint:
                  minimum: float = 0,
                  maximum: float = 100,
                  unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+        """
+        Constrain notional held in any particular country in the resulting optimization
+
+        :param country_name: country name
+        :param minimum: minimum
+        :param maximum: maximum
+        :param unit: the unit in which the min and max values are passed in with (defaults to percent)
+        """
         if unit not in [OptimizationConstraintUnit.PERCENT, OptimizationConstraintUnit.DECIMAL]:
             raise MqValueError('Country constraints can only be set by percent or decimal.')
         self.__country_name = country_name
@@ -164,7 +181,7 @@ class SectorConstraint:
         """
         Constrain notional held in any particular GICS Sector in the resulting optimization
 
-        :param sector_name: Sector name
+        :param sector_name: sector name
         :param minimum: minimum
         :param maximum: maximum
         :param unit: the unit in which the min and max values are passed in with (defaults to percent)
@@ -207,13 +224,78 @@ class SectorConstraint:
     @unit.setter
     def unit(self, value: OptimizationConstraintUnit):
         if value not in [OptimizationConstraintUnit.PERCENT, OptimizationConstraintUnit.DECIMAL]:
-            raise MqValueError('Country constraints can only be set by percent.')
+            raise MqValueError('Sector constraints can only be set by percent.')
         self.__unit = value
 
     def to_dict(self):
         return {
             'type': 'Sector',
             'name': self.sector_name,
+            'min': self.minimum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.minimum,
+            'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
+        }
+
+
+class IndustryConstraint:
+
+    def __init__(self,
+                 industry_name: str,
+                 minimum: float = 0,
+                 maximum: float = 100,
+                 unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+        """
+        Constrain notional held in any particular GICS Industry in the resulting optimization
+
+        :param industry_name: industry name
+        :param minimum: minimum
+        :param maximum: maximum
+        :param unit: the unit in which the min and max values are passed in with (defaults to percent)
+        """
+        if unit not in [OptimizationConstraintUnit.PERCENT, OptimizationConstraintUnit.DECIMAL]:
+            raise MqValueError('Industry constraints can only be set by percent or decimal.')
+        self.__industry_name = industry_name
+        self.__minimum = minimum
+        self.__maximum = maximum
+        self.__unit = unit
+
+    @property
+    def industry_name(self) -> str:
+        return self.__industry_name
+
+    @industry_name.setter
+    def industry_name(self, value: str):
+        self.__industry_name = value
+
+    @property
+    def minimum(self) -> float:
+        return self.__minimum
+
+    @minimum.setter
+    def minimum(self, value: float):
+        self.__minimum = value
+
+    @property
+    def maximum(self) -> float:
+        return self.__maximum
+
+    @maximum.setter
+    def maximum(self, value: float):
+        self.__maximum = value
+
+    @property
+    def unit(self) -> OptimizationConstraintUnit:
+        return self.__unit
+
+    @unit.setter
+    def unit(self, value: OptimizationConstraintUnit):
+        if value not in [OptimizationConstraintUnit.PERCENT, OptimizationConstraintUnit.DECIMAL]:
+            raise MqValueError('Industry constraints can only be set by percent.')
+        self.__unit = value
+
+    def to_dict(self):
+        return {
+            'type': 'Industry',
+            'name': self.industry_name,
             'min': self.minimum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.minimum,
             'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
         }
@@ -399,11 +481,13 @@ class OptimizerConstraints:
                  asset_constraints: List[AssetConstraint] = [],
                  country_constraints: List[CountryConstraint] = [],
                  sector_constraints: List[SectorConstraint] = [],
+                 industry_constraints: List[IndustryConstraint] = [],
                  factor_constraints: List[FactorConstraint] = [],
                  max_factor_proportion_of_risk: MaxFactorProportionOfRiskConstraint = None):
         self.__asset_constraints = asset_constraints
         self.__country_constraints = country_constraints
         self.__sector_constraints = sector_constraints
+        self.__industry_constraints = industry_constraints
         self.__factor_constraints = factor_constraints
         self.__max_factor_proportion_of_risk = max_factor_proportion_of_risk
 
@@ -432,6 +516,14 @@ class OptimizerConstraints:
         self.__sector_constraints = value
 
     @property
+    def industry_constraints(self) -> List[IndustryConstraint]:
+        return self.__industry_constraints
+
+    @industry_constraints.setter
+    def industry_constraints(self, value: List[IndustryConstraint]):
+        self.__industry_constraints = value
+
+    @property
     def factor_constraints(self) -> List[FactorConstraint]:
         return self.__factor_constraints
 
@@ -452,9 +544,10 @@ class OptimizerConstraints:
         if len(types) > 1:
             raise MqValueError('All asset constraints need to have the same unit')
         constrain_by_notional = len(self.asset_constraints) > 0 and types.pop() == OptimizationConstraintUnit.NOTIONAL
+        classification_constraints = self.country_constraints + self.sector_constraints + self.industry_constraints
         as_dict = {
             'assetConstraints': [c.to_dict() for c in self.asset_constraints],
-            'classificationConstraints': [c.to_dict() for c in self.country_constraints + self.sector_constraints],
+            'classificationConstraints': [c.to_dict() for c in classification_constraints],
             'factorConstraints': [c.to_dict() for c in self.factor_constraints],
             'constrainAssetsByNotional': constrain_by_notional
         }
@@ -463,6 +556,132 @@ class OptimizerConstraints:
             as_dict['maxFactorMCTR'] = self.max_factor_proportion_of_risk.max_factor_proportion_of_risk
 
         return as_dict
+
+
+class ConstraintPriorities:
+
+    def __init__(self,
+                 min_sector_weights: PrioritySetting = None,
+                 max_sector_weights: PrioritySetting = None,
+                 min_industry_weights: PrioritySetting = None,
+                 max_industry_weights: PrioritySetting = None,
+                 min_region_weights: PrioritySetting = None,
+                 max_region_weights: PrioritySetting = None,
+                 min_country_weights: PrioritySetting = None,
+                 max_country_weights: PrioritySetting = None,
+                 style_factor_exposures: PrioritySetting = None,
+                 ):
+        """
+        Priority of the constraint from 0-5 (prioritized in that order). The optimization will fail if it cannot meet a
+        constraint with 0 priority.  A constraint with priority of 1-5 can be called a relaxed constraint, which means
+        that the optimization will make its best effort to meet the constraint but will not fail if it cannot. A
+        constraint with a lower priority will take precedence over a constraint with a higher priority.
+        :param min_sector_weights: constraint priority of the minimum sector weight constraints
+        :param max_sector_weights: constraint priority of the maximum sector weight constraints
+        :param min_industry_weights: constraint priority of the minimum industry weight constraints
+        :param max_industry_weights: constraint priority of the maximum industry weight constraints
+        :param min_region_weights: constraint priority of the minimum region weight constraints
+        :param max_region_weights: constraint priority of the maximum region weight constraints
+        :param min_country_weights: constraint priority of the minimum country weight constraints
+        :param max_country_weights: constraint priority of the maximum country weight constraints
+        :param style_factor_exposures: constraint priority of the style factor exposure constraints
+        """
+        self.__min_sector_weights = min_sector_weights
+        self.__max_sector_weights = max_sector_weights
+        self.__min_industry_weights = min_industry_weights
+        self.__max_industry_weights = max_industry_weights
+        self.__min_region_weights = min_region_weights
+        self.__max_region_weights = max_region_weights
+        self.__min_country_weights = min_country_weights
+        self.__max_country_weights = max_country_weights
+        self.__style_factor_exposures = style_factor_exposures
+
+    @property
+    def min_sector_weights(self) -> PrioritySetting:
+        return self.__min_sector_weights
+
+    @min_sector_weights.setter
+    def min_sector_weights(self, value: PrioritySetting):
+        self.__min_sector_weights = value
+
+    @property
+    def max_sector_weights(self) -> PrioritySetting:
+        return self.__max_sector_weights
+
+    @max_sector_weights.setter
+    def max_sector_weights(self, value: PrioritySetting):
+        self.__max_sector_weights = value
+
+    @property
+    def min_industry_weights(self) -> PrioritySetting:
+        return self.__min_industry_weights
+
+    @min_industry_weights.setter
+    def min_industry_weights(self, value: PrioritySetting):
+        self.__min_industry_weights = value
+
+    @property
+    def max_industry_weights(self) -> PrioritySetting:
+        return self.__max_industry_weights
+
+    @max_industry_weights.setter
+    def max_industry_weights(self, value: PrioritySetting):
+        self.__max_industry_weights = value
+
+    @property
+    def min_region_weights(self) -> PrioritySetting:
+        return self.__min_region_weights
+
+    @min_region_weights.setter
+    def min_region_weights(self, value: PrioritySetting):
+        self.__min_region_weights = value
+
+    @property
+    def max_region_weights(self) -> PrioritySetting:
+        return self.__max_region_weights
+
+    @max_region_weights.setter
+    def max_region_weights(self, value: PrioritySetting):
+        self.__max_region_weights = value
+
+    @property
+    def min_country_weights(self) -> PrioritySetting:
+        return self.__min_country_weights
+
+    @min_country_weights.setter
+    def min_country_weights(self, value: PrioritySetting):
+        self.__min_country_weights = value
+
+    @property
+    def max_country_weights(self) -> PrioritySetting:
+        return self.__max_country_weights
+
+    @max_country_weights.setter
+    def max_country_weights(self, value: PrioritySetting):
+        self.__max_country_weights = value
+
+    @property
+    def style_factor_exposures(self) -> PrioritySetting:
+        return self.__style_factor_exposures
+
+    @style_factor_exposures.setter
+    def style_factor_exposures(self, value: PrioritySetting):
+        self.__style_factor_exposures = value
+
+    def to_dict(self) -> Dict:
+        as_dict = {
+            'minSectorWeights': self.min_sector_weights,
+            'maxSectorWeights': self.max_sector_weights,
+            'minIndustryWeights': self.min_industry_weights,
+            'maxIndustryWeights': self.max_industry_weights,
+            'minRegionWeights': self.min_region_weights,
+            'maxRegionWeights': self.max_region_weights,
+            'minCountryWeights': self.min_country_weights,
+            'maxCountryWeights': self.max_country_weights,
+            'styleExposures': self.style_factor_exposures
+        } if self is not None else {}
+        as_dict = {k: as_dict[k].value for k in as_dict.keys() if as_dict[k] is not None}
+        return as_dict if len(as_dict.keys()) > 0 else None
 
 
 class OptimizerSettings:
@@ -474,7 +693,8 @@ class OptimizerSettings:
                  max_names: float = 100,
                  min_weight_per_constituent: float = None,
                  max_weight_per_constituent: float = None,
-                 max_adv: float = 15):
+                 max_adv: float = 15,
+                 constraint_priorities: ConstraintPriorities = None):
         """
         Optimizer settings
 
@@ -485,6 +705,7 @@ class OptimizerSettings:
         :param min_weight_per_constituent: minimum weight of each constituent in the optimization
         :param max_weight_per_constituent: maximum weight of each constituent in the optimization
         :param max_adv: maximum average daily volume of each constituent in the optimization (in percent)
+        :param constraint_priorities: constraint priorities
         """
         self.__notional = notional
         self.__allow_long_short = allow_long_short
@@ -493,6 +714,7 @@ class OptimizerSettings:
         self.__min_weight_per_constituent = min_weight_per_constituent
         self.__max_weight_per_constituent = max_weight_per_constituent
         self.__max_adv = max_adv
+        self.__constraint_priorities = constraint_priorities
 
     @property
     def notional(self) -> float:
@@ -550,6 +772,14 @@ class OptimizerSettings:
     def max_adv(self, value: float):
         self.__max_adv = value
 
+    @property
+    def constraint_priorities(self) -> ConstraintPriorities:
+        return self.__constraint_priorities
+
+    @constraint_priorities.setter
+    def constraint_priorities(self, value: ConstraintPriorities):
+        self.__constraint_priorities = value
+
     def to_dict(self):
         as_dict = {
             'hedgeNotional': self.notional,
@@ -562,6 +792,8 @@ class OptimizerSettings:
             as_dict['minWeight'] = self.min_weight_per_constituent * 100
         if self.max_weight_per_constituent:
             as_dict['maxWeight'] = self.max_weight_per_constituent * 100
+        if self.constraint_priorities:
+            as_dict['constraintPrioritySettings'] = self.constraint_priorities.to_dict()
         return as_dict
 
 

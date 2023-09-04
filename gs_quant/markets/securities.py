@@ -39,7 +39,7 @@ from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import get_enum_value
 from gs_quant.common import DateLimit
-from gs_quant.data import DataMeasure, DataFrequency, Dataset
+from gs_quant.data import DataMeasure, DataFrequency, Dataset, AssetMeasure
 from gs_quant.data.coordinate import DataDimensions
 from gs_quant.data.coordinate import DateOrDatetime
 from gs_quant.data.core import IntervalFrequency, DataAggregationOperator
@@ -387,6 +387,42 @@ class Asset(Entity, metaclass=ABCMeta):
 
         ids = self.get_identifiers(as_of=as_of)
         return ids.get(id_type.value)
+
+    def get_asset_measures(self) -> List[AssetMeasure]:
+        """
+        Get asset measures
+
+        :return: A list consisting of the following measures available for an asset: type, frequency, datasetField.
+        For more details check the fields defined in class: 'AssetMeasures'
+
+        **Usage**
+
+        Get list of measures available for an asset
+
+        **Examples**
+
+        >>> from gs_quant.markets.securities import SecurityMaster,AssetIdentifier
+        >>>
+        >>> asset = SecurityMaster.get_asset("USDJPY", AssetIdentifier.BLOOMBERG_ID)
+        >>> asset.get_asset_measures()
+
+        **See also**
+
+        :class:`AssetMeasures`
+
+        """
+
+        availability_response = GsSession.current._get(f'/data/measures/{self.get_marquee_id()}/availability')
+        final_measure_set = set()
+
+        if availability_response['data']:
+            for measure_set in availability_response['data']:
+                asset_measures = AssetMeasure.from_dict(measure_set)
+
+                if {'type', 'frequency', 'datasetField'} <= measure_set.keys():
+                    final_measure_set.add(asset_measures)
+
+        return list(final_measure_set)
 
     def get_data_series(self,
                         measure: DataMeasure,
