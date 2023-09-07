@@ -631,12 +631,13 @@ def test_geometrically_aggregate():
         date(2019, 1, 2),
         date(2019, 1, 3),
         date(2019, 1, 4),
+        date(2019, 1, 5),
     ]
 
-    x = pd.Series([0.05, 0.04, -0.03, 0.12], index=dates)
+    x = pd.Series([None, 0.05, 0.04, -0.03, 0.12], index=dates)
 
     result = geometrically_aggregate(x)
-    expected = pd.Series([0.05, 0.09200000000000008, 0.05923999999999996, 0.18634879999999998], index=dates)
+    expected = pd.Series([None, 0.05, 0.09200000000000008, 0.05923999999999996, 0.18634879999999998], index=dates)
     assert_series_equal(result, expected)
 
 

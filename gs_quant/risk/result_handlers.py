@@ -363,6 +363,7 @@ def mmapi_pca_table_handler(result: dict, risk_key: RiskKey, _instrument: Instru
         r['coordinate'].update({'layer1': r['layer1']})
         r['coordinate'].update({'layer2': r['layer2']})
         r['coordinate'].update({'layer3': r['layer3']})
+        r['coordinate'].update({'layer4': r['layer4']})
         r['coordinate'].update({'level': r['level']})
         r['coordinate'].update({'sensitivity': r['sensitivity']})
         r['coordinate'].update({'irDelta': r['irDelta']})
@@ -377,6 +378,7 @@ def mmapi_pca_table_handler(result: dict, risk_key: RiskKey, _instrument: Instru
                 ('layer1', 'layer1'),
                 ('layer2', 'layer2'),
                 ('layer3', 'layer3'),
+                ('layer4', 'layer4'),
                 ('level', 'level'),
                 ('sensitivity', 'sensitivity'),
                 ('irDelta', 'irDelta'))

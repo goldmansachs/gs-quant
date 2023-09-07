@@ -821,7 +821,4 @@ def geometrically_aggregate(series: pd.Series) -> pd.Series:
 
     Used to aggregate daily returns when expressed as weights
     """
-    er = [series.iloc[0]]
-    for i in range(1, len(series)):
-        er.append((1 + er[i - 1]) * (1 + series.iloc[i]) - 1)
-    return pd.Series(er, index=series.index)
+    return series.add(1).cumprod() - 1

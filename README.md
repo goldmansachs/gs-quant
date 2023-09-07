@@ -23,7 +23,7 @@ You can find examples, guides and tutorials in the respective folders as well as
 
 ## Contributions
 
-Contributions are encouraged! Please see CONTRIBUTING.MD for more details.
+Contributions are encouraged! Please see [CONTRIBUTING](CONTRIBUTING.md) for more details.
 
 ## Help
 

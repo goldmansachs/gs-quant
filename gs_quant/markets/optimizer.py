@@ -977,7 +977,8 @@ class OptimizerStrategy:
                 'pricingDate': self.initial_position_set.date.strftime('%Y-%m-%d'),
                 'useUnadjustedClosePrice': True,
                 'frequency': 'End Of Day',
-                'priceRegardlessOfAssetsMissingPrices': not fail_on_unpriced_positions
+                'priceRegardlessOfAssetsMissingPrices': not fail_on_unpriced_positions,
+                'fallbackDate': '5d'
             }
         }
         if self.initial_position_set.reference_notional is not None:

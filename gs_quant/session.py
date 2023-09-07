@@ -129,7 +129,7 @@ class GsSession(ContextBase):
         raise NotImplementedError("Must implement _authenticate")
 
     def _authenticate_async(self):
-        if self._session_async:
+        if self._has_async_session():
             self._session_async.headers.update([(k, v) for k, v in self._session.headers.items()])
             for cookie in self._session.cookies:
                 self._session_async.cookies.set(cookie.name, cookie.value, domain=cookie.domain)
@@ -148,9 +148,12 @@ class GsSession(ContextBase):
             self._session = None
             self._session_async = None
 
+    def _has_async_session(self) -> bool:
+        return self._session_async and not self._session_async.is_closed
+
     def _init_async(self):
         import httpx
-        if not self._session_async:
+        if not self._has_async_session():
             self._session_async = httpx.AsyncClient(follow_redirects=True, verify=self.verify, proxies=self.proxies)
             self._session_async.headers.update({'X-Application': self.application})
             self._session_async.headers.update({'X-Version': self.application_version})
@@ -158,7 +161,7 @@ class GsSession(ContextBase):
 
     async def _on_aenter(self):
         self.__close_on_exit = self._session is None
-        if not self._session_async:
+        if not self._has_async_session():
             self.init()
             self._init_async()
 
