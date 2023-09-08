@@ -19,7 +19,6 @@ from typing import List, Dict, Tuple, Union
 import pandas as pd
 import numpy as np
 import logging
-import pydash
 import deprecation
 
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
@@ -29,7 +28,7 @@ from gs_quant.markets.factor import Factor
 from gs_quant.models.risk_model_utils import build_asset_data_map, build_factor_data_map, \
     build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, get_closest_date_index, \
     batch_and_upload_partial_data, get_universe_size, batch_and_upload_coverage_data, only_factor_data_is_present, \
-    upload_model_data, validate_factors_exist
+    upload_model_data, build_factor_id_to_name_map
 from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModelEventType, RiskModelData, \
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
     RiskModelCoverage as CoverageType, RiskModelUniverseIdentifier as UniverseIdentifier, Entitlements, \
@@ -675,28 +674,13 @@ class MarqueeRiskModel(RiskModel):
         :func:`get_factor_returns_by_id` :func:`get_factor_data`
         """
 
-        if factors:
-            risk_model_factors = self.get_factor_data(start_date=start_date,
-                                                      end_date=end_date,
-                                                      factor_type=FactorType.Factor,
-                                                      format=ReturnFormat.JSON)
-            factors = validate_factors_exist(factors, risk_model_factors, self.id, 'name')
-
-        limit_factors = True if assets else False
-        measures = [Measure.Factor_Return, Measure.Factor_Name, Measure.Factor_Id]
-        if assets:
-            measures += [Measure.Universe_Factor_Exposure, Measure.Asset_Universe]
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=measures,
-            limit_factors=limit_factors
-        ).get('results')
-        factor_data = build_factor_data_map(results, 'factorName', 'factorReturn', factors=factors)
-        if format == ReturnFormat.DATA_FRAME:
-            factor_data = pd.DataFrame(factor_data)
-        return factor_data
+        return self._get_factor_data_measure(Measure.Factor_Return,
+                                             start_date,
+                                             end_date,
+                                             assets,
+                                             True,
+                                             factors,
+                                             format)
 
     def get_factor_returns_by_id(self,
                                  start_date: dt.date,
@@ -734,18 +718,28 @@ class MarqueeRiskModel(RiskModel):
         :func:`get_factor_returns_by_name` :func:`get_factor_data`
         """
 
-        if factors:
-            risk_model_factors = self.get_factor_data(start_date=start_date,
-                                                      end_date=end_date,
-                                                      factor_type=FactorType.Factor,
-                                                      format=ReturnFormat.JSON)
+        return self._get_factor_data_measure(Measure.Factor_Return,
+                                             start_date,
+                                             end_date,
+                                             assets,
+                                             False,
+                                             factors,
+                                             format)
 
-            factors = validate_factors_exist(factors, risk_model_factors, self.id, 'identifier')
+    def _get_factor_data_measure(self,
+                                 requested_measure: RiskModelDataMeasure,
+                                 start_date: dt.date,
+                                 end_date: dt.date = None,
+                                 assets: DataAssetsRequest = None,
+                                 factors_by_name=True,
+                                 factors: List[str] = [],
+                                 format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
 
-        limit_factors = True if assets else False
-        measures = [Measure.Factor_Return, Measure.Factor_Name, Measure.Factor_Id]
+        limit_factors = False
+        measures = [requested_measure, Measure.Factor_Name, Measure.Factor_Id]
         if assets:
             measures += [Measure.Universe_Factor_Exposure, Measure.Asset_Universe]
+            limit_factors = True
         results = self.get_data(
             start_date=start_date,
             end_date=end_date,
@@ -753,10 +747,9 @@ class MarqueeRiskModel(RiskModel):
             measures=measures,
             limit_factors=limit_factors
         ).get('results')
-        factor_data = build_factor_data_map(results, 'factorId', 'factorReturn', factors=factors)
-        if format == ReturnFormat.DATA_FRAME:
-            factor_data = pd.DataFrame(factor_data)
-        return factor_data
+        identifier = 'factorName' if factors_by_name else 'factorId'
+        factor_data_df = build_factor_data_map(results, identifier, self.id, requested_measure, factors=factors)
+        return factor_data_df if format == ReturnFormat.DATA_FRAME else factor_data_df.to_dict()
 
     def _get_asset_data_measure(self,
                                 requested_measure: RiskModelDataMeasure,
@@ -765,15 +758,6 @@ class MarqueeRiskModel(RiskModel):
                                 assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
                                                                               []),
                                 format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        measure_to_key = {
-            Measure.Specific_Risk: 'specificRisk',
-            Measure.Total_Risk: 'totalRisk',
-            Measure.Historical_Beta: 'historicalBeta',
-            Measure.Predicted_Beta: 'predictedBeta',
-            Measure.Global_Predicted_Beta: 'globalPredictedBeta',
-            Measure.Daily_Return: 'dailyReturn',
-            Measure.Estimation_Universe_Weight: 'estimationUniverseWeight',
-        }
         results = self.get_data(
             start_date=start_date,
             end_date=end_date,
@@ -781,7 +765,7 @@ class MarqueeRiskModel(RiskModel):
             measures=[requested_measure, Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
-        measure_data = build_asset_data_map(results, assets.universe, measure_to_key.get(requested_measure, ''), {})
+        measure_data = build_asset_data_map(results, assets.universe, requested_measure, {})
         if format == ReturnFormat.DATA_FRAME:
             measure_data = pd.DataFrame(measure_data)
         return measure_data
@@ -828,14 +812,13 @@ class MarqueeRiskModel(RiskModel):
             start_date=start_date,
             end_date=end_date,
             assets=assets,
-            measures=[Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
+            measures=[Measure.Factor_Name, Measure.Factor_Id, Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
         factor_map = {}
         if get_factors_by_name:
-            model_factors = self.get_factor_data(start_date=start_date, end_date=end_date, format=ReturnFormat.JSON)
-            factor_map = {factor.get('identifier'): factor.get('name') for factor in model_factors}
-        factor_exposure = build_asset_data_map(results, assets.universe, 'factorExposure', factor_map)
+            factor_map = build_factor_id_to_name_map(results)
+        factor_exposure = build_asset_data_map(results, assets.universe, Measure.Universe_Factor_Exposure, factor_map)
         if format == ReturnFormat.DATA_FRAME:
             factor_exposure = pd.DataFrame.from_dict(
                 {(i, j): factor_exposure[i][j]
@@ -1331,17 +1314,7 @@ class FactorRiskModel(MarqueeRiskModel):
         :func:`get_specific_risk` :func:`get_universe_factor_exposure`
 
         """
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Specific_Return, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        specific_return = build_asset_data_map(results, assets.universe, 'specificReturn', {})
-        if format == ReturnFormat.DATA_FRAME:
-            specific_return = pd.DataFrame(specific_return)
-        return specific_return
+        return self._get_asset_data_measure(Measure.Specific_Return, start_date, end_date, assets, format)
 
     def get_universe_factor_exposure(self,
                                      start_date: dt.date,
@@ -1781,18 +1754,7 @@ class MacroRiskModel(MarqueeRiskModel):
         :func:`get_fair_value_gap` :func:`factor_standard_deviation` :func:`factor_z_score`
         """
 
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.R_Squared, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        r_squared = build_asset_data_map(results, universe, 'rSquared', {})
-        if format == ReturnFormat.DATA_FRAME:
-            r_squared = pd.DataFrame(r_squared)
-        return r_squared
+        return self._get_asset_data_measure(Measure.R_Squared, start_date, end_date, assets, format)
 
     def get_fair_value_gap(self,
                            start_date: dt.date,
@@ -1840,22 +1802,14 @@ class MacroRiskModel(MarqueeRiskModel):
         :func:`get_r_squared` :func:`factor_standard_deviation` :func:`factor_z_score`
         """
 
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=[Measure.Fair_Value_Gap_Standard_Deviation, Measure.Asset_Universe]
-            if fair_value_gap_unit == Unit.STANDARD_DEVIATION else
-            [Measure.Fair_Value_Gap_Percent, Measure.Asset_Universe],
-            limit_factors=False
-        ).get('results')
-        universe = pydash.get(results, '0.assetData.universe', [])
-        measure = 'fairValueGapStandardDeviation' if fair_value_gap_unit == Unit.STANDARD_DEVIATION else \
-            'fairValueGapPercent'
-        fair_value_gap = build_asset_data_map(results, universe, measure, {})
-        if format == ReturnFormat.DATA_FRAME:
-            fair_value_gap = pd.DataFrame(fair_value_gap)
-        return fair_value_gap
+        return self._get_asset_data_measure(
+            Measure.Fair_Value_Gap_Standard_Deviation
+            if fair_value_gap_unit == Unit.STANDARD_DEVIATION
+            else Measure.Fair_Value_Gap_Percent,
+            start_date,
+            end_date,
+            assets,
+            format)
 
     def get_factor_standard_deviation(self,
                                       start_date: dt.date,
@@ -1897,31 +1851,13 @@ class MacroRiskModel(MarqueeRiskModel):
         :func:`factor_standard_deviation` :func:`factor_z_score`
         """
 
-        if factors:
-            risk_model_factors = self.get_factor_data(start_date=start_date,
-                                                      end_date=end_date,
-                                                      factor_type=FactorType.Factor,
-                                                      format=ReturnFormat.JSON)
-
-            identifier = 'name' if factors_by_name else 'identifier'
-            factors = validate_factors_exist(factors, risk_model_factors, self.id, identifier)
-
-        limit_factors = True if assets else False
-        measures = [Measure.Factor_Standard_Deviation, Measure.Factor_Name, Measure.Factor_Id]
-        if assets:
-            measures += [Measure.Universe_Factor_Exposure, Measure.Asset_Universe]
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=measures,
-            limit_factors=limit_factors
-        ).get('results')
-        factor_identifier = 'factorName' if factors_by_name else 'factorId'
-        factor_data = build_factor_data_map(results, factor_identifier, 'factorStandardDeviation', factors=factors)
-        if format == ReturnFormat.DATA_FRAME:
-            factor_data = pd.DataFrame(factor_data)
-        return factor_data
+        return self._get_factor_data_measure(Measure.Factor_Standard_Deviation,
+                                             start_date,
+                                             end_date,
+                                             assets,
+                                             factors_by_name,
+                                             factors,
+                                             format)
 
     def get_factor_z_score(self,
                            start_date: dt.date,
@@ -1961,31 +1897,13 @@ class MacroRiskModel(MarqueeRiskModel):
         :func:`get_r_squared` :func:`factor_standard_deviation` :func:`factor_z_score`
         """
 
-        if factors:
-            risk_model_factors = self.get_factor_data(start_date=start_date,
-                                                      end_date=end_date,
-                                                      factor_type=FactorType.Factor,
-                                                      format=ReturnFormat.JSON)
-
-            identifier = 'name' if factors_by_name else 'identifier'
-            factors = validate_factors_exist(factors, risk_model_factors, self.id, identifier)
-
-        limit_factors = True if assets else False
-        measures = [Measure.Factor_Z_Score, Measure.Factor_Name, Measure.Factor_Id]
-        if assets:
-            measures += [Measure.Universe_Factor_Exposure, Measure.Asset_Universe]
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=measures,
-            limit_factors=limit_factors
-        ).get('results')
-        factor_identifier = 'factorName' if factors_by_name else 'factorId'
-        factor_data = build_factor_data_map(results, factor_identifier, 'factorZScore', factors=factors)
-        if format == ReturnFormat.DATA_FRAME:
-            factor_data = pd.DataFrame(factor_data)
-        return factor_data
+        return self._get_factor_data_measure(Measure.Factor_Z_Score,
+                                             start_date,
+                                             end_date,
+                                             assets,
+                                             factors_by_name,
+                                             factors,
+                                             format)
 
     def __repr__(self):
         s = "{}('{}','{}','{}','{}','{}','{}'".format(

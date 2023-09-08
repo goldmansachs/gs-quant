@@ -18,79 +18,103 @@ import logging
 import math
 import pydash
 from time import sleep
-from typing import List, Dict, Union
+from typing import List, Union
 
 import pandas as pd
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi
-from gs_quant.errors import MqRequestError, MqValueError
+from gs_quant.errors import MqRequestError
 from gs_quant.target.risk_models import RiskModelData, RiskModelType as Type
+from gs_quant.target.risk_models import RiskModelDataMeasure as Measure
 
 
-def build_asset_data_map(results: List, req_universe: tuple, measure: str, factor_map: dict) -> dict:
-    # if full universe is requested then pull the universe from the results.
+def _map_measure_to_field_name(measure: Measure):
+
+    measure_to_field = {
+        Measure.Specific_Risk: 'specificRisk',
+        Measure.Total_Risk: 'totalRisk',
+        Measure.Historical_Beta: 'historicalBeta',
+        Measure.Predicted_Beta: 'predictedBeta',
+        Measure.Global_Predicted_Beta: 'globalPredictedBeta',
+        Measure.Daily_Return: 'dailyReturn',
+        Measure.Specific_Return: 'specificReturn',
+        Measure.Estimation_Universe_Weight: 'estimationUniverseWeight',
+        Measure.R_Squared: 'rSquared',
+        Measure.Fair_Value_Gap_Standard_Deviation: 'fairValueGapStandardDeviation',
+        Measure.Fair_Value_Gap_Percent: 'fairValueGapPercent',
+        Measure.Universe_Factor_Exposure: 'factorExposure',
+        Measure.Factor_Return: 'factorReturn',
+        Measure.Factor_Standard_Deviation: 'factorStandardDeviation',
+        Measure.Factor_Z_Score: 'factorZScore'
+    }
+
+    return measure_to_field.get(measure, '')
+
+
+def build_factor_id_to_name_map(results: List) -> dict:
+    risk_model_factor_data = {}
+    for row in results:
+        for factor in row.get('factorData', []):
+            factor_id = factor['factorId']
+            if not risk_model_factor_data.get(factor_id):
+                risk_model_factor_data[factor_id] = factor['factorName']
+    return risk_model_factor_data
+
+
+def build_asset_data_map(results: List, requested_universe: tuple, requested_measure: Measure, factor_map: dict) \
+        -> dict:
     if not results:
         return {}
-    universe = pydash.get(results, '0.assetData.universe', []) if len(req_universe) == 0 else list(req_universe)
+    data_field = _map_measure_to_field_name(requested_measure)
+    # if full universe is requested then pull the universe from the results.
+    universe = pydash.get(results, '0.assetData.universe', []) if requested_universe else list(requested_universe)
     data_map = {}
     for asset in universe:
         date_list = {}
         for row in results:
             if asset in row.get('assetData').get('universe'):
                 i = row.get('assetData').get('universe').index(asset)
-                if measure == 'factorExposure':
-                    exposures = row.get('assetData').get(measure)[i]
+                if data_field == 'factorExposure':
+                    exposures = row.get('assetData').get(data_field)[i]
                     date_list[row.get('date')] = {factor_map.get(f, f): v for f, v in exposures.items()}
                 else:
-                    date_list[row.get('date')] = row.get('assetData').get(measure)[i]
+                    date_list[row.get('date')] = row.get('assetData').get(data_field)[i]
         data_map[asset] = date_list
     return data_map
 
 
-def build_factor_data_map(results: List, identifier: str, measure: str, factors: List[str] = []) -> dict:
-    if not results:
-        return {}
-    factor_data = set()
+def build_factor_data_map(results: List, identifier: str, risk_model_id: str, requested_measure: Measure,
+                          factors: List[str] = []) -> Union[dict, pd.DataFrame]:
+    field_name = _map_measure_to_field_name(requested_measure)
+    if not field_name:
+        raise NotImplementedError(f"{requested_measure.value} is currently not yet supported")
+
+    data_list = []
     for row in results:
-        factor_data |= set([factor.get('factorId') for factor in row.get('factorData')])
-        if factors:
-            factor_data &= set(factors)
-    data_map = {}
-    for factor in factor_data:
-        date_list = {}
-        factor_name = factor
-        for row in results:
-            for data in row.get('factorData'):
-                if data.get('factorId') == factor:
-                    factor_name = factor if identifier == 'factorId' else data.get(identifier)
-                    date_list[row.get('date')] = data.get(measure)
-        data_map[factor_name] = date_list
-    return data_map
+        date = row.get('date')
+        factor_data = row.get('factorData')
+        for factor_map in factor_data:
+            data_list.append(
+                {"date": date,
+                 identifier: factor_map.get(identifier),
+                 field_name: factor_map.get(field_name)
+                 }
+            )
 
+    factor_data_df = pd.DataFrame(data_list)
+    factor_data_df = factor_data_df.pivot(index="date", columns=identifier, values=field_name)
 
-def validate_factors_exist(factors_to_validate: List[str], risk_model_factors: List[Dict],
-                           risk_model_id: str, identifier: str) -> List[str]:
+    # if factors, only return data for those factors
+    if factors:
+        missing_factors = set(factors) - set(factor_data_df.columns.tolist())
+        if missing_factors:
+            raise ValueError(f'Factors(s) with {identifier}(s) {", ".join(missing_factors)} do not exist in '
+                             f'risk model {risk_model_id}. Make sure the factor {identifier}(s) are correct')
 
-    risk_model_factors_id_to_name = {f['identifier']: f['name'] for f in risk_model_factors}
-    all_factor_names = list(risk_model_factors_id_to_name.keys()) if identifier == 'identifier' else \
-        list(risk_model_factors_id_to_name.values())
-    factor_matches = list(set(all_factor_names) & set(factors_to_validate))
-    wrong_factors = list(set(factors_to_validate) - set(factor_matches))
+        factor_data_df = factor_data_df[factors]
 
-    if wrong_factors:
-        raise MqValueError(f'Factors(s) with {identifier}(s) {", ".join(wrong_factors)} do not exist in '
-                           f'risk model {risk_model_id}. Make sure the factor {identifier}(s) are correct')
-
-    factor_ids = []
-    if identifier == 'name':
-        for f_id, f_name in risk_model_factors_id_to_name.items():
-            if f_name in factors_to_validate:
-                factor_ids.append(f_id)
-    else:
-        factor_ids = list(set(risk_model_factors_id_to_name.keys()) & set(factors_to_validate))
-
-    return factor_ids
+    return factor_data_df
 
 
 def build_pfp_data_dataframe(results: List) -> pd.DataFrame:

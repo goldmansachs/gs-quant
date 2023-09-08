@@ -23,6 +23,7 @@ from pydash import decapitalize
 
 from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
+from gs_quant.datetime import prev_business_date
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
 from gs_quant.markets.portfolio_manager import PortfolioManager
@@ -30,6 +31,7 @@ from gs_quant.markets.report import FactorRiskReport, PerformanceReport, Themati
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.target.reports import PositionSourceType
 from gs_quant.timeseries import plot_measure_entity
+from gs_quant.timeseries.algebra import geometrically_aggregate
 from gs_quant.timeseries.measures import _extract_series_from_df, SecurityMaster, AssetIdentifier
 
 
@@ -307,6 +309,34 @@ def aum(report_id: str, *, source: str = None,
     return _extract_series_from_df(df, QueryType.AUM)
 
 
+@plot_measure_entity(EntityType.REPORT, [QueryType.PNL])
+def pnl(report_id: str, unit: str = 'Notional', *, source: str = None,
+        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    PNL from all holdings, if unit is Percent, geometrically aggregate over time frame
+
+    :param report_id: id of performance report
+    :param unit: by default uses mode as Notional, but can also be set to Percent
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio pnl
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    performance_report = PerformanceReport.get(report_id)
+    pnl_df = performance_report.get_pnl(start_date, end_date)
+
+    if unit == Unit.PERCENT.value:
+        aum_as_dict = performance_report.get_aum(start_date=prev_business_date(start_date), end_date=end_date)
+        aum_df = pd.DataFrame(aum_as_dict.items(), columns=['date', 'aum'])
+        return_series = _generate_daily_returns(aum_df, pnl_df, 'aum', 'pnl')
+        return geometrically_aggregate(return_series).multiply(100)
+    else:
+        pnl_df.set_index('date', inplace=True)
+        return pd.Series(pnl_df['pnl'], name="pnl")
+
+
 def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, unit: Unit = Unit.NOTIONAL) -> pd.Series:
     # Check params
     report = FactorRiskReport.get(report_id)
@@ -334,16 +364,15 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
             raise MqValueError('Unit can only be set to percent for portfolio reports')
         pm = PortfolioManager(report.position_source_id)
         performance_report = pm.get_performance_report()
+        start_date = dt.datetime.strptime(min([d['date'] for d in factor_data]), '%Y-%m-%d').date()
+        end_date = dt.datetime.strptime(max([d['date'] for d in factor_data]), '%Y-%m-%d').date()
         if query_type == QueryType.FACTOR_PNL:
-            last_date = dt.datetime.strptime(max([d['date'] for d in factor_data]), '%Y-%m-%d').date()
-            aum = performance_report.get_aum(start_date=last_date, end_date=last_date)
-            last_aum = aum.get(last_date.strftime('%Y-%m-%d'))
-            if last_aum is None:
-                raise MqValueError('Cannot convert to percent: Missing AUM on the last date in the date range')
-            factor_exposures = [{'date': d['date'], col_name: d[data_type] / last_aum * 100} for d in factor_data]
+            # Factor Pnl needs to be geometrically aggregated if unit is %
+            aum_as_dict = performance_report.get_aum(start_date=prev_business_date(start_date), end_date=end_date)
+            aum_df = pd.DataFrame(aum_as_dict.items(), columns=['date', 'aum'])
+            return_series = _generate_daily_returns(aum_df, pd.DataFrame(factor_data)[['date', 'pnl']], 'aum', 'pnl')
+            return geometrically_aggregate(return_series).multiply(100)
         else:
-            start_date = dt.datetime.strptime(min([d['date'] for d in factor_data]), '%Y-%m-%d').date()
-            end_date = dt.datetime.strptime(max([d['date'] for d in factor_data]), '%Y-%m-%d').date()
             aum = performance_report.get_aum(start_date=start_date, end_date=end_date)
             for data in factor_data:
                 if aum.get(data['date']) is None:
@@ -377,3 +406,14 @@ def _return_metrics(one_leg: pd.DataFrame, dates: list, name: str):
     one_leg[f'{name}Metrics'] = 1 / one_leg[f'{name}Metrics'] if one_leg['exposure'].iloc[-1] < 0 else one_leg[
         f'{name}Metrics']
     return one_leg
+
+
+def _generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_key: str, pnl_col_key: str):
+    # Returns are defined as Pnl today divided by AUM yesterday.
+    df = pd.merge(pnl_df, aum_df, how='outer', on='date')
+    df.set_index('date', inplace=True)
+    df.sort_index(inplace=True)
+    df.loc[:, [aum_col_key]] = df.loc[:, [aum_col_key]].fillna(method='ffill')
+    df['return'] = df[pnl_col_key].div(df[aum_col_key].shift(1))
+    return_series = pd.Series(df['return'], name="return").dropna()
+    return return_series

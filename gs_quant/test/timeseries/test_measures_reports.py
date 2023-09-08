@@ -313,6 +313,18 @@ thematic_data = [
 ]
 
 
+def compute_geometric_aggregation_calculations(aum: dict, pnl: dict, dates: list):
+    daily_returns = []
+    for i in range(1, len(dates)):
+        daily_returns.append(pnl[dates[i]] / aum[dates[i - 1]])
+
+    expected_values = [daily_returns[0]]
+    for i in range(1, len(daily_returns)):
+        expected_values.append((1 + expected_values[i - 1]) * (1 + daily_returns[i]) - 1)
+
+    return [v * 100 for v in expected_values]
+
+
 def mock_risk_model():
     risk_model = RiskModel(coverage=RiskModelCoverage.Country, id_='model_id', name='Fake Risk Model',
                            term=RiskModelTerm.Long, universe_identifier=RiskModelUniverseIdentifier.gsid, vendor='GS',
@@ -522,6 +534,11 @@ def test_factor_pnl_percent():
         'factorCategory': 'Factor Name'
     }]
 
+    pnl = {entry['date']: entry['pnl'] for entry in factor_data}
+    aum = {'2020-11-22': 200, '2020-11-23': 400, '2020-11-24': 400, '2020-11-25': 400}
+    # Each team uses pnl today/aum yesterday
+    expected_values = compute_geometric_aggregation_calculations(aum, pnl, list(aum.keys()))
+
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
         mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
@@ -533,9 +550,9 @@ def test_factor_pnl_percent():
 
         # mock getting aum
         mock = replace('gs_quant.markets.report.PerformanceReport.get_long_exposure', Mock())
-        mock.return_value = pandas.DataFrame.from_dict({'date': ['2020-11-25'], 'longExposure': [100]})
+        mock.return_value = pandas.DataFrame.from_dict({'date': aum.keys(), 'longExposure': aum.values()})
         actual = mr.factor_pnl('report_id', 'Factor Name', 'Percent')
-        assert all(actual.values == [11.23, 11.24, 11.25])
+        assert all([a == pytest.approx(e) for a, e in zip(actual.values, expected_values)])
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
@@ -548,9 +565,9 @@ def test_factor_pnl_percent():
 
         # mock getting aum
         mock = replace('gs_quant.markets.report.PerformanceReport.get_short_exposure', Mock())
-        mock.return_value = pandas.DataFrame.from_dict({'date': ['2020-11-25'], 'shortExposure': [100]})
+        mock.return_value = pandas.DataFrame.from_dict({'date': aum.keys(), 'shortExposure': aum.values()})
         actual = mr.factor_pnl('report_id', 'Factor Name', 'Percent')
-        assert all(actual.values == [11.23, 11.24, 11.25])
+        assert all([a == pytest.approx(e) for a, e in zip(actual.values, expected_values)])
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
@@ -563,9 +580,9 @@ def test_factor_pnl_percent():
 
         # mock getting aum
         mock = replace('gs_quant.markets.report.PerformanceReport.get_gross_exposure', Mock())
-        mock.return_value = pandas.DataFrame.from_dict({'date': ['2020-11-25'], 'grossExposure': [400]})
+        mock.return_value = pandas.DataFrame.from_dict({'date': aum.keys(), 'grossExposure': aum.values()})
         actual = mr.factor_pnl('report_id', 'Factor Name', 'Percent')
-        assert all(actual.values == [11.23 / 4, 11.24 / 4, 11.25 / 4])
+        assert all([a == pytest.approx(e) for a, e in zip(actual.values, expected_values)])
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
@@ -578,23 +595,9 @@ def test_factor_pnl_percent():
 
         # mock getting aum
         mock = replace('gs_quant.markets.report.PerformanceReport.get_net_exposure', Mock())
-        mock.return_value = pandas.DataFrame.from_dict({'date': ['2020-11-25'], 'netExposure': [200]})
+        mock.return_value = pandas.DataFrame.from_dict({'date': aum.keys(), 'netExposure': aum.values()})
         actual = mr.factor_pnl('report_id', 'Factor Name', 'Percent')
-        assert all(actual.values == [11.23 / 2, 11.24 / 2, 11.25 / 2])
-
-    with pytest.raises(MqValueError):
-        # mock getting aum source
-        mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
-        mock.return_value = RiskAumSource.Net
-
-        # mock getting performance report
-        mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
-        mock.return_value = PerformanceReport(id='ID')
-
-        # mock getting aum
-        mock = replace('gs_quant.markets.report.PerformanceReport.get_net_exposure', Mock())
-        mock.return_value = pandas.DataFrame.from_dict({'date': ['2020-11-24'], 'netExposure': [200]})
-        mr.factor_pnl('report_id', 'Factor Name', 'Percent')
+        assert all([a == pytest.approx(e) for a, e in zip(actual.values, expected_values)])
 
     replace.restore()
 
@@ -1009,6 +1012,78 @@ def test_aum():
     with DataContext(datetime.date(2022, 7, 1), datetime.date(2022, 7, 3)):
         actual = mr.aum('RP1')
         assert all(actual.values == [100, 200])
+
+    replace.restore()
+
+
+def test_pnl():
+    replace = Replacer()
+
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+    mock.return_value = PerformanceReport(report_id='RP1',
+                                          position_source_type='Portfolio',
+                                          position_source_id='MP1',
+                                          report_type='Portfolio Performance Analytics',
+                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+    # mock PerformanceReport.get_pnl()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
+    mock.return_value = pandas.DataFrame.from_dict(
+        {'date': ['2022-07-01', '2022-07-02', '2022-07-03'], 'pnl': [200, 400, 600]})
+
+    with DataContext(datetime.date(2022, 7, 1), datetime.date(2022, 7, 3)):
+        actual = mr.pnl('RP1')
+        assert all(actual.values == [200, 400, 600])
+
+    replace.restore()
+
+
+def test_pnl_percent():
+    replace = Replacer()
+
+    # mock PerformanceReport.get()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
+    mock.return_value = PerformanceReport(report_id='RP1',
+                                          position_source_type='Portfolio',
+                                          position_source_id='MP1',
+                                          report_type='Portfolio Performance Analytics',
+                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+
+    pnl = {'2022-07-01': 200, '2022-07-02': 400, '2022-07-03': 600}
+    aum = {'2022-06-30': 2000, '2022-07-01': 3000, '2022-07-02': 3000, '2022-07-03': 4000}
+
+    # mock PerformanceReport.get_pnl()
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
+    mock.return_value = pandas.DataFrame.from_dict({'date': pnl.keys(), 'pnl': pnl.values()})
+
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
+    mock.return_value = RiskAumSource.Long
+
+    # mock getting performance report
+    mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
+    mock.return_value = PerformanceReport(id='ID')
+
+    # Each team uses pnl today/aum yesterday
+    expected_values = compute_geometric_aggregation_calculations(aum, pnl, list(aum.keys()))
+
+    with DataContext(datetime.date(2022, 7, 1), datetime.date(2022, 7, 3)):
+        # mock getting aum
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_long_exposure', Mock())
+        mock.return_value = pandas.DataFrame.from_dict({'date': aum.keys(), 'longExposure': aum.values()})
+
+        actual = mr.pnl('report_id', 'Percent')
+        assert all([a == pytest.approx(e) for a, e in zip(actual.values, expected_values)])
+
+    # with one day's aum missed to test forward filling logic
+    with DataContext(datetime.date(2022, 7, 1), datetime.date(2022, 7, 3)):
+        # mock getting aum with one day missed to test forward filling logic
+        aum = {'2022-06-30': 2000, '2022-07-01': 3000, '2022-07-03': 4000}
+        mock = replace('gs_quant.markets.report.PerformanceReport.get_long_exposure', Mock())
+        mock.return_value = pandas.DataFrame.from_dict({'date': aum.keys(), 'longExposure': aum.values()})
+
+        actual = mr.pnl('report_id', 'Percent')
+        assert all([a == pytest.approx(e) for a, e in zip(actual.values, expected_values)])
 
     replace.restore()
 
