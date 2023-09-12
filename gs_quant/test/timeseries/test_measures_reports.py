@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import copy
 import datetime
 
 import pandas
@@ -461,10 +462,6 @@ def test_factor_pnl():
     mock = replace('gs_quant.api.gs.reports.GsReportApi.get_report', Mock())
     mock.return_value = factor_risk_report
 
-    # mock getting report factor data
-    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
-    mock.return_value = factor_data
-
     # mock getting risk model dates
     mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_dates', Mock())
     mock.return_value = ['2010-01-01']
@@ -489,8 +486,30 @@ def test_factor_pnl():
     }]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+        # mock getting report factor data
+        mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
+        mock.return_value = factor_data
+
         actual = mr.factor_pnl('report_id', 'Factor Name')
         assert all(actual.values == [11.23, 11.24, 11.25])
+
+    with DataContext(datetime.date(2020, 11, 22), datetime.date(2020, 11, 25)):
+        # mock getting report factor data with first day set to 0
+        factor_data_copy = copy.copy(factor_data)
+        factor_data_copy.insert(0, {
+            'date': '2020-11-22',
+            'reportId': 'report_id',
+            'factor': 'factor_id',
+            'factorCategory': 'CNT',
+            'pnl': 0,
+            'exposure': -11.23,
+            'proportionOfRisk': 1
+        })
+        mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
+        mock.return_value = factor_data_copy
+
+        actual = mr.factor_pnl('report_id', 'Factor Name')
+        assert all(actual.values == [0.0, 11.23, 11.24, 11.25])
 
     with pytest.raises(MqValueError):
         mr.factor_pnl('report_id', 'Wrong Factor Name')

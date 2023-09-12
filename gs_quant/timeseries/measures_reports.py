@@ -358,7 +358,7 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
         end_date=DataContext.current.end_date,
         return_format=ReturnFormat.JSON
     )
-    factor_data = [d for d in factor_data if d.get(data_type)]
+    factor_data = [d for d in factor_data if d.get(data_type) is not None]
     if unit == Unit.PERCENT:
         if report.position_source_type != PositionSourceType.Portfolio:
             raise MqValueError('Unit can only be set to percent for portfolio reports')
