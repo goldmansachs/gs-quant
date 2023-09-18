@@ -23,6 +23,7 @@ import pandas as pd
 from opentracing import Span, UnsupportedFormatException, SpanContextCorruptedException
 from opentracing import Tracer as OpenTracer
 from opentracing.mocktracer import MockTracer
+from opentracing.scope_managers.contextvars import ContextVarsScopeManager
 
 from gs_quant.errors import *
 
@@ -34,7 +35,7 @@ class TracerFactory:
 
     def get(self) -> OpenTracer:
         if TracerFactory.__tracer_instance is None:
-            TracerFactory.__tracer_instance = MockTracer()
+            TracerFactory.__tracer_instance = MockTracer(scope_manager=ContextVarsScopeManager())
         return TracerFactory.__tracer_instance
 
 

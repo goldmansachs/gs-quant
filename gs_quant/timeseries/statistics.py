@@ -888,12 +888,12 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
     :func:`zscores`
 
     """
-    w = normalize_window(x, w)
     if x.empty:
         return x
 
     if y is None:
         y = x.copy()
+    w = normalize_window(y, w)
 
     if isinstance(w.r, int) and w.r > len(y):
         raise ValueError('Ramp value must be less than the length of the series y.')
@@ -904,15 +904,17 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
     res = pd.Series(dtype=np.dtype(float))
     convert_to_date = not isinstance(x.index, pd.DatetimeIndex)
 
-    for idx, val in y.items():
-        sample = x.loc[(x.index > ((idx - w.w).date() if convert_to_date else idx - w.w)) & (x.index <= idx)] if \
-            isinstance(w.w, pd.DateOffset) else x[:idx][-w.w:]
-        res.loc[idx] = percentileofscore(sample, val, kind='mean')
-
-    if isinstance(w.r, pd.DateOffset):
-        return res.loc[(res.index[0] + w.r).date():]
-    else:
-        return res[w.r:]
+    if isinstance(w.w, pd.DateOffset):
+        for idx, val in y.items():
+            sample = x.loc[(x.index > ((idx - w.w).date() if convert_to_date else idx - w.w)) & (x.index <= idx)]
+            res.loc[idx] = percentileofscore(sample, val, kind='mean')
+    elif not y.empty:
+        min_periods = 0 if isinstance(w.r, pd.DateOffset) else w.r
+        rolling_window = x[:y.index[-1]].rolling(w.w, min_periods)
+        percentile_on_x_index = rolling_window.apply(lambda a: percentileofscore(a, y[a.index[-1]:][0], kind="mean"))
+        joined_index = pd.concat([x, y], axis=1).index
+        res = percentile_on_x_index.reindex(joined_index, method="ffill")[y.index]
+    return apply_ramp(res, w)
 
 
 @plot_function

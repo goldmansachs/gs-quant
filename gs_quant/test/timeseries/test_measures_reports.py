@@ -315,8 +315,8 @@ thematic_data = [
 
 
 def compute_geometric_aggregation_calculations(aum: dict, pnl: dict, dates: list):
-    daily_returns = []
-    for i in range(1, len(dates)):
+    daily_returns = [0]
+    for i in range(2, len(dates)):
         daily_returns.append(pnl[dates[i]] / aum[dates[i - 1]])
 
     expected_values = [daily_returns[0]]

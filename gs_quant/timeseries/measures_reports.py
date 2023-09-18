@@ -330,7 +330,8 @@ def pnl(report_id: str, unit: str = 'Notional', *, source: str = None,
     if unit == Unit.PERCENT.value:
         aum_as_dict = performance_report.get_aum(start_date=prev_business_date(start_date), end_date=end_date)
         aum_df = pd.DataFrame(aum_as_dict.items(), columns=['date', 'aum'])
-        return_series = _generate_daily_returns(aum_df, pnl_df, 'aum', 'pnl')
+        is_first_data_point_on_start_date = pnl_df['date'].iloc[[0]].values[0] == start_date.strftime('%Y-%m-%d')
+        return_series = _generate_daily_returns(aum_df, pnl_df, 'aum', 'pnl', is_first_data_point_on_start_date)
         return geometrically_aggregate(return_series).multiply(100)
     else:
         pnl_df.set_index('date', inplace=True)
@@ -370,7 +371,9 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
             # Factor Pnl needs to be geometrically aggregated if unit is %
             aum_as_dict = performance_report.get_aum(start_date=prev_business_date(start_date), end_date=end_date)
             aum_df = pd.DataFrame(aum_as_dict.items(), columns=['date', 'aum'])
-            return_series = _generate_daily_returns(aum_df, pd.DataFrame(factor_data)[['date', 'pnl']], 'aum', 'pnl')
+            pnl_df = pd.DataFrame(factor_data)[['date', 'pnl']]
+            is_first_data_point_on_start_date = pnl_df['date'].iloc[[0]].values[0] == start_date.strftime('%Y-%m-%d')
+            return_series = _generate_daily_returns(aum_df, pnl_df, 'aum', 'pnl', is_first_data_point_on_start_date)
             return geometrically_aggregate(return_series).multiply(100)
         else:
             aum = performance_report.get_aum(start_date=start_date, end_date=end_date)
@@ -408,8 +411,11 @@ def _return_metrics(one_leg: pd.DataFrame, dates: list, name: str):
     return one_leg
 
 
-def _generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_key: str, pnl_col_key: str):
+def _generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_key: str, pnl_col_key: str,
+                            is_start_date_first_data_point: bool):
     # Returns are defined as Pnl today divided by AUM yesterday.
+    if is_start_date_first_data_point:
+        pnl_df[pnl_col_key].iloc[[0]] = 0
     df = pd.merge(pnl_df, aum_df, how='outer', on='date')
     df.set_index('date', inplace=True)
     df.sort_index(inplace=True)

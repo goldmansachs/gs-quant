@@ -607,11 +607,13 @@ class PositionSet:
         self.positions = new_weights
 
     def price(self, currency: Optional[Currency] = Currency.USD,
+              use_unadjusted_close_price: bool = True,
               weighting_strategy: Optional[PositionSetWeightingStrategy] = None, **kwargs):
         """
         Fetch positions weights from quantities, or vice versa
 
         :param currency: Reference notional currency (defaults to USD if not passed in)
+        :param use_unadjusted_close_price: Use adjusted or unadjusted close prices (defaults to unadjusted)
         :param weighting_strategy: Quantity or Weighted weighting strategy (defaults based on positions info)
         :param use_tags: Determines if tags are used to index the position response for non-netted positions
 
@@ -655,7 +657,8 @@ class PositionSet:
                                            notional_type='Gross',
                                            pricing_date=self.date,
                                            price_regardless_of_assets_missing_prices=True,
-                                           weighting_strategy=weighting_strategy)
+                                           weighting_strategy=weighting_strategy,
+                                           use_unadjusted_close_price=use_unadjusted_close_price)
         for k, v in kwargs.items():
             price_parameters[k] = v
         results = GsPriceApi.price_positions(PositionSetPriceInput(positions=positions, parameters=price_parameters))

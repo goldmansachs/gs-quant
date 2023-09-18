@@ -554,6 +554,7 @@ def test_percentiles():
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
     y = pd.Series([3.5, 1.8, 2.9, 1.2, 3.1, 6.0], index=dates)
+    y_with_mismatched_index = pd.Series([3.5, 1.8, 2.9, 1.2, 3.1], index=dates[:-1])
 
     assert_series_equal(percentiles(pd.Series(dtype=float), y), pd.Series(dtype=float))
     assert_series_equal(percentiles(x, pd.Series(dtype=float)), pd.Series(dtype=float))
@@ -567,6 +568,10 @@ def test_percentiles():
     expected = pd.Series([100.0, 0.0, 50.0, 50.0, 100.0, 75.0], index=dates)
     assert_series_equal(result, expected, obj="percentiles with window 2 and ramp 0")
 
+    result = percentiles(x, y_with_mismatched_index, Window(2, 0))
+    expected = pd.Series([100.0, 0.0, 50.0, 50.0, 100.0], index=dates[:-1])
+    assert_series_equal(result, expected, obj="percentiles with mismatched y index")
+
     result = percentiles(x, y, Window('1w', 0))
     expected = pd.Series([100.0, 0.0, 33.333333, 25.0, 100.0, 90.0], index=dates)
     assert_series_equal(result, expected, obj="percentiles with window 1w")
@@ -574,6 +579,10 @@ def test_percentiles():
     result = percentiles(x, y, Window('1w', '3d'))
     expected = pd.Series([25.0, 100.0, 90.0], index=dates[3:])
     assert_series_equal(result, expected, obj="percentiles with window 1w and ramp 3d")
+
+    result = percentiles(x, y, Window(5, '3d'))
+    expected = pd.Series([25.0, 100.0, 90.0], index=dates[3:])
+    assert_series_equal(result, expected, obj="percentiles with window 5 and ramp 3d")
 
     result = percentiles(x)
     expected = pd.Series([50.0, 25.0, 66.667, 12.500, 70.0, 91.667], index=dates)
