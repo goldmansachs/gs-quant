@@ -475,6 +475,7 @@ class DataQuery(Base):
     limit: Optional[int] = field(default=None, metadata=field_metadata)
     polling_interval: Optional[int] = field(default=None, metadata=field_metadata)
     grouped: Optional[bool] = field(default=None, metadata=field_metadata)
+    group_by: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     fields: Optional[Tuple[Union[DictBase, str], ...]] = field(default=None, metadata=field_metadata)
     restrict_fields: Optional[bool] = field(default=False, metadata=field_metadata)
     entity_filter: Optional[FieldFilterMapDataQuery] = field(default=None, metadata=field_metadata)
