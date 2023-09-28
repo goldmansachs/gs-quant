@@ -615,6 +615,7 @@ class Backtest(Base):
     start_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     end_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     version: Optional[float] = field(default=None, metadata=field_metadata)
+    cash_accrual: Optional[bool] = field(default=True, metadata=field_metadata)
 
 
 @handle_camel_case_args

@@ -50,11 +50,13 @@ class StrategySystematic:
                  trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
                  market_model: Union[EquityMarketModel, str] = EquityMarketModel.SFK,
                  roll_date_mode: str = None,
-                 expiry_date_mode: str = None):
+                 expiry_date_mode: str = None,
+                 cash_accrual: bool = True):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name
         self.__backtest_type = BACKTEST_TYPE_NAME
+        self.__cash_accrual = cash_accrual
 
         trade_in_method = get_enum_value(TradeInMethod, trade_in_method).value
         market_model = get_enum_value(EquityMarketModel, market_model).value
@@ -143,7 +145,8 @@ class StrategySystematic:
                             type=BACKTEST_TYPE_VALUE,
                             asset_class=AssetClass.Equity,
                             currency=self.__currency,
-                            cost_netting=self.__cost_netting)
+                            cost_netting=self.__cost_netting,
+                            cash_accrual=self.__cash_accrual)
 
         if is_async:
             # Create back test ...

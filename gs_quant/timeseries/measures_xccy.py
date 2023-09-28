@@ -39,6 +39,7 @@ class CrossCurrencyRateOptionType(Enum):
     OIS = 'OIS'
     EUROSTR = 'EUROSTR'
     SOFR = 'SOFR'
+    SOFRVLIBOR = 'SOFRVLIBOR'
     TestRateOption = 'TestRateOption'
 
 
@@ -68,6 +69,50 @@ class TdapiCrossCurrencyRatesDefaultsProvider:
 
 CROSSCURRENCY_RATES_DEFAULTS = {
     "CURRENCIES": {
+        "AUD": [
+            {"BenchmarkType": "LIBOR",
+             "rateOption": "AUD-BBR-BBSW",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["TKO"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "AUD-AONIA-OIS-COMPOUND",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["TKO"]},
+            {"BenchmarkType": "SOFRVLIBOR",
+             "rateOption": "AUD-BBR-BBSW",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["TKO"]},
+        ],
+        "CAD": [
+            {"BenchmarkType": "LIBOR",
+             "rateOption": "CAD-BA-CDOR",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["NYC"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "CAD-BA-CDOR",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["NYC"]},
+        ],
+        "CHF": [
+            {"BenchmarkType": "LIBOR",
+             "rateOption": "CHF-LIBOR-BBA",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["LDN"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "CHF-LIBOR-BBA",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["LDN"]},
+        ],
+        "DKK": [
+            {"BenchmarkType": "LIBOR",
+             "rateOption": "DKK-CIBOR2-DKNA13",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["LDN"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "DKK-CIBOR2-DKNA13",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["LDN"]},
+        ],
         "EUR": [
             {"BenchmarkType": "LIBOR",
              "rateOption": "EUR-EURIBOR-TELERATE",
@@ -81,20 +126,6 @@ CROSSCURRENCY_RATES_DEFAULTS = {
              "rateOption": "EUR-EUROSTR-COMPOUND",
              "designatedMaturity": "3m",
              "pricingLocation": ["LDN"]}
-        ],
-        "USD": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "USD-LIBOR-BBA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["NYC"]},
-            {"BenchmarkType": "OIS",
-             "rateOption": "USD-FEDERAL FUNDS-H.15-OIS-COMP",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["NYC"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "USD-SOFR-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["NYC"]}
         ],
         "GBP": [
             {"BenchmarkType": "LIBOR",
@@ -124,47 +155,63 @@ CROSSCURRENCY_RATES_DEFAULTS = {
              "designatedMaturity": "3m",
              "pricingLocation": ["TKO"]}
         ],
-        "CHF": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "CHF-LIBOR-BBA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-        ],
-        "DKK": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "DKK-CIBOR2-DKNA13",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-        ],
-        "SEK": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "SEK-STIBOR-SIDE",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-        ],
         "NOK": [
             {"BenchmarkType": "LIBOR",
              "rateOption": "NOK-NIBOR-BBA",
              "designatedMaturity": "3m",
              "pricingLocation": ["LDN"]},
-        ],
-        "AUD": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "AUD-BBR-BBSW",
+            {"BenchmarkType": "SOFR",
+             "rateOption": "NOK-NIBOR-BBA",
              "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
+             "pricingLocation": ["LDN"]},
         ],
         "NZD": [
             {"BenchmarkType": "LIBOR",
              "rateOption": "NZD-BBR-FRA",
              "designatedMaturity": "3m",
              "pricingLocation": ["TKO"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "NZD-NZIONA-OIS-COMPOUND",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["TKO"]},
+            {"BenchmarkType": "SOFRVLIBOR",
+             "rateOption": "NZD-BBR-FRA",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["TKO"]},
         ],
-        "CAD": [
+        "SEK": [
             {"BenchmarkType": "LIBOR",
-             "rateOption": "CAD-BA-CDOR",
+             "rateOption": "SEK-STIBOR-SIDE",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["LDN"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "SEK-STIBOR-SIDE",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["LDN"]},
+        ],
+        "SGD": [
+            {"BenchmarkType": "SOFR",
+             "rateOption": "SGD-SORA-COMPOUND",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["TKO"]},
+        ],
+        "USD": [
+            {"BenchmarkType": "LIBOR",
+             "rateOption": "USD-LIBOR-BBA",
              "designatedMaturity": "3m",
              "pricingLocation": ["NYC"]},
+            {"BenchmarkType": "OIS",
+             "rateOption": "USD-FEDERAL FUNDS-H.15-OIS-COMP",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["NYC"]},
+            {"BenchmarkType": "SOFR",
+             "rateOption": "USD-SOFR-COMPOUND",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["NYC"]},
+            {"BenchmarkType": "SOFRVLIBOR",
+             "rateOption": "USD-SOFR-COMPOUND",
+             "designatedMaturity": "3m",
+             "pricingLocation": ["NYC"]}
         ],
     },
     "COMMON": {
@@ -177,20 +224,28 @@ CROSSCURRENCY_RATES_DEFAULTS = {
 crossCurrencyRates_defaults_provider = TdapiCrossCurrencyRatesDefaultsProvider(CROSSCURRENCY_RATES_DEFAULTS)
 
 CURRENCY_TO_XCCY_SWAP_RATE_BENCHMARK = {
+    'AUD': OrderedDict(
+        [('LIBOR', 'AUD-BBR-BBSW'), ('SOFR', 'AUD-AONIA-OIS-COMPOUND'), ('SOFRVLIBOR', 'AUD-BBR-BBSW')]),
+    'CAD': OrderedDict(
+        [('LIBOR', 'CAD-BA-CDOR'), ('SOFR', 'CAD-BA-CDOR')]),
     'CHF': OrderedDict([('LIBOR', 'CHF-LIBOR-BBA'), ('OIS', 'CHF-SARON-OIS-COMPOUND')]),
+    'DKK': OrderedDict([('LIBOR', 'DKK-CIBOR2-DKNA13'), ('SOFR', 'DKK-CIBOR2-DKNA13')]),
     'EUR': OrderedDict([('LIBOR', 'EUR-EURIBOR-TELERATE'), ('OIS', 'EUR-EONIA-OIS-COMPOUND'),
                         ('SOFR', 'EUR-EUROSTR-COMPOUND')]),
     'GBP': OrderedDict([('LIBOR', 'GBP-LIBOR-BBA'), ('OIS', 'GBP-SONIA-COMPOUND'), ('SOFR', 'GBP-SONIA-COMPOUND')]),
     'JPY': OrderedDict([('LIBOR', 'JPY-LIBOR-BBA'), ('OIS', 'JPY-TONA-OIS-COMPOUND'),
                         ('SOFR', 'JPY-TONA-OIS-COMPOUND')]),
+    'NOK': OrderedDict(
+        [('LIBOR', 'NOK-NIBOR-BBA'), ('SOFR', 'NOK-NIBOR-BBA')]),
+    'NZD': OrderedDict(
+        [('LIBOR', 'NZD-BBR-FRA'), ('SOFR', 'NZD-NZIONA-OIS-COMPOUND'), ('SOFRVLIBOR', 'NZD-BBR-FRA')]),
+    'SEK': OrderedDict(
+        [('LIBOR', 'SEK-STIBOR-SIDE'), ('SOFR', 'SEK-STIBOR-SIDE')]),
+    'SGD': OrderedDict(
+        [('SOFR', 'SGD-SORA-COMPOUND')]),
     'USD': OrderedDict(
-        [('LIBOR', 'USD-LIBOR-BBA'), ('OIS', 'USD-FEDERAL FUNDS-H.15-OIS-COMP'), ('SOFR', 'USD-SOFR-COMPOUND')]),
-    'SEK': {'LIBOR': 'SEK-STIBOR-SIDE'},
-    'NOK': {'LIBOR': 'NOK-NIBOR-BBA'},
-    'DKK': {'LIBOR': 'DKK-CIBOR2-DKNA13'},
-    'AUD': {'LIBOR': 'AUD-BBR-BBSW'},
-    'CAD': {'LIBOR': 'CAD-BA-CDOR'},
-    'NZD': {'LIBOR': 'NZD-BBR-FRA'},
+        [('LIBOR', 'USD-LIBOR-BBA'), ('OIS', 'USD-FEDERAL FUNDS-H.15-OIS-COMP'), ('SOFR', 'USD-SOFR-COMPOUND'),
+         ('SOFRVLIBOR', 'USD-SOFR-COMPOUND')]),
 }
 
 CURRENCY_TO_DUMMY_CROSSCURRENCY_SWAP_BBID = {
@@ -204,6 +259,7 @@ CURRENCY_TO_DUMMY_CROSSCURRENCY_SWAP_BBID = {
     'AUD': 'MAHN46BVXFAZ354E',
     'NZD': 'MAW1MNKPQWYJPX3A',
     'CAD': 'MAPRDGWMZSQJ8CZ0',
+    'SGD': 'MA7B3JT80Q617KGQ',
 }
 
 

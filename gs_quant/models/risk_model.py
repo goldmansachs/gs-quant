@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import math
 from enum import Enum, auto
 from typing import List, Dict, Tuple, Union
 import pandas as pd
@@ -23,8 +24,10 @@ import deprecation
 
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
 from gs_quant.base import EnumBase
+from gs_quant.data import DataMeasure
 from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.markets.factor import Factor
+from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
 from gs_quant.models.risk_model_utils import build_asset_data_map, build_factor_data_map, \
     build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, get_closest_date_index, \
     batch_and_upload_partial_data, get_universe_size, batch_and_upload_coverage_data, only_factor_data_is_present, \
@@ -33,7 +36,7 @@ from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModel
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
     RiskModelCoverage as CoverageType, RiskModelUniverseIdentifier as UniverseIdentifier, Entitlements, \
     RiskModelTerm as Term, RiskModelUniverseIdentifierRequest, Factor as RiskModelFactor, RiskModelType, \
-    RiskModelDataMeasure
+    RiskModelDataMeasure, RiskModelDataAssetsRequest
 
 
 class ReturnFormat(Enum):
@@ -1536,6 +1539,158 @@ class FactorRiskModel(MarqueeRiskModel):
         pfp_data = results if format == ReturnFormat.JSON else build_pfp_data_dataframe(results)
         return pfp_data
 
+    def get_asset_contribution_to_risk(self,
+                                       asset_identifier: str,
+                                       date: dt.date,
+                                       asset_identifier_type=RiskModelUniverseIdentifierRequest.bbid,
+                                       get_factors_by_name: bool = True,
+                                       format: ReturnFormat = ReturnFormat.DATA_FRAME):
+        """
+        Get factor proportion of risk and marginal contribution to risk for each factor in the model
+
+        :param asset_identifier: asset identifier
+        :param date: date
+        :param asset_identifier_type: type corresponding to the identifier passed in
+        :param get_factors_by_name: whether to denote the results by factor name (True) or ID (False)
+        :param format: which format to return the results in
+
+        :return: factor proportion of risk and marginal contribution to risk breakdown
+
+        **Usage**
+
+        Get the factor contribution breakdown for any asset covered by the risk model
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> mctr_breakdown = model.get_asset_contribution_to_risk('AAPL UW', date)
+        """
+        # Get spot price for the asset as of date
+        security = SecurityMaster.get_asset(asset_identifier, AssetIdentifier(asset_identifier_type.value.upper()))
+        spot_data_coordinate = security.get_data_coordinate(DataMeasure.SPOT_PRICE)
+        series = spot_data_coordinate.get_series(start=date, end=date)
+        if len(series) == 0:
+            raise MqValueError(f'{asset_identifier} has no end of day price available on {date.strftime("%Y-%m-%d")}')
+        spot_price = series.iloc[0]
+
+        # Get risk model data for the asset as of date
+        data_measures = [RiskModelDataMeasure.Asset_Universe,
+                         RiskModelDataMeasure.Total_Risk,
+                         RiskModelDataMeasure.Universe_Factor_Exposure,
+                         RiskModelDataMeasure.Covariance_Matrix,
+                         RiskModelDataMeasure.Factor_Name,
+                         RiskModelDataMeasure.Factor_Id,
+                         RiskModelDataMeasure.Factor_Category]
+        risk_results = self.get_data(data_measures, date, date,
+                                     RiskModelDataAssetsRequest(identifier=asset_identifier_type,
+                                                                universe=[asset_identifier]),
+                                     limit_factors=True)
+        if len(risk_results['results'][0]['assetData']['totalRisk']) == 0:
+            raise MqValueError(f'{asset_identifier} is not covered by {self.id} on {date.strftime("%Y-%m-%d")}')
+        total_risk = risk_results['results'][0]['assetData']['totalRisk'][0]
+        var = total_risk / 100 * spot_price / math.sqrt(252)
+        covariance_matrix = np.array(risk_results['results'][0]['covarianceMatrix'])
+        factor_z_scores = risk_results['results'][0]['assetData']['factorExposure'][0]
+
+        # Calculate results
+        factors = risk_results['results'][0]['factorData']
+        factor_ids_in_order = [f['factorId'] for f in factors]
+        exp = np.array([factor_z_scores[key] * spot_price for key in factor_ids_in_order])
+        cov_x_exp = np.dot(covariance_matrix, exp)
+        mctr = np.divide(cov_x_exp, var)
+        rmctr = np.multiply(exp, mctr)
+        annualized_rmctr = np.multiply(rmctr, math.sqrt(252) / spot_price * 100)
+        annualized_factor_rmctr_sum = np.sum(annualized_rmctr)
+
+        final_results = []
+        for i in range(0, len(mctr)):
+            final_results.append({
+                'Factor': factors[i]['factorName'] if get_factors_by_name else factors[i]['factorId'],
+                'Factor Category': factors[i]['factorCategory'],
+                'Proportion of Risk (%)': annualized_rmctr[i] / total_risk * 100,
+                'MCTR (%)': annualized_rmctr[i]
+            })
+        final_results.append({
+            'Factor': 'Specific' if get_factors_by_name else 'SPC',
+            'Factor Category': 'Specific',
+            'Proportion of Risk (%)': (total_risk - annualized_factor_rmctr_sum) / total_risk * 100,
+            'MCTR (%)': total_risk - annualized_factor_rmctr_sum
+        })
+
+        return pd.DataFrame(final_results) if format == ReturnFormat.DATA_FRAME else final_results
+
+    def get_asset_factor_attribution(self,
+                                     asset_identifier: str,
+                                     start_date: dt.date,
+                                     end_date: dt.date,
+                                     asset_identifier_type=RiskModelUniverseIdentifierRequest.bbid,
+                                     get_factors_by_name: bool = True,
+                                     format: ReturnFormat = ReturnFormat.DATA_FRAME):
+        """
+        Get attribution by factor for an asset for a desired date range
+
+        :param asset_identifier: asset identifier
+        :param start_date: start date
+        :param end_date: end date
+        :param asset_identifier_type: type corresponding to the identifier passed in
+        :param get_factors_by_name: whether to denote the results by factor name (True) or ID (False)
+        :param format: which format to return the results in
+
+        :return: factor attribution breakdown
+
+        **Usage**
+
+        Get the factor attribution (in percent) breakdown for any asset covered by the risk model
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 5, 2)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> attribution_breakdown = model.get_asset_factor_attribution('AAPL UW', start_date, end_date)
+        """
+
+        # Get risk model data for the asset
+        data_measures = [RiskModelDataMeasure.Asset_Universe,
+                         RiskModelDataMeasure.Universe_Factor_Exposure,
+                         RiskModelDataMeasure.Factor_Volatility,
+                         RiskModelDataMeasure.Factor_Return,
+                         RiskModelDataMeasure.Factor_Name,
+                         RiskModelDataMeasure.Factor_Id,
+                         RiskModelDataMeasure.Factor_Category]
+        risk_results = self.get_data(data_measures, start_date, end_date,
+                                     RiskModelDataAssetsRequest(identifier=asset_identifier_type,
+                                                                universe=[asset_identifier]),
+                                     limit_factors=True)['results']
+        if len(risk_results) == 0:
+            raise MqValueError(f'{asset_identifier} is not covered by {self.id}')
+        if len(risk_results) < 2:
+            raise MqValueError('Attribution cannot be calculated with only one day of risk data')
+        factor_id_to_name_map = {}
+        factor_attribution = []
+        for i in range(1, len(risk_results)):
+            attribution_on_date = {'Date': risk_results[i]['date']}
+            for factor_data in risk_results[i]['factorData']:
+                factor = factor_data['factorName'] if get_factors_by_name else factor_data['factorId']
+                attribution_on_date[factor] = factor_data['factorReturn']
+                factor_id_to_name_map[factor_data['factorId']] = factor_data['factorName']
+
+            previous_factor_exposures = risk_results[i - 1]['assetData']['factorExposure'][0]
+            for factor_id in previous_factor_exposures:
+                factor = factor_id_to_name_map[factor_id] if get_factors_by_name else factor_id
+                factor_exposure = previous_factor_exposures[factor_id]
+                attribution_on_date[factor] *= factor_exposure
+            factor_attribution.append(attribution_on_date)
+
+        return pd.DataFrame(factor_attribution) if format == ReturnFormat.DATA_FRAME else factor_attribution
+
     def __repr__(self):
         s = "{}('{}','{}','{}','{}','{}','{}','{}'".format(
             self.__class__.__name__,
@@ -1700,9 +1855,7 @@ class MacroRiskModel(MarqueeRiskModel):
 
         factor_categories = list(set(sensitivity_df.columns.get_level_values(0).values))
         factor_category_sens_df = pd.concat(
-            [sensitivity_df[factor_category].agg(np.sum, axis=1)
-             .to_frame()
-             .rename(columns={0: factor_category})
+            [sensitivity_df[factor_category].agg(np.sum, axis=1).to_frame().rename(columns={0: factor_category})
              for factor_category in factor_categories], axis=1
         )
 

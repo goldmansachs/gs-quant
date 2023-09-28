@@ -31,7 +31,7 @@ from pandas.testing import assert_series_equal
 from pandas.tseries.offsets import CustomBusinessDay
 from pytz import timezone
 from testfixtures import Replacer
-from testfixtures.mock import Mock
+from testfixtures.mock import Mock, MagicMock
 
 import gs_quant.timeseries.measures as tm
 import gs_quant.timeseries.measures_rates as tm_rates
@@ -2117,9 +2117,9 @@ def test_swap_annuity(mocker):
     replace = Replacer()
     args = dict(swap_tenor='10y', benchmark_type=None, floating_rate_tenor=None, forward_tenor='0b', real_time=False)
 
-    mock_nok = Currency('MA891', 'PLN')
+    mock_nok = Currency('MA891', 'ACU')
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
-    xrefs.return_value = 'PLN'
+    xrefs.return_value = 'ACU'
     args['asset'] = mock_nok
     with pytest.raises(NotImplementedError):
         tm_rates.swap_annuity(**args)
@@ -2169,9 +2169,9 @@ def test_swap_term_structure():
     args = dict(benchmark_type=None, floating_rate_tenor=None, tenor_type=tm_rates._SwapTenorType.FORWARD_TENOR,
                 tenor='0b', real_time=False)
 
-    mock_nok = Currency('MA891', 'PLN')
+    mock_nok = Currency('MA891', 'ACU')
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
-    xrefs.return_value = 'PLN'
+    xrefs.return_value = 'ACU'
     args['asset'] = mock_nok
     with pytest.raises(NotImplementedError):
         tm_rates.swap_term_structure(**args)
@@ -2207,6 +2207,8 @@ def test_swap_term_structure():
     bd_mock.return_value = pd.DataFrame(data=dict(date="2020-04-10", exchange="NYC", description="Good Friday"),
                                         index=[pd.Timestamp('2020-04-10')])
     args['pricing_date'] = datetime.date(2020, 4, 10)
+    bd_mock = replace('gs_quant.datetime.gscalendar.GsCalendar.holidays', MagicMock())
+    bd_mock.__iter__.return_value = (datetime.date(2020, 4, 10),)
     with pytest.raises(MqValueError):
         tm_rates.swap_term_structure(**args)
     args['pricing_date'] = None
@@ -2354,6 +2356,8 @@ def test_basis_swap_term_structure():
     bd_mock.return_value = pd.DataFrame(data=dict(date="2020-04-10", exchange="NYC", description="Good Friday"),
                                         index=[pd.Timestamp('2020-04-10')])
     args['pricing_date'] = datetime.date(2020, 4, 10)
+    bd_mock = replace('gs_quant.datetime.gscalendar.GsCalendar.holidays', MagicMock())
+    bd_mock.__iter__.return_value = (datetime.date(2020, 4, 10),)
     with pytest.raises(MqValueError):
         tm_rates.basis_swap_term_structure(**args)
     args['pricing_date'] = None
