@@ -21,11 +21,12 @@ import sys
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import TimeoutError
 from threading import Thread
-from typing import Iterable, Optional, Union, Tuple, Callable
+from typing import Iterable, Optional, Union, Tuple
 
 from opentracing import Span
 from tqdm import tqdm
 
+from gs_quant.api.api_session import ApiWithCustomSession
 from gs_quant.base import RiskKey, Sentinel
 from gs_quant.risk import ErrorValue, RiskRequest
 from gs_quant.risk.result_handlers import result_handlers
@@ -35,9 +36,8 @@ from gs_quant.tracing import Tracer
 _logger = logging.getLogger(__name__)
 
 
-class RiskApi(metaclass=ABCMeta):
+class RiskApi(ApiWithCustomSession, metaclass=ABCMeta):
     __SHUTDOWN_SENTINEL = Sentinel('QueueListenerShutdown')
-    __SESSION_SUPPLIER: Optional[Callable[[], GsSession]] = None
 
     @classmethod
     @abstractmethod
@@ -185,10 +185,7 @@ class RiskApi(metaclass=ABCMeta):
             results_handler = None
 
             # determine session to use
-            if cls.__SESSION_SUPPLIER:
-                session = cls.__SESSION_SUPPLIER()
-            else:
-                session = GsSession.current
+            session = cls.get_session()
 
             # The requests library (which we use for dispatching) is not async, so we need a thread for concurrency
             Thread(daemon=True,
@@ -321,12 +318,3 @@ class RiskApi(metaclass=ABCMeta):
                     formatted_results[(risk_key, position.instrument)] = result
 
         return formatted_results
-
-    @classmethod
-    def set_session_provider(cls, session_supplier: Callable[[], GsSession]):
-        """
-        To allow session context override specific to this API, set a factory/supplier.
-        Default is GsSession.current.
-        :param session_supplier: callable which returns a GsSession
-        """
-        cls.__SESSION_SUPPLIER = session_supplier

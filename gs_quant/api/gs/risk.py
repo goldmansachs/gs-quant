@@ -30,7 +30,6 @@ from opentracing import Span
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.risk import RiskRequest
-from gs_quant.session import GsSession
 from gs_quant.target.risk import OptimizationRequest
 from gs_quant.tracing import Tracer
 
@@ -63,7 +62,7 @@ class GsRiskApi(RiskApi):
     def _exec(cls, request: Union[RiskRequest, Iterable[RiskRequest]]) -> Union[Iterable, dict]:
         use_msgpack = cls.USE_MSGPACK and not isinstance(request, RiskRequest)
         headers = {'Content-Type': 'application/x-msgpack'} if use_msgpack else {}
-        result, request_id = GsSession.current._post(cls.__url(request),
+        result, request_id = cls.get_session()._post(cls.__url(request),
                                                      request,
                                                      request_headers=headers,
                                                      timeout=181,
@@ -122,7 +121,7 @@ class GsRiskApi(RiskApi):
             # ... poll for completed requests ...
 
             try:
-                calc_results = GsSession.current._post('/risk/calculate/results/bulk', list(pending_requests.keys()))
+                calc_results = cls.get_session()._post('/risk/calculate/results/bulk', list(pending_requests.keys()))
 
                 # ... enqueue the request and result for the listener to handle ...
                 for result in calc_results:
@@ -236,10 +235,11 @@ class GsRiskApi(RiskApi):
 
             try:
                 ws_url = '/risk/calculate/results/subscribe'
-                async with GsSession.current._connect_websocket(ws_url) as ws:
+                async with cls.get_session()._connect_websocket(ws_url) as ws:
                     if span:
                         Tracer.get_instance().scope_manager.activate(span, finish_on_close=False)
-                        with Tracer(f'wss:/{ws_url}'):
+                        with Tracer(f'wss:/{ws_url}') as scope:
+                            scope.span.set_tag('wss.host', ws.request_headers.get('host'))
                             error = await handle_websocket()
                     else:
                         error = await handle_websocket()
@@ -265,7 +265,7 @@ class GsRiskApi(RiskApi):
     @classmethod
     def create_pretrade_execution_optimization(cls, request: OptimizationRequest) -> str:
         try:
-            response = GsSession.current._post(r'/risk/execution/pretrade', request)
+            response = cls.get_session()._post(r'/risk/execution/pretrade', request)
             _logger.info('New optimization is created with id: {}'.format(response.get("optimizationId")))
             return response
         except Exception as e:
@@ -285,7 +285,7 @@ class GsRiskApi(RiskApi):
                 time.sleep(math.pow(2, attempts))
                 _logger.error('Retrying (attempt {} of {})'.format(attempts, max_attempts))
             try:
-                results = GsSession.current._get(url)
+                results = cls.get_session()._get(url)
                 if results.get('status') == 'Running':
                     attempts += 1
                 else:
