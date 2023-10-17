@@ -31,7 +31,7 @@ from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
 from gs_quant.models.risk_model_utils import build_asset_data_map, build_factor_data_map, \
     build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, get_closest_date_index, \
     batch_and_upload_partial_data, get_universe_size, batch_and_upload_coverage_data, only_factor_data_is_present, \
-    upload_model_data, build_factor_id_to_name_map
+    upload_model_data, build_factor_id_to_name_map, build_factor_volatility_dataframe
 from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModelEventType, RiskModelData, \
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
     RiskModelCoverage as CoverageType, RiskModelUniverseIdentifier as UniverseIdentifier, Entitlements, \
@@ -904,7 +904,8 @@ class MarqueeRiskModel(RiskModel):
 
     def upload_data(self,
                     data: Union[RiskModelData, Dict],
-                    max_asset_batch_size: int = 20000):
+                    max_asset_batch_size: int = 20000,
+                    aws_upload: bool = False):
         """ Upload risk model data to existing risk model in Marquee
 
         :param data: complete or partial risk model data for uploading on given date
@@ -934,10 +935,10 @@ class MarqueeRiskModel(RiskModel):
         if target_universe_size:
             logging.info(f'Target universe size for upload: {target_universe_size}')
         if make_partial_request:
-            batch_and_upload_partial_data(self.id, data, max_asset_batch_size)
+            batch_and_upload_partial_data(self.id, data, max_asset_batch_size, aws_upload=aws_upload)
         else:
             logging.info('Uploading model data in one request')
-            upload_model_data(self.id, data)
+            upload_model_data(self.id, data, aws_upload=aws_upload)
 
     @deprecation.deprecated(deprecated_in="0.9.42", details="Please use upload_data instead")
     def upload_partial_data(self,
@@ -1408,6 +1409,59 @@ class FactorRiskModel(MarqueeRiskModel):
         ).get('results')
         covariance_data = results if format == ReturnFormat.JSON else get_covariance_matrix_dataframe(results)
         return covariance_data
+
+    def get_factor_volatility(self,
+                              start_date: dt.date,
+                              end_date: dt.date = None,
+                              factors: List[str] = None,
+                              get_factors_by_name: bool = True,
+                              format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """ Get factor volatility data for existing risk model
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param factors: The factors to get factor return data for. If empty, the data for all factors is returned
+        :param get_factors_by_name: get results keyed by factor name instead of ID
+        :param format: which format to return the results in
+
+        :return: factor volatility data
+
+        **Usage**
+
+        Get the factor volatility data for daily factor returns
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_volatility_by_name = model.get_factor_volatility(start_date, end_date,
+        ...                                                         factors=["factor1", "factor2"])
+        >>> factor_volatility_by_id = model.get_factor_volatility(start_date=start_date, end_date=end_date,
+        ...                                                       factors=["1", "2", "3"], get_factors_by_name=False)
+
+        **See also**
+
+        :func:`get_factor_returns_by_name` :func:`get_factor_returns_by_id`
+        """
+        if factors is None:
+            factors = []
+        measures = [Measure.Factor_Volatility, Measure.Factor_Name, Measure.Factor_Id]
+        results = self.get_data(
+            start_date=start_date,
+            end_date=end_date,
+            measures=measures,
+            limit_factors=False
+        ).get('results')
+        if format == ReturnFormat.JSON and not get_factors_by_name and not factors:
+            return results
+        else:
+            factor_volatility_df = build_factor_volatility_dataframe(results, get_factors_by_name, factors)
+            return factor_volatility_df if format == ReturnFormat.DATA_FRAME else factor_volatility_df.to_dict()
 
     def get_estimation_universe_weights(self,
                                         start_date: dt.date,

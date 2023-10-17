@@ -30,7 +30,6 @@ from gs_quant.target.risk_models import RiskModelDataMeasure as Measure
 
 
 def _map_measure_to_field_name(measure: Measure):
-
     measure_to_field = {
         Measure.Specific_Risk: 'specificRisk',
         Measure.Total_Risk: 'totalRisk',
@@ -158,6 +157,27 @@ def get_covariance_matrix_dataframe(results: dict) -> pd.DataFrame:
     return results
 
 
+def build_factor_volatility_dataframe(results: List, group_by_name: bool, factors: List[str]) -> pd.DataFrame:
+    data = []
+    dates = []
+    for row in results:
+        dates.append(row.get('date'))
+        data.append(row.get('factorVolatility'))
+
+    df = pd.DataFrame(data, index=dates)
+    if group_by_name:
+        factor_id_to_name_map = build_factor_id_to_name_map(results)
+        df.rename(columns=factor_id_to_name_map, inplace=True)
+    if factors:
+        missing_factors = set(factors) - set(df.columns.tolist())
+        if missing_factors:
+            raise ValueError(f'Factors(s): {", ".join(missing_factors)} do not exist in the risk model. '
+                             f'Make sure the factors are correct.')
+        else:
+            return df[factors]
+    return df
+
+
 def get_closest_date_index(date: dt.date, dates: List[str], direction: str) -> int:
     for i in range(50):
         for index in range(len(dates)):
@@ -226,7 +246,7 @@ def only_factor_data_is_present(model_type: Type, data: dict) -> bool:
     return False
 
 
-def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int):
+def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int, **kwargs):
     """ Takes in total risk model data for one day and batches requests according to
     asset data size, returns a list of messages from resulting post calls"""
     date = data.get('date')
@@ -234,11 +254,11 @@ def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int
     sleep(2)
     for risk_model_data_type in ["assetData", "issuerSpecificCovariance", "factorPortfolios"]:
         _repeat_try_catch_request(_batch_data_v2, model_id=model_id, data=data.get(risk_model_data_type),
-                                  data_type=risk_model_data_type, max_asset_size=max_asset_size, date=date)
+                                  data_type=risk_model_data_type, max_asset_size=max_asset_size, date=date, **kwargs)
         sleep(2)
 
 
-def _batch_data_v2(model_id: str, data: dict, data_type: str, max_asset_size: int, date: Union[str, dt.date]):
+def _batch_data_v2(model_id: str, data: dict, data_type: str, max_asset_size: int, date: Union[str, dt.date], **kwargs):
     if data:
         if data_type in ["issuerSpecificCovariance", "factorPortfolios"]:
             max_asset_size //= 2
@@ -249,7 +269,7 @@ def _batch_data_v2(model_id: str, data: dict, data_type: str, max_asset_size: in
                 res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
                                                                   model_data={data_type: data_list[i], 'date': date},
                                                                   partial_upload=True,
-                                                                  final_upload=final_upload)
+                                                                  final_upload=final_upload, **kwargs)
                 logging.info(res)
             except (MqRequestError, Exception) as e:
                 raise e
@@ -327,11 +347,9 @@ def _batch_asset_input(input_data: dict, i: int, split_idx: int, split_num: int,
                          'specificRisk': input_data.get('specificRisk')[i * split_idx:end_idx],
                          'factorExposure': input_data.get('factorExposure')[i * split_idx:end_idx]}
 
-    optional_asset_inputs = ['totalRisk', 'historicalBeta', 'predictedBeta', 'globalPredictedBeta', 'specificReturn',
-                             'dailyReturn', 'rSquared', 'fairValueGapPercent', 'fairValueGapStandardDeviation',
-                             'estimationUniverseWeight']
-
-    for optional_input in optional_asset_inputs:
+    optional_fields = list(input_data.keys())
+    [optional_fields.remove(required_field) for required_field in ["universe", "specificRisk", "factorExposure"]]
+    for optional_input in optional_fields:
         if input_data.get(optional_input):
             asset_data_subset[optional_input] = input_data.get(optional_input)[i * split_idx:end_idx]
     return asset_data_subset

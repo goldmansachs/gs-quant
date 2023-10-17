@@ -106,10 +106,35 @@ class TdapiRatesDefaultsProvider:
 
 SWAPTION_DEFAULTS = {
     "CURRENCIES": {
+        "AUD": [{"benchmarkType": "BBR", "floatingRateOption": "AUD-BBR-BBSW", "floatingRateTenor": ["6m", "3m"],
+                 "assetIdForAvailabilityCheck": "MAQHSC1PAF4X5H4B",
+                 "pricingLocation": ["TKO"]}],
         "EUR": [
             {"benchmarkType": "LIBOR", "floatingRateOption": "EUR-EURIBOR-TELERATE", "floatingRateTenor": ["6m", "3m"],
              "assetIdForAvailabilityCheck": "MAZB3PAH8JFVVT80",
-             "pricingLocation": ["LDN"]}],
+             "pricingLocation": ["LDN"]},
+            {"benchmarkType": "EURIBOR", "floatingRateOption": "EUR-EURIBOR-TELERATE",
+             "floatingRateTenor": ["6m", "3m"],
+             "assetIdForAvailabilityCheck": "MAZB3PAH8JFVVT80",
+             "pricingLocation": ["LDN"]}
+        ],
+        "GBP": [{"benchmarkType": "LIBOR", "floatingRateOption": "GBP-LIBOR-BBA", "floatingRateTenor": ["6m", "3m"],
+                 "assetIdForAvailabilityCheck": "MAX2SBXZRPYR3NTY",
+                 "pricingLocation": ["LDN"]},
+                {"benchmarkType": "SONIA", "floatingRateOption": "GBP-SONIA-COMPOUND",
+                 "floatingRateTenor": ["1y", "6m", "3m"],
+                 "assetIdForAvailabilityCheck": "MAQC2E5J9X6WGGCJ",
+                 "pricingLocation": ["LDN"]}
+                ],
+        "JPY": [{"benchmarkType": "LIBOR", "floatingRateOption": "JPY-LIBOR-BBA", "floatingRateTenor": ["6m"],
+                 "assetIdForAvailabilityCheck": "MATT7CA7PRA4B8YB",
+                 "pricingLocation": ["TKO"], }],
+        "KRW": [{"benchmarkType": "KSDA", "floatingRateOption": "KRW-CD-KSDA-BLOOMBERG", "floatingRateTenor": ["3m"],
+                 "assetIdForAvailabilityCheck": "MAMNSGB00G4ZCWMP",
+                 "pricingLocation": ["TKO"]}],
+        "NZD": [{"benchmarkType": "BBR", "floatingRateOption": "NZD-BBR-FRA", "floatingRateTenor": ["3m"],
+                 "assetIdForAvailabilityCheck": "MAHGK129ZCWCEG33",
+                 "pricingLocation": ["TKO"], }],
         "USD": [{"benchmarkType": "LIBOR", "floatingRateOption": "USD-LIBOR-BBA", "floatingRateTenor": ["3m", "6m"],
                  "assetIdForAvailabilityCheck": "MAY0X3KRD4AN77E2",
                  "strikeReference": ["ATM"],
@@ -120,20 +145,6 @@ SWAPTION_DEFAULTS = {
                  "strikeReference": ["ATM"],
                  "pricingLocation": ["NYC"]}
                 ],
-        "GBP": [{"benchmarkType": "LIBOR", "floatingRateOption": "GBP-LIBOR-BBA", "floatingRateTenor": ["6m", "3m"],
-                 "assetIdForAvailabilityCheck": "MAX2SBXZRPYR3NTY",
-                 "pricingLocation": ["LDN"]},
-                {"benchmarkType": "SONIA", "floatingRateOption": "GBP-SONIA-COMPOUND",
-                 "floatingRateTenor": ["1y", "6m", "3m"],
-                 "assetIdForAvailabilityCheck": "MAQC2E5J9X6WGGCJ",
-                 "pricingLocation": ["LDN"]}
-                ],
-        "AUD": [{"benchmarkType": "BBR", "floatingRateOption": "AUD-BBR-BBSW", "floatingRateTenor": ["6m", "3m"],
-                 "assetIdForAvailabilityCheck": "MAQHSC1PAF4X5H4B",
-                 "pricingLocation": ["TKO"]}],
-        "JPY": [{"benchmarkType": "LIBOR", "floatingRateOption": "JPY-LIBOR-BBA", "floatingRateTenor": ["6m"],
-                 "assetIdForAvailabilityCheck": "MATT7CA7PRA4B8YB",
-                 "pricingLocation": ["TKO"], }]
     },
     "COMMON": {
         "strikeReference": "ATM",

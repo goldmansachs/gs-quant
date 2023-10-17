@@ -17,13 +17,15 @@ under the License.
 import concurrent
 import socket
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import List, Callable
+from typing import List, Callable, Optional
 
 import requests
+from opentracing import Span
 
 from gs_quant.data import DataContext
 from gs_quant.errors import MqUninitialisedError
 from gs_quant.session import GsSession
+from gs_quant.tracing import Tracer
 
 
 def handle_proxy(url, params):
@@ -57,7 +59,11 @@ class ThreadPoolManager:
 
         tasks_to_idx = {}
         for i, task in enumerate(tasks):
-            tasks_to_idx[cls.__executor.submit(cls.__run, GsSession.current, DataContext.current, task)] = i
+            tasks_to_idx[cls.__executor.submit(cls.__run,
+                                               GsSession.current,
+                                               DataContext.current,
+                                               Tracer.get_instance().active_span,
+                                               task)] = i
         results = [None] * len(tasks_to_idx)
         for task in concurrent.futures.as_completed(tasks_to_idx):
             idx = tasks_to_idx[task]
@@ -66,7 +72,10 @@ class ThreadPoolManager:
         return results
 
     @staticmethod
-    def __run(session, data_context, func):
+    def __run(session, data_context, span: Optional[Span], func):
+        if span:
+            Tracer.get_instance().scope_manager.activate(span, finish_on_close=False)
+
         with session:
             with data_context:
                 return func()

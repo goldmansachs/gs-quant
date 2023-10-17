@@ -172,7 +172,8 @@ class GsFactorRiskModelApi(GsRiskModelApi):
                                model_data: Union[Dict, RiskModelData],
                                partial_upload: bool = False,
                                target_universe_size: float = None,
-                               final_upload: bool = None) -> str:
+                               final_upload: bool = None,
+                               aws_upload: bool = False) -> str:
         url = f'/risk/models/data/{model_id}'
         if partial_upload:
             url += '?partialUpload=true'
@@ -181,6 +182,8 @@ class GsFactorRiskModelApi(GsRiskModelApi):
             if final_upload is not None:
                 final_upload_flag = 'true' if final_upload else 'false'
                 url += f'&finalUpload={final_upload_flag}'
+            if aws_upload:
+                url += '&awsUpload=true'
         return GsSession.current._post(url, model_data, timeout=200)
 
     @classmethod
