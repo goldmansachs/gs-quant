@@ -99,12 +99,19 @@ class GsSession(ContextBase):
                 cls.READ_USER_PROFILE.value
             )
 
-    def __init__(self, domain: str, api_version: str = API_VERSION, application: str = DEFAULT_APPLICATION, verify=True,
+    def __init__(self, domain: str, environment: str = None, api_version: str = API_VERSION,
+                 application: str = DEFAULT_APPLICATION, verify=True,
                  http_adapter: requests.adapters.HTTPAdapter = None, application_version=APP_VERSION, proxies=None):
         super().__init__()
         self._session = None
         self._session_async = None
         self.domain = domain
+        if environment in tuple(x.name for x in Environment):
+            self.environment = Environment[environment]
+        elif isinstance(domain, Environment):
+            self.environment = domain
+        else:
+            self.environment = Environment.DEV
         self.api_version = api_version
         self.application = application
         self.verify = verify
@@ -228,13 +235,19 @@ class GsSession(ContextBase):
             else:
                 return cls(**results)
 
+    def _build_url(self, domain: Optional[str], path: str, include_version: Optional[bool]):
+        if not domain:
+            domain = self.domain
+        url = '{}{}{}'.format(domain, '/' + self.api_version if include_version else '', path)
+        return url
+
     def _build_request_params(
             self,
             method: str,
             path: str,
+            url: str,
             payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]],
             request_headers: Optional[dict],
-            include_version: Optional[bool],
             timeout: Optional[int],
             use_body: bool,
             data_key: str,
@@ -243,7 +256,6 @@ class GsSession(ContextBase):
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
             payload = payload or {}
-        url = '{}{}{}'.format(self.domain, '/' + self.api_version if include_version else '', path)
         kwargs = {
             'timeout': timeout
         }
@@ -282,11 +294,10 @@ class GsSession(ContextBase):
                                     json.dumps(payload, cls=JSONEncoder))
         else:
             raise MqError('not implemented')
-        return kwargs, url
+        return kwargs
 
     def _parse_response(self, request_id, response, method: str, url: str,
                         cls: Optional[type], return_request_id: Optional[bool]):
-        ret = {}
         if not 199 < response.status_code < 300:
             reason = response.reason if hasattr(response, 'reason') else response.reason_phrase
             raise MqRequestError(response.status_code, f'{reason}: {response.text}',
@@ -321,13 +332,15 @@ class GsSession(ContextBase):
             include_version: Optional[bool] = True,
             timeout: Optional[int] = DEFAULT_TIMEOUT,
             return_request_id: Optional[bool] = False,
-            use_body: bool = False
+            use_body: bool = False,
+            domain: Optional[str] = None
     ) -> Union[Base, tuple, dict]:
         span = Tracer.get_instance().active_span
-        tracer = Tracer(f'http:/{path}') if span else nullcontext()
+        url = self._build_url(domain, path, include_version)
+        tracer = Tracer(url) if span else nullcontext()
         with tracer as scope:
-            kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
-                                                     use_body, "data", scope)
+            kwargs = self._build_request_params(method, path, url, payload, request_headers, timeout, use_body, "data",
+                                                scope)
             response = self._session.request(method, url, **kwargs)
             request_id = response.headers.get('x-dash-requestid')
             logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
@@ -354,14 +367,16 @@ class GsSession(ContextBase):
             include_version: Optional[bool] = True,
             timeout: Optional[int] = DEFAULT_TIMEOUT,
             return_request_id: Optional[bool] = False,
-            use_body: bool = False
+            use_body: bool = False,
+            domain: Optional[str] = None
     ) -> Union[Base, tuple, dict]:
         self._init_async()
         span = Tracer.get_instance().active_span
+        url = self._build_url(domain, path, include_version)
         tracer = Tracer(f'http:/{path}') if span else nullcontext()
         with tracer as scope:
-            kwargs, url = self._build_request_params(method, path, payload, request_headers, include_version, timeout,
-                                                     use_body, "content", scope)
+            kwargs = self._build_request_params(method, path, url, payload, request_headers, timeout, use_body,
+                                                "content", scope)
             response = await self._session_async.request(method, url, **kwargs)
             request_id = response.headers.get('x-dash-requestid')
             if scope:
@@ -398,17 +413,19 @@ class GsSession(ContextBase):
     def _post(self, path: str, payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
               request_headers: Optional[dict] = None, cls: Optional[type] = None,
               include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-              return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
+              return_request_id: Optional[bool] = False, domain: Optional[str] = None) -> Union[Base, tuple, dict]:
         return self.__request('POST', path, payload=payload, request_headers=request_headers, cls=cls,
-                              include_version=include_version, timeout=timeout, return_request_id=return_request_id)
+                              include_version=include_version, timeout=timeout, return_request_id=return_request_id,
+                              domain=domain)
 
     async def _post_async(self, path: str, payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
                           request_headers: Optional[dict] = None, cls: Optional[type] = None,
                           include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-                          return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
+                          return_request_id: Optional[bool] = False,
+                          domain: Optional[str] = None) -> Union[Base, tuple, dict]:
         ret = await self.__request_async('POST', path, payload=payload, request_headers=request_headers, cls=cls,
                                          include_version=include_version, timeout=timeout,
-                                         return_request_id=return_request_id)
+                                         return_request_id=return_request_id, domain=domain)
         return ret
 
     def _delete(self, path: str, payload: Optional[Union[dict, Base]] = None,
@@ -561,7 +578,7 @@ class OAuth2Session(GsSession):
             env_config = self._config_for_environment(environment)
             url = env_config[domain]
 
-        super().__init__(url, api_version=api_version, application=application, http_adapter=http_adapter)
+        super().__init__(url, environment, api_version=api_version, application=application, http_adapter=http_adapter)
         self.auth_url = env_config['AuthURL']
         self.client_id = client_id
         self.client_secret = client_secret
@@ -597,7 +614,7 @@ class PassThroughSession(GsSession):
         domain = self._config_for_environment(environment)['AppDomain']
         verify = True
 
-        super().__init__(domain, api_version=api_version, application=application, verify=verify,
+        super().__init__(domain, environment, api_version=api_version, application=application, verify=verify,
                          http_adapter=http_adapter)
 
         self.token = token
@@ -618,16 +635,16 @@ try:
                      application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None,
                      application_version: str = APP_VERSION):
             domain, verify = self.domain_and_verify(environment_or_domain)
-            GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify,
-                               http_adapter=http_adapter, application_version=application_version)
+            GsSession.__init__(self, domain, environment_or_domain, api_version=api_version, application=application,
+                               verify=verify, http_adapter=http_adapter, application_version=application_version)
 
     class PassThroughGSSSOSession(KerberosSessionMixin, GsSession):
 
         def __init__(self, environment: str, token, api_version=API_VERSION,
                      application=DEFAULT_APPLICATION, http_adapter=None, csrf_token=None):
             domain, verify = self.domain_and_verify(environment)
-            GsSession.__init__(self, domain, api_version=api_version, application=application, verify=verify,
-                               http_adapter=http_adapter)
+            GsSession.__init__(self, domain, environment, api_version=api_version, application=application,
+                               verify=verify, http_adapter=http_adapter)
 
             self.token = token
             self.csrf_token = csrf_token
