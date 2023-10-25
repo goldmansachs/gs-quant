@@ -385,6 +385,30 @@ def mmapi_pca_table_handler(result: dict, risk_key: RiskKey, _instrument: Instru
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
 
 
+def mmapi_pca_hedge_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
+                                  request_id: Optional[str] = None) -> DataFrameWithInfo:
+    coordinates = []
+    for r in result['rows']:
+        raw_point = r['coordinate'].get('point', '')
+        point = ';'.join(raw_point) if isinstance(raw_point, list) else raw_point
+        r['coordinate'].update({'point': point})
+        r['coordinate'].update({'size': r['size']})
+        r['coordinate'].update({'fixedRate': r['fixedRate']})
+        r['coordinate'].update({'irDelta': r['irDelta']})
+        coordinates.append(r['coordinate'])
+
+    mappings = (('mkt_type', 'type'),
+                ('mkt_asset', 'asset'),
+                ('mkt_class', 'assetClass'),
+                ('mkt_point', 'point'),
+                ('mkt_quoting_style', 'quotingStyle'),
+                ('size', 'size'),
+                ('fixedRate', 'fixedRate'),
+                ('irDelta', 'irDelta'))
+
+    return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
+
+
 def mqvs_validators_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                             request_id: Optional[str] = None) -> MQVSValidatorDefnsWithInfo:
     validators = [MQVSValidatorDefn.from_dict(r) for r in result['validators']]
@@ -409,6 +433,7 @@ result_handlers = {
     'MDAPITable': mdapi_table_handler,
     'MMAPITable': mmapi_table_handler,
     'MMAPIPCATable': mmapi_pca_table_handler,
+    'MMAPIPCAHedgeTable': mmapi_pca_hedge_table_handler,
     'MQVSValidators': mqvs_validators_handler,
     'NumberAndUnit': number_and_unit_handler,
     'RequireAssets': required_assets_handler,
