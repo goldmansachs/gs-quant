@@ -475,6 +475,50 @@ class MaxFactorProportionOfRiskConstraint:
         self.__max_factor_proportion_of_risk = value
 
 
+class MaxProportionOfRiskByGroupConstraint:
+
+    def __init__(self,
+                 factors: List[Factor],
+                 max_factor_proportion_of_risk: float,
+                 unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+        """
+        Constrain the maximum proportion of risk coming from a group of factors in the final optimized result.
+
+        :param factors: the list of factors
+        :param max_factor_proportion_of_risk: the maximum proportion of risk
+        :param unit: unit of proportion of risk
+        """
+        if unit not in [OptimizationConstraintUnit.PERCENT, OptimizationConstraintUnit.DECIMAL]:
+            raise MqValueError('Max Factor Proportion of Risk can only be set by percent or decimal.')
+        if unit == OptimizationConstraintUnit.PERCENT:
+            max_factor_proportion_of_risk = max_factor_proportion_of_risk / 100
+        self.__factors = factors
+        self.__max_factor_proportion_of_risk = max_factor_proportion_of_risk
+        self.__unit = unit
+
+    @property
+    def factors(self) -> List[Factor]:
+        return self.__factors
+
+    @factors.setter
+    def factors(self, value: List[Factor]):
+        self.__factors = value
+
+    @property
+    def max_factor_proportion_of_risk(self) -> float:
+        return self.__max_factor_proportion_of_risk
+
+    @max_factor_proportion_of_risk.setter
+    def max_factor_proportion_of_risk(self, value: float):
+        self.__max_factor_proportion_of_risk = value
+
+    def to_dict(self):
+        return {
+            'factors': [f.name for f in self.factors],
+            'max': self.max_factor_proportion_of_risk
+        }
+
+
 class OptimizerConstraints:
 
     def __init__(self,
@@ -483,13 +527,15 @@ class OptimizerConstraints:
                  sector_constraints: List[SectorConstraint] = [],
                  industry_constraints: List[IndustryConstraint] = [],
                  factor_constraints: List[FactorConstraint] = [],
-                 max_factor_proportion_of_risk: MaxFactorProportionOfRiskConstraint = None):
+                 max_factor_proportion_of_risk: MaxFactorProportionOfRiskConstraint = None,
+                 max_proportion_of_risk_by_groups: List[MaxProportionOfRiskByGroupConstraint] = None):
         self.__asset_constraints = asset_constraints
         self.__country_constraints = country_constraints
         self.__sector_constraints = sector_constraints
         self.__industry_constraints = industry_constraints
         self.__factor_constraints = factor_constraints
         self.__max_factor_proportion_of_risk = max_factor_proportion_of_risk
+        self.__max_proportion_of_risk_by_groups = max_proportion_of_risk_by_groups
 
     @property
     def asset_constraints(self) -> List[AssetConstraint]:
@@ -539,6 +585,14 @@ class OptimizerConstraints:
     def max_factor_proportion_of_risk(self, value: MaxFactorProportionOfRiskConstraint):
         self.__max_factor_proportion_of_risk = value
 
+    @property
+    def max_proportion_of_risk_by_groups(self) -> List[MaxProportionOfRiskByGroupConstraint]:
+        return self.__max_proportion_of_risk_by_groups
+
+    @max_proportion_of_risk_by_groups.setter
+    def max_proportion_of_risk_by_groups(self, value: List[MaxProportionOfRiskByGroupConstraint]):
+        self.__max_proportion_of_risk_by_groups = value
+
     def to_dict(self):
         types = set([c.unit for c in self.asset_constraints])
         if len(types) > 1:
@@ -554,6 +608,9 @@ class OptimizerConstraints:
 
         if self.max_factor_proportion_of_risk:
             as_dict['maxFactorMCTR'] = self.max_factor_proportion_of_risk.max_factor_proportion_of_risk
+
+        if self.max_proportion_of_risk_by_groups:
+            as_dict['maxFactorMCTRByGroup'] = [g.to_dict() for g in self.max_proportion_of_risk_by_groups]
 
         return as_dict
 

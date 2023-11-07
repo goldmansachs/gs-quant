@@ -25,14 +25,14 @@ from functools import update_wrapper
 from typing import Iterable, Mapping, Optional, Union, Tuple
 
 import numpy as np
-from dataclasses_json import config, global_config
+from dataclasses_json import config, global_config, LetterCase, dataclass_json
 from dataclasses_json.core import _decode_generic, _is_supported_generic
 from inflection import camelize, underscore
 
 from gs_quant.context_base import ContextBase, ContextMeta
 from gs_quant.json_convertors import encode_date_or_str, decode_date_or_str, decode_optional_date, encode_datetime, \
     decode_datetime, decode_float_or_str, decode_instrument, encode_dictable, decode_quote_report, decode_quote_reports, \
-    decode_custom_comment, decode_custom_comments, decode_hedge_type, decode_hedge_types
+    decode_custom_comment, decode_custom_comments
 
 _logger = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ __getattribute__ = object.__getattribute__
 __setattr__ = object.__setattr__
 
 _rename_cache = {}
+
 
 def exclude_none(o):
     return o is None
@@ -63,6 +64,7 @@ def _get_underscore(arg):
         _rename_cache[arg] = underscore(arg)
 
     return _rename_cache[arg]
+
 
 def handle_camel_case_args(cls):
     init = cls.__init__
@@ -141,7 +143,6 @@ class HashableDict(dict):
 
 
 class DictBase(HashableDict):
-
     _PROPERTIES = set()
 
     def __init__(self, *args, **kwargs):
@@ -479,7 +480,6 @@ class RiskMeasureParameter(Base, ABC):
 
 @dataclass
 class InstrumentBase(Base, ABC):
-
     quantity_: InitVar[float] = field(default=1, init=False)
 
     @property
@@ -598,6 +598,15 @@ def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
         enum_value = value
 
     return enum_value
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class MarketDataScenario(Base):
+    scenario: Scenario = field(default=None, metadata=field_metadata)
+    subtract_base: Optional[bool] = field(default=False, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 # Yes, I know this is a little evil ...

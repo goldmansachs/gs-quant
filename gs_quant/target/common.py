@@ -310,6 +310,14 @@ class CDOptionType(EnumBase, Enum):
     Digital_Put = 'Digital Put'    
 
 
+class CashReinvestmentTreatment(EnumBase, Enum):    
+    
+    """Cash reinvestment treatment for cash acquisitions and dividends."""
+
+    Reinvest_At_Open = 'Reinvest At Open'
+    Add_To_Index = 'Add To Index'    
+
+
 class CommodMeanRule(EnumBase, Enum):    
     
     """Commodity mean rule"""
@@ -344,7 +352,7 @@ class CommoditySector(EnumBase, Enum):
     Power = 'Power'    
 
 
-class CountryCode(EnumBase, Enum):    
+class CountryCode(EnumBase, Enum):
     
     """ISO Country code"""
 
@@ -987,6 +995,16 @@ class DayCountFraction(EnumBase, Enum):
     _30E_OVER_360 = '30E/360'    
 
 
+class EqBasketHistoryMethodology(EnumBase, Enum):    
+    
+    """Whether basket history should be backcasted, backtested, or uploaded manually
+       after creation."""
+
+    Backcast = 'Backcast'
+    Backtest = 'Backtest'
+    Custom = 'Custom'    
+
+
 class FallbackType(EnumBase, Enum):    
     
     """Different Rules for Libor Fallback"""
@@ -1221,6 +1239,7 @@ class Field(EnumBase, Enum):
     lastUpdatedMessage = 'lastUpdatedMessage'
     loanValue = 'loanValue'
     optionAdjustedOISSpread = 'optionAdjustedOISSpread'
+    propagateShocks = 'propagateShocks'
     clientFwdSpreadMultiplier = 'clientFwdSpreadMultiplier'
     totalReturnPrice = 'totalReturnPrice'
     valueCurrency = 'valueCurrency'
@@ -1329,6 +1348,7 @@ class Field(EnumBase, Enum):
     m2RPrice = 'm2RPrice'
     extMktPoint1 = 'extMktPoint1'
     direction = 'direction'
+    padExDate = 'padExDate'
     extMktPoint2 = 'extMktPoint2'
     subRegionCode = 'subRegionCode'
     assetParametersFixedRate = 'assetParametersFixedRate'
@@ -1577,6 +1597,7 @@ class Field(EnumBase, Enum):
     aumEnd = 'aumEnd'
     mktFwdPointMid = 'mktFwdPointMid'
     premium = 'premium'
+    furtherDetails = 'furtherDetails'
     low = 'low'
     crossGroup = 'crossGroup'
     reportRunTime = 'reportRunTime'
@@ -1618,6 +1639,7 @@ class Field(EnumBase, Enum):
     buy120cents = 'buy120cents'
     matchedMaturitySwapRate = 'matchedMaturitySwapRate'
     underlyingAssetName = 'underlyingAssetName'
+    maximumFactorShock = 'maximumFactorShock'
     primaryVwap = 'primaryVwap'
     exchangeTypeId = 'exchangeTypeId'
     basisSwapRate = 'basisSwapRate'
@@ -1639,6 +1661,7 @@ class Field(EnumBase, Enum):
     hedgeTrackingError = 'hedgeTrackingError'
     assetParametersPutCurrency = 'assetParametersPutCurrency'
     termStatus = 'termStatus'
+    compositeVolume30d = 'compositeVolume30d'
     windSpeedType = 'windSpeedType'
     strikePrice = 'strikePrice'
     lowInterestCoverage = 'lowInterestCoverage'
@@ -1696,6 +1719,7 @@ class Field(EnumBase, Enum):
     restrictNamedIndividuals = 'restrictNamedIndividuals'
     pricedBy = 'pricedBy'
     hedgeVolatility = 'hedgeVolatility'
+    compositeVolume = 'compositeVolume'
     tags = 'tags'
     population = 'population'
     underlyingAssetId = 'underlyingAssetId'
@@ -1756,6 +1780,7 @@ class Field(EnumBase, Enum):
     clusterDescription = 'clusterDescription'
     concentrationLimit = 'concentrationLimit'
     windSpeed = 'windSpeed'
+    hedgeIds = 'hedgeIds'
     observationHour = 'observationHour'
     signal = 'signal'
     borrowerId = 'borrowerId'
@@ -1831,6 +1856,7 @@ class Field(EnumBase, Enum):
     queueClockTimeDescription = 'queueClockTimeDescription'
     assetParametersReceiverDayCountFraction = 'assetParametersReceiverDayCountFraction'
     percentMidExecutionQuantity = 'percentMidExecutionQuantity'
+    tradingVolume60d = 'tradingVolume60d'
     deltaStrike = 'deltaStrike'
     cloudCover = 'cloudCover'
     assetParametersNotionalCurrency = 'assetParametersNotionalCurrency'
@@ -1861,6 +1887,7 @@ class Field(EnumBase, Enum):
     futureMonthZ26 = 'futureMonthZ26'
     futureMonthZ25 = 'futureMonthZ25'
     ccgCode = 'ccgCode'
+    factorScenarioType = 'factorScenarioType'
     shortExposure = 'shortExposure'
     leg1FixedPaymentCurrency = 'leg1FixedPaymentCurrency'
     map = 'map'
@@ -1891,6 +1918,7 @@ class Field(EnumBase, Enum):
     payOrReceive = 'payOrReceive'
     impliedRetailSellPctNotional = 'impliedRetailSellPctNotional'
     totalSevere = 'totalSevere'
+    unadjustedSpecificRisk = 'unadjustedSpecificRisk'
     unexecutedNotionalUSD = 'unexecutedNotionalUSD'
     expectedResidualPercentage = 'expectedResidualPercentage'
     maturityDate = 'maturityDate'
@@ -2034,6 +2062,7 @@ class Field(EnumBase, Enum):
     liquidityBucketSell = 'liquidityBucketSell'
     daysOpenUnrealizedCash = 'daysOpenUnrealizedCash'
     temperature = 'temperature'
+    issuerMarketCap = 'issuerMarketCap'
     averageRealizedVariance = 'averageRealizedVariance'
     leg1CommodityUnderlyerId = 'leg1CommodityUnderlyerId'
     ratingFitch = 'ratingFitch'
@@ -2115,6 +2144,7 @@ class Field(EnumBase, Enum):
     impliedRepoRate = 'impliedRepoRate'
     settlementCurrency = 'settlementCurrency'
     wtdDegreeDaysForecast = 'wtdDegreeDaysForecast'
+    historicalSimulationEndDate = 'historicalSimulationEndDate'
     indicationOfCollateralization = 'indicationOfCollateralization'
     futureMonthN26 = 'futureMonthN26'
     _60 = '60'
@@ -2158,6 +2188,7 @@ class Field(EnumBase, Enum):
     _75 = '75'
     complianceEffectiveTime = 'complianceEffectiveTime'
     expirationDate = 'expirationDate'
+    compositeValue30d = 'compositeValue30d'
     _76 = '76'
     _77 = '77'
     _78 = '78'
@@ -2173,6 +2204,7 @@ class Field(EnumBase, Enum):
     newIdeasWtd = 'newIdeasWtd'
     assetClassSDR = 'assetClassSDR'
     yieldToWorst = 'yieldToWorst'
+    compositeVolume60d = 'compositeVolume60d'
     assetParametersForwardRate = 'assetParametersForwardRate'
     _80 = '80'
     closingPrice = 'closingPrice'
@@ -2232,6 +2264,7 @@ class Field(EnumBase, Enum):
     currentConstituentsSalesPerShare = 'currentConstituentsSalesPerShare'
     benchmark = 'benchmark'
     nvtAdj = 'nvtAdj'
+    bidAskSpread90d = 'bidAskSpread90d'
     tcmCostParticipationRate15Pct = 'tcmCostParticipationRate15Pct'
     fiscalYear = 'fiscalYear'
     recallDate = 'recallDate'
@@ -2301,6 +2334,7 @@ class Field(EnumBase, Enum):
     calSpreadMisPricing = 'calSpreadMisPricing'
     totalTestedNegative = 'totalTestedNegative'
     impliedRetailNotional = 'impliedRetailNotional'
+    tradingVolume = 'tradingVolume'
     rate366 = 'rate366'
     currentConstituentsReturnOnEquity = 'currentConstituentsReturnOnEquity'
     platform = 'platform'
@@ -2342,6 +2376,7 @@ class Field(EnumBase, Enum):
     priceToBook = 'priceToBook'
     isin = 'isin'
     fwdEbookRiskSpreadMultBid = 'fwdEbookRiskSpreadMultBid'
+    transitionPlanTransparencyPercentile = 'transitionPlanTransparencyPercentile'
     assetParametersStrikeType = 'assetParametersStrikeType'
     plId = 'plId'
     lastReturnsStartDate = 'lastReturnsStartDate'
@@ -2422,6 +2457,7 @@ class Field(EnumBase, Enum):
     simonId = 'simonId'
     congestion = 'congestion'
     leg2CommodityInstrumentId = 'leg2CommodityInstrumentId'
+    shockedFactor = 'shockedFactor'
     notes = 'notes'
     totalProbableSeniorHome = 'totalProbableSeniorHome'
     eventCategory = 'eventCategory'
@@ -2498,6 +2534,7 @@ class Field(EnumBase, Enum):
     wouldIfGoodLevel = 'wouldIfGoodLevel'
     bufferThresholdRequired = 'bufferThresholdRequired'
     faceValue = 'faceValue'
+    tradingVolume90d = 'tradingVolume90d'
     rollVolumeHist = 'rollVolumeHist'
     counterPartyStatus = 'counterPartyStatus'
     composite22DayAdv = 'composite22DayAdv'
@@ -2654,6 +2691,7 @@ class Field(EnumBase, Enum):
     strategy = 'strategy'
     priceUnitOfMeasure2 = 'priceUnitOfMeasure2'
     issueStatusDate = 'issueStatusDate'
+    solactiveExDate = 'solactiveExDate'
     lenderIncome = 'lenderIncome'
     settlementCcy = 'settlementCcy'
     pbClientId = 'pbClientId'
@@ -2679,6 +2717,7 @@ class Field(EnumBase, Enum):
     shortConvictionSmall = 'shortConvictionSmall'
     upfrontPaymentCurrency = 'upfrontPaymentCurrency'
     spotSettlementDate = 'spotSettlementDate'
+    compositeVolume90d = 'compositeVolume90d'
     matrixOrder = 'matrixOrder'
     dayClose = 'dayClose'
     dateIndex = 'dateIndex'
@@ -2718,6 +2757,7 @@ class Field(EnumBase, Enum):
     ask = 'ask'
     closePrice = 'closePrice'
     endTime = 'endTime'
+    bidAskSpread60d = 'bidAskSpread60d'
     sell100cents = 'sell100cents'
     executionTimestamp = 'executionTimestamp'
     buy180cents = 'buy180cents'
@@ -2797,6 +2837,7 @@ class Field(EnumBase, Enum):
     testId = 'testId'
     risk = 'risk'
     impliedCorrelation = 'impliedCorrelation'
+    modelPrice = 'modelPrice'
     normalizedPerformance = 'normalizedPerformance'
     overnightNewsEndTime = 'overnightNewsEndTime'
     bytesConsumed = 'bytesConsumed'
@@ -2920,6 +2961,7 @@ class Field(EnumBase, Enum):
     relativePeriod = 'relativePeriod'
     user = 'user'
     fwdEbookPointSpreadMultBid = 'fwdEbookPointSpreadMultBid'
+    viewEntitlements = 'viewEntitlements'
     customer = 'customer'
     leg1ResetFrequency = 'leg1ResetFrequency'
     queueClockTimeLabel = 'queueClockTimeLabel'
@@ -2985,6 +3027,7 @@ class Field(EnumBase, Enum):
     deploymentVersion = 'deploymentVersion'
     buy16bps = 'buy16bps'
     tradeDayCount = 'tradeDayCount'
+    transitionPerformancePercentile = 'transitionPerformancePercentile'
     transactionType = 'transactionType'
     priceToSales = 'priceToSales'
     newIdeasQtd = 'newIdeasQtd'
@@ -3026,6 +3069,7 @@ class Field(EnumBase, Enum):
     startingDate = 'startingDate'
     loanId = 'loanId'
     onboarded = 'onboarded'
+    minimumFactorShock = 'minimumFactorShock'
     liquidityScore = 'liquidityScore'
     longRatesContribution = 'longRatesContribution'
     sourceDateSpan = 'sourceDateSpan'
@@ -3176,6 +3220,7 @@ class Field(EnumBase, Enum):
     sell70cents = 'sell70cents'
     sell110cents = 'sell110cents'
     pnodeId = 'pnodeId'
+    historicalSimulationStartDate = 'historicalSimulationStartDate'
     price1 = 'price1'
     price2 = 'price2'
     referenceRate = 'referenceRate'
@@ -3195,9 +3240,11 @@ class Field(EnumBase, Enum):
     swapPointsAsk = 'swapPointsAsk'
     expectedResidualQuantity = 'expectedResidualQuantity'
     clientSwapPointsBid = 'clientSwapPointsBid'
+    cashTreatment = 'cashTreatment'
     rollDate = 'rollDate'
     dynamicHybridSpeed = 'dynamicHybridSpeed'
     capFloorVol = 'capFloorVol'
+    bidAskSpread30d = 'bidAskSpread30d'
     targetQuantity = 'targetQuantity'
     submitter = 'submitter'
     no = 'no'
@@ -3333,6 +3380,7 @@ class Field(EnumBase, Enum):
     netChange = 'netChange'
     percentOfIssueOutstanding = 'percentOfIssueOutstanding'
     numberOfUnderliers = 'numberOfUnderliers'
+    tradingVolume30d = 'tradingVolume30d'
     swapType = 'swapType'
     forecastType = 'forecastType'
     leg1Notional = 'leg1Notional'
@@ -3522,6 +3570,7 @@ class Field(EnumBase, Enum):
     sensitivity = 'sensitivity'
     clientSwapPointsAsk = 'clientSwapPointsAsk'
     embeddedOptionType = 'embeddedOptionType'
+    shockedFactorCategory = 'shockedFactorCategory'
     domainsData = 'domainsData'
     dayCount = 'dayCount'
     sell16bps = 'sell16bps'
@@ -3582,6 +3631,7 @@ class Field(EnumBase, Enum):
     sell8bps = 'sell8bps'
     bidPrice = 'bidPrice'
     optionCallPremium = 'optionCallPremium'
+    capitalization = 'capitalization'
     sell8point5bps = 'sell8point5bps'
     targetPriceUnrealizedBps = 'targetPriceUnrealizedBps'
     clientSpotBid = 'clientSpotBid'
@@ -3592,6 +3642,7 @@ class Field(EnumBase, Enum):
     relativePayoffMtd = 'relativePayoffMtd'
     dailyNetShareholderFlows = 'dailyNetShareholderFlows'
     buy2point5bps = 'buy2point5bps'
+    tradedValue30d = 'tradedValue30d'
     cai = 'cai'
     executedNotionalUSD = 'executedNotionalUSD'
     systemTime = 'systemTime'
@@ -3700,6 +3751,16 @@ class Format(EnumBase, Enum):
     Excel = 'Excel'
     MessagePack = 'MessagePack'
     Pdf = 'Pdf'    
+
+
+class FrequencyInterval(EnumBase, Enum):    
+    
+    """Frequency interval."""
+
+    Weekly = 'Weekly'
+    Monthly = 'Monthly'
+    Quarterly = 'Quarterly'
+    Annually = 'Annually'    
 
 
 class InOut(EnumBase, Enum):    
@@ -4113,7 +4174,7 @@ class ProductType(EnumBase, Enum):
     Single_Stock = 'Single Stock'    
 
 
-class QuoteType(EnumBase, Enum):    
+class QuoteType(EnumBase, Enum):
     
     """Quote type that is used for the bond price"""
 
@@ -4390,7 +4451,7 @@ class Strategy(EnumBase, Enum):
     Yield_Alternative = 'Yield Alternative'    
 
 
-class StrikeMethodType(EnumBase, Enum):    
+class StrikeMethodType(EnumBase, Enum):
     
     Spread = 'Spread'
     Delta = 'Delta'
@@ -4406,7 +4467,7 @@ class StrikeType(EnumBase, Enum):
     Price = 'Price'    
 
 
-class SwapClearingHouse(EnumBase, Enum):    
+class SwapClearingHouse(EnumBase, Enum):
     
     """Swap Clearing House"""
 
@@ -4574,9 +4635,31 @@ class AssetScreenerRequestFilterLimits(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class AssetValueParameters(Base):
+    max_: Optional[float] = field(default=None, metadata=config(field_name='max', exclude=exclude_none))
+    min_: Optional[float] = field(default=None, metadata=config(field_name='min', exclude=exclude_none))
+    increment: Optional[float] = field(default=None, metadata=field_metadata)
+    value: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class BlendedBenchmarkAttribute(Base):
     benchmark_id: Optional[str] = field(default=None, metadata=field_metadata)
     weight: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class BloombergPublishParameters(Base):
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    long_name: Optional[str] = field(default=None, metadata=field_metadata)
+    close_precision: Optional[float] = field(default=2, metadata=field_metadata)
+    tick_precision: Optional[float] = field(default=4, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -4999,6 +5082,7 @@ class XRef(Base):
     wpk: Optional[str] = field(default=None, metadata=field_metadata)
     gsn: Optional[str] = field(default=None, metadata=field_metadata)
     sec_name: Optional[str] = field(default=None, metadata=field_metadata)
+    sec_master_id: Optional[str] = field(default=None, metadata=field_metadata)
     cross: Optional[str] = field(default=None, metadata=field_metadata)
     simon_id: Optional[str] = field(default=None, metadata=field_metadata)
     em_id: Optional[str] = field(default=None, metadata=field_metadata)
@@ -5377,22 +5461,23 @@ class ISelectNewParameter(Base):
     early_unwind_after: Optional[float] = field(default=None, metadata=field_metadata)
     early_unwind_applicable: Optional[str] = field(default=None, metadata=field_metadata)
     expiry_date_rule: Optional[str] = field(default=None, metadata=field_metadata)
-    option_target_expiry_parameter: Optional[float] = field(default=None, metadata=field_metadata)
+    option_target_expiry_parameter: Optional[DictBase] = field(default=None, metadata=field_metadata)
     option_early_unwind_days: Optional[float] = field(default=None, metadata=field_metadata)
-    in_alpha: Optional[bool] = field(default=None, metadata=field_metadata)
-    is_fsr_target_factor: Optional[bool] = field(default=None, metadata=config(field_name='isFSRTargetFactor', exclude=exclude_none))
+    in_alpha: Optional[Union[bool, int]] = field(default=None, metadata=field_metadata)
+    is_fsr_target_factor: Optional[Union[bool, int]] = field(default=None, metadata=config(field_name='isFSRTargetFactor', exclude=exclude_none))
     fsr_max_ratio: Optional[float] = field(default=None, metadata=field_metadata)
     fsr_min_ratio: Optional[float] = field(default=None, metadata=field_metadata)
-    module_enabled: Optional[bool] = field(default=None, metadata=field_metadata)
-    trend_signal_0: Optional[bool] = field(default=None, metadata=config(field_name='trendSignal_0', exclude=exclude_none))
-    trend_signal_1: Optional[bool] = field(default=None, metadata=config(field_name='trendSignal_1', exclude=exclude_none))
-    trend_signal_2: Optional[bool] = field(default=None, metadata=config(field_name='trendSignal_2', exclude=exclude_none))
-    trend_signal_3: Optional[bool] = field(default=None, metadata=config(field_name='trendSignal_3', exclude=exclude_none))
+    module_enabled: Optional[Union[bool, int]] = field(default=None, metadata=field_metadata)
+    trend_signal_0: Optional[Union[bool, int]] = field(default=None, metadata=config(field_name='trendSignal_0', exclude=exclude_none))
+    trend_signal_1: Optional[Union[bool, int]] = field(default=None, metadata=config(field_name='trendSignal_1', exclude=exclude_none))
+    trend_signal_2: Optional[Union[bool, int]] = field(default=None, metadata=config(field_name='trendSignal_2', exclude=exclude_none))
+    trend_signal_3: Optional[Union[bool, int]] = field(default=None, metadata=config(field_name='trendSignal_3', exclude=exclude_none))
     module_name: Optional[str] = field(default=None, metadata=field_metadata)
     target_strike: Optional[float] = field(default=None, metadata=field_metadata)
     strike_method: Optional[StrikeMethodType] = field(default=None, metadata=field_metadata)
     option_expiry: Optional[OptionExpiryType] = field(default=None, metadata=field_metadata)
     bloomberg_id: Optional[str] = field(default=None, metadata=field_metadata)
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
     stock_id: Optional[str] = field(default=None, metadata=field_metadata)
     asset_class: Optional[str] = field(default=None, metadata=field_metadata)
     future_id: Optional[str] = field(default=None, metadata=field_metadata)
@@ -5405,7 +5490,7 @@ class ISelectNewParameter(Base):
     execution_end_time: Optional[DictBase] = field(default=None, metadata=field_metadata)
     execution_style: Optional[str] = field(default=None, metadata=field_metadata)
     execution_timezone: Optional[str] = field(default=None, metadata=field_metadata)
-    notional: Optional[float] = field(default=None, metadata=field_metadata)
+    notional: Optional[DictBase] = field(default=None, metadata=field_metadata)
     leverage: Optional[float] = field(default=None, metadata=field_metadata)
     quantity: Optional[float] = field(default=None, metadata=field_metadata)
     hedge_ratio: Optional[float] = field(default=None, metadata=field_metadata)
@@ -5413,7 +5498,7 @@ class ISelectNewParameter(Base):
     option_strike_type: Optional[OptionStrikeType] = field(default=None, metadata=field_metadata)
     credit_option_type: Optional[CreditOptionType] = field(default=None, metadata=field_metadata)
     credit_option_strike_type: Optional[CreditOptionStrikeType] = field(default=None, metadata=field_metadata)
-    strike_relative: Optional[float] = field(default=None, metadata=field_metadata)
+    strike_relative: Optional[DictBase] = field(default=None, metadata=field_metadata)
     trade_type: Optional[TradeType] = field(default=None, metadata=field_metadata)
     signal: Optional[float] = field(default=None, metadata=field_metadata)
     new_signal: Optional[float] = field(default=None, metadata=field_metadata)
@@ -5437,11 +5522,23 @@ class ISelectNewParameter(Base):
     valid_contract_expiry: Optional[str] = field(default=None, metadata=field_metadata)
     rtl: Optional[float] = field(default=None, metadata=field_metadata)
     current_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    chg_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    new_units: Optional[float] = field(default=None, metadata=field_metadata)
     country: Optional[str] = field(default=None, metadata=field_metadata)
     region: Optional[str] = field(default=None, metadata=field_metadata)
     adv: Optional[float] = field(default=None, metadata=field_metadata)
     tadv: Optional[float] = field(default=None, metadata=field_metadata)
     hadv: Optional[float] = field(default=None, metadata=field_metadata)
+    market_cap: Optional[float] = field(default=None, metadata=field_metadata)
+    market_classification: Optional[str] = field(default=None, metadata=field_metadata)
+    new_signal_param_a: Optional[float] = field(default=None, metadata=config(field_name='NewSignalParamA', exclude=exclude_none))
+    new_signal_param_b: Optional[float] = field(default=None, metadata=config(field_name='NewSignalParamB', exclude=exclude_none))
+    signal_param_a: Optional[float] = field(default=None, metadata=config(field_name='SignalParamA', exclude=exclude_none))
+    signal_param_b: Optional[float] = field(default=None, metadata=config(field_name='SignalParamB', exclude=exclude_none))
+    inv_vol_cap: Optional[float] = field(default=None, metadata=field_metadata)
+    newinv_vol_cap: Optional[float] = field(default=None, metadata=field_metadata)
+    units_scaling_factor: Optional[float] = field(default=None, metadata=field_metadata)
+    new_units_scaling_factor: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5527,6 +5624,10 @@ class PCOCashBalance(Base):
     cash_reserve: Optional[str] = field(default=None, metadata=field_metadata)
     long_threshold: Optional[str] = field(default=None, metadata=field_metadata)
     short_threshold: Optional[str] = field(default=None, metadata=field_metadata)
+    holding: Optional[str] = field(default=None, metadata=field_metadata)
+    t0: Optional[str] = field(default=None, metadata=field_metadata)
+    t1: Optional[str] = field(default=None, metadata=field_metadata)
+    t2: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5906,7 +6007,9 @@ class PCOSecurity(Base):
     base_currency_exposure_limits: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     hedge_ratio: Optional[str] = field(default=None, metadata=field_metadata)
     local_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    base_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
     base_currency_exposure: Optional[str] = field(default=None, metadata=field_metadata)
+    local_currency_exposure: Optional[str] = field(default=None, metadata=field_metadata)
     security_name: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
@@ -5947,7 +6050,7 @@ class PCOSecurityBreakdown(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class CompositeScenario(Base):
+class CompositeScenario(Scenario):
     scenarios: Optional[Tuple[Scenario, ...]] = field(default=None, metadata=field_metadata)
     scenario_type: Optional[str] = field(init=False, default='CompositeScenario', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
@@ -5988,15 +6091,6 @@ class RelativeMarket(Base):
     from_market: SingleMarket = field(default=None, metadata=field_metadata)
     to_market: SingleMarket = field(default=None, metadata=field_metadata)
     market_type: Optional[str] = field(init=False, default='RelativeMarket', metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class MarketDataScenario(Base):
-    scenario: Scenario = field(default=None, metadata=field_metadata)
-    subtract_base: Optional[bool] = field(default=False, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -6153,7 +6247,6 @@ class ReportParameters(Base):
     basket_ready_for_trade: Optional[bool] = field(default=None, metadata=field_metadata)
     allow_in_position_rebalance: Optional[bool] = field(default=None, metadata=field_metadata)
     weighting_strategy: Optional[PositionSetWeightingStrategy] = field(default=None, metadata=field_metadata)
-    preferred_risk_model: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

@@ -21,6 +21,7 @@ from typing import Optional, Union, List
 import inflection
 import pandas as pd
 
+from gs_quant.api.api_session import ApiWithCustomSession
 from gs_quant.api.fred.fred_query import FredQuery
 from gs_quant.base import Base
 from gs_quant.target.coordinates import MDAPIDataQuery
@@ -29,7 +30,7 @@ from gs_quant.target.data import DataQuery
 _logger = logging.getLogger(__name__)
 
 
-class DataApi(metaclass=ABCMeta):
+class DataApi(ApiWithCustomSession, metaclass=ABCMeta):
     @classmethod
     def query_data(cls, query: Union[DataQuery, FredQuery], dataset_id: str = None) -> Union[list, tuple]:
         raise NotImplementedError('Must implement get_data')
