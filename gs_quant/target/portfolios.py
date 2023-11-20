@@ -193,6 +193,7 @@ class Portfolio(Base):
     last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     owner_id: Optional[str] = field(default=None, metadata=field_metadata)
     report_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    scenario_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     short_name: Optional[str] = field(default=None, metadata=field_metadata)
     underlying_portfolio_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)

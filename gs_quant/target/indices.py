@@ -156,6 +156,18 @@ class ISelectActionRequest(IndicesRebalanceActionTypes):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class ISelectError(Base):
+    status_code: Optional[str] = field(default=None, metadata=config(field_name='Status_Code', exclude=exclude_none))
+    validation_messages: Optional[Tuple[str, ...]] = field(default=None, metadata=config(field_name='Validation_Messages', exclude=exclude_none))
+    date_validation_errors: Optional[Tuple[str, ...]] = field(default=None, metadata=config(field_name='Date_Validation_Errors', exclude=exclude_none))
+    index_parameters_errors: Optional[Tuple[str, ...]] = field(default=None, metadata=config(field_name='Index_Parameters_Errors', exclude=exclude_none))
+    underlyer_validation_errors: Optional[Tuple[str, ...]] = field(default=None, metadata=config(field_name='Underlyer_Validation_Errors', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class ISelectIndexParameter(Base):
     name: Optional[str] = field(default=None, metadata=field_metadata)
     value: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)

@@ -74,6 +74,7 @@ class PriceParameters(Base):
     fallback_date: Optional[str] = field(default=None, metadata=field_metadata)
     vendor: Optional[MarketDataVendor] = field(default=None, metadata=field_metadata)
     use_unadjusted_close_price: Optional[bool] = field(default=False, metadata=field_metadata)
+    use_exchange_currency: Optional[bool] = field(default=False, metadata=field_metadata)
     weighting_strategy: Optional[PositionSetWeightingStrategy] = field(default=None, metadata=field_metadata)
     notional_type: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)

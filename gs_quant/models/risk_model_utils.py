@@ -67,7 +67,7 @@ def build_asset_data_map(results: List, requested_universe: tuple, requested_mea
         return {}
     data_field = _map_measure_to_field_name(requested_measure)
     # if full universe is requested then pull the universe from the results.
-    universe = pydash.get(results, '0.assetData.universe', []) if requested_universe else list(requested_universe)
+    universe = pydash.get(results, '0.assetData.universe', []) if not requested_universe else list(requested_universe)
     data_map = {}
     for asset in universe:
         date_list = {}

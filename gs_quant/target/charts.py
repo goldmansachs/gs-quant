@@ -211,6 +211,7 @@ class ParameterField(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class XAxisSettings(Base):
     auto_fit_range_to_data: Optional[bool] = field(default=None, metadata=field_metadata)
+    label: Optional[str] = field(default=None, metadata=field_metadata)
     show_grid_lines: Optional[bool] = field(default=None, metadata=field_metadata)
     ignore_nil_date: Optional[bool] = field(default=None, metadata=field_metadata)
     x_axis_date_format: Optional[str] = field(default=None, metadata=field_metadata)
@@ -300,6 +301,7 @@ class ChartRegression(Base):
     type_: Optional[ChartRegressionType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     line_data_index: Optional[int] = field(default=None, metadata=field_metadata)
     is_visible: Optional[bool] = field(default=None, metadata=field_metadata)
+    show_statistical_info: Optional[bool] = field(default=None, metadata=field_metadata)
     stroke_color: Optional[str] = field(default=None, metadata=field_metadata)
     stroke_type: Optional[ChartRegressionStrokeType] = field(default=None, metadata=field_metadata)
     stroke_width: Optional[float] = field(default=None, metadata=field_metadata)
@@ -343,6 +345,7 @@ class Chart(Base):
     entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
     entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
     title: Optional[str] = field(default=None, metadata=field_metadata)
+    subtitle: Optional[str] = field(default=None, metadata=field_metadata)
     rank: Optional[int] = field(default=None, metadata=field_metadata)
     folder_name: Optional[str] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)

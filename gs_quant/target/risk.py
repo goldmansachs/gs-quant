@@ -432,6 +432,8 @@ class LiquidityConstituent(Base):
     beta_adjusted_exposure: Optional[float] = field(default=None, metadata=field_metadata)
     adv_bucket: Optional[object] = field(default=None, metadata=field_metadata)
     settlement_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    transition_plan_transparency_percentile: Optional[float] = field(default=None, metadata=field_metadata)
+    transition_performance_percentile: Optional[float] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args

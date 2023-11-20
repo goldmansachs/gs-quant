@@ -95,6 +95,10 @@ class AssetConstraint(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+class BasketConditions(DictBase):
+    pass
+
+
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
@@ -339,6 +343,7 @@ class FactorHedgeParameters(Base):
     explode_universe: Optional[bool] = field(default=None, metadata=field_metadata)
     min_names: Optional[float] = field(default=None, metadata=field_metadata)
     max_names: Optional[float] = field(default=None, metadata=field_metadata)
+    max_trades: Optional[float] = field(default=None, metadata=field_metadata)
     min_weight: Optional[float] = field(default=None, metadata=field_metadata)
     max_weight: Optional[float] = field(default=None, metadata=field_metadata)
     min_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
@@ -349,6 +354,7 @@ class FactorHedgeParameters(Base):
     asset_constraints: Optional[Tuple[AssetConstraint, ...]] = field(default=None, metadata=field_metadata)
     constrain_assets_by_notional: Optional[bool] = field(default=None, metadata=field_metadata)
     allow_long_short: Optional[bool] = field(default=None, metadata=field_metadata)
+    only_reweight_target_composition: Optional[bool] = field(default=None, metadata=field_metadata)
     factor_constraints: Optional[Tuple[FactorConstraint, ...]] = field(default=None, metadata=field_metadata)
     classification_constraints: Optional[Tuple[ClassificationConstraint, ...]] = field(default=None, metadata=field_metadata)
     esg_constraints: Optional[Tuple[ESGConstraint, ...]] = field(default=None, metadata=field_metadata)
@@ -357,6 +363,7 @@ class FactorHedgeParameters(Base):
     turnover_portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
     max_turnover_percentage: Optional[float] = field(default=None, metadata=field_metadata)
     return_type: Optional[ReturnType] = field(default=None, metadata=field_metadata)
+    is_best_basket: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

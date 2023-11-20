@@ -29,6 +29,7 @@ class PositionsPricingParameters(Base):
     currency: str = field(default=None, metadata=field_metadata)
     weighting_strategy: str = field(default=None, metadata=field_metadata)
     carryover_positions_for_missing_dates: Optional[bool] = field(default=False, metadata=field_metadata)
+    should_reweight: Optional[bool] = field(default=False, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -38,6 +39,8 @@ class PositionsPricingParameters(Base):
 class PositionsRequest(Base):
     asset_id: str = field(default=None, metadata=field_metadata)
     weight: Optional[float] = field(default=None, metadata=field_metadata)
+    quantity: Optional[float] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[PositionTag, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -46,8 +49,8 @@ class PositionsRequest(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class PositionSetRequest(Base):
     date: datetime.date = field(default=None, metadata=field_metadata)
-    target_notional: float = field(default=None, metadata=field_metadata)
     positions: Tuple[PositionsRequest, ...] = field(default=None, metadata=field_metadata)
+    target_notional: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

@@ -63,6 +63,7 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Issuer_Specific_Covariance = 'Issuer Specific Covariance'
     Factor_Portfolios = 'Factor Portfolios'    
 
+
 class RiskModelEventType(EnumBase, Enum):    
     
     """Event type for risk model class."""
@@ -72,7 +73,7 @@ class RiskModelEventType(EnumBase, Enum):
     Risk_Model_ISC_Data = 'Risk Model ISC Data'
     Risk_Model_AWS = 'Risk Model AWS'
     Risk_Model_PFP_Data_AWS = 'Risk Model PFP Data AWS'
-    Risk_Model_ISC_Data_AWS = 'Risk Model ISC Data AWS'
+    Risk_Model_ISC_Data_AWS = 'Risk Model ISC Data AWS'    
 
 
 class RiskModelLogicalDb(EnumBase, Enum):    
@@ -109,13 +110,14 @@ class RiskModelUniverseIdentifierRequest(EnumBase, Enum):
 
     gsid = 'gsid'
     bbid = 'bbid'
+    bcid = 'bcid'
     cusip = 'cusip'
     sedol = 'sedol'
     ric = 'ric'
     ticker = 'ticker'
     primeId = 'primeId'
     isin = 'isin'    
-    bcid = "bcid"
+
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -283,8 +285,6 @@ class RiskModelData(Base):
     asset_data: Optional[RiskModelAssetData] = field(default=None, metadata=field_metadata)
     factor_data: Optional[Tuple[RiskModelFactorData, ...]] = field(default=None, metadata=field_metadata)
     covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = field(default=None, metadata=field_metadata)
-    preVRA_covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = field(default=None, metadata=field_metadata)
-    unadjusted_covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = field(default=None, metadata=field_metadata)
     issuer_specific_covariance: Optional[RiskModelIssuerSpecificCovarianceData] = field(default=None, metadata=field_metadata)
     factor_portfolios: Optional[RiskModelFactorPortfoliosData] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
