@@ -42,8 +42,9 @@ def get_risk_request_id(requests):
         identifier += '-'.join([pos.instrument.name for pos in request.positions])
         identifier += '-'.join([r.__repr__() for r in request.measures])
         date = request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
-        today = business_day_offset(datetime.date.today(), 0, roll='preceding').strftime('%Y%b%d')
-        identifier += 'today' if date == today else date
+        today_pre = business_day_offset(datetime.date.today(), 0, roll='preceding').strftime('%Y%b%d')
+        today_post = business_day_offset(datetime.date.today(), 0, roll='following').strftime('%Y%b%d')
+        identifier += 'today' if date in (today_post, today_pre) else date
         if request.scenario is not None:
             if isinstance(request.scenario.scenario, CompositeScenario):
                 underlying_scenarios = request.scenario.scenario.scenarios

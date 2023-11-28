@@ -352,8 +352,9 @@ class GsSession(ContextBase):
             if not try_auth:
                 raise MqRequestError(response.status_code, response.text, context=f'{request_id}: {method} {url}')
             self._authenticate()
-            return self.__request(method, path, payload=payload, cls=cls, include_version=include_version,
-                                  return_request_id=return_request_id, use_body=use_body, try_auth=False)
+            return self.__request(method, path, payload=payload, request_headers=request_headers, cls=cls,
+                                  try_auth=False, include_version=include_version, timeout=timeout,
+                                  return_request_id=return_request_id, use_body=use_body, domain=domain)
         return self._parse_response(request_id, response, method, url, cls, return_request_id)
 
     async def __request_async(
@@ -389,8 +390,9 @@ class GsSession(ContextBase):
             if not try_auth:
                 raise MqRequestError(response.status_code, response.text, context=f'{request_id}: {method} {url}')
             self._authenticate_all_sessions()
-            res = await self.__request_async(method, path, payload=payload, cls=cls, include_version=include_version,
-                                             return_request_id=return_request_id, use_body=use_body, try_auth=False)
+            res = await self.__request_async(method, path, payload=payload, request_headers=request_headers,
+                                             cls=cls, try_auth=False, include_version=include_version, timeout=timeout,
+                                             return_request_id=return_request_id, use_body=use_body, domain=domain)
             return res
         return self._parse_response(request_id, response, method, url, cls, return_request_id)
 

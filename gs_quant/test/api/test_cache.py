@@ -14,15 +14,15 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 from unittest import mock
 
-import datetime as dt
 import pandas as pd
 
+import gs_quant.risk as risk
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.instrument import IRSwap, IRSwaption
 from gs_quant.markets import HistoricalPricingContext, PricingCache, PricingContext
-import gs_quant.risk as risk
 from gs_quant.session import Environment, GsSession
 
 
@@ -132,7 +132,7 @@ def test_cache_subset(mocker):
     price_f.result()
 
     for date in dates:
-        with PricingContext(pricing_date=date) as pc:
+        with PricingContext(pricing_date=date, use_historical_diddles_only=True) as pc:
             risk_key = pc._PricingContext__risk_key(risk.Price, ir_swap.provider)
         cached_scalar = PricingCache.get(risk_key, ir_swap)
         assert cached_scalar
@@ -210,12 +210,12 @@ def test_multiple_measures(mocker):
 
     # make sure all the risk measures got cached correctly
     for date in dates:
-        with PricingContext(pricing_date=date) as pc:
+        with PricingContext(pricing_date=date, use_historical_diddles_only=True) as pc:
             for risk_measure in (risk.Price, risk.IRDelta, risk.IRVega):
                 val = PricingCache.get(pc._PricingContext__risk_key(risk_measure, ir_swaption.provider), ir_swaption)
                 assert val is not None
 
-    with PricingContext(pricing_date=dt.date(2019, 10, 11)) as pc:
+    with PricingContext(pricing_date=dt.date(2019, 10, 11), use_historical_diddles_only=True) as pc:
         for risk_measure in (risk.Price, risk.IRDelta, risk.IRVega):
             val = PricingCache.get(pc._PricingContext__risk_key(risk_measure, ir_swaption.provider), ir_swaption)
             assert val is None

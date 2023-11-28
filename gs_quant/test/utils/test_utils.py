@@ -29,6 +29,15 @@ def test_all_cache_files_used():
 
     unused_files = MockRequest.get_unused_files()
     print(unused_files)
+    # import pathlib
+    # import os
+    # for l in unused_files:
+    #     path = str(pathlib.Path(__file__).parents[0]) + "/pricer/calc_cache/" + l
+    #     try:
+    #         os.remove(path)
+    #     except:
+    #         continue
+
     assert unused_files == [], 'Cleanup your unused test files!'
 
 

@@ -279,11 +279,13 @@ class SeriesWithInfo(pd.Series, ResultInfo):
 
     def __mul__(self, other):
         new_result = pd.Series.__mul__(self, other)
-        ResultInfo.__init__(new_result, risk_key=self.risk_key, unit=self.unit, error=self.error, request_id=self.request_id)
+        ResultInfo.__init__(new_result, risk_key=self.risk_key, unit=self.unit, error=self.error,
+                            request_id=self.request_id)
         return new_result
 
     def copy_with_resultinfo(self, deep=True):
-        return SeriesWithInfo(self.raw_value.copy(deep=deep), risk_key=self.risk_key, unit=self.unit, error=self.error, request_id=self.request_id)
+        return SeriesWithInfo(self.raw_value.copy(deep=deep), risk_key=self.risk_key, unit=self.unit, error=self.error,
+                              request_id=self.request_id)
 
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
@@ -388,6 +390,7 @@ class MQVSValidatorDefn:
     groupIndex: Optional[int] = None
     groupMethod: Optional[str] = None
 
+
 class MQVSValidatorDefnsWithInfo(ResultInfo):
     validators: Tuple[MQVSValidatorDefn]
 
@@ -440,6 +443,7 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]],
     delta_f and vega_f are lists of futures, where the result will be a Dataframe
     delta and vega are Dataframes, representing the merged risk of the individual instruments
     """
+
     def get_df(result_obj):
         if isinstance(result_obj, Future):
             result_obj = result_obj.result()
@@ -485,7 +489,7 @@ def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=Fa
 
             unit = unit or result.unit
 
-        if not allow_mismatch_risk_keys and risk_key and risk_key != result.risk_key:
+        if not allow_mismatch_risk_keys and risk_key and risk_key.ex_historical_diddle != result.risk_key.ex_historical_diddle:
             raise ValueError('Cannot aggregate results with different pricing keys')
 
         risk_key = risk_key or result.risk_key

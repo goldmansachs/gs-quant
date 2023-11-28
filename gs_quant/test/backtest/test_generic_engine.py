@@ -89,7 +89,7 @@ def test_hedge_action_risk_trigger(mocker):
 
         triggers = StrategyRiskTrigger(trig_req, action_hedge)
 
-        with PricingContext(pricing_date=start_date):
+        with PricingContext(pricing_date=start_date, use_historical_diddles_only=True):
             fut = call.resolve(in_place=False)
 
         call = fut.result()

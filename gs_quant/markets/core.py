@@ -25,6 +25,8 @@ from inspect import signature
 from itertools import zip_longest, takewhile
 from typing import Optional, Union
 
+from tqdm import tqdm
+
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
 from gs_quant.common import PricingLocation, RiskMeasure
 from gs_quant.context_base import ContextBaseWithDefault
@@ -36,8 +38,6 @@ from gs_quant.session import GsSession
 from gs_quant.target.common import PricingDateAndMarketDataAsOf
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
 from gs_quant.tracing import Tracer
-from tqdm import tqdm
-
 from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket
 
 _logger = logging.getLogger(__name__)
@@ -89,7 +89,8 @@ class PricingContext(ContextBaseWithDefault):
                  show_progress: Optional[bool] = None,
                  use_server_cache: Optional[bool] = None,
                  market_behaviour: Optional[str] = 'ContraintsBased',
-                 set_parameters_only: bool = False):
+                 set_parameters_only: bool = False,
+                 use_historical_diddles_only: bool =False):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
         as per the examples
@@ -186,7 +187,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__use_server_cache = use_server_cache
         self.__max_per_batch = None
         self.__max_concurrent = None
-
+        self.__use_historical_diddles_only = use_historical_diddles_only
         self.__set_parameters_only = set_parameters_only
 
         self.__pending = {}
@@ -391,7 +392,8 @@ class PricingContext(ContextBaseWithDefault):
     @property
     def _parameters(self) -> RiskRequestParameters:
         return RiskRequestParameters(csa_term=self.__csa_term, raw_results=True,
-                                     market_behaviour=self.__market_behaviour)
+                                     market_behaviour=self.__market_behaviour,
+                                     use_historical_diddles_only=self.__use_historical_diddles_only)
 
     @property
     def _scenario(self) -> Optional[MarketDataScenario]:

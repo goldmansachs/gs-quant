@@ -21,7 +21,6 @@ from gs_quant.common import RiskMeasure
 from gs_quant.datetime.date import date_range, prev_business_date
 from gs_quant.risk import RollFwd, MarketDataScenario
 from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
-
 from .core import PricingContext
 from .markets import CloseMarket
 
@@ -78,7 +77,7 @@ class HistoricalPricingContext(PricingContext):
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
                          request_priority=request_priority, csa_term=csa_term,
                          market_data_location=market_data_location, timeout=timeout, show_progress=show_progress,
-                         use_server_cache=use_server_cache)
+                         use_server_cache=use_server_cache, use_historical_diddles_only=True)
 
         if start is not None:
             if dates is not None:

@@ -380,7 +380,7 @@ FXSpot.__doc__ = "FX spot reference"
 FXVega = RiskMeasureWithFiniteDifferenceParameter(name="FXVega", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Vega"))
 FXVega.__doc__ = "Change in Dollar Price due to a 1 vol move in the implied volatility of ATM instruments used to build the volatility surface"
 
-FairPremium = RiskMeasure(name="FairPremium", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FairPremium"))
+FairPremium = RiskMeasureWithCurrencyParameter(name="FairPremium", measure_type=RiskMeasureType("FairPremium"))
 FairPremium.__doc__ = "Fair Premium is the instrument present value discounted to the premium settlement date"
 
 FairPremiumInPercent = RiskMeasure(name="FairPremiumInPercent", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FairPremiumPct"), unit=RiskMeasureUnit("Percent"))

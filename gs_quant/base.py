@@ -98,7 +98,19 @@ class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'sc
 
     @property
     def ex_measure(self):
-        return RiskKey(self.provider, self.date, self.market, self.params, self.scenario, None)
+        from gs_quant.target.common import RiskRequestParameters
+        return RiskKey(self.provider, self.date, self.market,
+                       RiskRequestParameters(self.params.csa_term, self.params.raw_results, False,
+                                             self.params.market_behaviour),
+                       self.scenario, None)
+
+    @property
+    def ex_historical_diddle(self):
+        from gs_quant.target.common import RiskRequestParameters
+        return RiskKey(self.provider, self.date, self.market,
+                       RiskRequestParameters(self.params.csa_term, self.params.raw_results, False,
+                                             self.params.market_behaviour),
+                       self.scenario, self.risk_measure)
 
     @property
     def fields(self):
