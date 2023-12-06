@@ -287,6 +287,7 @@ class SecMasterGetRequestPathSchema(Base):
     fields: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     as_of_time: Optional[Tuple[datetime.datetime, ...]] = field(default=None, metadata=field_metadata)
     is_primary: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    all_listings: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     effective_date: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
     limit: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     offset: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)

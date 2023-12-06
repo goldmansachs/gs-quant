@@ -64,7 +64,7 @@ factor_data = [
     {
         'date': '2020-11-23',
         'reportId': 'report_id',
-        'factor': 'factor_id',
+        'factor': 'Factor Name',
         'factorCategory': 'CNT',
         'pnl': 11.23,
         'exposure': -11.23,
@@ -73,7 +73,7 @@ factor_data = [
     {
         'date': '2020-11-24',
         'reportId': 'report_id',
-        'factor': 'factor_id',
+        'factor': 'Factor Name',
         'factorCategory': 'CNT',
         'pnl': 11.24,
         'exposure': -11.24,
@@ -82,9 +82,36 @@ factor_data = [
     {
         'date': '2020-11-25',
         'reportId': 'report_id',
-        'factor': 'factor_id',
+        'factor': 'Factor Name',
         'factorCategory': 'CNT',
         'pnl': 11.25,
+        'exposure': -11.25,
+        'proportionOfRisk': 3
+    },
+    {
+        'date': '2020-11-23',
+        'reportId': 'report_id',
+        'factor': 'Total',
+        'factorCategory': 'CNT',
+        'pnl': 19.23,
+        'exposure': -11.23,
+        'proportionOfRisk': 1
+    },
+    {
+        'date': '2020-11-24',
+        'reportId': 'report_id',
+        'factor': 'Total',
+        'factorCategory': 'CNT',
+        'pnl': 14.24,
+        'exposure': -11.24,
+        'proportionOfRisk': 2
+    },
+    {
+        'date': '2020-11-25',
+        'reportId': 'report_id',
+        'factor': 'Total',
+        'factorCategory': 'CNT',
+        'pnl': 21.25,
         'exposure': -11.25,
         'proportionOfRisk': 3
     }
@@ -499,7 +526,7 @@ def test_factor_pnl():
         factor_data_copy.insert(0, {
             'date': '2020-11-22',
             'reportId': 'report_id',
-            'factor': 'factor_id',
+            'factor': 'Factor Name',
             'factorCategory': 'CNT',
             'pnl': 0,
             'exposure': -11.23,
@@ -518,6 +545,8 @@ def test_factor_pnl():
 
 def test_factor_pnl_percent():
     replace = Replacer()
+
+    aum = {'2020-11-22': 200, '2020-11-23': 400, '2020-11-24': 400, '2020-11-25': 400}
 
     # mock getting risk model entity()
     mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
@@ -553,10 +582,11 @@ def test_factor_pnl_percent():
         'factorCategory': 'Factor Name'
     }]
 
-    pnl = {entry['date']: entry['pnl'] for entry in factor_data}
-    aum = {'2020-11-22': 200, '2020-11-23': 400, '2020-11-24': 400, '2020-11-25': 400}
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
+    mock.return_value = aum
+
     # Each team uses pnl today/aum yesterday
-    expected_values = compute_geometric_aggregation_calculations(aum, pnl, list(aum.keys()))
+    expected_values = [0, 0, 3.022984004, 6.0231948]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
@@ -1074,7 +1104,7 @@ def test_pnl_percent():
 
     # mock PerformanceReport.get_pnl()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
-    mock.return_value = pandas.DataFrame.from_dict({'date': pnl.keys(), 'pnl': pnl.values()})
+    mock.return_value = pandas.DataFrame.from_dict({'date': list(pnl.keys()), 'pnl': list(pnl.values())})
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum_source', Mock())
     mock.return_value = RiskAumSource.Long
@@ -1082,6 +1112,9 @@ def test_pnl_percent():
     # mock getting performance report
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport(id='ID')
+
+    mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
+    mock.return_value = aum
 
     # Each team uses pnl today/aum yesterday
     expected_values = compute_geometric_aggregation_calculations(aum, pnl, list(aum.keys()))

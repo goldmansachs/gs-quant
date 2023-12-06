@@ -426,6 +426,7 @@ class CustomBasketsRebalanceInputs(Base):
     allow_in_position_rebalance: Optional[bool] = field(default=False, metadata=field_metadata)
     action_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     preferred_risk_model: Optional[str] = field(default=None, metadata=field_metadata)
+    on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

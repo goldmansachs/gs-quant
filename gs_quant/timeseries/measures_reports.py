@@ -18,6 +18,7 @@ from enum import Enum
 from typing import Optional
 
 import pandas as pd
+import numpy as np
 from pandas.tseries.offsets import BDay
 from pydash import decapitalize
 
@@ -352,14 +353,16 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
     col_name = query_type.value.replace(' ', '')
     col_name = decapitalize(col_name)
     data_type = decapitalize(col_name[6:]) if col_name.startswith('factor') else col_name
-
+    include_total_factor = factor_name != 'Total' and unit == Unit.PERCENT and query_type == QueryType.FACTOR_PNL
+    factors_to_query = [factor_name, 'Total'] if include_total_factor else [factor_name]
     factor_data = report.get_results(
-        factors=[factor_name],
+        factors=factors_to_query,
         start_date=DataContext.current.start_date,
         end_date=DataContext.current.end_date,
         return_format=ReturnFormat.JSON
     )
-    factor_data = [d for d in factor_data if d.get(data_type) is not None]
+    total_data = [d for d in factor_data if d.get(data_type) is not None and d.get('factor') == 'Total']
+    factor_data = [d for d in factor_data if d.get(data_type) is not None and d.get('factor') == factor_name]
     if unit == Unit.PERCENT:
         if report.position_source_type != PositionSourceType.Portfolio:
             raise MqValueError('Unit can only be set to percent for portfolio reports')
@@ -372,9 +375,11 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
             aum_as_dict = performance_report.get_aum(start_date=prev_business_date(start_date), end_date=end_date)
             aum_df = pd.DataFrame(aum_as_dict.items(), columns=['date', 'aum'])
             pnl_df = pd.DataFrame(factor_data)[['date', 'pnl']]
+            total_returns_df = pd.DataFrame(total_data)[['date', 'pnl']]
+            total_returns_df = total_returns_df.rename(columns={'pnl': 'totalPnl'})
+            pnl_df = pd.merge(pnl_df, total_returns_df, how='inner', on=['date'])
             is_first_data_point_on_start_date = pnl_df['date'].iloc[[0]].values[0] == start_date.strftime('%Y-%m-%d')
-            return_series = _generate_daily_returns(aum_df, pnl_df, 'aum', 'pnl', is_first_data_point_on_start_date)
-            return geometrically_aggregate(return_series).multiply(100)
+            return _generate_daily_returns(aum_df, pnl_df, 'aum', 'pnl', is_first_data_point_on_start_date)
         else:
             aum = performance_report.get_aum(start_date=start_date, end_date=end_date)
             for data in factor_data:
@@ -421,5 +426,35 @@ def _generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_
     df.sort_index(inplace=True)
     df.loc[:, [aum_col_key]] = df.loc[:, [aum_col_key]].fillna(method='ffill')
     df['return'] = df[pnl_col_key].div(df[aum_col_key].shift(1))
+    if 'totalPnl' in list(df.columns.values):
+        df['totalPnl'] = df['totalPnl'].div(df[aum_col_key].shift(1))
+        df = df.fillna(0)
+        df['return'] = __smooth_percent_returns(df['return'].to_numpy(), df['totalPnl'].to_numpy()).tolist()
     return_series = pd.Series(df['return'], name="return").dropna()
     return return_series
+
+
+def __smooth_percent_returns(daily_factor_returns: np.array, daily_total_returns: np.array) -> np.array:
+    """
+    When attribution (in weights) are decomposed among multiple factors (like a group of risk model factors or
+    categories), simple geometric aggregation will not preserve additivity. In other words, the geometric sum of factor
+    PnL from Factor and Specific will NOT add up to the factor PnL from Total. The Carino log linking formula
+    calculates the coefficients for each node, and after that multiplication is done, the results can be aggregated
+    to calculate cumulative PnL:
+    https://rdrr.io/github/R-Finance/PortfolioAttribution/man/Carino.html
+
+    βt = A * αt
+    where βt is the linking coefficient on date t
+    where A is the log scaling factor (which is constant throughout the timeseries)
+    where αt is the perturbation factor on date t
+
+    A = (Rp - Rb) / (ln(1 + Rp) - ln(1 + Rb)) where Rp is the total portfolio return ; Rb is the total benchmark return
+    αt = (ln(1 + Rpt) - ln(1 + Rbt)) / (Rpt - Rbt) where Rpt is portfolio return on t and Rbp is benchmark return on t
+
+    For this use case benchmark returns are set to 0 for every day.
+    """
+    total_return = np.prod(daily_total_returns + 1) - 1
+    log_scaling_factor = (total_return) / (np.log(1 + total_return)) if total_return != 0 else 1
+    perturbation_factors = np.log(1 + daily_total_returns) / daily_total_returns
+    perturbation_factors = np.nan_to_num(perturbation_factors, nan=1)
+    return np.cumsum(daily_factor_returns * log_scaling_factor * perturbation_factors * 100)

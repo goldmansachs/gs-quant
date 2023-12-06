@@ -28,7 +28,8 @@ class DataSetType(EnumBase, Enum):
     """Type of the dataset"""
 
     PlotTool_Pro = 'PlotTool Pro'
-    Alloy = 'Alloy'    
+    Alloy = 'Alloy'
+    Snowflake = 'Snowflake'    
 
 
 class DelayExclusionType(EnumBase, Enum):    
@@ -521,6 +522,7 @@ class DataSetParameters(Base):
     support_distribution_list: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     apply_market_data_entitlements: Optional[bool] = field(default=None, metadata=field_metadata)
     upload_data_policy: Optional[str] = field(default=None, metadata=field_metadata)
+    database_id: Optional[str] = field(default=None, metadata=field_metadata)
     logical_db: Optional[str] = field(default=None, metadata=field_metadata)
     symbol_strategy: Optional[str] = field(default=None, metadata=field_metadata)
     underlying_data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
