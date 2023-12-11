@@ -398,18 +398,20 @@ class GsSession(ContextBase):
 
     def _get(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict] = None,
              cls: Optional[type] = None, include_version: Optional[bool] = True,
-             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False) \
-            -> Union[Base, tuple, dict]:
+             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False,
+             domain: Optional[str] = None) -> Union[Base, tuple, dict]:
         return self.__request('GET', path, payload=payload, request_headers=request_headers, cls=cls,
-                              include_version=include_version, timeout=timeout, return_request_id=return_request_id)
+                              include_version=include_version, timeout=timeout, return_request_id=return_request_id,
+                              domain=domain)
 
     async def _get_async(self, path: str, payload: Optional[Union[dict, Base]] = None,
                          request_headers: Optional[dict] = None, cls: Optional[type] = None,
                          include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-                         return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
+                         return_request_id: Optional[bool] = False, domain: Optional[str] = None) \
+            -> Union[Base, tuple, dict]:
         ret = await self.__request_async('GET', path, payload=payload, request_headers=request_headers, cls=cls,
                                          include_version=include_version, timeout=timeout,
-                                         return_request_id=return_request_id)
+                                         return_request_id=return_request_id, domain=domain)
         return ret
 
     def _post(self, path: str, payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
