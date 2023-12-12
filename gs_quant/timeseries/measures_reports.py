@@ -421,6 +421,8 @@ def _generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_
     # Returns are defined as Pnl today divided by AUM yesterday.
     if is_start_date_first_data_point:
         pnl_df[pnl_col_key].iloc[[0]] = 0
+        if 'totalPnl' in list(pnl_df.columns.values):
+            pnl_df['totalPnl'].iloc[[0]] = 0
     df = pd.merge(pnl_df, aum_df, how='outer', on='date')
     df.set_index('date', inplace=True)
     df.sort_index(inplace=True)

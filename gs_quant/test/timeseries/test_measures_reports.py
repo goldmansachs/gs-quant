@@ -586,7 +586,7 @@ def test_factor_pnl_percent():
     mock.return_value = aum
 
     # Each team uses pnl today/aum yesterday
-    expected_values = [0, 0, 3.022984004, 6.0231948]
+    expected_values = [0, 0, 2.8844318, 5.7471343]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
         # mock getting aum source
