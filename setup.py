@@ -53,7 +53,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
-        "asteval<0.9.24",
+        "asteval",
         "aenum",
         "backoff",
         "cachetools",

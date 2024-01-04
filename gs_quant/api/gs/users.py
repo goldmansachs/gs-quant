@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import List
+from typing import List, Any, Dict
 
 from pydash import get
 
@@ -47,7 +47,7 @@ class GsUsersApi:
         return f"guid:{GsSession.current._get('/users/self')['id']}"
 
     @classmethod
-    def get_current_user_info(cls) -> List[str]:
+    def get_current_user_info(cls) -> Dict[str, Any]:
         """
         Gets user
         :return: user

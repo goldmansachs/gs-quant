@@ -38,3 +38,9 @@ try:
         nest_asyncio.apply()
 except ImportError:
     pass
+
+# Setup tracing for Jupyter
+try:
+    from gs_quant.tracing import tracing  # pylint: disable=unused-import
+except ImportError:
+    pass

@@ -89,7 +89,7 @@ class RiskApi(ApiWithCustomSession, metaclass=ABCMeta):
         try:
             elem = await asyncio.wait_for(q.get(), timeout=timeout) if timeout else await q.get()
             return cls.__handle_queue_update(q, elem)
-        except TimeoutError:
+        except (TimeoutError, asyncio.TimeoutError):
             return False, []
 
     @classmethod
