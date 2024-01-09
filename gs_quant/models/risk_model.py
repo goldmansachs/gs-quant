@@ -905,7 +905,7 @@ class MarqueeRiskModel(RiskModel):
     def upload_data(self,
                     data: Union[RiskModelData, Dict],
                     max_asset_batch_size: int = 20000,
-                    aws_upload: bool = False):
+                    aws_upload: bool = True):
         """ Upload risk model data to existing risk model in Marquee
 
         :param data: complete or partial risk model data for uploading on given date
@@ -917,7 +917,7 @@ class MarqueeRiskModel(RiskModel):
             models that have factor ids ranging from 1- 3 characters in length. For models with longer factor ids,
             consider batching with a smaller max asset batch size
         If upload universe is over max_asset_batch_size, will batch data in chunks of max_asset_batch_size assets
-
+        :param aws_upload: If true, uploads risk model data to AWS
         This function takes risk model data, and if partial requests are necessary, will upload data by
             1. factor data (includes covariance matrix if factor model)
             2. asset data in batches of max_asset_batch_size

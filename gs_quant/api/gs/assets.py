@@ -165,6 +165,27 @@ class GsAssetApi:
 
     @classmethod
     @_cached
+    def get_many_assets_scroll(
+            cls,
+            scroll: str = '1m',
+            fields: IdList = None,
+            as_of: dt.datetime = None,
+            limit: int = 1000,
+            return_type: Optional[type] = GsAsset,
+            order_by: List[str] = None,
+            **kwargs
+    ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
+        query = cls.__create_query(fields, as_of, limit, scroll, order_by=order_by, **kwargs)
+        response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
+        results = get(response, 'results')
+        while (has(response, 'scrollId') and len(get(response, 'results'))):
+            query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
+            response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
+            results += get(response, 'results')
+        return results
+
+    @classmethod
+    @_cached
     def get_many_assets_data(
             cls,
             fields: IdList = None,

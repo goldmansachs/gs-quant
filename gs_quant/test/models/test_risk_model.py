@@ -676,7 +676,8 @@ def test_get_specific_return(mocker):
     assert response == specific_return_response
 
 
-def test_upload_risk_model_data(mocker):
+@pytest.mark.parametrize("aws_upload", [True, False])
+def test_upload_risk_model_data(mocker, aws_upload):
     model = mock_risk_model(mocker)
     risk_model_data = {
         'date': '2023-04-14',
@@ -738,42 +739,46 @@ def test_upload_risk_model_data(mocker):
 
     max_asset_batch_size //= 2
     batched_factor_portfolios = [
-        {"factorPortfolios":
-            {key: (value[i:i + max_asset_batch_size] if key in "universe" else
-                   [{"factorId": factor_weights.get("factorId"),
-                     "weights": factor_weights.get("weights")[i:i + max_asset_batch_size]} for factor_weights in value])
-             for key, value in risk_model_data.get("factorPortfolios").items()},
+        {"factorPortfolios": {key: (value[i:i + max_asset_batch_size] if key in "universe" else
+                                    [{"factorId": factor_weights.get("factorId"),
+                                      "weights": factor_weights.get("weights")[i:i + max_asset_batch_size]} for
+                                     factor_weights in
+                                     value])
+                              for key, value in risk_model_data.get("factorPortfolios").items()},
          "date": date
          } for i in range(0, len(risk_model_data.get("factorPortfolios").get("universe")), max_asset_batch_size)
     ]
 
     expected_factor_data_calls = [
-        mock.call(base_url, {"date": date, "factorData": risk_model_data.get("factorData"),
-                             "covarianceMatrix": risk_model_data.get("covarianceMatrix")}, timeout=200)
+        mock.call(f"{base_url}{'&awsUpload=true' if aws_upload else ''}",
+                  {"date": date, "factorData": risk_model_data.get("factorData"),
+                   "covarianceMatrix": risk_model_data.get("covarianceMatrix")}, timeout=200)
     ]
 
     expected_asset_data_calls = []
     for batch_num, batch_asset_payload in enumerate(batched_asset_data):
         final_upload_flag = 'true' if batch_num == len(batched_asset_data) - 1 else 'false'
         expected_asset_data_calls.append(
-            mock.call(f"{base_url}&finalUpload={final_upload_flag}", batch_asset_payload, timeout=200)
+            mock.call(f"{base_url}&finalUpload={final_upload_flag}{'&awsUpload=true' if aws_upload else ''}",
+                      batch_asset_payload, timeout=200)
         )
 
     expected_factor_portfolios_data_calls = []
     for batch_num, batched_fp_payload in enumerate(batched_factor_portfolios):
         final_upload_flag = 'true' if batch_num == len(batched_factor_portfolios) - 1 else 'false'
         expected_factor_portfolios_data_calls.append(
-            mock.call(f"{base_url}&finalUpload={final_upload_flag}", batched_fp_payload, timeout=200)
+            mock.call(f"{base_url}&finalUpload={final_upload_flag}{'&awsUpload=true' if aws_upload else ''}",
+                      batched_fp_payload, timeout=200)
         )
 
     expected_isc_data_calls = [
-        mock.call(f"{base_url}&finalUpload=true",
+        mock.call(f"{base_url}&finalUpload=true{'&awsUpload=true' if aws_upload else ''}",
                   {"issuerSpecificCovariance": risk_model_data.get("issuerSpecificCovariance"), "date": date},
                   timeout=200)
     ]
 
-    expected_calls = expected_factor_data_calls + expected_asset_data_calls + \
-        expected_isc_data_calls + expected_factor_portfolios_data_calls
+    expected_calls = (expected_factor_data_calls + expected_asset_data_calls + expected_isc_data_calls +
+                      expected_factor_portfolios_data_calls)
 
     # mock GsSession
     mocker.patch.object(
@@ -786,7 +791,7 @@ def test_upload_risk_model_data(mocker):
     mocker.patch.object(GsSession.current, '_post', return_value='Upload Successful')
 
     max_asset_batch_size = 2
-    model.upload_data(risk_model_data, max_asset_batch_size=max_asset_batch_size)
+    model.upload_data(risk_model_data, max_asset_batch_size=max_asset_batch_size, aws_upload=aws_upload)
 
     call_args_list = GsSession.current._post.call_args_list
 

@@ -204,7 +204,7 @@ def batch_and_upload_partial_data_use_target_universe_size(model_id: str, data: 
     _batch_data_if_present(model_id, data, max_asset_size, date)
 
 
-def _upload_factor_data_if_present(model_id: str, data: dict, date: str):
+def _upload_factor_data_if_present(model_id: str, data: dict, date: str, **kwargs):
     if data.get('factorData'):
         factor_data = {
             'date': date,
@@ -213,7 +213,7 @@ def _upload_factor_data_if_present(model_id: str, data: dict, date: str):
             factor_data['covarianceMatrix'] = data.get('covarianceMatrix')
         logging.info('Uploading factor data')
         _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
-                                  model_data=factor_data, partial_upload=True)
+                                  model_data=factor_data, partial_upload=True, **kwargs)
 
 
 def _batch_data_if_present(model_id: str, data, max_asset_size, date):
@@ -250,7 +250,7 @@ def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int
     """ Takes in total risk model data for one day and batches requests according to
     asset data size, returns a list of messages from resulting post calls"""
     date = data.get('date')
-    _upload_factor_data_if_present(model_id, data, date)
+    _upload_factor_data_if_present(model_id, data, date, **kwargs)
     sleep(2)
     for risk_model_data_type in ["assetData", "issuerSpecificCovariance", "factorPortfolios"]:
         _repeat_try_catch_request(_batch_data_v2, model_id=model_id, data=data.get(risk_model_data_type),
