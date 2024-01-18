@@ -473,8 +473,8 @@ class GsSession(ContextBase):
         extra_headers = self._headers() + list((headers or {}).items())
         return websockets.connect(url,
                                   extra_headers=extra_headers,
-                                  max_size=2 ** 64,
-                                  read_limit=2 ** 64,
+                                  max_size=2 ** 32,
+                                  read_limit=2 ** 32,
                                   ssl=self.__ssl_context() if url.startswith('wss') else None)
 
     def _headers(self):

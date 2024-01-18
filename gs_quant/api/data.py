@@ -49,7 +49,7 @@ class DataApi(ApiWithCustomSession, metaclass=ABCMeta):
 
     @classmethod
     def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, list, tuple, pd.Series],
-                                       schema_varies=False) -> pd.DataFrame:
+                                       schema_varies=False, standard_fields=False) -> pd.DataFrame:
         raise NotImplementedError('Must implement time_field')
 
     @staticmethod

@@ -817,20 +817,43 @@ class GsDataApi(DataApi):
         raise RuntimeError(f"Unable to get Dataset schema for {dataset_id}")
 
     @classmethod
+    def get_field_types(cls, field_names: Union[str, List[str]]):
+        try:
+            fields = cls.get_dataset_fields(names=field_names, limit=len(field_names))
+        except Exception:
+            return {}
+        if fields:
+            field_types = {}
+            field: DataSetFieldEntity
+            for field in fields:
+                field_name = field.name
+                field_type = field.type_
+                field_format = field.parameters.get('format')
+                field_types[field_name] = field_format or field_type
+            return field_types
+        return {}
+
+    @classmethod
     def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, List, Tuple],
-                                       schema_varies=False) -> pd.DataFrame:
+                                       schema_varies=False, standard_fields=False) -> pd.DataFrame:
         """
         Constructs a dataframe with correct date types.
         :param dataset_id: id of the dataset
         :param data: data to convert with correct types
         :param schema_varies: if set, method will not assume that all rows have the same columns
+        :param standard_fields: if set, will use fields api instead of catalog api to get fieldTypes
         :return: dataframe with correct types
         """
         if len(data):
-            dataset_types = cls.get_types(dataset_id)
             # Use first row to infer fields from data
             sample = data if schema_varies else [data[0]]
             incoming_data_data_types = pd.DataFrame(sample).dtypes.to_dict()
+            dataset_types = cls.get_types(dataset_id) if not standard_fields \
+                else cls.get_field_types(field_names=list(incoming_data_data_types.keys()))
+
+            # fallback approach in case fields api doesn't return results
+            if dataset_types is {} and standard_fields:
+                dataset_types = cls.get_types(dataset_id)
 
             df = pd.DataFrame(data, columns={**dataset_types, **incoming_data_data_types})
 

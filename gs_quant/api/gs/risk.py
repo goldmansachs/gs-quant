@@ -163,9 +163,9 @@ class GsRiskApi(RiskApi):
                     complete, pending = await asyncio.wait(listeners, return_when=asyncio.FIRST_COMPLETED)
 
                     # Check results before sending more requests. Results can be lost otherwise
-
                     if result_listener in complete:
                         # New results have been received
+                        request_id = None
                         try:
                             request_id, status_result_str = result_listener.result().split(';', 1)
                             status, result_str = status_result_str[0], status_result_str[1:]
@@ -178,15 +178,23 @@ class GsRiskApi(RiskApi):
                             result = RuntimeError(result_str)
                         else:
                             # Unpack the result
-
                             try:
                                 result = msgpack.unpackb(base64.b64decode(result_str), raw=False) \
                                     if cls.USE_MSGPACK else json.loads(result_str)
                             except Exception as ee:
                                 result = ee
-
-                        # Enqueue the request and result for the listener to handle
-                        results.put_nowait((pending_requests.pop(request_id), result))
+                        if request_id is None:
+                            # Certain fatal websocket errors (e.g. ConnectionClosed) that are caught above will mean
+                            # we have no request_id - In this case we abort and set the error on all results
+                            result_listener.cancel()
+                            for req in pending_requests.values():
+                                results.put_nowait((req, result))
+                            # Give up
+                            pending_requests.clear()
+                            all_requests_dispatched = True
+                        else:
+                            # Enqueue the request and result for the listener to handle
+                            results.put_nowait((pending_requests.pop(request_id), result))
                     else:
                         result_listener.cancel()
 
@@ -197,8 +205,8 @@ class GsRiskApi(RiskApi):
                             all_requests_dispatched, items = request_listener.result()
                             if items:
                                 if not all([isinstance(i[1], dict) for i in items]):
-                                    error = next(i[1] for i in items if not isinstance(i[1], dict))
-                                    raise RuntimeError(error[0][0][0]['errorString'])
+                                    error_item = next(i[1] for i in items if not isinstance(i[1], dict))
+                                    raise RuntimeError(error_item[0][0][0]['errorString'])
 
                                 # ... extract the request IDs ...
                                 request_ids = [i[1]['reportId'] for i in items]

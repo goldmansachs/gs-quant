@@ -116,6 +116,7 @@ class Dataset:
             fields: Optional[Iterable[Union[str, Fields]]] = None,
             asset_id_type: Optional[str] = None,
             empty_intervals: Optional[bool] = None,
+            standard_fields: Optional[bool] = False,
             **kwargs
     ) -> pd.DataFrame:
         """
@@ -127,6 +128,7 @@ class Dataset:
         :param since: Request data since
         :param fields: DataSet fields to include
         :param empty_intervals: whether to request empty intervals
+        :param standard_fields: If set, will use fields api instead of catalog api to get fieldTypes
         :param kwargs: Extra query arguments, e.g. ticker='EDZ19'
         :return: A Dataframe of the requested data
 
@@ -162,10 +164,12 @@ class Dataset:
         )
         data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
         if type(data) is tuple:
-            df = self.provider.construct_dataframe_with_types(self.id, data[0], schema_varies)
+            df = self.provider.construct_dataframe_with_types(self.id, data[0], schema_varies,
+                                                              standard_fields=standard_fields)
             return df.groupby(data[1], group_keys=True).apply(lambda x: x)
         else:
-            return self.provider.construct_dataframe_with_types(self.id, data, schema_varies)
+            return self.provider.construct_dataframe_with_types(self.id, data, schema_varies,
+                                                                standard_fields=standard_fields)
 
     def get_data_series(
             self,
@@ -175,6 +179,7 @@ class Dataset:
             as_of: Optional[dt.datetime] = None,
             since: Optional[dt.datetime] = None,
             dates: Optional[List[dt.date]] = None,
+            standard_fields: Optional[bool] = False,
             **kwargs
     ) -> pd.Series:
         """
@@ -185,6 +190,7 @@ class Dataset:
         :param end: Requested end date/datetime for data
         :param as_of: Request data as_of
         :param since: Request data since
+        :param standard_fields: If set, will use fields api instead of catalog api to get fieldTypes
         :param kwargs: Extra query arguments, e.g. ticker='EDZ19'
         :return: A Series of the requested data, indexed by date or time, depending on the DataSet
 
@@ -216,7 +222,7 @@ class Dataset:
 
         symbol_dimension = symbol_dimensions[0]
         data = self.provider.query_data(query, self.id)
-        df = self.provider.construct_dataframe_with_types(self.id, data)
+        df = self.provider.construct_dataframe_with_types(self.id, data, standard_fields=standard_fields)
 
         from gs_quant.api.gs.data import GsDataApi
 
@@ -237,6 +243,7 @@ class Dataset:
             as_of: Optional[Union[dt.date, dt.datetime]],
             start: Optional[Union[dt.date, dt.datetime]] = None,
             fields: Optional[Iterable[str]] = None,
+            standard_fields: Optional[bool] = False,
             **kwargs
     ) -> pd.DataFrame:
         """
@@ -245,6 +252,7 @@ class Dataset:
         :param as_of: The date or time as of which to query
         :param start: The start of the range to query
         :param fields: The fields for which to query
+        :param standard_fields: If set, will use fields api instead of catalog api to get fieldTypes
         :param kwargs: Additional query parameters, e.g., city='Boston'
         :return: A Dataframe of values
 
@@ -266,7 +274,7 @@ class Dataset:
         query.format = None  # "last" endpoint does not support MessagePack
 
         data = self.provider.last_data(query, self.id)
-        return self.provider.construct_dataframe_with_types(self.id, data)
+        return self.provider.construct_dataframe_with_types(self.id, data, standard_fields=standard_fields)
 
     def get_coverage(
             self,

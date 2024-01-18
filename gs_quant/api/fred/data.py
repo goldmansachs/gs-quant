@@ -130,7 +130,8 @@ class FredDataApi(DataApi):
         data = data.sort_index()
         return data
 
-    def construct_dataframe_with_types(self, dataset_id: str, data: pd.Series, schema_varies=False) -> pd.DataFrame:
+    def construct_dataframe_with_types(self, dataset_id: str, data: pd.Series, schema_varies=False,
+                                       standard_fields=False) -> pd.DataFrame:
         """
         Constructs a dataframe with correct date types.
 

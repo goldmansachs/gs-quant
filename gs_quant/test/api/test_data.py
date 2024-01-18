@@ -20,6 +20,7 @@ import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 from gs_quant.api.gs.data import GsDataApi
+from gs_quant.base import DictBase
 from gs_quant.context_base import ContextMeta
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
@@ -359,8 +360,8 @@ def test_auto_scroll_on_pages(mocker):
     assert len(response) == 5
 
 
-def test_get_dataset_fields(mocker):
-    mock_response = {
+def mock_fields_response():
+    return {
         "totalResults": 2,
         "results": [
             {
@@ -431,6 +432,9 @@ def test_get_dataset_fields(mocker):
         ]
     }
 
+
+def test_get_dataset_fields(mocker):
+    mock_response = mock_fields_response()
     mocker.patch.object(GsSession.__class__, 'default_value',
                         return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
     mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
@@ -442,6 +446,41 @@ def test_get_dataset_fields(mocker):
     GsSession.current._post.assert_called_once_with('/data/fields/query',
                                                     payload={'where': {'id': ['FIVCFB4GAWBT61GT', 'FI4YBC6DS3PRE7W9']},
                                                              'limit': 10},
+                                                    cls=DataSetFieldEntity)
+
+
+def test_get_field_types(mocker):
+    mock_response = {
+        "totalResults": 4,
+        "results": [
+            DataSetFieldEntity(name="price", type_="number", parameters=DictBase({})),
+            DataSetFieldEntity(name="strikeReference", type_="string", parameters=DictBase({})),
+            DataSetFieldEntity(name="adjDate", type_="string", field_java_type='DateField',
+                               parameters=DictBase({'format': 'date'})),
+            DataSetFieldEntity(name="time", type_="string", field_java_type='DateTimeField',
+                               parameters=DictBase({'format': 'date-time'}))
+        ]
+    }
+
+    mock_field_types = {
+        "price": "number",
+        "strikeReference": "string",
+        "adjDate": "date",
+        "time": "date-time"
+    }
+
+    mocker.patch.object(GsSession.__class__, 'default_value',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+
+    response = GsDataApi.get_field_types(field_names=['price', 'strikeReference', 'adjDate', 'time'])
+    assert len(response) == 4
+    assert response == mock_field_types
+
+    GsSession.current._post.assert_called_once_with('/data/fields/query',
+                                                    payload={'where': {'name': ['price', 'strikeReference',
+                                                                                'adjDate', 'time']},
+                                                             'limit': 4},
                                                     cls=DataSetFieldEntity)
 
 
