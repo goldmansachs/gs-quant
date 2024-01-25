@@ -361,6 +361,67 @@ def test_currency_to_tdapi_basis_swap_rate_asset(mocker):
         replace.restore()
 
 
+def test_currency_to_tdapi_swap_rate_asset_for_intraday(mocker):
+    replace = Replacer()
+    mocker.patch.object(GsSession.__class__, 'current',
+                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
+
+    bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+
+    with tm.PricingContext(dt.date.today()):
+        asset = Currency('MAZ7RWC904JYHYPS', 'USD')
+        bbid_mock.return_value = 'USD'
+        correct_id = tm_rates._currency_to_tdapi_swap_rate_asset_for_intraday(asset)
+        assert 'MACF6R4J5FY4KGBZ' == correct_id
+        replace.restore()
+
+
+def my_mocked_mxapi_backtest(cls=None, builder=None, start_time=None, end_time=None, num_samples=60,
+                             csa=None, request_id=None):
+    d = {'column_name': [], 'timeStamp': []}
+    df = MarketDataResponseFrame(pd.DataFrame(data=d))
+    df = df.set_index('timeStamp')
+    return df
+
+
+def test_swap_rate_calc(mocker):
+    replace = Replacer()
+
+    mocker.patch.object(GsDataApi, 'get_mxapi_backtest_data', )
+    bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+
+    mocker.patch.object(GsDataApi, 'get_mxapi_backtest_data', side_effect=my_mocked_mxapi_backtest)
+
+    asset = Currency('MAZ7RWC904JYHYPS', 'USD')
+    bbid_mock.return_value = 'USD'
+    val = tm_rates.swap_rate_calc(asset, swap_tenor='10y', benchmark_type='SOFR', real_time=True, forward_tenor='0b')
+    assert len(val.keys()) == 0
+
+    try:
+        val = tm_rates.swap_rate_calc(asset, swap_tenor='10y', benchmark_type='SOFR', real_time=False)
+        assert False
+    except NotImplementedError:
+        assert True
+
+    try:
+        val = tm_rates.swap_rate_calc(asset, swap_tenor='10x', benchmark_type='SOFR', real_time=True)
+        assert False
+    except MqValueError:
+        assert True
+
+    asset = Currency('MA890', 'EGP')
+    bbid_mock.return_value = 'EGP'
+    try:
+        val = tm_rates.swap_rate_calc(asset, swap_tenor='10y', benchmark_type='SOFR', real_time=True)
+        assert False
+    except NotImplementedError:
+        assert True
+
+    replace.restore()
+
+
 def test_check_clearing_house():
     assert tm_rates._ClearingHouse.LCH == tm_rates._check_clearing_house('lch')
     assert tm_rates._ClearingHouse.CME == tm_rates._check_clearing_house(tm_rates._ClearingHouse.CME)

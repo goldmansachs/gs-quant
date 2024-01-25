@@ -23,17 +23,19 @@ from typing import Iterable, List, Optional, Tuple, Union, Dict
 import cachetools
 import pandas as pd
 from cachetools import TTLCache
-
+import json
 from gs_quant.api.data import DataApi
 from gs_quant.base import Base
 from gs_quant.data.core import DataContext, DataFrequency
 from gs_quant.data.log import log_debug, log_warning
 from gs_quant.errors import MqValueError
+from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.target.common import MarketDataVendor, PricingLocation, Format
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataQuery, DataQueryResponse, DataSetCatalogEntry
 from gs_quant.target.data import DataSetEntity, DataSetFieldEntity
+from dateutil import parser
 from .assets import GsIdType
 from ..api_cache import ApiRequestCache
 from ...target.assets import EntityQuery, FieldFilterMap
@@ -471,6 +473,79 @@ class GsDataApi(DataApi):
                 ) for coordinate in results)
         else:
             raise NotImplementedError('Unsupported return type')
+
+    @classmethod
+    def _to_zulu(cls, d):
+        return d.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    @classmethod
+    def _resolve_default_csa_for_builder(cls, builder):
+        dict_builder = builder.to_dict()
+        properties = dict_builder.get('properties')
+
+        if not properties:
+            return 'USD-1'
+
+        clearing_house = properties.get('clearinghouse')
+
+        if 'payccy' in properties:
+            pay_ccy = properties['payccy']
+            if pay_ccy == 'USD':
+                default_csa = 'USD-SOFR'
+            elif pay_ccy == 'EUR':
+                default_csa = 'EUR-EUROSTR'
+            else:
+                default_csa = pay_ccy + "-1"
+
+            if clearing_house and clearing_house != 'LCH':
+                default_csa = f'CB LCH/{clearing_house.upper()} {default_csa}'
+
+            return default_csa
+        else:
+            return "USD-1"
+
+    @classmethod
+    def get_mxapi_backtest_data(cls, builder, start_time=None, end_time=None, num_samples=60,
+                                csa=None, request_id=None) -> pd.DataFrame:
+        if not start_time:
+            start_time = DataContext.current.start_time
+        if not end_time:
+            end_time = DataContext.current.end_time
+        if not csa:
+            csa = cls._resolve_default_csa_for_builder(builder)
+
+        leg = builder.resolve(in_place=False)
+        leg_dict_string = json.dumps(leg, cls=JSONEncoder)
+        leg_dict = json.loads(leg_dict_string)
+
+        request_dict = {
+            'type': 'MxAPI Backtest Request MQ',
+            'builder': leg_dict,
+            'startTime': cls._to_zulu(start_time),
+            'endTime': cls._to_zulu(end_time),
+            'sampleSize': num_samples,
+            'csa': csa
+        }
+
+        start = time.perf_counter()
+        try:
+            body = cls._post_with_cache_check('/mxapi/mq/backtest', payload=request_dict)
+        except Exception as e:
+            log_warning(request_id, _logger, f'Mxapi backtest query {request_dict} failed due to {e}')
+            raise e
+        log_debug(request_id, _logger, 'MxAPI backtest query (%s) with payload (%s) ran in %.3f ms',
+                  body.get('requestId'), request_dict, (time.perf_counter() - start) * 1000)
+
+        values = body['valuations']
+        valuation_times = body['valuationTimes']
+        timestamps = [parser.parse(s) for s in valuation_times]
+        column_name = body['valuationName']
+
+        d = {column_name: values, 'timeStamp': timestamps}
+        df = MarketDataResponseFrame(pd.DataFrame(data=d))
+        df = df.set_index('timeStamp')
+
+        return df
 
     @staticmethod
     def build_market_data_query(asset_ids: List[str],

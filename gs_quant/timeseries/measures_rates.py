@@ -22,6 +22,8 @@ from enum import Enum
 from typing import Optional, Union, Dict, List
 
 import pandas as pd
+from gs_quant.instrument import IRSwap
+
 from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
@@ -30,7 +32,7 @@ from gs_quant.data import DataContext, Dataset
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset
-from gs_quant.target.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation
+from gs_quant.target.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation, SwapClearingHouse
 from gs_quant.timeseries import currency_to_default_ois_asset, convert_asset_for_rates_data_set, RatesConversionType
 from gs_quant.timeseries.helper import _to_offset, check_forward_looking, plot_measure
 from gs_quant.timeseries.measures import _market_data_timed, _range_from_pricing_date, \
@@ -277,6 +279,20 @@ CURRENCY_TO_DUMMY_SWAP_BBID = {
     'MXN': 'MAAJ9RAHYBAXGYD2'
 }
 
+SUPPORTED_INTRADAY_CURRENCY_TO_DUMMY_SWAP_BBID = {
+    'CHF': 'MACF6R4J5FY4KGBZ',
+    'EUR': 'MACF6R4J5FY4KGBZ',
+    'GBP': 'MACF6R4J5FY4KGBZ',
+    'JPY': 'MACF6R4J5FY4KGBZ',
+    'SEK': 'MACF6R4J5FY4KGBZ',
+    'USD': 'MACF6R4J5FY4KGBZ',
+    'DKK': 'MACF6R4J5FY4KGBZ',
+    'NOK': 'MACF6R4J5FY4KGBZ',
+    'NZD': 'MACF6R4J5FY4KGBZ',
+    'AUD': 'MACF6R4J5FY4KGBZ',
+    'CAD': 'MACF6R4J5FY4KGBZ'
+}
+
 # FXFwd XCCYSwap rates Defaults
 CROSS_BBID_TO_DUMMY_OISXCCY_ASSET = {
     'EURUSD': 'MA1VJC1E3SZW8E4S',
@@ -323,6 +339,14 @@ def _currency_to_tdapi_swap_rate_asset(asset_spec: ASSET_SPEC) -> str:
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     # for each currency, get a dummy asset for checking availability
     result = CURRENCY_TO_DUMMY_SWAP_BBID.get(bbid, asset.get_marquee_id())
+    return result
+
+
+def _currency_to_tdapi_swap_rate_asset_for_intraday(asset_spec: ASSET_SPEC) -> str:
+    asset = _asset_from_spec(asset_spec)
+    bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    # for each currency, get a dummy asset for checking availability
+    result = SUPPORTED_INTRADAY_CURRENCY_TO_DUMMY_SWAP_BBID.get(bbid, asset.get_marquee_id())
     return result
 
 
@@ -632,6 +656,38 @@ def _get_swap_data(asset: Asset, swap_tenor: str, benchmark_type: str = None, fl
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return df
+
+
+def _get_swap_data_calc(asset: Asset, swap_tenor: str, benchmark_type: str = None, floating_rate_tenor: str = None,
+                        forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
+                        real_time: bool = False, location: PricingLocation = None) -> pd.DataFrame:
+    currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
+
+    if currency.value not in SUPPORTED_INTRADAY_CURRENCY_TO_DUMMY_SWAP_BBID.keys():
+        raise NotImplementedError(f'Data not available for {currency.value} calculated swap rates')
+    benchmark_type = _check_benchmark_type(currency, benchmark_type)
+
+    clearing_house = _check_clearing_house(clearing_house)
+
+    defaults = _get_swap_leg_defaults(currency, benchmark_type, floating_rate_tenor)
+
+    if not re.fullmatch('(\\d+)([bdwmy])', swap_tenor):
+        raise MqValueError('invalid swap tenor ' + swap_tenor)
+
+    forward_tenor = _check_forward_tenor(forward_tenor)
+
+    builder = IRSwap(notional_currency=currency, clearing_house=SwapClearingHouse(clearing_house.value),
+                     floating_rate_designated_maturity=defaults['floating_rate_tenor'],
+                     floating_rate_option=defaults['benchmark_type'],
+                     fixed_rate=0.0, termination_date=swap_tenor)
+
+    if forward_tenor:
+        builder.startdate = forward_tenor
+
+    _logger.debug(f'where builder={builder.as_dict()}')
+
+    q = GsDataApi.get_mxapi_backtest_data(builder)
+    return q
 
 
 def _get_term_struct_date(tenor: Union[str, datetime.datetime], index: datetime.datetime,
@@ -1212,6 +1268,40 @@ def swap_rate(asset: Asset, swap_tenor: str, benchmark_type: str = None, floatin
 
     series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset_for_intraday,
+                                 query_type=QueryType.SWAP_RATE)])
+def swap_rate_calc(asset: Asset, swap_tenor: str, benchmark_type: str = None, floating_rate_tenor: str = None,
+                   forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = _ClearingHouse.LCH,
+                   location: PricingLocation = None, *,
+                   source: str = None, real_time: bool = False) -> Series:
+    """
+    GS intra-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
+
+    :param asset: asset object loaded from security master
+    :param swap_tenor: relative date representation of expiration date e.g. 1m
+    :param benchmark_type: benchmark type e.g. LIBOR
+    :param floating_rate_tenor: floating index rate
+    :param forward_tenor: absolute / relative date representation of forward starting point eg: '1y' or 'Spot' for
+            spot starting swaps, 'imm1' or 'frb1'
+    :param clearing_house: Example - "LCH", "CME"
+    :param location: Example - "TKO", "LDN", "NYC"
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: swap rate curve
+    """
+    if not real_time:
+        raise NotImplementedError("Calculated swap rates cannot be used outside realtime")
+
+    df = _get_swap_data_calc(asset=asset, swap_tenor=swap_tenor, benchmark_type=benchmark_type,
+                             floating_rate_tenor=floating_rate_tenor, forward_tenor=forward_tenor,
+                             clearing_house=clearing_house, real_time=real_time, location=location)
+
+    series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['ATMRate'])
+    series.dataset_ids = ()
     return series
 
 
