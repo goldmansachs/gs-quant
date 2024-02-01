@@ -122,14 +122,6 @@ class SolvingTarget(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class StrategyDescription(Base):
-    strategy_type: Optional[str] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class WorkflowEntitlement(Base):
     type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     value: str = field(default=None, metadata=field_metadata)
@@ -180,6 +172,17 @@ class OverlayParameters(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class SolvingInfo(Base):
     target: Optional[SolvingTarget] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class StrategyDescription(Base):
+    strategy_type: Optional[str] = field(default=None, metadata=field_metadata)
+    long_short: Optional[LongShort] = field(default=LongShort.Long, metadata=field_metadata)
+    assets: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    asset_classes: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
