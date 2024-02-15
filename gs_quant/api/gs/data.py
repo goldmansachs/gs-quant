@@ -14,8 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import json
 import logging
 import time
+from copy import copy
 from enum import Enum
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union, Dict
@@ -23,7 +25,8 @@ from typing import Iterable, List, Optional, Tuple, Union, Dict
 import cachetools
 import pandas as pd
 from cachetools import TTLCache
-import json
+from dateutil import parser
+
 from gs_quant.api.data import DataApi
 from gs_quant.base import Base
 from gs_quant.data.core import DataContext, DataFrequency
@@ -35,7 +38,6 @@ from gs_quant.target.common import MarketDataVendor, PricingLocation, Format
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataQuery, DataQueryResponse, DataSetCatalogEntry
 from gs_quant.target.data import DataSetEntity, DataSetFieldEntity
-from dateutil import parser
 from .assets import GsIdType
 from ..api_cache import ApiRequestCache
 from ...target.assets import EntityQuery, FieldFilterMap
@@ -548,12 +550,12 @@ class GsDataApi(DataApi):
         return df
 
     @staticmethod
-    def build_market_data_query(asset_ids: List[str],
-                                query_type: Union[QueryType, str],
-                                where: Union[FieldFilterMap, Dict] = None,
-                                source: Union[str] = None,
-                                real_time: bool = False,
-                                measure='Curve'):
+    def _get_market_data_filters(asset_ids: List[str],
+                                 query_type: Union[QueryType, str],
+                                 where: Union[FieldFilterMap, Dict] = None,
+                                 source: Union[str] = None,
+                                 real_time: bool = False,
+                                 measure='Curve'):
         inner = {
             'entityIds': asset_ids,
             'queryType': query_type.value if isinstance(query_type, QueryType) else query_type,
@@ -564,6 +566,56 @@ class GsDataApi(DataApi):
                 measure
             ]
         }
+        return inner
+
+    @staticmethod
+    def build_interval_chunked_market_data_queries(asset_ids: List[str],
+                                                   query_type: Union[QueryType, str],
+                                                   where: Union[FieldFilterMap, Dict] = None,
+                                                   source: Union[str] = None,
+                                                   real_time: bool = False,
+                                                   measure='Curve',
+                                                   parallel_pool_size: int = 1) -> List[dict]:
+        def chunk_time(start, end, pool_size) -> tuple:
+            chunk_duration = (end - start) / pool_size
+            current = start
+            for _ in range(pool_size):
+                next_end = current + chunk_duration
+                yield current, next_end
+                current = next_end
+
+        queries = []
+        if real_time:
+            start, end = DataContext.current.start_time, DataContext.current.end_time
+            start_key, end_key = 'startTime', 'endTime'
+        else:
+            start, end = DataContext.current.start_date, DataContext.current.end_date
+            start_key, end_key = 'startDate', 'endDate'
+
+        for s, e in chunk_time(start, end, parallel_pool_size):
+            inner = copy(GsDataApi._get_market_data_filters(asset_ids, query_type, where, source, real_time, measure))
+            inner[start_key], inner[end_key] = s, e
+            queries.append({
+                'queries': [inner]
+            })
+
+        log_debug("", _logger, f"Created {len(queries)} market data queries. Pool size = {parallel_pool_size}")
+
+        return queries
+
+    @staticmethod
+    def build_market_data_query(asset_ids: List[str],
+                                query_type: Union[QueryType, str],
+                                where: Union[FieldFilterMap, Dict] = None,
+                                source: Union[str] = None,
+                                real_time: bool = False,
+                                measure='Curve',
+                                parallel_pool_size: int = 1) -> Union[dict, List[dict]]:
+        if parallel_pool_size > 1:
+            return GsDataApi.build_interval_chunked_market_data_queries(asset_ids, query_type, where, source, real_time,
+                                                                        measure, parallel_pool_size)
+
+        inner = GsDataApi._get_market_data_filters(asset_ids, query_type, where, source, real_time, measure)
         if DataContext.current.interval is not None:
             inner['interval'] = DataContext.current.interval
         if real_time:

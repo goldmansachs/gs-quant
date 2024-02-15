@@ -903,7 +903,8 @@ def mock_missing_bucket_implied_volatility():
     return pd.DataFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 8))
 
 
-def mock_fx_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None, request_id=None):
+def mock_fx_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None, request_id=None,
+                parallel_pool_size=1):
     d = {
         'strikeReference': ['delta', 'spot', 'forward'],
         'relativeStrike': [25, 100, 100],
@@ -1087,7 +1088,8 @@ def mock_eq(_cls, _q, ignore_errors=False):
     return df
 
 
-def mock_eq_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None, request_id=None):
+def mock_eq_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None, request_id=None,
+                parallel_pool_size=1):
     d = {
         'impliedVolatility': [5, 1, 2],
     }
@@ -1105,7 +1107,7 @@ def mock_eq_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, 
 
 
 def mock_eq_vol_last_empty(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None,
-                           request_id=None):
+                           request_id=None, parallel_pool_size=1):
     d = {
         'impliedVolatility': [5, 1, 2],
     }

@@ -27,7 +27,6 @@ from gs_quant.json_encoder import JSONEncoder
 from gs_quant.session import GsSession
 from gs_quant.target.secmaster import SecMasterAssetType
 
-DEFAULT_EFFECTIVE_DATE = dt.date(2100, 1, 1)
 DEFAULT_SCROLL_PAGE_SIZE = 500
 
 
@@ -105,7 +104,7 @@ class GsSecurityMasterApi:
 
     @classmethod
     def get_many_securities(cls, type_: SecMasterAssetType = None,
-                            effective_date: dt.date = DEFAULT_EFFECTIVE_DATE,
+                            effective_date: dt.date = None,
                             limit: int = 10, flatten=False,
                             is_primary=None,
                             offset_key: str = None,
@@ -127,11 +126,11 @@ class GsSecurityMasterApi:
             raise ValueError("Neither '_type' nor 'query_params' are provided")
 
         params = {
-            'effectiveDate': effective_date,
             "limit": limit
         }
 
-        cls.prepare_params(params, is_primary, offset_key, type_)
+        cls.prepare_params(params, is_primary, offset_key, type_, effective_date)
+
         params = {**params, **query_params}
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
 
@@ -145,7 +144,7 @@ class GsSecurityMasterApi:
 
     @classmethod
     def get_all_securities(cls, type_: SecMasterAssetType,
-                           effective_date: dt.date = DEFAULT_EFFECTIVE_DATE,
+                           effective_date: dt.date = None,
                            is_primary=None,
                            flatten=False, **query_params) -> \
             Union[Iterable[dict], None]:
@@ -159,7 +158,13 @@ class GsSecurityMasterApi:
         @param effective_date: As of date for query
         @return:" list of dict
         """
-        response = cls.get_many_securities(type_, effective_date, limit=DEFAULT_SCROLL_PAGE_SIZE, offset_key=None,
+        if 'limit' in query_params:
+            limit = query_params['limit']
+            del query_params['limit']
+        else:
+            limit = DEFAULT_SCROLL_PAGE_SIZE
+
+        response = cls.get_many_securities(type_, effective_date, limit=limit, offset_key=None,
                                            flatten=flatten, is_primary=is_primary,
                                            **query_params)
         if response is None or "offsetKey" not in response:
@@ -170,8 +175,9 @@ class GsSecurityMasterApi:
 
         results = response["results"]
         offset_key = response["offsetKey"]
+
         fn = partial(cls.get_many_securities, type_=type_, effective_date=effective_date,
-                     limit=DEFAULT_SCROLL_PAGE_SIZE, flatten=flatten,
+                     limit=limit, flatten=flatten,
                      **query_params)
         results.extend(cls.__fetch_all(fn, offset_key))
         response["totalResults"] = len(results)
@@ -182,7 +188,7 @@ class GsSecurityMasterApi:
     @classmethod
     def get_security_data(cls, id_value: str,
                           id_type: SecMasterIdentifiers,
-                          effective_date: dt.date = DEFAULT_EFFECTIVE_DATE) -> Union[dict, None]:
+                          effective_date: dt.date = None) -> Union[dict, None]:
         """
         Get flatten asset reference data
 
@@ -337,7 +343,7 @@ class GsSecurityMasterApi:
     def get_capital_structure(cls, id_value: str,
                               id_type: CapitalStructureIdentifiers,
                               type_: SecMasterAssetType = None, is_primary: bool = None,
-                              effective_date: dt.date = DEFAULT_EFFECTIVE_DATE) -> dict:
+                              effective_date: dt.date = None) -> dict:
         """
         Get a capital structure of the given company by id_value of the security.
          It runs in batches till all data is  fetched
@@ -388,22 +394,23 @@ class GsSecurityMasterApi:
     def _get_capital_structure(cls, id_value: str, id_type: Union[CapitalStructureIdentifiers, SecMasterIdentifiers],
                                type_, is_primary, effective_date, offset_key: Union[str, None]):
         params = {
-            id_type.value: id_value,
-            "effectiveDate": effective_date
+            id_type.value: id_value
         }
-        cls.prepare_params(params, is_primary, offset_key, type_)
+        cls.prepare_params(params, is_primary, offset_key, type_, effective_date)
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
         r = GsSession.current._get("/markets/capitalstructure", payload=payload)
         return r
 
     @classmethod
-    def prepare_params(cls, params, is_primary, offset_key, type_):
+    def prepare_params(cls, params, is_primary, offset_key, type_, effective_date=None):
         if type_ is not None:
             params["type"] = type_.value
         if is_primary is not None:
             params["isPrimary"] = is_primary
         if offset_key is not None:
             params["offsetKey"] = offset_key
+        if effective_date is not None:
+            params["effectiveDate"] = effective_date
 
     @classmethod
     def get_deltas(cls, start_time: dt.datetime = None, end_time: dt.datetime = None, raw: bool = None) -> \
@@ -429,7 +436,7 @@ class GsSecurityMasterApi:
         return r
 
     @classmethod
-    def get_exchanges(cls, effective_date: dt.date = DEFAULT_EFFECTIVE_DATE,
+    def get_exchanges(cls, effective_date: dt.date = None,
                       **query_params: Dict[str, Union[str, Iterable[str]]]):
         """
         Returns reference data for exchanges - e.g. MICs, exchange codes, name, listing country.
@@ -452,7 +459,7 @@ class GsSecurityMasterApi:
         return response
 
     @classmethod
-    def _get_exchanges(cls, effective_date: dt.date = DEFAULT_EFFECTIVE_DATE, limit: int = 10,
+    def _get_exchanges(cls, effective_date: dt.date = None, limit: int = 10,
                        query_params=None,
                        offset_key: Union[str, None] = None):
 
@@ -463,9 +470,11 @@ class GsSecurityMasterApi:
             if qp not in allowed_keys:
                 raise ValueError(f" Parameter '{qp}' is not supported. Allowed parameters:  {allowed_keys}")
         params = {
-            "effectiveDate": effective_date,
             "limit": limit
         }
+        if effective_date is not None:
+            params['effectiveDate'] = effective_date
+
         params = {**params, **query_params}
         if offset_key is not None:
             params["offsetKey"] = offset_key

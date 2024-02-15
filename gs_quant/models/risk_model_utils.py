@@ -45,7 +45,28 @@ def _map_measure_to_field_name(measure: Measure):
         Measure.Universe_Factor_Exposure: 'factorExposure',
         Measure.Factor_Return: 'factorReturn',
         Measure.Factor_Standard_Deviation: 'factorStandardDeviation',
-        Measure.Factor_Z_Score: 'factorZScore'
+        Measure.Factor_Z_Score: 'factorZScore',
+        Measure.Bid_Ask_Spread: 'bidAskSpread',
+        Measure.Bid_Ask_Spread_30d: 'bidAskSpread30d',
+        Measure.Bid_Ask_Spread_60d: 'bidAskSpread60d',
+        Measure.Bid_Ask_Spread_90d: 'bidAskSpread90d',
+        Measure.Trading_Volume: 'tradingVolume',
+        Measure.Trading_Volume_30d: 'tradingVolume30d',
+        Measure.Trading_Volume_60d: 'tradingVolume60d',
+        Measure.Trading_Volume_90d: 'tradingVolume90d',
+        Measure.Traded_Value_30d: 'tradedValue30d',
+        Measure.Composite_Volume: 'compositeVolume',
+        Measure.Composite_Volume_30d: 'compositeVolume30d',
+        Measure.Composite_Volume_60d: 'compositeVolume60d',
+        Measure.Composite_Volume_90d: 'compositeVolume90d',
+        Measure.Composite_Value_30d: 'compositeValue30d',
+        Measure.Issuer_Market_Cap: 'issuerMarketCap',
+        Measure.Capitalization: 'capitalization',
+        Measure.Currency: 'currency',
+        Measure.Dividend_Yield: 'dividendYield',
+        Measure.Price: 'price',
+        Measure.Unadjusted_Specific_Risk: 'unadjustedSpecificRisk',
+        Measure.Model_Price: 'modelPrice',
     }
 
     return measure_to_field.get(measure, '')
@@ -143,11 +164,11 @@ def get_isc_dataframe(results: dict) -> pd.DataFrame:
     return results
 
 
-def get_covariance_matrix_dataframe(results: dict) -> pd.DataFrame:
+def get_covariance_matrix_dataframe(results: dict, covariance_matrix_key: str = 'covarianceMatrix') -> pd.DataFrame:
     cov_list = []
     date_list = []
     for row in results:
-        matrix_df = pd.DataFrame(row.get('covarianceMatrix'))
+        matrix_df = pd.DataFrame(row.get(covariance_matrix_key))
         factor_names = [data.get('factorName') for data in row.get('factorData')]
         matrix_df.columns = factor_names
         matrix_df.index = factor_names

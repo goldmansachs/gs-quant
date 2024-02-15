@@ -1894,7 +1894,7 @@ def parse_meeting_date(valuation_date: Optional[GENERIC_DATE] = None):
             year, month, day = valuation_date.split('-')
             return datetime.date(int(year), int(month), int(day))
         else:
-            start, valuation_date = _range_from_pricing_date(None, valuation_date)
+            start, valuation_date = _range_from_pricing_date('USD', valuation_date)
             return valuation_date.date() if isinstance(valuation_date, pd.Timestamp) else valuation_date
     elif isinstance(valuation_date, datetime.date) or valuation_date is None:
         start, valuation_date = _range_from_pricing_date(None, valuation_date)

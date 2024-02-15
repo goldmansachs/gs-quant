@@ -15,14 +15,15 @@ under the License.
 """
 import logging
 from enum import Enum
+from numbers import Real
 from typing import Union, Optional
 
 import pandas as pd
-from numbers import Real
 from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
+from gs_quant.data.log import log_debug
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset, SecurityMaster
 from gs_quant.target.common import AssetClass, AssetType, PricingLocation
@@ -32,7 +33,6 @@ from gs_quant.timeseries import measures as tm
 from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _cross_stored_direction_helper, \
     _preprocess_implied_vol_strikes_fx, _tenor_month_to_year
 from gs_quant.timeseries.measures_helper import VolReference
-from gs_quant.data.log import log_debug
 
 _logger = logging.getLogger(__name__)
 

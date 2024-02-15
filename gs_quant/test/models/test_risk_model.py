@@ -801,5 +801,789 @@ def test_upload_risk_model_data(mocker, aws_upload):
     GsSession.current._post.assert_has_calls(expected_calls, any_order=False)
 
 
+@pytest.mark.parametrize("days", [0, 30, 60, 90])
+def test_get_bid_ask_spread(mocker, days):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    measure_to_query = Measure.Bid_Ask_Spread if not days else Measure[f'Bid_Ask_Spread_{days}d']
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [measure_to_query, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    f"bidAskSpread{'' if days == 0 else f'{days}d'}": [0.5, 1.6]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    bid_ask_spread_response = {
+        '2588173': {'2022-04-05': 1.6},
+        '2046251': {'2022-04-05': 0.5}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_bid_ask_spread(start_date=dt.date(2022, 4, 5),
+                                        end_date=dt.date(2022, 4, 5),
+                                        days=days,
+                                        assets=assets,
+                                        format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == bid_ask_spread_response
+
+
+@pytest.mark.parametrize("days", [0, 30, 60, 90])
+def test_get_trading_volume(mocker, days):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    measure_to_query = Measure.Trading_Volume if not days else Measure[f'Trading_Volume_{days}d']
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [measure_to_query, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    f"tradingVolume{'' if days == 0 else f'{days}d'}": [0.5, 1.6]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    trading_volume_response = {
+        '2588173': {'2022-04-05': 1.6},
+        '2046251': {'2022-04-05': 0.5}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_trading_volume(start_date=dt.date(2022, 4, 5),
+                                        end_date=dt.date(2022, 4, 5),
+                                        days=days,
+                                        assets=assets,
+                                        format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == trading_volume_response
+
+
+@pytest.mark.parametrize("days", [0, 30])
+def test_get_traded_value(mocker, days):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    measure_to_query = Measure.Traded_Value_30d if not days else Measure[f'Traded_Value_{days}d']
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [measure_to_query, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    "tradedValue30d": [0.5, 1.6]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    trading_value_30d_response = {
+        '2588173': {'2022-04-05': 1.6},
+        '2046251': {'2022-04-05': 0.5}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_traded_value(start_date=dt.date(2022, 4, 5),
+                                      end_date=dt.date(2022, 4, 5),
+                                      days=days,
+                                      assets=assets,
+                                      format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == trading_value_30d_response
+
+
+@pytest.mark.parametrize("days", [0, 30, 60, 90])
+def test_get_composite_volume(mocker, days):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    measure_to_query = Measure.Composite_Volume if not days else Measure[f'Composite_Volume_{days}d']
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [measure_to_query, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    f"compositeVolume{'' if days == 0 else f'{days}d'}": [0.5, 1.6]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    composite_volume_response = {
+        '2588173': {'2022-04-05': 1.6},
+        '2046251': {'2022-04-05': 0.5}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_composite_volume(start_date=dt.date(2022, 4, 5),
+                                          end_date=dt.date(2022, 4, 5),
+                                          days=days,
+                                          assets=assets,
+                                          format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == composite_volume_response
+
+
+@pytest.mark.parametrize("days", [0, 30])
+def test_get_composite_value(mocker, days):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    measure_to_query = Measure.Composite_Value_30d if not days else Measure[f'Composite_Value_{days}d']
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [measure_to_query, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    "compositeValue30d": [0.5, 1.6]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    composite_value_response = {
+        '2588173': {'2022-04-05': 1.6},
+        '2046251': {'2022-04-05': 0.5}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_composite_value(start_date=dt.date(2022, 4, 5),
+                                         end_date=dt.date(2022, 4, 5),
+                                         days=days,
+                                         assets=assets,
+                                         format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == composite_value_response
+
+
+def test_get_issuer_market_cap(mocker):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Issuer_Market_Cap, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    "issuerMarketCap": [1000000000, 2000000000]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    issuer_market_cap_response = {
+        '2588173': {'2022-04-05': 2000000000},
+        '2046251': {'2022-04-05': 1000000000}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_issuer_market_cap(start_date=dt.date(2022, 4, 5),
+                                           end_date=dt.date(2022, 4, 5),
+                                           assets=assets,
+                                           format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == issuer_market_cap_response
+
+
+def test_get_asset_price(mocker):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Price, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    "price": [100, 200]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    price_response = {
+        '2588173': {'2022-04-05': 200},
+        '2046251': {'2022-04-05': 100}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_asset_price(start_date=dt.date(2022, 4, 5),
+                                     end_date=dt.date(2022, 4, 5),
+                                     assets=assets,
+                                     format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == price_response
+
+
+def test_get_asset_capitalization(mocker):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Capitalization, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    "capitalization": [1000000000, 2000000000]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    capitalization_response = {
+        '2588173': {'2022-04-05': 2000000000},
+        '2046251': {'2022-04-05': 1000000000}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_asset_capitalization(start_date=dt.date(2022, 4, 5),
+                                              end_date=dt.date(2022, 4, 5),
+                                              assets=assets,
+                                              format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == capitalization_response
+
+
+def test_get_currency(mocker):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Currency, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    "currency": ["USD", "GBP"]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    currency_response = {
+        '2588173': {'2022-04-05': "GBP"},
+        '2046251': {'2022-04-05': "USD"}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_currency(start_date=dt.date(2022, 4, 5),
+                                  end_date=dt.date(2022, 4, 5),
+                                  assets=assets,
+                                  format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == currency_response
+
+
+def test_get_unadjusted_specific_risk(mocker):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Unadjusted_Specific_Risk, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    "unadjustedSpecificRisk": [0.5, 1.6]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    unadjusted_specific_risk_response = {
+        '2588173': {'2022-04-05': 1.6},
+        '2046251': {'2022-04-05': 0.5}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_unadjusted_specific_risk(start_date=dt.date(2022, 4, 5),
+                                                  end_date=dt.date(2022, 4, 5),
+                                                  assets=assets,
+                                                  format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == unadjusted_specific_risk_response
+
+
+def test_get_dividend_yield(mocker):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Dividend_Yield, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    "dividendYield": [0.5, 1.6]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    dividend_yield_response = {
+        '2588173': {'2022-04-05': 1.6},
+        '2046251': {'2022-04-05': 0.5}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_dividend_yield(start_date=dt.date(2022, 4, 5),
+                                        end_date=dt.date(2022, 4, 5),
+                                        assets=assets,
+                                        format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == dividend_yield_response
+
+
+def test_get_model_price(mocker):
+    model = mock_macro_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Model_Price, Measure.Asset_Universe],
+        'limitFactors': False
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "assetData": {
+                    "universe": ["2046251", "2588173"],
+                    "modelPrice": [100, 200]
+                }
+            }
+        ],
+        'totalResults': 1
+    }
+
+    model_price_response = {
+        '2588173': {'2022-04-05': 200},
+        '2046251': {'2022-04-05': 100}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_model_price(start_date=dt.date(2022, 4, 5),
+                                     end_date=dt.date(2022, 4, 5),
+                                     assets=assets,
+                                     format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'),
+                                               query, timeout=200)
+    assert response == model_price_response
+
+
+def test_get_covariance_matrix(mocker):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Covariance_Matrix, Measure.Factor_Name, Measure.Factor_Id,
+                     Measure.Universe_Factor_Exposure,
+                     Measure.Asset_Universe],
+        'limitFactors': True
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "factorData": [
+                    {
+                        "factorId": "1",
+                        "factorName": "factor1",
+                    },
+                    {
+                        "factorId": "2",
+                        "factorName": "factor2",
+                    },
+                    {
+                        "factorId": "3",
+                        "factorName": "factor3",
+                    },
+                    {
+                        "factorId": "4",
+                        "factorName": "factor4",
+                    }
+                ],
+                "covarianceMatrix": [[0.5, 0.6, 0.7, 0.8], [0.3, 0.7, 0.8, 0.9], [0.5, 0.6, 0.7, 0.8],
+                                     [0.3, 0.7, 0.8, 0.9]]
+            }
+        ],
+        'totalResults': 1
+    }
+
+    covariance_matrix_response = [{
+        "date": "2022-04-05",
+        "factorData": [
+            {
+                "factorId": "1",
+                "factorName": "factor1",
+            },
+            {
+                "factorId": "2",
+                "factorName": "factor2",
+            },
+            {
+                "factorId": "3",
+                "factorName": "factor3",
+            },
+            {
+                "factorId": "4",
+                "factorName": "factor4",
+            }
+        ],
+        "covarianceMatrix": [[0.5, 0.6, 0.7, 0.8], [0.3, 0.7, 0.8, 0.9], [0.5, 0.6, 0.7, 0.8],
+                             [0.3, 0.7, 0.8, 0.9]]
+    }]
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_covariance_matrix(start_date=dt.date(2022, 4, 5),
+                                           end_date=dt.date(2022, 4, 5),
+                                           assets=assets,
+                                           format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == covariance_matrix_response
+
+
+def test_get_unadjusted_covariance_matrix(mocker):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Unadjusted_Covariance_Matrix, Measure.Factor_Name, Measure.Factor_Id,
+                     Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
+        'limitFactors': True
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "factorData": [
+                    {
+                        "factorId": "1",
+                        "factorName": "factor1",
+                    },
+                    {
+                        "factorId": "2",
+                        "factorName": "factor2",
+                    },
+                    {
+                        "factorId": "3",
+                        "factorName": "factor3",
+                    },
+                    {
+                        "factorId": "4",
+                        "factorName": "factor4",
+                    }
+                ],
+                "unadjustedCovarianceMatrix": [[0.5, 0.6, 0.7, 0.8], [0.3, 0.7, 0.8, 0.9], [0.5, 0.6, 0.7, 0.8],
+                                               [0.3, 0.7, 0.8, 0.9]]
+            }
+        ],
+        'totalResults': 1
+    }
+
+    unadjusted_covariance_matrix_response = [{
+        "date": "2022-04-05",
+        "factorData": [
+            {
+                "factorId": "1",
+                "factorName": "factor1",
+            },
+            {
+                "factorId": "2",
+                "factorName": "factor2",
+            },
+            {
+                "factorId": "3",
+                "factorName": "factor3",
+            },
+            {
+                "factorId": "4",
+                "factorName": "factor4",
+            }
+        ],
+        "unadjustedCovarianceMatrix": [[0.5, 0.6, 0.7, 0.8], [0.3, 0.7, 0.8, 0.9], [0.5, 0.6, 0.7, 0.8],
+                                       [0.3, 0.7, 0.8, 0.9]]
+    }]
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_unadjusted_covariance_matrix(start_date=dt.date(2022, 4, 5),
+                                                      end_date=dt.date(2022, 4, 5),
+                                                      assets=assets,
+                                                      format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == unadjusted_covariance_matrix_response
+
+
+def test_get_pre_vra_covariance_matrix(mocker):
+    model = mock_risk_model(mocker)
+
+    universe = ["2046251", "2588173"]
+    assets = DataAssetsRequest(UniverseIdentifier.sedol, universe)
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'assets': assets,
+        'measures': [Measure.Pre_VRA_Covariance_Matrix, Measure.Factor_Name, Measure.Factor_Id,
+                     Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
+        'limitFactors': True
+    }
+
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "factorData": [
+                    {
+                        "factorId": "1",
+                        "factorName": "factor1",
+                    },
+                    {
+                        "factorId": "2",
+                        "factorName": "factor2",
+                    },
+                    {
+                        "factorId": "3",
+                        "factorName": "factor3",
+                    },
+                    {
+                        "factorId": "4",
+                        "factorName": "factor4",
+                    }
+                ],
+                "preVRACovarianceMatrix": [[0.5, 0.6, 0.7, 0.8], [0.3, 0.7, 0.8, 0.9], [0.5, 0.6, 0.7, 0.8],
+                                           [0.3, 0.7, 0.8, 0.9]]
+            }
+        ],
+        'totalResults': 1
+    }
+
+    pre_vra_covariance_matrix_response = [{
+        "date": "2022-04-05",
+        "factorData": [
+            {
+                "factorId": "1",
+                "factorName": "factor1",
+            },
+            {
+                "factorId": "2",
+                "factorName": "factor2",
+            },
+            {
+                "factorId": "3",
+                "factorName": "factor3",
+            },
+            {
+                "factorId": "4",
+                "factorName": "factor4",
+            }
+        ],
+        "preVRACovarianceMatrix": [[0.5, 0.6, 0.7, 0.8], [0.3, 0.7, 0.8, 0.9], [0.5, 0.6, 0.7, 0.8],
+                                   [0.3, 0.7, 0.8, 0.9]]
+    }]
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    # run test
+    response = model.get_pre_vra_covariance_matrix(start_date=dt.date(2022, 4, 5),
+                                                   end_date=dt.date(2022, 4, 5),
+                                                   assets=assets,
+                                                   format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == pre_vra_covariance_matrix_response
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

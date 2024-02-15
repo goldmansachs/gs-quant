@@ -799,8 +799,8 @@ def cds_spread(asset: Asset, spread: int, *, source: str = None, real_time: bool
                                  query_type=QueryType.IMPLIED_VOLATILITY)],
               asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference = None,
-                       relative_strike: Real = None, *, source: str = None, real_time: bool = False,
-                       request_id: Optional[str] = None) -> Series:
+                       relative_strike: Real = None, parallel_pool_size: int = 1, *, source: str = None,
+                       real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -809,6 +809,8 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
             or absolute calendar strips e.g. 'Cal20', 'F20-G20'
     :param strike_reference: reference for strike level
     :param relative_strike: strike relative to reference
+    :param parallel_pool_size: chunk time range into 'parallel_pool_size' intervals
+    to execute parallel queries
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -833,7 +835,8 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
     where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
     # Parallel calls when fetching / appending last results
     df = get_historical_and_last_for_measure([asset_id], QueryType.IMPLIED_VOLATILITY, where, source=source,
-                                             real_time=real_time, request_id=request_id)
+                                             real_time=real_time, request_id=request_id,
+                                             parallel_pool_size=parallel_pool_size)
 
     s = _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
     return s
@@ -930,8 +933,9 @@ def _check_top_n(top_n):
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
 def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
-                        top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None, *,
-                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                        top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None,
+                        *, source: str = None, real_time: bool = False,
+                        request_id: Optional[str] = None) -> Series:
     """
     Correlation of an asset implied by observations of market prices.
 
@@ -4556,6 +4560,32 @@ def append_last_for_measure(df: pd.DataFrame, asset_ids: List[str], query_type, 
     return result
 
 
+def get_market_data_tasks(asset_ids: List[str],
+                          query_type,
+                          where: dict,
+                          *,
+                          source: str = None,
+                          real_time: bool = False,
+                          request_id: Optional[str] = None,
+                          chunk_size: int = 5,
+                          ignore_errors: bool = False,
+                          parallel_pool_size: int = 1) -> list:
+    tasks = []
+    for i, chunked_assets in enumerate(chunk(asset_ids, chunk_size)):
+        queries = GsDataApi.build_market_data_query(
+            chunked_assets,
+            query_type,
+            where=where,
+            source=source,
+            real_time=real_time,
+            parallel_pool_size=parallel_pool_size)
+
+        queries = [queries] if not isinstance(queries, list) else queries
+        tasks.extend(
+            partial(_market_data_timed, query, request_id, ignore_errors=ignore_errors) for query in queries)
+    return tasks
+
+
 def get_historical_and_last_for_measure(asset_ids: List[str],
                                         query_type,
                                         where: dict,
@@ -4564,17 +4594,11 @@ def get_historical_and_last_for_measure(asset_ids: List[str],
                                         real_time: bool = False,
                                         request_id: Optional[str] = None,
                                         chunk_size: int = 5,
-                                        ignore_errors: bool = False):
-    tasks = []
-    for i, chunked_assets in enumerate(chunk(asset_ids, chunk_size)):
-        query = GsDataApi.build_market_data_query(
-            chunked_assets,
-            query_type,
-            where=where,
-            source=source,
-            real_time=real_time)
-
-        tasks.append(partial(_market_data_timed, query, request_id, ignore_errors=ignore_errors))
+                                        ignore_errors: bool = False,
+                                        parallel_pool_size: int = 1):
+    tasks = get_market_data_tasks(asset_ids, query_type, where, source=source, real_time=real_time,
+                                  request_id=request_id, chunk_size=chunk_size, ignore_errors=ignore_errors,
+                                  parallel_pool_size=parallel_pool_size)
 
     if not real_time and DataContext.current.end_date >= datetime.date.today():
         where_list = _split_where_conditions(where)

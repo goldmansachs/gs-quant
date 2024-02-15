@@ -1320,6 +1320,417 @@ class FactorRiskModel(MarqueeRiskModel):
         """
         return self._get_asset_data_measure(Measure.Specific_Return, start_date, end_date, assets, format)
 
+    def get_bid_ask_spread(self,
+                           start_date: dt.date,
+                           end_date: dt.date = None,
+                           days: int = 0,
+                           assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                           format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get bid ask spread data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param days: Get bid ask spread for a past average of specific days
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Bid Ask Spread Data
+
+        **Usage**
+
+        Get Bid Ask Spread data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> bid_ask_spread_30d = model.get_bid_ask_spread(start_date, end_date, 30,
+                                                          DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_composite_volume` :func:`get_trading_volume`
+
+        """
+        try:
+            requested_measure = Measure.Bid_Ask_Spread if not days else Measure[f'Bid_Ask_Spread_{days}d']
+            return super()._get_asset_data_measure(requested_measure, start_date, end_date, assets, format)
+        except KeyError:
+            raise ValueError(f'Bid Ask Spread data is not available for the requested days: {days}')
+
+    def get_trading_volume(self,
+                           start_date: dt.date,
+                           end_date: dt.date = None,
+                           days: int = 0,
+                           assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                           format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get trading volume data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param days: Get trading volume for a past average of specific days
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Trading Volume data
+
+        **Usage**
+
+        Get trading volume data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> trading_volume_60d = model.get_trading_volume(start_date, end_date, 60,
+        ...                                               DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_composite_volume` :func:`get_traded_value`
+
+        """
+        try:
+            requested_measure = Measure.Trading_Volume if not days else Measure[f'Trading_Volume_{days}d']
+            return super()._get_asset_data_measure(requested_measure, start_date, end_date, assets, format)
+        except KeyError:
+            raise ValueError(f'Trading volume data is not available for the requested days: {days}')
+
+    def get_traded_value(self,
+                         start_date: dt.date,
+                         end_date: dt.date = None,
+                         days: int = 30,
+                         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
+                                                                       []),
+                         format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get traded value data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param days: Get traded value for a past average of specific days
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Traded Value Data
+
+        **Usage**
+
+        Get traded value data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> traded_value_30d = model.get_traded_value(start_date, end_date,
+        ...                                           assets = DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_composite_value` :func:`get_trading_volume`
+
+        """
+        try:
+            requested_measure = Measure.Traded_Value_30d if not days else Measure[f'Traded_Value_{days}d']
+            return super()._get_asset_data_measure(requested_measure, start_date, end_date, assets, format)
+        except KeyError:
+            raise ValueError(f'Traded Value data is not available for the requested days: {days}')
+
+    def get_composite_volume(self,
+                             start_date: dt.date,
+                             end_date: dt.date = None,
+                             days: int = 0,
+                             assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
+                                                                           []),
+                             format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get composite volume data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param days: Get composite volume for a past average of specific days
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Composite volume data
+
+        **Usage**
+
+        Get composite volume data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> composite_volume_30d = model.get_composite_volume(start_date, end_date, 30,
+        ...                                                   DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_composite_value` :func:`get_traded_value`
+
+        """
+        try:
+            requested_measure = Measure.Composite_Volume if not days else Measure[f'Composite_Volume_{days}d']
+            return super()._get_asset_data_measure(requested_measure, start_date, end_date, assets, format)
+        except KeyError:
+            raise ValueError(f'Composite Volume data is not available for the requested days: {days}')
+
+    def get_composite_value(self,
+                            start_date: dt.date,
+                            end_date: dt.date = None,
+                            days: int = 30,
+                            assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
+                                                                          []),
+                            format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get composite value data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param days: Get composite value for a past average of specific days
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Composite Value data
+
+        **Usage**
+
+        Get composite value data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> composite_value_30d = model.get_composite_value(start_date, end_date,
+        ...                                                assets=DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_traded_value` :func:`get_composite_volume`
+
+        """
+        try:
+            requested_measure = Measure.Composite_Value_30d if not days else Measure[f'Composite_Value_{days}d']
+            return super()._get_asset_data_measure(requested_measure, start_date, end_date, assets, format)
+        except KeyError:
+            raise ValueError(f'Composite Value data is not available for the requested days: {days}')
+
+    def get_issuer_market_cap(self,
+                              start_date: dt.date,
+                              end_date: dt.date = None,
+                              assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
+                                                                            []),
+                              format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get issuer market capitalization for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Issue Market cap data
+
+        **Usage**
+
+        Get issuer market capitalization for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> issuer_market_cap = model.get_issuer_market_cap(start_date, end_date,
+        ...                                                  DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_asset_price` :func:`get_asset_capitalization` :func:`get_currency`
+
+        """
+        return super()._get_asset_data_measure(Measure.Issuer_Market_Cap, start_date, end_date, assets, format)
+
+    def get_asset_price(self,
+                        start_date: dt.date,
+                        end_date: dt.date = None,
+                        assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get asset price data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Asset price data
+
+        **Usage**
+
+        Get prices for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> asset_price = model.get_asset_price(start_date, end_date,
+        ...                                                  DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_asset_capitalization` :func:`get_currency`
+
+        """
+        return super()._get_asset_data_measure(Measure.Price, start_date, end_date, assets, format)
+
+    def get_asset_capitalization(self,
+                                 start_date: dt.date,
+                                 end_date: dt.date = None,
+                                 assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid,
+                                                                               []),
+                                 format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get asset capitalization data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Asset Capitalization data
+
+        **Usage**
+
+        Get asset capitalization data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> asset_capitalization = model.get_asset_capitalization(start_date, end_date,
+        ...                                                  DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_issuer_market_cap` :func:`get_currency`
+
+        """
+        return super()._get_asset_data_measure(Measure.Capitalization, start_date, end_date, assets, format)
+
+    def get_currency(self,
+                     start_date: dt.date,
+                     end_date: dt.date = None,
+                     assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
+                     format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get currency data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Currency data
+
+        **Usage**
+
+        Get currency data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> currency = model.get_currency(start_date, end_date,
+        ...                               DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_asset_price` :func:`get_issuer_market_cap`
+
+        """
+        return super()._get_asset_data_measure(Measure.Currency, start_date, end_date, assets, format)
+
+    def get_unadjusted_specific_risk(self,
+                                     start_date: dt.date,
+                                     end_date: dt.date = None,
+                                     assets: DataAssetsRequest = DataAssetsRequest(
+                                         RiskModelUniverseIdentifierRequest.gsid, []),
+                                     format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get asset unadjusted specific risk data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Unadjusted Specific Risk data
+
+        **Usage**
+
+        Get unadjusted specific risk data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> unadjusted_specific_risk = model.get_unadjusted_specific_risk(start_date, end_date,
+        ...                                                  DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_specific_risk` :func:`get_total_risk`
+
+        """
+        return super()._get_asset_data_measure(Measure.Unadjusted_Specific_Risk, start_date, end_date, assets, format)
+
+    def get_dividend_yield(self,
+                           start_date: dt.date,
+                           end_date: dt.date = None,
+                           assets: DataAssetsRequest = DataAssetsRequest(
+                               RiskModelUniverseIdentifierRequest.gsid, []),
+                           format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get dividend yield data for assets covered by the risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Asset Divident Yield
+
+        **Usage**
+
+        Get dividend yield data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> dividend_yield = model.get_dividend_yield(start_date, end_date,
+        ...                                           DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_asset_capitalization` :func:`get_issuer_market_cap`
+
+        """
+        return super()._get_asset_data_measure(Measure.Dividend_Yield, start_date, end_date, assets, format)
+
     def get_universe_factor_exposure(self,
                                      start_date: dt.date,
                                      end_date: dt.date = None,
@@ -1361,6 +1772,33 @@ class FactorRiskModel(MarqueeRiskModel):
         return super().get_universe_exposure(start_date, end_date, assets,
                                              get_factors_by_name=get_factors_by_name, format=format)
 
+    def _build_covariance_matrix_measure(self,
+                                         covariance_matrix_type: Measure,
+                                         start_date: dt.date,
+                                         end_date: dt.date = None,
+                                         assets: DataAssetsRequest = None,
+                                         format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        measure_to_field_name_map = {
+            Measure.Covariance_Matrix: 'covarianceMatrix',
+            Measure.Unadjusted_Covariance_Matrix: 'unadjustedCovarianceMatrix',
+            Measure.Pre_VRA_Covariance_Matrix: 'preVRACovarianceMatrix'
+        }
+        limit_factors = True if assets else False
+        measures = [covariance_matrix_type, Measure.Factor_Name, Measure.Factor_Id]
+        if assets:
+            measures += [Measure.Universe_Factor_Exposure, Measure.Asset_Universe]
+        results = self.get_data(
+            start_date=start_date,
+            end_date=end_date,
+            assets=assets,
+            measures=measures,
+            limit_factors=limit_factors
+        ).get('results')
+        covariance_data = results if format == ReturnFormat.JSON \
+            else get_covariance_matrix_dataframe(results, covariance_matrix_key=measure_to_field_name_map[
+                                                 covariance_matrix_type])
+        return covariance_data
+
     def get_covariance_matrix(self,
                               start_date: dt.date,
                               end_date: dt.date = None,
@@ -1395,20 +1833,81 @@ class FactorRiskModel(MarqueeRiskModel):
 
         :func:`get_factor_returns_by_name` :func:`get_factor_returns_by_id`
         """
+        return self._build_covariance_matrix_measure(Measure.Covariance_Matrix, start_date, end_date, assets, format)
 
-        limit_factors = True if assets else False
-        measures = [Measure.Covariance_Matrix, Measure.Factor_Name, Measure.Factor_Id]
-        if assets:
-            measures += [Measure.Universe_Factor_Exposure, Measure.Asset_Universe]
-        results = self.get_data(
-            start_date=start_date,
-            end_date=end_date,
-            assets=assets,
-            measures=measures,
-            limit_factors=limit_factors
-        ).get('results')
-        covariance_data = results if format == ReturnFormat.JSON else get_covariance_matrix_dataframe(results)
-        return covariance_data
+    def get_unadjusted_covariance_matrix(self,
+                                         start_date: dt.date,
+                                         end_date: dt.date = None,
+                                         assets: DataAssetsRequest = None,
+                                         format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """ Get covariance matrix data for existing risk model
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to limit the covariance matrix by
+        :param format: which format to return the results in
+
+        :return: covariance matrix of daily factor returns
+
+        **Usage**
+
+        Get the covariance matrix of daily factor returns
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> covariance_matrix = model.get_unadjusted_covariance_matrix(start_date, end_date,
+        ...                                                 DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_factor_returns_by_name` :func:`get_factor_returns_by_id`
+        """
+        return self._build_covariance_matrix_measure(Measure.Unadjusted_Covariance_Matrix, start_date, end_date, assets,
+                                                     format)
+
+    def get_pre_vra_covariance_matrix(self,
+                                      start_date: dt.date,
+                                      end_date: dt.date = None,
+                                      assets: DataAssetsRequest = None,
+                                      format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """ Get covariance matrix data for existing risk model
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to limit the covariance matrix by
+        :param format: which format to return the results in
+
+        :return: covariance matrix of daily factor returns
+
+        **Usage**
+
+        Get the covariance matrix of daily factor returns
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MacroRiskModel, DataAssetsRequest, \
+        ...                      RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> covariance_matrix = model.get_covariance_matrix(start_date, end_date,
+        ...                                                 DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+
+        :func:`get_factor_returns_by_name` :func:`get_factor_returns_by_id`
+        """
+        return self._build_covariance_matrix_measure(Measure.Pre_VRA_Covariance_Matrix, start_date, end_date, assets,
+                                                     format)
 
     def get_factor_volatility(self,
                               start_date: dt.date,
@@ -2111,6 +2610,41 @@ class MacroRiskModel(MarqueeRiskModel):
                                              factors_by_name,
                                              factors,
                                              format)
+
+    def get_model_price(self,
+                        start_date: dt.date,
+                        end_date: dt.date = None,
+                        assets: DataAssetsRequest = DataAssetsRequest(
+                            RiskModelUniverseIdentifierRequest.gsid, []),
+                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get model price data for existing risk model
+
+        :param start_date: Start date for data request
+        :param end_date: End date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param format: Which format to return the results in
+
+        :return: Model price data
+
+        **Usage**
+
+        Get model price data for assets specified in `assets` between `start_date` and `end_date`
+
+        **Example**
+        >>> from gs_quant.models.risk_model import FactorRiskModel, DataAssetsRequest, \
+        ...                                        RiskModelUniverseIdentifierRequest as UniverseIdentifier
+        >>> import datetime as dt
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MacroRiskModel.get("MODEL_ID")
+        >>> model_price = model.get_model_price(start_date, end_date,
+        ...                                                  DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+
+        **See also**
+        :func:`get_r_squared` :func:`get_fair_value_gap`
+
+        """
+        return super()._get_asset_data_measure(Measure.Model_Price, start_date, end_date, assets, format)
 
     def __repr__(self):
         s = "{}('{}','{}','{}','{}','{}','{}'".format(
