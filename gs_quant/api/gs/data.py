@@ -507,47 +507,166 @@ class GsDataApi(DataApi):
             return "USD-1"
 
     @classmethod
-    def get_mxapi_backtest_data(cls, builder, start_time=None, end_time=None, num_samples=60,
-                                csa=None, request_id=None) -> pd.DataFrame:
+    def get_mxapi_curve_measure(cls, curve_type=None, curve_asset=None, curve_point=None, curve_tags=None,
+                                measure=None, start_time=None, end_time=None, request_id=None,
+                                close_location=None, real_time=None) -> pd.DataFrame:
+        real_time = real_time or isinstance(start_time, dt.datetime)
+
         if not start_time:
-            start_time = DataContext.current.start_time
+            if real_time:
+                start_time = DataContext.current.start_time
+            else:
+                start_time = DataContext.current.start_date
+
         if not end_time:
-            end_time = DataContext.current.end_time
+            if real_time:
+                end_time = DataContext.current.end_time
+            else:
+                end_time = DataContext.current.end_date
+
+        if not real_time and not close_location:
+            close_location = 'NYC'
+
+        if real_time and not isinstance(end_time, dt.date):
+            raise ValueError("Start and end need to be either both date or both time")
+
+        if real_time:
+            request_dict = {
+                'type': 'MxAPI Measure Request',
+                'modelType': curve_type,
+                'modelAsset': curve_asset,
+                'point': curve_point,
+                'tags': curve_tags,
+                'startTime': cls._to_zulu(start_time),
+                'endTime': cls._to_zulu(end_time),
+                'measureName': measure
+            }
+        else:
+            request_dict = {
+                'type': 'MxAPI Measure Request EOD',
+                'modelType': curve_type,
+                'modelAsset': curve_asset,
+                'point': curve_point,
+                'tags': curve_tags,
+                'startDate': start_time.isoformat(),
+                'endDate': end_time.isoformat(),
+                'close': close_location,
+                'measureName': measure
+            }
+
+        url = '/mxapi/mq/measure' if real_time else '/mxapi/mq/measure/eod'
+
+        start = time.perf_counter()
+        try:
+            body = cls._post_with_cache_check(url, payload=request_dict)
+        except Exception as e:
+            log_warning(request_id, _logger, f'Mxapi measure query {request_dict} failed due to {e}')
+            raise e
+        log_debug(request_id, _logger, 'MxAPI measure query (%s) with payload (%s) ran in %.3f ms',
+                  body.get('requestId'), request_dict, (time.perf_counter() - start) * 1000)
+
+        if real_time:
+            values = body['measures']
+            valuation_times = body['measureTimes']
+            timestamps = [parser.parse(s) for s in valuation_times]
+            column_name = body['measureName']
+
+            d = {column_name: values, 'timeStamp': timestamps}
+            df = MarketDataResponseFrame(pd.DataFrame(data=d))
+            df = df.set_index('timeStamp')
+            return df
+        else:
+            values = body['measures']
+            valuation_date_strings = body['measureDates']
+            valuation_dates = [dt.date.fromisoformat(s) for s in valuation_date_strings]
+            column_name = body['measureName']
+
+            d = {column_name: values, 'date': valuation_dates}
+            df = MarketDataResponseFrame(pd.DataFrame(data=d))
+            df = df.set_index('date')
+            return df
+
+    @classmethod
+    def get_mxapi_backtest_data(cls, builder, start_time=None, end_time=None, num_samples=120,
+                                csa=None, request_id=None, close_location=None, real_time=None) -> pd.DataFrame:
+        real_time = real_time or isinstance(start_time, dt.datetime)
+
+        if not start_time:
+            if real_time:
+                start_time = DataContext.current.start_time
+            else:
+                start_time = DataContext.current.start_date
+
+        if not end_time:
+            if real_time:
+                end_time = DataContext.current.end_time
+            else:
+                end_time = DataContext.current.end_date
+
         if not csa:
             csa = cls._resolve_default_csa_for_builder(builder)
+
+        if not real_time and not close_location:
+            close_location = 'NYC'
+
+        if real_time and not isinstance(end_time, dt.date):
+            raise ValueError("Start and end need to be either both date or both time")
 
         leg = builder.resolve(in_place=False)
         leg_dict_string = json.dumps(leg, cls=JSONEncoder)
         leg_dict = json.loads(leg_dict_string)
 
-        request_dict = {
-            'type': 'MxAPI Backtest Request MQ',
-            'builder': leg_dict,
-            'startTime': cls._to_zulu(start_time),
-            'endTime': cls._to_zulu(end_time),
-            'sampleSize': num_samples,
-            'csa': csa
-        }
+        if real_time:
+            request_dict = {
+                'type': 'MxAPI Backtest Request MQ',
+                'builder': leg_dict,
+                'startTime': cls._to_zulu(start_time),
+                'endTime': cls._to_zulu(end_time),
+                'sampleSize': num_samples,
+                'csa': csa
+            }
+        else:
+            request_dict = {
+                'type': 'MxAPI Backtest Request MQEOD',
+                'builder': leg_dict,
+                'startDate': start_time.isoformat(),
+                'endDate': end_time.isoformat(),
+                'sampleSize': num_samples,
+                'csa': csa,
+                'close': close_location
+            }
+
+        url = '/mxapi/mq/backtest' if real_time else '/mxapi/mq/backtest/eod'
 
         start = time.perf_counter()
         try:
-            body = cls._post_with_cache_check('/mxapi/mq/backtest', payload=request_dict)
+            body = cls._post_with_cache_check(url, payload=request_dict)
         except Exception as e:
             log_warning(request_id, _logger, f'Mxapi backtest query {request_dict} failed due to {e}')
             raise e
         log_debug(request_id, _logger, 'MxAPI backtest query (%s) with payload (%s) ran in %.3f ms',
                   body.get('requestId'), request_dict, (time.perf_counter() - start) * 1000)
 
-        values = body['valuations']
-        valuation_times = body['valuationTimes']
-        timestamps = [parser.parse(s) for s in valuation_times]
-        column_name = body['valuationName']
+        if real_time:
+            values = body['valuations']
+            valuation_times = body['valuationTimes']
+            timestamps = [parser.parse(s) for s in valuation_times]
+            column_name = body['valuationName']
 
-        d = {column_name: values, 'timeStamp': timestamps}
-        df = MarketDataResponseFrame(pd.DataFrame(data=d))
-        df = df.set_index('timeStamp')
+            d = {column_name: values, 'timeStamp': timestamps}
+            df = MarketDataResponseFrame(pd.DataFrame(data=d))
+            df = df.set_index('timeStamp')
+            return df
+        else:
+            values = body['valuations']
+            valuation_date_strings = body['valuationDates']
+            valuation_dates = [dt.date.fromisoformat(s) for s in valuation_date_strings]
+            column_name = body['valuationName']
 
-        return df
+            d = {column_name: values, 'date': valuation_dates}
+            df = MarketDataResponseFrame(pd.DataFrame(data=d))
+            df = df.set_index('date')
+            return df
 
     @staticmethod
     def _get_market_data_filters(asset_ids: List[str],

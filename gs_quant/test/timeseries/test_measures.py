@@ -379,7 +379,7 @@ def test_currency_to_tdapi_swap_rate_asset_for_intraday(mocker):
 
 
 def my_mocked_mxapi_backtest(cls=None, builder=None, start_time=None, end_time=None, num_samples=60,
-                             csa=None, request_id=None):
+                             csa=None, request_id=None, close_location=None, real_time=None):
     d = {'column_name': [], 'timeStamp': []}
     df = MarketDataResponseFrame(pd.DataFrame(data=d))
     df = df.set_index('timeStamp')
@@ -401,9 +401,9 @@ def test_swap_rate_calc(mocker):
 
     try:
         val = tm_rates.swap_rate_calc(asset, swap_tenor='10y', benchmark_type='SOFR', real_time=False)
-        assert False
-    except NotImplementedError:
         assert True
+    except NotImplementedError:
+        assert False
 
     try:
         val = tm_rates.swap_rate_calc(asset, swap_tenor='10x', benchmark_type='SOFR', real_time=True)
@@ -418,6 +418,66 @@ def test_swap_rate_calc(mocker):
         assert False
     except NotImplementedError:
         assert True
+
+    replace.restore()
+
+
+def my_mocked_mxapi_measure(cls, curve_type=None, curve_asset=None, curve_point=None, curve_tags=None,
+                            measure=None, start_time=None, end_time=None, request_id=None,
+                            close_location=None, real_time=None):
+    d = {'column_name': [], 'timeStamp': []}
+    df = MarketDataResponseFrame(pd.DataFrame(data=d))
+    df = df.set_index('timeStamp')
+    return df
+
+
+def test_curve_measures(mocker):
+    replace = Replacer()
+
+    mocker.patch.object(GsDataApi, 'get_mxapi_curve_measure')
+    bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+
+    mocker.patch.object(GsDataApi, 'get_mxapi_curve_measure', side_effect=my_mocked_mxapi_measure)
+
+    asset = Currency('MAZ7RWC904JYHYPS', 'USD')
+    bbid_mock.return_value = 'USD'
+    val = tm_rates.forward_rate(asset, forward_term='1m')
+    assert len(val.keys()) == 0
+    val = tm_rates.discount_factor(asset, tenor='1m')
+    assert len(val.keys()) == 0
+    val = tm_rates.instantaneous_forward_rate(asset, tenor='1m')
+    assert len(val.keys()) == 0
+    val = tm_rates.index_forward_rate(asset, forward_start_tenor='1m', benchmark_type='LIBOR')
+    assert len(val.keys()) == 0
+
+    try:
+        val = tm_rates.forward_rate(asset)
+        assert False
+    except MqValueError:
+        assert True
+
+    try:
+        val = tm_rates.discount_factor(asset)
+        assert False
+    except MqValueError:
+        assert True
+
+    try:
+        val = tm_rates.index_forward_rate(asset)
+        assert False
+    except MqValueError:
+        assert True
+
+    try:
+        val = tm_rates.instantaneous_forward_rate(asset)
+        assert False
+    except MqValueError:
+        assert True
+
+    asset = Currency('MA890', 'EGP')
+    bbid_mock.return_value = 'EGP'
+    val = tm_rates.forward_rate(asset, forward_term='1m')
+    assert len(val.keys()) == 0
 
     replace.restore()
 
