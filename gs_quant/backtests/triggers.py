@@ -15,12 +15,14 @@ under the License.
 """
 
 
+from dataclasses import dataclass, field
+from dataclasses_json import dataclass_json
 from typing import Optional
-import warnings
 from gs_quant.backtests.actions import Action, AddTradeAction, AddTradeActionInfo
 from gs_quant.backtests.backtest_objects import BackTest, PredefinedAssetBacktest
 from gs_quant.backtests.backtest_utils import make_list, CalcType
 from gs_quant.backtests.data_sources import *
+from gs_quant.base import field_metadata
 from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.risk.transform import Transformer
 from gs_quant.risk import RiskMeasure
@@ -37,109 +39,88 @@ class AggType(Enum):
     ANY_OF = 2
 
 
+@dataclass_json
+@dataclass
 class TriggerRequirements(object):
-    def __init__(self):
-        pass
+    pass
 
 
+@dataclass_json
+@dataclass
 class PeriodicTriggerRequirements(TriggerRequirements):
-    def __init__(self, start_date: dt.date = None, end_date: dt.date = None, frequency: str = None,
-                 calendar: str = None):
-        super().__init__()
-        self.start_date = start_date
-        self.end_date = end_date
-        self.frequency = frequency
-        self.calendar = calendar
+    start_date: Optional[dt.date] = field(default=None, metadata=field_metadata)
+    end_date: Optional[dt.date] = field(default=None, metadata=field_metadata)
+    frequency: Optional[str] = field(default=None, metadata=field_metadata)
+    calendar: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@dataclass_json
+@dataclass
 class IntradayTriggerRequirements(TriggerRequirements):
-    def __init__(self, start_time: dt.datetime, end_time: dt.datetime, frequency: str):
-        super().__init__()
-        self.start_time = start_time
-        self.end_time = end_time
-        self.frequency = frequency
+    start_time: Optional[dt.datetime] = field(default=None, metadata=field_metadata)
+    end_time: Optional[dt.datetime] = field(default=None, metadata=field_metadata)
+    frequency: Optional[str] = field(default=None, metadata=field_metadata)
 
 
+@dataclass_json
+@dataclass
 class MktTriggerRequirements(TriggerRequirements):
-    def __init__(self, data_source: DataSource, trigger_level: float, direction: TriggerDirection):
-        super().__init__()
-        self.data_source = data_source
-        self.trigger_level = trigger_level
-        self.direction = direction
+    data_source: DataSource = field(default=None, metadata=field_metadata)
+    trigger_level: float = field(default=None, metadata=field_metadata)
+    direction: TriggerDirection = field(default=None, metadata=field_metadata)
 
 
+@dataclass_json
+@dataclass
 class RiskTriggerRequirements(TriggerRequirements):
-    def __init__(self, risk: RiskMeasure, trigger_level: float, direction: TriggerDirection,
-                 risk_transformation: Optional[Transformer] = None):
-        super().__init__()
-        self.risk = risk
-        self.trigger_level = trigger_level
-        self.direction = direction
-        self.risk_transformation = risk_transformation
+    risk: RiskMeasure = field(default=None, metadata=field_metadata)
+    trigger_level: float = field(default=None, metadata=field_metadata)
+    direction: TriggerDirection = field(default=None, metadata=field_metadata)
+    risk_transformation: Optional[Transformer] = field(default=None, metadata=field_metadata)
 
 
+@dataclass_json
+@dataclass
 class AggregateTriggerRequirements(TriggerRequirements):
-    def __init__(self, triggers: Iterable[object], aggregate_type: AggType = AggType.ALL_OF):
-        super().__init__()
-        self.triggers = triggers
-        self.aggregate_type = aggregate_type
+    triggers: Iterable = field(default=None, metadata=field_metadata)
+    aggregate_type: AggType = field(default=AggType.ALL_OF, metadata=field_metadata)
 
 
+@dataclass_json
+@dataclass
 class NotTriggerRequirements(TriggerRequirements):
-    def __init__(self, trigger: object):
-        super().__init__()
-        self.trigger = trigger
+    trigger: object = field(default=None, metadata=field_metadata)
 
 
+@dataclass_json
+@dataclass
 class DateTriggerRequirements(TriggerRequirements):
-    def __init__(self, dates: Iterable[Union[dt.datetime, dt.date]], entire_day: bool = False):
-        super().__init__()
-        """
-        :param dates: the list of dates on which to trigger
-        :param entire_day: flag that indicates whether to check against dates instead of datetimes
-        """
-        self.dates = dates
-        self.entire_day = entire_day
+    dates: Iterable[Union[dt.datetime, dt.date]] = field(default=None, metadata=field_metadata)
+    entire_day: bool = field(default=False, metadata=field_metadata)
 
 
+@dataclass_json
+@dataclass
 class PortfolioTriggerRequirements(TriggerRequirements):
-    def __init__(self, data_source: str, trigger_level: float, direction: TriggerDirection):
-        """
-        :param data_source: the portfolio property to check
-        :param trigger_level: the threshold level on which to trigger
-        :param direction: a direction for the trigger_level comparison
-        """
-        super().__init__()
-        self.data_source = data_source
-        self.trigger_level = trigger_level
-        self.direction = direction
+    data_source: str = field(default=None, metadata=field_metadata)
+    trigger_level: float = field(default=None, metadata=field_metadata)
+    direction: TriggerDirection = field(default=None, metadata=field_metadata)
 
 
+@dataclass_json
+@dataclass
 class MeanReversionTriggerRequirements(TriggerRequirements):
-    def __init__(self, data_source: DataSource,
-                 z_score_bound: float,
-                 rolling_mean_window: int,
-                 rolling_std_window: int):
-        """
-        This trigger will sell when the value hits the z score threshold on the up side, will close out a position
-        when the value crosses the rolling_mean and buy when the value hits the z score threshold on the down side.
-
-        :param data_source: the asset values
-        :param z_score_bound: the threshold level on which to trigger
-        :param rolling_mean_window: the number of values to consider when calculating the rolling mean
-        :param rolling_std_window: the number of values to consider when calculating the standard deviation
-        """
-        super().__init__()
-        self.data_source = data_source
-        self.z_score_bound = z_score_bound
-        self.rolling_mean_window = rolling_mean_window
-        self.rolling_std_window = rolling_std_window
+    data_source: DataSource = field(default=None, metadata=field_metadata)
+    z_score_bound: float = field(default=None, metadata=field_metadata)
+    rolling_mean_window: int = field(default=None, metadata=field_metadata)
+    rolling_std_window: int = field(default=None, metadata=field_metadata)
 
 
+@dataclass_json
+@dataclass
 class TriggerInfo(object):
-    def __init__(self, triggered: bool, info_dict: Optional[dict] = None):
-        self.triggered = triggered
-        self.info_dict = info_dict
+    triggered: bool
+    info_dict: Optional[dict] = None
 
     def __eq__(self, other):
         return self.triggered is other
@@ -148,13 +129,14 @@ class TriggerInfo(object):
         return self.triggered
 
 
+@dataclass_json
+@dataclass
 class Trigger(object):
+    trigger_requirements: Optional[TriggerRequirements] = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
 
-    def __init__(self, trigger_requirements: Optional[TriggerRequirements], actions: Union[Action, Iterable[Action]]):
-        self._trigger_requirements = trigger_requirements
-        self._actions = make_list(actions)
-        self._risks = [x.risk for x in self.actions if x.risk is not None]
-        self._calc_type = CalcType.simple
+    def __post_init__(self):
+        self.actions = make_list(self.actions)
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         """
@@ -172,35 +154,27 @@ class Trigger(object):
 
     @property
     def calc_type(self):
-        return self._calc_type
-
-    @property
-    def actions(self):
-        return self._actions
-
-    @property
-    def trigger_requirements(self):
-        return self._trigger_requirements
+        return CalcType.simple
 
     @property
     def risks(self):
-        return self._risks
+        return [x.risk for x in make_list(self.actions) if x.risk is not None]
 
 
+@dataclass_json
+@dataclass
 class PeriodicTrigger(Trigger):
-    def __init__(self,
-                 trigger_requirements: PeriodicTriggerRequirements,
-                 actions: Union[Action, Iterable[Action]]):
-        super().__init__(trigger_requirements, actions)
-        self._trigger_dates = None
+    trigger_requirements: PeriodicTriggerRequirements = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
+    _trigger_dates = None
 
     def get_trigger_times(self) -> [dt.date]:
         if not self._trigger_dates:
-            self._trigger_dates = self._trigger_requirements.dates if \
-                hasattr(self._trigger_requirements, 'dates') else \
-                RelativeDateSchedule(self._trigger_requirements.frequency,
-                                     self._trigger_requirements.start_date,
-                                     self._trigger_requirements.end_date).apply_rule(
+            self._trigger_dates = self.trigger_requirements.dates if \
+                hasattr(self.trigger_requirements, 'dates') else \
+                RelativeDateSchedule(self.trigger_requirements.frequency,
+                                     self.trigger_requirements.start_date,
+                                     self.trigger_requirements.end_date).apply_rule(
                     holiday_calendar=self.trigger_requirements.calendar)
         return self._trigger_dates
 
@@ -210,16 +184,18 @@ class PeriodicTrigger(Trigger):
         return TriggerInfo(state in self._trigger_dates)
 
 
+@dataclass_json
+@dataclass
 class IntradayPeriodicTrigger(Trigger):
-    def __init__(self,
-                 trigger_requirements: IntradayTriggerRequirements,
-                 actions: Union[Action, Iterable[Action]]):
-        super().__init__(trigger_requirements, actions)
+    trigger_requirements: IntradayTriggerRequirements = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
 
+    def __post_init__(self):
+        super().__post_init__()
         # generate all the trigger times
-        start = trigger_requirements.start_time
-        end = trigger_requirements.end_time
-        freq = trigger_requirements.frequency
+        start = self.trigger_requirements.start_time
+        end = self.trigger_requirements.end_time
+        freq = self.trigger_requirements.frequency
 
         self._trigger_times = []
         time = start
@@ -234,114 +210,127 @@ class IntradayPeriodicTrigger(Trigger):
         return TriggerInfo(state.time() in self._trigger_times)
 
 
+@dataclass_json
+@dataclass
 class MktTrigger(Trigger):
-    def __init__(self,
-                 trigger_requirements: MktTriggerRequirements,
-                 actions: Union[Action, Iterable[Action]]):
-        super().__init__(trigger_requirements, actions)
+    trigger_requirements: MktTriggerRequirements = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
-        data_value = self._trigger_requirements.data_source.get_data(state)
-        if self._trigger_requirements.direction == TriggerDirection.ABOVE:
-            if data_value > self._trigger_requirements.trigger_level:
+        data_value = self.trigger_requirements.data_source.get_data(state)
+        if self.trigger_requirements.direction == TriggerDirection.ABOVE:
+            if data_value > self.trigger_requirements.trigger_level:
                 return TriggerInfo(True)
-        elif self._trigger_requirements.direction == TriggerDirection.BELOW:
-            if data_value < self._trigger_requirements.trigger_level:
+        elif self.trigger_requirements.direction == TriggerDirection.BELOW:
+            if data_value < self.trigger_requirements.trigger_level:
                 return TriggerInfo(True)
         else:
-            if data_value == self._trigger_requirements.trigger_level:
+            if data_value == self.trigger_requirements.trigger_level:
                 return TriggerInfo(True)
         return TriggerInfo(False)
 
 
+@dataclass_json
+@dataclass
 class StrategyRiskTrigger(Trigger):
-    def __init__(self,
-                 trigger_requirements: RiskTriggerRequirements,
-                 actions: Union[Action, Iterable[Action]]):
-        super().__init__(trigger_requirements, actions)
-        self._calc_type = CalcType.path_dependent
-        self._risks += [trigger_requirements.risk]
+    trigger_requirements: RiskTriggerRequirements = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
+
+    @property
+    def calc_type(self):
+        return CalcType.path_dependent
+
+    @property
+    def risks(self):
+        return [x.risk for x in make_list(self.actions) if x.risk is not None] + [self.trigger_requirements.risk]
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         if self.trigger_requirements.risk_transformation is None:
-            risk_value = backtest.results[state][self._trigger_requirements.risk].aggregate()
+            risk_value = backtest.results[state][self.trigger_requirements.risk].aggregate()
         else:
-            risk_value = backtest.results[state][self._trigger_requirements.risk].transform(
+            risk_value = backtest.results[state][self.trigger_requirements.risk].transform(
                 risk_transformation=self.trigger_requirements.risk_transformation).aggregate(
                 allow_mismatch_risk_keys=True)
-        if self._trigger_requirements.direction == TriggerDirection.ABOVE:
-            if risk_value > self._trigger_requirements.trigger_level:
+        if self.trigger_requirements.direction == TriggerDirection.ABOVE:
+            if risk_value > self.trigger_requirements.trigger_level:
                 return TriggerInfo(True)
-        elif self._trigger_requirements.direction == TriggerDirection.BELOW:
-            if risk_value < self._trigger_requirements.trigger_level:
+        elif self.trigger_requirements.direction == TriggerDirection.BELOW:
+            if risk_value < self.trigger_requirements.trigger_level:
                 return TriggerInfo(True)
         else:
-            if risk_value == self._trigger_requirements.trigger_level:
+            if risk_value == self.trigger_requirements.trigger_level:
                 return TriggerInfo(True)
         return TriggerInfo(False)
 
 
+@dataclass_json
+@dataclass
 class AggregateTrigger(Trigger):
-    def __init__(self,
-                 trigger_requirements: Optional[AggregateTriggerRequirements] = None,
-                 actions: Optional[Union[Action, Iterable[Action]]] = None,
-                 triggers: Optional[Iterable[Trigger]] = None):
-        # support previous behaviour where a list of triggers was passed.
-        if not trigger_requirements and triggers is not None:
-            warnings.warn('triggers is deprecated; trigger_requirements', DeprecationWarning, 2)
-            trigger_requirements = AggregateTriggerRequirements(triggers)
-        actions = [] if not actions else actions
-        for t in trigger_requirements.triggers:
+    trigger_requirements: AggregateTriggerRequirements = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
+
+    def __post_init__(self):
+        super().__post_init__()
+        actions = [] if not self.actions else make_list(self.actions)
+        for t in self.trigger_requirements.triggers:
             actions += [action for action in t.actions]
-        super().__init__(trigger_requirements, actions)
+        self.actions = actions
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
-        self._actions = []
         info_dict = {}
-        if self._trigger_requirements.aggregate_type == AggType.ALL_OF:
-            for trigger in self._trigger_requirements.triggers:
+        if self.trigger_requirements.aggregate_type == AggType.ALL_OF:
+            for trigger in self.trigger_requirements.triggers:
                 t_info = trigger.has_triggered(state, backtest)
                 if not t_info:
                     return TriggerInfo(False)
                 else:
                     if t_info.info_dict:
                         info_dict.update(t_info.info_dict)
-                    self._actions.extend(trigger.actions)
             return TriggerInfo(True, info_dict)
-        elif self._trigger_requirements.aggregate_type == AggType.ANY_OF:
+        elif self.trigger_requirements.aggregate_type == AggType.ANY_OF:
             triggered = False
-            for trigger in self._trigger_requirements.triggers:
+            for trigger in self.trigger_requirements.triggers:
                 t_info = trigger.has_triggered(state, backtest)
                 if t_info:
                     triggered = True
                     if t_info.info_dict:
                         info_dict.update(t_info.info_dict)
-                    self._actions.extend(trigger.actions)
             return TriggerInfo(True, info_dict) if triggered else TriggerInfo(False)
         else:
-            raise RuntimeError(f'Unrecognised aggregation type: {self._trigger_requirements.aggregate_type}')
+            raise RuntimeError(f'Unrecognised aggregation type: {self.trigger_requirements.aggregate_type}')
 
     @property
     def triggers(self) -> Iterable[Trigger]:
-        return self._trigger_requirements.triggers
+        return self.trigger_requirements.triggers
 
 
+@dataclass_json
+@dataclass
 class NotTrigger(Trigger):
-    def __init__(self, trigger_requirements: NotTriggerRequirements, actions: Optional[Iterable[Action]] = None):
-        super().__init__(trigger_requirements, actions)
+    trigger_requirements: NotTriggerRequirements = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
+
+    def __post_init__(self):
+        super().__post_init__()
+        actions = [] if not self.actions else self.actions
+        actions += [action for action in self.trigger_requirements.trigger.actions]
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         t_info = self.trigger_requirements.trigger.has_triggered(state, backtest)
         if t_info:
             return TriggerInfo(False)
         else:
-            self._actions.extend(self.trigger_requirements.trigger.actions)
             return TriggerInfo(True)
 
 
+@dataclass_json
+@dataclass
 class DateTrigger(Trigger):
-    def __init__(self, trigger_requirements: DateTriggerRequirements, actions: Iterable[Action]):
-        super().__init__(trigger_requirements, actions)
+    trigger_requirements: DateTriggerRequirements = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
+
+    def __post_init__(self):
+        super().__post_init__()
         self._dates_from_datetimes = [d.date() if isinstance(d, dt.datetime) else d
                                       for d in self.trigger_requirements.dates] \
             if self.trigger_requirements.entire_day else None
@@ -355,41 +344,49 @@ class DateTrigger(Trigger):
             elif isinstance(state, dt.date):
                 return TriggerInfo(state in self._dates_from_datetimes)
 
-        return TriggerInfo(state in self._trigger_requirements.dates)
+        return TriggerInfo(state in self.trigger_requirements.dates)
 
     def get_trigger_times(self):
-        return self._dates_from_datetimes or self._trigger_requirements.dates
+        return self._dates_from_datetimes or self.trigger_requirements.dates
 
 
+@dataclass_json
+@dataclass
 class PortfolioTrigger(Trigger):
-    def __init__(self, trigger_requirements: PortfolioTriggerRequirements, actions: Iterable[Action] = None):
-        super().__init__(trigger_requirements, actions)
+    trigger_requirements: PortfolioTriggerRequirements = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
 
-    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
-        if self._trigger_requirements.data_source == 'len':
-            value = len(backtest.portfolio_dict)
-            if self._trigger_requirements.direction == TriggerDirection.ABOVE:
-                if value > self._trigger_requirements.trigger_level:
-                    return TriggerInfo(True)
-            elif self._trigger_requirements.direction == TriggerDirection.BELOW:
-                if value < self._trigger_requirements.trigger_level:
-                    return TriggerInfo(True)
-            else:
-                if value == self._trigger_requirements.trigger_level:
-                    return TriggerInfo(True)
-
-        return TriggerInfo(False)
-
-
-class MeanReversionTrigger(Trigger):
-    def __init__(self,
-                 trigger_requirements: MeanReversionTriggerRequirements,
-                 actions: Union[Action, Iterable[Action]]):
-        super().__init__(trigger_requirements, actions)
+    def __post_init__(self):
+        super().__post_init__()
         self._current_position = 0
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
-        trigger_req = self._trigger_requirements
+        if self.trigger_requirements.data_source == 'len':
+            value = len(backtest.portfolio_dict)
+            if self.trigger_requirements.direction == TriggerDirection.ABOVE:
+                if value > self.trigger_requirements.trigger_level:
+                    return TriggerInfo(True)
+            elif self.trigger_requirements.direction == TriggerDirection.BELOW:
+                if value < self.trigger_requirements.trigger_level:
+                    return TriggerInfo(True)
+            else:
+                if value == self.trigger_requirements.trigger_level:
+                    return TriggerInfo(True)
+        return TriggerInfo(False)
+
+
+@dataclass_json
+@dataclass
+class MeanReversionTrigger(Trigger):
+    trigger_requirements: MeanReversionTriggerRequirements = field(default=None, metadata=field_metadata)
+    actions: Union[Action, Iterable[Action]] = field(default=None, metadata=field_metadata)
+
+    def __post_init__(self):
+        super().__post_init__()
+        self._current_position = 0
+
+    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
+        trigger_req = self.trigger_requirements
         rolling_mean = trigger_req.data_source.get_data_range(state, trigger_req.rolling_mean_window).mean()
         rolling_std = trigger_req.data_source.get_data_range(state, trigger_req.rolling_std_window).std()
         current_price = trigger_req.data_source.get_data(state)
@@ -414,10 +411,15 @@ class MeanReversionTrigger(Trigger):
         return TriggerInfo(False)
 
 
+@dataclass_json
+@dataclass
 class OrdersGeneratorTrigger(Trigger):
     """Base class for triggers used with the PredefinedAssetEngine."""
-    def __init__(self):
-        super().__init__(None, Action())
+
+    def __post_init__(self):
+        if not self.actions:
+            self.actions = [Action()]
+        super().__post_init__()
 
     def get_trigger_times(self) -> list:
         """

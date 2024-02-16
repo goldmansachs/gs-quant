@@ -14,6 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 from typing import Tuple
 
 from gs_quant.backtests.triggers import *
@@ -26,27 +28,23 @@ from gs_quant.base import Priceable
 backtest_engines = [GenericEngine(), PredefinedAssetEngine(), EquityVolEngine()]
 
 
+@dataclass_json
+@dataclass
 class Strategy(object):
     """
     A strategy object on which one may run a backtest
     """
+    initial_portfolio: Optional[Tuple[Priceable, ...]]
+    triggers: Union[Trigger, Iterable[Trigger]]
 
-    def __init__(self, initial_portfolio: Optional[Tuple[Priceable, ...]], triggers: Union[Trigger, Iterable[Trigger]]):
-        self._initial_portfolio = make_list(initial_portfolio)
-        self._triggers = make_list(triggers)
+    def __post_init__(self):
+        self.initial_portfolio = make_list(self.initial_portfolio)
+        self.triggers = make_list(self.triggers)
+        self.risks = self.get_risks()
 
-    @property
-    def triggers(self):
-        return self._triggers
-
-    @property
-    def initial_portfolio(self):
-        return self._initial_portfolio
-
-    @property
-    def risks(self):
+    def get_risks(self):
         risk_list = []
-        for t in self._triggers:
+        for t in self.triggers:
             risk_list += t.risks if t.risks is not None else []
         return risk_list
 

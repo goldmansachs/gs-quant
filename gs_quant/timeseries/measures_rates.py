@@ -1322,8 +1322,11 @@ def _csa_default(csa=None, currency=None):
     return csa
 
 
-def forward_rate(asset: Asset, forward_start_tenor=None, forward_term=None, csa=None,
-                 close_location=None, *, source: str = None, real_time: bool = False):
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset,
+                                 query_type=QueryType.SWAP_RATE)])
+def forward_rate(asset: Asset, forward_start_tenor: str = None, forward_term: str = None, csa: str = None,
+                 close_location: str = None, *, source: str = None, real_time: bool = False) -> Series:
     """
     GS Forward Rate across major currencies.
 
@@ -1356,8 +1359,11 @@ def forward_rate(asset: Asset, forward_start_tenor=None, forward_term=None, csa=
     return series
 
 
-def discount_factor(asset: Asset, tenor=None, csa=None, close_location=None,
-                    *, source: str = None, real_time: bool = False):
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset,
+                                 query_type=QueryType.SWAP_RATE)])
+def discount_factor(asset: Asset, tenor: str = None, csa: str = None, close_location: str = None,
+                    *, source: str = None, real_time: bool = False) -> Series:
     """
     GS Discount Factor across major currencies.
 
@@ -1387,8 +1393,11 @@ def discount_factor(asset: Asset, tenor=None, csa=None, close_location=None,
     return series
 
 
-def instantaneous_forward_rate(asset: Asset, tenor=None, csa=None, close_location=None,
-                               *, source: str = None, real_time: bool = False):
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset,
+                                 query_type=QueryType.SWAP_RATE)])
+def instantaneous_forward_rate(asset: Asset, tenor: str = None, csa: str = None, close_location: str = None,
+                               *, source: str = None, real_time: bool = False) -> Series:
     """
     GS Floating Rate Benchmark annualised instantaneous forward rates across major currencies.
 
@@ -1418,8 +1427,12 @@ def instantaneous_forward_rate(asset: Asset, tenor=None, csa=None, close_locatio
     return series
 
 
-def index_forward_rate(asset: Asset, forward_start_tenor=None, benchmark_type: str = None, fixing_tenor=None,
-                       close_location=None, *, source: str = None, real_time: bool = False):
+@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
+              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset,
+                                 query_type=QueryType.SWAP_RATE)])
+def index_forward_rate(asset: Asset, forward_start_tenor: str = None, benchmark_type: str = None,
+                       fixing_tenor: str = None, close_location: str = None, *,
+                       source: str = None, real_time: bool = False) -> Series:
     """
     GS annualised forward rates across floating rate benchmark
 

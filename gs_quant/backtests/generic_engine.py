@@ -504,7 +504,7 @@ class GenericEngine(BacktestBaseEngine):
 
         """
 
-        logging.info(f'Starting Backtest: Building Date Schedule - {dt.datetime.now()}')
+        logger.info(f'Starting Backtest: Building Date Schedule - {dt.datetime.now()}')
         self._tracing_enabled = Tracer.get_instance().active_span is not None
         self._pricing_context_params = {'show_progress': show_progress,
                                         'csa_term': csa_term,
@@ -558,15 +558,15 @@ class GenericEngine(BacktestBaseEngine):
 
         backtest = BackTest(strategy, strategy_pricing_dates, risks)
 
-        logging.info('Resolving initial portfolio')
+        logger.info('Resolving initial portfolio')
         with self._trace('Resolve initial portfolio'):
             self._resolve_initial_portfolio(strategy, backtest, strategy_start_date,
                                             strategy_pricing_dates)
 
-        logging.info('Building simple and semi-deterministic triggers and actions')
+        logger.info('Building simple and semi-deterministic triggers and actions')
         self._build_simple_and_semi_triggers_and_actions(strategy, backtest, strategy_pricing_dates)
 
-        logging.info(f'Filtering strategy calculations to run from {strategy_start_date} to {strategy_end_date}')
+        logger.info(f'Filtering strategy calculations to run from {strategy_start_date} to {strategy_end_date}')
         backtest.portfolio_dict = defaultdict(Portfolio, {k: backtest.portfolio_dict[k]
                                                           for k in backtest.portfolio_dict
                                                           if strategy_start_date <= k <= strategy_end_date})
@@ -574,12 +574,11 @@ class GenericEngine(BacktestBaseEngine):
                                              for k in backtest.hedges
                                              if strategy_start_date <= k <= strategy_end_date})
 
-        logging.info('Pricing simple and semi-deterministic triggers and actions')
+        logger.info('Pricing simple and semi-deterministic triggers and actions')
         with self._trace('Pricing semi-det Triggers'):
             self._price_semi_det_triggers(backtest, risks)
 
-        logging.info('Scaling semi-deterministic triggers and actions and calculating path dependent triggers '
-                     'and actions')
+        logger.info('Scaling semi-determ triggers and actions and calculating path dependent triggers and actions')
         for d in strategy_pricing_dates:
             with self._trace('Process date') as scope:
                 if scope:
@@ -592,7 +591,7 @@ class GenericEngine(BacktestBaseEngine):
         with self._trace('Handle Cash'):
             self._handle_cash(backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value)
 
-        logging.info(f'Finished Backtest:- {dt.datetime.now()}')
+        logger.info(f'Finished Backtest:- {dt.datetime.now()}')
         return backtest
 
     def _resolve_initial_portfolio(self, strategy, backtest, strategy_start_date, strategy_pricing_dates):
@@ -662,7 +661,7 @@ class GenericEngine(BacktestBaseEngine):
                         p.results = port.calc(tuple(risks))
 
     def _process_triggers_and_actions_for_date(self, d, strategy, backtest, risks):
-        logging.info(f'{d}: Processing triggers and actions')
+        logger.info(f'{d}: Processing triggers and actions')
         # path dependent
         for trigger in strategy.triggers:
             if trigger.calc_type == CalcType.path_dependent:
@@ -746,7 +745,7 @@ class GenericEngine(BacktestBaseEngine):
                     backtest.cash_payments[hedge.exit_payment.effective_date].append(hedge.exit_payment)
 
     def _calc_new_trades(self, backtest, risks):
-        logging.info('Calculating and scaling newly added portfolio positions')
+        logger.info('Calculating and scaling newly added portfolio positions')
         # test to see if new trades have been added and calc
         with PricingContext():
             backtest.calc_calls += 1
@@ -762,7 +761,7 @@ class GenericEngine(BacktestBaseEngine):
                 leaves = []
                 for leaf in portfolio:
                     if leaf.name not in trades_for_date:
-                        logging.info(f'{day}: new portfolio position {leaf} scheduled for calculation')
+                        logger.info(f'{day}: new portfolio position {leaf} scheduled for calculation')
                         leaves.append(leaf)
 
                 if len(leaves):
@@ -770,12 +769,12 @@ class GenericEngine(BacktestBaseEngine):
                         leaves_by_date[day] = Portfolio(leaves).calc(tuple(risks))
                         backtest.calculations += len(leaves) * len(risks)
 
-        logging.info('Processing results for newly added portfolio positions')
+        logger.info('Processing results for newly added portfolio positions')
         for day, leaves in leaves_by_date.items():
             backtest.add_results(day, leaves)
 
     def _handle_cash(self, backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value):
-        logging.info('Calculating prices for cash payments')
+        logger.info('Calculating prices for cash payments')
         # run any additional calcs to handle cash scaling (e.g. unwinds)
         cash_results = {}
         cash_trades_by_date = defaultdict(list)

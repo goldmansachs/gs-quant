@@ -17,14 +17,18 @@ import datetime as dt
 from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 from queue import Queue as FifoQueue
 from typing import Iterable, TypeVar, Optional
 
 import numpy as np
 import pandas as pd
 
+from gs_quant.common import RiskMeasure
 from gs_quant.instrument import Cash
 from gs_quant.markets.portfolio import Portfolio
+from gs_quant.backtests.backtest_utils import make_list
 from gs_quant.backtests.core import ValuationMethod
 from gs_quant.backtests.data_handler import DataHandler
 from gs_quant.backtests.event import FillEvent
@@ -39,17 +43,22 @@ class BaseBacktest(ABC):
 TBaseBacktest = TypeVar('TBaseBacktest', bound='BaseBacktest')
 
 
+@dataclass_json
+@dataclass
 class BackTest(BaseBacktest):
-    def __init__(self, strategy, states, risks):
+    strategy: object
+    states: Iterable
+    risks: Iterable[RiskMeasure]
+
+    def __post_init__(self):
         self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
         self._cash_dict = {}  # cash by state
         self._hedges = defaultdict(list)  # list of Hedge by date
         self._cash_payments = defaultdict(list)  # list of cash payments (entry, unwind)
         self._transaction_costs = defaultdict(int)  # list of transaction costs by date
-        self._strategy = deepcopy(strategy)  # the strategy definition
-        self._states = states  # list of states
+        self.strategy = deepcopy(self.strategy)  # the strategy definition
         self._results = defaultdict(list)
-        self._risks = tuple(risks)  # list of risks to calculate
+        self.risks = make_list(self.risks)  # list of risks to calculate
         self._calc_calls = 0
         self._calculations = 0
 
@@ -86,19 +95,11 @@ class BackTest(BaseBacktest):
         self._hedges = hedges
 
     @property
-    def states(self):
-        return self._states
-
-    @property
     def results(self):
         return self._results
 
     def set_results(self, date, results):
         self._results[date] = results
-
-    @property
-    def risks(self):
-        return self._risks
 
     def add_results(self, date, results, replace=False):
         if date in self._results and len(self._results[date]) and not replace:
@@ -204,7 +205,8 @@ class BackTest(BaseBacktest):
         risk_measure_table = risk_measure_table.rename(columns={'pricing_date': 'Pricing Date',
                                                        'instrument_name': 'Instrument Name'})
         risk_measure_table = risk_measure_table.set_index(['Pricing Date', 'Instrument Name'])
-        risk_measure_table.columns = pd.MultiIndex.from_product([['Risk Measures'], risk_measure_table.columns])
+        risk_measure_table.columns = pd.MultiIndex.from_product(
+            [['Risk Measures'], [str(col) for col in risk_measure_table.columns]])
 
         risk_and_cp_joined = risk_measure_table.join(cp_table, how='outer')
 
@@ -260,40 +262,35 @@ class Hedge:
         self.exit_payment = exit_payment
 
 
+@dataclass_json()
+@dataclass
 class TransactionModel:
     def get_cost(self, state, backtest, info) -> float:
         pass
 
 
+@dataclass_json()
+@dataclass
 class ConstantTransactionModel(TransactionModel):
-    def __init__(self, cost):
-        self._cost = cost
+    cost: float = 0
 
     def get_cost(self, state, backtest, info) -> float:
-        return self._cost
+        return self.cost
 
 
+@dataclass_json
+@dataclass
 class PredefinedAssetBacktest(BaseBacktest):
-    """
-    :param data_handler: holds all the data required to run the backtest
-    :param performance: backtest values
-    :param cash_asset: currently restricted to USD non-accrual
-    :param holdings: a dictionary keyed by instruments with quantity values
-    :param historical_holdings: holdings for each backtest date
-    :param orders: a list of all the orders generated
-    :param initial_value: the initial value of the index
-    :param results: a dictionary which can be used to store intermediate results
-    """
+    data_handler: DataHandler
+    initial_value: float
 
-    def __init__(self, data_handler: DataHandler, initial_value: float):
-        self.data_handler = data_handler
+    def __post_init__(self):
         self.performance = pd.Series(dtype=float)
         self.cash_asset = Cash('USD')
         self.holdings = defaultdict(float)
         self.historical_holdings = pd.Series(dtype=float)
         self.historical_weights = pd.Series(dtype=float)
         self.orders = []
-        self.initial_value = initial_value
         self.results = {}
 
     def set_start_date(self, start: dt.date):

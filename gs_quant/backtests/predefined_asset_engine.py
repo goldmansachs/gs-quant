@@ -50,14 +50,14 @@ class AddTradeActionImpl(ActionHandler):
                                         quantity=quantity,
                                         generation_time=state,
                                         execution_datetime=state,
-                                        source=self.action._name))
+                                        source=self.action.name))
             if isinstance(self.action.trade_duration, dt.timedelta):
                 # create close order
                 orders.append(OrderAtMarket(instrument=pricable,
                                             quantity=quantity * -1,
                                             generation_time=state,
                                             execution_datetime=state + self.action.trade_duration,
-                                            source=self.action._name))
+                                            source=self.action.name))
         return orders
 
     def apply_action(self, state: dt.datetime, backtest: PredefinedAssetBacktest, info=None):

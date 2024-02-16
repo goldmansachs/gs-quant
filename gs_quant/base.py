@@ -47,7 +47,7 @@ def exclude_none(o):
     return o is None
 
 
-def exlude_always(_o):
+def exclude_always(_o):
     return True
 
 
@@ -91,7 +91,7 @@ def handle_camel_case_args(cls):
 
 
 field_metadata = config(exclude=exclude_none)
-name_metadata = config(exclude=exlude_always)
+name_metadata = config(exclude=exclude_always)
 
 
 class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'scenario', 'risk_measure'))):
@@ -350,6 +350,7 @@ class Base(ABC):
                 __setattr__(self, fld.name, __getattribute__(instance, fld.name))
 
 
+@dataclass_json
 @dataclass
 class Priceable(Base):
 

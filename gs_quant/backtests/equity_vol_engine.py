@@ -35,7 +35,7 @@ def is_synthetic_forward(priceable):
     is_syn_fwd = is_portfolio
     if is_portfolio:
         is_size_two = len(priceable) == 2
-        is_syn_fwd &= is_size_two
+        is_syn_fwd = is_size_two
         if is_size_two:
             has_two_eq_options = isinstance(priceable[0], EqOption) and isinstance(priceable[1], EqOption)
             is_syn_fwd &= has_two_eq_options
