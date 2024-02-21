@@ -71,6 +71,7 @@ class CustomHttpAdapter(requests.adapters.HTTPAdapter):
 
 class Domain:
     MDS_US_EAST = "MdsDomainEast"
+    MDS_WEB = "MdsWebDomain"
     APP = "AppDomain"
 
 
@@ -560,11 +561,19 @@ class GsSession(ContextBase):
                 return PassThroughSession(environment_or_domain, token, api_version=api_version,
                                           application=application, http_adapter=http_adapter)
         else:
-            try:
-                return KerberosSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter,
-                                       application_version=application_version, application=application)
-            except NameError:
-                raise MqUninitialisedError('Must specify client_id and client_secret')
+            if domain == Domain.MDS_WEB:
+                try:
+                    return MQLoginSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter,
+                                          application_version=application_version, application=application)
+                except NameError:
+                    raise MqUninitialisedError('Unable to obtain MarqueeLogin token. '
+                                               'Please use client_id and client_secret to make the query')
+            else:
+                try:
+                    return KerberosSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter,
+                                           application_version=application_version, application=application)
+                except NameError:
+                    raise MqUninitialisedError('Must specify client_id and client_secret')
 
     def is_internal(self) -> bool:
         return False
@@ -665,6 +674,24 @@ try:
                                                         value=self.csrf_token)
                 self._session.cookies.set_cookie(cookie)
                 self._session.headers.update({'X-MARQUEE-CSRF-TOKEN': self.csrf_token})
+
+except ModuleNotFoundError:
+    pass
+
+try:
+    from gs_quant_auth.kerberos.session_kerberos import MQLoginMixin
+
+    class MQLoginSession(MQLoginMixin, GsSession):
+
+        def __init__(self, environment_or_domain: str, api_version: str = API_VERSION,
+                     application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None,
+                     application_version: str = APP_VERSION):
+            domain, verify = self.domain_and_verify(environment_or_domain)
+            env_config = self._config_for_environment(environment_or_domain)
+            GsSession.__init__(self, env_config['MdsWebDomain'], environment_or_domain, api_version=api_version,
+                               application=application, verify=verify, http_adapter=http_adapter,
+                               application_version=application_version)
+
 
 except ModuleNotFoundError:
     pass

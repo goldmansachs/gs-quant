@@ -348,11 +348,7 @@ def _currency_to_tdapi_swap_rate_asset(asset_spec: ASSET_SPEC) -> str:
 
 
 def _currency_to_tdapi_swap_rate_asset_for_intraday(asset_spec: ASSET_SPEC) -> str:
-    asset = _asset_from_spec(asset_spec)
-    bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    # for each currency, get a dummy asset for checking availability
-    result = SUPPORTED_INTRADAY_CURRENCY_TO_DUMMY_SWAP_BBID.get(bbid, asset.get_marquee_id())
-    return result
+    return 'MACF6R4J5FY4KGBZ'
 
 
 def _currency_to_tdapi_asset_base(asset_spec: ASSET_SPEC, allowed_bbids=None) -> str:
@@ -1284,13 +1280,15 @@ def swap_rate(asset: Asset, swap_tenor: str, benchmark_type: str = None, floatin
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset_for_intraday,
-                                 query_type=QueryType.SWAP_RATE)])
+                                 query_type=QueryType.SPOT)])
 def swap_rate_calc(asset: Asset, swap_tenor: str, benchmark_type: str = None, floating_rate_tenor: str = None,
                    forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = _ClearingHouse.LCH,
                    location: PricingLocation = None, *,
                    source: str = None, real_time: bool = False) -> Series:
     """
     GS intra-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
+    This API runs on-the-fly calculations
+
 
     :param asset: asset object loaded from security master
     :param swap_tenor: relative date representation of expiration date e.g. 1m
@@ -1323,12 +1321,13 @@ def _csa_default(csa=None, currency=None):
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset,
-                                 query_type=QueryType.SWAP_RATE)])
+              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset_for_intraday,
+                                 query_type=QueryType.SPOT)])
 def forward_rate(asset: Asset, forward_start_tenor: str = None, forward_term: str = None, csa: str = None,
                  close_location: str = None, *, source: str = None, real_time: bool = False) -> Series:
     """
     GS Forward Rate across major currencies.
+    This API computes forward rates off stored forward/discount curves
 
 
     :param asset: asset object loaded from security master
@@ -1360,12 +1359,13 @@ def forward_rate(asset: Asset, forward_start_tenor: str = None, forward_term: st
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset,
-                                 query_type=QueryType.SWAP_RATE)])
+              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset_for_intraday,
+                                 query_type=QueryType.SPOT)])
 def discount_factor(asset: Asset, tenor: str = None, csa: str = None, close_location: str = None,
                     *, source: str = None, real_time: bool = False) -> Series:
     """
     GS Discount Factor across major currencies.
+    This API computes discount factor off stored forward/discount curves
 
 
     :param asset: asset object loaded from security master
@@ -1394,12 +1394,13 @@ def discount_factor(asset: Asset, tenor: str = None, csa: str = None, close_loca
 
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset,
-                                 query_type=QueryType.SWAP_RATE)])
+              [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset_for_intraday,
+                                 query_type=QueryType.SPOT)])
 def instantaneous_forward_rate(asset: Asset, tenor: str = None, csa: str = None, close_location: str = None,
                                *, source: str = None, real_time: bool = False) -> Series:
     """
     GS Floating Rate Benchmark annualised instantaneous forward rates across major currencies.
+    This API computes IFR off stored forward/discount curves
 
 
     :param asset: asset object loaded from security master
@@ -1435,6 +1436,7 @@ def index_forward_rate(asset: Asset, forward_start_tenor: str = None, benchmark_
                        source: str = None, real_time: bool = False) -> Series:
     """
     GS annualised forward rates across floating rate benchmark
+    This API computes index forward rate off stored index forward curves
 
 
     :param asset: asset object loaded from security master
