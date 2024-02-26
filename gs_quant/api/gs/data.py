@@ -481,32 +481,6 @@ class GsDataApi(DataApi):
         return d.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     @classmethod
-    def _resolve_default_csa_for_builder(cls, builder):
-        dict_builder = builder.to_dict()
-        properties = dict_builder.get('properties')
-
-        if not properties:
-            return 'USD-1'
-
-        clearing_house = properties.get('clearinghouse')
-
-        if 'payccy' in properties:
-            pay_ccy = properties['payccy']
-            if pay_ccy == 'USD':
-                default_csa = 'USD-SOFR'
-            elif pay_ccy == 'EUR':
-                default_csa = 'EUR-EUROSTR'
-            else:
-                default_csa = pay_ccy + "-1"
-
-            if clearing_house and clearing_house != 'LCH':
-                default_csa = f'CB LCH/{clearing_house.upper()} {default_csa}'
-
-            return default_csa
-        else:
-            return "USD-1"
-
-    @classmethod
     def get_mxapi_curve_measure(cls, curve_type=None, curve_asset=None, curve_point=None, curve_tags=None,
                                 measure=None, start_time=None, end_time=None, request_id=None,
                                 close_location=None, real_time=None) -> pd.DataFrame:
@@ -604,7 +578,7 @@ class GsDataApi(DataApi):
                 end_time = DataContext.current.end_date
 
         if not csa:
-            csa = cls._resolve_default_csa_for_builder(builder)
+            csa = 'Default'
 
         if not real_time and not close_location:
             close_location = 'NYC'

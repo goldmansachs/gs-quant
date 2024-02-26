@@ -411,13 +411,11 @@ def test_swap_rate_calc(mocker):
     except MqValueError:
         assert True
 
-    asset = Currency('MA890', 'EGP')
-    bbid_mock.return_value = 'EGP'
     try:
-        val = tm_rates.swap_rate_calc(asset, swap_tenor='10y', benchmark_type='SOFR', real_time=True)
-        assert False
-    except NotImplementedError:
+        val = tm_rates.swap_rate_calc(asset, swap_tenor='10y', benchmark_type='SOFR', csa='CME', real_time=True)
         assert True
+    except MqValueError:
+        assert False
 
     replace.restore()
 
