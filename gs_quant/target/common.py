@@ -703,6 +703,7 @@ class Currency(EnumBase, Enum):
     DEM = 'DEM'
     DIJ = 'DIJ'
     DJF = 'DJF'
+    DJE = 'DJE'
     DKK = 'DKK'
     DOP = 'DOP'
     DZD = 'DZD'
@@ -1006,6 +1007,28 @@ class EqBasketHistoryMethodology(EnumBase, Enum):
 
     Backcast = 'Backcast'
     Backtest = 'Backtest'
+    Custom = 'Custom'    
+
+
+class EqBasketHolidayCalendar(EnumBase, Enum):    
+    
+    """Holiday calendar by exchange."""
+
+    NYSE = 'NYSE'
+    LNSE = 'LNSE'
+    HKGE = 'HKGE'    
+
+
+class EqBasketRebalanceFrequencyRule(EnumBase, Enum):    
+    
+    """Expected rebalance frequency for a basket."""
+
+    First_Biz_Day_of_Month = 'First Biz Day of Month'
+    Last_Biz_Day_of_Month = 'Last Biz Day of Month'
+    First_Biz_Day_of_Quarter = 'First Biz Day of Quarter'
+    Last_Biz_Day_of_Quarter = 'Last Biz Day of Quarter'
+    Last_Biz_Day_of_Quarter_first_Month = 'Last Biz Day of Quarter first Month'
+    Biweekly_Based_on_Last_Rebal = 'Biweekly Based on Last Rebal'
     Custom = 'Custom'    
 
 
@@ -4430,14 +4453,6 @@ class StrikeMethodType(EnumBase, Enum):
     Fixed = 'Fixed'    
 
 
-class StrikeType(EnumBase, Enum):    
-    
-    """Style type, either spread of price"""
-
-    Spread = 'Spread'
-    Price = 'Price'    
-
-
 class SwapClearingHouse(EnumBase, Enum):    
     
     """Swap Clearing House"""
@@ -4538,7 +4553,7 @@ class ValuationTime(EnumBase, Enum):
     SQ = 'SQ'
     MktPreOpen = 'MktPreOpen'
     MktPrevClose = 'MktPrevClose'
-    HedgeUnwind = 'HedgeUnwind'    
+    Hedge_Unwind = 'Hedge Unwind'    
 
 
 class VarianceConvention(EnumBase, Enum):    
@@ -5306,11 +5321,10 @@ class EqBasketBacktestParameters(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class EqBasketRebalanceFrequency(Base):
+class EqBasketRebalanceCustomFrequencyRule(Base):
     frequency_interval: FrequencyInterval = field(default=None, metadata=field_metadata)
     every: float = field(default=1, metadata=field_metadata)
     on: Union[float, str] = field(default=None, metadata=field_metadata)
-    holiday_calendar: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5661,6 +5675,196 @@ class TimestampedMarket(BaseMarket):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class AssetStatsRequest(Base):
+    last_updated_time: Optional[DateRange] = field(default=None, metadata=field_metadata)
+    period: Optional[AssetStatsPeriod] = field(default=None, metadata=field_metadata)
+    type_: Optional[AssetStatsType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    stats: Optional[PerformanceStatsRequest] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CSLCurrencyArray(Base):
+    currency_values: Optional[Tuple[CSLCurrency, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CSLSchedule(Base):
+    first_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    last_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    calendar_name: Optional[str] = field(default=None, metadata=field_metadata)
+    period: Optional[str] = field(default=None, metadata=field_metadata)
+    delay: Optional[str] = field(default=None, metadata=field_metadata)
+    business_day_convention: Optional[str] = field(default=None, metadata=field_metadata)
+    day_count_convention: Optional[str] = field(default=None, metadata=field_metadata)
+    days_per_term: Optional[str] = field(default=None, metadata=field_metadata)
+    delay_business_day_convention: Optional[str] = field(default=None, metadata=field_metadata)
+    delay_calendar_name: Optional[str] = field(default=None, metadata=field_metadata)
+    has_reset_date: Optional[bool] = field(default=None, metadata=field_metadata)
+    term_formula: Optional[str] = field(default=None, metadata=field_metadata)
+    extra_dates: Optional[Tuple[CSLDateArrayNamedParam, ...]] = field(default=None, metadata=field_metadata)
+    extra_dates_by_offset: Optional[Tuple[CSLSymCaseNamedParam, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CurveScenario(Scenario):
+    market_data_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
+    parallel_shift: Optional[float] = field(default=None, metadata=field_metadata)
+    curve_shift: Optional[float] = field(default=None, metadata=field_metadata)
+    pivot_point: Optional[float] = field(default=None, metadata=field_metadata)
+    tenor_start: Optional[float] = field(default=None, metadata=field_metadata)
+    tenor_end: Optional[float] = field(default=None, metadata=field_metadata)
+    shock_type: Optional[MarketDataShockType] = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='CurveScenario', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class EqBasketRebalanceFrequency(Base):
+    frequency_rule: DictBase = field(default=None, metadata=field_metadata)
+    holiday_calendar: Optional[EqBasketHolidayCalendar] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+class FieldFilterMap(DictBase):
+    _PROPERTIES = {'internal_index_calc_region', 'issue_status_date', 'pl_id', 'last_returns_start_date', 'amount_outstanding', 'asset_classifications_gics_sub_industry', 'mdapi_class', 'data_set_ids', 'call_first_date', 'pb_client_id', 'asset_parameters_start', 'owner_id', 'economic_terms_hash', 'sec_db', 'objective', 'simon_intl_asset_tags', 'private_placement_type', 'hedge_notional', 'rank', 'data_set_category', 'pair_calculation', 'asset_parameters_index_family', 'created_by_id', 'vehicle_type', 'market_data_type', 'asset_parameters_payer_day_count_fraction', 'point_class', 'asset_parameters_underlier_type', 'asset_parameters_cap_floor', 'minimum_increment', 'asset_parameters_payer_currency', 'settlement_date', 'hedge_volatility', 'version', 'tags', 'asset_classifications_gics_industry_group', 'market_data_asset', 'asset_classifications_is_primary', 'styles', 'asset_parameters_total_quantity', 'short_name', 'asset_classifications_underliers_asset_class', 'calculation_region', 'eid', 'jsn', 'mkt_quoting_style', 'hurdle_type', 'mic', 'ps_id', 'issue_status', 'region_code', 'dollar_cross', 'portfolio_type', 'vendor', 'popularity', 'term', 'currency', 'real_time_restriction_status', 'asset_parameters_clearing_house', 'rating_fitch', 'non_symbol_dimensions', 'asset_parameters_option_style', 'share_class_type', 'asset_parameters_put_amount', 'asset_parameters_underlier', 'next_rebalance_date', 'asset_parameters_floating_rate_designated_maturity', 'target_notional', 'asset_parameters_tenor', 'mkt_class', 'delisted', 'asset_classifications_digital_asset_class', 'last_updated_since', 'regional_focus', 'asset_parameters_payer_designated_maturity', 'tsdb_shortname', 'seasonal_adjustment_short', 'asset_parameters_exchange_currency', 'asset_classifications_country_name', 'management_fee', 'asset_parameters_settlement_date', 'rating_moodys', 'simon_id', 'development_status', 'cusip', 'notes', 'tags_to_exclude', 'asset_parameters_floating_rate_option', 'internal_index_calc_agent', 'last_rebalance_date', 'rating_second_highest', 'asset_classifications_country_code', 'frequency', 'option_type', 'data_set_sub_category', 'is_live', 'is_legacy_pair_basket', 'issuer_type', 'asset_parameters_pricing_location', 'plot_id', 'asset_parameters_coupon', 'asset_parameters_identifier', 'asset_parameters_last_fixing_date', 'data_product', 'mq_symbol', 'asset_parameters_method_of_settlement', 'sectors', 'redemption_notice_period', 'multiplier', 'asset_parameters_payer_rate_option', 'market_data_point', 'external', 'wpk', 'sts_fx_currency', 'hedge_annualized_volatility', 'fix_order_routing_region', 'name', 'asset_parameters_expiration_date', 'aum', 'exchange', 'folder_name', 'region', 'cid', 'onboarded', 'live_date', 'issue_price', 'sink_factor', 'underlying_data_set_id', 'asset_parameters_notional_amount_in_other_currency', 'asset_parameters_payer_frequency', 'prime_id', 'asset_classifications_gics_sector', 'asset_parameters_pair', 'sts_asset_name', 'description', 'asset_classifications_is_country_primary', 'title', 'net_exposure_classification', 'asset_parameters_strike_price', 'coupon_type', 'last_updated_by_id', 'asset_parameters_forward_price', 'clone_parent_id', 'company', 'gate_type', 'issue_date', 'expiration_date', 'coverage', 'ticker', 'asset_parameters_receiver_rate_option', 'coin_metrics_id', 'call_last_date', 'asset_parameters_payer_spread', 'sts_rates_country', 'asset_parameters_premium_payment_date', 'latest_execution_time', 'asset_parameters_forward_rate', 'asset_parameters_receiver_designated_maturity', 'asset_classifications_digital_asset_industry', 'gate', 'multi_tags', 'gsn', 'gss', 'rating_linear', 'asset_class', 'asset_parameters_index', 'cm_id', 'asset_classifications_vendor', 'type', 'gsideid', 'mdapi', 'ric', 'issuer', 'position_source_id', 'measures', 'asset_parameters_floating_rate_day_count_fraction', 'asset_parameters_notional_amount', 'strategy_aum', 'action', 'id', 'asset_parameters_call_amount', 'asset_parameters_seniority', 'redemption_date', 'identifier', 'index_create_source', 'sec_name', 'sub_region', 'asset_parameters_receiver_day_count_fraction', 'asset_parameters_index2_tenor', 'asset_parameters_notional_currency', 'sedol', 'mkt_asset', 'rating_standard_and_poors', 'asset_types', 'bcid', 'asset_parameters_credit_index_series', 'gsid', 'tdapi', 'asset_classifications_digital_asset_subsector', 'last_updated_message', 'rcic', 'trading_restriction', 'status', 'name_raw', 'asset_parameters_pay_or_receive', 'domains_data', 'client_name', 'asset_parameters_index_series', 'asset_classifications_gics_industry', 'on_behalf_of', 'increment', 'accrued_interest_standard', 'enabled', 'sts_commodity', 'sectors_raw', 'sts_commodity_sector', 'asset_parameters_receiver_frequency', 'position_source_name', 'gsid_equivalent', 'categories', 'symbol_dimensions', 'ext_mkt_asset', 'asset_parameters_fixed_rate_frequency', 'coupon', 'side_pocket', 'compliance_restricted_status', 'quoting_style', 'is_entity', 'scenario_group_id', 'asset_parameters_trade_as', 'redemption_period', 'asset_parameters_issuer_type', 'sts_credit_market', 'bbid', 'asset_classifications_risk_country_code', 'asset_parameters_receiver_currency', 'sts_em_dm', 'asset_classifications_digital_asset_sector', 'issue_size', 'returns_enabled', 'seniority', 'asset_parameters_settlement', 'asset_parameters_expiration_time', 'primary_country_ric', 'is_pair_basket', 'asset_parameters_index_version', 'asset_parameters_commodity_reference_price', 'asset_classifications_digital_asset_market', 'default_backcast', 'asset_parameters_number_of_shares', 'use_machine_learning', 'performance_fee', 'report_type', 'lockup_type', 'lockup', 'underlying_asset_ids', 'asset_parameters_fee_currency', 'encoded_stats', 'pnode_id', 'backtest_type', 'asset_parameters_issuer', 'exchange_code', 'asset_parameters_strike', 'oe_id', 'asset_parameters_termination_date', 'resource', 'asset_parameters_receiver_spread', 'bbid_equivalent', 'hurdle', 'asset_parameters_effective_date', 'valoren', 'asset_parameters_number_of_options', 'asset_parameters_fixed_rate_day_count_fraction', 'auto_tags', 'short_description', 'ext_mkt_class', 'mkt_point1', 'portfolio_managers', 'asset_parameters_commodity_sector', 'hedge_tracking_error', 'asset_parameters_put_currency', 'asset_parameters_coupon_type', 'supra_strategy', 'term_status', 'wi_id', 'market_cap_category', 'asset_parameters_call_currency', 'mkt_point3', 'display_id', 'mkt_point2', 'strike_price', 'mkt_point4', 'risk_packages', 'units', 'em_id', 'sts_credit_region', 'country_id', 'ext_mkt_point3', 'asset_classifications_risk_country_name', 'asset_parameters_vendor', 'asset_parameters_index1_tenor', 'mkt_type', 'is_public', 'alias', 'ext_mkt_point1', 'product_type', 'ext_mkt_point2', 'sub_region_code', 'asset_parameters_option_type', 'asset_parameters_fixed_rate', 'last_returns_end_date', 'tsdb_synced_symbol', 'position_source_type', 'asset_parameters_multiplier', 'minimum_denomination', 'flagship', 'lms_id', 'cross', 'in_code', 'asset_parameters_strike_price_relative', 'sts_rates_maturity', 'sts_include_sstk_analytics', 'position_source', 'listed', 'non_owner_id', 'latest_end_date', 'shock_style', 'g10_currency', 'strategy', 'methodology', 'isin', 'asset_parameters_strike_type'}
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class IndexCurveShift(Scenario):
+    market_data_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
+    freeze_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
+    annualised_parallel_shift: Optional[float] = field(default=None, metadata=field_metadata)
+    annualised_slope_shift: Optional[float] = field(default=None, metadata=field_metadata)
+    cutoff: Optional[float] = field(default=None, metadata=field_metadata)
+    floor: Optional[float] = field(default=None, metadata=field_metadata)
+    tenor: Optional[str] = field(default=None, metadata=field_metadata)
+    rate_option: Optional[str] = field(default=None, metadata=field_metadata)
+    bucket_shift: Optional[float] = field(default=None, metadata=field_metadata)
+    bucket_start: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    bucket_end: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='IndexCurveShift', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class MarketDataPatternAndShock(Base):
+    pattern: MarketDataPattern = field(default=None, metadata=field_metadata)
+    shock: MarketDataShock = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class MarketDataVolShockScenario(Scenario):
+    pattern: MarketDataPattern = field(default=None, metadata=field_metadata)
+    shock_type: MarketDataShockType = field(default=None, metadata=field_metadata)
+    vol_levels: Tuple[MarketDataVolSlice, ...] = field(default=None, metadata=field_metadata)
+    ref_spot: float = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='MarketDataVolShockScenario', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class PCOExposureLeg(Base):
+    local_to_base_rate: Optional[str] = field(default=None, metadata=field_metadata)
+    local_nav_limits: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    base_nav_limits: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    all_approved_hedge_ratio: Optional[str] = field(default=None, metadata=field_metadata)
+    show_all_approved_hedge_ratio: Optional[bool] = field(default=None, metadata=field_metadata)
+    hedge_ratio: Optional[str] = field(default=None, metadata=field_metadata)
+    exposure_ratio: Optional[str] = field(default=None, metadata=field_metadata)
+    local_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    target_ratio: Optional[str] = field(default=None, metadata=field_metadata)
+    benchmark: Optional[PCOBenchmark] = field(default=None, metadata=field_metadata)
+    long_rebalance_threshold: Optional[str] = field(default=None, metadata=field_metadata)
+    short_rebalance_threshold: Optional[str] = field(default=None, metadata=field_metadata)
+    base_nav: Optional[str] = field(default=None, metadata=field_metadata)
+    local_nav: Optional[str] = field(default=None, metadata=field_metadata)
+    base_fx_forward: Optional[str] = field(default=None, metadata=field_metadata)
+    local_fx_forward: Optional[str] = field(default=None, metadata=field_metadata)
+    auto_roll: Optional[bool] = field(default=None, metadata=field_metadata)
+    exposure_currencies: Optional[Tuple[Currency, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class PCOSecurityWeight(Base):
+    security_type: Optional[str] = field(default=None, metadata=field_metadata)
+    currency_weights: Optional[Tuple[PCOCurrencyWeight, ...]] = field(default=None, metadata=field_metadata)
+    settlement_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class User(Base):
+    company: str = field(default=None, metadata=field_metadata)
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    country: str = field(default=None, metadata=field_metadata)
+    city: str = field(default=None, metadata=field_metadata)
+    region: str = field(default=None, metadata=field_metadata)
+    email: str = field(default=None, metadata=field_metadata)
+    name: str = field(default=None, metadata=field_metadata)
+    internal: Optional[bool] = field(default=None, metadata=field_metadata)
+    system_user: Optional[bool] = field(default=None, metadata=field_metadata)
+    app_user: Optional[bool] = field(default=None, metadata=field_metadata)
+    analytics_id: Optional[str] = field(default=None, metadata=field_metadata)
+    eaa_company: Optional[str] = field(default=None, metadata=field_metadata)
+    root_oe_id: Optional[str] = field(default=None, metadata=config(field_name='rootOEId', exclude=exclude_none))
+    oe_id: Optional[str] = field(default=None, metadata=field_metadata)
+    drg_id: Optional[str] = field(default=None, metadata=field_metadata)
+    root_oe_name: Optional[str] = field(default=None, metadata=config(field_name='rootOEName', exclude=exclude_none))
+    oe_name: Optional[str] = field(default=None, metadata=field_metadata)
+    oe_alias: Optional[int] = field(default=None, metadata=field_metadata)
+    coverage: Optional[Tuple[DictBase, ...]] = field(default=None, metadata=field_metadata)
+    internal_email: Optional[str] = field(default=None, metadata=field_metadata)
+    kerberos: Optional[str] = field(default=None, metadata=field_metadata)
+    first_name: Optional[str] = field(default=None, metadata=field_metadata)
+    last_name: Optional[str] = field(default=None, metadata=field_metadata)
+    internal_id: Optional[str] = field(default=None, metadata=config(field_name='internalID', exclude=exclude_none))
+    mi_fidii_trade_idea_declined: Optional[str] = field(default=None, metadata=config(field_name='miFIDIITradeIdeaDeclined', exclude=exclude_none))
+    department_code: Optional[str] = field(default=None, metadata=field_metadata)
+    department_name: Optional[str] = field(default=None, metadata=field_metadata)
+    division_name: Optional[str] = field(default=None, metadata=field_metadata)
+    business_unit: Optional[str] = field(default=None, metadata=field_metadata)
+    title: Optional[str] = field(default=None, metadata=field_metadata)
+    pmd: Optional[bool] = field(default=None, metadata=field_metadata)
+    login: Optional[str] = field(default=None, metadata=field_metadata)
+    tokens: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    roles: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    groups: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    app_managers: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class AssetParameters(Base):
     basket_type: Optional[str] = field(default=None, metadata=field_metadata)
     style: Optional[str] = field(default=None, metadata=field_metadata)
@@ -5787,55 +5991,8 @@ class AssetParameters(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class AssetStatsRequest(Base):
-    last_updated_time: Optional[DateRange] = field(default=None, metadata=field_metadata)
-    period: Optional[AssetStatsPeriod] = field(default=None, metadata=field_metadata)
-    type_: Optional[AssetStatsType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
-    stats: Optional[PerformanceStatsRequest] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class CSLCurrencyArray(Base):
-    currency_values: Optional[Tuple[CSLCurrency, ...]] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class CSLSchedule(Base):
-    first_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    last_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    calendar_name: Optional[str] = field(default=None, metadata=field_metadata)
-    period: Optional[str] = field(default=None, metadata=field_metadata)
-    delay: Optional[str] = field(default=None, metadata=field_metadata)
-    business_day_convention: Optional[str] = field(default=None, metadata=field_metadata)
-    day_count_convention: Optional[str] = field(default=None, metadata=field_metadata)
-    days_per_term: Optional[str] = field(default=None, metadata=field_metadata)
-    delay_business_day_convention: Optional[str] = field(default=None, metadata=field_metadata)
-    delay_calendar_name: Optional[str] = field(default=None, metadata=field_metadata)
-    has_reset_date: Optional[bool] = field(default=None, metadata=field_metadata)
-    term_formula: Optional[str] = field(default=None, metadata=field_metadata)
-    extra_dates: Optional[Tuple[CSLDateArrayNamedParam, ...]] = field(default=None, metadata=field_metadata)
-    extra_dates_by_offset: Optional[Tuple[CSLSymCaseNamedParam, ...]] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class CurveScenario(Scenario):
-    market_data_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
-    parallel_shift: Optional[float] = field(default=None, metadata=field_metadata)
-    curve_shift: Optional[float] = field(default=None, metadata=field_metadata)
-    pivot_point: Optional[float] = field(default=None, metadata=field_metadata)
-    tenor_start: Optional[float] = field(default=None, metadata=field_metadata)
-    tenor_end: Optional[float] = field(default=None, metadata=field_metadata)
-    shock_type: Optional[MarketDataShockType] = field(default=None, metadata=field_metadata)
-    scenario_type: Optional[str] = field(init=False, default='CurveScenario', metadata=field_metadata)
+class CSLScheduleArray(Base):
+    schedule_values: Optional[Tuple[CSLSchedule, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5845,160 +6002,6 @@ class CurveScenario(Scenario):
 class EqBasketRebalanceCalendar(Base):
     frequency_rule: Optional[EqBasketRebalanceFrequency] = field(default=None, metadata=field_metadata)
     date_override: Optional[EqBasketRebalanceDateOverride] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-class FieldFilterMap(DictBase):
-    _PROPERTIES = {'internal_index_calc_region', 'issue_status_date', 'pl_id', 'last_returns_start_date', 'amount_outstanding', 'asset_classifications_gics_sub_industry', 'mdapi_class', 'data_set_ids', 'call_first_date', 'pb_client_id', 'asset_parameters_start', 'owner_id', 'economic_terms_hash', 'sec_db', 'objective', 'simon_intl_asset_tags', 'private_placement_type', 'hedge_notional', 'rank', 'data_set_category', 'pair_calculation', 'asset_parameters_index_family', 'created_by_id', 'vehicle_type', 'market_data_type', 'asset_parameters_payer_day_count_fraction', 'point_class', 'asset_parameters_underlier_type', 'asset_parameters_cap_floor', 'minimum_increment', 'asset_parameters_payer_currency', 'settlement_date', 'hedge_volatility', 'version', 'tags', 'asset_classifications_gics_industry_group', 'market_data_asset', 'asset_classifications_is_primary', 'styles', 'asset_parameters_total_quantity', 'short_name', 'asset_classifications_underliers_asset_class', 'calculation_region', 'eid', 'jsn', 'mkt_quoting_style', 'hurdle_type', 'mic', 'ps_id', 'issue_status', 'region_code', 'dollar_cross', 'portfolio_type', 'vendor', 'popularity', 'term', 'currency', 'real_time_restriction_status', 'asset_parameters_clearing_house', 'rating_fitch', 'non_symbol_dimensions', 'asset_parameters_option_style', 'share_class_type', 'asset_parameters_put_amount', 'asset_parameters_underlier', 'next_rebalance_date', 'asset_parameters_floating_rate_designated_maturity', 'target_notional', 'asset_parameters_tenor', 'mkt_class', 'delisted', 'asset_classifications_digital_asset_class', 'last_updated_since', 'regional_focus', 'asset_parameters_payer_designated_maturity', 'tsdb_shortname', 'seasonal_adjustment_short', 'asset_parameters_exchange_currency', 'asset_classifications_country_name', 'management_fee', 'asset_parameters_settlement_date', 'rating_moodys', 'simon_id', 'development_status', 'cusip', 'notes', 'tags_to_exclude', 'asset_parameters_floating_rate_option', 'internal_index_calc_agent', 'last_rebalance_date', 'rating_second_highest', 'asset_classifications_country_code', 'frequency', 'option_type', 'data_set_sub_category', 'is_live', 'is_legacy_pair_basket', 'issuer_type', 'asset_parameters_pricing_location', 'plot_id', 'asset_parameters_coupon', 'asset_parameters_identifier', 'asset_parameters_last_fixing_date', 'data_product', 'mq_symbol', 'asset_parameters_method_of_settlement', 'sectors', 'redemption_notice_period', 'multiplier', 'asset_parameters_payer_rate_option', 'market_data_point', 'external', 'wpk', 'sts_fx_currency', 'hedge_annualized_volatility', 'fix_order_routing_region', 'name', 'asset_parameters_expiration_date', 'aum', 'exchange', 'folder_name', 'region', 'cid', 'onboarded', 'live_date', 'issue_price', 'sink_factor', 'underlying_data_set_id', 'asset_parameters_notional_amount_in_other_currency', 'asset_parameters_payer_frequency', 'prime_id', 'asset_classifications_gics_sector', 'asset_parameters_pair', 'sts_asset_name', 'description', 'asset_classifications_is_country_primary', 'title', 'net_exposure_classification', 'asset_parameters_strike_price', 'coupon_type', 'last_updated_by_id', 'asset_parameters_forward_price', 'clone_parent_id', 'company', 'gate_type', 'issue_date', 'expiration_date', 'coverage', 'ticker', 'asset_parameters_receiver_rate_option', 'coin_metrics_id', 'call_last_date', 'asset_parameters_payer_spread', 'sts_rates_country', 'asset_parameters_premium_payment_date', 'latest_execution_time', 'asset_parameters_forward_rate', 'asset_parameters_receiver_designated_maturity', 'asset_classifications_digital_asset_industry', 'gate', 'multi_tags', 'gsn', 'gss', 'rating_linear', 'asset_class', 'asset_parameters_index', 'cm_id', 'asset_classifications_vendor', 'type', 'gsideid', 'mdapi', 'ric', 'issuer', 'position_source_id', 'measures', 'asset_parameters_floating_rate_day_count_fraction', 'asset_parameters_notional_amount', 'strategy_aum', 'action', 'id', 'asset_parameters_call_amount', 'asset_parameters_seniority', 'redemption_date', 'identifier', 'index_create_source', 'sec_name', 'sub_region', 'asset_parameters_receiver_day_count_fraction', 'asset_parameters_index2_tenor', 'asset_parameters_notional_currency', 'sedol', 'mkt_asset', 'rating_standard_and_poors', 'asset_types', 'bcid', 'asset_parameters_credit_index_series', 'gsid', 'tdapi', 'asset_classifications_digital_asset_subsector', 'last_updated_message', 'rcic', 'trading_restriction', 'name_raw', 'status', 'asset_parameters_pay_or_receive', 'domains_data', 'client_name', 'asset_parameters_index_series', 'asset_classifications_gics_industry', 'on_behalf_of', 'increment', 'accrued_interest_standard', 'enabled', 'sts_commodity', 'sectors_raw', 'sts_commodity_sector', 'asset_parameters_receiver_frequency', 'position_source_name', 'gsid_equivalent', 'categories', 'symbol_dimensions', 'ext_mkt_asset', 'asset_parameters_fixed_rate_frequency', 'coupon', 'side_pocket', 'compliance_restricted_status', 'quoting_style', 'is_entity', 'scenario_group_id', 'asset_parameters_trade_as', 'redemption_period', 'asset_parameters_issuer_type', 'sts_credit_market', 'bbid', 'asset_classifications_risk_country_code', 'asset_parameters_receiver_currency', 'sts_em_dm', 'asset_classifications_digital_asset_sector', 'issue_size', 'returns_enabled', 'seniority', 'asset_parameters_settlement', 'asset_parameters_expiration_time', 'primary_country_ric', 'is_pair_basket', 'asset_parameters_index_version', 'asset_parameters_commodity_reference_price', 'asset_classifications_digital_asset_market', 'default_backcast', 'asset_parameters_number_of_shares', 'use_machine_learning', 'performance_fee', 'report_type', 'lockup_type', 'lockup', 'underlying_asset_ids', 'asset_parameters_fee_currency', 'encoded_stats', 'pnode_id', 'backtest_type', 'asset_parameters_issuer', 'exchange_code', 'asset_parameters_strike', 'oe_id', 'asset_parameters_termination_date', 'resource', 'asset_parameters_receiver_spread', 'bbid_equivalent', 'hurdle', 'asset_parameters_effective_date', 'valoren', 'asset_parameters_number_of_options', 'asset_parameters_fixed_rate_day_count_fraction', 'auto_tags', 'short_description', 'ext_mkt_class', 'mkt_point1', 'portfolio_managers', 'asset_parameters_commodity_sector', 'hedge_tracking_error', 'asset_parameters_put_currency', 'asset_parameters_coupon_type', 'supra_strategy', 'term_status', 'wi_id', 'market_cap_category', 'asset_parameters_call_currency', 'mkt_point3', 'display_id', 'mkt_point2', 'strike_price', 'mkt_point4', 'risk_packages', 'units', 'em_id', 'sts_credit_region', 'country_id', 'ext_mkt_point3', 'asset_classifications_risk_country_name', 'asset_parameters_vendor', 'asset_parameters_index1_tenor', 'mkt_type', 'is_public', 'alias', 'ext_mkt_point1', 'product_type', 'sub_region_code', 'ext_mkt_point2', 'asset_parameters_option_type', 'asset_parameters_fixed_rate', 'last_returns_end_date', 'tsdb_synced_symbol', 'position_source_type', 'asset_parameters_multiplier', 'minimum_denomination', 'flagship', 'lms_id', 'cross', 'in_code', 'asset_parameters_strike_price_relative', 'sts_rates_maturity', 'sts_include_sstk_analytics', 'position_source', 'listed', 'non_owner_id', 'latest_end_date', 'shock_style', 'g10_currency', 'strategy', 'methodology', 'isin', 'asset_parameters_strike_type'}
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class IndexCurveShift(Scenario):
-    market_data_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
-    freeze_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
-    annualised_parallel_shift: Optional[float] = field(default=None, metadata=field_metadata)
-    annualised_slope_shift: Optional[float] = field(default=None, metadata=field_metadata)
-    cutoff: Optional[float] = field(default=None, metadata=field_metadata)
-    floor: Optional[float] = field(default=None, metadata=field_metadata)
-    tenor: Optional[str] = field(default=None, metadata=field_metadata)
-    rate_option: Optional[str] = field(default=None, metadata=field_metadata)
-    bucket_shift: Optional[float] = field(default=None, metadata=field_metadata)
-    bucket_start: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    bucket_end: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    scenario_type: Optional[str] = field(init=False, default='IndexCurveShift', metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class MarketDataPatternAndShock(Base):
-    pattern: MarketDataPattern = field(default=None, metadata=field_metadata)
-    shock: MarketDataShock = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class MarketDataVolShockScenario(Scenario):
-    pattern: MarketDataPattern = field(default=None, metadata=field_metadata)
-    shock_type: MarketDataShockType = field(default=None, metadata=field_metadata)
-    vol_levels: Tuple[MarketDataVolSlice, ...] = field(default=None, metadata=field_metadata)
-    ref_spot: float = field(default=None, metadata=field_metadata)
-    scenario_type: Optional[str] = field(init=False, default='MarketDataVolShockScenario', metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class PCOExposureLeg(Base):
-    local_to_base_rate: Optional[str] = field(default=None, metadata=field_metadata)
-    local_nav_limits: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    base_nav_limits: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    all_approved_hedge_ratio: Optional[str] = field(default=None, metadata=field_metadata)
-    show_all_approved_hedge_ratio: Optional[bool] = field(default=None, metadata=field_metadata)
-    hedge_ratio: Optional[str] = field(default=None, metadata=field_metadata)
-    exposure_ratio: Optional[str] = field(default=None, metadata=field_metadata)
-    local_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
-    target_ratio: Optional[str] = field(default=None, metadata=field_metadata)
-    benchmark: Optional[PCOBenchmark] = field(default=None, metadata=field_metadata)
-    long_rebalance_threshold: Optional[str] = field(default=None, metadata=field_metadata)
-    short_rebalance_threshold: Optional[str] = field(default=None, metadata=field_metadata)
-    base_nav: Optional[str] = field(default=None, metadata=field_metadata)
-    local_nav: Optional[str] = field(default=None, metadata=field_metadata)
-    base_fx_forward: Optional[str] = field(default=None, metadata=field_metadata)
-    local_fx_forward: Optional[str] = field(default=None, metadata=field_metadata)
-    auto_roll: Optional[bool] = field(default=None, metadata=field_metadata)
-    exposure_currencies: Optional[Tuple[Currency, ...]] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class PCOSecurityWeight(Base):
-    security_type: Optional[str] = field(default=None, metadata=field_metadata)
-    currency_weights: Optional[Tuple[PCOCurrencyWeight, ...]] = field(default=None, metadata=field_metadata)
-    settlement_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class User(Base):
-    company: str = field(default=None, metadata=field_metadata)
-    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
-    country: str = field(default=None, metadata=field_metadata)
-    city: str = field(default=None, metadata=field_metadata)
-    region: str = field(default=None, metadata=field_metadata)
-    email: str = field(default=None, metadata=field_metadata)
-    name: str = field(default=None, metadata=field_metadata)
-    internal: Optional[bool] = field(default=None, metadata=field_metadata)
-    system_user: Optional[bool] = field(default=None, metadata=field_metadata)
-    app_user: Optional[bool] = field(default=None, metadata=field_metadata)
-    analytics_id: Optional[str] = field(default=None, metadata=field_metadata)
-    eaa_company: Optional[str] = field(default=None, metadata=field_metadata)
-    root_oe_id: Optional[str] = field(default=None, metadata=config(field_name='rootOEId', exclude=exclude_none))
-    oe_id: Optional[str] = field(default=None, metadata=field_metadata)
-    root_oe_name: Optional[str] = field(default=None, metadata=config(field_name='rootOEName', exclude=exclude_none))
-    oe_name: Optional[str] = field(default=None, metadata=field_metadata)
-    oe_alias: Optional[int] = field(default=None, metadata=field_metadata)
-    coverage: Optional[Tuple[DictBase, ...]] = field(default=None, metadata=field_metadata)
-    internal_email: Optional[str] = field(default=None, metadata=field_metadata)
-    kerberos: Optional[str] = field(default=None, metadata=field_metadata)
-    first_name: Optional[str] = field(default=None, metadata=field_metadata)
-    last_name: Optional[str] = field(default=None, metadata=field_metadata)
-    internal_id: Optional[str] = field(default=None, metadata=config(field_name='internalID', exclude=exclude_none))
-    mi_fidii_trade_idea_declined: Optional[str] = field(default=None, metadata=config(field_name='miFIDIITradeIdeaDeclined', exclude=exclude_none))
-    department_code: Optional[str] = field(default=None, metadata=field_metadata)
-    department_name: Optional[str] = field(default=None, metadata=field_metadata)
-    division_name: Optional[str] = field(default=None, metadata=field_metadata)
-    business_unit: Optional[str] = field(default=None, metadata=field_metadata)
-    title: Optional[str] = field(default=None, metadata=field_metadata)
-    pmd: Optional[bool] = field(default=None, metadata=field_metadata)
-    login: Optional[str] = field(default=None, metadata=field_metadata)
-    tokens: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    roles: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    groups: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
-    app_managers: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class CSLScheduleArray(Base):
-    schedule_values: Optional[Tuple[CSLSchedule, ...]] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class EntityQuery(Base):
-    format_: Optional[Format] = field(default=None, metadata=config(field_name='format', exclude=exclude_none))
-    where: Optional[FieldFilterMap] = field(default=None, metadata=field_metadata)
-    as_of_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    last_updated_since: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    delay: Optional[int] = field(default=None, metadata=field_metadata)
-    order_by: Optional[Tuple[Union[DictBase, str], ...]] = field(default=None, metadata=field_metadata)
-    scroll: Optional[str] = field(default=None, metadata=field_metadata)
-    scroll_id: Optional[str] = field(default=None, metadata=field_metadata)
-    fields: Optional[Tuple[Union[DictBase, str], ...]] = field(default=None, metadata=field_metadata)
-    limit: Optional[int] = field(default=None, metadata=field_metadata)
-    offset: Optional[int] = field(default=None, metadata=field_metadata)
-    vendor: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -6072,6 +6075,27 @@ class DataSetFieldMap(Base):
     field_: str = field(default=None, metadata=config(field_name='field', exclude=exclude_none))
     results_field: str = field(default=None, metadata=field_metadata)
     risk_measure: RiskMeasure = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class EntityQuery(Base):
+    format_: Optional[Format] = field(default=None, metadata=config(field_name='format', exclude=exclude_none))
+    where: Optional[FieldFilterMap] = field(default=None, metadata=field_metadata)
+    as_of_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    last_updated_since: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    delay: Optional[int] = field(default=None, metadata=field_metadata)
+    order_by: Optional[Tuple[Union[DictBase, str], ...]] = field(default=None, metadata=field_metadata)
+    scroll: Optional[str] = field(default=None, metadata=field_metadata)
+    scroll_id: Optional[str] = field(default=None, metadata=field_metadata)
+    fields: Optional[Tuple[Union[DictBase, str], ...]] = field(default=None, metadata=field_metadata)
+    limit: Optional[int] = field(default=None, metadata=field_metadata)
+    offset: Optional[int] = field(default=None, metadata=field_metadata)
+    vendor: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -6226,7 +6250,7 @@ class ReportParameters(Base):
     aggregate_by_tag_name: Optional[str] = field(default=None, metadata=field_metadata)
     fx_hedged: Optional[bool] = field(default=None, metadata=field_metadata)
     rebalance_calendar: Optional[EqBasketRebalanceCalendar] = field(default=None, metadata=field_metadata)
-    cash_reinvestment_treatment: Optional[Tuple[CashReinvestmentTreatment, ...]] = field(default=None, metadata=field_metadata)
+    cash_reinvestment_treatment: Optional[CashReinvestmentTreatment] = field(default=None, metadata=field_metadata)
     historical_methodology: Optional[EqBasketHistoryMethodology] = field(default=None, metadata=field_metadata)
     backtest_parameters: Optional[EqBasketBacktestParameters] = field(default=None, metadata=field_metadata)
     bloomberg_publish_parameters: Optional[BloombergPublishParameters] = field(default=None, metadata=field_metadata)

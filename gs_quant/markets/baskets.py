@@ -610,6 +610,63 @@ class Basket(Asset, PositionedEntity):
         self.__allow_limited_access_assets = value
 
     @property
+    def asset_class(self) -> Optional[AssetClass]:
+        """ Asset class of the basket """
+        return self.__asset_class
+
+    @asset_class.setter
+    @_validate(ErrorMessage.UNMODIFIABLE)
+    def asset_class(self, value: AssetClass):
+        self.__asset_class = value
+
+    @property
+    def benchmark(self) -> Optional[str]:
+        """ Benchmark for a basket """
+        return self.__benchmark
+
+    @benchmark.setter
+    @_validate(ErrorMessage.NON_ADMIN, ErrorMessage.NON_INTERNAL)
+    def benchmark(self, value: str):
+        self.__benchmark = value
+
+    @property
+    def backtest_parameters(self) -> Optional[EqBasketBacktestParameters]:
+        """ Backtest parameters for a basket """
+        return self.__backtest_parameters
+
+    @backtest_parameters.setter
+    @_validate(ErrorMessage.NON_ADMIN)
+    def backtest_parameters(self, value: EqBasketBacktestParameters):
+        if value is not None:
+            self.__historical_methodology = EqBasketHistoryMethodology.Backtest
+        self.__backtest_parameters = value
+
+    @property
+    def bloomberg_publish_parameters(self) -> Optional[BloombergPublishParameters]:
+        """ Bloomberg publish overrides for a basket """
+        return self.__bloomberg_publish_parameters
+
+    @bloomberg_publish_parameters.setter
+    @_validate(ErrorMessage.NON_ADMIN, ErrorMessage.NON_INTERNAL)
+    def bloomberg_publish_parameters(self, value: BloombergPublishParameters):
+        self.__bloomberg_publish_parameters = value
+
+    @property
+    def cash_reinvestment_treatment(self) -> Optional[CashReinvestmentTreatment]:
+        """ Cash reinvestment treatment options for a basket """
+        return self.__cash_reinvestment_treatment
+
+    @cash_reinvestment_treatment.setter
+    @_validate(ErrorMessage.NON_ADMIN)
+    def cash_reinvestment_treatment(self, value: Union[CashReinvestmentTreatment, CashReinvestmentTreatmentType]):
+        if isinstance(value, CashReinvestmentTreatmentType):
+            self.__cash_reinvestment_treatment = CashReinvestmentTreatment(cash_acquisition_treatment=value,
+                                                                           regular_dividend_treatment=value,
+                                                                           special_dividend_treatment=value)
+        else:
+            self.__cash_reinvestment_treatment = value
+
+    @property
     def clone_parent_id(self) -> Optional[str]:
         """ Marquee Id of the source basket, in case basket composition is sourced from another marquee basket """
         return self.__clone_parent_id
@@ -632,6 +689,8 @@ class Basket(Asset, PositionedEntity):
     @default_backcast.setter
     @_validate(ErrorMessage.UNMODIFIABLE)
     def default_backcast(self, value: bool):
+        if not value:
+            self.__historical_methodology = EqBasketHistoryMethodology.Custom
         self.__default_backcast = value
 
     @property
@@ -683,6 +742,17 @@ class Basket(Asset, PositionedEntity):
         return self.__hedge_id
 
     @property
+    def historical_methodology(self) -> Optional[EqBasketHistoryMethodology]:
+        """ Historical methodology for a basket """
+        return self.__historical_methodology
+
+    @historical_methodology.setter
+    @_validate(ErrorMessage.NON_ADMIN)
+    def historical_methodology(self, value: EqBasketHistoryMethodology):
+        self.__default_backcast = value != EqBasketHistoryMethodology.Custom
+        self.__historical_methodology = value
+
+    @property
     def include_price_history(self) -> Optional[bool]:
         """ Include full price history when publishing to Bloomberg """
         return self.__include_price_history
@@ -726,7 +796,7 @@ class Basket(Asset, PositionedEntity):
     @parent_basket.setter
     @_validate(ErrorMessage.UNMODIFIABLE)
     def parent_basket(self, value: str):
-        self.__clone_parent_id = get(__get_gs_asset(value), 'id')
+        self.__clone_parent_id = get(self.__get_gs_asset(value), 'id')
         self.__parent_basket = value
 
     @property
@@ -740,6 +810,16 @@ class Basket(Asset, PositionedEntity):
     def position_set(self, value: PositionSet):
         self.__validate_position_set(value)
         self.__position_set = value
+
+    @property
+    def preferred_risk_model(self) -> Optional[str]:
+        """ Preferred risk model for a basket """
+        return self.__preferred_risk_model
+
+    @preferred_risk_model.setter
+    @_validate(ErrorMessage.NON_ADMIN, ErrorMessage.NON_INTERNAL)
+    def preferred_risk_model(self, value: str):
+        self.__preferred_risk_model = value
 
     @property
     @_validate()
@@ -772,6 +852,16 @@ class Basket(Asset, PositionedEntity):
     @_validate(ErrorMessage.NON_ADMIN)
     def publish_to_reuters(self, value: bool):
         self.__publish_to_reuters = value
+
+    @property
+    def rebalance_calendar(self) -> Optional[EqBasketRebalanceCalendar]:
+        """ Expected rebalance calender/frequency a basket """
+        return self.__rebalance_calendar
+
+    @rebalance_calendar.setter
+    @_validate(ErrorMessage.NON_ADMIN, ErrorMessage.NON_INTERNAL)
+    def rebalance_calendar(self, value: EqBasketRebalanceCalendar):
+        self.__rebalance_calendar = value
 
     @property
     def return_type(self) -> Optional[ReturnType]:
@@ -831,12 +921,12 @@ class Basket(Asset, PositionedEntity):
                       once the edit report has completed. Submitting basket edits now...')
         response = GsIndexApi.edit(self.id, edit_inputs)
         report_id = response.report_id
-        self.__latest_create_report = GsReportApi.get_report(response.report_id)
+        self.__latest_create_report = GsReportApi.get_report(report_id)
         report_status = self.poll_report(report_id, timeout=600, step=15)
         if report_status != ReportStatus.done:
             raise MqError(f'The basket edit report\'s status is {report_status}. The current rebalance request will \
                             not be submitted in the meantime.')
-        _logger.info('Your basket edits have completed successfuly. Submitting rebalance request now...')
+        _logger.info('Your basket edits have completed successfully. Submitting rebalance request now...')
         response = GsIndexApi.rebalance(self.id, rebal_inputs)
         return response
 
@@ -856,13 +946,17 @@ class Basket(Asset, PositionedEntity):
                 self.__initial_price = get(initial_price, 'price')
                 set_(self.__initial_state, 'initial_price', self.__initial_price)
             if not has(self.__initial_state, 'publish_to_bloomberg'):
-                report = get(self, '__latest_create_report', self.__get_latest_create_report())
-                self.__publish_to_bloomberg = get(report, 'parameters.publish_to_bloomberg')
-                self.__publish_to_factset = get(report, 'parameters.publish_to_factset')
-                self.__publish_to_reuters = get(report, 'parameters.publish_to_reuters')
+                report_params = self.__get_latest_create_report().parameters
+                self.__publish_to_bloomberg = report_params.publish_to_bloomberg
+                self.__publish_to_factset = report_params.publish_to_factset
+                self.__publish_to_reuters = report_params.publish_to_reuters
+                self.__backtest_parameters = report_params.backtest_parameters
+                self.__bloomberg_publish_parameters = report_params.bloomberg_publish_parameters
                 set_(self.__initial_state, 'publish_to_bloomberg', self.__publish_to_bloomberg)
                 set_(self.__initial_state, 'publish_to_factset', self.__publish_to_factset)
                 set_(self.__initial_state, 'publish_to_reuters', self.__publish_to_reuters)
+                set_(self.__initial_state, 'bloomberg_publish_parameters', self.__bloomberg_publish_parameters)
+                set_(self.__initial_state, 'backtest_parameters', self.__backtest_parameters)
             if not has(self, '__entitlements'):
                 self.__entitlements = BasketEntitlements.from_target(self.__initial_entitlements)
         self.__set_error_messages()
@@ -876,57 +970,72 @@ class Basket(Asset, PositionedEntity):
         return GsAssetApi.get_asset(get(response, '0.id'))
 
     def __get_latest_create_report(self) -> Report:
-        """ Used to find baskets's most recent price/publish info """
+        """ Used to find basket's most recent price/publish info """
         report = GsReportApi.get_reports(limit=1, position_source_id=self.id, report_type='Basket Create',
                                          order_by='>latestExecutionTime')
         return get(report, '0')
 
     def __get_updates(self) -> Tuple[Optional[CustomBasketsEditInputs], Optional[CustomBasketsRebalanceInputs]]:
         """ Compares initial and current basket state to determine if updates require edit/rebalance """
-        edit_inputs, rebal_inputs, pricing, publish = {}, {}, {}, {}
-        update_publish_params = False
+        edit_inputs, eligible_for_edit = {}, False
+        rebal_inputs, eligible_for_rebal = {}, False
+        pricing, pricing_updated = {}, False
+        publish, publish_updated = {}, False
+
+        positions = set(self.position_set.positions)
+        positions_updated = self.__initial_positions != positions
 
         for prop in CustomBasketsEditInputs.properties():
             if get(self.__initial_state, prop) != get(self, prop):
-                set_(edit_inputs, prop, get(self, prop))
+                eligible_for_edit = True
+            set_(edit_inputs, prop, get(self, prop))
         for prop in CustomBasketsRebalanceInputs.properties():
-            if prop != 'position_set' and get(self.__initial_state, prop) != get(self, prop):
+            if prop != 'position_set':
+                if get(self.__initial_state, prop) != get(self, prop):
+                    eligible_for_rebal = True
                 set_(rebal_inputs, prop, get(self, prop))
         for prop in CustomBasketsPricingParameters.properties():
             if get(self.__initial_state, prop) != get(self, prop):
-                set_(pricing, prop, get(self, prop))
+                pricing_updated = True
+            set_(pricing, prop, get(self, prop))
         for prop in PublishParameters.properties():
             if get(self.__initial_state, prop) != get(self, prop):
-                update_publish_params = True
+                publish_updated = True
             set_(publish, prop, get(self, prop))
 
-        curr_positions = set(self.position_set.positions)
-        position_set_changed = False if self.__initial_positions == curr_positions else True
+        # Since edit and rebalance have some shared inputs, we need to decide which action(s) to perform
+        # 1. rebalance if pricing/positions have changed or if rebalance specific metadata has been updated
+        # 2. edit if edit metadata has changed, or if only publishing options have changed (rebal not required)
+        should_rebal = pricing_updated or positions_updated or (eligible_for_rebal and not eligible_for_edit)
+        should_edit = (publish_updated and not should_rebal) or eligible_for_edit
 
         # handle nested objects and make sure required/default values are input correctly
-        if len(rebal_inputs) or len(pricing) or position_set_changed:
+        if should_rebal:
             set_(rebal_inputs, 'position_set', self.position_set.to_target(common=False))
             set_(rebal_inputs, 'pricing_parameters', CustomBasketsPricingParameters(**pricing))
+            set_(rebal_inputs, 'publish_parameters', PublishParameters(**publish))
+        if should_edit:
+            set_(edit_inputs, 'publish_parameters', PublishParameters(**publish))
 
-        # publish params can be sent during edit or rebal, so we choose depending on current payload states
-        if update_publish_params:
-            publish = PublishParameters(**publish)
-            set_(rebal_inputs if len(rebal_inputs) else edit_inputs, 'publish_parameters', publish)
-
-        edit_inputs = None if not len(edit_inputs) else CustomBasketsEditInputs(**edit_inputs)
-        rebal_inputs = None if not len(rebal_inputs) else CustomBasketsRebalanceInputs(**rebal_inputs)
+        edit_inputs = CustomBasketsEditInputs(**edit_inputs) if should_edit else None
+        rebal_inputs = CustomBasketsRebalanceInputs(**rebal_inputs) if should_rebal else None
         return edit_inputs, rebal_inputs
 
     def __populate_current_attributes_for_existing_basket(self, gs_asset: GsAsset):
         """ Current basket settings for existing basket """
+        self.__benchmark = get(gs_asset, 'parameters.benchmark')
+        self.__cash_reinvestment_treatment = get(gs_asset, 'parameters.cashReinvestmentTreatment')
         self.__clone_parent_id = get(gs_asset, 'parameters.cloneParentId')
         self.__default_backcast = get(gs_asset, 'parameters.defaultBackcast')
         self.__description = get(gs_asset, 'description')
         self.__flagship = get(gs_asset, 'parameters.flagship')
         self.__gs_asset_type = get(gs_asset, 'type')
         self.__hedge_id = get(gs_asset, 'parameters.hedgeId')
+        self.__historical_methodology = get(gs_asset, 'parameters.historicalMethodology')
         self.__include_price_history = False
         self.__live_date = get(gs_asset, 'liveDate')
+        self.__preferred_risk_model = get(gs_asset, 'parameters.preferredRiskModel')
+        self.__rebalance_calendar = get(gs_asset, 'parameters.rebalanceFrequency')
         self.__return_type = get(gs_asset, 'parameters.indexCalculationType')
         self.__ticker = get(gs_asset, 'xref.ticker')
 
@@ -940,22 +1049,31 @@ class Basket(Asset, PositionedEntity):
         """ Default basket settings prior to creation """
         self.__allow_ca_restricted_assets = get(kwargs, 'allow_ca_restricted_assets')
         self.__allow_limited_access_assets = get(kwargs, 'allow_limited_access_assets')
+        self.__backtest_parameters = get(kwargs, 'backtest_parameters')
+        self.__benchmark = get(kwargs, 'benchmark')
+        self.__cash_reinvestment_treatment = get(kwargs, 'cash_reinvestment_treatment', CashReinvestmentTreatment(
+            cash_acquisition_treatment=CashReinvestmentTreatmentType.Reinvest_At_Open,
+            regular_dividend_treatment=CashReinvestmentTreatmentType.Reinvest_At_Open,
+            special_dividend_treatment=CashReinvestmentTreatmentType.Reinvest_At_Open))
         self.__clone_parent_id = get(kwargs, 'clone_parent_id')
         self.__currency = get(kwargs, 'currency')
         self.__default_backcast = get(kwargs, 'default_backcast', True)
         self.__description = get(kwargs, 'description')
         self.__divisor = get(kwargs, 'divisor')
         self.__hedge_id = get(kwargs, 'hedge_id')
+        self.__historical_methodology = get(kwargs, 'historical_methodology', EqBasketHistoryMethodology.Backcast)
         self.__include_price_history = get(kwargs, 'include_price_history', False)
         self.__initial_price = get(kwargs, 'initial_price', 100) if self.__divisor is None else None
         self.__name = get(kwargs, 'name')
         self.__parent_basket = get(kwargs, 'parent_basket')
         if self.__parent_basket is not None and self.__clone_parent_id is None:
-            self.__clone_parent_id = get(__get_gs_asset(self.__parent_basket), 'id')
+            self.__clone_parent_id = get(self.__get_gs_asset(self.__parent_basket), 'id')
         self.__position_set = get(kwargs, 'position_set')
+        self.__preferred_risk_model = get(kwargs, 'preferred_risk_model')
         self.__publish_to_bloomberg = get(kwargs, 'publish_to_bloomberg', True)
         self.__publish_to_factset = get(kwargs, 'publish_to_factset', False)
         self.__publish_to_reuters = get(kwargs, 'publish_to_reuters', False)
+        self.__rebalance_calendar = get(kwargs, 'rebalance_calendar')
         self.__return_type = get(kwargs, 'return_type')
         self.__target_notional = get(kwargs, 'target_notional', 10000000)
         self.__ticker = get(kwargs, 'ticker')
@@ -988,7 +1106,8 @@ class Basket(Asset, PositionedEntity):
             raise MqValueError(f'Error in resolving the following identifiers for date {position_set.date}: \
             {[p.identifier for p in position_set.unresolved_positions]}')
 
-    def __validate_ticker(self, ticker: str):
+    @staticmethod
+    def __validate_ticker(ticker: str):
         """ Blocks ticker setter if entry is invalid """
         if not len(ticker) == 8:
             raise MqValueError('Invalid ticker: must be 8 characters')

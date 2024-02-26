@@ -22,6 +22,7 @@ from gs_quant.risk.measures import PnlExplain
 
 from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
     sort_values, MQVSValidatorDefnsWithInfo, MQVSValidatorDefn
+from gs_quant.common import RiskMeasure, AssetClass, RiskMeasureType
 
 _logger = logging.getLogger(__name__)
 
@@ -271,9 +272,16 @@ def map_coordinate_to_column(coordinate_struct, tag):
     return updated_struct
 
 
+def __is_single_row_2nd_order_risk(risk_key: RiskKey):
+    return risk_key is not None and isinstance(risk_key.risk_measure,
+                                               RiskMeasure) and \
+        risk_key.risk_measure.asset_class == AssetClass.Rates and \
+        risk_key.risk_measure.measur_type in (RiskMeasureType.ParallelGamma, RiskMeasureType.ParallelGammaLocalCcy)
+
+
 def mdapi_second_order_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                                      request_id: Optional[str] = None) -> Union[DataFrameWithInfo, FloatWithInfo]:
-    if len(result['values']) == 1:
+    if len(result['values']) == 1 and __is_single_row_2nd_order_risk(risk_key):
         return risk_float_handler(result, risk_key, _instrument, request_id)
 
     coordinate_pairs = []

@@ -248,6 +248,16 @@ class QueryableStatus(EnumBase, Enum):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class ChannelMetadata(Base):
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    channel_visibility: Optional[object] = field(default=None, metadata=field_metadata)
+    restricted: Optional[bool] = field(default=None, metadata=field_metadata)
+    streaming: Optional[bool] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class Content(Base):
     body: str = field(default=None, metadata=field_metadata)
     mime_type: object = field(default=None, metadata=field_metadata)
@@ -407,6 +417,8 @@ class ContentParameters(Base):
     is_flow: Optional[bool] = field(default=None, metadata=field_metadata)
     is_research_summary: Optional[bool] = field(default=None, metadata=field_metadata)
     is_restricted: Optional[bool] = field(default=None, metadata=field_metadata)
+    post_sharing_type: Optional[object] = field(default=None, metadata=field_metadata)
+    channels_metadata: Optional[Tuple[ChannelMetadata, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

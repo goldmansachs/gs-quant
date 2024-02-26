@@ -964,7 +964,7 @@ def mock_missing_bucket_implied_volatility():
 
 
 def mock_fx_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None, request_id=None,
-                parallel_pool_size=1):
+                parallelize_queries=False):
     d = {
         'strikeReference': ['delta', 'spot', 'forward'],
         'relativeStrike': [25, 100, 100],
@@ -1149,7 +1149,7 @@ def mock_eq(_cls, _q, ignore_errors=False):
 
 
 def mock_eq_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None, request_id=None,
-                parallel_pool_size=1):
+                parallelize_queries=False):
     d = {
         'impliedVolatility': [5, 1, 2],
     }
@@ -1167,7 +1167,7 @@ def mock_eq_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, 
 
 
 def mock_eq_vol_last_empty(_cls, asset_ids=None, query_type=None, where=None, source=None, real_time=None,
-                           request_id=None, parallel_pool_size=1):
+                           request_id=None, parallelize_queries=False):
     d = {
         'impliedVolatility': [5, 1, 2],
     }

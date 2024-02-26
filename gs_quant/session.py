@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import ssl
+import sys
 from abc import abstractmethod
 from configparser import ConfigParser
 from enum import Enum, auto, unique
@@ -189,6 +190,7 @@ class GsSession(ContextBase):
             self._session.headers.update({'X-Application': self.application})
             self._session.headers.update({'X-Version': self.application_version})
             self._authenticate()
+            self.post_to_activity_service()
 
     def close(self):
         self._session: requests.Session
@@ -520,6 +522,17 @@ class GsSession(ContextBase):
 
         session.init()
         cls.current = session
+
+    def post_to_activity_service(self):
+        params = {'featureApplication': self.application,
+                  'gsQuantVersion': self.application_version,
+                  'pythonVersion': f'{sys.version_info.major}.{sys.version_info.minor}'}
+        self._session.post(f'{self.domain}/{self.api_version}/activities',
+                           verify=self.verify,
+                           headers={'Content-Type': 'application/json; charset=utf-8'},
+                           data=json.dumps({'action': 'Initiated', 'kpis': [{'id': 'gsqInitiated', 'value': 1}],
+                                            'resource': 'GSQuant',
+                                            'parameters': params}))
 
     @classmethod
     def get(

@@ -693,15 +693,16 @@ class GsDataApi(DataApi):
                                                    where: Union[FieldFilterMap, Dict] = None,
                                                    source: Union[str] = None,
                                                    real_time: bool = False,
-                                                   measure='Curve',
-                                                   parallel_pool_size: int = 1) -> List[dict]:
-        def chunk_time(start, end, pool_size) -> tuple:
-            chunk_duration = (end - start) / pool_size
-            current = start
-            for _ in range(pool_size):
-                next_end = current + chunk_duration
-                yield current, next_end
-                current = next_end
+                                                   measure='Curve') -> List[dict]:
+        parallel_interval = 365  # chunk over a year
+
+        def chunk_time(start, end) -> tuple:
+            # chunk the time interval into 1 year chunks
+            s = start
+            while s < end:
+                e = min(s + dt.timedelta(days=parallel_interval), end)
+                yield s, e
+                s = e
 
         queries = []
         if real_time:
@@ -711,14 +712,14 @@ class GsDataApi(DataApi):
             start, end = DataContext.current.start_date, DataContext.current.end_date
             start_key, end_key = 'startDate', 'endDate'
 
-        for s, e in chunk_time(start, end, parallel_pool_size):
+        for s, e in chunk_time(start, end):
             inner = copy(GsDataApi._get_market_data_filters(asset_ids, query_type, where, source, real_time, measure))
             inner[start_key], inner[end_key] = s, e
             queries.append({
                 'queries': [inner]
             })
 
-        log_debug("", _logger, f"Created {len(queries)} market data queries. Pool size = {parallel_pool_size}")
+        log_debug("", _logger, f"Created {len(queries)} market data queries")
 
         return queries
 
@@ -729,10 +730,10 @@ class GsDataApi(DataApi):
                                 source: Union[str] = None,
                                 real_time: bool = False,
                                 measure='Curve',
-                                parallel_pool_size: int = 1) -> Union[dict, List[dict]]:
-        if parallel_pool_size > 1:
+                                parallelize_queries: bool = False) -> Union[dict, List[dict]]:
+        if parallelize_queries:
             return GsDataApi.build_interval_chunked_market_data_queries(asset_ids, query_type, where, source, real_time,
-                                                                        measure, parallel_pool_size)
+                                                                        measure)
 
         inner = GsDataApi._get_market_data_filters(asset_ids, query_type, where, source, real_time, measure)
         if DataContext.current.interval is not None:

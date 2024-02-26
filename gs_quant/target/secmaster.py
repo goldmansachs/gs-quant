@@ -273,6 +273,7 @@ class SecMasterGetCapitalStructureRequestPathSchema(Base):
 class SecMasterGetRequestPathSchema(Base):
     gsid: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     ticker: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    bbg: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     bbid: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     ric: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     rcic: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
@@ -283,14 +284,11 @@ class SecMasterGetRequestPathSchema(Base):
     prime_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     type_: Optional[Tuple[str, ...]] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     country_code: Optional[Tuple[CountryCode, ...]] = field(default=None, metadata=field_metadata)
-    exchange: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    fields: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    as_of_time: Optional[Tuple[datetime.datetime, ...]] = field(default=None, metadata=field_metadata)
     is_primary: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     all_listings: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     effective_date: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
+    as_of_time: Optional[Tuple[datetime.datetime, ...]] = field(default=None, metadata=field_metadata)
     limit: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    offset: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     offset_key: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 

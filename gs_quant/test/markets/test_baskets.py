@@ -38,7 +38,12 @@ from gs_quant.target.reports import Report, User as TargetUser
 asset_1 = {'name': 'asset 1', 'id': 'id1', 'bbid': 'bbid1'}
 asset_2 = {'name': 'asset 2', 'id': 'id2', 'bbid': 'bbid2'}
 assets_data = [asset_1, asset_2]
-base_user = {'name': 'First Last', 'email': 'ex@email.com', 'company': 'Company A'}
+base_user = {'name': 'First Last',
+             'email': 'ex@email.com',
+             'city': 'City A',
+             'company': 'Company A',
+             'country': 'Country A',
+             'region': 'Region A'}
 cb_response = CustomBasketsResponse('done', 'R1234567890', 'MA1234567890')
 gs_asset = GsAsset(asset_class=AssetClass.Equity,
                    type_=AssetType.Custom_Basket,
@@ -217,7 +222,7 @@ def test_basket_edit_and_rebalance(mocker):
     basket = Basket.get(ticker)
     basket.description = 'New Basket Description'
     gs_asset.description = 'New Basket Description'
-    basket.allow_ca_restricted_assets = True
+    basket.initial_price = 2000000
 
     mock_response(mocker, GsIndexApi, 'edit', cb_response)
     mock_response(mocker, GsReportApi, 'get_report', report)

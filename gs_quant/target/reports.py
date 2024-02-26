@@ -103,6 +103,7 @@ class ReportType(EnumBase, Enum):
     Analytics = 'Analytics'
     Risk_Calculation = 'Risk Calculation'
     Factor_Overview_Email = 'Factor Overview Email'
+    FactSet_Fundamentals_Analytics = 'FactSet Fundamentals Analytics'
     PCO = 'PCO'    
 
 

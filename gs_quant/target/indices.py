@@ -37,6 +37,31 @@ class ApprovalStatus(EnumBase, Enum):
     Error = 'Error'    
 
 
+class ISelectActionType(EnumBase, Enum):    
+    
+    """Workflow actions that exist in ISelect"""
+
+    GetStatus = 'GetStatus'
+    ValidateRebalance = 'ValidateRebalance'
+    ToggleConstraints = 'ToggleConstraints'
+    GenerateSubmissionConfirm = 'GenerateSubmissionConfirm'
+    GenerateSubmissionConfirmWithWaiver = 'GenerateSubmissionConfirmWithWaiver'
+    SubmitRebalance = 'SubmitRebalance'
+    CancelRebalance = 'CancelRebalance'
+    SubmitDraft = 'SubmitDraft'
+    CancelDraft = 'CancelDraft'
+    AgeDraft = 'AgeDraft'
+    RerunChecks = 'RerunChecks'
+    TraderApproves = 'TraderApproves'
+    TraderRejects = 'TraderRejects'
+    ClientVerifierApproves = 'ClientVerifierApproves'
+    ClientVerifierRejects = 'ClientVerifierRejects'
+    ClearException = 'ClearException'
+    ClientAcknowledges = 'ClientAcknowledges'
+    AllowWaiver = 'AllowWaiver'
+    DisableWaiver = 'DisableWaiver'    
+
+
 class IndicesCurrency(EnumBase, Enum):    
     
     """Currencies supported for Indices"""
@@ -212,17 +237,6 @@ class Link(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class PublishParameters(Base):
-    publish_to_bloomberg: bool = field(default=False, metadata=field_metadata)
-    include_price_history: bool = field(default=False, metadata=field_metadata)
-    publish_to_reuters: Optional[bool] = field(default=False, metadata=field_metadata)
-    publish_to_factset: Optional[bool] = field(default=False, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class CreditCustomBasketPricingParameters(Base):
     quote_source: BasketValuationSource = field(default=None, metadata=field_metadata)
     quote_time: str = field(default='16:00:00', metadata=field_metadata)
@@ -299,42 +313,6 @@ class IndicesPositionSet(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class CreditCustomBasketCreateInputs(IndicesConstructRequestTypes):
-    ticker: str = field(default=None, metadata=field_metadata)
-    name: str = field(default=None, metadata=field_metadata)
-    pricing_parameters: CreditCustomBasketPricingParameters = field(default=None, metadata=field_metadata)
-    position_set: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
-    return_type: IndexCalculationType = field(default='Price Return', metadata=field_metadata)
-    styles: Tuple[str, ...] = field(default=None, metadata=field_metadata)
-    asset_class: Optional[AssetClass] = field(default='Credit', metadata=field_metadata)
-    description: Optional[str] = field(default=None, metadata=field_metadata)
-    related_content: Optional[GIRDomain] = field(default=None, metadata=field_metadata)
-    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
-    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
-    index_notes: Optional[str] = field(default=None, metadata=field_metadata)
-    flagship: Optional[bool] = field(default=False, metadata=field_metadata)
-    on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
-    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
-    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class CreditCustomBasketRebalanceInputs(IndicesRebalanceInputTypes):
-    asset_class: AssetClass = field(default='Credit', metadata=field_metadata)
-    position_set: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
-    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
-    pricing_parameters: Optional[CreditCustomBasketPricingParameters] = field(default=None, metadata=field_metadata)
-    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
-    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
-    save_as_draft: Optional[bool] = field(default=False, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class CryptoBasketCreateInputs(IndicesConstructRequestTypes):
     ticker: str = field(default=None, metadata=field_metadata)
     name: str = field(default=None, metadata=field_metadata)
@@ -359,74 +337,6 @@ class CryptoBasketRebalanceInputs(IndicesRebalanceInputTypes):
 @dataclass(unsafe_hash=True, repr=False)
 class CustomBasketsBackcastInputs(Base):
     position_set: Tuple[IndicesPositionSet, ...] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class CustomBasketsCreateInputs(IndicesConstructRequestTypes):
-    ticker: str = field(default=None, metadata=field_metadata)
-    name: str = field(default=None, metadata=field_metadata)
-    pricing_parameters: CustomBasketsPricingParameters = field(default=None, metadata=field_metadata)
-    position_set: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
-    return_type: str = field(default=None, metadata=field_metadata)
-    description: Optional[str] = field(default=None, metadata=field_metadata)
-    styles: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    related_content: Optional[GIRDomain] = field(default=None, metadata=field_metadata)
-    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
-    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
-    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
-    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
-    index_notes: Optional[str] = field(default=None, metadata=field_metadata)
-    flagship: Optional[bool] = field(default=None, metadata=field_metadata)
-    on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
-    allow_limited_access_assets: Optional[bool] = field(default=False, metadata=field_metadata)
-    allow_ca_restricted_assets: Optional[bool] = field(default=False, metadata=config(field_name='allowCARestrictedAssets', exclude=exclude_none))
-    vendor: Optional[str] = field(default=None, metadata=field_metadata)
-    default_backcast: Optional[bool] = field(default=True, metadata=field_metadata)
-    action_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    preferred_risk_model: Optional[str] = field(default=None, metadata=field_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class CustomBasketsEditInputs(Base):
-    name: Optional[str] = field(default=None, metadata=field_metadata)
-    description: Optional[str] = field(default=None, metadata=field_metadata)
-    styles: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    related_content: Optional[GIRDomain] = field(default=None, metadata=field_metadata)
-    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
-    index_notes: Optional[str] = field(default=None, metadata=field_metadata)
-    index_not_trading_reasons: Optional[IndexNotTradingReasons] = field(default=None, metadata=field_metadata)
-    flagship: Optional[bool] = field(default=None, metadata=field_metadata)
-    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
-    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
-    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
-    vendor: Optional[str] = field(default=None, metadata=field_metadata)
-    action_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    preferred_risk_model: Optional[str] = field(default=None, metadata=field_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class CustomBasketsRebalanceInputs(Base):
-    position_set: Optional[Tuple[PositionPriceInput, ...]] = field(default=None, metadata=field_metadata)
-    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
-    pricing_parameters: Optional[CustomBasketsPricingParameters] = field(default=None, metadata=field_metadata)
-    allow_limited_access_assets: Optional[bool] = field(default=False, metadata=field_metadata)
-    allow_ca_restricted_assets: Optional[bool] = field(default=False, metadata=config(field_name='allowCARestrictedAssets', exclude=exclude_none))
-    allow_system_approval: Optional[bool] = field(default=False, metadata=field_metadata)
-    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
-    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
-    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
-    save_as_draft: Optional[bool] = field(default=False, metadata=field_metadata)
-    allow_in_position_rebalance: Optional[bool] = field(default=False, metadata=field_metadata)
-    action_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    preferred_risk_model: Optional[str] = field(default=None, metadata=field_metadata)
-    on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -463,6 +373,7 @@ class ISelectRebalance(Base):
     index_parameters: Optional[Tuple[ISelectIndexParameters, ...]] = field(default=None, metadata=field_metadata)
     waiver_requested: Optional[bool] = field(default=None, metadata=field_metadata)
     custom_basket_import: Optional[str] = field(default=None, metadata=field_metadata)
+    unwind_missing_constituents: Optional[bool] = field(default=True, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -471,7 +382,6 @@ class ISelectRebalance(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectRequest(IndicesRebalanceInputTypes):
     rebalance_date: str = field(default=None, metadata=field_metadata)
-    request_counter: int = field(default=None, metadata=field_metadata)
     use_new_rebalance_interface: bool = field(default=None, metadata=field_metadata)
     new_parameters: Optional[Tuple[ISelectNewParameter, ...]] = field(default=None, metadata=field_metadata)
     index_parameters: Optional[Tuple[ISelectIndexParameter, ...]] = field(default=None, metadata=field_metadata)
@@ -479,10 +389,13 @@ class ISelectRequest(IndicesRebalanceInputTypes):
     new_units: Optional[Tuple[ISelectNewUnit, ...]] = field(default=None, metadata=field_metadata)
     observation_date: Optional[str] = field(default=None, metadata=field_metadata)
     entry_type: Optional[str] = field(default=None, metadata=field_metadata)
+    request_counter: Optional[int] = field(default=0, metadata=field_metadata)
     waiver_requested: Optional[bool] = field(default=None, metadata=field_metadata)
     presubmit: Optional[bool] = field(default=None, metadata=field_metadata)
     requester_id: Optional[str] = field(default=None, metadata=field_metadata)
     custom_basket_import: Optional[str] = field(default=None, metadata=field_metadata)
+    action: Optional[str] = field(default=None, metadata=field_metadata)
+    unwind_missing_constituents: Optional[bool] = field(default=True, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -490,12 +403,12 @@ class ISelectRequest(IndicesRebalanceInputTypes):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class ISelectResponse(Base):
-    action: Optional[object] = field(default=None, metadata=config(field_name='Action', exclude=exclude_none))
+    action: Optional[ISelectActionType] = field(default=None, metadata=config(field_name='Action', exclude=exclude_none))
     action_comment: Optional[str] = field(default=None, metadata=config(field_name='ActionComment', exclude=exclude_none))
     asset_name: Optional[str] = field(default=None, metadata=field_metadata)
     asset_short_name: Optional[str] = field(default=None, metadata=field_metadata)
     available_action_confirms: Optional[Tuple[Tuple[str, ...], ...]] = field(default=None, metadata=field_metadata)
-    available_actions: Optional[tuple] = field(default=None, metadata=field_metadata)
+    available_actions: Optional[Tuple[Union[DictBase, ISelectActionType], ...]] = field(default=None, metadata=field_metadata)
     available_rebalance_dates: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     constituent_validations: Optional[tuple] = field(default=None, metadata=field_metadata)
     date_validation_status: Optional[str] = field(default=None, metadata=field_metadata)
@@ -537,6 +450,76 @@ class IndicesDynamicConstructInputs(IndicesConstructRequestTypes):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class PublishParameters(Base):
+    publish_to_bloomberg: bool = field(default=False, metadata=field_metadata)
+    include_price_history: bool = field(default=False, metadata=field_metadata)
+    publish_to_reuters: Optional[bool] = field(default=False, metadata=field_metadata)
+    publish_to_factset: Optional[bool] = field(default=False, metadata=field_metadata)
+    historical_methodology: Optional[EqBasketHistoryMethodology] = field(default=None, metadata=field_metadata)
+    backtest_parameters: Optional[EqBasketBacktestParameters] = field(default=None, metadata=field_metadata)
+    bloomberg_publish_parameters: Optional[BloombergPublishParameters] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CreditCustomBasketCreateInputs(IndicesConstructRequestTypes):
+    ticker: str = field(default=None, metadata=field_metadata)
+    name: str = field(default=None, metadata=field_metadata)
+    pricing_parameters: CreditCustomBasketPricingParameters = field(default=None, metadata=field_metadata)
+    position_set: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
+    return_type: IndexCalculationType = field(default='Price Return', metadata=field_metadata)
+    styles: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(default='Credit', metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    related_content: Optional[GIRDomain] = field(default=None, metadata=field_metadata)
+    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
+    index_notes: Optional[str] = field(default=None, metadata=field_metadata)
+    flagship: Optional[bool] = field(default=False, metadata=field_metadata)
+    on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
+    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
+    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CreditCustomBasketEditInputs(Base):
+    name: str = field(default=None, metadata=field_metadata)
+    description: str = field(default=None, metadata=field_metadata)
+    publish_parameters: PublishParameters = field(default=None, metadata=field_metadata)
+    pricing_parameters: CreditCustomBasketPricingParameters = field(default=None, metadata=field_metadata)
+    flagship: bool = field(default=False, metadata=field_metadata)
+    on_behalf_of: str = field(default=None, metadata=field_metadata)
+    styles: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(default='Credit', metadata=field_metadata)
+    related_content: Optional[GIRDomain] = field(default=None, metadata=field_metadata)
+    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    return_type: Optional[IndexCalculationType] = field(default='Price Return', metadata=field_metadata)
+    position_set: Optional[Tuple[PositionPriceInput, ...]] = field(default=None, metadata=field_metadata)
+    index_notes: Optional[str] = field(default=None, metadata=field_metadata)
+    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CreditCustomBasketRebalanceInputs(IndicesRebalanceInputTypes):
+    asset_class: AssetClass = field(default='Credit', metadata=field_metadata)
+    position_set: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
+    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
+    pricing_parameters: Optional[CreditCustomBasketPricingParameters] = field(default=None, metadata=field_metadata)
+    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
+    save_as_draft: Optional[bool] = field(default=False, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class IndicesBackcastInputs(Base):
     parameters: CustomBasketsBackcastInputs = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
@@ -545,8 +528,87 @@ class IndicesBackcastInputs(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class IndicesEditInputs(Base):
-    parameters: CustomBasketsEditInputs = field(default=None, metadata=field_metadata)
+class CustomBasketsCreateInputs(IndicesConstructRequestTypes):
+    ticker: str = field(default=None, metadata=field_metadata)
+    name: str = field(default=None, metadata=field_metadata)
+    pricing_parameters: CustomBasketsPricingParameters = field(default=None, metadata=field_metadata)
+    position_set: Tuple[PositionPriceInput, ...] = field(default=None, metadata=field_metadata)
+    return_type: str = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(default='Equity', metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    styles: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    related_content: Optional[GIRDomain] = field(default=None, metadata=field_metadata)
+    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
+    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
+    cash_reinvestment_treatment: Optional[CashReinvestmentTreatment] = field(default=None, metadata=field_metadata)
+    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
+    index_notes: Optional[str] = field(default=None, metadata=field_metadata)
+    flagship: Optional[bool] = field(default=None, metadata=field_metadata)
+    on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
+    allow_limited_access_assets: Optional[bool] = field(default=False, metadata=field_metadata)
+    allow_ca_restricted_assets: Optional[bool] = field(default=False, metadata=config(field_name='allowCARestrictedAssets', exclude=exclude_none))
+    vendor: Optional[str] = field(default=None, metadata=field_metadata)
+    default_backcast: Optional[bool] = field(default=True, metadata=field_metadata)
+    action_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    preferred_risk_model: Optional[str] = field(default=None, metadata=field_metadata)
+    rebalance_calendar: Optional[EqBasketRebalanceCalendar] = field(default=None, metadata=field_metadata)
+    benchmark: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CustomBasketsEditInputs(Base):
+    asset_class: Optional[AssetClass] = field(default='Equity', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    styles: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    related_content: Optional[GIRDomain] = field(default=None, metadata=field_metadata)
+    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
+    index_notes: Optional[str] = field(default=None, metadata=field_metadata)
+    index_not_trading_reasons: Optional[IndexNotTradingReasons] = field(default=None, metadata=field_metadata)
+    flagship: Optional[bool] = field(default=None, metadata=field_metadata)
+    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
+    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
+    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    vendor: Optional[str] = field(default=None, metadata=field_metadata)
+    action_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    preferred_risk_model: Optional[str] = field(default=None, metadata=field_metadata)
+    rebalance_calendar: Optional[EqBasketRebalanceCalendar] = field(default=None, metadata=field_metadata)
+    benchmark: Optional[str] = field(default=None, metadata=field_metadata)
+    on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CustomBasketsRebalanceInputs(Base):
+    asset_class: Optional[AssetClass] = field(default='Equity', metadata=field_metadata)
+    position_set: Optional[Tuple[PositionPriceInput, ...]] = field(default=None, metadata=field_metadata)
+    publish_parameters: Optional[PublishParameters] = field(default=None, metadata=field_metadata)
+    pricing_parameters: Optional[CustomBasketsPricingParameters] = field(default=None, metadata=field_metadata)
+    allow_limited_access_assets: Optional[bool] = field(default=False, metadata=field_metadata)
+    allow_ca_restricted_assets: Optional[bool] = field(default=False, metadata=config(field_name='allowCARestrictedAssets', exclude=exclude_none))
+    allow_system_approval: Optional[bool] = field(default=False, metadata=field_metadata)
+    clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
+    hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
+    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    save_as_draft: Optional[bool] = field(default=False, metadata=field_metadata)
+    allow_in_position_rebalance: Optional[bool] = field(default=False, metadata=field_metadata)
+    action_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    preferred_risk_model: Optional[str] = field(default=None, metadata=field_metadata)
+    rebalance_calendar: Optional[EqBasketRebalanceCalendar] = field(default=None, metadata=field_metadata)
+    benchmark: Optional[str] = field(default=None, metadata=field_metadata)
+    on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class IndicesEditInputTypes(Base):
+    parameters: DictBase = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

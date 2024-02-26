@@ -15,6 +15,8 @@ under the License.
 """
 import datetime
 
+import pytest
+
 from gs_quant.api.gs.data import GsDataApi, QueryType
 from gs_quant.data import DataContext
 
@@ -26,9 +28,9 @@ def test_build_market_data_query():
     source = None
     real_time = False
     measure = "Curve"
-    with DataContext(start=datetime.date(2013, 1, 1), end=datetime.date(2025, 2, 1)):
+    with DataContext(start=datetime.date(2013, 1, 1), end=datetime.date(2020, 2, 1)):
         queries = GsDataApi.build_market_data_query(asset_ids, query_type, where, source, real_time, measure,
-                                                    parallel_pool_size=3)
+                                                    parallelize_queries=True)
         payload = {'entityIds': ['MA4B66MW5E27U8P3295'],
                    'queryType': 'Implied Volatility',
                    'where': {'tenor': '1y', 'strikeReference': 'delta', 'relativeStrike': 0.1},
@@ -36,9 +38,14 @@ def test_build_market_data_query():
                    'frequency': 'End Of Day',
                    'measures': ['Curve']}
 
-        dates = [{'startDate': datetime.date(2013, 1, 1), 'endDate': datetime.date(2017, 1, 11)},
-                 {'startDate': datetime.date(2017, 1, 11), 'endDate': datetime.date(2021, 1, 21)},
-                 {'startDate': datetime.date(2021, 1, 21), 'endDate': datetime.date(2025, 1, 31)}]
+        dates = [{'startDate': datetime.date(2013, 1, 1), 'endDate': datetime.date(2014, 1, 1)},
+                 {'startDate': datetime.date(2014, 1, 1), 'endDate': datetime.date(2015, 1, 1)},
+                 {'startDate': datetime.date(2015, 1, 1), 'endDate': datetime.date(2016, 1, 1)},
+                 {'startDate': datetime.date(2016, 1, 1), 'endDate': datetime.date(2016, 12, 31)},
+                 {'startDate': datetime.date(2016, 12, 31), 'endDate': datetime.date(2017, 12, 31)},
+                 {'startDate': datetime.date(2017, 12, 31), 'endDate': datetime.date(2018, 12, 31)},
+                 {'startDate': datetime.date(2018, 12, 31), 'endDate': datetime.date(2019, 12, 31)},
+                 {'startDate': datetime.date(2019, 12, 31), 'endDate': datetime.date(2020, 2, 1)}]
 
         expected = [{'queries': [{**payload, **date_range}]} for date_range in dates]
         assert expected == queries
@@ -56,3 +63,7 @@ def test_build_market_data_query():
 
         expected = {'queries': [payload]}
         assert expected == queries
+
+
+if __name__ == '__main__':
+    pytest.main(args=["test_queries.py"])
