@@ -106,6 +106,7 @@ class AssetType(EnumBase, Enum):
     Any = 'Any'
     Autoroll = 'Autoroll'
     AveragePriceOption = 'AveragePriceOption'
+    Barrier = 'Barrier'
     Basis = 'Basis'
     BasisSwap = 'BasisSwap'
     Benchmark = 'Benchmark'

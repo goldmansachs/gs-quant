@@ -236,6 +236,31 @@ class EqAutoroll(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class EqBarrier(Instrument):
+    underlier: Optional[str] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    option_type: Optional[OptionType] = field(default=None, metadata=field_metadata)
+    expiration_date: Optional[str] = field(default=None, metadata=field_metadata)
+    strike_price: Optional[float] = field(default=None, metadata=field_metadata)
+    barrier_start_date: Optional[str] = field(default=None, metadata=field_metadata)
+    barrier_end_date: Optional[str] = field(default=None, metadata=field_metadata)
+    barrier_level: Optional[float] = field(default=None, metadata=field_metadata)
+    knock_up_or_down: Optional[UpDown] = field(default=None, metadata=field_metadata)
+    barrier_frequency: Optional[str] = field(default=None, metadata=field_metadata)
+    knock_in_or_out: Optional[InOut] = field(default=None, metadata=field_metadata)
+    number_of_options: Optional[float] = field(default=None, metadata=field_metadata)
+    multiplier: Optional[float] = field(default=None, metadata=field_metadata)
+    premium: Optional[float] = field(default=None, metadata=field_metadata)
+    premium_settlement_date: Optional[str] = field(default=None, metadata=field_metadata)
+    currency: Optional[str] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.Barrier, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class EqBinary(Instrument):
     underlier: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
     buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)

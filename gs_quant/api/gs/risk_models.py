@@ -189,7 +189,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
     @classmethod
     def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date = None,
                             assets: RiskModelDataAssetsRequest = None, measures: List[RiskModelDataMeasure] = None,
-                            limit_factors: bool = None) -> Dict:
+                            factors: list = None, limit_factors: bool = None) -> Dict:
         end_date = cls.get_risk_model_dates(model_id)[-1] if not end_date else end_date.strftime('%Y-%m-%d')
         query = {
             'startDate': start_date.strftime('%Y-%m-%d'),
@@ -199,6 +199,8 @@ class GsFactorRiskModelApi(GsRiskModelApi):
             query['assets'] = assets
         if measures is not None:
             query['measures'] = measures
+        if factors is not None:
+            query['factors'] = factors
         if limit_factors is not None:
             query['limitFactors'] = limit_factors
         return GsSession.current._post(f'/risk/models/data/{model_id}/query', query, timeout=200)

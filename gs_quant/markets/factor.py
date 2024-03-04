@@ -14,17 +14,17 @@ specific language governing permissions and limitations
 under the License.
 """
 from enum import auto
-from math import sqrt
 from typing import Dict, Union
 
+import numpy as np
 import pandas as pd
 
-from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data.core import DataContext
 from gs_quant.datetime import date
-from gs_quant.session import GsSession
 from gs_quant.target.common import Enum
-from gs_quant.target.data import DataQuery
+from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, RiskModelDataMeasure
+from gs_quant.models.risk_model_utils import get_covariance_matrix_dataframe, build_factor_volatility_dataframe, \
+    build_factor_data_map
 
 
 class ReturnFormat(Enum):
@@ -86,57 +86,62 @@ class Factor:
         return self.__risk_model_id
 
     def covariance(self,
-                   factor,
+                   factor: 'Factor',
                    start_date: date = DataContext.current.start_date,
                    end_date: date = DataContext.current.end_date,
                    format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Retrieve a Dataframe or Dictionary of date->covariance values between this factor and another for a date
-        range """
-        appendage = self.__get_dataset_trial_appendage()
-        covariance_data_raw = GsDataApi.execute_query(
-            f'RISK_MODEL_COVARIANCE_MATRIX{appendage}',
-            DataQuery(
-                where={"riskModel": self.risk_model_id, "factorId": self.id},
-                start_date=start_date,
-                end_date=end_date
-            )
-        ).get('data', [])
+                range """
+        covariance_data_raw = GsFactorRiskModelApi.get_risk_model_data(self.risk_model_id,
+                                                                       start_date,
+                                                                       end_date,
+                                                                       measures=[RiskModelDataMeasure.Covariance_Matrix,
+                                                                                 RiskModelDataMeasure.Factor_Name,
+                                                                                 RiskModelDataMeasure.Factor_Id],
+                                                                       factors=list({self.name, factor.name}),
+                                                                       limit_factors=False).get('results')
 
-        date_to_matrix_order = factor.__matrix_order(start_date, end_date, appendage)
+        covariance_data_raw = get_covariance_matrix_dataframe(covariance_data_raw)
 
-        covariance_data = {}
-        for data in covariance_data_raw:
-            date = data['date']
-            if date_to_matrix_order.get(date):
-                matrix_order_on_date = date_to_matrix_order[date]
-                covariance_data[date] = data[matrix_order_on_date] * 252
+        covariance_data_df = covariance_data_raw.stack().loc[pd.IndexSlice[:, self.name, factor.name]] * 252
 
-        if format == ReturnFormat.DATA_FRAME:
-            return pd.DataFrame.from_dict(covariance_data, orient='index', columns=['covariance'])
-        return covariance_data
+        if format == ReturnFormat.JSON:
+            return covariance_data_df.to_dict()
+
+        return covariance_data_df.to_frame(name="covariance")
 
     def variance(self,
                  start_date: date = DataContext.current.start_date,
                  end_date: date = DataContext.current.end_date,
                  format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Retrieve a Dataframe or Dictionary of date->variance values for a factor over a date range """
-        variance_data = self.covariance(self, start_date, end_date, ReturnFormat.JSON)
+        variance_raw_data = self.covariance(self, start_date, end_date, ReturnFormat.DATA_FRAME) \
+            .rename(columns={"covariance": "variance"})
 
-        if format == ReturnFormat.DATA_FRAME:
-            return pd.DataFrame.from_dict(variance_data, orient='index', columns=['variance'])
-        return variance_data
+        if format == ReturnFormat.JSON:
+            return variance_raw_data.squeeze().to_dict()
+
+        return variance_raw_data
 
     def volatility(self,
                    start_date: date = DataContext.current.start_date,
                    end_date: date = DataContext.current.end_date,
                    format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Retrieve a Dataframe or Dictionary of date->volatility values for a factor over a date range """
-        variance = self.variance(start_date, end_date, ReturnFormat.JSON)
-        volatility_data = {k: sqrt(v) for k, v in variance.items()}
+        volatility_raw_data = GsFactorRiskModelApi.get_risk_model_data(self.risk_model_id,
+                                                                       start_date,
+                                                                       end_date,
+                                                                       measures=[RiskModelDataMeasure.Factor_Volatility,
+                                                                                 RiskModelDataMeasure.Factor_Id,
+                                                                                 RiskModelDataMeasure.Factor_Name],
+                                                                       factors=[self.name],
+                                                                       limit_factors=False).get('results')
 
+        volatility_data_df = build_factor_volatility_dataframe(volatility_raw_data, True, None) * 252
         if format == ReturnFormat.DATA_FRAME:
-            return pd.DataFrame.from_dict(volatility_data, orient='index', columns=['volatility'])
-        return volatility_data
+            return volatility_data_df.to_dict()
+
+        return volatility_data_df
 
     def correlation(self,
                     other_factor,
@@ -146,65 +151,45 @@ class Factor:
         """ Retrieve a Dataframe or Dictionary of date->correlation values between this factor and another for a date
         range """
 
-        factor_vol = self.volatility(start_date, end_date, ReturnFormat.JSON)
-        other_factor_vol = other_factor.volatility(start_date, end_date, ReturnFormat.JSON)
-        covariance = self.covariance(other_factor, start_date, end_date, ReturnFormat.JSON)
+        raw_data = GsFactorRiskModelApi.get_risk_model_data(self.risk_model_id,
+                                                            start_date,
+                                                            end_date,
+                                                            measures=[RiskModelDataMeasure.Covariance_Matrix,
+                                                                      RiskModelDataMeasure.Factor_Name,
+                                                                      RiskModelDataMeasure.Factor_Id],
+                                                            factors=[self.name, other_factor.name],
+                                                            limit_factors=False).get('results')
 
-        correlation_data = {}
-        for _date, covar in covariance.items():
-            if _date in factor_vol and _date in other_factor_vol:
-                denominator = factor_vol[_date] * other_factor_vol[_date]
-                if denominator != 0:
-                    correlation_data[_date] = covar / denominator
+        covariance_data_raw = get_covariance_matrix_dataframe(raw_data) * 252
+        numerator = covariance_data_raw.stack().loc[pd.IndexSlice[:, self.name, other_factor.name]]
+        denominator = np.sqrt(covariance_data_raw.stack().loc[pd.IndexSlice[:, self.name, self.name]] *
+                              covariance_data_raw.stack().loc[pd.IndexSlice[:, other_factor.name, other_factor.name]])
 
-        if format == ReturnFormat.DATA_FRAME:
-            return pd.DataFrame.from_dict(correlation_data, orient='index', columns=['correlation'])
-        return correlation_data
+        correlation_df = numerator / denominator
+
+        if format == ReturnFormat.JSON:
+            return correlation_df.to_dict()
+        return correlation_df.to_frame(name="correlation")
 
     def returns(self,
                 start_date: date = DataContext.current.start_date,
                 end_date: date = DataContext.current.end_date,
                 format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Retrieve a Dataframe or Dictionary of date->factor return values for a date range """
-        appendage = self.__get_dataset_trial_appendage()
-        data_query_results = GsDataApi.execute_query(
-            f'RISK_MODEL_FACTOR{appendage}',
-            DataQuery(
-                where={"riskModel": self.risk_model_id, "factorId": self.id},
-                fields=['return'],
-                start_date=start_date,
-                end_date=end_date
-            )
-        ).get('data', [])
+        factor_returns_raw = GsFactorRiskModelApi.get_risk_model_data(self.risk_model_id,
+                                                                      start_date,
+                                                                      end_date,
+                                                                      measures=[RiskModelDataMeasure.Factor_Return,
+                                                                                RiskModelDataMeasure.Factor_Name,
+                                                                                RiskModelDataMeasure.Factor_Id],
+                                                                      factors=[self.name],
+                                                                      limit_factors=False).get('results')
 
-        return_data = {dp['date']: dp['return'] for dp in data_query_results if dp.get('return')}
+        factor_returns_formatted = build_factor_data_map(factor_returns_raw, 'factorName', self.risk_model_id,
+                                                         RiskModelDataMeasure.Factor_Return, None)
+        factor_returns_df = factor_returns_formatted.rename(columns={self.name: 'return'}).rename_axis(None, axis=1)
 
-        if format == ReturnFormat.DATA_FRAME:
-            return pd.DataFrame.from_dict(return_data, orient='index', columns=['return'])
-        return return_data
+        if format == ReturnFormat.JSON:
+            return factor_returns_df.squeeze().to_dict()
 
-    def __matrix_order(self, start_date: date, end_date: date, appendage: str) -> Dict:
-        """ Retrieve Dictionary of date->matrix_order for the factor in the covariance matrix """
-        query_results = GsDataApi.execute_query(
-            f'RISK_MODEL_COVARIANCE_MATRIX{appendage}',
-            DataQuery(
-                where={"riskModel": self.risk_model_id, "factorId": self.id},
-                fields=['matrixOrder'],
-                start_date=start_date,
-                end_date=end_date
-            )
-        ).get('data', [])
-        return {data['date']: str(data['matrixOrder']) for data in query_results}
-
-    def __get_dataset_trial_appendage(self):
-        availability_response = [model_dataset for model_dataset in
-                                 GsSession.current._get(f'/data/measures/{self.risk_model_id}/availability?entityType'
-                                                        f'=RISK_MODEL').get('data')
-                                 if model_dataset.get('type') == 'Factor Return']
-        availability_response = sorted(availability_response, key=lambda k: k['rank'], reverse=True)
-        for availability in availability_response:
-            dataset_id = availability.get('datasetId')
-            models_covered = GsDataApi.get_coverage(dataset_id, limit=1000)
-            for model in models_covered:
-                if model.get('riskModel') == self.risk_model_id:
-                    return dataset_id.replace('RISK_MODEL_FACTOR', '')
+        return factor_returns_df

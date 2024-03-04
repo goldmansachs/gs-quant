@@ -83,6 +83,18 @@ mock_covariance_curve = {
     '2020-01-03': 1.03
 }
 
+mock_volatility_curve = {
+    '2020-01-01': sqrt(1.01),
+    '2020-01-02': sqrt(1.02),
+    '2020-01-03': sqrt(1.03)
+}
+
+mock_correlation_curve = {
+    '2020-01-01': 1.0,
+    '2020-01-02': 1.0,
+    '2020-01-03': 1.0
+}
+
 
 def mock_risk_model():
     replace = Replacer()
@@ -220,8 +232,8 @@ def test_factor_volatility():
     mock.return_value = ['2020-01-01', '2020-01-02', '2020-01-03']
 
     # mock getting covariances
-    mock = replace('gs_quant.markets.factor.Factor.variance', Mock())
-    mock.return_value = mock_covariance_curve
+    mock = replace('gs_quant.markets.factor.Factor.volatility', Mock())
+    mock.return_value = mock_volatility_curve
 
     with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
         actual = mrm.factor_volatility(mock_risk_model(), 'Factor Name')
@@ -252,12 +264,12 @@ def test_factor_correlation():
     mock.return_value = ['2020-01-01', '2020-01-02', '2020-01-03']
 
     # mock getting covariances
-    mock = replace('gs_quant.markets.factor.Factor.covariance', Mock())
-    mock.return_value = mock_covariance_curve
+    mock = replace('gs_quant.markets.factor.Factor.correlation', Mock())
+    mock.return_value = mock_correlation_curve
 
     with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
         actual = mrm.factor_correlation(mock_risk_model(), 'Factor Name', 'Factor Name')
-        assert all(actual.values == [1.0000000000000002, 1, 1])
+        assert all(actual.values == [1, 1, 1])
     replace.restore()
 
 
