@@ -190,7 +190,8 @@ class GsSession(ContextBase):
             self._session.headers.update({'X-Application': self.application})
             self._session.headers.update({'X-Version': self.application_version})
             self._authenticate()
-            self.post_to_activity_service()
+            if self.domain == Domain.APP:
+                self.post_to_activity_service()
 
     def close(self):
         self._session: requests.Session
@@ -527,12 +528,15 @@ class GsSession(ContextBase):
         params = {'featureApplication': self.application,
                   'gsQuantVersion': self.application_version,
                   'pythonVersion': f'{sys.version_info.major}.{sys.version_info.minor}'}
-        self._session.post(f'{self.domain}/{self.api_version}/activities',
-                           verify=self.verify,
-                           headers={'Content-Type': 'application/json; charset=utf-8'},
-                           data=json.dumps({'action': 'Initiated', 'kpis': [{'id': 'gsqInitiated', 'value': 1}],
-                                            'resource': 'GSQuant',
-                                            'parameters': params}))
+        try:
+            self._session.post(f'{self.domain}/{self.api_version}/activities',
+                               verify=self.verify,
+                               headers={'Content-Type': 'application/json; charset=utf-8'},
+                               data=json.dumps({'action': 'Initiated', 'kpis': [{'id': 'gsqInitiated', 'value': 1}],
+                                                'resource': 'GSQuant',
+                                                'parameters': params}))
+        except Exception:
+            pass
 
     @classmethod
     def get(

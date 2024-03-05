@@ -1,0 +1,50 @@
+[
+  [
+    [
+      [
+        {
+          "$type": "RiskVector",
+          "points": [
+            {
+              "path": "",
+              "type": "CMD NRG",
+              "asset": "WTI",
+              "class_": "FUTURE",
+              "point": "Z24",
+              "quoteStyle": "Price"
+            }
+          ],
+          "asset": [
+            -1630.8292216583252
+          ],
+          "calculationTime": 2170,
+          "queueingTime": -10164
+        }
+      ]
+    ]
+  ],
+  [
+    [
+      [
+        {
+          "$type": "RiskVector",
+          "points": [
+            {
+              "path": "",
+              "type": "CMD NRG",
+              "asset": "WTI",
+              "class_": "FUTURE",
+              "point": "Z24",
+              "quoteStyle": "Price"
+            }
+          ],
+          "asset": [
+            -1630.8292216583252
+          ],
+          "calculationTime": 2170,
+          "queueingTime": -10164
+        }
+      ]
+    ]
+  ]
+]

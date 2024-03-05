@@ -127,7 +127,10 @@ def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: Unio
     if result.empty:
         return result
 
-    raw_value = result.loc[date]
+    # if the result is a dataframe try to preserve the type
+    # if a dataframe has only 1 row selected it otherwise gets turned into a series
+    raw_value = result.loc[[date]] if isinstance(result, DataFrameWithInfo) and isinstance(date, dt.date) \
+        else result.loc[date]
     key = result.risk_key
 
     risk_key = RiskKey(

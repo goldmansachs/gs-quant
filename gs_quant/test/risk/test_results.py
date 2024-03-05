@@ -19,7 +19,7 @@ from datetime import date
 import gs_quant.risk as risk
 import numpy as np
 import pytest
-from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg
+from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg, CommodSwap
 from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMarket, MarketDataCoordinate
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import MultiScenario, ResolvedInstrumentValues
@@ -70,12 +70,14 @@ swap_5 = IRSwap("Pay", "5y", "GBP", fixed_rate=-0.005, name="5y")
 swap_6 = IRSwap("Pay", "10y", "GBP", fixed_rate=-0.005, name="10y")
 swap_7 = IRSwap("Pay", "5y", "JPY", fixed_rate=-0.005, name="5y")
 swap_8 = IRSwap("Pay", "10y", "JPY", fixed_rate=-0.005, name="10y")
+commod_swap = CommodSwap(name="Test")
 eur_port = Portfolio([swap_1, swap_2], name="EUR")
 usd_port = Portfolio([swap_3, swap_4], name="USD")
 gbp_port = Portfolio([swap_5, swap_6], name="GBP")
 jpy_port = Portfolio([swap_7, swap_8], name='JPY')
 port1 = Portfolio([eur_port, gbp_port], name='EURGBP')
 port2 = Portfolio([jpy_port, usd_port], name='USDJPY')
+commod_port = Portfolio([commod_swap])
 port = Portfolio([port1, port2])
 swaption_port = Portfolio([IRSwaption("Receive", '5y', 'USD', expiration_date='2m', strike='atm', name='Swaption1'),
                            IRSwaption("Receive", '10y', 'USD', expiration_date='3m', strike='atm', name='Swaption2')])
@@ -302,6 +304,7 @@ def test_bucketed_risks(mocker):
         _, res4, frame4 = get_attributes(port1, risk.IRDelta, 'Multiple')
         _, res5, frame5 = get_attributes(bs_port, risk.IRBasis(aggregation_level=AggregationLevel.Asset))
         _, res6, frame6 = get_attributes(jpy_port, risk.IRBasis(aggregation_level=AggregationLevel.Asset), 'Multiple')
+        _, res7, frame7 = get_attributes(commod_port, risk.CommodDelta, "Multiple")
 
     def check_depth(res, f, with_dates=''):
         temp_res = list(res)[0].drop('value', axis=1)
@@ -316,6 +319,7 @@ def test_bucketed_risks(mocker):
     check_depth(res4, frame4, 'dated')
     check_depth(res5, frame5)
     check_depth(res6, frame6, 'dated')
+    check_depth(res7, frame7, 'dated')
 
     default_pivot_table_test(res1, 'has_bucketed')
     default_pivot_table_test(res2, 'has_bucketed')
@@ -323,6 +327,7 @@ def test_bucketed_risks(mocker):
     default_pivot_table_test(res4, 'has_bucketed')
     default_pivot_table_test(res5, 'has_bucketed')
     default_pivot_table_test(res6, 'has_bucketed')
+    default_pivot_table_test(res7, 'has_bucketed')
 
     # test slicing
     # slice one portfolio
@@ -348,6 +353,9 @@ def test_bucketed_risks(mocker):
     filter_agg_r6 = agg_r6.loc[agg_r6.apply(filter_lambda, axis=1)]['value'].values[0]
     manual_agg_f6 = frame6.loc[frame6.apply(filter_lambda, axis=1)]['value'].values.sum()
     np.testing.assert_almost_equal(filter_agg_r6, manual_agg_f6, 8)
+
+    assert isinstance(res7[date(2020, 1, 14)].result().futures[0].result(), DataFrameWithInfo)
+    assert res7[date(2020, 1, 14)].to_frame()["mkt_type"][0] == "CMD NRG"
 
 
 def test_cashflows_risk(mocker):

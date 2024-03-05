@@ -248,6 +248,7 @@ class WorkflowPosition(Base):
     description: Optional[str] = field(default=None, metadata=field_metadata)
     entitlements: Optional[WorkflowEntitlements] = field(default=None, metadata=field_metadata)
     creator: Optional[str] = field(default=None, metadata=field_metadata)
+    originating_system: Optional[str] = field(default=None, metadata=field_metadata)
     is_read_only: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
