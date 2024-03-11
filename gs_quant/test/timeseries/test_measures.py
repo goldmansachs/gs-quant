@@ -417,6 +417,20 @@ def test_swap_rate_calc(mocker):
     except MqValueError:
         assert False
 
+    try:
+        # rate option with no defaults specified
+        val = tm_rates.swap_rate_calc(asset, swap_tenor='10y', benchmark_type='NGN-LIBOR-SYNTHETIC', real_time=True)
+        assert False
+    except MqValueError:
+        assert True
+
+    try:
+        # rate option with defaults specified
+        val = tm_rates.swap_rate_calc(asset, swap_tenor='10y', benchmark_type='USD-SOFR-COMPOUND', real_time=True)
+        assert True
+    except MqValueError:
+        assert False
+
     replace.restore()
 
 
@@ -468,6 +482,22 @@ def test_curve_measures(mocker):
 
     try:
         val = tm_rates.instantaneous_forward_rate(asset)
+        assert False
+    except MqValueError:
+        assert True
+
+    try:
+        # rate option with defaults specified
+        val = tm_rates.index_forward_rate(asset, forward_start_tenor='10y', benchmark_type='USD-SOFR-COMPOUND',
+                                          real_time=True)
+        assert True
+    except MqValueError:
+        assert False
+
+    try:
+        # rate option with no defaults specified
+        val = tm_rates.index_forward_rate(asset, forward_start_tenor='10y', benchmark_type='NGN-LIBOR-SYNTHETIC',
+                                          real_time=True)
         assert False
     except MqValueError:
         assert True
@@ -5195,6 +5225,87 @@ def test_forward_curve():
                             pd.Series(actual))
 
     replace.restore()
+
+
+def mock_us_gas_forward_curve(_cls, _q, ignore_errors=False):
+    d = {
+        'forwardPrice': [1.614, 1.685, 1.814],
+        'priceMethod': ["GDD", "GDD", "GDD"],
+        'contract': ["H24", "J24", "K24"]
+    }
+    date = datetime.date(2020, 8, 20)
+    df = MarketDataResponseFrame(data=d, index=pd.to_datetime([date, date, date]))
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def test_us_gas_forward_curve():
+    replace = Replacer()
+    asset = CommodityNaturalGasHub('MAA66', 'HENRY')
+    mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data_last', Mock())
+    expeted_output = [1.614, 1.685, 1.814]
+    expected_dates = [datetime.date(2024, 3, 1), datetime.date(2024, 4, 1), datetime.date(2024, 5, 1)]
+    with DataContext(datetime.date(2023, 12, 20), datetime.date(2024, 5, 20)):  # G24, H24, J24, K24
+        # Normal case with range contracts between (2023, 12, 20) - (2024, 5, 20)
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data',
+                mock_us_gas_forward_curve)
+        mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2024, 2, 16)])
+        actual = tm.forward_curve_ng(asset, market_date='20240216')
+        assert_series_equal(pd.Series(expeted_output, index=expected_dates, name='forwardPrice'),
+                            pd.Series(actual))
+
+        # market date is a holiday (2024, 2, 19) -> Washington's Birthday
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data',
+                mock_us_gas_forward_curve)
+        mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2024, 2, 16)])
+        actual = tm.forward_curve_ng(asset, market_date='20240219')
+        assert_series_equal(pd.Series(expeted_output, index=expected_dates, name='forwardPrice'),
+                            pd.Series(actual))
+
+        # Test for an empty data query result
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_empty_forward_curve)
+        mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2024, 2, 16)])
+        actual = tm.forward_curve_ng(asset)
+        assert actual.empty
+
+        # Test for default date always returning a weekday
+        replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_us_gas_forward_curve)
+        mock_todate = replace('pandas.Timestamp.today', Mock())
+        mock_todate.return_value = pd.Timestamp('2024-02-18')
+        mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2020, 8, 20)])
+        actual = tm.forward_curve_ng(asset)
+        assert_series_equal(pd.Series(expeted_output, index=expected_dates, name='forwardPrice'),
+                            pd.Series(actual))
+
+        # Test for intra day frequency error
+        with pytest.raises(MqValueError):
+            tm.forward_curve_ng(asset, market_date='20240216', real_time=True)
+
+        # Test for future date query
+        with pytest.raises(MqValueError):
+            tm.forward_curve_ng(asset, market_date='20400820')
+
+        # Test for weekend date query
+        with pytest.raises(MqValueError):
+            tm.forward_curve_ng(asset, market_date='20240217')
+
+        # Test for term structure for market date beyond end date which is an invalid scenario
+        with pytest.raises(MqValueError):
+            tm.forward_curve_ng(asset, market_date='20240320')
+
+        # Test for empty market date in parameters, will fail as end date for this test is in past
+        with pytest.raises(MqValueError):
+            mock_todate = replace('pandas.Timestamp.today', Mock())
+            mock_todate.return_value = pd.Timestamp('2024-10-18')
+            actual = tm.forward_curve_ng(asset)
+
+        # Test for invalid market_date data type
+        with pytest.raises(MqTypeError):
+            actual = tm.forward_curve_ng(asset, market_date=20201001)
+
+        # Test for invalid market_date string format
+        with pytest.raises(MqValueError):
+            actual = tm.forward_curve_ng(asset, market_date='9, Jan 2020')
 
 
 def test_eu_ng_hub_to_swap():

@@ -420,16 +420,16 @@ class RebalanceActionImpl(ActionHandler):
 
 
 class GenericEngineActionFactory(ActionHandlerBaseFactory):
-    def __init__(self, action_impl_map={}):
+    def __init__(self, action_impl_map=None):
         self.action_impl_map = {
             AddTradeAction: AddTradeActionImpl,
             EnterPositionQuantityScaledAction: EnterPositionQuantityScaledActionImpl,
             HedgeAction: HedgeActionImpl,
             ExitTradeAction: ExitTradeActionImpl,
             ExitAllPositionsAction: ExitTradeActionImpl,
-            RebalanceAction: RebalanceActionImpl
+            RebalanceAction: RebalanceActionImpl,
+            **(action_impl_map or {})
         }
-        self.action_impl_map.update(action_impl_map)
 
     def get_action_handler(self, action: Action) -> ActionHandler:
         if type(action) in self.action_impl_map:
@@ -439,8 +439,8 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
 
 class GenericEngine(BacktestBaseEngine):
 
-    def __init__(self, action_impl_map={}, price_measure=Price):
-        self.action_impl_map = action_impl_map
+    def __init__(self, action_impl_map=None, price_measure=Price):
+        self.action_impl_map = {} if action_impl_map is None else action_impl_map
         self.price_measure = price_measure
         self._pricing_context_params = None
         self._initial_pricing_context = None

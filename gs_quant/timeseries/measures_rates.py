@@ -503,7 +503,8 @@ class BenchmarkType(Enum):
     SIOR = 'SIOR'
 
 
-def _check_benchmark_type(currency, benchmark_type: Union[BenchmarkType, str]) -> BenchmarkType:
+def _check_benchmark_type(currency, benchmark_type: Union[BenchmarkType, str], nothrow: bool = False) \
+        -> Union[BenchmarkType, str]:
     if isinstance(benchmark_type, str):
         if benchmark_type.upper() in BenchmarkType.__members__:
             benchmark_type = BenchmarkType[benchmark_type.upper()]
@@ -511,12 +512,15 @@ def _check_benchmark_type(currency, benchmark_type: Union[BenchmarkType, str]) -
             benchmark_type = BenchmarkType.Fed_Funds
         elif benchmark_type in ['estr', 'ESTR', 'eurostr', 'EuroStr']:
             benchmark_type = BenchmarkType.EUROSTR
+        elif not nothrow:
+            raise MqValueError(f'{benchmark_type} is not valid, pick one among ' +
+                               ', '.join([x.value for x in BenchmarkType]))
         else:
-            raise MqValueError('%s is not valid, pick one among ' + ', '.join([x.value for x in BenchmarkType]))
+            return benchmark_type
 
     if isinstance(benchmark_type, BenchmarkType) and \
             benchmark_type.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK[currency.value].keys():
-        raise MqValueError('%s is not supported for %s', benchmark_type.value, currency.value)
+        raise MqValueError(f'{benchmark_type.value} is not supported for {currency.value}')
     else:
         return benchmark_type
 
@@ -573,14 +577,20 @@ def _get_benchmark_type(currency: CurrencyEnum, benchmark_type: BenchmarkType = 
     return benchmark_type_input
 
 
-def _get_swap_leg_defaults(currency: CurrencyEnum, benchmark_type: BenchmarkType = None,
+def _get_swap_leg_defaults(currency: CurrencyEnum, benchmark_type: Union[BenchmarkType, str] = None,
                            floating_rate_tenor: str = None) -> dict:
     pricing_location = CURRENCY_TO_PRICING_LOCATION.get(currency, PricingLocation.LDN)
     # default benchmark types
-    benchmark_type_input = _get_benchmark_type(currency, benchmark_type)
+    if not isinstance(benchmark_type, str):
+        benchmark_type_input = _get_benchmark_type(currency, benchmark_type)
+    else:
+        benchmark_type_input = benchmark_type
     # default floating index
     if floating_rate_tenor is None:
-        floating_rate_tenor = BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS[benchmark_type_input]
+        if benchmark_type_input in BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS:
+            floating_rate_tenor = BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS[benchmark_type_input]
+        else:
+            raise MqValueError(f"{benchmark_type_input} has no default fixing tenor, please specify one")
 
     return dict(currency=currency, benchmark_type=benchmark_type_input,
                 floating_rate_tenor=floating_rate_tenor, pricing_location=pricing_location)
@@ -669,7 +679,7 @@ def _get_swap_data_calc(asset: Asset, swap_tenor: str, benchmark_type: str = Non
                         real_time: bool = False, location: PricingLocation = None) -> pd.DataFrame:
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
 
-    benchmark_type = _check_benchmark_type(currency, benchmark_type)
+    benchmark_type = _check_benchmark_type(currency, benchmark_type, True)
 
     clearing_house = SwapClearingHouse.LCH
     if csa in ['EUREX', 'JSCC', 'CME']:
@@ -688,7 +698,7 @@ def _get_swap_data_calc(asset: Asset, swap_tenor: str, benchmark_type: str = Non
                      fixed_rate=0.0, termination_date=swap_tenor)
 
     if forward_tenor:
-        builder.startdate = forward_tenor
+        builder.effective_date = forward_tenor
 
     _logger.debug(f'where builder={builder.as_dict()}')
 
@@ -1447,10 +1457,16 @@ def index_forward_rate(asset: Asset, forward_start_tenor: str = None, benchmark_
     if not forward_start_tenor:
         raise MqValueError("Forward rate start date not specified")
 
-    benchmark_type = _check_benchmark_type(currency, benchmark_type)
-    benchmark_type_input = _get_benchmark_type(currency, benchmark_type)
+    benchmark_type = _check_benchmark_type(currency, benchmark_type, True)
+    if not isinstance(benchmark_type, str):
+        benchmark_type_input = _get_benchmark_type(currency, benchmark_type)
+    else:
+        benchmark_type_input = benchmark_type
 
     if fixing_tenor is None:
+        if benchmark_type_input not in BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS:
+            raise MqValueError("Please provide fixing tenor: " +
+                               f"default fixing tenor not specified for {benchmark_type_input}")
         fixing_tenor = BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS[benchmark_type_input]
 
     measure = f'FR:{forward_start_tenor}:{fixing_tenor}'
