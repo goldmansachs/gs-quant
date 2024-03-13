@@ -561,6 +561,70 @@ class GsDataApi(DataApi):
             return df
 
     @classmethod
+    def get_mxapi_vector_measure(cls, curve_type=None, curve_asset=None, curve_point=None, curve_tags=None,
+                                 vector_measure=None, as_of_time=None, request_id=None,
+                                 close_location=None) -> pd.DataFrame:
+        if not vector_measure:
+            raise ValueError("Vector measure must be specified.")
+
+        if not as_of_time:
+            raise ValueError("As-of date or time must be specified.")
+
+        real_time = isinstance(as_of_time, dt.datetime)
+
+        if not real_time and not isinstance(as_of_time, dt.date):
+            raise ValueError("As-of date or time must be specified.")
+
+        if not real_time and not close_location:
+            close_location = 'NYC'
+
+        if real_time:
+            request_dict = {
+                'type': 'MxAPI Curve Request',
+                'modelType': curve_type,
+                'modelAsset': curve_asset,
+                'point': curve_point,
+                'tags': curve_tags,
+                'asOfTime': cls._to_zulu(as_of_time),
+                'curveName': vector_measure
+            }
+        else:
+            request_dict = {
+                'type': 'MxAPI Curve Request EOD',
+                'modelType': curve_type,
+                'modelAsset': curve_asset,
+                'point': curve_point,
+                'tags': curve_tags,
+                'asOfDate': as_of_time.isoformat(),
+                'close': close_location,
+                'curveName': vector_measure
+            }
+
+        url = '/mxapi/mq/curve' if real_time else '/mxapi/mq/curve/eod'
+
+        start = time.perf_counter()
+        try:
+            body = cls._post_with_cache_check(url, payload=request_dict)
+        except Exception as e:
+            log_warning(request_id, _logger, f'Mxapi curve query {request_dict} failed due to {e}')
+            raise e
+        log_debug(request_id, _logger, 'MxAPI curve query (%s) with payload (%s) ran in %.3f ms',
+                  body.get('requestId'), request_dict, (time.perf_counter() - start) * 1000)
+
+        values = body['curve']
+        value_col_name = body['curveName']
+        knots = body['knots']
+        column_name = body['knotType']
+
+        if len(values) == 0 and len(body['errMsg']) > 0:
+            raise RuntimeError(body['errMsg'])
+
+        d = {value_col_name: values, column_name: knots}
+        df = MarketDataResponseFrame(pd.DataFrame(data=d))
+        df = df.set_index(column_name)
+        return df
+
+    @classmethod
     def get_mxapi_backtest_data(cls, builder, start_time=None, end_time=None, num_samples=120,
                                 csa=None, request_id=None, close_location=None, real_time=None) -> pd.DataFrame:
         real_time = real_time or isinstance(start_time, dt.datetime)
