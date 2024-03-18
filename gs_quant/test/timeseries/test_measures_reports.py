@@ -15,6 +15,7 @@ under the License.
 """
 import copy
 import datetime
+import math
 
 import pandas
 import pandas as pd
@@ -115,6 +116,71 @@ factor_data = [
         'exposure': -11.25,
         'proportionOfRisk': 3
     }
+]
+
+
+factor_exposure_data = [
+    {
+        'date': '2024-03-14',
+        'reportId': 'report_id',
+        'factor': 'Factor_1',
+        'factorCategory': 'Style',
+        'pnl': 19.23,
+        'exposure': 100,
+        'proportionOfRisk': 1
+    },
+    {
+        'date': '2024-03-14',
+        'reportId': 'report_id',
+        'factor': 'Factor_2',
+        'factorCategory': 'Style',
+        'pnl': 14.24,
+        'exposure': 100,
+        'proportionOfRisk': 2
+    },
+    {
+        'date': '2024-03-14',
+        'reportId': 'report_id',
+        'factor': 'Factor_3',
+        'factorCategory': 'Style',
+        'pnl': 21.25,
+        'exposure': 100,
+        'proportionOfRisk': 3
+    }
+]
+
+
+factor_return_data = [
+    {
+        "date": "2024-03-13",
+        "factor": "Factor_1",
+        "return": 2
+    },
+    {
+        "date": "2024-03-13",
+        "factor": "Factor_2",
+        "return": 3
+    },
+    {
+        "date": "2024-03-13",
+        "factor": "Factor_3",
+        "return": 2
+    },
+    {
+        "date": "2024-03-14",
+        "factor": "Factor_1",
+        "return": 2
+    },
+    {
+        "date": "2024-03-14",
+        "factor": "Factor_2",
+        "return": 3
+    },
+    {
+        "date": "2024-03-14",
+        "factor": "Factor_3",
+        "return": 2
+    },
 ]
 
 aggregate_factor_data = [
@@ -1136,6 +1202,52 @@ def test_pnl_percent():
 
         actual = mr.pnl('report_id', 'Percent')
         assert all([a == pytest.approx(e) for a, e in zip(actual.values, expected_values)])
+
+    replace.restore()
+
+
+def test_historical_simulation_estimated_pnl():
+    replace = Replacer()
+
+    # mock getting report
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_report', Mock())
+    mock.return_value = factor_risk_report
+
+    # mock getting report factor data
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
+    mock.return_value = factor_exposure_data
+
+    # mock sending data request
+    mock = replace('gs_quant.api.gs.data.GsDataApi.execute_query', Mock())
+    mock.return_value = {"data": factor_return_data}
+
+    with DataContext(datetime.date(2024, 3, 13), datetime.date(2024, 3, 14)):
+        actual = mr.historical_simulation_estimated_pnl('report_id')
+        actual_values = list(actual.values)
+        assert all([math.isclose(x, actual_values[i]) for i, x in enumerate([7.0, 14.17])])
+
+    replace.restore()
+
+
+def test_historical_simulation_estimated_factor_attribution():
+    replace = Replacer()
+
+    # mock getting report
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_report', Mock())
+    mock.return_value = factor_risk_report
+
+    # mock getting report factor data
+    mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
+    mock.return_value = factor_exposure_data
+
+    # mock sending data request
+    mock = replace('gs_quant.api.gs.data.GsDataApi.execute_query', Mock())
+    mock.return_value = {"data": [data for data in factor_return_data if data['factor'] == 'Factor_1']}
+
+    with DataContext(datetime.date(2024, 3, 13), datetime.date(2024, 3, 14)):
+        actual = mr.historical_simulation_estimated_factor_attribution('report_id', "Factor_1")
+        actual_values = list(actual.values)
+        assert all([math.isclose(x, actual_values[i]) for i, x in enumerate([2.0, 4.04])])
 
     replace.restore()
 

@@ -36,6 +36,7 @@ from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.thematics import ThematicMeasure, GsThematicApi, Region
+from gs_quant.api.gs.scenarios import GsFactorScenarioApi
 from gs_quant.common import DateLimit, PositionType, Currency
 from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
@@ -44,10 +45,13 @@ from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport, \
-    flatten_results_into_df, get_thematic_breakdown_as_df
+    flatten_results_into_df, get_thematic_breakdown_as_df, ReturnFormat
+from gs_quant.markets.scenario import Scenario
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
 from gs_quant.target.reports import ReportStatus, ReportType
+from gs_quant.entities.entity_utils import _explode_data
+
 
 _logger = logging.getLogger(__name__)
 
@@ -63,6 +67,7 @@ class EntityType(Enum):
     RISK_MODEL = 'risk_model'
     SUBDIVISION = 'subdivision'
     DATASET = 'dataset'
+    SCENARIO = 'scenario'
 
 
 @dataclass
@@ -73,6 +78,19 @@ class EntityKey:
 
 class EntityIdentifier(Enum):
     pass
+
+
+class ScenarioCalculationType(Enum):
+    FACTOR_SCENARIO = "Factor Scenario"
+
+
+class ScenarioCalculationMeasure(Enum):
+    SUMMARY = "Summary"
+    ESTIMATED_FACTOR_PNL = "Factor Pnl"
+    ESTIMATED_PNL_BY_SECTOR = "By Sector Pnl Aggregations"
+    ESTIMATED_PNL_BY_REGION = "By Region Pnl Aggregations"
+    ESTIMATED_PNL_BY_DIRECTION = "By Direction Pnl Aggregations"
+    ESTIMATED_PNL_BY_ASSET = "By Asset Pnl"
 
 
 class Entity(metaclass=ABCMeta):
@@ -879,3 +897,125 @@ class PositionedEntity(metaclass=ABCMeta):
         :return: a Pandas DataFrame with results
         """
         return get_thematic_breakdown_as_df(entity_id=self.id, date=date, basket_id=basket_id)
+
+    def get_factor_scenario_analytics(self,
+                                      scenarios: List[Scenario],
+                                      date: dt.date,
+                                      measures: List[ScenarioCalculationMeasure],
+                                      risk_model: str = None,
+                                      return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> \
+            Union[Dict, Union[Dict, pd.DataFrame]]:
+
+        """Given a list of factor scenarios (historical simulation and/or custom shocks), return the estimated pnl
+         of the given positioned entity.
+         :param scenarios: List of factor-based scenarios
+         :param date: date to run scenarios.
+         :param measures: which metrics to return
+         :param risk_model: valid risk model ID
+         :param return_format: whether to return data formatted in a dataframe or as a dict
+
+          **Examples**
+
+            >>> from gs_quant.session import GsSession, Environment
+            >>> from gs_quant.markets.portfolio_manager import PortfolioManager, ReturnFormat
+            >>> from gs_quant.entities.entity import ScenarioCalculationMeasure, PositionedEntity
+            >>> from gs_quant.markets.scenario import Scenario
+
+          Get scenarios
+            >>> covid_19_omicron = Scenario.get_by_name("Covid 19 Omicron (v2)") # historical simulation
+            >>> custom_shock = Scenario.get_by_name("Shocking factor by x% (Propagated)") # custom shock
+            >>> risk_model = "RISK_MODEL_ID" # valid risk model ID
+
+          Instantiate your positionedEntity. Here, we are using one of its subclasses, PortfolioManager
+
+            >>> pm = PortfolioManager(portfolio_id="PORTFOLIO_ID")
+
+          Set the date you wish to run your scenario on
+
+           >>> date = dt.date(2023, 3, 7)
+
+          Run scenario and get estimated impact on your positioned entity
+
+          >>> scenario_analytics = pm.get_factor_scenario_analytics(
+          ...     scenarios=[covid_19_omicron, beta_propagated],
+          ...     date=date,
+          ...     measures=[ScenarioCalculationMeasure.SUMMARY,
+          ...               ScenarioCalculationMeasure.ESTIMATED_FACTOR_PNL,
+          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_SECTOR,
+          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_REGION,
+          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_DIRECTION,
+          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_ASSET],
+          ...     risk_model=risk_model)
+
+          By default, the result will be returned in a dict with keys as the measures/metrics requested and values as
+          the scenario calculation results formatted in a dataframe. To get the results in a dict, specify the return
+          format as JSON
+         """
+        risk_report = self.get_factor_risk_report(risk_model_id=risk_model)
+
+        id_to_scenario_map = {scenario.id: scenario for scenario in scenarios}
+        scenario_ids = list(id_to_scenario_map.keys())
+
+        calculation_request = {
+            "date": date,
+            "scenarioIds": scenario_ids,
+            "reportId": risk_report.id,
+            "measures": [m.value for m in measures],
+            "riskModel": risk_model,
+            "type": "Factor Scenario"
+        }
+
+        results = GsFactorScenarioApi.calculate_scenario(calculation_request)
+
+        scenarios = [id_to_scenario_map.get(sc_id) for sc_id in results.get('scenarios')]
+        calculation_results = results.get('results')
+
+        if return_format == ReturnFormat.JSON:
+            return dict(zip(scenarios, calculation_results))
+
+        result = {}
+
+        all_data = {}
+        [all_data.update({result_type: []}) for result_type in ['summary', 'factorPnl', 'bySectorAggregations',
+                                                                'byRegionAggregations', 'byDirectionAggregations',
+                                                                'byAsset']]
+
+        for i, calc_result in enumerate(calculation_results):
+            all_data.get('summary').append(calc_result.get('summary'))
+            for result_type in ['summary', 'factorPnl', 'bySectorAggregations',
+                                'byRegionAggregations', 'byDirectionAggregations', 'byAsset']:
+                scenario_metadata_map = {"scenarioId": scenarios[i].id,
+                                         "scenarioName": scenarios[i].name,
+                                         "scenarioType": scenarios[i].scenario_type}
+                if result_type == 'summary':
+                    calc_result.get(result_type).update(scenario_metadata_map)
+                    all_data.get(result_type).append(calc_result.get(result_type))
+                else:
+                    [data_map.update(scenario_metadata_map) for data_map in calc_result.get(result_type, [])]
+                    [all_data.get(result_type).append(element) for element in calc_result.get(result_type, [])]
+
+        for result_type, result_label in {"summary": "summary",
+                                          "factorPnl": "factorCategories",
+                                          "bySectorAggregations": "sectors",
+                                          "byRegionAggregations": "countries",
+                                          "byDirectionAggregations": "direction",
+                                          "byAsset": "byAsset"}.items():
+            estimated_pnl_results_as_json = all_data.get(result_type)
+            if estimated_pnl_results_as_json:
+                estimated_pnl_df = pd.DataFrame.from_dict(estimated_pnl_results_as_json)
+                estimated_pnl_df = estimated_pnl_df.apply(
+                    _explode_data, axis=1, parent_label=result_label)
+                if isinstance(estimated_pnl_df, pd.Series):
+                    estimated_pnl_df = pd.concat(estimated_pnl_df.values, ignore_index=True)
+
+                estimated_pnl_df.columns = estimated_pnl_df.columns.map(lambda x: {
+                    "factorCategories": "factorCategory",
+                    "factors": "factor",
+                    "sectors": "sector",
+                    "countries": "country",
+                    "industries": "industry"
+                }.get(x, x))
+
+                result[result_type] = estimated_pnl_df
+
+        return result

@@ -33,6 +33,14 @@ class FactorRiskTableMode(EnumBase, Enum):
     Mctr = 'Mctr'    
 
 
+class FactorScenarioType(EnumBase, Enum):    
+    
+    """Marquee factor scenario type"""
+
+    Factor_Shock = 'Factor Shock'
+    Factor_Historical_Simulation = 'Factor Historical Simulation'    
+
+
 class OptimizationStatus(EnumBase, Enum):    
     
     """Optimization status."""
@@ -87,6 +95,24 @@ class ExecutionCostForHorizon(Base):
     execution_cost: Optional[float] = field(default=None, metadata=field_metadata)
     execution_cost_long: Optional[float] = field(default=None, metadata=field_metadata)
     execution_cost_short: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class FactorHistoricalSimulationScenarioParameters(Base):
+    start_date: datetime.date = field(default=None, metadata=field_metadata)
+    end_date: datetime.date = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class FactorShock(Base):
+    factor: str = field(default=None, metadata=field_metadata)
+    shock: float = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -394,11 +420,43 @@ class RiskAtHorizon(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class ScenarioGetManyRequestPathSchema(Base):
+    id_: Optional[Tuple[str, ...]] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    limit: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    offset: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    propagate_shocks: Optional[Tuple[bool, ...]] = field(default=None, metadata=field_metadata)
+    short_name: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    factor_scenario_type: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    historical_simulation_end_date: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    shocked_factor: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    description: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    historical_simulation_start_date: Optional[Tuple[datetime.date, ...]] = field(default=None, metadata=field_metadata)
+    shocked_factor_category: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    scenario_group_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class TradeCompleteAtHorizon(Base):
     minutes_expired: Optional[int] = field(default=None, metadata=field_metadata)
     positions_complete: Optional[int] = field(default=None, metadata=field_metadata)
     positions_complete_pct: Optional[float] = field(default=None, metadata=field_metadata)
     notional_complete_pct: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class FactorShockScenarioParameters(Base):
+    factor_shocks: Tuple[FactorShock, ...] = field(default=None, metadata=field_metadata)
+    propagate_shocks: bool = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -489,6 +547,22 @@ class OptimizationPortfolioCharacteristics(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class ShockScopeFilter(Base):
+    region: Optional[Region] = field(default=None, metadata=field_metadata)
+    asset_id: Optional[str] = field(default=None, metadata=field_metadata)
+    gics_sector: Optional[str] = field(default=None, metadata=field_metadata)
+    country_code: Optional[CountryCode] = field(default=None, metadata=field_metadata)
+    gics_industry_group: Optional[str] = field(default=None, metadata=field_metadata)
+    gics_industry: Optional[str] = field(default=None, metadata=field_metadata)
+    gics_sub_industry: Optional[str] = field(default=None, metadata=field_metadata)
+    is_investment_grade: Optional[bool] = field(default=None, metadata=field_metadata)
+    tenor: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class LiquidityTableRow(Base):
     asset_id: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=field_metadata)
@@ -544,6 +618,16 @@ class OptimizationTradeSchedule(Base):
     period_start_time: datetime.datetime = field(default=None, metadata=field_metadata)
     period_end_time: datetime.datetime = field(default=None, metadata=field_metadata)
     traded_positions: Tuple[OptimizationTradedPosition, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class ShockScope(Base):
+    asset_class: Optional[AssetClass] = field(default=None, metadata=field_metadata)
+    type_: Optional[str] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    filter_: Optional[ShockScopeFilter] = field(default=None, metadata=config(field_name='filter', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -608,6 +692,16 @@ class OptimizationAnalytics(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class Shock(Base):
+    scope: ShockScope = field(default=None, metadata=field_metadata)
+    value: float = field(default=None, metadata=field_metadata)
+    type_: str = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class OptimizationResult(Base):
     created_by_id: str = field(default=None, metadata=field_metadata)
     created_time: datetime.datetime = field(default=None, metadata=field_metadata)
@@ -621,6 +715,29 @@ class OptimizationResult(Base):
     status: OptimizationStatus = field(default=None, metadata=field_metadata)
     trade_schedule: Optional[Tuple[OptimizationTradeSchedule, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class Scenario(Base):
+    name: str = field(default=None, metadata=field_metadata)
+    shocks: Optional[Tuple[Shock, ...]] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    description: Optional[str] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    identifiers: Optional[Tuple[Identifier, ...]] = field(default=None, metadata=field_metadata)
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    scenario_group_id: Optional[str] = field(default=None, metadata=field_metadata)
+    short_name: Optional[str] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    type_: Optional[FactorScenarioType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    parameters: Optional[DictBase] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args

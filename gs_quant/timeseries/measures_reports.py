@@ -15,14 +15,15 @@ under the License.
 """
 import datetime as dt
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union, List
 
 import pandas as pd
 import numpy as np
+import math
 from pandas.tseries.offsets import BDay
 from pydash import decapitalize
 
-from gs_quant.api.gs.data import QueryType
+from gs_quant.api.gs.data import QueryType, GsDataApi, DataQuery
 from gs_quant.data.core import DataContext
 from gs_quant.datetime import prev_business_date
 from gs_quant.entities.entity import EntityType
@@ -337,6 +338,91 @@ def pnl(report_id: str, unit: str = 'Notional', *, source: str = None,
     else:
         pnl_df.set_index('date', inplace=True)
         return pd.Series(pnl_df['pnl'], name="pnl")
+
+
+@plot_measure_entity(EntityType.REPORT)
+def historical_simulation_estimated_pnl(report_id: str, *, source: str = None,
+                                        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    Estimated Pnl from replaying a historical simulation scenario on your latest positions
+    :param report_id: id of performance report
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio estimated pnl
+    """
+
+    factor_attributed_pnl = _replay_historical_factor_moves_on_latest_positions(report_id, [])
+    total_factor_attributed_pnl = factor_attributed_pnl.apply(np.sum, axis=1).to_frame("estimatedPnl")
+
+    total_factor_attributed_pnl.index = pd.to_datetime(total_factor_attributed_pnl.index)
+    return total_factor_attributed_pnl.squeeze()
+
+
+@plot_measure_entity(EntityType.REPORT)
+def historical_simulation_estimated_factor_attribution(report_id: str, factor_name: str, *, source: str = None,
+                                                       real_time: bool = False,
+                                                       request_id: Optional[str] = None) -> pd.Series:
+    """
+    Estimated Pnl attributed to the factor after replaying a historical simulation scenario on a portfolio's latest
+    positions
+    :param report_id: id of performance report
+    :param factor_name: name of the factor
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio estimated pnl
+    """
+
+    factor_attributed_pnl = _replay_historical_factor_moves_on_latest_positions(report_id, [factor_name])
+    factor_attributed_pnl.index = pd.to_datetime(factor_attributed_pnl.index)
+
+    return factor_attributed_pnl.squeeze()
+
+
+def _replay_historical_factor_moves_on_latest_positions(report_id: str, factors: List[str]) -> \
+        Union[pd.Series, pd.DataFrame]:
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    risk_report = FactorRiskReport.get(report_id)
+    risk_model_id = risk_report.get_risk_model_id()
+
+    # Get data in batches of 365 days
+    date_range = pd.bdate_range(start_date, end_date)
+    batches = np.array_split([d.date() for d in date_range.tolist()], math.ceil(len(date_range.tolist()) / 365))
+    data_query_results = []
+    query = {"riskModel": risk_model_id}
+    if factors:
+        query.update({"factor": factors})
+    for batch in batches:
+        data_query_results += GsDataApi.execute_query(
+            'RISK_MODEL_FACTOR',
+            DataQuery(
+                where=query,
+                start_date=batch[0],
+                end_date=batch[-1]
+            )
+        ).get('data', [])
+
+    return_data = pd.DataFrame(data_query_results).pivot(columns="factor", index="date", values="return").sort_index()
+    return_data_aggregated = (return_data / 100).apply(geometrically_aggregate)
+
+    latest_report_date = risk_report.latest_end_date
+    factor_exposures = risk_report.get_results(
+        start_date=latest_report_date,
+        end_date=latest_report_date,
+        return_format=ReturnFormat.JSON
+    )
+    factor_exposure_df = pd.DataFrame(factor_exposures).pivot(columns="factor",
+                                                              index="date",
+                                                              values="exposure").sort_index()
+
+    factor_exposure_df = factor_exposure_df.reindex(columns=return_data_aggregated.columns)
+    factor_attributed_pnl_values = return_data_aggregated.values * factor_exposure_df.values
+    factor_attributed_pnl = pd.DataFrame(factor_attributed_pnl_values, index=return_data_aggregated.index,
+                                         columns=return_data_aggregated.columns)
+
+    return factor_attributed_pnl
 
 
 def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, unit: Unit = Unit.NOTIONAL) -> pd.Series:

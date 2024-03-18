@@ -33,6 +33,7 @@ from gs_quant.target.common import PricingLocation
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import Currency, Cross, Bond, CurrencyEnum, SecurityMaster
 from gs_quant.timeseries.measures_fx_vol import _currencypair_to_tdapi_fxo_asset, _currencypair_to_tdapi_fxfwd_asset
+from gs_quant.timeseries.measures_helper import VolReference
 
 _index = [pd.Timestamp('2021-03-30')]
 _test_datasets = ('TEST_DATASET',)
@@ -343,79 +344,6 @@ def test_fwd_points(mocker):
     replace.restore()
 
 
-def test_fx_vol_measure_legacy(mocker):
-    replace = Replacer()
-    args = dict(tenor='1m', strike_reference=tm_fxo.VolReference('delta_neutral'), relative_strike=0,
-                location=None, legacy_implementation=True)
-
-    mock_gbp = Cross('MA26QSMPX9990G66', 'GBPUSD')
-    args['asset'] = mock_gbp
-    expected = tm.ExtendedSeries([1, 2, 3], index=_index * 3, name='impliedVolatility')
-    expected.dataset_ids = _test_datasets
-    mocker.patch.object(tm_rates, 'get_historical_and_last_for_measure',
-                        return_value=expected)
-    mocker.patch.object(tm_rates, '_extract_series_from_df',
-                        return_value=expected)
-    xrefs = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
-    xrefs.return_value = 'MA26QSMPX9990G66'
-    actual = tm_fxo.implied_volatility_fxvol(**args)
-    assert_series_equal(expected, actual)
-    replace.restore()
-
-    args['legacy_implementation'] = False
-    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
-    xrefs.return_value = None
-    with pytest.raises(MqValueError):
-        tm_fxo.implied_volatility_fxvol(**args)
-
-    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
-    xrefs.return_value = 'GBPUSD'
-    xrefs = replace('gs_quant.timeseries.measures._cross_stored_direction_helper', Mock())
-    xrefs.return_value = 'GBPUSD'
-    mocker.patch.object(tm_fxo, 'implied_volatility_new',
-                        return_value=expected)
-    actual = tm_fxo.implied_volatility_fxvol(**args)
-    assert_series_equal(expected, actual)
-
-    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
-    xrefs.return_value = 'USDUSD'
-    xrefs = replace('gs_quant.timeseries.measures_fx_vol._cross_stored_direction_helper', Mock())
-    xrefs.return_value = 'GBPUSD'
-    assets = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    assets.return_value = mock_gbp
-    actual = tm_fxo.implied_volatility_fxvol(**args)
-    assert_series_equal(expected, actual)
-
-    args['strike_reference'] = tm_fxo.VolReference('delta_call')
-    args['relative_strike'] = 25
-    actual = tm_fxo.implied_volatility_fxvol(**args)
-    assert_series_equal(expected, actual)
-
-    args['strike_reference'] = tm_fxo.VolReference('delta_put')
-    args['relative_strike'] = 25
-    actual = tm_fxo.implied_volatility_fxvol(**args)
-    assert_series_equal(expected, actual)
-
-    args['strike_reference'] = tm_fxo.VolReference('spot')
-    args['relative_strike'] = 100
-    actual = tm_fxo.implied_volatility_fxvol(**args)
-    assert_series_equal(expected, actual)
-
-    args['strike_reference'] = tm_fxo.VolReference('forward')
-    args['relative_strike'] = 100
-    actual = tm_fxo.implied_volatility_fxvol(**args)
-    assert_series_equal(expected, actual)
-
-    args['strike_reference'] = tm_fxo.VolReference('normalized')
-    args['relative_strike'] = 100
-    xrefs = replace('gs_quant.timeseries.measures_fx_vol._preprocess_implied_vol_strikes_fx', Mock())
-    xrefs.return_value = ['normalized', 0]
-    with pytest.raises(MqValueError):
-        tm_fxo.implied_volatility_fxvol(**args)
-
-    replace.restore()
-
-
 def mock_df():
     d = {
         'strikeVol': [5, 1, 2],
@@ -519,6 +447,84 @@ def test_vol_swap_strike():
 
     actual = tm_fxo.vol_swap_strike(base, "1y", None, real_time=False)
     assert_series_equal(tm_rates._extract_series_from_df(mock_df(), QueryType.STRIKE_VOL), actual)
+    replace.restore()
+
+
+def test_implied_volatility_fxvol(mocker):
+    replace = Replacer()
+
+    args = dict(tenor="1y", location=None)
+    mock_eur = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    args['asset'] = mock_eur
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'EURUSD'
+    xrefs = replace('gs_quant.timeseries.measures_fx_vol._cross_stored_direction_helper', Mock())
+    xrefs.return_value = 'GBPUSD'
+    assets = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
+    assets.return_value = mock_eur
+
+    preprocess_impl_vol = replace('gs_quant.timeseries.measures_fx_vol._preprocess_implied_vol_strikes_fx', Mock())
+    replace('gs_quant.timeseries.measures_fx_vol._get_tdapi_fxo_assets', Mock())
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    expected = tm.ExtendedSeries([1, 2, 3], index=_index * 3, name='impliedVolatility')
+
+    args['strike_reference'] = VolReference.DELTA_CALL
+    args['relative_strike'] = 50
+    preprocess_impl_vol.return_value = ['abc', 50]
+    with pytest.raises(MqValueError):
+        tm_fxo.implied_volatility_fxvol(**args)
+
+    args['strike_reference'] = VolReference.DELTA_CALL
+    args['relative_strike'] = 50
+    preprocess_impl_vol.return_value = ['delta', 50]
+    actual = tm_fxo.implied_volatility_fxvol(**args)
+    assert_series_equal(expected, actual)
+
+    args['strike_reference'] = VolReference.DELTA_PUT
+    args['relative_strike'] = 25
+    preprocess_impl_vol.return_value = ['delta', -25]
+    actual = tm_fxo.implied_volatility_fxvol(**args)
+    assert_series_equal(expected, actual)
+
+    args['strike_reference'] = VolReference.DELTA_CALL
+    args['relative_strike'] = 0
+    preprocess_impl_vol.return_value = ['delta', 0]
+    actual = tm_fxo.implied_volatility_fxvol(**args)
+    assert_series_equal(expected, actual)
+
+    args['strike_reference'] = VolReference.SPOT
+    args['relative_strike'] = 100
+    preprocess_impl_vol.return_value = ['spot', 100]
+    actual = tm_fxo.implied_volatility_fxvol(**args)
+    assert_series_equal(expected, actual)
+
+    args['strike_reference'] = VolReference.FORWARD
+    args['relative_strike'] = 100
+    preprocess_impl_vol.return_value = ['forward', 100]
+    actual = tm_fxo.implied_volatility_fxvol(**args)
+    assert_series_equal(expected, actual)
+
+    args['strike_reference'] = VolReference.NORMALIZED
+    args['relative_strike'] = 100
+    preprocess_impl_vol = replace('gs_quant.timeseries.measures_fx_vol._preprocess_implied_vol_strikes_fx', Mock())
+    preprocess_impl_vol.return_value = ['normalized', 0]
+    with pytest.raises(MqValueError):
+        tm_fxo.implied_volatility_fxvol(**args)
+
+    xrefs = replace('gs_quant.timeseries.measures_fx_vol._cross_stored_direction_helper', Mock())
+    xrefs.return_value = 'EURUSD'
+    args['strike_reference'] = VolReference.DELTA_CALL
+    args['relative_strike'] = 50
+    preprocess_impl_vol.return_value = ['delta', 50]
+    actual = tm_fxo.implied_volatility_fxvol(**args)
+    assert_series_equal(expected, actual)
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = None
+    with pytest.raises(MqValueError):
+        tm_fxo.implied_volatility_fxvol(**args)
+
     replace.restore()
 
 

@@ -22,7 +22,8 @@ from gs_quant.api.gs.data import QueryType
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.markets.securities import Asset, AssetIdentifier
-from gs_quant.models.risk_model import FactorRiskModel, ReturnFormat, MarqueeRiskModel
+from gs_quant.models.risk_model import FactorRiskModel, MarqueeRiskModel
+from gs_quant.markets.factor import ReturnFormat
 from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.target.risk_models import RiskModelDataMeasure, RiskModelDataAssetsRequest, \
     RiskModelUniverseIdentifierRequest

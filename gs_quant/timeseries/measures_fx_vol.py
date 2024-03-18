@@ -23,13 +23,11 @@ from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
-from gs_quant.data.log import log_debug
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset, SecurityMaster
 from gs_quant.target.common import AssetClass, AssetType, PricingLocation
 from gs_quant.timeseries import ASSET_SPEC, plot_measure, MeasureDependency
 from gs_quant.timeseries import ExtendedSeries, measures_rates as tm_rates
-from gs_quant.timeseries import measures as tm
 from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _cross_stored_direction_helper, \
     _preprocess_implied_vol_strikes_fx, _tenor_month_to_year
 from gs_quant.timeseries.measures_helper import VolReference
@@ -554,43 +552,6 @@ def implied_volatility_new(asset: Asset, expiry_tenor: str, strike: str, option_
 
 
 """
-Legacy implementation
-"""
-
-
-def legacy_implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference = None,
-                              relative_strike: Real = None, *, source: str = None, real_time: bool = False,
-                              request_id: Optional[str] = None) -> Series:
-    """
-    Volatility of an asset implied by observations of market prices.
-
-    :param asset: asset object loaded from security master
-    :param tenor: relative date representation of expiration date e.g. 1m
-            or absolute calendar strips e.g. 'Cal20', 'F20-G20'
-    :param strike_reference: reference for strike level
-    :param relative_strike: strike relative to reference
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :param request_id: service request id, if any
-    :return: implied volatility curve
-    """
-
-    asset_id = tm.cross_stored_direction_for_fx_vol(asset.get_marquee_id())
-    ref_string, relative_strike = tm._preprocess_implied_vol_strikes_fx(strike_reference, relative_strike)
-
-    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
-              relative_strike)
-    tenor = tm._tenor_month_to_year(tenor)
-    where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
-    # Parallel calls when fetching / appending last results
-    df = tm.get_historical_and_last_for_measure([asset_id], QueryType.IMPLIED_VOLATILITY, where, source=source,
-                                                real_time=real_time, request_id=request_id)
-
-    s = tm._extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
-    return s
-
-
-"""
 New Implementation
 """
 
@@ -602,8 +563,7 @@ New Implementation
 def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolReference = None,
                              relative_strike: Real = None, location: Optional[PricingLocation] = None,
                              legacy_implementation: bool = False, *,
-                             source: str = None, real_time: bool = False,
-                             request_id: Optional[str] = None) -> Series:
+                             source: str = None, real_time: bool = False) -> Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -613,16 +573,11 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
     :param strike_reference: reference for strike level
     :param relative_strike: strike relative to reference
     :param location: location of the data snapshot Example - "HKG", "LDN", "NYC"
-    :param legacy_implementation: use FX_IVOl over  FX_VANILLA_OPTIONS_VOLS
+    :param legacy_implementation: Deprecated (supplied values are ignored)
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
-    :param request_id: service request id, if any
     :return: implied volatility curve
     """
-
-    if legacy_implementation:
-        return (legacy_implied_volatility(asset, tenor, strike_reference, relative_strike,
-                                          source=source, real_time=real_time, request_id=request_id))
 
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     if bbid is not None:

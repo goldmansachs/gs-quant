@@ -138,8 +138,8 @@ class Factor:
                                                                        limit_factors=False).get('results')
 
         volatility_data_df = build_factor_volatility_dataframe(volatility_raw_data, True, None) * 252
-        if format == ReturnFormat.DATA_FRAME:
-            return volatility_data_df.to_dict()
+        if format == ReturnFormat.JSON:
+            return volatility_data_df.squeeze(axis=1).to_dict()
 
         return volatility_data_df
 

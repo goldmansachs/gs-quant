@@ -40,6 +40,7 @@ from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import Price
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.target.backtests import BacktestTradingQuantityType
+from gs_quant.common import AssetClass
 from gs_quant.tracing import Tracer
 
 # priority set to contexts making requests to the pricing API (min. 1 - max. 10)
@@ -432,6 +433,13 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
         }
 
     def get_action_handler(self, action: Action) -> ActionHandler:
+        def is_eq_underlier(leg):
+            if hasattr(leg, 'asset_class'):
+                return isinstance(leg.asset_class, AssetClass) and leg.asset_class == AssetClass.Equity
+            return leg.__class__.__name__.lower().startswith('eq')
+        if isinstance(action, EnterPositionQuantityScaledAction) and \
+                not all([is_eq_underlier(p) for p in action.priceables]):
+            raise RuntimeError('EnterPositionQuantityScaledAction only supported for equity underliers')
         if type(action) in self.action_impl_map:
             return self.action_impl_map[type(action)](action)
         raise RuntimeError(f'Action {type(action)} not supported by engine')
