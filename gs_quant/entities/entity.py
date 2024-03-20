@@ -129,6 +129,7 @@ class Entity(metaclass=ABCMeta):
             id_type: Union[EntityIdentifier, str],
             entity_type: Optional[Union[EntityType, str]] = None):
         id_type = id_type.value if isinstance(id_type, Enum) else id_type
+        id_value = id_value.lower()  # Convert to lowercase
 
         if entity_type is None:
             entity_type = cls.entity_type()
