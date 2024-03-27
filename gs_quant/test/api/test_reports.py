@@ -354,7 +354,7 @@ def test_get_factor_risk_report_view(mocker):
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
-    response = GsReportApi.get_factor_risk_report_view(report_id, view='Risk')
+    response = GsReportApi.get_factor_risk_report_view(report_id)
 
-    GsSession.current._get.assert_called_with(f'/risk/factors/reports/{report_id}/views?view=Risk')
+    GsSession.current._get.assert_called_with(f'/factor/risk/{report_id}/views?')
     assert response == mock_response

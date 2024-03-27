@@ -567,7 +567,7 @@ class GsSession(ContextBase):
 
             return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
                                  application=application, http_adapter=http_adapter, domain=domain)
-        elif token:
+        elif token and domain != Domain.MDS_WEB:
             if is_gssso:
                 try:
                     return PassThroughGSSSOSession(environment_or_domain, token, api_version=api_version,
@@ -581,7 +581,8 @@ class GsSession(ContextBase):
             if domain == Domain.MDS_WEB:
                 try:
                     return MQLoginSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter,
-                                          application_version=application_version, application=application)
+                                          application_version=application_version, application=application,
+                                          mq_login_token=token)
                 except NameError:
                     raise MqUninitialisedError('Unable to obtain MarqueeLogin token. '
                                                'Please use client_id and client_secret to make the query')
@@ -702,9 +703,10 @@ try:
 
         def __init__(self, environment_or_domain: str, api_version: str = API_VERSION,
                      application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None,
-                     application_version: str = APP_VERSION):
+                     application_version: str = APP_VERSION, mq_login_token=None):
             domain, verify = self.domain_and_verify(environment_or_domain)
             env_config = self._config_for_environment(environment_or_domain)
+            self.mq_login_token = mq_login_token
             GsSession.__init__(self, env_config['MdsWebDomain'], environment_or_domain, api_version=api_version,
                                application=application, verify=verify, http_adapter=http_adapter,
                                application_version=application_version)

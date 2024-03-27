@@ -25,11 +25,11 @@ from pydash import decapitalize
 
 from gs_quant.api.gs.data import QueryType, GsDataApi, DataQuery
 from gs_quant.data.core import DataContext
-from gs_quant.datetime import prev_business_date
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
 from gs_quant.markets.portfolio_manager import PortfolioManager
-from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport, ReturnFormat
+from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport, ReturnFormat, \
+    format_aum_for_return_calculation, get_pnl_percent, get_factor_pnl_percent_for_single_factor
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.target.reports import PositionSourceType
 from gs_quant.timeseries import plot_measure_entity
@@ -330,11 +330,7 @@ def pnl(report_id: str, unit: str = 'Notional', *, source: str = None,
     pnl_df = performance_report.get_pnl(start_date, end_date)
 
     if unit == Unit.PERCENT.value:
-        aum_as_dict = performance_report.get_aum(start_date=prev_business_date(start_date), end_date=end_date)
-        aum_df = pd.DataFrame(aum_as_dict.items(), columns=['date', 'aum'])
-        is_first_data_point_on_start_date = pnl_df['date'].iloc[[0]].values[0] == start_date.strftime('%Y-%m-%d')
-        return_series = _generate_daily_returns(aum_df, pnl_df, 'aum', 'pnl', is_first_data_point_on_start_date)
-        return geometrically_aggregate(return_series).multiply(100)
+        return get_pnl_percent(performance_report, pnl_df, 'pnl', start_date, end_date)
     else:
         pnl_df.set_index('date', inplace=True)
         return pd.Series(pnl_df['pnl'], name="pnl")
@@ -453,19 +449,14 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
         if report.position_source_type != PositionSourceType.Portfolio:
             raise MqValueError('Unit can only be set to percent for portfolio reports')
         pm = PortfolioManager(report.position_source_id)
-        performance_report = pm.get_performance_report()
+        tags = dict((tag.name, tag.value) for tag in report.parameters.tags) if report.parameters.tags else None
+        performance_report = pm.get_performance_report(tags=tags)
         start_date = dt.datetime.strptime(min([d['date'] for d in factor_data]), '%Y-%m-%d').date()
         end_date = dt.datetime.strptime(max([d['date'] for d in factor_data]), '%Y-%m-%d').date()
         if query_type == QueryType.FACTOR_PNL:
             # Factor Pnl needs to be geometrically aggregated if unit is %
-            aum_as_dict = performance_report.get_aum(start_date=prev_business_date(start_date), end_date=end_date)
-            aum_df = pd.DataFrame(aum_as_dict.items(), columns=['date', 'aum'])
-            pnl_df = pd.DataFrame(factor_data)[['date', 'pnl']]
-            total_returns_df = pd.DataFrame(total_data)[['date', 'pnl']]
-            total_returns_df = total_returns_df.rename(columns={'pnl': 'totalPnl'})
-            pnl_df = pd.merge(pnl_df, total_returns_df, how='inner', on=['date'])
-            is_first_data_point_on_start_date = pnl_df['date'].iloc[[0]].values[0] == start_date.strftime('%Y-%m-%d')
-            return _generate_daily_returns(aum_df, pnl_df, 'aum', 'pnl', is_first_data_point_on_start_date)
+            aum_df = format_aum_for_return_calculation(performance_report, start_date, end_date)
+            return get_factor_pnl_percent_for_single_factor(factor_data, total_data, aum_df, start_date)
         else:
             aum = performance_report.get_aum(start_date=start_date, end_date=end_date)
             for data in factor_data:
@@ -500,49 +491,3 @@ def _return_metrics(one_leg: pd.DataFrame, dates: list, name: str):
     one_leg[f'{name}Metrics'] = 1 / one_leg[f'{name}Metrics'] if one_leg['exposure'].iloc[-1] < 0 else one_leg[
         f'{name}Metrics']
     return one_leg
-
-
-def _generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_key: str, pnl_col_key: str,
-                            is_start_date_first_data_point: bool):
-    # Returns are defined as Pnl today divided by AUM yesterday.
-    if is_start_date_first_data_point:
-        pnl_df[pnl_col_key].iloc[[0]] = 0
-        if 'totalPnl' in list(pnl_df.columns.values):
-            pnl_df['totalPnl'].iloc[[0]] = 0
-    df = pd.merge(pnl_df, aum_df, how='outer', on='date')
-    df.set_index('date', inplace=True)
-    df.sort_index(inplace=True)
-    df.loc[:, [aum_col_key]] = df.loc[:, [aum_col_key]].fillna(method='ffill')
-    df['return'] = df[pnl_col_key].div(df[aum_col_key].shift(1))
-    if 'totalPnl' in list(df.columns.values):
-        df['totalPnl'] = df['totalPnl'].div(df[aum_col_key].shift(1))
-        df = df.fillna(0)
-        df['return'] = __smooth_percent_returns(df['return'].to_numpy(), df['totalPnl'].to_numpy()).tolist()
-    return_series = pd.Series(df['return'], name="return").dropna()
-    return return_series
-
-
-def __smooth_percent_returns(daily_factor_returns: np.array, daily_total_returns: np.array) -> np.array:
-    """
-    When attribution (in weights) are decomposed among multiple factors (like a group of risk model factors or
-    categories), simple geometric aggregation will not preserve additivity. In other words, the geometric sum of factor
-    PnL from Factor and Specific will NOT add up to the factor PnL from Total. The Carino log linking formula
-    calculates the coefficients for each node, and after that multiplication is done, the results can be aggregated
-    to calculate cumulative PnL:
-    https://rdrr.io/github/R-Finance/PortfolioAttribution/man/Carino.html
-
-    βt = A * αt
-    where βt is the linking coefficient on date t
-    where A is the log scaling factor (which is constant throughout the timeseries)
-    where αt is the perturbation factor on date t
-
-    A = (Rp - Rb) / (ln(1 + Rp) - ln(1 + Rb)) where Rp is the total portfolio return ; Rb is the total benchmark return
-    αt = (ln(1 + Rpt) - ln(1 + Rbt)) / (Rpt - Rbt) where Rpt is portfolio return on t and Rbp is benchmark return on t
-
-    For this use case benchmark returns are set to 0 for every day.
-    """
-    total_return = np.prod(daily_total_returns + 1) - 1
-    log_scaling_factor = (total_return) / (np.log(1 + total_return)) if total_return != 0 else 1
-    perturbation_factors = np.log(1 + daily_total_returns) / daily_total_returns
-    perturbation_factors = np.nan_to_num(perturbation_factors, nan=1)
-    return np.cumsum(daily_factor_returns * log_scaling_factor * perturbation_factors * 100)

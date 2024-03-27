@@ -178,7 +178,6 @@ class GsReportApi:
     @classmethod
     def get_factor_risk_report_view(cls,
                                     risk_report_id: str,
-                                    view: str = None,
                                     factor: str = None,
                                     factor_category: str = None,
                                     currency: Currency = None,
@@ -188,26 +187,27 @@ class GsReportApi:
 
         query_string = urllib.parse.urlencode(
             dict(filter(lambda item: item[1] is not None,
-                        dict(view=view, factor=factor, factorCategory=factor_category,
+                        dict(factor=factor, factorCategory=factor_category,
                              currency=currency, startDate=start_date, endDate=end_date, unit=unit).items())))
 
-        url = f'/risk/factors/reports/{risk_report_id}/views?{query_string}'
-        return GsSession.current._get(url)
+        GsSession.current.api_version = "v2"
+        url = f'/factor/risk/{risk_report_id}/views?{query_string}'
+        response = GsSession.current._get(url)
+        GsSession.current.api_version = "v1"
+        return response
 
     @classmethod
     def get_factor_risk_report_table(cls,
                                      risk_report_id: str,
                                      mode: FactorRiskTableMode = None,
-                                     factors: List[str] = None,
-                                     factor_categories: List[str] = None,
                                      unit: str = None,
                                      currency: Currency = None,
                                      date: dt.date = None,
                                      start_date: dt.date = None,
-                                     end_date: dt.date = None,
-                                     order_by_column: str = None,
-                                     order_type: OrderType = None) -> dict:
-        url = f'/risk/factors/reports/{risk_report_id}/tables?'
+                                     end_date: dt.date = None) -> dict:
+
+        GsSession.current.api_version = "v2"
+        url = f'/factor/risk/{risk_report_id}/tables?'
         if mode is not None:
             url += f'&mode={mode.value}'
         if unit is not None:
@@ -220,17 +220,10 @@ class GsReportApi:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
         if end_date is not None:
             url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
-        if factors is not None:
-            factors = map(urllib.parse.quote, factors)
-            url += f'&factor={"&factor=".join(factors)}'
-        if factor_categories is not None:
-            url += f'&factorCategory={"&factorCategory=".join(factor_categories)}'
-        if order_by_column is not None:
-            url += f'&orderByColumn={order_by_column}'
-        if order_type is not None:
-            url += f'&orderType={order_type}'
 
-        return GsSession.current._get(url)
+        response = GsSession.current._get(url)
+        GsSession.current.api_version = "v1"
+        return response
 
     @classmethod
     def get_brinson_attribution_results(cls,

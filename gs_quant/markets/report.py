@@ -15,8 +15,9 @@ under the License.
 """
 import datetime as dt
 from enum import Enum, auto
+import numpy as np
 from time import sleep
-from typing import Tuple, Union, List, Dict
+from typing import Tuple, Union, List, Dict, OrderedDict
 import scipy.stats as st
 
 import pandas as pd
@@ -25,12 +26,12 @@ from inflection import titleize
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
-from gs_quant.api.gs.reports import GsReportApi, OrderType, FactorRiskTableMode
+from gs_quant.api.gs.reports import GsReportApi, FactorRiskTableMode
 from gs_quant.api.gs.thematics import Region, GsThematicApi, ThematicMeasure
-from gs_quant.datetime import business_day_offset
+from gs_quant.datetime import business_day_offset, prev_business_date
 from gs_quant.errors import MqValueError
 from gs_quant.markets.report_utils import _get_ppaa_batches
-from gs_quant.target.common import ReportParameters, Currency
+from gs_quant.target.common import ReportParameters, Currency, PositionTag
 from gs_quant.target.coordinates import MDAPIDataBatchResponse
 from gs_quant.target.data import DataQuery, DataQueryResponse
 from gs_quant.target.reports import Report as TargetReport, ReportType, PositionSourceType, ReportStatus
@@ -109,6 +110,7 @@ class CustomAUMDataPoint:
 
 class ReportJobFuture:
     """Report job future that monitors report status and results"""
+
     def __init__(self,
                  report_id: str,
                  job_id: str,
@@ -452,15 +454,17 @@ class PerformanceReport(Report):
 
     def get_pnl(self,
                 start_date: dt.date = None,
-                end_date: dt.date = None) -> pd.DataFrame:
+                end_date: dt.date = None,
+                unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical portfolio PnL
 
         :param start_date: start date
         :param end_date: end date
+        :param unit: return the results in terms of notional or percent (defaults to notional)
         :return: returns a Pandas DataFrame with the results
         """
-        return self.get_measure("pnl", start_date, end_date)
+        return self.get_pnl_measure("pnl", unit, start_date, end_date)
 
     def get_long_exposure(self,
                           start_date: dt.date = None,
@@ -561,51 +565,59 @@ class PerformanceReport(Report):
 
     def get_trading_pnl(self,
                         start_date: dt.date = None,
-                        end_date: dt.date = None) -> pd.DataFrame:
+                        end_date: dt.date = None,
+                        unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical portfolio trading PnL
 
         :param start_date: start date
         :param end_date: end date
+        :param unit: return the results in terms of notional or percent (defaults to notional)
         :return: returns a Pandas DataFrame with the results
         """
-        return self.get_measure("tradingPnl", start_date, end_date)
+        return self.get_pnl_measure("tradingPnl", unit, start_date, end_date)
 
     def get_trading_cost_pnl(self,
                              start_date: dt.date = None,
-                             end_date: dt.date = None) -> pd.DataFrame:
+                             end_date: dt.date = None,
+                             unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical portfolio trading cost PnL
 
         :param start_date: start date
         :param end_date: end date
+        :param unit: return the results in terms of notional or percent (defaults to notional)
         :return: returns a Pandas DataFrame with the results
         """
-        return self.get_measure("tradingCostPnl", start_date, end_date)
+        return self.get_pnl_measure("tradingCostPnl", unit, start_date, end_date)
 
     def get_servicing_cost_long_pnl(self,
                                     start_date: dt.date = None,
-                                    end_date: dt.date = None) -> pd.DataFrame:
+                                    end_date: dt.date = None,
+                                    unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical portfolio servicing cost long PnL
 
         :param start_date: start date
         :param end_date: end date
+        :param unit: return the results in terms of notional or percent (defaults to notional)
         :return: returns a Pandas DataFrame with the results
         """
-        return self.get_measure("servicingCostLongPnl", start_date, end_date)
+        return self.get_pnl_measure("servicingCostLongPnl", unit, start_date, end_date)
 
     def get_servicing_cost_short_pnl(self,
                                      start_date: dt.date = None,
-                                     end_date: dt.date = None) -> pd.DataFrame:
+                                     end_date: dt.date = None,
+                                     unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
         """
         Get historical portfolio servicing cost short PnL
 
         :param start_date: start date
         :param end_date: end date
+        :param unit: return the results in terms of notional or percent (defaults to notional)
         :return: returns a Pandas DataFrame with the results
         """
-        return self.get_measure("servicingCostShortPnl", start_date, end_date)
+        return self.get_pnl_measure("servicingCostShortPnl", unit, start_date, end_date)
 
     def get_asset_count_priced(self,
                                start_date: dt.date = None,
@@ -637,6 +649,15 @@ class PerformanceReport(Report):
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
         results = GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
+
+    def get_pnl_measure(self, field: str, unit: FactorRiskUnit, start_date: dt.date, end_date: dt.date):
+        measure = self.get_measure(field, start_date, end_date)
+        if unit == FactorRiskUnit.Notional:
+            return measure
+        else:
+            aggregated_pnl = get_pnl_percent(self, measure, field, start_date, end_date)
+            return pd.merge(measure.drop(columns=[field]), aggregated_pnl, left_on='date', right_index=True) \
+                .rename(columns={'return': field})
 
     def get_many_measures(self,
                           measures: Tuple[str, ...] = None,
@@ -854,6 +875,7 @@ class FactorRiskReport(Report):
                  latest_execution_time: dt.datetime = None,
                  status: Union[str, ReportStatus] = ReportStatus.new,
                  percentage_complete: float = None,
+                 tags: Tuple[PositionTag, ...] = None,
                  **kwargs):
         """
         Historical analyses on both the risk and attribution of a portfolio or asset to various factors determined by
@@ -872,6 +894,7 @@ class FactorRiskReport(Report):
         :param latest_execution_time: date of the latest execution
         :param status: status of of report (i.e. 'ready', 'executing', or 'done')
         :param percentage_complete: percent of the report that is complete
+        :param tags: tags of the report
 
         **Examples**
 
@@ -892,7 +915,8 @@ class FactorRiskReport(Report):
                 else ReportType.Asset_Factor_Risk
 
         super().__init__(report_id, name, position_source_id, position_source_type, report_type,
-                         ReportParameters(risk_model=risk_model_id, fx_hedged=fx_hedged, benchmark=benchmark_id),
+                         ReportParameters(risk_model=risk_model_id, fx_hedged=fx_hedged, benchmark=benchmark_id,
+                                          tags=tags),
                          earliest_start_date, latest_end_date, latest_execution_time, status, percentage_complete)
 
     @classmethod
@@ -922,7 +946,8 @@ class FactorRiskReport(Report):
                                 earliest_start_date=report.earliest_start_date,
                                 latest_end_date=report.latest_end_date,
                                 status=report.status,
-                                percentage_complete=report.percentage_complete)
+                                percentage_complete=report.percentage_complete,
+                                tags=report.parameters.tags)
 
     def get_risk_model_id(self) -> str:
         """
@@ -979,7 +1004,6 @@ class FactorRiskReport(Report):
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
     def get_view(self,
-                 mode: FactorRiskViewsMode,
                  factor: str = None,
                  factor_category: str = None,
                  start_date: dt.date = None,
@@ -989,7 +1013,6 @@ class FactorRiskReport(Report):
         """
         Get the results associated with the factor risk report as seen on the Marquee user interface
 
-        :param mode: views mode
         :param factor: optional factor name
         :param factor_category: optional factor category
         :param start_date: start date
@@ -998,10 +1021,11 @@ class FactorRiskReport(Report):
         :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: risk report results
 
+
+
         **Examples**
 
         >>> category_table = risk_report.get_view(
-        >>>     mode=FactorRiskViewsMode.Risk,
         >>>     start_date=risk_report.latest_end_date,
         >>>     end_date=risk_report.latest_end_date,
         >>>     unit=FactorRiskUnit.Notional
@@ -1018,7 +1042,6 @@ class FactorRiskReport(Report):
         """
         return GsReportApi.get_factor_risk_report_view(
             risk_report_id=self.id,
-            view=mode.value,
             factor=factor,
             factor_category=factor_category,
             currency=currency,
@@ -1036,8 +1059,6 @@ class FactorRiskReport(Report):
                   end_date: dt.date = None,
                   unit: FactorRiskUnit = None,
                   currency: Currency = None,
-                  order_by_column: str = None,
-                  order_type: OrderType = None,
                   return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """
         Get the results associated with the factor risk report formatted for the asset level table on the interface
@@ -1050,8 +1071,6 @@ class FactorRiskReport(Report):
         :param end_date: end date for modes requiring date range (defaults to the latest available date)
         :param unit: return the results in terms of notional or percent (defaults to notional)
         :param currency: currency
-        :param order_by_column: column to order the rows by (defaults to name)
-        :param order_type: order ascending or descending (defaults to ascending)
         :return: risk report table at asset level
 
         **Examples**
@@ -1065,22 +1084,17 @@ class FactorRiskReport(Report):
         """
         table = GsReportApi.get_factor_risk_report_table(risk_report_id=self.id,
                                                          mode=mode,
-                                                         factors=factors,
-                                                         factor_categories=factor_categories,
                                                          unit=unit.value if unit else None,
                                                          currency=currency,
                                                          date=date,
                                                          start_date=start_date,
-                                                         end_date=end_date,
-                                                         order_by_column=order_by_column,
-                                                         order_type=order_type)
+                                                         end_date=end_date)
         if return_format == ReturnFormat.DATA_FRAME:
             column_info = table.get('table').get('metadata').get('columnInfo')
             column_info[0].update({'columns': ['name', 'symbol', 'sector']})
             rows = table.get('table').get('rows')
-            sorted_columns = []
-            for column_group in column_info:
-                sorted_columns = sorted_columns + column_group.get('columns')
+            sorted_columns = _filter_table_by_factor_and_category(column_info, factors, factor_categories)
+            sorted_columns = list(OrderedDict.fromkeys(sorted_columns))
             rows_data_frame = pd.DataFrame(rows)
             rows_data_frame = rows_data_frame.reindex(columns=sorted_columns)
             rows_data_frame = rows_data_frame.set_index('name')
@@ -1104,19 +1118,47 @@ class FactorRiskReport(Report):
         :param start_date: start date
         :param end_date: end date
         :param currency: currency
-        :param: unit: return the results in terms of notional or percent (defaults to notional)
+        :param unit: return the results in terms of notional or percent (defaults to notional)
         :return: a Pandas DataFrame with the results
         """
+
+        factor_names_to_query = factor_names
+        if unit == FactorRiskUnit.Percent and factor_names_to_query is not None:
+            factor_names_to_query.append('Total')
+
         factor_data = self.get_results(mode=mode,
-                                       factors=factor_names,
+                                       factors=factor_names_to_query,
                                        factor_categories=factor_categories,
                                        start_date=start_date,
                                        end_date=end_date,
                                        currency=currency,
                                        return_format=ReturnFormat.JSON,
-                                       unit=unit)
+                                       unit=unit if self.position_source_type != PositionSourceType.Portfolio
+                                       else FactorRiskUnit.Notional)
 
-        return _format_multiple_factor_table(factor_data, 'pnl')
+        if unit == FactorRiskUnit.Notional or self.position_source_type != PositionSourceType.Portfolio:
+            return _format_multiple_factor_table(factor_data, 'pnl')
+        else:
+            if factor_names is None:
+                factor_names = list(set([x.get('factor') for x in factor_data]))
+
+            all_reports = GsPortfolioApi.get_reports(self.position_source_id, None)
+            performance_reports = [PerformanceReport.get(r.id) for r in all_reports if r.type_ ==
+                                   ReportType.Portfolio_Performance_Analytics]
+            performance_report = [r for r in performance_reports if r.parameters.tags == self.parameters.tags][0]
+            aum_df = format_aum_for_return_calculation(performance_report, start_date, end_date)
+
+            total_data = [d for d in factor_data if d.get('factor') == 'Total']
+
+            smoothened_factor_data = {}
+            for factor_name in factor_names:
+                selected_factor_data = [d for d in factor_data if d.get('factor') == factor_name]
+                start_date = dt.datetime.strptime(min([d['date'] for d in selected_factor_data]), '%Y-%m-%d').date()
+                smoothened_factor_data[factor_name] = \
+                    get_factor_pnl_percent_for_single_factor(selected_factor_data, total_data, aum_df, start_date)
+
+            result = pd.DataFrame(smoothened_factor_data).reset_index().rename(columns={'date': 'Date'})
+            return result.loc[result['Date'] >= start_date.strftime("%Y-%m-&d")]
 
     def get_factor_exposure(self,
                             mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
@@ -1533,3 +1575,94 @@ def flatten_results_into_df(results: List):
                     })
     all_results = pd.DataFrame(all_results).rename(columns={'Basket': 'Basket Id'})
     return pd.DataFrame(all_results)
+
+
+def get_pnl_percent(performance_report: PerformanceReport, pnl_df: pd.DataFrame, field: str,
+                    start_date: dt.datetime.date, end_date: dt.datetime.date):
+    aum_df = format_aum_for_return_calculation(performance_report, start_date, end_date)
+    is_first_data_point_on_start_date = pnl_df['date'].iloc[[0]].values[0] == start_date.strftime('%Y-%m-%d')
+    return_series = generate_daily_returns(aum_df, pnl_df, 'aum', field, is_first_data_point_on_start_date)
+    return (return_series.add(1).cumprod() - 1).multiply(100)
+
+
+def get_factor_pnl_percent_for_single_factor(factor_data, total_data, aum_df, start_date):
+    pnl_df = format_factor_pnl_for_return_calculation(factor_data, total_data)
+    is_start_date_first_data_point = pnl_df['date'].iloc[[0]].values[0] == start_date.strftime('%Y-%m-%d')
+    return generate_daily_returns(aum_df, pnl_df, 'aum', 'pnl', is_start_date_first_data_point)
+
+
+def format_factor_pnl_for_return_calculation(factor_data: list, total_data: list):
+    pnl_df = pd.DataFrame(factor_data)[['date', 'pnl']]
+    total_returns_df = pd.DataFrame(total_data)[['date', 'pnl']]
+    total_returns_df = total_returns_df.rename(columns={'pnl': 'totalPnl'})
+    pnl_df = pd.merge(pnl_df, total_returns_df, how='inner', on=['date'])
+    return pnl_df
+
+
+def format_aum_for_return_calculation(performance_report: PerformanceReport, start_date: dt.datetime.date,
+                                      end_date: dt.datetime.date):
+    aum_as_dict = performance_report.get_aum(start_date=prev_business_date(start_date), end_date=end_date)
+    aum_df = pd.DataFrame(aum_as_dict.items(), columns=['date', 'aum'])
+    return aum_df
+
+
+def generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_key: str, pnl_col_key: str,
+                           is_start_date_first_data_point: bool):
+    # Returns are defined as Pnl today divided by AUM yesterday.
+    if is_start_date_first_data_point:
+        pnl_df[pnl_col_key].iloc[[0]] = 0
+        if 'totalPnl' in list(pnl_df.columns.values):
+            pnl_df['totalPnl'].iloc[[0]] = 0
+    df = pd.merge(pnl_df, aum_df, how='outer', on='date')
+    df.set_index('date', inplace=True)
+    df.sort_index(inplace=True)
+    df.loc[:, [aum_col_key]] = df.loc[:, [aum_col_key]].fillna(method='ffill')
+    df['return'] = df[pnl_col_key].div(df[aum_col_key].shift(1))
+    if 'totalPnl' in list(df.columns.values):
+        df['totalPnl'] = df['totalPnl'].div(df[aum_col_key].shift(1))
+        df = df.fillna(0)
+        df['return'] = __smooth_percent_returns(df['return'].to_numpy(), df['totalPnl'].to_numpy()).tolist()
+    return_series = pd.Series(df['return'], name="return").dropna()
+    return return_series
+
+
+def __smooth_percent_returns(daily_factor_returns: np.array, daily_total_returns: np.array) -> np.array:
+    """
+    When attribution (in weights) are decomposed among multiple factors (like a group of risk model factors or
+    categories), simple geometric aggregation will not preserve additivity. In other words, the geometric sum of factor
+    PnL from Factor and Specific will NOT add up to the factor PnL from Total. The Carino log linking formula
+    calculates the coefficients for each node, and after that multiplication is done, the results can be aggregated
+    to calculate cumulative PnL:
+    https://rdrr.io/github/R-Finance/PortfolioAttribution/man/Carino.html
+
+    βt = A * αt
+    where βt is the linking coefficient on date t
+    where A is the log scaling factor (which is constant throughout the timeseries)
+    where αt is the perturbation factor on date t
+
+    A = (Rp - Rb) / (ln(1 + Rp) - ln(1 + Rb)) where Rp is the total portfolio return ; Rb is the total benchmark return
+    αt = (ln(1 + Rpt) - ln(1 + Rbt)) / (Rpt - Rbt) where Rpt is portfolio return on t and Rbp is benchmark return on t
+
+    For this use case benchmark returns are set to 0 for every day.
+    """
+    total_return = np.prod(daily_total_returns + 1) - 1
+    log_scaling_factor = total_return / (np.log(1 + total_return)) if total_return != 0 else 1
+    perturbation_factors = np.log(1 + daily_total_returns) / daily_total_returns
+    perturbation_factors = np.nan_to_num(perturbation_factors, nan=1)
+    return np.cumsum(daily_factor_returns * log_scaling_factor * perturbation_factors * 100)
+
+
+def _filter_table_by_factor_and_category(column_info: Dict, factors: List, factor_categories: List):
+    if factors is None and factor_categories is None:
+        sorted_columns = []
+        for column_group in column_info:
+            sorted_columns = sorted_columns + column_group.get('columns')
+    else:
+        sorted_columns = column_info[0].get('columns') + column_info[1].get('columns')
+        if factors is not None:
+            sorted_columns = sorted_columns + factors
+        if factor_categories is not None:
+            for column_group in [column_group for column_group in column_info
+                                 if column_group.get('columnGroup') in factor_categories]:
+                sorted_columns = sorted_columns + column_group.get('columns')
+    return sorted_columns
