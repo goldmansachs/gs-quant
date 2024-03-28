@@ -1149,6 +1149,15 @@ class FactorRiskReport(Report):
             aum_df = format_aum_for_return_calculation(performance_report, start_date, end_date)
 
             total_data = [d for d in factor_data if d.get('factor') == 'Total']
+            # Total pnl must be retieved when using smoothening to calculate Pnl %
+            if len(total_data) == 0:
+                total_data = self.get_results(mode=mode,
+                                              factors=['Total'],
+                                              start_date=start_date,
+                                              end_date=end_date,
+                                              currency=currency,
+                                              return_format=ReturnFormat.JSON,
+                                              unit=FactorRiskUnit.Notional)
 
             smoothened_factor_data = {}
             for factor_name in factor_names:

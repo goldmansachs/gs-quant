@@ -1113,7 +1113,7 @@ class GsDataApi(DataApi):
             for field in fields:
                 field_name = field.name
                 field_type = field.type_
-                field_format = field.parameters.get('format')
+                field_format = field.parameters.get('format') if field.parameters else None
                 field_types[field_name] = field_format or field_type
             return field_types
         return {}
