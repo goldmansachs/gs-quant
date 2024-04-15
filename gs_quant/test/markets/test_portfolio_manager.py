@@ -25,9 +25,11 @@ from gs_quant.api.gs.carbon import GsCarbonApi, CarbonTargetCoverageCategory, Ca
 from gs_quant.api.gs.esg import GsEsgApi, ESGMeasure
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
+from gs_quant.api.gs.scenarios import GsFactorScenarioApi
 from gs_quant.entities.entitlements import Entitlements, User, EntitlementBlock
-from gs_quant.markets.portfolio_manager import PortfolioManager
+from gs_quant.markets.portfolio_manager import PortfolioManager, ScenarioCalculationMeasure
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport
+from gs_quant.markets.scenario import FactorScenario, HistoricalSimulationParameters, FactorScenarioType
 from gs_quant.models.risk_model import MacroRiskModel, FactorType, UniverseIdentifier, CoverageType, Term
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.portfolios import Portfolio as TargetPortfolio
@@ -1046,6 +1048,894 @@ carbon_data = {
         ]
     }
 }
+scenario_data = {
+    "scenarios": [
+        "MS0VH86TEJGWDK8V"
+    ],
+    "results": [
+        {
+            "summary": {
+                "estimatedPnl": -10570.100235985032,
+                "estimatedPerformance": 5.867062741998796,
+                "stressedMarketValue": -190730.10023598504
+            },
+            "factorPnl": [
+                {
+                    "name": "Currency",
+                    "factorExposure": -360320,
+                    "estimatedPnl": -3471.845645552283,
+                    "factors": [
+                        {
+                            "name": "AED",
+                            "factorExposure": -180160.00000000003,
+                            "factorShock": 0.0027226443140238032,
+                            "estimatedPnl": -4.905115996145284,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 189689.99999999997,
+                                    "estimatedPnl": 5.164583999271752
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": -369850,
+                                    "estimatedPnl": -10.069699995417036
+                                }
+                            ]
+                        },
+                        {
+                            "name": "BRL",
+                            "factorExposure": -180160,
+                            "factorShock": 1.9243675230662394,
+                            "estimatedPnl": -3466.9405295561373,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 189690,
+                                    "estimatedPnl": 3650.3327545043494
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": -369850,
+                                    "estimatedPnl": -7117.273284060487
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Industry",
+                    "factorExposure": -180160,
+                    "estimatedPnl": -6040.119337162676,
+                    "factors": [
+                        {
+                            "name": "Biotechnology",
+                            "factorExposure": 189690,
+                            "factorShock": -7.941253726728414,
+                            "estimatedPnl": -15063.76419423113,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 189690,
+                                    "estimatedPnl": -15063.76419423113
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Health Care Providers & Services",
+                            "factorExposure": -369850,
+                            "factorShock": -2.4398120473349882,
+                            "estimatedPnl": 9023.644857068453,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": -369850,
+                                    "estimatedPnl": 9023.644857068453
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Style",
+                    "factorExposure": 375097.91196133004,
+                    "estimatedPnl": 5023.410933430805,
+                    "factors": [
+                        {
+                            "name": "Dividend Yield",
+                            "factorExposure": 39292.92823909999,
+                            "factorShock": 0.6191212422128611,
+                            "estimatedPnl": 243.27086541572396,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": -80909.0466669,
+                                    "estimatedPnl": -500.9250947866948
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": 120201.97490599999,
+                                    "estimatedPnl": 744.1959602024187
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Earnings Yield",
+                            "factorExposure": 28047.463723279994,
+                            "factorShock": 1.0996305646159277,
+                            "estimatedPnl": 308.41848370075127,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": -14836.828701720004,
+                                    "estimatedPnl": -163.15030322382168
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": 42884.292425,
+                                    "estimatedPnl": 471.568786924573
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Exchange Rate Sensitivity",
+                            "factorExposure": 253936.74563119997,
+                            "factorShock": 0.1803193519871238,
+                            "estimatedPnl": 457.8970941793707,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 225295.87526399997,
+                                    "estimatedPnl": 406.2520623297635
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": 28640.8703672,
+                                    "estimatedPnl": 51.6450318496072
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Growth",
+                            "factorExposure": -44761.018989899996,
+                            "factorShock": -0.7552222730204394,
+                            "estimatedPnl": 338.0451850426333,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": -26364.8708325,
+                                    "estimatedPnl": 199.11337678010935
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": -18396.1481574,
+                                    "estimatedPnl": 138.93180826252396
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Leverage",
+                            "factorExposure": 191868.018137,
+                            "factorShock": 0.167948580725219,
+                            "estimatedPnl": 322.2396133266973,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 52489.679485500004,
+                                    "estimatedPnl": 88.1556717231137
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": 139378.3386515,
+                                    "estimatedPnl": 234.0839416035836
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Liquidity",
+                            "factorExposure": 88641.57049540001,
+                            "factorShock": -1.2990094028817012,
+                            "estimatedPnl": -1151.4623355972578,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 19569.494045400003,
+                                    "estimatedPnl": -254.20956774612065
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": 69072.07645000001,
+                                    "estimatedPnl": -897.2527678511373
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Market Sensitivity",
+                            "factorExposure": 9435.966403949995,
+                            "factorShock": 1.8499630741892314,
+                            "estimatedPnl": 174.5618941659764,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 36458.8713591,
+                                    "estimatedPnl": 674.4756574095036
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": -27022.904955150003,
+                                    "estimatedPnl": -499.91376324352717
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Medium-Term Momentum",
+                            "factorExposure": -158802.2664814,
+                            "factorShock": -0.8293589360579001,
+                            "estimatedPnl": 1317.0407877259704,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 19560.973170600002,
+                                    "estimatedPnl": -162.23067897025948
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": -178363.23965200002,
+                                    "estimatedPnl": 1479.27146669623
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Profitability",
+                            "factorExposure": 123348.2983915,
+                            "factorShock": 0.44359069709951626,
+                            "estimatedPnl": 547.1615766952461,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 201297.377697,
+                                    "estimatedPnl": 892.9364409691684
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": -77949.0793055,
+                                    "estimatedPnl": -345.7748642739222
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Size",
+                            "factorExposure": -156279.36591819994,
+                            "factorShock": -1.2578893438789152,
+                            "estimatedPnl": 1965.8214905665745,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 170372.65707780002,
+                                    "estimatedPnl": -2143.0994982650127
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": -326652.02299599996,
+                                    "estimatedPnl": 4108.920988831587
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Value",
+                            "factorExposure": 38081.90757720001,
+                            "factorShock": 1.660035175814345,
+                            "estimatedPnl": 632.1730614026285,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": -77920.3687998,
+                                    "estimatedPnl": -1293.5055312009458
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": 116002.276377,
+                                    "estimatedPnl": 1925.6785926035743
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Volatility",
+                            "factorExposure": -37712.3352478,
+                            "factorShock": 0.34937317545509217,
+                            "estimatedPnl": -131.75678319350888,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": -74956.7850228,
+                                    "estimatedPnl": -261.8789000532033
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": 37244.449775,
+                                    "estimatedPnl": 130.12211685969444
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Country",
+                    "factorExposure": -180160,
+                    "estimatedPnl": -6081.546186700877,
+                    "factors": [
+                        {
+                            "name": "United States",
+                            "factorExposure": -180160,
+                            "factorShock": 3.375636204873933,
+                            "estimatedPnl": -6081.546186700877,
+                            "byAsset": [
+                                {
+                                    "assetId": "MA4B66MW5E27U9VBB94",
+                                    "name": "Apple Inc",
+                                    "bbid": "AAPL UW",
+                                    "factorExposure": 189690,
+                                    "estimatedPnl": 6403.244317025364
+                                },
+                                {
+                                    "assetId": "MA4B66MW5E27UAL9SUX",
+                                    "name": "Microsoft Corp",
+                                    "bbid": "MSFT UW",
+                                    "factorExposure": -369850,
+                                    "estimatedPnl": -12484.79050372624
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "bySectorAggregations": [
+                {
+                    "name": "Information Technology",
+                    "exposure": -2882560,
+                    "estimatedPnl": -10570.100235985032,
+                    "industries": [
+                        {
+                            "name": "Software",
+                            "exposure": -5917600,
+                            "estimatedPnl": -3047.0113322484867
+                        },
+                        {
+                            "name": "Technology Hardware, Storage & Peripherals",
+                            "exposure": 3035040,
+                            "estimatedPnl": -7523.088903736546
+                        }
+                    ]
+                }
+            ],
+            "byRegionAggregations": [
+                {
+                    "name": "United States",
+                    "exposure": -2882560,
+                    "estimatedPnl": -10570.100235985032
+                }
+            ],
+            "byDirectionAggregations": [
+                {
+                    "name": "LONG",
+                    "exposure": 3035040,
+                    "estimatedPnl": -7523.088903736546
+                },
+                {
+                    "name": "SHORT",
+                    "exposure": -5917600,
+                    "estimatedPnl": -3047.0113322484867
+                }
+            ],
+            "byAsset": [
+                {
+                    "assetId": "MA4B66MW5E27U9VBB94",
+                    "name": "Apple Inc",
+                    "sector": "Information Technology",
+                    "industry": "Technology Hardware, Storage & Peripherals",
+                    "country": "United States",
+                    "direction": "LONG",
+                    "exposure": 3035040,
+                    "estimatedPnl": -7523.088903736545,
+                    "estimatedPerformance": -0.24787445647294748
+                },
+                {
+                    "assetId": "MA4B66MW5E27UAL9SUX",
+                    "name": "Microsoft Corp",
+                    "sector": "Information Technology",
+                    "industry": "Software",
+                    "country": "United States",
+                    "direction": "SHORT",
+                    "exposure": -5917600,
+                    "estimatedPnl": -3047.0113322484845,
+                    "estimatedPerformance": 0.05149066060985001
+                }
+            ]
+        }
+    ]
+}
+scenario_results = {
+    'byAsset': [{'assetId': 'MA4B66MW5E27U9VBB94',
+                 'country': 'United States',
+                 'direction': 'LONG',
+                 'estimatedPerformance': -0.24787445647294748,
+                 'estimatedPnl': -7523.088903736545,
+                 'exposure': 3035040,
+                 'industry': 'Technology Hardware, Storage & Peripherals',
+                 'name': 'Apple Inc',
+                 'scenarioId': 'MS0VH86TEJGWDK8V',
+                 'scenarioName': 'US Presidential Election 2016',
+                 'scenarioType': 'Factor Historical Simulation',
+                 'sector': 'Information Technology'},
+                {'assetId': 'MA4B66MW5E27UAL9SUX',
+                 'country': 'United States',
+                 'direction': 'SHORT',
+                 'estimatedPerformance': 0.05149066060985001,
+                 'estimatedPnl': -3047.0113322484845,
+                 'exposure': -5917600,
+                 'industry': 'Software',
+                 'name': 'Microsoft Corp',
+                 'scenarioId': 'MS0VH86TEJGWDK8V',
+                 'scenarioName': 'US Presidential Election 2016',
+                 'scenarioType': 'Factor Historical Simulation',
+                 'sector': 'Information Technology'}],
+    'byDirectionAggregations': [{'direction': 'LONG',
+                                 'estimatedPnl': -7523.088903736546,
+                                 'exposure': 3035040,
+                                 'scenarioId': 'MS0VH86TEJGWDK8V',
+                                 'scenarioName': 'US Presidential Election 2016',
+                                 'scenarioType': 'Factor Historical Simulation'},
+                                {'direction': 'SHORT',
+                                 'estimatedPnl': -3047.0113322484867,
+                                 'exposure': -5917600,
+                                 'scenarioId': 'MS0VH86TEJGWDK8V',
+                                 'scenarioName': 'US Presidential Election 2016',
+                                 'scenarioType': 'Factor Historical Simulation'}],
+    'byRegionAggregations': [{'country': 'United States',
+                              'estimatedPnl': -10570.100235985032,
+                              'exposure': -2882560,
+                              'scenarioId': 'MS0VH86TEJGWDK8V',
+                              'scenarioName': 'US Presidential Election 2016',
+                              'scenarioType': 'Factor Historical Simulation'}],
+    'bySectorAggregations': [{'estimatedPnl': -3047.0113322484867,
+                              'exposure': -5917600,
+                              'industry': 'Software',
+                              'scenarioId': 'MS0VH86TEJGWDK8V',
+                              'scenarioName': 'US Presidential Election 2016',
+                              'scenarioType': 'Factor Historical Simulation',
+                              'sector': 'Information Technology'},
+                             {'estimatedPnl': -7523.088903736546,
+                              'exposure': 3035040,
+                              'industry': 'Technology Hardware, Storage & '
+                                          'Peripherals',
+                              'scenarioId': 'MS0VH86TEJGWDK8V',
+                              'scenarioName': 'US Presidential Election 2016',
+                              'scenarioType': 'Factor Historical Simulation',
+                              'sector': 'Information Technology'}],
+    'factorPnl': [{'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': 5.164583999271752,
+                   'factor': 'AED',
+                   'factorCategory': 'Currency',
+                   'factorExposure': 189689.99999999997,
+                   'factorShock': 0.0027226443140238032,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': -10.069699995417036,
+                   'factor': 'AED',
+                   'factorCategory': 'Currency',
+                   'factorExposure': -369850.0,
+                   'factorShock': 0.0027226443140238032,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': 3650.3327545043494,
+                   'factor': 'BRL',
+                   'factorCategory': 'Currency',
+                   'factorExposure': 189690.0,
+                   'factorShock': 1.9243675230662394,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': -7117.273284060487,
+                   'factor': 'BRL',
+                   'factorCategory': 'Currency',
+                   'factorExposure': -369850.0,
+                   'factorShock': 1.9243675230662394,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': -15063.76419423113,
+                   'factor': 'Biotechnology',
+                   'factorCategory': 'Industry',
+                   'factorExposure': 189690.0,
+                   'factorShock': -7.941253726728414,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 9023.644857068453,
+                   'factor': 'Health Care Providers & Services',
+                   'factorCategory': 'Industry',
+                   'factorExposure': -369850.0,
+                   'factorShock': -2.4398120473349882,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': -500.9250947866948,
+                   'factor': 'Dividend Yield',
+                   'factorCategory': 'Style',
+                   'factorExposure': -80909.0466669,
+                   'factorShock': 0.6191212422128611,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 744.1959602024187,
+                   'factor': 'Dividend Yield',
+                   'factorCategory': 'Style',
+                   'factorExposure': 120201.97490599999,
+                   'factorShock': 0.6191212422128611,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': -163.15030322382168,
+                   'factor': 'Earnings Yield',
+                   'factorCategory': 'Style',
+                   'factorExposure': -14836.828701720004,
+                   'factorShock': 1.0996305646159277,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 471.568786924573,
+                   'factor': 'Earnings Yield',
+                   'factorCategory': 'Style',
+                   'factorExposure': 42884.292425,
+                   'factorShock': 1.0996305646159277,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': 406.2520623297635,
+                   'factor': 'Exchange Rate Sensitivity',
+                   'factorCategory': 'Style',
+                   'factorExposure': 225295.87526399997,
+                   'factorShock': 0.1803193519871238,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 51.6450318496072,
+                   'factor': 'Exchange Rate Sensitivity',
+                   'factorCategory': 'Style',
+                   'factorExposure': 28640.8703672,
+                   'factorShock': 0.1803193519871238,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': 199.11337678010935,
+                   'factor': 'Growth',
+                   'factorCategory': 'Style',
+                   'factorExposure': -26364.8708325,
+                   'factorShock': -0.7552222730204394,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 138.93180826252396,
+                   'factor': 'Growth',
+                   'factorCategory': 'Style',
+                   'factorExposure': -18396.1481574,
+                   'factorShock': -0.7552222730204394,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': 88.1556717231137,
+                   'factor': 'Leverage',
+                   'factorCategory': 'Style',
+                   'factorExposure': 52489.679485500004,
+                   'factorShock': 0.167948580725219,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 234.0839416035836,
+                   'factor': 'Leverage',
+                   'factorCategory': 'Style',
+                   'factorExposure': 139378.3386515,
+                   'factorShock': 0.167948580725219,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': -254.20956774612065,
+                   'factor': 'Liquidity',
+                   'factorCategory': 'Style',
+                   'factorExposure': 19569.494045400003,
+                   'factorShock': -1.2990094028817012,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': -897.2527678511373,
+                   'factor': 'Liquidity',
+                   'factorCategory': 'Style',
+                   'factorExposure': 69072.07645000001,
+                   'factorShock': -1.2990094028817012,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': 674.4756574095036,
+                   'factor': 'Market Sensitivity',
+                   'factorCategory': 'Style',
+                   'factorExposure': 36458.8713591,
+                   'factorShock': 1.8499630741892314,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': -499.91376324352717,
+                   'factor': 'Market Sensitivity',
+                   'factorCategory': 'Style',
+                   'factorExposure': -27022.904955150003,
+                   'factorShock': 1.8499630741892314,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': -162.23067897025948,
+                   'factor': 'Medium-Term Momentum',
+                   'factorCategory': 'Style',
+                   'factorExposure': 19560.973170600002,
+                   'factorShock': -0.8293589360579001,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 1479.27146669623,
+                   'factor': 'Medium-Term Momentum',
+                   'factorCategory': 'Style',
+                   'factorExposure': -178363.23965200002,
+                   'factorShock': -0.8293589360579001,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': 892.9364409691684,
+                   'factor': 'Profitability',
+                   'factorCategory': 'Style',
+                   'factorExposure': 201297.377697,
+                   'factorShock': 0.44359069709951626,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': -345.7748642739222,
+                   'factor': 'Profitability',
+                   'factorCategory': 'Style',
+                   'factorExposure': -77949.0793055,
+                   'factorShock': 0.44359069709951626,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': -2143.0994982650127,
+                   'factor': 'Size',
+                   'factorCategory': 'Style',
+                   'factorExposure': 170372.65707780002,
+                   'factorShock': -1.2578893438789152,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 4108.920988831587,
+                   'factor': 'Size',
+                   'factorCategory': 'Style',
+                   'factorExposure': -326652.02299599996,
+                   'factorShock': -1.2578893438789152,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': -1293.5055312009458,
+                   'factor': 'Value',
+                   'factorCategory': 'Style',
+                   'factorExposure': -77920.3687998,
+                   'factorShock': 1.660035175814345,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 1925.6785926035743,
+                   'factor': 'Value',
+                   'factorCategory': 'Style',
+                   'factorExposure': 116002.276377,
+                   'factorShock': 1.660035175814345,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': -261.8789000532033,
+                   'factor': 'Volatility',
+                   'factorCategory': 'Style',
+                   'factorExposure': -74956.7850228,
+                   'factorShock': 0.34937317545509217,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': 130.12211685969444,
+                   'factor': 'Volatility',
+                   'factorCategory': 'Style',
+                   'factorExposure': 37244.449775,
+                   'factorShock': 0.34937317545509217,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27U9VBB94',
+                   'bbid': 'AAPL UW',
+                   'estimatedPnl': 6403.244317025364,
+                   'factor': 'United States',
+                   'factorCategory': 'Country',
+                   'factorExposure': 189690.0,
+                   'factorShock': 3.375636204873933,
+                   'name': 'Apple Inc',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'},
+                  {'assetId': 'MA4B66MW5E27UAL9SUX',
+                   'bbid': 'MSFT UW',
+                   'estimatedPnl': -12484.79050372624,
+                   'factor': 'United States',
+                   'factorCategory': 'Country',
+                   'factorExposure': -369850.0,
+                   'factorShock': 3.375636204873933,
+                   'name': 'Microsoft Corp',
+                   'scenarioId': 'MS0VH86TEJGWDK8V',
+                   'scenarioName': 'US Presidential Election 2016',
+                   'scenarioType': 'Factor Historical Simulation'}],
+    'summary': [{'estimatedPerformance': 5.867062741998796,
+                 'estimatedPnl': -10570.100235985032,
+                 'scenarioId': 'MS0VH86TEJGWDK8V',
+                 'scenarioName': 'US Presidential Election 2016',
+                 'scenarioType': 'Factor Historical Simulation',
+                 'stressedMarketValue': -190730.10023598504},
+                {'estimatedPerformance': 5.867062741998796,
+                 'estimatedPnl': -10570.100235985032,
+                 'scenarioId': 'MS0VH86TEJGWDK8V',
+                 'scenarioName': 'US Presidential Election 2016',
+                 'scenarioType': 'Factor Historical Simulation',
+                 'stressedMarketValue': -190730.10023598504}]}
 
 
 def test_get_reports(mocker):
@@ -1371,7 +2261,6 @@ def test_carbon_attribution_table(mocker):
 
 
 def test_get_macro_exposure(mocker):
-
     portfolio_constituents = {"date": ["2022-05-02", "2022-05-02"],
                               "assetId": ["mq1", "mq2"],
                               "direction": ["LONG", "LONG"],
@@ -1420,6 +2309,42 @@ def test_get_macro_exposure(mocker):
     exposure_df = pm.get_macro_exposure(model=macro_model, date=dt.date(2022, 5, 2), factor_type=FactorType.Factor)
 
     assert exposure_df.equals(pd.DataFrame.from_dict(result))
+
+
+def test_get_factor_scenario_analytics(mocker):
+    risk_report = FactorRiskReport(report_id='id',
+                                   risk_model='RISK_MODEL')
+
+    mocker.patch.object(PortfolioManager, "get_factor_risk_report", return_value=risk_report)
+    mocker.patch.object(GsFactorScenarioApi, "calculate_scenario", return_value=scenario_data)
+
+    pm = PortfolioManager("portfolioId")
+
+    factor_scenario = FactorScenario(name='US Presidential Election 2016',
+                                     description='Presidential Elections in 2016 when Donald Trump won',
+                                     id_="MS0VH86TEJGWDK8V",
+                                     type=FactorScenarioType.Factor_Historical_Simulation,
+                                     parameters=HistoricalSimulationParameters(start_date=dt.date(2016, 1, 1),
+                                                                               end_date=dt.date(2020, 1, 1)))
+
+    scenario_analytics_data = pm.get_factor_scenario_analytics(
+        scenarios=[factor_scenario],
+        date=dt.date(2024, 3, 5),
+        measures=[ScenarioCalculationMeasure.SUMMARY,
+                  ScenarioCalculationMeasure.ESTIMATED_FACTOR_PNL,
+                  ScenarioCalculationMeasure.ESTIMATED_PNL_BY_SECTOR,
+                  ScenarioCalculationMeasure.ESTIMATED_PNL_BY_REGION,
+                  ScenarioCalculationMeasure.ESTIMATED_PNL_BY_DIRECTION,
+                  ScenarioCalculationMeasure.ESTIMATED_PNL_BY_ASSET],
+        risk_model="RISK_MODEL")
+
+    assert len(
+        set(scenario_analytics_data.keys()) - {"summary", "factorPnl", "bySectorAggregations",
+                                               "byRegionAggregations", "byDirectionAggregations", "byAsset"}) == 0
+    for key, value in scenario_analytics_data.items():
+        result_df = pd.DataFrame(scenario_results[key])
+        result_df = result_df.reindex(columns=value.columns)
+        assert value.equals(result_df)
 
 
 if __name__ == '__main__':

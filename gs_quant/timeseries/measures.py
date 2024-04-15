@@ -3448,6 +3448,39 @@ def price_to_earnings_positive(asset: Asset,
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
+def price_to_earnings_positive_exclusive(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
+                                         *, source: str = None, real_time: bool = False,
+                                         request_id: Optional[str] = None) -> Series:
+    """
+    Price to Earnings Positive of the single stock or the asset-weighted average value of a composite's underliers
+    excluding negative EPS stocks.
+
+    1y forward: time-weighted average of one fiscal year (FY1) and two fiscal year (FY2) fwd-looking estimates.
+    2y forward: time-weighted average of two fiscal year (FY2) and three fiscal year (FY3) fwd-looking estimates.
+    3y forward: time-weighted average of three fiscal year (FY3) and four fiscal year (FY4) fwd-looking estimates.
+    1y trailing: time-weighted average of latest reported fiscal year (FY0) data and one fiscal year (FY1) fwd-looking
+    estimate.
+
+    :param asset: asset object loaded from security master
+    :param period: the relative fiscal period from now. e.g. 1y
+    :param period_direction: whether the period is forward-looking or backward-looking e.g. forward
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: Price to Earnings Positive Exclusive
+    """
+    if real_time:
+        raise NotImplementedError('real-time price_to_earnings_positive_exclusive not implemented')
+
+    mqid = asset.get_marquee_id()
+    metric = DataMeasure.PRICE_TO_EARNINGS_POSITIVE_EXCLUSIVE.value
+
+    _logger.debug('where assetId=%s, metric=%s, period=%s, periodDirection=%s', mqid, metric, period, period_direction)
+
+    return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
+
+
+@plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                    *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """

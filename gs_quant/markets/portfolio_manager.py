@@ -24,10 +24,11 @@ import pandas as pd
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.entities.entitlements import Entitlements
-from gs_quant.entities.entity import PositionedEntity, EntityType
+from gs_quant.entities.entity import PositionedEntity, EntityType, ScenarioCalculationMeasure
 from gs_quant.errors import MqError
 from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
+from gs_quant.markets.scenario import FactorScenario
 from gs_quant.markets.portfolio_manager_utils import build_exposure_df, build_portfolio_constituents_df, \
     build_sensitivity_df
 from gs_quant.markets.report import PerformanceReport, ReportJobFuture
@@ -505,3 +506,59 @@ class PortfolioManager(PositionedEntity):
             return exposure_df.to_dict()
 
         return exposure_df
+
+    def get_factor_scenario_analytics(self,
+                                      scenarios: List[FactorScenario],
+                                      date: dt.date,
+                                      measures: List[ScenarioCalculationMeasure],
+                                      risk_model: str = None,
+                                      return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> \
+            Union[Dict, Union[Dict, pd.DataFrame]]:
+
+        """Given a list of factor scenarios (historical simulation and/or custom shocks), return the estimated pnl
+         of the given positioned entity.
+         :param scenarios: List of factor-based scenarios
+         :param date: date to run scenarios.
+         :param measures: which metrics to return
+         :param risk_model: valid risk model ID
+         :param return_format: whether to return data formatted in a dataframe or as a dict
+
+          **Examples**
+
+            >>> from gs_quant.session import GsSession, Environment
+            >>> from gs_quant.markets.portfolio_manager import PortfolioManager, ReturnFormat
+            >>> from gs_quant.entities.entity import ScenarioCalculationMeasure, PositionedEntity
+            >>> from gs_quant.markets.scenario import Scenario
+
+          Get scenarios
+            >>> covid_19_omicron = Scenario.get_by_name("Covid 19 Omicron (v2)") # historical simulation
+            >>> custom_shock = Scenario.get_by_name("Shocking factor by x% (Propagated)") # custom shock
+            >>> risk_model = "RISK_MODEL_ID" # valid risk model ID
+
+          Instantiate your positionedEntity. Here, we are using one of its subclasses, PortfolioManager
+
+            >>> pm = PortfolioManager(portfolio_id="PORTFOLIO_ID")
+
+          Set the date you wish to run your scenario on
+
+           >>> date = dt.date(2023, 3, 7)
+
+          Run scenario and get estimated impact on your positioned entity
+
+          >>> scenario_analytics = pm.get_factor_scenario_analytics(
+          ...     scenarios=[covid_19_omicron, beta_propagated],
+          ...     date=date,
+          ...     measures=[ScenarioCalculationMeasure.SUMMARY,
+          ...               ScenarioCalculationMeasure.ESTIMATED_FACTOR_PNL,
+          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_SECTOR,
+          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_REGION,
+          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_DIRECTION,
+          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_ASSET],
+          ...     risk_model=risk_model)
+
+          By default, the result will be returned in a dict with keys as the measures/metrics requested and values as
+          the scenario calculation results formatted in a dataframe. To get the results in a dict, specify the return
+          format as JSON
+         """
+
+        return super().get_factor_scenario_analytics(scenarios, date, measures, risk_model, return_format)

@@ -966,7 +966,6 @@ class PositionedEntity(metaclass=ABCMeta):
         }
 
         results = GsFactorScenarioApi.calculate_scenario(calculation_request)
-
         scenarios = [id_to_scenario_map.get(sc_id) for sc_id in results.get('scenarios')]
         calculation_results = results.get('results')
 
@@ -986,7 +985,7 @@ class PositionedEntity(metaclass=ABCMeta):
                                 'byRegionAggregations', 'byDirectionAggregations', 'byAsset']:
                 scenario_metadata_map = {"scenarioId": scenarios[i].id,
                                          "scenarioName": scenarios[i].name,
-                                         "scenarioType": scenarios[i].scenario_type}
+                                         "scenarioType": scenarios[i].type.value}
                 if result_type == 'summary':
                     calc_result.get(result_type).update(scenario_metadata_map)
                     all_data.get(result_type).append(calc_result.get(result_type))

@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union, Type
 
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.common import RiskMeasure
@@ -23,6 +23,7 @@ from gs_quant.risk import RollFwd, MarketDataScenario
 from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
 from .core import PricingContext
 from .markets import CloseMarket
+from ..api.risk import RiskApi
 
 
 class HistoricalPricingContext(PricingContext):
@@ -45,7 +46,8 @@ class HistoricalPricingContext(PricingContext):
             market_data_location: Optional[str] = None,
             timeout: Optional[int] = None,
             show_progress: Optional[bool] = None,
-            use_server_cache: Optional[bool] = None):
+            use_server_cache: Optional[bool] = None,
+            provider: Optional[Type[RiskApi]] = None):
         """
         A context for producing valuations over multiple dates
 
@@ -77,7 +79,7 @@ class HistoricalPricingContext(PricingContext):
         super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
                          request_priority=request_priority, csa_term=csa_term,
                          market_data_location=market_data_location, timeout=timeout, show_progress=show_progress,
-                         use_server_cache=use_server_cache, use_historical_diddles_only=True)
+                         use_server_cache=use_server_cache, use_historical_diddles_only=True, provider=provider)
 
         if start is not None:
             if dates is not None:
@@ -99,7 +101,7 @@ class HistoricalPricingContext(PricingContext):
     def calc(self, instrument: InstrumentBase, risk_measure: RiskMeasure) -> PricingFuture:
         futures = []
 
-        provider = instrument.provider
+        provider = instrument.provider if self.provider is None else self.provider
         scenario = self._scenario
         parameters = self._parameters
         location = self.market.location
@@ -135,7 +137,8 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
             market_data_location: Optional[str] = None,
             timeout: Optional[int] = None,
             show_progress: Optional[bool] = None,
-            name: Optional[str] = None):
+            name: Optional[str] = None,
+            provider: Optional[Type[RiskApi]] = None):
         """
         A context for producing valuations over multiple dates
 
@@ -166,7 +169,7 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
         super().__init__(start=start, end=end, calendars=calendars, dates=dates,
                          is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
                          csa_term=csa_term, market_data_location=market_data_location,
-                         timeout=timeout, show_progress=show_progress)
+                         timeout=timeout, show_progress=show_progress, provider=provider)
         self._roll_to_fwds = roll_to_fwds
         self.name = name
         if start is not None:
@@ -185,7 +188,7 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
     def calc(self, instrument: InstrumentBase, risk_measure: RiskMeasure) -> PricingFuture:
         futures = []
 
-        provider = instrument.provider
+        provider = instrument.provider if self.provider is None else self.provider
         base_scenario = self._scenario
         parameters = self._parameters
         location = self.market.location

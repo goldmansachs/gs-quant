@@ -4660,6 +4660,12 @@ def test_fundamental_metrics():
     with pytest.raises(NotImplementedError):
         tm.price_to_sales(..., period, direction, real_time=True)
 
+    actual = tm.price_to_earnings_positive_exclusive(mock_spx, period, direction)
+    assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    with pytest.raises(NotImplementedError):
+        tm.price_to_earnings_positive_exclusive(..., period, direction, real_time=True)
+
     actual = tm.return_on_equity(mock_spx, period, direction)
     assert_series_equal(pd.Series([5, 1, 2], index=_index * 3, name='fundamentalMetric'), pd.Series(actual))
     assert actual.dataset_ids == _test_datasets

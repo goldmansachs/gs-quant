@@ -23,7 +23,7 @@ from abc import ABCMeta
 from concurrent.futures import ThreadPoolExecutor
 from inspect import signature
 from itertools import zip_longest, takewhile
-from typing import Optional, Union
+from typing import Optional, Union, Type
 
 from tqdm import tqdm
 
@@ -39,6 +39,7 @@ from gs_quant.target.common import PricingDateAndMarketDataAsOf
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
 from gs_quant.tracing import Tracer
 from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket
+from ..api.risk import RiskApi
 
 _logger = logging.getLogger(__name__)
 
@@ -90,7 +91,8 @@ class PricingContext(ContextBaseWithDefault):
                  use_server_cache: Optional[bool] = None,
                  market_behaviour: Optional[str] = 'ContraintsBased',
                  set_parameters_only: bool = False,
-                 use_historical_diddles_only: bool =False):
+                 use_historical_diddles_only: bool = False,
+                 provider: Optional[Type[RiskApi]] = None):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
         as per the examples
@@ -111,6 +113,7 @@ class PricingContext(ContextBaseWithDefault):
         :param market_behaviour: the behaviour to build the curve for pricing ('ContraintsBased' or 'Calibrated'
             (defaults to ContraintsBased))
         :param set_parameters_only: if true don't stop embedded pricing contexts submitting their jobs.
+        :param provider: RiskApi implementation to use for pricing requests
 
         **Examples**
 
@@ -185,6 +188,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__market = market
         self.__show_progress = show_progress
         self.__use_server_cache = use_server_cache
+        self.__provider = provider
         self.__max_per_batch = None
         self.__max_concurrent = None
         self.__use_historical_diddles_only = use_historical_diddles_only
@@ -209,6 +213,7 @@ class PricingContext(ContextBaseWithDefault):
         attr_dict['market'] = self.__market
         attr_dict['show_progress'] = self.__show_progress
         attr_dict['use_server_cache'] = self.__use_server_cache
+        attr_dict['provider'] = self.__provider
         attr_dict['_max_concurrent'] = self.__max_concurrent
         attr_dict['_max_per_batch'] = self.__max_per_batch
 
@@ -246,6 +251,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__request_priority = self.request_priority
         self.__show_progress = self.show_progress
         self.__use_server_cache = self.use_server_cache
+        self.__provider = self.provider
         self.__max_concurrent = self._max_concurrent
         self.__max_per_batch = self._max_per_batch
 
@@ -263,6 +269,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__market = self.__attrs_on_entry.get('market')
         self.__show_progress = self.__attrs_on_entry.get('show_progress')
         self.__use_server_cache = self.__attrs_on_entry.get('use_server_cache')
+        self.__provider = self.__attrs_on_entry.get('provider')
         self.__max_concurrent = self.__attrs_on_entry.get('_max_concurrent')
         self.__max_per_batch = self.__attrs_on_entry.get('_max_per_batch')
 
@@ -473,6 +480,11 @@ class PricingContext(ContextBaseWithDefault):
             'use_server_cache', False)
 
     @property
+    def provider(self) -> Type[RiskApi]:
+        return self.__provider if self.__provider is not None else self._inherited_val(
+            'provider', None)
+
+    @property
     def market_behaviour(self) -> str:
         return self.__market_behaviour if self.__market_behaviour else self._inherited_val(
             'market_behaviour', default='ContraintsBased')
@@ -540,7 +552,8 @@ class PricingContext(ContextBaseWithDefault):
         >>> swap = IRSwap('Pay', '10y', 'USD', fixed_rate=0.01)
         >>> delta = swap.calc(IRDelta)
         """
-        return self._calc(instrument, self.__risk_key(risk_measure, instrument.provider))
+        provider = instrument.provider if self.provider is None else self.provider
+        return self._calc(instrument, self.__risk_key(risk_measure, provider))
 
 
 class PositionContext(ContextBaseWithDefault):

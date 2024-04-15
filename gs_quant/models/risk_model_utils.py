@@ -226,12 +226,17 @@ def batch_and_upload_partial_data_use_target_universe_size(model_id: str, data: 
 
 
 def _upload_factor_data_if_present(model_id: str, data: dict, date: str, **kwargs):
+    aws_upload = kwargs.get('aws_upload', None)
     if data.get('factorData'):
         factor_data = {
             'date': date,
             'factorData': data.get('factorData')}
         if data.get('covarianceMatrix'):
             factor_data['covarianceMatrix'] = data.get('covarianceMatrix')
+        if data.get('unadjustedCovarianceMatrix') and aws_upload:
+            factor_data['unadjustedCovarianceMatrix'] = data.get('unadjustedCovarianceMatrix')
+        if data.get('preVRACovarianceMatrix') and aws_upload:
+            factor_data['preVRACovarianceMatrix'] = data.get('preVRACovarianceMatrix')
         logging.info('Uploading factor data')
         _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
                                   model_data=factor_data, partial_upload=True, **kwargs)

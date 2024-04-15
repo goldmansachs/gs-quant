@@ -67,7 +67,7 @@ class GsScenarioApi:
 
     @classmethod
     def update_scenario(cls, scenario: Scenario) -> Dict:
-        return GsSession.current._put(f'/risk/scenarios/{scenario.get("id")}', scenario, cls=Scenario)
+        return GsSession.current._put(f'/risk/scenarios/{scenario.id_}', scenario, cls=Scenario)
 
     @classmethod
     def delete_scenario(cls, scenario_id: str) -> Dict:
@@ -91,9 +91,9 @@ class GsFactorScenarioApi(GsScenarioApi):
                            risk_model: str = None,
                            shocked_factors: List[str] = None,
                            shocked_factor_categories: List[str] = None,
-                           propagated_shocks: bool = None,
                            start_date: dt.date = None,
-                           end_date: dt.date = None) -> Tuple[Scenario]:
+                           end_date: dt.date = None,
+                           tags: List[str] = None) -> Tuple[Scenario]:
         factor_scenario_args = {}
         if risk_model:
             factor_scenario_args['riskModel'] = risk_model
@@ -103,14 +103,17 @@ class GsFactorScenarioApi(GsScenarioApi):
             factor_scenario_args['shockedFactor'] = shocked_factors
         if shocked_factor_categories:
             factor_scenario_args['shockedFactorCategory'] = shocked_factor_categories
-        if propagated_shocks:
-            factor_scenario_args['propagatedShocks'] = propagated_shocks
         if start_date:
             factor_scenario_args['historicalSimulationStartDate'] = start_date
         if end_date:
             factor_scenario_args['historicalSimulationEndDate'] = end_date
+        if tags:
+            factor_scenario_args['tags'] = tags
 
-        return super().get_many_scenarios(ids=ids, names=names, limit=limit, **factor_scenario_args)
+        many_scenarios = super().get_many_scenarios(ids=ids, names=names, limit=limit, **factor_scenario_args)
+        many_scenarios = tuple([scenario for scenario in many_scenarios if scenario.type_])
+
+        return many_scenarios
 
     @classmethod
     def calculate_scenario(cls, calculation_request: Dict) -> Dict:

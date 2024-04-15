@@ -61,6 +61,7 @@ class DataMeasure(Enum):
     PRICE_TO_CASH = 'Price to Cash'
     PRICE_TO_EARNINGS = 'Price to Earnings'
     PRICE_TO_EARNINGS_POSITIVE = 'Price to Earnings Positive'
+    PRICE_TO_EARNINGS_POSITIVE_EXCLUSIVE = 'Price to Earnings Positive Exclusive'
     PRICE_TO_SALES = 'Price to Sales'
     RETURN_ON_EQUITY = 'Return on Equity'
     SALES_PER_SHARE = 'Sales per Share'
@@ -89,6 +90,7 @@ class DataMeasure(Enum):
         return [metric.value for metric in [cls.DIVIDEND_YIELD, cls.EARNINGS_PER_SHARE, cls.EARNINGS_PER_SHARE_POSITIVE,
                                             cls.NET_DEBT_TO_EBITDA, cls.PRICE_TO_BOOK, cls.PRICE_TO_CASH,
                                             cls.PRICE_TO_EARNINGS, cls.PRICE_TO_EARNINGS_POSITIVE,
+                                            cls.PRICE_TO_EARNINGS_POSITIVE_EXCLUSIVE,
                                             cls.PRICE_TO_SALES, cls.RETURN_ON_EQUITY, cls.SALES_PER_SHARE,
                                             cls.CURRENT_CONSTITUENTS_DIVIDEND_YIELD,
                                             cls.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE,

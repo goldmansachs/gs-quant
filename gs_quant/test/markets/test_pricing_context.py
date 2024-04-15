@@ -19,8 +19,11 @@ from time import sleep
 from unittest.mock import patch, ANY
 
 import pytest
+
 from gs_quant import risk
+from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.api.risk import RiskApi
+from gs_quant.base import RiskKey
 from gs_quant.common import PayReceive, Currency
 from gs_quant.datetime import business_day_offset, today
 from gs_quant.errors import MqValueError
@@ -29,9 +32,14 @@ from gs_quant.markets import PricingContext, CloseMarket, OverlayMarket, MarketD
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import RollFwd
 from gs_quant.target.common import PricingLocation
+from gs_quant.target.instrument import EqOption
 from gs_quant.test.utils.mock_calc import MockCalc
 
 WEEKEND_DATE = dt.date(2022, 3, 19)
+
+
+class TestProvider:
+    pass
 
 
 @pytest.fixture
@@ -140,12 +148,13 @@ def test_creation():
     assert c1.is_batch is False
     assert c1.use_cache is False
     assert c1._max_concurrent == 1000
+    assert c1.provider is None
 
     assert c1.pricing_date == datetime.date(2022, 6, 15)
 
 
 def test_inheritance():
-    c1 = PricingContext(pricing_date=datetime.date(2022, 6, 16), market_data_location='NYC')
+    c1 = PricingContext(pricing_date=datetime.date(2022, 6, 16), market_data_location='NYC', provider=TestProvider)
     c2 = PricingContext(pricing_date=datetime.date(2022, 7, 1))
     c3 = PricingContext()
 
@@ -155,6 +164,8 @@ def test_inheritance():
             assert c2.pricing_date == datetime.date(2022, 7, 1)
             # market data location is inherited from c1 (the active context)
             assert c2.market_data_location == c1.market_data_location
+            # provider is inherited
+            assert c2.provider == c1.provider
             # all other props have default values
             assert c2.is_batch is False
             assert c2.use_cache is False
@@ -353,3 +364,18 @@ def test_use_context_for_inheritance():
                 assert pc3.active_context == pc3
                 with PricingContext() as pc4:
                     assert pc4.active_context == pc3
+
+
+@patch.object(PricingContext, '_calc')
+def test_provider(calc_mock):
+    calc_mock.return_value = None
+    pc = PricingContext(provider=None)
+    inst = EqOption()
+    inst.PROVIDER = TestProvider
+    pc.calc(inst, None)
+    calc_mock.assert_called_with(inst, RiskKey(TestProvider, None, None, ANY, None, None))
+    pc = PricingContext(provider=GsRiskApi)
+    inst = EqOption()
+    inst.PROVIDER = TestProvider
+    pc.calc(inst, None)
+    calc_mock.assert_called_with(inst, RiskKey(GsRiskApi, None, None, ANY, None, None))
