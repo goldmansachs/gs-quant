@@ -231,6 +231,20 @@ class GsAssetApi:
         return GsSession.current._post('/positions/resolver', payload=query)
 
     @classmethod
+    def get_many_asset_xrefs(
+            cls,
+            identifier: [str],
+            fields: IdList = [],
+            limit: int = 100,
+            as_of: dt.datetime = dt.datetime.today(),
+            **kwargs
+    ) -> Tuple[dict, ...]:
+        where = dict(identifier=identifier, **kwargs)
+        query = dict(where=where, limit=limit, fields=fields,  asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+        return GsSession.current._post('/assets/xrefs/query', payload=query).get('results')
+
+    @classmethod
     @_cached
     def get_asset_xrefs(
             cls,

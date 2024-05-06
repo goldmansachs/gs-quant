@@ -335,7 +335,7 @@ class Basket:
         vols.index.name = None
 
         # Necessary when current values appended - set weights index to match vols index
-        actual_weights = actual_weights.reindex(vols.index).fillna(method='pad')
+        actual_weights = actual_weights.reindex(vols.index).ffill()
 
         return actual_weights.mul(vols).sum(axis=1, skipna=False)
 
@@ -363,7 +363,7 @@ class Basket:
         vols = pd.concat(vols, axis=1)
         vols.columns = list(spot_df)
         # Necessary when current values appended - set weights index to match vols index
-        actual_weights = actual_weights.reindex(vols.index).fillna(method='pad')
+        actual_weights = actual_weights.reindex(vols.index).ffill()
 
         return actual_weights.mul(vols, axis=1).sum(axis=1, skipna=False)
 
@@ -460,6 +460,6 @@ class Basket:
         actual_weights = self.get_actual_weights(request_id)
 
         # Necessary when current values appended - set weights index to match vols index
-        actual_weights = actual_weights.reindex(pd.DatetimeIndex(vols.index)).fillna(method='pad')
+        actual_weights = actual_weights.reindex(pd.DatetimeIndex(vols.index)).ffill()
 
         return actual_weights.mul(vols).sum(axis=1, skipna=False)

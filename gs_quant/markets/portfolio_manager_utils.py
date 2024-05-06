@@ -187,14 +187,14 @@ def build_exposure_df(notional_df: pd.DataFrame,
             universe_sensitivities_df = universe_sensitivities_df[categories_names]
 
         universe_sensitivities_df = pd.concat([universe_sensitivities_df,
-                                               universe_sensitivities_df.agg(np.sum).to_frame().rename(
+                                               universe_sensitivities_df.agg("sum").to_frame().rename(
                                                    columns={0: "Total Factor Category Exposure"}).T])
 
         universe_sensitivities_df = universe_sensitivities_df.sort_values(
             by="Total Factor Category Exposure", axis=1, ascending=False)
         notional_df = pd.concat(
             [notional_df,
-             notional_df[["Notional"]].agg(np.sum).to_frame().rename(
+             notional_df[["Notional"]].agg("sum").to_frame().rename(
                  columns={0: "Total Factor Category Exposure"}).T])
 
         exposure_df = notional_df.join(universe_sensitivities_df).rename_axis("Factor Category", axis=1)
@@ -209,7 +209,7 @@ def build_exposure_df(notional_df: pd.DataFrame,
                                      .rename_axis(("Factor Category", "Factor"), axis=1)
         )
         universe_sensitivities_df = pd.concat([universe_sensitivities_df,
-                                               universe_sensitivities_df.agg(np.sum).to_frame().rename(
+                                               universe_sensitivities_df.agg("sum").to_frame().rename(
                                                    columns={0: "Total Factor Exposure"}).T
                                                ])
         universe_sensitivities_df = universe_sensitivities_df.sort_values(
@@ -223,7 +223,7 @@ def build_exposure_df(notional_df: pd.DataFrame,
         notional_df = (
             pd.concat([
                 notional_df,
-                notional_df[["Notional"]].agg(np.sum).to_frame().rename(columns={0: "Total Factor Exposure"}).T
+                notional_df[["Notional"]].agg("sum").to_frame().rename(columns={0: "Total Factor Exposure"}).T
             ]).set_axis(pd.MultiIndex.from_tuples(
                 [("Asset Information", "Asset Name"), ("Asset Information", "Notional")]), axis=1)
         )

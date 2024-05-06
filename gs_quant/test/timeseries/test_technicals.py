@@ -202,9 +202,9 @@ def test_exponential_moving_average():
     def ema_by_hand(ts, alpha=0.75):
         R = ts.copy()
         R *= 0
-        R[0] = ts[0]
+        R.iloc[0] = ts.iloc[0]
         for i in range(1, len(ts)):
-            R[i] = alpha * R[i - 1] + (1 - alpha) * ts[i]
+            R.iloc[i] = alpha * R.iloc[i - 1] + (1 - alpha) * ts.iloc[i]
         return R
 
     dates = [
@@ -262,7 +262,7 @@ def test_trend():
         trend(long_x, SeasonalModel.MULTIPLICATIVE)  # Should not be all NaN, make sure it's correct length
     res = trend(long_x + 1, SeasonalModel.MULTIPLICATIVE)  # Should not be all NaN, make sure it's correct length
     assert len(res) == len(long_x)
-    assert np.isclose((res[int(len(res) / 2)] - 1), long_x[int(len(res) / 2)], 0.1)
+    assert np.isclose((res.iloc[int(len(res) / 2)] - 1), long_x.iloc[int(len(res) / 2)], 0.1)
     assert res.notnull().any()
     with pytest.raises(MqValueError):
         x = pd.Series(range(10))

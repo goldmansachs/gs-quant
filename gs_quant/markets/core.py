@@ -16,7 +16,6 @@ under the License.
 import asyncio
 import datetime as dt
 import logging
-import queue
 import sys
 import weakref
 from abc import ABCMeta
@@ -39,7 +38,7 @@ from gs_quant.target.common import PricingDateAndMarketDataAsOf
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
 from gs_quant.tracing import Tracer
 from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket
-from ..api.risk import RiskApi
+from ..api.risk import GenericRiskApi
 
 _logger = logging.getLogger(__name__)
 
@@ -92,7 +91,7 @@ class PricingContext(ContextBaseWithDefault):
                  market_behaviour: Optional[str] = 'ContraintsBased',
                  set_parameters_only: bool = False,
                  use_historical_diddles_only: bool = False,
-                 provider: Optional[Type[RiskApi]] = None):
+                 provider: Optional[Type[GenericRiskApi]] = None):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
         as per the examples
@@ -113,7 +112,7 @@ class PricingContext(ContextBaseWithDefault):
         :param market_behaviour: the behaviour to build the curve for pricing ('ContraintsBased' or 'Calibrated'
             (defaults to ContraintsBased))
         :param set_parameters_only: if true don't stop embedded pricing contexts submitting their jobs.
-        :param provider: RiskApi implementation to use for pricing requests
+        :param provider: GenericRiskApi implementation to use for pricing requests
 
         **Examples**
 
@@ -288,32 +287,11 @@ class PricingContext(ContextBaseWithDefault):
         def run_requests(requests_: list, provider_, create_event_loop: bool, pc_attrs: dict, span):
             if create_event_loop:
                 asyncio.set_event_loop(asyncio.new_event_loop())
-
-            results = queue.Queue()
-            done = False
-
-            try:
-                with session:
-                    provider_.run(requests_, results, pc_attrs['_max_concurrent'], progress_bar,
-                                  timeout=pc_attrs['timeout'], span=span)
-            except Exception as e:
-                provider_.enqueue(results, ((k, e) for k in self.__pending.keys()))
-
-            while self.__pending and not done:
-                done, chunk_results = provider_.drain_queue(results)
-                for (risk_key_, priceable_), result in chunk_results:
-                    future = self.__pending.pop((risk_key_, priceable_), None)
-                    if future is not None:
-                        future.set_result(result)
-
-                        if pc_attrs['use_cache']:
-                            PricingCache.put(risk_key_, priceable_, result)
-
-            if not pc_attrs['is_async']:
-                # In async mode we can't tell if we've completed, we could be re-used
-                while self.__pending:
-                    (risk_key_, _), future = self.__pending.popitem()
-                    future.set_result(ErrorValue(risk_key_, 'No result returned'))
+            provider_.populate_pending_futures(requests_, session, self.__pending,
+                                               max_concurrent=pc_attrs['_max_concurrent'], progress_bar=progress_bar,
+                                               timeout=pc_attrs['timeout'], span=span,
+                                               cache_impl=PricingCache if pc_attrs['use_cache'] else None,
+                                               is_async=pc_attrs['is_async'])
 
         # Group requests optimally
         requests_by_provider = {}
@@ -343,11 +321,12 @@ class PricingContext(ContextBaseWithDefault):
                 # Restrict to 1,000 instruments and 1 date in a batch, until server side changes are made
 
                 for (params, scenario, dates_markets, risk_measures), instruments in grouped_requests.items():
+                    date_chunk_size = (1 if self._group_by_date else self._max_per_batch) if provider.batch_dates \
+                                                                                            else len(dates_markets)
                     for insts_chunk in [tuple(filter(None, i)) for i in
                                         zip_longest(*[iter(instruments)] * self._max_per_batch)]:
                         for dates_chunk in [tuple(filter(None, i)) for i in
-                                            zip_longest(*[iter(dates_markets)] * (
-                                                    1 if self._group_by_date else self._max_per_batch))]:
+                                            zip_longest(*[iter(dates_markets)] * date_chunk_size)]:
                             requests.append(RiskRequest(
                                 tuple(RiskPosition(instrument=i, quantity=i.instrument_quantity,
                                                    instrument_name=i.name) for i in insts_chunk),
@@ -480,7 +459,7 @@ class PricingContext(ContextBaseWithDefault):
             'use_server_cache', False)
 
     @property
-    def provider(self) -> Type[RiskApi]:
+    def provider(self) -> Type[GenericRiskApi]:
         return self.__provider if self.__provider is not None else self._inherited_val(
             'provider', None)
 

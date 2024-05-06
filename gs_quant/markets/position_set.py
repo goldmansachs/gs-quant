@@ -18,14 +18,23 @@ import logging
 from typing import Dict, List, Union, Optional
 
 import pandas as pd
+import numpy as np
+import datetime as dt
+import math
 from pydash import get
+from time import time
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.price import GsPriceApi
-from gs_quant.errors import MqValueError
+from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.target.common import Position as CommonPosition, PositionPriceInput, PositionSet as CommonPositionSet, \
     PositionTag, Currency, PositionSetWeightingStrategy
 from gs_quant.target.price import PriceParameters, PositionSetPriceInput
+from gs_quant.target.positions_v2_pricing import PositionsPricingParameters, PositionsRequest, PositionSetRequest, \
+    PositionsPricingRequest
+from gs_quant.markets.position_set_utils import _get_asset_temporal_xrefs, \
+    _group_temporal_xrefs_into_discrete_time_ranges, _resolve_many_assets
+from gs_quant.models.risk_model_utils import _repeat_try_catch_request
 
 _logger = logging.getLogger(__name__)
 
@@ -125,7 +134,8 @@ class Position:
 
     def as_dict(self) -> Dict:
         position_dict = dict(identifier=self.identifier, weight=self.weight,
-                             quantity=self.quantity, name=self.name, asset_id=self.asset_id, tags=self.tags)
+                             quantity=self.quantity, name=self.name, asset_id=self.asset_id, restricted=self.restricted,
+                             tags=self.tags)
         return {k: v for k, v in position_dict.items() if v is not None}
 
     def to_target(self, common: bool = True) -> Union[CommonPosition, PositionPriceInput]:
@@ -892,3 +902,371 @@ class PositionSet:
             for tag in position_tags:
                 hashed_results = hashed_results + tag.name + '-' + tag.value
         return hashed_results
+
+    @staticmethod
+    def to_frame_many(position_sets: List['PositionSet']) -> pd.DataFrame:
+        """Returns dataframe of position sets"""
+        position_sets = pd.DataFrame(position_sets, columns=["position_sets"])
+
+        for field in ['date', 'divisor', 'reference_notional']:
+            position_sets[field] = [getattr(pos, field, None) for pos in position_sets['position_sets']]
+
+        position_sets['positions'] = [pos.positions for pos in position_sets['position_sets']]
+
+        position_sets = position_sets[position_sets['positions'].apply(lambda x: len(x) > 0)]
+
+        position_sets = position_sets.explode('positions')
+        position_sets['positions'] = [pos.as_dict() for pos in position_sets['positions']]
+
+        for field in ['name', 'asset_id', 'identifier', 'weight', 'restricted', 'quantity', 'tags']:
+            position_sets[field] = [pos.get(field) for pos in position_sets['positions']]
+
+        columns_to_drop = ["position_sets", "positions"]
+        position_sets.drop(columns=columns_to_drop, inplace=True)
+        return position_sets
+
+    @staticmethod
+    @np.vectorize
+    def __build_positions_from_frame(names: pd.Series = None,
+                                     identifiers: pd.Series = None,
+                                     asset_ids: pd.Series = None,
+                                     weights: pd.Series = None,
+                                     quantities: pd.Series = None,
+                                     restricted: pd.Series = None,
+                                     hard_to_borrow: pd.Series = None,
+                                     tags: pd.Series = None):
+        position = Position(asset_id=asset_ids,
+                            name=names,
+                            identifier=identifiers,
+                            weight=weights if weights else None,
+                            quantity=quantities if quantities else None,
+                            tags=tags)
+
+        position._restricted = restricted
+        position._hard_to_borrow = hard_to_borrow
+
+        return position
+
+    @classmethod
+    def resolve_many(cls, position_sets: List['PositionSet'], **kwargs):
+        """
+        Resolve positions on each holding date into Marquee assets. Positions sets will be updated inplace.
+        Each resolved position will have a unique Marquee ID.
+
+            :param position_sets: Positions sets in a list.
+            :param kwargs: Additional parameters to send to the GS Resolver API.
+
+            **Usage**
+
+            >>> from gs_quant.markets.position_set import PositionSet, Position, PositionTag
+            >>> import datetime as dt
+            >>> import pandas as pd
+
+            The input to the function can be a list of `PositionSet` object.
+
+            >>> position_set_list = [
+            ...          PositionSet(date=dt.date(2024, 5, 1),
+            ...                      reference_notional=1000,
+            ...                      positions=[Position(identifier='GS UN',
+            ...                                          weight=0.5,
+            ...                                          tags=[PositionTag(name="tag1", value="tagvalue1")]),
+            ...                                 Position(identifier='AAPL UW',
+            ...                                          weight=0.5,
+            ...                                          ags=[PositionTag(name="tag2", value="tagvalue2")])]),
+            ...          PositionSet(date=dt.date(2024, 5, 1),
+            ...                      reference_notional=1000,
+            ...                      positions=[Position(identifier='GS UN',
+            ...                                          weight=0.5,
+            ...                                          tags=[PositionTag(name="tag1", value="tagvalue1")]),
+            ...                                 Position(identifier='AAPL UW',
+            ...                                           weight=0.5,
+            ...                                           tags=[PositionTag(name="tag2", value="tagvalue2")])])
+            ...                        ]
+
+            >>> PositionSet.resolve_many(position_set_list)
+
+            **See also**
+
+            :func:`price_many`
+
+            """
+
+        position_sets_df = cls.to_frame_many(position_sets)
+        if "name" in position_sets_df.columns.tolist():
+            position_sets_df = position_sets_df.drop(columns="name")
+        if "asset_id" in position_sets_df.columns.tolist():
+            position_sets_df = position_sets_df.drop(columns="asset_id")
+        position_sets_df = position_sets_df.dropna(how='all', axis=1)
+
+        position_sets_attributes = position_sets_df.columns.tolist()
+        if "quantity" in position_sets_attributes and "weight" in position_sets_attributes:
+            raise MqValueError("Cannot have both weight and quantity in position sets")
+
+        asset_temporal_xrefs_df, asset_identifier_type = \
+            _get_asset_temporal_xrefs(position_sets_df)
+        _group_temporal_xrefs_into_discrete_time_ranges(asset_temporal_xrefs_df)
+        resolved_assets_results_df = _resolve_many_assets(asset_temporal_xrefs_df, asset_identifier_type, **kwargs)
+
+        position_sets_df = pd.merge(position_sets_df,
+                                    resolved_assets_results_df[["assetId", asset_identifier_type, "name", "asOfDate",
+                                                                "tradingRestriction", "startDate", "endDate"]],
+                                    how="left",
+                                    left_on="identifier",
+                                    right_on=asset_identifier_type)
+        position_sets_df["date"] = pd.to_datetime(position_sets_df["date"])
+
+        # Fill N/A for startDate and endDate so they are not filtered out (for instance if some positions
+        # did not have xrefs or were not resolved. These should be included in the unresolved positions group"
+        position_sets_df['startDate'] = position_sets_df['startDate'].fillna(position_sets_df['date'])
+        position_sets_df['endDate'] = position_sets_df['endDate'].fillna(position_sets_df['date'])
+
+        position_sets_df = position_sets_df[(position_sets_df["startDate"] <= position_sets_df["date"]) &
+                                            (position_sets_df["date"] <= position_sets_df["endDate"])]
+        position_sets_df = (
+            position_sets_df.drop(columns=[asset_identifier_type, "asOfDate", "startDate", "endDate"])
+                            .rename(columns={"tradingRestriction": "restricted"})
+                            .fillna(np.nan)
+                            .replace([np.nan], [None])
+        )
+
+        # Build position sets
+        if 'reference_notional' in position_sets_df.columns.tolist():
+            if "quantity" in position_sets_df.columns.tolist():
+                position_sets_df = position_sets_df.drop(columns='quantity')
+
+        weights_df = position_sets_df['weight'] \
+            if 'weight' in position_sets_df.columns.tolist() else None
+        quantities_df = position_sets_df['quantity'] \
+            if 'quantity' in position_sets_df.columns.tolist() else None
+        tags_df = position_sets_df['tags'] if 'tags' in position_sets_df.columns.tolist() else None
+
+        all_positions = cls.__build_positions_from_frame(names=position_sets_df['name'],
+                                                         identifiers=position_sets_df['identifier'],
+                                                         asset_ids=position_sets_df['assetId'],
+                                                         weights=weights_df,
+                                                         quantities=quantities_df,
+                                                         restricted=position_sets_df['restricted'],
+                                                         tags=tags_df)
+
+        position_sets_df['positions'] = all_positions
+        position_sets_grouped_by_date = position_sets_df.groupby('date')
+        for position_set in position_sets:
+            if not isinstance(position_set.date, dt.date):
+                position_set.date = pd.Timestamp(position_set.date).to_pydatetime().date()
+            positions_on_holding_date_df = position_sets_grouped_by_date.get_group(position_set.date)
+            position_set.positions = positions_on_holding_date_df.loc[~positions_on_holding_date_df['assetId'].isnull(),
+                                                                      'positions'].tolist()
+            unresolved_positions = positions_on_holding_date_df.loc[positions_on_holding_date_df['assetId'].isnull(),
+                                                                    'positions'].tolist()
+            if unresolved_positions:
+                position_set.__unresolved_positions = unresolved_positions
+
+    @classmethod
+    def price_many(cls,
+                   position_sets: List['PositionSet'],
+                   currency: Optional[Currency] = Currency.USD,
+                   weighting_strategy: PositionSetWeightingStrategy = None,
+                   carryover_positions_for_missing_dates: bool = False,
+                   should_reweight: bool = False,
+                   allow_fractional_shares: bool = False,
+                   allow_partial_pricing: bool = False,
+                   batch_size: int = 20,
+                   **kwargs):
+        """Fetch position weights from quantities or vice versa for a list of position sets. This function modifies the
+         input position sets inplace
+
+            :param position_sets: Positions sets in a list.
+            :param currency: Currency to use to price. Defaults to USD.
+            :param weighting_strategy: The weighting strategy to use. Should be weight or quantity. If None, infers
+            weighting strategy from positions metadata
+            :param carryover_positions_for_missing_dates: Broadcast previous positions onto dates with missing
+            positions. Defaults to False
+            :param should_reweight: Ensures total weight across positions on a holding date equals 1. Defaults to False
+            :param allow_fractional_shares: Whether to allow fractional shares. Defaults to False
+            :param allow_partial_pricing: whether to price a subset of positions in case of errors
+            :param batch_size: Size of position sets to send to the pricing API per request. Defaults to 30
+            :param kwargs: Additional parameters to pass to the GS pricing API
+
+            **Usage**
+
+            The function expects a required input of positions sets, which can be a dataframe of the format below or
+            a list of `PositionSet` object
+
+            >>> from gs_quant.markets.position_set import PositionSet, Position, PositionTag
+            >>> import datetime as dt
+            >>> import pandas as pd
+
+            The input to the function is a list of `PositoinSet`
+
+            >>> position_set_list = [
+            ...     PositionSet(date=dt.date(2024, 5, 1),
+            ...                 reference_notional=1000,
+            ...                 positions=[Position(identifier='GS UN',
+            ...                                      weight=0.5,
+            ...                                      tags=[PositionTag(name="tag1", value="tagvalue1")]),
+            ...                            Position(identifier='AAPL UW',
+            ...                                     weight=0.5,
+            ...                                     tags=[PositionTag(name="tag2", value="tagvalue2")])]),
+            ...     PositionSet(date=dt.date(2024, 5, 1),
+            ...                 reference_notional=1000,
+            ...                 positions=[Position(identifier='GS UN',
+            ...                                     weight=0.5,
+            ...                                     tags=[PositionTag(name="tag1", value="tagvalue1")]),
+            ...                            Position(identifier='AAPL UW',
+            ...                                     weight=0.5,
+            ...                                     tags=[PositionTag(name="tag2", value="tagvalue2")])])
+            ...                        ]
+
+            >>> PositionSet.price_many(position_set_list)
+
+            :func:`resolve_many`
+
+            """
+        position_sets_to_price_df = cls.to_frame_many(position_sets)
+        position_sets_to_price_df = position_sets_to_price_df.dropna(how='all', axis=1)
+        position_sets_column_attributes = position_sets_to_price_df.columns.tolist()
+
+        if "quantity" in position_sets_column_attributes and "weight" in position_sets_column_attributes:
+            raise MqValueError("Cannot have both weight and quantity in position sets")
+
+        if not weighting_strategy:
+            weighting_strategy = PositionSetWeightingStrategy.Weight \
+                if "weight" in position_sets_column_attributes \
+                   and "reference_notional" in position_sets_column_attributes \
+                else PositionSetWeightingStrategy.Quantity
+
+        if weighting_strategy not in [PositionSetWeightingStrategy.Quantity, PositionSetWeightingStrategy.Weight]:
+            raise MqValueError("Can only specify a weighting strategy of weight or quantity")
+
+        if weighting_strategy == PositionSetWeightingStrategy.Quantity and \
+                "quantity" not in position_sets_column_attributes:
+            raise MqValueError("Unable to price positions without position weights and daily reference notional "
+                               "or position quantities")
+
+        position_pricing_parameters = PositionsPricingParameters(
+            currency=currency.value,
+            weighting_strategy=weighting_strategy.value,
+            carryover_positions_for_missing_dates=carryover_positions_for_missing_dates,
+            should_reweight=should_reweight,
+            allow_fractional_shares=allow_fractional_shares
+        )
+
+        if kwargs:
+            [setattr(position_pricing_parameters, arg, value) for arg, value in kwargs.items()]
+
+        if weighting_strategy == PositionSetWeightingStrategy.Weight:
+            positions_with_missing_weights = position_sets_to_price_df[position_sets_to_price_df['weight'].isna()]
+            if not positions_with_missing_weights.empty:
+                _logger.warning("Some positions do not have weights. These will be filtered out")
+        else:
+            positions_with_missing_quantities = position_sets_to_price_df[position_sets_to_price_df['quantity'].isna()]
+            if not positions_with_missing_quantities.empty:
+                _logger.warning("Some positions do not have quantities. These will be filtered out")
+
+        if "weight" not in position_sets_column_attributes:
+            position_sets_to_price_df['weight'] = None
+        elif "quantity" not in position_sets_column_attributes:
+            position_sets_to_price_df["quantity"] = None
+
+        position_sets_to_price_df['positions'] = \
+            np.vectorize(
+                lambda asset_id, weight, quantity:
+                PositionsRequest(asset_id=asset_id, weight=weight, quantity=quantity))(
+                position_sets_to_price_df['asset_id'],
+                position_sets_to_price_df['weight'],
+                position_sets_to_price_df['quantity'])
+
+        # build positionSets requests
+        position_sets_grouped_by_date = position_sets_to_price_df.groupby("date")
+
+        all_pos_sets = []
+        for date, pos_df in position_sets_grouped_by_date:
+            all_pos_sets.append(
+                PositionSetRequest(date=date,
+                                   positions=pos_df['positions'].tolist(),
+                                   target_notional=pos_df['reference_notional'].iat[
+                                       0] if weighting_strategy == PositionSetWeightingStrategy.Weight else None))
+
+        batches = np.array_split(all_pos_sets, math.ceil(len(all_pos_sets) / batch_size))
+        all_pricing_results = []
+
+        start = time()
+        for batch_idx, batch in enumerate(batches):
+            _logger.info(f"Pricing batch {batch_idx} of {len(batches)}")
+            try:
+                payload = PositionsPricingRequest(parameters=position_pricing_parameters,
+                                                  position_sets=tuple(batch))
+                pricing_results = _repeat_try_catch_request(GsPriceApi.price_many_positions, number_retries=3,
+                                                            return_result=True,
+                                                            verbose=False,
+                                                            pricing_request=payload)
+                all_pricing_results += pricing_results
+            except MqRequestError as request_exception:
+                earliest_pos_set_in_batch = batch[0]
+                latest_pos_set_in_batch = batch[-1]
+                _logger.error(f"An error occurred while pricing positions on holding dates "
+                              f"{earliest_pos_set_in_batch.date} to {latest_pos_set_in_batch.date}: "
+                              f"{request_exception}.Consider batching position sets or reducing the batch"
+                              f"size")
+                if not allow_partial_pricing:
+                    raise request_exception
+        _logger.info(f"Total time to price positions is {time() - start} seconds")
+
+        next_start = time()
+        date_to_priced_position_sets = {
+            dt.datetime.strptime(pos_set.get('date'), '%Y-%m-%d').date(): pos_set for pos_set in all_pricing_results}
+
+        for input_position_set in position_sets:
+            if not isinstance(input_position_set.date, dt.date):
+                # use pandas to infer format of date
+                input_position_set.date = pd.to_datetime(input_position_set.date).date()
+            if not date_to_priced_position_sets.get(input_position_set.date):
+                input_position_set.__unpriced_positions = list(input_position_set.positions)
+                input_position_set.positions = None
+                continue
+
+            priced_position_set = date_to_priced_position_sets.get(input_position_set.date)
+            position_date = dt.datetime.strptime(priced_position_set.get('date'), '%Y-%m-%d').date()
+            priced_positions_df = pd.DataFrame(priced_position_set.get('positions'))
+            column_from_initial_position_sets_to_merge_by = "weight" \
+                if weighting_strategy == PositionSetWeightingStrategy.Weight else "quantity"
+            column_from_priced_positions_results_to_merge_by = "referenceWeight" \
+                if column_from_initial_position_sets_to_merge_by == "weight" else "quantity"
+            priced_positions_df = priced_positions_df\
+                .drop_duplicates(subset=['assetId', column_from_priced_positions_results_to_merge_by])
+
+            priced_positions_df = pd.merge(
+                position_sets_to_price_df.loc[position_sets_to_price_df['date'] == position_date, :],
+                priced_positions_df,
+                how="left",
+                left_on=['asset_id', column_from_initial_position_sets_to_merge_by],
+                right_on=['assetId', column_from_priced_positions_results_to_merge_by],
+                suffixes=("original", None)
+            )
+
+            unpriced_positions_df = priced_positions_df[priced_positions_df['weight'].isna()] \
+                if weighting_strategy == PositionSetWeightingStrategy.Weight else \
+                priced_positions_df[priced_positions_df['quantity'].isna()]
+            priced_positions_df = priced_positions_df[~priced_positions_df['weight'].isna()] \
+                if weighting_strategy == PositionSetWeightingStrategy.Weight else \
+                priced_positions_df[~priced_positions_df["quantity"].isna()]
+            positions = []
+            for record in priced_positions_df.to_dict('records'):
+                curr_position = Position(asset_id=record.get('assetId'),
+                                         identifier=record.get('identifier'),
+                                         name=record.get('name'),
+                                         weight=record.get('weight'),
+                                         quantity=record.get('quantity'),
+                                         tags=record.get('tags'))
+                curr_position._restricted = record.get('restricted')
+                positions.append(curr_position)
+
+            unpriced_positions = [Position(asset_id=unpriced_record.get('assetId'),
+                                           identifier=unpriced_record.get('identifier'),
+                                           name=unpriced_record.get('name')) for unpriced_record in
+                                  unpriced_positions_df.to_dict('records')]
+
+            input_position_set.positions = positions
+            input_position_set._unpriced_positions = unpriced_positions
+
+        _logger.info(f"Total time to process pricing results is {time() - next_start} seconds")

@@ -16,6 +16,7 @@ under the License.
 
 from gs_quant.session import GsSession
 from gs_quant.target.price import *
+from gs_quant.target.positions_v2_pricing import *
 
 
 class GsPriceApi:
@@ -25,3 +26,14 @@ class GsPriceApi:
     def price_positions(cls, inputs: PositionSetPriceInput) -> PositionSetPriceResponse:
         url = '/price/positions'
         return GsSession.current._post(url, payload=inputs, cls=PositionSetPriceResponse)
+
+    @classmethod
+    def price_many_positions(cls, pricing_request: PositionsPricingRequest) -> dict:
+        url = '/positions/price/bulk'
+        GsSession.current.api_version = "v2"
+        pricing_response = GsSession.current._post(url, payload=pricing_request)
+        GsSession.current.api_version = "v1"
+
+        positions = pricing_response.get("positions")
+
+        return positions

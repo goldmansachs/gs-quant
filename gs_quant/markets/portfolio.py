@@ -72,6 +72,15 @@ class Portfolio(PriceableImpl):
         self.__id = None
         self.__quote_id = None
 
+    def __repr__(self):
+        name = 'Portfolio'
+        inst_desc = f'{len(self.all_instruments) if self.priceables else "0"} instrument(s)'
+        if self.name:
+            name += f'({self.name}, {inst_desc})'
+        else:
+            name += f'({inst_desc})'
+        return name
+
     def _to_records(self):
         def get_name(obj, idx):
             if isinstance(obj, InstrumentBase) and hasattr(obj, 'type_'):

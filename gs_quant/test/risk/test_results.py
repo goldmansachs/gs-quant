@@ -355,7 +355,7 @@ def test_bucketed_risks(mocker):
     np.testing.assert_almost_equal(filter_agg_r6, manual_agg_f6, 8)
 
     assert isinstance(res7[date(2020, 1, 14)].result().futures[0].result(), DataFrameWithInfo)
-    assert res7[date(2020, 1, 14)].to_frame()["mkt_type"][0] == "CMD NRG"
+    assert res7[date(2020, 1, 14)].to_frame()["mkt_type"].iloc[0] == "CMD NRG"
 
 
 def test_cashflows_risk(mocker):

@@ -21,23 +21,70 @@ import sys
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import TimeoutError
 from threading import Thread
-from typing import Iterable, Optional, Union, Tuple
+from typing import Iterable, Optional, Union, Tuple, Dict, Any
 
 from opentracing import Span
 from tqdm import tqdm
 
 from gs_quant.api.api_session import ApiWithCustomSession
-from gs_quant.base import RiskKey, Sentinel
+from gs_quant.base import RiskKey, Sentinel, Priceable
 from gs_quant.risk import ErrorValue, RiskRequest
 from gs_quant.risk.result_handlers import result_handlers
+from gs_quant.risk.results import PricingFuture
 from gs_quant.session import GsSession
 from gs_quant.tracing import Tracer
 
 _logger = logging.getLogger(__name__)
 
 
-class RiskApi(ApiWithCustomSession, metaclass=ABCMeta):
+class GenericRiskApi(ApiWithCustomSession, metaclass=ABCMeta):
+    batch_dates = True
+
+    @classmethod
+    @abstractmethod
+    def populate_pending_futures(cls, requests: list, session: GsSession,
+                                 pending: Dict[Tuple[RiskKey, Priceable], PricingFuture]):
+        ...
+
+    @classmethod
+    @abstractmethod
+    def build_keyed_results(cls, request: RiskRequest, results: Union[Iterable, Exception]) -> \
+            Dict[Tuple[RiskKey, Priceable], Any]:
+        ...
+
+
+class RiskApi(GenericRiskApi, metaclass=ABCMeta):
     __SHUTDOWN_SENTINEL = Sentinel('QueueListenerShutdown')
+
+    @classmethod
+    def populate_pending_futures(cls, requests: list, session: GsSession,
+                                 pending: Dict[Tuple[RiskKey, Priceable], PricingFuture], **kwargs):
+        results = queue.Queue()
+        done = False
+        max_concurrent, progress_bar, timeout, span, cache_impl, is_async = \
+            [kwargs.get(arg) for arg in ['max_concurrent', 'progress_bar', 'timeout', 'span', 'cache_impl', 'is_async']]
+        try:
+            with session:
+                cls.run(requests, results, max_concurrent, progress_bar,
+                        timeout=timeout, span=span)
+        except Exception as e:
+            cls.enqueue(results, ((k, e) for k in pending.keys()))
+
+        while pending and not done:
+            done, chunk_results = cls.drain_queue(results)
+            for (risk_key_, priceable_), result in chunk_results:
+                future = pending.pop((risk_key_, priceable_), None)
+                if future is not None:
+                    future.set_result(result)
+
+                    if cache_impl is not None:
+                        cache_impl.put(risk_key_, priceable_, result)
+
+        if not is_async:
+            # In async mode we can't tell if we've completed, we could be re-used
+            while pending:
+                (risk_key_, _), future = pending.popitem()
+                future.set_result(ErrorValue(risk_key_, 'No result returned'))
 
     @classmethod
     @abstractmethod
@@ -129,7 +176,7 @@ class RiskApi(ApiWithCustomSession, metaclass=ABCMeta):
             timeout: Optional[int] = None,
             span: Optional[str] = None):
         def _process_results(completed: list):
-            chunk_results = tuple(itertools.chain.from_iterable(cls._handle_results(request, result).items()
+            chunk_results = tuple(itertools.chain.from_iterable(cls.build_keyed_results(request, result).items()
                                                                 for request, result in completed))
             cls.enqueue(results, chunk_results, wait=True)
 
@@ -286,7 +333,8 @@ class RiskApi(ApiWithCustomSession, metaclass=ABCMeta):
                     asyncio.set_event_loop(None)
 
     @classmethod
-    def _handle_results(cls, request: RiskRequest, results: Union[Iterable, Exception]) -> dict:
+    def build_keyed_results(cls, request: RiskRequest, results: Union[Iterable, Exception]) -> \
+            Dict[Tuple[RiskKey, Priceable], Any]:
         formatted_results = {}
 
         if isinstance(results, Exception):

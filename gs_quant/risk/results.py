@@ -377,7 +377,7 @@ class MultipleRiskMeasureResult(dict):
                 return tuple(value.scenarios)
         return tuple()
 
-    def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
+    def to_frame(self, values='default', index='default', columns='default', aggfunc="sum",
                  display_options: DisplayOptions = None):
         df = pd.DataFrame.from_records(self._to_records({}, display_options=display_options))
         if values is None and index is None and columns is None:

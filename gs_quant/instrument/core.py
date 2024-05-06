@@ -40,6 +40,9 @@ class Instrument(PriceableImpl, InstrumentBase):
     PROVIDER = GsRiskApi
     __instrument_mappings = {}
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}{"(" + self.name + ")" if self.name else ""}'
+
     @classmethod
     def __asset_class_and_type_to_instrument(cls):
         if not cls.__instrument_mappings:

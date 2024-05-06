@@ -1200,9 +1200,9 @@ class SIRModel:
         data_end.append(DataContext.current.end_date)
         end_date = max(data_end)
 
-        self.s = s if isinstance(s, pd.Series) else [s]
-        self.i = i if isinstance(i, pd.Series) else [i]
-        self.r = r if isinstance(r, pd.Series) else [r]
+        self.s = s if isinstance(s, pd.Series) else pd.Series([s])
+        self.i = i if isinstance(i, pd.Series) else pd.Series([i])
+        self.r = r if isinstance(r, pd.Series) else pd.Series([r])
         self.n = n
         self.beta_init = beta
         self.gamma_init = gamma
@@ -1218,10 +1218,10 @@ class SIRModel:
         beta_init = self.beta_init if self.beta_init is not None else 0.9
         gamma_init = self.gamma_init if self.gamma_init is not None else 0.01
 
-        parameters, initial_conditions = SIR.get_parameters(self.s[0], self.i[0], self.r[0], n, beta=beta_init,
-                                                            gamma=gamma_init, beta_fixed=self.beta_fixed,
-                                                            gamma_fixed=self.gamma_fixed, S0_fixed=True, I0_fixed=True,
-                                                            R0_fixed=True)
+        parameters, initial_conditions = SIR.get_parameters(self.s.iloc[0], self.i.iloc[0], self.r.iloc[0], n,
+                                                            beta=beta_init, gamma=gamma_init,
+                                                            beta_fixed=self.beta_fixed, gamma_fixed=self.gamma_fixed,
+                                                            S0_fixed=True, I0_fixed=True, R0_fixed=True)
         self.parameters = parameters
 
         self._model = EpidemicModel(SIR, parameters=parameters, data=data, initial_conditions=initial_conditions,
@@ -1385,10 +1385,10 @@ class SEIRModel(SIRModel):
         data_end.append(DataContext.current.end_date)
         end_date = max(data_end)
 
-        self.s = s if isinstance(s, pd.Series) else [s]
-        self.e = e if isinstance(e, pd.Series) else [e]
-        self.i = i if isinstance(i, pd.Series) else [i]
-        self.r = r if isinstance(r, pd.Series) else [r]
+        self.s = s if isinstance(s, pd.Series) else pd.Series([s])
+        self.e = e if isinstance(e, pd.Series) else pd.Series([e])
+        self.i = i if isinstance(i, pd.Series) else pd.Series([i])
+        self.r = r if isinstance(r, pd.Series) else pd.Series([r])
         self.n = n
         self.beta_init = beta
         self.gamma_init = gamma
@@ -1407,7 +1407,8 @@ class SEIRModel(SIRModel):
         gamma_init = self.gamma_init if self.gamma_init is not None else 0.01
         sigma_init = self.sigma_init if self.sigma_init is not None else 0.2
 
-        parameters, initial_conditions = SEIR.get_parameters(self.s[0], self.e[0], self.i[0], self.r[0], n,
+        parameters, initial_conditions = SEIR.get_parameters(self.s.iloc[0], self.e.iloc[0],
+                                                             self.i.iloc[0], self.r.iloc[0], n,
                                                              beta=beta_init, gamma=gamma_init, sigma=sigma_init,
                                                              beta_fixed=self.beta_fixed,
                                                              gamma_fixed=self.gamma_fixed,

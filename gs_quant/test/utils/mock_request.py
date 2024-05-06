@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import json
+import logging
 import os
 from abc import abstractmethod
 from os.path import exists
@@ -22,6 +23,8 @@ from unittest import mock
 
 from gs_quant.errors import MqUninitialisedError
 from gs_quant.session import GsSession, Environment
+
+logger = logging.getLogger("mock_request")
 
 
 class MockRequest:
@@ -57,7 +60,12 @@ class MockRequest:
     def mock_calc(self, *args, **kwargs):
         request_id = self.get_request_id(args, kwargs)
         file_name = f'request{request_id}.json'
-        with open(self.paths / f'calc_cache/{file_name}') as json_data:
+        file_path = self.paths / f'calc_cache/{file_name}'
+        if not exists(file_path):
+            logger.error(f'Unable to find mock test date for {self.__class__.__name__}:\n'
+                         f'File {file_path} not found.')
+            raise FileNotFoundError(f'File {file_name} not found in {self.paths / "calc_cache"}')
+        with open(file_path) as json_data:
             MockRequest.__looked_at_files.setdefault(self.paths, set()).add(file_name)
             return json.load(json_data)
 

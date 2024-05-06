@@ -1625,7 +1625,7 @@ def generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_k
     df = pd.merge(pnl_df, aum_df, how='outer', on='date')
     df.set_index('date', inplace=True)
     df.sort_index(inplace=True)
-    df.loc[:, [aum_col_key]] = df.loc[:, [aum_col_key]].fillna(method='ffill')
+    df.loc[:, [aum_col_key]] = df.loc[:, [aum_col_key]].ffill()
     df['return'] = df[pnl_col_key].div(df[aum_col_key].shift(1))
     if 'totalPnl' in list(df.columns.values):
         df['totalPnl'] = df['totalPnl'].div(df[aum_col_key].shift(1))

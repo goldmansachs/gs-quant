@@ -31,7 +31,9 @@ def encode_date_or_str(value: Optional[Union[str, dt.date]]) -> Optional[str]:
 
 
 def decode_optional_date(value: Optional[str]) -> Optional[dt.date]:
-    if value is None:
+    # from dataclasses-json 0.6.5 onwards the global config for type T will be applied to Optional[T]
+    # So this decoder would become redundant, to allow any version we simply return if it's already a date
+    if value is None or isinstance(value, dt.date):
         return value
     elif isinstance(value, str):
         return dt.datetime.strptime(value, '%Y-%m-%d').date()
@@ -43,8 +45,10 @@ def decode_date_tuple(blob: Tuple[str]):
     return tuple(decode_optional_date(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
-def optional_from_isodatetime(datetime: str):
-    return dt.datetime.fromisoformat(datetime.replace('Z', '')) if datetime is not None else None
+def optional_from_isodatetime(datetime: Union[str, dt.datetime, None]) -> Optional[dt.datetime]:
+    if datetime is None or isinstance(datetime, dt.datetime):
+        return datetime
+    return dt.datetime.fromisoformat(datetime.replace('Z', ''))
 
 
 def optional_to_isodatetime(datetime: Optional[dt.datetime]):
@@ -108,7 +112,7 @@ def encode_datetime(value: Optional[dt.datetime]) -> Optional[str]:
 
 
 def decode_datetime(value: Optional[Union[int, str]]) -> Optional[dt.datetime]:
-    if value is None:
+    if value is None or isinstance(value, dt.datetime):
         return value
     if isinstance(value, int):
         return dt.datetime.fromtimestamp(value / 1000)

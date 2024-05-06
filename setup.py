@@ -59,7 +59,7 @@ setuptools.setup(
         "certifi",
         "dataclasses;python_version<'3.7'",
         "contextvars;python_version<'3.7'",
-        "dataclasses_json",
+        "dataclasses_json<0.6.5",
         "deprecation",
         "funcsigs",
         "inflection",

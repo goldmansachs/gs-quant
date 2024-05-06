@@ -290,6 +290,8 @@ class GsSession(ContextBase):
                 headers.update({'Content-Type': 'application/json; charset=utf-8'})
 
             use_msgpack = headers.get('Content-Type') == 'application/x-msgpack'
+            if use_msgpack:
+                headers['Accept'] = headers.get('Content-Type')
             kwargs['headers'] = headers
 
             if is_dataframe or payload:

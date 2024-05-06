@@ -23,7 +23,7 @@ from gs_quant.risk import RollFwd, MarketDataScenario
 from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
 from .core import PricingContext
 from .markets import CloseMarket
-from ..api.risk import RiskApi
+from ..api.risk import GenericRiskApi
 
 
 class HistoricalPricingContext(PricingContext):
@@ -47,7 +47,7 @@ class HistoricalPricingContext(PricingContext):
             timeout: Optional[int] = None,
             show_progress: Optional[bool] = None,
             use_server_cache: Optional[bool] = None,
-            provider: Optional[Type[RiskApi]] = None):
+            provider: Optional[Type[GenericRiskApi]] = None):
         """
         A context for producing valuations over multiple dates
 
@@ -138,7 +138,7 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
             timeout: Optional[int] = None,
             show_progress: Optional[bool] = None,
             name: Optional[str] = None,
-            provider: Optional[Type[RiskApi]] = None):
+            provider: Optional[Type[GenericRiskApi]] = None):
         """
         A context for producing valuations over multiple dates
 

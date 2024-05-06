@@ -128,10 +128,10 @@ def align(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpol
         return [new_x, new_y]
     if method == Interpolate.STEP:
         new_x, new_y = x.align(y, 'outer')
-        new_x.fillna(method='ffill', inplace=True)
-        new_y.fillna(method='ffill', inplace=True)
-        new_x.fillna(method='bfill', inplace=True)
-        new_y.fillna(method='bfill', inplace=True)
+        new_x.ffill(inplace=True)
+        new_y.ffill(inplace=True)
+        new_x.bfill(inplace=True)
+        new_y.bfill(inplace=True)
         return [new_x, new_y]
     else:
         raise MqValueError('Unknown intersection type: ' + method)
@@ -249,7 +249,7 @@ def value(x: pd.Series, date: Union[date, time], method: Interpolate = Interpola
     """
 
     values = interpolate(x, [date], method)
-    return values.get(0)
+    return None if values.empty else values.iloc[0]
 
 
 @plot_function

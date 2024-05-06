@@ -1,4 +1,4 @@
-gs\_quant.markets.position\_set.PositionSet
+﻿gs\_quant.markets.position\_set.PositionSet
 ===========================================
 
 .. currentmodule:: gs_quant.markets.position_set
@@ -26,6 +26,8 @@ gs\_quant.markets.position\_set.PositionSet
       ~PositionSet.resolve
       ~PositionSet.to_frame
       ~PositionSet.to_target
+      ~PositionSet.price_many
+      ~PositionSet.resolve_many
    
    
 

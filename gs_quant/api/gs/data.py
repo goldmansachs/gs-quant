@@ -712,7 +712,8 @@ class GsDataApi(DataApi):
                                  where: Union[FieldFilterMap, Dict] = None,
                                  source: Union[str] = None,
                                  real_time: bool = False,
-                                 measure='Curve'):
+                                 measure='Curve',
+                                 vendor: str = ''):
         inner = {
             'entityIds': asset_ids,
             'queryType': query_type.value if isinstance(query_type, QueryType) else query_type,
@@ -723,6 +724,8 @@ class GsDataApi(DataApi):
                 measure
             ]
         }
+        if vendor != '':
+            inner['vendor'] = vendor
         return inner
 
     @staticmethod
@@ -731,7 +734,8 @@ class GsDataApi(DataApi):
                                                    where: Union[FieldFilterMap, Dict] = None,
                                                    source: Union[str] = None,
                                                    real_time: bool = False,
-                                                   measure='Curve') -> List[dict]:
+                                                   measure='Curve',
+                                                   vendor: str = '') -> List[dict]:
         parallel_interval = 365  # chunk over a year
 
         def chunk_time(start, end) -> tuple:
@@ -751,7 +755,8 @@ class GsDataApi(DataApi):
             start_key, end_key = 'startDate', 'endDate'
 
         for s, e in chunk_time(start, end):
-            inner = copy(GsDataApi._get_market_data_filters(asset_ids, query_type, where, source, real_time, measure))
+            inner = copy(GsDataApi._get_market_data_filters(asset_ids, query_type, where, source, real_time, measure,
+                                                            vendor))
             inner[start_key], inner[end_key] = s, e
             queries.append({
                 'queries': [inner]
@@ -768,12 +773,13 @@ class GsDataApi(DataApi):
                                 source: Union[str] = None,
                                 real_time: bool = False,
                                 measure='Curve',
-                                parallelize_queries: bool = False) -> Union[dict, List[dict]]:
+                                parallelize_queries: bool = False,
+                                vendor: str = '') -> Union[dict, List[dict]]:
         if parallelize_queries:
             return GsDataApi.build_interval_chunked_market_data_queries(asset_ids, query_type, where, source, real_time,
-                                                                        measure)
+                                                                        measure, vendor)
 
-        inner = GsDataApi._get_market_data_filters(asset_ids, query_type, where, source, real_time, measure)
+        inner = GsDataApi._get_market_data_filters(asset_ids, query_type, where, source, real_time, measure, vendor)
         if DataContext.current.interval is not None:
             inner['interval'] = DataContext.current.interval
         if real_time:

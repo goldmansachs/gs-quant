@@ -167,7 +167,9 @@ class GsRiskApi(RiskApi):
                         # New results have been received
                         request_id = None
                         try:
-                            request_id, status_result_str = result_listener.result().split(';', 1)
+                            raw_res = result_listener.result()
+                            parsed_res = raw_res.decode() if isinstance(raw_res, bytes) else raw_res
+                            request_id, status_result_str = parsed_res.split(';', 1)
                             status, result_str = status_result_str[0], status_result_str[1:]
                         except Exception as ee:
                             status = 'E'

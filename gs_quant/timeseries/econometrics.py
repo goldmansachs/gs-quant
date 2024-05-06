@@ -108,7 +108,7 @@ def _annualized_return(levels: pd.Series, rolling: Union[int, pd.DateOffset],
         starting = [0] * rolling
         starting.extend([a for a in range(1, len(levels) - rolling + 1)])
         points = list(
-            map(lambda d, v, i: pow(v / levels[i], 365.25 / (d - levels.index[i]).days) - 1, levels.index[1:],
+            map(lambda d, v, i: pow(v / levels.iloc[i], 365.25 / (d - levels.index[i]).days) - 1, levels.index[1:],
                 levels.values[1:], starting[1:]))
     points.insert(0, 0)
     return pd.Series(points, index=levels.index)

@@ -4099,7 +4099,7 @@ def test_forward_price():
         with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
             bbId_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
             bbId_mock.return_value = None
-            ISO_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+            ISO_mock = replace('gs_quant.entities.entity.Entity.get_entity', Mock())
             ISO_mock.return_value = {'parameters': {'ISO': 'PJM'}}
 
             # Should work as other usecases where assetId has bbid
@@ -5341,7 +5341,7 @@ def test_settlement_price():
     with DataContext(datetime.date(2021, 6, 2), datetime.date(2021, 6, 2)):
         # Test for EEX Asset
         Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'DEBM')
-        EEX_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        EEX_mock = replace('gs_quant.entities.entity.Entity.get_entity', Mock())
         EEX_mock.return_value = {'parameters': {'exchange': 'EEX', 'productGroup': 'PowerFutures'}}
         EEX_ds = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
         EEX_ds.return_value = pd.DataFrame(data=dict(settlementPrice=20.20, contract='K21'),
@@ -5352,7 +5352,7 @@ def test_settlement_price():
 
         # Test for CarbonCredit Asset
         Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'RGGI V19')
-        CC_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        CC_mock = replace('gs_quant.entities.entity.Entity.get_entity', Mock())
         CC_mock.return_value = {'parameters': {'exchange': 'ICE', 'productGroup': 'Physical Environment'}}
         CC_ds = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
         CC_ds.return_value = pd.DataFrame(data=dict(settlementPrice=21.21, contract='K21'),
@@ -5363,7 +5363,7 @@ def test_settlement_price():
 
         # Test for ICE Power Asset
         Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'GAB')
-        CC_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        CC_mock = replace('gs_quant.entities.entity.Entity.get_entity', Mock())
         CC_mock.return_value = {'parameters': {'exchange': 'ICE', 'productGroup': 'PowerFutures'}}
         CC_ds = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
         CC_ds.return_value = pd.DataFrame(data=dict(settlementPrice=22.22, contract='K21'),
@@ -5374,7 +5374,7 @@ def test_settlement_price():
 
         # Test for NASDAQ Power Asset
         Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'ENOFUTBL')
-        CC_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        CC_mock = replace('gs_quant.entities.entity.Entity.get_entity', Mock())
         CC_mock.return_value = {'parameters': {'exchange': 'NASDAQ', 'productGroup': 'PowerFutures'}}
         CC_ds = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
         CC_ds.return_value = pd.DataFrame(data=dict(settlementPrice=23.23, contract='K21'),
@@ -5391,7 +5391,7 @@ def test_settlement_price():
 
         # Test for asset with no exchange info
         Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'XYZ')
-        empty_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        empty_mock = replace('gs_quant.entities.entity.Entity.get_entity', Mock())
         empty_mock.return_value = {'parameters': {}}
 
         with pytest.raises(MqTypeError):
@@ -5399,7 +5399,7 @@ def test_settlement_price():
 
         # Test for asset with any only some asset params filled
         Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'XYZ')
-        empty_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        empty_mock = replace('gs_quant.entities.entity.Entity.get_entity', Mock())
         empty_mock.return_value = {'parameters': {'exchange': 'OTHER_EXCHANGE'}}
 
         with pytest.raises(MqTypeError):
@@ -5407,7 +5407,7 @@ def test_settlement_price():
 
         # Test for asset with any other exchange, currently not covered
         Asset_Mock = FutureMarket('MA001', AssetClass.Commod, 'XYZ')
-        empty_mock = replace('gs_quant.timeseries.measures.Asset.get_entity', Mock())
+        empty_mock = replace('gs_quant.entities.entity.Entity.get_entity', Mock())
         empty_mock.return_value = {'parameters': {'exchange': 'OTHER_EXCHANGE', 'productGroup': 'OTHER_PRODUCT'}}
 
         with pytest.raises(MqTypeError):

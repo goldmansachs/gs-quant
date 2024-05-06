@@ -615,6 +615,13 @@ class IndicesEditInputTypes(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class IndicesEditInputs(Base):
+    parameters: CustomBasketsEditInputs = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class IndicesRebalanceInputs(IndicesRebalanceInputTypes):
     parameters: DictBase = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)

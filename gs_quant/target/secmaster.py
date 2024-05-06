@@ -27,6 +27,16 @@ class SecMasterAssetType(EnumBase, Enum):
     
     """Asset type differentiates the product categorization or contract type."""
 
+    Austrian_Crt = 'Austrian Crt'
+    BDR = 'BDR'
+    Belgium_Cert = 'Belgium Cert'
+    CDR = 'CDR'
+    EDR = 'EDR'
+    German_Cert = 'German Cert'
+    IDR = 'IDR'
+    RDC = 'RDC'
+    Swiss_Cert = 'Swiss Cert'
+    Canadian_DR = 'Canadian DR'
     ETF = 'ETF'
     ETN = 'ETN'
     Future = 'Future'
@@ -73,7 +83,8 @@ class SecMasterAssetType(EnumBase, Enum):
     Debt_Structured_Note = 'Debt Structured Note'
     Agency_CMO = 'Agency CMO'
     Future_Option = 'Future Option'
-    Convertible_Bond = 'Convertible Bond'    
+    Convertible_Bond = 'Convertible Bond'
+
 
 
 class SecMasterCorporateActionStatus(EnumBase, Enum):    

@@ -19,7 +19,7 @@ GsSession.use(client_id=None, client_secret=None, scopes=('run_analytics',))
 def format_df(data_dict):
     df = pd.concat(data_dict, axis=1)
     df.columns = data_dict.keys()
-    return df.fillna(method='ffill').dropna()
+    return df.ffill().dropna()
 
 
 def volatility_screen(crosses, start_date, end_date, tenor='3m', plot=True):

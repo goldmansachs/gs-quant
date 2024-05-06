@@ -50,16 +50,14 @@ class FactorShock:
         return factor_name == other_factor_name and self.shock == other.shock
 
     def __repr__(self):
-        return '%r(factor=%r, shock=%r)' % (self.__class__.__name__, self.factor, self.shock)
+        return '%r(factor=%r, shock=%r)' % (self.__class__.__name__,
+                                            self.factor,
+                                            self.shock)
 
     @property
     def factor(self) -> Union[str, Factor]:
         """ Get factor being shocked"""
         return self.__factor
-
-    @factor.setter
-    def factor(self, factor: Union[str, Factor]):
-        self.__factor = factor
 
     @property
     def shock(self) -> float:
@@ -299,10 +297,13 @@ class FactorScenario:
 
     @classmethod
     def from_target(cls, target_scenario: TargetScenario):
+        parameters = FactorShockParameters.from_dict(target_scenario.parameters) \
+            if target_scenario.type == FactorScenarioType.Factor_Shock else \
+            HistoricalSimulationParameters.from_dict(target_scenario.parameters)
         scenario = cls(id_=target_scenario.id,
                        name=target_scenario.name,
                        type=target_scenario.type,
-                       parameters=target_scenario.parameters,
+                       parameters=parameters,
                        entitlements=Entitlements.from_target(target_scenario.entitlements),
                        description=target_scenario.description,
                        tags=target_scenario.tags)

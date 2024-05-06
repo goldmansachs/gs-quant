@@ -45,12 +45,12 @@ def test_generate_series():
 
     assert (len(x) == 100)
     assert (x.index[0] == datetime.date.today())
-    assert (x[0] == 100)
+    assert (x.iloc[0] == 100)
 
     x = generate_series(100, Direction.END_TODAY)
     assert (len(x) == 100)
     assert (x.index[-1] == datetime.date.today())
-    assert (x[0] == 100)
+    assert (x.iloc[0] == 100)
 
 
 def test_min():
@@ -396,7 +396,7 @@ def test_exponential_std():
             ema = sum(weights * x) / sum(weights)
             debias_fact = sum(weights) ** 2 / (sum(weights) ** 2 - sum(weights ** 2))
             var = debias_fact * sum(weights * (x - ema) ** 2) / sum(weights)
-            std[i] = np.sqrt(var)
+            std.iloc[i] = np.sqrt(var)
         std[0] = np.NaN
         return std
 
@@ -747,7 +747,7 @@ def test_sir_model():
     sir1 = SIRModel(beta, gamma, s, i, r, n, fit=False)
 
     with DataContext(end=dt.date.today() + dt.timedelta(days=d - 1)):
-        sir2 = SIRModel(beta, gamma, s[0], i, r[0], n, fit=False)
+        sir2 = SIRModel(beta, gamma, s.iloc[0], i, r.iloc[0], n, fit=False)
 
     assert sir1.beta() == sir1.beta()
     assert sir2.gamma() == sir2.gamma()
@@ -818,7 +818,7 @@ def test_seir_model():
     seir1 = SEIRModel(beta, gamma, sigma, s, e, i, r, n, fit=False)
 
     with DataContext(end=dt.date.today() + dt.timedelta(days=d - 1)):
-        seir2 = SEIRModel(beta, gamma, sigma, s[0], e[0], i, r[0], n, fit=False)
+        seir2 = SEIRModel(beta, gamma, sigma, s.iloc[0], e.iloc[0], i, r.iloc[0], n, fit=False)
 
     assert seir1.beta() == seir1.beta()
     assert seir2.gamma() == seir2.gamma()

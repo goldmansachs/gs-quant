@@ -385,7 +385,7 @@ def test_thematic_exposure():
     mock = replace('gs_quant.markets.report.ThematicReport.get', Mock())
     mock.return_value = ThematicReport(id='report_id')
 
-    mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_thematic_report', Mock())
+    mock = replace('gs_quant.entities.entity.PositionedEntity.get_thematic_report', Mock())
     mock.return_value = ThematicReport(id='report_id')
 
     # mock getting thematic exposure
@@ -484,7 +484,7 @@ def test_aggregate_factor_support():
     replace = Replacer()
 
     # mock getting risk model entity()
-    mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_factor_risk_report', Mock())
+    mock = replace('gs_quant.entities.entity.PositionedEntity.get_factor_risk_report', Mock())
     mock.return_value = risk_model
 
     mock = replace('gs_quant.api.gs.reports.GsReportApi.get_report', Mock())

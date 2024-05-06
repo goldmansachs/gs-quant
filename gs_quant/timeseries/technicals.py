@@ -174,19 +174,20 @@ def smoothed_moving_average(x: pd.Series, w: Union[Window, int, str] = Window(No
     means = apply_ramp(mean(x, Window(window_size, 0)), w)
     if means.size < 1:
         return pd.Series(dtype=float)
-    initial_moving_average = means[0]
+    initial_moving_average = means.iloc[0]
     if (isinstance(ramp, int) and ramp > 0) or isinstance(ramp, pd.DateOffset):
         x = apply_ramp(x, w)
 
     smoothed_moving_averages = x.copy()
     smoothed_moving_averages *= 0
-    smoothed_moving_averages[0] = initial_moving_average
+    smoothed_moving_averages.iloc[0] = initial_moving_average
     for i in range(1, len(x)):
         if isinstance(window_size, int):
             window_num_elem = window_size
         else:
             window_num_elem = len(x[(x.index > (x.index[i] - window_size).date()) & (x.index <= x.index[i])])
-        smoothed_moving_averages[i] = ((window_num_elem - 1) * smoothed_moving_averages[i - 1] + x[i]) / window_num_elem
+        smoothed_moving_averages.iloc[i] = ((window_num_elem - 1) *
+                                            smoothed_moving_averages.iloc[i - 1] + x.iloc[i]) / window_num_elem
     return smoothed_moving_averages
 
 
@@ -235,10 +236,10 @@ def relative_strength_index(x: pd.Series, w: Union[Window, int, str] = 14) -> pd
     rsi *= 0
 
     for index in range(0, rsi_len):
-        if moving_avg_losses[index] == 0:
-            rsi[index] = 100
+        if moving_avg_losses.iloc[index] == 0:
+            rsi.iloc[index] = 100
         else:
-            relative_strength = moving_avg_gains[index] / moving_avg_losses[index]
+            relative_strength = moving_avg_gains.iloc[index] / moving_avg_losses.iloc[index]
             rsi[index] = 100 - (100 / (1 + relative_strength))
 
     return rsi

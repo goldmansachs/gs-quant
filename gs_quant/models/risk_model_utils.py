@@ -402,13 +402,18 @@ def _batch_isc_input(input_data: dict, i: int, split_idx: int, split_num: int, t
             'covariance': input_data.get('covariance')[i * split_idx:end_idx]}
 
 
-def _repeat_try_catch_request(input_function, number_retries: int = 5, **kwargs):
+def _repeat_try_catch_request(input_function, number_retries: int = 5,
+                              return_result: bool = False,
+                              verbose: bool = True,
+                              **kwargs):
     t = 2.0
     errors = []
     for i in range(number_retries):
         try:
             result = input_function(**kwargs)
             if result:
+                if return_result:
+                    return result
                 logging.info(result)
             errors.clear()
             break
@@ -419,18 +424,22 @@ def _repeat_try_catch_request(input_function, number_retries: int = 5, **kwargs)
             elif i < number_retries - 1:
                 sleep_time = math.pow(2.2, t)
                 t += 1
-                logging.warning(f'Exception caught while making request: {e}, retrying in {int(sleep_time)}')
+                if verbose:
+                    logging.warning(f'Exception caught while making request: {e}, retrying in {int(sleep_time)}')
                 sleep(sleep_time)
             else:
-                logging.warning(f'Maximum number of retries: {number_retries} triggered')
+                if verbose:
+                    logging.warning(f'Maximum number of retries: {number_retries} triggered')
         except Exception as unknown_exception:
             errors.append(unknown_exception)
             if i < number_retries - 1:
                 sleep_time = math.pow(2.2, t)
                 t += 1
-                logging.warning(f'Unknown exception caught: {unknown_exception}, retrying in {int(sleep_time)}')
+                if verbose:
+                    logging.warning(f'Unknown exception caught: {unknown_exception}, retrying in {int(sleep_time)}')
                 sleep(sleep_time)
             else:
-                logging.warning(f'Maximum number of retries: {number_retries} triggered')
+                if verbose:
+                    logging.warning(f'Maximum number of retries: {number_retries} triggered')
     if errors:
         raise errors.pop()

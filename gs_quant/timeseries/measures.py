@@ -4893,7 +4893,7 @@ def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.R
             measures_to_sum.append(RetailMeasures.SHARES.value)
         else:
             measures_to_sum.append(RetailMeasures.NOTIONAL.value)
-        category_sums = retail_data.groupby([retail_data.index])[measures_to_sum].agg(sum)
+        category_sums = retail_data.groupby([retail_data.index])[measures_to_sum].agg("sum")
         category_sums[measure.value] = 100 * category_sums[measures_to_sum[0]] / category_sums[
             measures_to_sum[1]]
         category_sums.drop(columns=measures_to_sum)
