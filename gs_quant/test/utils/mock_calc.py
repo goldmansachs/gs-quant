@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime
-import hashlib
 import inspect
 from pathlib import Path
 
@@ -55,7 +54,7 @@ def get_risk_request_id(requests):
                 if request.scenario.scenario.name is None:
                     raise RuntimeError('Please provide unique names for your scenarios for testing')
                 identifier += request.scenario.scenario.name
-    return hashlib.md5(identifier.encode('utf-8')).hexdigest()
+    return identifier
 
 
 class MockCalc(MockRequest):

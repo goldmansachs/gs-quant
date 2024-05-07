@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"Japanese Yen": 1.0}, "val": 13557.272642407566, "children": {}}]]]]
+{
+    "request_id": "1_HedgeAction1_2y_forward_2021-12-01Price2021Dec03",
+    "request_hash": "b4af456eaf436e85182b6fab7c046bf8",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_action_risk_trigger"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"Japanese Yen\": 1.0}, \"val\": 13557.272642407566, \"children\": {}}]]]]"
+}

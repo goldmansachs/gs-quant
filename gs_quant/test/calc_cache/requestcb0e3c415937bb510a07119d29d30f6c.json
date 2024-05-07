@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 2173028.0318295504, "children": {}, "calculationTime": 1091, "queueingTime": 67}]]]]
+{
+    "request_id": "1_EUR3m10ypayerPricetoday",
+    "request_hash": "cb0e3c415937bb510a07119d29d30f6c",
+    "type": "MockCalc",
+    "tests": [
+        "test_aggregation_with_heterogeous_types"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 2173028.0318295504, \"children\": {}, \"calculationTime\": 1091, \"queueingTime\": 67}]]]]"
+}

@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "val": 884.9163762351964, "children": {}}]], [[{"$type": "Risk", "unit": {"Japanese Yen": 1.0}, "val": -0.10709151811897755, "children": {}}]]]]
+{
+    "request_id": "1_HedgeAction1_2y_forward_2021-12-03FXDelta(aggregation_level:Type)-Price2021Dec03",
+    "request_hash": "c0db5360928e517ee29026d20572bced",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_action_risk_trigger"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"val\": 884.9163762351964, \"children\": {}}]], [[{\"$type\": \"Risk\", \"unit\": {\"Japanese Yen\": 1.0}, \"val\": -0.10709151811897755, \"children\": {}}]]]]"
+}

@@ -1,1 +1,9 @@
-[[[[{"$type": "RiskByClass", "classes": [{"type": "IR", "asset": "USD"}], "values": [-24852.34830894964], "calculationTime": 3499, "queueingTime": -4360}], [{"$type": "RiskByClass", "classes": [{"type": "IR", "asset": "USD"}], "values": [-47440.98892296477], "calculationTime": 3499, "queueingTime": -4360}]], [[{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 433852.43426229653, "children": {}, "calculationTime": 1093, "queueingTime": -4360}], [{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 1105617.6195956036, "children": {}, "calculationTime": 1093, "queueingTime": -4360}]]]]
+{
+    "request_id": "1_Swaption1-Swaption2IRDelta(aggregation_level:Asset, currency:local)-Price2020Jan14",
+    "request_hash": "8d2c2ca8df0fc30cb3152076a8af6016",
+    "type": "MockCalc",
+    "tests": [
+        "test_adding_risk_results"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"RiskByClass\", \"classes\": [{\"type\": \"IR\", \"asset\": \"USD\", \"value\": -24852.34830894964}], \"values\": [-24852.34830894964], \"calculationTime\": 3499, \"queueingTime\": -4360}], [{\"$type\": \"RiskByClass\", \"classes\": [{\"type\": \"IR\", \"asset\": \"USD\", \"value\": -47440.98892296477}], \"values\": [-47440.98892296477], \"calculationTime\": 3499, \"queueingTime\": -4360}]], [[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 433852.43426229653, \"children\": {}, \"calculationTime\": 1093, \"queueingTime\": -4360}], [{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 1105617.6195956036, \"children\": {}, \"calculationTime\": 1093, \"queueingTime\": -4360}]]]]"
+}

@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 7391261.222935775, "children": {}, "calculationTime": 157, "queueingTime": 267}]]]]
+{
+    "request_id": "1_10y@0DollarPrice2020Oct15",
+    "request_hash": "3ad3d9a8afd809af0b2b00617d46758d",
+    "type": "MockCalc",
+    "tests": [
+        "test_single_instrument"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 7391261.222935775, \"children\": {}, \"calculationTime\": 157, \"queueingTime\": 267}]]]]"
+}

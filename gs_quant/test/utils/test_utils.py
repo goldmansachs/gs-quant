@@ -18,7 +18,21 @@ import pathlib
 from json.encoder import JSONEncoder
 
 import pytest
+
+from gs_quant.test.mock_data_test_utils import did_anything_fail, did_anything_run
 from gs_quant.test.utils.mock_request import MockRequest
+
+
+@pytest.mark.second_to_last
+@pytest.mark.fixmockdata
+def test_fix_mock_data():
+    # This will only be run if you use "--fixmockdata" option to pytest
+    if did_anything_fail():
+        pytest.skip("Skipping test as another test failed")
+    if not did_anything_run():
+        pytest.skip("Skipping test as nothing ran or not setup correctly")
+    MockRequest.reindex_test_files()
+    MockRequest.remove_unused_files()
 
 
 @pytest.mark.last
@@ -27,18 +41,14 @@ def test_all_cache_files_used():
     saved_files = MockRequest.get_saved_files()
     assert [] == saved_files, 'Did you accidentally commit with save_files=True?!'
 
-    unused_files = MockRequest.get_unused_files()
-    print(unused_files)
-    # import pathlib
-    # import os
-    # for l in unused_files:
-    #     path = str(pathlib.Path(__file__).parents[0]) + "/pricer/calc_cache/" + l
-    #     try:
-    #         os.remove(path)
-    #     except:
-    #         continue
+    suffix = '(Other tests FAILED this could be red herring)' if did_anything_fail() else \
+        'Run pytest with --fixmockdata to fix this!'
 
-    assert unused_files == [], 'Cleanup your unused test files!'
+    bad_index = MockRequest.reindex_test_files(report_only=True)
+    assert bad_index == tuple(), f'Files with bad index. {suffix}'
+
+    unused_files = MockRequest.get_unused_files()
+    assert unused_files == tuple(), f'Cleanup your unused test files! {suffix}'
 
 
 def _remove_unwanted(json_text):

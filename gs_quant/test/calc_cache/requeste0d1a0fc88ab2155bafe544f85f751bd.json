@@ -1,1 +1,9 @@
-[[[[{"$type": "RiskByClass", "classes": [{"type": "IR BASIS", "asset": "GBP OIS/GBP-3M"}, {"type": "IR BASIS", "asset": "GBP-3M/GBP-6M"}, {"type": "IR BASIS", "asset": "USD OIS/USD-3M"}], "values": [405775.5447549485, -84.10992125279488, 4.255939660413599e-12], "calculationTime": 14483, "queueingTime": 27}]]]]
+{
+    "request_id": "1_IRBasisSwapIRBasis(aggregation_level:Asset)2020Jan14",
+    "request_hash": "e0d1a0fc88ab2155bafe544f85f751bd",
+    "type": "MockCalc",
+    "tests": [
+        "test_bucketed_risks"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"RiskByClass\", \"classes\": [{\"type\": \"IR BASIS\", \"asset\": \"GBP OIS/GBP-3M\", \"value\": 405775.5447549485}, {\"type\": \"IR BASIS\", \"asset\": \"GBP-3M/GBP-6M\", \"value\": -84.10992125279488}, {\"type\": \"IR BASIS\", \"asset\": \"USD OIS/USD-3M\", \"value\": 4.255939660413599e-12}], \"values\": [405775.5447549485, -84.10992125279488, 4.255939660413599e-12], \"calculationTime\": 14483, \"queueingTime\": 27}]]]]"
+}

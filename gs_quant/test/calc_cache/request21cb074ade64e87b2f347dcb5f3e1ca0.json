@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"Rate": 1.0}, "val": 0.013165585678999942, "children": {}, "calculationTime": 0, "queueingTime": 541}], [{"$type": "Risk", "unit": {"Rate": 1.0}, "val": 0.01685949177199996, "children": {}, "calculationTime": 0, "queueingTime": 541}], [{"$type": "Risk", "unit": {"Rate": 1.0}, "val": 0.025741618434707812, "children": {}, "calculationTime": 0, "queueingTime": 541}], [{"$type": "Risk", "unit": {"Rate": 1.0}, "val": 0.026454974268659327, "children": {}, "calculationTime": 0, "queueingTime": 541}]]]]
+{
+    "request_id": "1_5y-10y-5y-10yIRFwdRatetoday",
+    "request_hash": "21cb074ade64e87b2f347dcb5f3e1ca0",
+    "type": "MockCalc",
+    "tests": [
+        "test_unnamed_portfolio"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"Rate\": 1.0}, \"val\": 0.013165585678999942, \"children\": {}, \"calculationTime\": 0, \"queueingTime\": 541}], [{\"$type\": \"Risk\", \"unit\": {\"Rate\": 1.0}, \"val\": 0.01685949177199996, \"children\": {}, \"calculationTime\": 0, \"queueingTime\": 541}], [{\"$type\": \"Risk\", \"unit\": {\"Rate\": 1.0}, \"val\": 0.025741618434707812, \"children\": {}, \"calculationTime\": 0, \"queueingTime\": 541}], [{\"$type\": \"Risk\", \"unit\": {\"Rate\": 1.0}, \"val\": 0.026454974268659327, \"children\": {}, \"calculationTime\": 0, \"queueingTime\": 541}]]]]"
+}

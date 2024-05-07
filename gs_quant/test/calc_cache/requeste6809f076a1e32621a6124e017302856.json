@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 7.450580596923828e-09, "children": {}}]]]]
+{
+    "request_id": "1_location_test_swapPrice2022Jul11",
+    "request_hash": "e6809f076a1e32621a6124e017302856",
+    "type": "MockCalc",
+    "tests": [
+        "test_different_nested_locations"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 7.450580596923828e-09, \"children\": {}}]]]]"
+}

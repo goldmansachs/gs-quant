@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import hashlib
 import inspect
 from pathlib import Path
 
@@ -65,5 +64,4 @@ class MockData(MockRequest):
                 v_str = '_'.join([f'{where_k}:{stringify_values(where_v)}' for where_k, where_v in v.items()])
             parts.append(f'{k}:{v_str}')
         query_str = '_'.join(parts)
-        identifier = f'{args[1]}_{query_str}'
-        return hashlib.md5(identifier.encode('utf-8')).hexdigest()
+        return f'{args[1]}_{query_str}'

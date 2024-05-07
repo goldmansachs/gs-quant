@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"Malaysian Ringgit": 1.0}, "val": 40400773.28824528, "children": {}, "calculationTime": 0, "queueingTime": 1072}]]]]
+{
+    "request_id": "1_5yPrice(value:MYR)today",
+    "request_hash": "093e1ad35f25cb43fcad999f9adf8c50",
+    "type": "MockCalc",
+    "tests": [
+        "test_currency_params"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"Malaysian Ringgit\": 1.0}, \"val\": 40400773.28824528, \"children\": {}, \"calculationTime\": 0, \"queueingTime\": 1072}]]]]"
+}

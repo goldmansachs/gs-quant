@@ -1,1 +1,9 @@
-[[[[{"$type": "RiskByClass", "classes": [{"type": "IR", "asset": "EUR"}, {"type": "IR", "asset": "USD"}], "values": [47977.94611100083, -5.116586968231202], "calculationTime": 1656, "queueingTime": 16}]]]]
+{
+    "request_id": "1_5yIRDelta(aggregation_level:Asset)today",
+    "request_hash": "5711e73d9fdfbee2d67781cd43875f26",
+    "type": "MockCalc",
+    "tests": [
+        "test_finite_difference_params"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"RiskByClass\", \"classes\": [{\"type\": \"IR\", \"asset\": \"EUR\", \"value\": 47977.94611100083}, {\"type\": \"IR\", \"asset\": \"USD\", \"value\": -5.116586968231202}], \"values\": [47977.94611100083, -5.116586968231202], \"calculationTime\": 1656, \"queueingTime\": 16}]]]]"
+}

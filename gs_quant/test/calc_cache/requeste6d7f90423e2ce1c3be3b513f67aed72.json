@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 83.4779172996402}]]], [[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 97.1641777501738}]]], [[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 122.37019698478673}]]], [[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 173.53894999945754}]]], [[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 100.0}]]]]
+{
+    "request_id": "5_QuantityScaledAction1_call_2021-12-10Price2021Dec10_QuantityScaledAction1_call_2021-12-09Price2021Dec09_QuantityScaledAction1_call_2021-12-08Price2021Dec08_QuantityScaledAction1_call_2021-12-07Price2021Dec07_QuantityScaledAction1_call_2021-12-06Price2021Dec06",
+    "request_hash": "e6d7f90423e2ce1c3be3b513f67aed72",
+    "type": "MockCalc",
+    "tests": [
+        "test_quantity_scaled_action_nav"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 83.4779172996402}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 97.1641777501738}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 122.37019698478673}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 173.53894999945754}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 100.0}]]]]"
+}

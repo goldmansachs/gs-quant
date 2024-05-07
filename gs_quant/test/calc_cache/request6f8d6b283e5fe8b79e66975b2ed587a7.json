@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"Rate Normal Volatility": 1.0}, "val": 0.006052933894743938, "children": {}, "calculationTime": 30, "queueingTime": 16}], [{"$type": "Risk", "unit": {"Rate Normal Volatility": 1.0}, "val": 0.005639384959057612, "children": {}, "calculationTime": 30, "queueingTime": 16}], [{"$type": "Risk", "unit": {"Rate Normal Volatility": 1.0}, "val": 0.005811521714097704, "children": {}, "calculationTime": 30, "queueingTime": 16}]]]]
+{
+    "request_id": "1_1y-3m-6mIRAnnualImpliedVol2020Jan14",
+    "request_hash": "6f8d6b283e5fe8b79e66975b2ed587a7",
+    "type": "MockCalc",
+    "tests": [
+        "test_unsupported_error_datums"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"Rate Normal Volatility\": 1.0}, \"val\": 0.006052933894743938, \"children\": {}, \"calculationTime\": 30, \"queueingTime\": 16}], [{\"$type\": \"Risk\", \"unit\": {\"Rate Normal Volatility\": 1.0}, \"val\": 0.005639384959057612, \"children\": {}, \"calculationTime\": 30, \"queueingTime\": 16}], [{\"$type\": \"Risk\", \"unit\": {\"Rate Normal Volatility\": 1.0}, \"val\": 0.005811521714097704, \"children\": {}, \"calculationTime\": 30, \"queueingTime\": 16}]]]]"
+}

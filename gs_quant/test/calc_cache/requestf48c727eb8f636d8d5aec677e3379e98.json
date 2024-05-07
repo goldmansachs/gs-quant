@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 8855060.12007939, "children": {}, "calculationTime": 49, "queueingTime": 269}]], [[{"$type": "Risk", "unit": {"Malaysian Ringgit": 1.0}, "val": 40400773.28824528, "children": {}, "calculationTime": 49, "queueingTime": 269}]]]]
+{
+    "request_id": "1_5yPrice-Price(value:MYR)today",
+    "request_hash": "f48c727eb8f636d8d5aec677e3379e98",
+    "type": "MockCalc",
+    "tests": [
+        "test_currency_params"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 8855060.12007939, \"children\": {}, \"calculationTime\": 49, \"queueingTime\": 269}]], [[{\"$type\": \"Risk\", \"unit\": {\"Malaysian Ringgit\": 1.0}, \"val\": 40400773.28824528, \"children\": {}, \"calculationTime\": 49, \"queueingTime\": 269}]]]]"
+}

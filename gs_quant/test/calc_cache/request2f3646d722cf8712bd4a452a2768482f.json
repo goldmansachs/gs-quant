@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"Rate": 1.0}, "val": -0.005378011672427782, "children": {}, "calculationTime": 373, "queueingTime": 439}], [{"$type": "Risk", "unit": {"Rate": 1.0}, "val": -0.005224409462412383, "children": {}, "calculationTime": 373, "queueingTime": 439}], [{"$type": "Risk", "unit": {"Rate": 1.0}, "val": -0.0051899501984013115, "children": {}, "calculationTime": 373, "queueingTime": 439}]]]]
+{
+    "request_id": "1_EUR1y-EUR2y-EUR3yIRFwdRate2020Oct15",
+    "request_hash": "2f3646d722cf8712bd4a452a2768482f",
+    "type": "MockCalc",
+    "tests": [
+        "test_duplicate_instrument"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"Rate\": 1.0}, \"val\": -0.005378011672427782, \"children\": {}, \"calculationTime\": 373, \"queueingTime\": 439}], [{\"$type\": \"Risk\", \"unit\": {\"Rate\": 1.0}, \"val\": -0.005224409462412383, \"children\": {}, \"calculationTime\": 373, \"queueingTime\": 439}], [{\"$type\": \"Risk\", \"unit\": {\"Rate\": 1.0}, \"val\": -0.0051899501984013115, \"children\": {}, \"calculationTime\": 373, \"queueingTime\": 439}]]]]"
+}

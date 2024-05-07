@@ -1,1 +1,9 @@
-[[[[{"$type": "RiskByClass", "classes": [], "values": [], "calculationTime": 1693, "queueingTime": 289}]]]]
+{
+    "request_id": "1_swapIRVega(aggregation_level:Asset)today",
+    "request_hash": "c9537f6814eae8f18ee5fc96495e50bb",
+    "type": "MockCalc",
+    "tests": [
+        "test_display_options"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"RiskByClass\", \"classes\": [], \"values\": [], \"calculationTime\": 1693, \"queueingTime\": 289}]]]]"
+}

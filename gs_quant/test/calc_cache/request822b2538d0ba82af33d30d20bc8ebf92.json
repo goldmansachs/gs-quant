@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 87.93080662552369}]]]]
+{
+    "request_id": "1_QuantityScaledAction1_call_2021-12-07Price2021Dec07",
+    "request_hash": "822b2538d0ba82af33d30d20bc8ebf92",
+    "type": "MockCalc",
+    "tests": [
+        "test_quantity_scaled_action_nav"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 87.93080662552369}]]]]"
+}

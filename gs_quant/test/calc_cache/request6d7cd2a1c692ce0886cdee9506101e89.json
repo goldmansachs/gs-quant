@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"Japanese Yen": 1.0}, "val": 3364687.316191261, "children": {}}], [{"$type": "Risk", "unit": {"Japanese Yen": 1.0}, "val": 8760884.71457497, "children": {}}]]]]
+{
+    "request_id": "1_5y-10yPricetodayparallel shift5bp",
+    "request_hash": "6d7cd2a1c692ce0886cdee9506101e89",
+    "type": "MockCalc",
+    "tests": [
+        "test_adding_risk_results"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"Japanese Yen\": 1.0}, \"val\": 3364687.316191261, \"children\": {}}], [{\"$type\": \"Risk\", \"unit\": {\"Japanese Yen\": 1.0}, \"val\": 8760884.71457497, \"children\": {}}]]]]"
+}

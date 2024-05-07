@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"Japanese Yen": 1.0}, "val": 2245537.5291603645, "children": {}, "calculationTime": 1368, "queueingTime": 17}], [{"$type": "Risk", "unit": {"Japanese Yen": 1.0}, "val": 5335555.207899147, "children": {}, "calculationTime": 1368, "queueingTime": 17}]]], [[[{"$type": "Risk", "unit": {"Japanese Yen": 1.0}, "val": 2257946.840053587, "children": {}, "calculationTime": 1086, "queueingTime": 13}], [{"$type": "Risk", "unit": {"Japanese Yen": 1.0}, "val": 5372206.792654425, "children": {}, "calculationTime": 1086, "queueingTime": 13}]]]]
+{
+    "request_id": "2_5y-10yPrice2020Jan15_5y-10yPrice2020Jan14",
+    "request_hash": "dafae46704002ad2c1a2e8bc9a8f6bd4",
+    "type": "MockCalc",
+    "tests": [
+        "test_dated_risk_values"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"Japanese Yen\": 1.0}, \"val\": 2245537.5291603645, \"children\": {}, \"calculationTime\": 1368, \"queueingTime\": 17}], [{\"$type\": \"Risk\", \"unit\": {\"Japanese Yen\": 1.0}, \"val\": 5335555.207899147, \"children\": {}, \"calculationTime\": 1368, \"queueingTime\": 17}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"Japanese Yen\": 1.0}, \"val\": 2257946.840053587, \"children\": {}, \"calculationTime\": 1086, \"queueingTime\": 13}], [{\"$type\": \"Risk\", \"unit\": {\"Japanese Yen\": 1.0}, \"val\": 5372206.792654425, \"children\": {}, \"calculationTime\": 1086, \"queueingTime\": 13}]]]]"
+}

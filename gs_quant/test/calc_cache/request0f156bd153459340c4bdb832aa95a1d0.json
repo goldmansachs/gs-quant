@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 0.0, "children": {}}]]], [[[{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": -3.637978807091713e-12, "children": {}}]]], [[[{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 0.0, "children": {}}]]]]
+{
+    "request_id": "3_Action1_swap_2021-12-10Price2021Dec10_Action1_swap_2021-12-08Price2021Dec08_Action1_swap_2021-12-06Price2021Dec06",
+    "request_hash": "0f156bd153459340c4bdb832aa95a1d0",
+    "type": "MockCalc",
+    "tests": [
+        "test_exit_action_emptyresults"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 0.0, \"children\": {}}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": -3.637978807091713e-12, \"children\": {}}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 0.0, \"children\": {}}]]]]"
+}

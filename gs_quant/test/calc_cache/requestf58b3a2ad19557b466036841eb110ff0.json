@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 3660454.298656369, "children": {}, "calculationTime": 119, "queueingTime": 149}], [{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 15779322.606637968, "children": {}, "calculationTime": 124, "queueingTime": 149}]]]]
+{
+    "request_id": "1_5y-10yDollarPrice2020Jan14",
+    "request_hash": "f58b3a2ad19557b466036841eb110ff0",
+    "type": "MockCalc",
+    "tests": [
+        "test_nested_portfolio"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 3660454.298656369, \"children\": {}, \"calculationTime\": 119, \"queueingTime\": 149}], [{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 15779322.606637968, \"children\": {}, \"calculationTime\": 124, \"queueingTime\": 149}]]]]"
+}

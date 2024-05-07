@@ -1,1 +1,11 @@
-[[[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 3290317.2121213092, "children": {}, "calculationTime": 48, "queueingTime": -167}], [{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 9587809.11540649, "children": {}, "calculationTime": 48, "queueingTime": -167}], [{"$type": "Risk", "unit": {"British Pound Sterling": 1.0}, "val": 5644562.7450038865, "children": {}, "calculationTime": 1464, "queueingTime": -167}], [{"$type": "Risk", "unit": {"British Pound Sterling": 1.0}, "val": 12129718.693539664, "children": {}, "calculationTime": 1464, "queueingTime": -167}]]]]
+{
+    "request_id": "1_5y-10y-5y-10yPrice2020Jan14",
+    "request_hash": "cc779554821681f119c9f516e46e3572",
+    "type": "MockCalc",
+    "tests": [
+        "test_adding_risk_results",
+        "test_dated_risk_values",
+        "test_resolve_to_frame"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 3290317.2121213092, \"children\": {}, \"calculationTime\": 48, \"queueingTime\": -167}], [{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 9587809.11540649, \"children\": {}, \"calculationTime\": 48, \"queueingTime\": -167}], [{\"$type\": \"Risk\", \"unit\": {\"British Pound Sterling\": 1.0}, \"val\": 5644562.7450038865, \"children\": {}, \"calculationTime\": 1464, \"queueingTime\": -167}], [{\"$type\": \"Risk\", \"unit\": {\"British Pound Sterling\": 1.0}, \"val\": 12129718.693539664, \"children\": {}, \"calculationTime\": 1464, \"queueingTime\": -167}]]]]"
+}

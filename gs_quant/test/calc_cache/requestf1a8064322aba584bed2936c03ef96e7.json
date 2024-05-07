@@ -1,1 +1,9 @@
-[[[[{"$type": "RiskByClass", "classes": [{"type": "IR", "asset": "EUR"}], "values": [48938.31462251072], "calculationTime": 3210, "queueingTime": -3337}], [{"$type": "RiskByClass", "classes": [{"type": "IR", "asset": "EUR"}], "values": [93545.25523047562], "calculationTime": 3210, "queueingTime": -3337}]], [[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 3290317.2121213092, "children": {}, "calculationTime": 936, "queueingTime": -3337}], [{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 9587809.11540649, "children": {}, "calculationTime": 936, "queueingTime": -3337}]]]]
+{
+    "request_id": "1_5y-10yIRDelta(aggregation_level:Asset, currency:local)-Price2020Jan14",
+    "request_hash": "f1a8064322aba584bed2936c03ef96e7",
+    "type": "MockCalc",
+    "tests": [
+        "test_adding_risk_results"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"RiskByClass\", \"classes\": [{\"type\": \"IR\", \"asset\": \"EUR\", \"value\": 48938.31462251072}], \"values\": [48938.31462251072], \"calculationTime\": 3210, \"queueingTime\": -3337}], [{\"$type\": \"RiskByClass\", \"classes\": [{\"type\": \"IR\", \"asset\": \"EUR\", \"value\": 93545.25523047562}], \"values\": [93545.25523047562], \"calculationTime\": 3210, \"queueingTime\": -3337}]], [[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 3290317.2121213092, \"children\": {}, \"calculationTime\": 936, \"queueingTime\": -3337}], [{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 9587809.11540649, \"children\": {}, \"calculationTime\": 936, \"queueingTime\": -3337}]]]]"
+}

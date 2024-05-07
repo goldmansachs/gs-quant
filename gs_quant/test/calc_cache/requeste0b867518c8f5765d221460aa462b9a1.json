@@ -1,1 +1,11 @@
-[[[[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 3290317.2121213092, "children": {}, "calculationTime": 51, "queueingTime": 13}], [{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 9587809.11540649, "children": {}, "calculationTime": 51, "queueingTime": 13}]]]]
+{
+    "request_id": "1_5y-10yPrice2020Jan14",
+    "request_hash": "e0b867518c8f5765d221460aa462b9a1",
+    "type": "MockCalc",
+    "tests": [
+        "test_adding_risk_results",
+        "test_one_portfolio",
+        "test_resolve_to_frame"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 3290317.2121213092, \"children\": {}, \"calculationTime\": 51, \"queueingTime\": 13}], [{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 9587809.11540649, \"children\": {}, \"calculationTime\": 51, \"queueingTime\": 13}]]]]"
+}

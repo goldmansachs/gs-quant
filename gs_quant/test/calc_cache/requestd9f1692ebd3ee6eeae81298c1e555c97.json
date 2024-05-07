@@ -1,1 +1,9 @@
-[[[[{"$type":"Risk","unit":{"United States Dollar":1.0},"val":250.24996521804488}]]],[[[{"$type":"Risk","unit":{"United States Dollar":1.0},"val":262.04764680372136}]]],[[[{"$type":"Risk","unit":{"United States Dollar":1.0},"val":291.4666891854834}]]]]
+{
+    "request_id": "3_Action1_call_2021-12-01DollarPrice2021Dec03_Action1_call_2021-12-01DollarPrice2021Dec02_Action1_call_2021-12-01DollarPrice2021Dec01",
+    "request_hash": "d9f1692ebd3ee6eeae81298c1e555c97",
+    "type": "MockCalc",
+    "tests": [
+        "test_generic_engine_custom_price_measure"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 250.24996521804488}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 262.04764680372136}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 291.4666891854834}]]]]"
+}

@@ -1,1 +1,9 @@
-[[[[{"$type": "RiskByClass", "classes": [{"type": "IR VOL", "asset": "USD-LIBOR-BBA"}], "values": [7888.473420243549], "calculationTime": 1024, "queueingTime": 29}], [{"$type": "RiskByClass", "classes": [{"type": "IR VOL", "asset": "USD-LIBOR-BBA"}], "values": [18376.24873330908], "calculationTime": 1024, "queueingTime": 29}]]]]
+{
+    "request_id": "1_Swaption1-Swaption2IRVega(aggregation_level:Asset)2020Jan14",
+    "request_hash": "70a863d464f50abba7a86e6d46cb2873",
+    "type": "MockCalc",
+    "tests": [
+        "test_adding_risk_results"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"RiskByClass\", \"classes\": [{\"type\": \"IR VOL\", \"asset\": \"USD-LIBOR-BBA\", \"value\": 7888.473420243549}], \"values\": [7888.473420243549], \"calculationTime\": 1024, \"queueingTime\": 29}], [{\"$type\": \"RiskByClass\", \"classes\": [{\"type\": \"IR VOL\", \"asset\": \"USD-LIBOR-BBA\", \"value\": 18376.24873330908}], \"values\": [18376.24873330908], \"calculationTime\": 1024, \"queueingTime\": 29}]]]]"
+}

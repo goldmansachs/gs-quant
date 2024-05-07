@@ -138,6 +138,12 @@ class CloseMarket(Market):
     def market(self):
         return _CloseMarket(date=self.date, location=self.location)
 
+    def __hash__(self):
+        return hash((self.date, self.location))
+
+    def __eq__(self, other):
+        return isinstance(other, CloseMarket) and self.date == other.date and self.location == other.location
+
     @property
     def location(self) -> PricingLocation:
         if self.__location is not None and not self.check:

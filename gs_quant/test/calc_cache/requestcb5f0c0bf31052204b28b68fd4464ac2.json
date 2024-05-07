@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"Rate": 1.0}, "val": 0.007512000235944189, "children": {}, "calculationTime": 0, "queueingTime": 383}]]]]
+{
+    "request_id": "1_swap1IRFwdRate2020Oct15",
+    "request_hash": "cb5f0c0bf31052204b28b68fd4464ac2",
+    "type": "MockCalc",
+    "tests": [
+        "test_single_instrument_new_mock"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"Rate\": 1.0}, \"val\": 0.007512000235944189, \"children\": {}, \"calculationTime\": 0, \"queueingTime\": 383}]]]]"
+}

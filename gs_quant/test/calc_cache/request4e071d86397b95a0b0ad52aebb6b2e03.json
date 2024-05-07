@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 3660454.298656369, "children": {}, "calculationTime": 20, "queueingTime": 20}], [{"$type": "Risk", "unit": {"United States Dollar": 1.0}, "val": 10666368.872246133, "children": {}, "calculationTime": 20, "queueingTime": 20}]], [[{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 3290317.2121213092, "children": {}, "calculationTime": 20, "queueingTime": 20}], [{"$type": "Risk", "unit": {"European Euro": 1.0}, "val": 9587809.11540649, "children": {}, "calculationTime": 20, "queueingTime": 20}]]]]
+{
+    "request_id": "1_5y-10yDollarPrice-Price2020Jan14",
+    "request_hash": "4e071d86397b95a0b0ad52aebb6b2e03",
+    "type": "MockCalc",
+    "tests": [
+        "test_one_portfolio"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 3660454.298656369, \"children\": {}, \"calculationTime\": 20, \"queueingTime\": 20}], [{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 10666368.872246133, \"children\": {}, \"calculationTime\": 20, \"queueingTime\": 20}]], [[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 3290317.2121213092, \"children\": {}, \"calculationTime\": 20, \"queueingTime\": 20}], [{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 9587809.11540649, \"children\": {}, \"calculationTime\": 20, \"queueingTime\": 20}]]]]"
+}

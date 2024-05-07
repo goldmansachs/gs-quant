@@ -1,1 +1,9 @@
-[[[[{"$type": "Risk", "val": null, "children": {"Legs_0": 1.112625, "Legs_1": 1.3009500000000003}, "calculationTime": 10164, "queueingTime": 44}]]]]
+{
+    "request_id": "1_mcbFXSpot2020Jan14",
+    "request_hash": "6942e2686a9fe4a5d47af94a897be7e6",
+    "type": "MockCalc",
+    "tests": [
+        "test_leg_valuations"
+    ],
+    "mocked_data": "[[[[{\"$type\": \"Risk\", \"val\": null, \"children\": {\"Legs_0\": 1.112625, \"Legs_1\": 1.3009500000000003}, \"calculationTime\": 10164, \"queueingTime\": 44}]]]]"
+}
