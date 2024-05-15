@@ -452,7 +452,7 @@ class Index(Asset, PositionedEntity):
 
         return [position_set.get_positions() for position_set in self.get_position_sets(start, end)]
 
-    def get_latest_constituent_instruments(self) -> Tuple[Instrument]:
+    def get_latest_constituent_instruments(self) -> Tuple[Instrument, ...]:
         """
         Fetch the latest constituents of the index as instrument objects.
 
@@ -475,7 +475,7 @@ class Index(Asset, PositionedEntity):
         return GsAssetApi.get_instruments_for_positions(self.get_latest_position_set().to_target().positions)
 
     def get_constituent_instruments_for_date(self,
-                                             date: dt.date = dt.date.today()) -> Tuple[Instrument]:
+                                             date: dt.date = dt.date.today()) -> Tuple[Instrument, ...]:
         """
         Fetch the constituents of the index for a given date as instrument objects.
 
@@ -500,7 +500,7 @@ class Index(Asset, PositionedEntity):
 
     def get_constituent_instruments(self,
                                     start: dt.date = DateLimit.LOW_LIMIT.value,
-                                    end: dt.date = dt.date.today()) -> Tuple[Tuple[Instrument]]:
+                                    end: dt.date = dt.date.today()) -> Tuple[Tuple[Instrument, ...], ...]:
         """
         Fetch the constituents of the index as instrument objects for the given date range
 

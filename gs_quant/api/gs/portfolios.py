@@ -242,7 +242,7 @@ class GsPortfolioApi:
                                        request_headers=headers)['results']
 
     @classmethod
-    def get_workflow_quote(cls, workflow_id: str) -> Tuple[WorkflowPosition]:
+    def get_workflow_quote(cls, workflow_id: str) -> Tuple[WorkflowPosition, ...]:
         url = f'/risk-internal/quote/workflow/{workflow_id}'
         results = GsSession.current._get(url, timeout=181)
         wf_pos_res = WorkflowPositionsResponse.from_dict(results)

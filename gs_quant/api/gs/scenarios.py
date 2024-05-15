@@ -40,7 +40,7 @@ class GsScenarioApi:
                            ids: List[str] = None,
                            names: List[str] = None,
                            limit: int = 100,
-                           **kwargs) -> Tuple[Scenario]:
+                           **kwargs) -> Tuple[Scenario, ...]:
         url = f'/risk/scenarios?limit={limit}'
         if ids:
             url += f'&id={"&id=".join(ids)}'
@@ -93,7 +93,7 @@ class GsFactorScenarioApi(GsScenarioApi):
                            shocked_factor_categories: List[str] = None,
                            start_date: dt.date = None,
                            end_date: dt.date = None,
-                           tags: List[str] = None) -> Tuple[Scenario]:
+                           tags: List[str] = None) -> Tuple[Scenario, ...]:
         factor_scenario_args = {}
         if risk_model:
             factor_scenario_args['riskModel'] = risk_model

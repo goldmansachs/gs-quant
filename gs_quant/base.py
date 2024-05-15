@@ -17,10 +17,12 @@ import builtins
 import copy
 import datetime as dt
 import logging
+import sys
+import typing
 from abc import ABC, ABCMeta, abstractmethod
 from collections import namedtuple
 from dataclasses import Field, InitVar, MISSING, dataclass, field, fields, replace
-from enum import EnumMeta
+from enum import EnumMeta, Enum
 from functools import update_wrapper
 from typing import Iterable, Mapping, Optional, Union, Tuple
 
@@ -41,6 +43,7 @@ __getattribute__ = object.__getattribute__
 __setattr__ = object.__setattr__
 
 _rename_cache = {}
+_is_supported_generic_cache = {}
 
 
 def exclude_none(o):
@@ -64,6 +67,15 @@ def _get_underscore(arg):
         _rename_cache[arg] = underscore(arg)
 
     return _rename_cache[arg]
+
+
+def _get_is_supported_generic(arg):
+    if arg in _is_supported_generic_cache:
+        is_supported_generic = _is_supported_generic_cache[arg]
+    else:
+        is_supported_generic = _is_supported_generic(arg)
+        _is_supported_generic_cache[arg] = is_supported_generic
+    return is_supported_generic
 
 
 def handle_camel_case_args(cls):
@@ -239,7 +251,37 @@ class Base(ABC):
         return super().__repr__()
 
     @classmethod
+    def __is_type_match(cls, tp, val):
+        if sys.version_info >= (3, 9):
+            from types import GenericAlias
+            is_generic_alias = isinstance(tp, (typing._GenericAlias, GenericAlias))
+        else:
+            is_generic_alias = isinstance(tp, typing._GenericAlias)
+        if not is_generic_alias:
+            # Do not convert Enums to strings
+            is_enum_to_str = isinstance(val, Enum) and tp == str
+            return isinstance(tp, type) and (isinstance(val, tp) or is_enum_to_str)
+        if getattr(tp, '_special', False):
+            return False
+        origin = tp.__origin__
+        args = tp.__args__
+        if float in args:
+            args += (int,)
+        if origin == Union:
+            return any(cls.__is_type_match(arg, val) for arg in args)
+        if origin == tuple:
+            if not isinstance(val, tuple) or not args:
+                return False
+            if len(args) == 1 or args[1] == Ellipsis:
+                return all(cls.__is_type_match(args[0], x) for x in val)
+            else:
+                return len(args) == len(val) and all(cls.__is_type_match(arg, x) for arg, x in zip(args, val))
+        return False
+
+    @classmethod
     def __coerce_value(cls, typ: type, value):
+        if cls.__is_type_match(typ, value):
+            return value
         if isinstance(value, np.generic):
             # Handle numpy types
             return value.item()
@@ -248,7 +290,8 @@ class Base(ABC):
             return value()
         elif typ in (DictBase, Optional[DictBase]) and isinstance(value, Base):
             return value.to_dict()
-        if _is_supported_generic(typ):
+        is_supported_generic = _get_is_supported_generic(typ)
+        if is_supported_generic:
             return _decode_generic(typ, value, False)
         else:
             return value

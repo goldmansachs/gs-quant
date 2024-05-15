@@ -27,7 +27,7 @@ class GsScreenApi:
 
     @classmethod
     def get_screens(cls, screen_ids: List[str] = None, screen_names: List[str] = None, limit: int = 100) \
-            -> Tuple[Screen]:
+            -> Tuple[Screen, ...]:
         url = '/screens?'
         if screen_ids:
             url += f'&id={"&id=".join(screen_ids)}'

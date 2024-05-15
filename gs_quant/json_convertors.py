@@ -41,7 +41,7 @@ def decode_optional_date(value: Optional[str]) -> Optional[dt.date]:
     raise ValueError(f'Cannot convert {value} to date')
 
 
-def decode_date_tuple(blob: Tuple[str]):
+def decode_date_tuple(blob: Tuple[str, ...]):
     return tuple(decode_optional_date(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
@@ -72,7 +72,7 @@ def decode_dict_date_value(value):
     return {k: dt.date.fromisoformat(d) for k, d in value.items()} if value is not None else None
 
 
-def decode_datetime_tuple(blob: Tuple[str]):
+def decode_datetime_tuple(blob: Tuple[str, ...]):
     return tuple(optional_from_isodatetime(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 

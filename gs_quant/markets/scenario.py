@@ -18,6 +18,7 @@ from gs_quant.api.gs.scenarios import GsFactorScenarioApi
 from gs_quant.markets.factor import Factor
 from gs_quant.target.risk import Scenario as TargetScenario, FactorScenarioType
 from gs_quant.entities.entitlements import Entitlements
+from gs_quant.errors import MqValueError
 from enum import Enum
 from typing import List, Union, Dict
 from pydash import get
@@ -425,6 +426,13 @@ class FactorScenario:
         else:
             scenario = GsFactorScenarioApi.create_scenario(target_scenario)
             self.__id = scenario.id
+
+    def delete(self):
+        """Deletes factor scenario from Marquee"""
+        if not self.id:
+            raise MqValueError("Cannot delete scenario that has not been created in Marquee")
+
+        GsFactorScenarioApi.delete_scenario(self.id)
 
     def clone(self):
         """

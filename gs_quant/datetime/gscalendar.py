@@ -81,7 +81,7 @@ class GsCalendar:
         except (ValueError, AttributeError):
             return False
 
-    def holidays_from_dataset(self, dataset: Dataset, query_key: str, query_values: Tuple[str]) -> List[dt.date]:
+    def holidays_from_dataset(self, dataset: Dataset, query_key: str, query_values: Tuple[str, ...]) -> List[dt.date]:
         if not len(query_values):
             return []
         coverage = _coverage_cache.get(dataset.id, default=None)

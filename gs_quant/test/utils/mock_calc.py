@@ -87,7 +87,6 @@ class MockCalc(MockRequest):
                                    option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS)
         request_id = self.get_request_id(args, kwargs)
         self.create_files(request_id, result_json)
-
         return result
 
     def get_request_id(self, args, kwargs):

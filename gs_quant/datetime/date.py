@@ -71,7 +71,7 @@ class DayCountConvention(Enum):
 
 
 def is_business_day(dates: DateOrDates, calendars: Union[str, Tuple[str, ...]] = (), week_mask: Optional[str] = None)\
-        -> Union[bool, Tuple[bool]]:
+        -> Union[bool, Tuple[bool, ...]]:
     """
     Determine whether each date in dates is a business day
 
@@ -136,7 +136,7 @@ def prev_business_date(
 
 
 def business_day_count(begin_dates: DateOrDates, end_dates: DateOrDates, calendars: Union[str, Tuple[str, ...]] = (
-), week_mask: Optional[str] = None) -> Union[int, Tuple[int]]:
+), week_mask: Optional[str] = None) -> Union[int, Tuple[int, ...]]:
     """
     Determine the number of business days between begin_dates and end_dates
 

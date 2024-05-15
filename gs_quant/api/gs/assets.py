@@ -358,11 +358,11 @@ class GsAssetApi:
 
     @staticmethod
     def get_instruments_for_asset_ids(
-            asset_ids: Tuple[str]
+            asset_ids: Tuple[str, ...]
     ) -> Tuple[Optional[Union[Instrument, Security]]]:
         instrument_infos = GsSession.current._post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
         instrument_lookup = {i.assetId: i.instrument for i in instrument_infos if i}
-        ret: Tuple[Optional[Union[Instrument, Security]]] = tuple(instrument_lookup.get(a) for a in asset_ids)
+        ret: Tuple[Optional[Union[Instrument, Security]], ...] = tuple(instrument_lookup.get(a) for a in asset_ids)
 
         return ret
 

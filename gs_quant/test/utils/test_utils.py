@@ -36,18 +36,20 @@ def test_fix_mock_data():
 
 
 @pytest.mark.last
-def test_all_cache_files_used():
+def test_mock_data_file_sanity():
     # Important that this test runs last, it asserts all the test files are used so we can cleanup unused ones
     saved_files = MockRequest.get_saved_files()
     assert [] == saved_files, 'Did you accidentally commit with save_files=True?!'
 
-    suffix = '(Other tests FAILED this could be red herring)' if did_anything_fail() else \
+    tests_passed = not did_anything_fail()
+
+    suffix = '(Other tests FAILED this is probably a red herring)' if not tests_passed else \
         'Run pytest with --fixmockdata to fix this!'
 
-    bad_index = MockRequest.reindex_test_files(report_only=True)
+    bad_index = MockRequest.reindex_test_files(report_only=True, log=tests_passed)
     assert bad_index == tuple(), f'Files with bad index. {suffix}'
 
-    unused_files = MockRequest.get_unused_files()
+    unused_files = MockRequest.get_unused_files(log=tests_passed)
     assert unused_files == tuple(), f'Cleanup your unused test files! {suffix}'
 
 

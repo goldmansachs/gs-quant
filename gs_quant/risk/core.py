@@ -19,7 +19,7 @@ from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from copy import copy
 from dataclasses import dataclass, fields
-from typing import Iterable, Optional, Tuple, Union, Dict
+from typing import Iterable, Optional, Union, Tuple, Dict
 
 import pandas as pd
 from dataclasses_json import dataclass_json
@@ -373,7 +373,7 @@ class MQVSValidationTarget:
     env: Optional[str] = None
     operator: Optional[str] = None
     mqGroups: Optional[Tuple[str, ...]] = None
-    users: Optional[Tuple[str]] = None
+    users: Optional[Tuple[str, ...]] = None
     assetClasses: Optional[Tuple[str, ...]] = None
     assets: Optional[Tuple[str, ...]] = None
     legTypes: Optional[Tuple[str, ...]] = None
@@ -392,11 +392,11 @@ class MQVSValidatorDefn:
 
 
 class MQVSValidatorDefnsWithInfo(ResultInfo):
-    validators: Tuple[MQVSValidatorDefn]
+    validators: Tuple[MQVSValidatorDefn, ...]
 
     def __init__(self,
                  risk_key: RiskKey,
-                 value: Union[MQVSValidatorDefn, Tuple[MQVSValidatorDefn]],
+                 value: Union[MQVSValidatorDefn, Tuple[MQVSValidatorDefn, ...]],
                  unit: Optional[dict] = None,
                  error: Optional[Union[str, dict]] = None,
                  request_id: Optional[str] = None):

@@ -966,6 +966,7 @@ class PositionedEntity(metaclass=ABCMeta):
         }
 
         results = GsFactorScenarioApi.calculate_scenario(calculation_request)
+
         scenarios = [id_to_scenario_map.get(sc_id) for sc_id in results.get('scenarios')]
         calculation_results = results.get('results')
 
@@ -980,7 +981,6 @@ class PositionedEntity(metaclass=ABCMeta):
                                                                 'byAsset']]
 
         for i, calc_result in enumerate(calculation_results):
-            all_data.get('summary').append(calc_result.get('summary'))
             for result_type in ['summary', 'factorPnl', 'bySectorAggregations',
                                 'byRegionAggregations', 'byDirectionAggregations', 'byAsset']:
                 scenario_metadata_map = {"scenarioId": scenarios[i].id,
@@ -1008,13 +1008,34 @@ class PositionedEntity(metaclass=ABCMeta):
                     estimated_pnl_df = pd.concat(estimated_pnl_df.values, ignore_index=True)
 
                 estimated_pnl_df.columns = estimated_pnl_df.columns.map(lambda x: {
-                    "factorCategories": "factorCategory",
-                    "factors": "factor",
-                    "sectors": "sector",
-                    "countries": "country",
-                    "industries": "industry"
-                }.get(x, x))
+                    "factorCategories": "Factor Category",
+                    "factors": "Factor",
+                    "sectors": "Sector",
+                    "countries": "Country",
+                    "industries": "Industry",
+                    "direction": "Direction",
+                    "scenarioId": "Scenario ID",
+                    "scenarioName": "Scenario Name",
+                    "scenarioType": "Scenario Type",
+                    "assetId": "Asset ID",
+                    "name": "Asset Name",
+                    "bbid": "BBID",
+                    "factorExposure": "Factor Exposure",
+                    "factorShock": "Factor Shock (%)",
+                    "exposure": "Exposure",
+                    "estimatedPnl": "Estimated Pnl",
+                    "estimatedPerformance": "Estimated Performance (%)",
+                    "stressedMarketValue": "Stressed Market Value"
 
+                }.get(x, x))
+                column_order = [col
+                                for col in ["Scenario ID", "Scenario Name", "Scenario Type", "Asset ID",
+                                            "BBID", "Asset Name", "Factor Category", "Factor", "Factor Exposure",
+                                            "Factor Shock (%)", "Sector", "Industry", "Country", "Direction",
+                                            "Exposure", "Estimated Pnl", "Estimated Performance (%)",
+                                            "Stressed Market Value"]
+                                if col in estimated_pnl_df.columns.tolist()]
+                estimated_pnl_df = estimated_pnl_df[column_order]
                 result[result_type] = estimated_pnl_df
 
         return result

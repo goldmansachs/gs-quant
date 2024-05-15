@@ -32,7 +32,7 @@ class GsWorkspacesMarketsApi:
     """GS Workspaces Markets API implementation"""
 
     @classmethod
-    def get_workspaces(cls, limit: int = 10, **kwargs) -> Tuple[Workspace]:
+    def get_workspaces(cls, limit: int = 10, **kwargs) -> Tuple[Workspace, ...]:
         return GsSession.current._get(f'{API}?limit={limit}&{urllib.parse.urlencode(kwargs)}', cls=Workspace)['results']
 
     @classmethod

@@ -413,7 +413,7 @@ class GsDataApi(DataApi):
                     offset: int = None,
                     scroll: str = DEFAULT_SCROLL,
                     scroll_id: Optional[str] = None,
-                    ) -> Tuple[DataSetCatalogEntry]:
+                    ) -> Tuple[DataSetCatalogEntry, ...]:
 
         query = f'dataSetId={"&dataSetId=".join(dataset_ids)}' if dataset_ids else ''
         gs_session = cls.get_session()
@@ -913,7 +913,8 @@ class GsDataApi(DataApi):
     def _sort_coordinate_data(
             cls,
             df: pd.DataFrame,
-            by: Tuple[str] = ('date', 'time', 'mktType', 'mktAsset', 'mktClass', 'mktPoint', 'mktQuotingStyle', 'value')
+            by: Tuple[str, ...] = ('date', 'time', 'mktType', 'mktAsset', 'mktClass',
+                                   'mktPoint', 'mktQuotingStyle', 'value')
     ) -> pd.DataFrame:
         columns = df.columns
         field_order = [f for f in by if f in columns]

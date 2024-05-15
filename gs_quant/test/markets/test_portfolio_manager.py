@@ -1929,13 +1929,8 @@ scenario_results = {
                  'scenarioId': 'MS0VH86TEJGWDK8V',
                  'scenarioName': 'US Presidential Election 2016',
                  'scenarioType': 'Factor Historical Simulation',
-                 'stressedMarketValue': -190730.10023598504},
-                {'estimatedPerformance': 5.867062741998796,
-                 'estimatedPnl': -10570.100235985032,
-                 'scenarioId': 'MS0VH86TEJGWDK8V',
-                 'scenarioName': 'US Presidential Election 2016',
-                 'scenarioType': 'Factor Historical Simulation',
-                 'stressedMarketValue': -190730.10023598504}]}
+                 'stressedMarketValue': -190730.10023598504}
+                ]}
 
 
 def test_get_reports(mocker):
@@ -2343,8 +2338,29 @@ def test_get_factor_scenario_analytics(mocker):
                                                "byRegionAggregations", "byDirectionAggregations", "byAsset"}) == 0
     for key, value in scenario_analytics_data.items():
         result_df = pd.DataFrame(scenario_results[key])
-        result_df = result_df.reindex(columns=value.columns)
-        assert value.equals(result_df)
+        result_df.columns = result_df.columns.map(lambda x: {
+            "factorCategory": "Factor Category",
+            "factor": "Factor",
+            "sector": "Sector",
+            "country": "Country",
+            "industry": "Industry",
+            "direction": "Direction",
+            "scenarioId": "Scenario ID",
+            "scenarioName": "Scenario Name",
+            "scenarioType": "Scenario Type",
+            "assetId": "Asset ID",
+            "name": "Asset Name",
+            "bbid": "BBID",
+            "factorExposure": "Factor Exposure",
+            "factorShock": "Factor Shock (%)",
+            "exposure": "Exposure",
+            "estimatedPnl": "Estimated Pnl",
+            "estimatedPerformance": "Estimated Performance (%)",
+            "stressedMarketValue": "Stressed Market Value"
+
+        }.get(x, x))
+        result_df = result_df.reindex(columns=value.columns.tolist())
+        pd.testing.assert_frame_equal(value, result_df)
 
 
 if __name__ == '__main__':
