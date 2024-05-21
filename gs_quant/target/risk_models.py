@@ -84,7 +84,9 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Unadjusted_Specific_Risk = 'Unadjusted Specific Risk'
     Dividend_Yield = 'Dividend Yield'
     Pre_VRA_Covariance_Matrix = 'Pre VRA Covariance Matrix'
-    Unadjusted_Covariance_Matrix = 'Unadjusted Covariance Matrix'    
+    Unadjusted_Covariance_Matrix = 'Unadjusted Covariance Matrix'
+    Risk_Free_Rate = 'Risk Free Rate'
+    Currency_Exchange_Rate = "Currency Exchange Rate"
 
 
 class RiskModelEventType(EnumBase, Enum):    
@@ -209,6 +211,15 @@ class RiskModelIssuerSpecificCovarianceData(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class RiskModelCurrencyRatesData(Base):
+    currency: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    exchangeRate: Tuple[float, ...] = field(default=None, metadata=field_metadata)
+    risk_free_rate: Tuple[float, ...] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class RiskModelAssetData(Base):
     universe: Tuple[str, ...] = field(default=None, metadata=field_metadata)
     specific_risk: Tuple[float, ...] = field(default=None, metadata=field_metadata)
@@ -311,6 +322,7 @@ class RiskModelData(Base):
     pre_vra_covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = field(default=None, metadata=config(field_name='preVRACovarianceMatrix', exclude=exclude_none))
     unadjusted_covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = field(default=None, metadata=field_metadata)
     issuer_specific_covariance: Optional[RiskModelIssuerSpecificCovarianceData] = field(default=None, metadata=field_metadata)
+    currency_rates_data: Optional[RiskModelCurrencyRatesData] = field(default=None, metadata=field_metadata)
     factor_portfolios: Optional[RiskModelFactorPortfoliosData] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 

@@ -14,7 +14,6 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
-import re
 
 from gs_quant.datetime import relative_date_add
 from gs_quant.timeseries.datetime import *
@@ -26,14 +25,21 @@ autocorrelation, co-integration and other operations
 """
 
 
+class ThresholdType(str, Enum):
+    percentage = "percentage"
+    absolute = "absolute"
+
+
 @plot_function
-def smooth_spikes(x: pd.Series, threshold: float) -> pd.Series:
+def smooth_spikes(x: pd.Series, threshold: float,
+                  threshold_type: ThresholdType = ThresholdType.percentage) -> pd.Series:
     """
     Smooth out the spikes of a series. If a point is larger/smaller than (1 +/- threshold) times both neighbors, replace
     it with the average of those neighbours. Note: the first and last points in the input series are dropped.
 
     :param x: timeseries
     :param threshold: minimum increment to trigger filter
+    :param threshold_type: type of threshold check
     :return: smoothed timeseries
 
     **Usage**
@@ -51,19 +57,31 @@ def smooth_spikes(x: pd.Series, threshold: float) -> pd.Series:
 
     :func:`exponential_moving_average`
     """
+
+    def check_percentage(previous, current, next_, multiplier) -> bool:
+        current_higher = current > previous * multiplier and current > next_ * multiplier
+        current_lower = previous > current * multiplier and next_ > current * multiplier
+        return current_higher or current_lower
+
+    def check_absolute(previous, current, next_, absolute) -> bool:
+        current_higher = current > previous + absolute and current > next_ + absolute
+        current_lower = previous > current + absolute and next_ > current + absolute
+        return current_higher or current_lower
+
     if len(x) < 3:
         return pd.Series(dtype=float)
 
+    threshold_value, check_spike = (threshold, check_absolute) if threshold_type == ThresholdType.absolute else (
+        (1 + threshold), check_percentage)
+
     result = x.copy()
-    multiplier = (1 + threshold)
     current, next_ = x.iloc[0:2]
     for i in range(1, len(x) - 1):
         previous = current
         current = next_
         next_ = x.iloc[i + 1]
 
-        scaled = current * multiplier
-        if (current > previous * multiplier and current > next_ * multiplier) or (previous > scaled and next_ > scaled):
+        if check_spike(previous, current, next_, threshold_value):
             result.iloc[i] = (previous + next_) / 2
 
     return result[1:-1]

@@ -21,6 +21,7 @@ import pandas as pd
 import numpy as np
 import logging
 import deprecation
+from gs_quant.target.common import Currency
 
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
 from gs_quant.base import EnumBase
@@ -28,10 +29,7 @@ from gs_quant.data import DataMeasure
 from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
-from gs_quant.models.risk_model_utils import build_asset_data_map, build_factor_data_map, \
-    build_pfp_data_dataframe, get_isc_dataframe, get_covariance_matrix_dataframe, get_closest_date_index, \
-    batch_and_upload_partial_data, get_universe_size, batch_and_upload_coverage_data, only_factor_data_is_present, \
-    upload_model_data, build_factor_id_to_name_map, build_factor_volatility_dataframe
+from gs_quant.models.risk_model_utils import *
 from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModelEventType, RiskModelData, \
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
     RiskModelCoverage as CoverageType, RiskModelUniverseIdentifier as UniverseIdentifier, Entitlements, \
@@ -910,9 +908,9 @@ class MarqueeRiskModel(RiskModel):
 
         :param data: complete or partial risk model data for uploading on given date
             includes: date, and one or more of: factorData, assetData, covarianceMatrix,
-                issuerSpecificCovariance and factorPortfolios. Look at risk model upload documentation for
-                further information on what data can be grouped together if asset data size is above the
-                max asset batch size
+                issuerSpecificCovariance, factorPortfolios and currencyRatesData. Look at risk model upload
+                documentation for further information on what data can be grouped together if asset data size is above
+                the max asset batch size
         :param max_asset_batch_size: size of payload to batch with. Defaults to 20000 assets which works well for
             models that have factor ids ranging from 1- 3 characters in length. For models with longer factor ids,
             consider batching with a smaller max asset batch size
@@ -1909,6 +1907,89 @@ class FactorRiskModel(MarqueeRiskModel):
         return self._build_covariance_matrix_measure(Measure.Pre_VRA_Covariance_Matrix, start_date, end_date, assets,
                                                      format)
 
+    def _build_currency_rates_data(self, rows: List[Dict], currencies: List[Currency], rates_key: str,
+                                   format: ReturnFormat) -> Union[Dict, pd.DataFrame]:
+        currency_rates_key = "currencyRatesData"
+        currency_rates_df = get_optional_data_as_dataframe(rows, currency_rates_key)
+        if currencies:
+            currency_rates_df = currency_rates_df.loc[currency_rates_df['currency'].isin([cur.value
+                                                                                          for cur in currencies])]
+        if format == ReturnFormat.DATA_FRAME:
+            return currency_rates_df
+        return currency_rates_df.to_dict()
+
+    def get_risk_free_rate(self,
+                           start_date: dt.date,
+                           end_date: dt.date = None,
+                           currencies: List[Currency] = [],
+                           format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """ Get risk-free rates for existing risk model
+
+       :param start_date: start date for data request
+       :param end_date: end date for data request
+       :param currencies: return risk-free rates for these currencies. If empty returns data for all currencies
+       :param format: which format to return the results in
+
+       :return: risk-free rates data
+
+       **Usage**
+
+       Get risk-free rates data between `start_date` and `end_date`
+
+       **Examples**
+
+       >>> from gs_quant.models.risk_model import FactorRiskModel
+       >>> import datetime as dt
+       >>>
+       >>> start_date = dt.date(2022, 1, 1)
+       >>> end_date = dt.date(2022, 5, 2)
+       >>> model = FactorRiskModel.get("MODEL_ID")
+       >>> risk_free_rates = model.get_risk_free_rate(start_date, end_date))
+
+       **See also**
+
+       :func:`get_currency_exchange_rate`
+        """
+        results = self.get_data(measures=[RiskModelDataMeasure.Risk_Free_Rate], start_date=start_date,
+                                end_date=end_date, limit_factors=False).get('results')
+        return self._build_currency_rates_data(results, rates_key="riskFreeRate", currencies=currencies, format=format)
+
+    def get_currency_exchange_rate(self,
+                                   start_date: dt.date,
+                                   end_date: dt.date = None,
+                                   currencies: List[Currency] = [],
+                                   format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """ Get currency exchange rates for existing risk model
+
+       :param start_date: start date for data request
+       :param end_date: end date for data request
+       :param currencies: return currency exchange rates for these currencies. If empty returns data for all currencies
+       :param format: which format to return the results in
+
+       :return: currency exchange rates data
+
+       **Usage**
+
+       Get currency exchange rates data between `start_date` and `end_date`
+
+       **Examples**
+
+       >>> from gs_quant.models.risk_model import FactorRiskModel
+       >>> import datetime as dt
+       >>>
+       >>> start_date = dt.date(2022, 1, 1)
+       >>> end_date = dt.date(2022, 5, 2)
+       >>> model = FactorRiskModel.get("MODEL_ID")
+       >>> currency_exchange_rates = model.get_currency_exchange_rate(start_date, end_date))
+
+       **See also**
+
+       :func:`get_risk_free_rate`
+        """
+        results = self.get_data(measures=[RiskModelDataMeasure.Currency_Exchange_Rate], start_date=start_date,
+                                end_date=end_date, limit_factors=False).get('results')
+        return self._build_currency_rates_data(results, rates_key="exchangeRate", currencies=currencies, format=format)
+
     def get_factor_volatility(self,
                               start_date: dt.date,
                               end_date: dt.date = None,
@@ -2044,7 +2125,8 @@ class FactorRiskModel(MarqueeRiskModel):
             measures=[Measure.Issuer_Specific_Covariance],
             limit_factors=False
         ).get('results')
-        isc_data = isc if format == ReturnFormat.JSON else get_isc_dataframe(isc)
+        isc_data = isc if format == ReturnFormat.JSON else get_optional_data_as_dataframe(isc,
+                                                                                          'issuerSpecificCovariance')
         return isc_data
 
     def get_factor_portfolios(self,

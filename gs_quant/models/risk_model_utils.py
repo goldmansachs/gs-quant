@@ -153,11 +153,11 @@ def build_pfp_data_dataframe(results: List) -> pd.DataFrame:
     return results
 
 
-def get_isc_dataframe(results: dict) -> pd.DataFrame:
+def get_optional_data_as_dataframe(results: List, optional_data_key: str) -> pd.DataFrame:
     cov_list = []
     date_list = []
     for row in results:
-        matrix_df = pd.DataFrame(row.get('issuerSpecificCovariance'))
+        matrix_df = pd.DataFrame(row.get(optional_data_key))
         cov_list.append(matrix_df)
         date_list.append(row.get('date'))
     results = pd.concat(cov_list, keys=date_list) if cov_list else pd.DataFrame({})
@@ -278,6 +278,11 @@ def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int
     date = data.get('date')
     _upload_factor_data_if_present(model_id, data, date, **kwargs)
     sleep(2)
+    if data.get('currencyRatesData'):
+        _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
+                                  model_data={"currencyRatesData": data.get('currencyRatesData'), 'date': date},
+                                  partial_upload=True, **kwargs)
+        sleep(2)
     for risk_model_data_type in ["assetData", "issuerSpecificCovariance", "factorPortfolios"]:
         _repeat_try_catch_request(_batch_data_v2, model_id=model_id, data=data.get(risk_model_data_type),
                                   data_type=risk_model_data_type, max_asset_size=max_asset_size, date=date, **kwargs)

@@ -5271,7 +5271,7 @@ def test_us_gas_forward_curve():
         # Test for an empty data query result
         replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_empty_forward_curve)
         mock_get_data.return_value = pd.DataFrame(data=[0], index=[datetime.date(2024, 2, 16)])
-        actual = tm.forward_curve_ng(asset)
+        actual = tm.forward_curve_ng(asset, market_date='20240219')
         assert actual.empty
 
         # Test for default date always returning a weekday

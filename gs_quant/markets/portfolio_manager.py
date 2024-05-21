@@ -108,6 +108,7 @@ class PortfolioManager(PositionedEntity):
                                           position_source_id=self.id,
                                           report_type='Portfolio Performance Analytics',
                                           tags=tags)
+        reports = [report for report in reports if report.parameters.tags == tags]
         if len(reports) == 0:
             raise MqError('No performance report found.')
         return PerformanceReport.from_target(reports[0])

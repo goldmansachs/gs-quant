@@ -24,40 +24,10 @@ from gs_quant.api.gs.data import QueryType
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.entities.entity import EntityType
 from gs_quant.markets.portfolio_manager import PortfolioManager
-from gs_quant.markets.report import PerformanceReport
-from gs_quant.target.reports import ReportType
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _extract_series_from_df
 
 LOGGER = logging.getLogger(__name__)
-
-
-@plot_measure_entity(EntityType.PORTFOLIO, [QueryType.PNL])
-def portfolio_pnl(portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None, *, source: str = None,
-                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
-    """
-    Returns the PnL of a portfolio
-    :param portfolio_id: id of portfolio
-    :param start_date: start date for getting pnl
-    :param end_date: end date for getting pnl
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :param request_id: server request id
-    :return: portfolio pnl values
-    """
-
-    reports = GsPortfolioApi.get_reports(portfolio_id)
-    performance_report_id = ""
-    for report in reports:
-        if report.type == ReportType.Portfolio_Performance_Analytics:
-            performance_report_id = report.id
-    if performance_report_id:
-        ppa_report = PerformanceReport.get(performance_report_id)
-        data = ppa_report.get_pnl(start_date, end_date)
-        df = pd.DataFrame.from_records(data)
-        df.set_index(pd.DatetimeIndex(df['date']), inplace=True)
-        df.drop(columns=['date'])
-        return _extract_series_from_df(df, QueryType.PNL, True)
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.AUM])
@@ -80,9 +50,9 @@ def aum(portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None,
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.FACTOR_EXPOSURE])
-def factor_exposure(portfolio_id: str, risk_model_id: str, factor_name: str, unit: str = 'Notional',
-                    benchmark_id: str = None, *, source: str = None,
-                    real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_factor_exposure(portfolio_id: str, risk_model_id: str, factor_name: str, unit: str = 'Notional',
+                              benchmark_id: str = None, *, source: str = None,
+                              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Factor exposure data associated with a factor in a factor risk report
 
@@ -102,9 +72,9 @@ def factor_exposure(portfolio_id: str, risk_model_id: str, factor_name: str, uni
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.FACTOR_PNL])
-def factor_pnl(portfolio_id: str, risk_model_id: str, factor_name: str, unit: str = 'Notional', *,
-               benchmark_id: str = None, source: str = None,
-               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_factor_pnl(portfolio_id: str, risk_model_id: str, factor_name: str, unit: str = 'Notional',
+                         benchmark_id: str = None, *, source: str = None,
+                         real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Factor PnL data associated with a factor in a factor risk report
 
@@ -124,9 +94,9 @@ def factor_pnl(portfolio_id: str, risk_model_id: str, factor_name: str, unit: st
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.FACTOR_PROPORTION_OF_RISK])
-def factor_proportion_of_risk(portfolio_id: str, risk_model_id: str, factor_name: str,
-                              benchmark_id: str = None, *, source: str = None,
-                              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_factor_proportion_of_risk(portfolio_id: str, risk_model_id: str, factor_name: str,
+                                        benchmark_id: str = None, *, source: str = None,
+                                        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Factor proportion of risk data associated with a factor in a factor risk report
 
@@ -145,9 +115,9 @@ def factor_proportion_of_risk(portfolio_id: str, risk_model_id: str, factor_name
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.DAILY_RISK])
-def daily_risk(portfolio_id: str, risk_model_id: str, factor_name: str = 'Total',
-               benchmark_id: str = None, *, source: str = None,
-               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_daily_risk(portfolio_id: str, risk_model_id: str, factor_name: str = 'Total',
+                         benchmark_id: str = None, *, source: str = None,
+                         real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Daily risk data associated with a factor in a factor risk report
 
@@ -166,9 +136,9 @@ def daily_risk(portfolio_id: str, risk_model_id: str, factor_name: str = 'Total'
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.ANNUAL_RISK])
-def annual_risk(portfolio_id: str, risk_model_id: str, factor_name: str = 'Total',
-                benchmark_id: str = None, *, source: str = None,
-                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_annual_risk(portfolio_id: str, risk_model_id: str, factor_name: str = 'Total',
+                          benchmark_id: str = None, *, source: str = None,
+                          real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Annual risk data associated with a factor in a factor risk report
 
@@ -187,8 +157,8 @@ def annual_risk(portfolio_id: str, risk_model_id: str, factor_name: str = 'Total
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.THEMATIC_EXPOSURE])
-def thematic_exposure(portfolio_id: str, basket_ticker: str, *, source: str = None,
-                      real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_thematic_exposure(portfolio_id: str, basket_ticker: str, *, source: str = None,
+                                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Thematic exposure of a portfolio to a requested GS thematic flagship basket
 
@@ -205,8 +175,8 @@ def thematic_exposure(portfolio_id: str, basket_ticker: str, *, source: str = No
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.PNL])
-def pnl(portfolio_id: str, unit: str = 'Notional', *, source: str = None,
-        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_pnl(portfolio_id: str, unit: str = 'Notional', *, source: str = None,
+                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     PNL from all holdings, if unit is Percent, geometrically aggregate over time frame
 

@@ -213,7 +213,7 @@ def mock_risk_model():
     return actual
 
 
-def test_factor_exposure():
+def test_portfolio_factor_exposure():
     replace = Replacer()
 
     # mock getting risk model entity()
@@ -254,15 +254,15 @@ def test_factor_exposure():
     }]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
-        actual = mp.factor_exposure('report_id', 'risk_model_id', 'Factor Name')
+        actual = mp.portfolio_factor_exposure('report_id', 'risk_model_id', 'Factor Name')
         assert all(actual.values == [-11.23, -11.24, -11.25])
 
     with pytest.raises(MqValueError):
-        mp.factor_exposure('report_id', 'risk_model_id', 'Wrong Factor Name')
+        mp.portfolio_factor_exposure('report_id', 'risk_model_id', 'Wrong Factor Name')
     replace.restore()
 
 
-def test_factor_pnl():
+def test_portfolio_factor_pnl():
     replace = Replacer()
 
     # mock getting risk model entity()
@@ -303,7 +303,7 @@ def test_factor_pnl():
         mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
         mock.return_value = factor_data
 
-        actual = mp.factor_pnl('report_id', 'risk_model_id', 'Factor Name')
+        actual = mp.portfolio_factor_pnl('report_id', 'risk_model_id', 'Factor Name')
         assert all(actual.values == [11.23, 11.24, 11.25])
 
     with DataContext(datetime.date(2020, 11, 22), datetime.date(2020, 11, 25)):
@@ -321,15 +321,15 @@ def test_factor_pnl():
         mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
         mock.return_value = factor_data_copy
 
-        actual = mp.factor_pnl('report_id', 'risk_model_id', 'Factor Name')
+        actual = mp.portfolio_factor_pnl('report_id', 'risk_model_id', 'Factor Name')
         assert all(actual.values == [0.0, 11.23, 11.24, 11.25])
 
     with pytest.raises(MqValueError):
-        mp.factor_pnl('report_id', 'risk_model_id', 'Wrong Factor Name')
+        mp.portfolio_factor_pnl('report_id', 'risk_model_id', 'Wrong Factor Name')
     replace.restore()
 
 
-def test_factor_proportion_of_risk():
+def test_portfolio_factor_proportion_of_risk():
     replace = Replacer()
 
     # mock getting risk model entity()
@@ -370,15 +370,15 @@ def test_factor_proportion_of_risk():
     }]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
-        actual = mp.factor_proportion_of_risk('report_id', 'risk_model_id', 'Factor Name')
+        actual = mp.portfolio_factor_proportion_of_risk('report_id', 'risk_model_id', 'Factor Name')
         assert all(actual.values == [1, 2, 3])
 
     with pytest.raises(MqValueError):
-        mp.factor_proportion_of_risk('report_id', 'risk_model_id', 'Wrong Factor Name')
+        mp.portfolio_factor_proportion_of_risk('report_id', 'risk_model_id', 'Wrong Factor Name')
     replace.restore()
 
 
-def test_thematic_exposure():
+def test_portfolio_thematic_exposure():
     replace = Replacer()
 
     # mock getting PTA report
@@ -403,13 +403,13 @@ def test_thematic_exposure():
     replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
     with DataContext(datetime.date(2020, 7, 12), datetime.date(2020, 7, 15)):
-        actual = mp.thematic_exposure('report_id', 'basket_ticker')
+        actual = mp.portfolio_thematic_exposure('report_id', 'basket_ticker')
         assert all(actual.values == [2, 2, 2, 2])
 
     replace.restore()
 
 
-def test_pnl():
+def test_portfolio_pnl():
     replace = Replacer()
 
     performance_report = PerformanceReport(report_id='RP1',
@@ -431,52 +431,9 @@ def test_pnl():
         {'date': ['2022-07-01', '2022-07-02', '2022-07-03'], 'pnl': [200, 400, 600]})
 
     with DataContext(datetime.date(2022, 7, 1), datetime.date(2022, 7, 3)):
-        actual = mp.pnl('RP1')
+        actual = mp.portfolio_pnl('RP1')
         assert all(actual.values == [200, 400, 600])
 
-    replace.restore()
-
-
-def test_financial_conditions_index():
-    data = {
-        'pnl': [
-            101,
-            102,
-            103
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03'
-        ]
-    }
-    idx = pd.date_range('2020-01-01', freq='D', periods=3)
-    df = MarketDataResponseFrame(data=data, index=idx)
-    df.dataset_ids = ('PNL',)
-    replace = Replacer()
-
-    # mock PerformanceReport.get_pnl()
-    mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
-    mock.return_value = df
-
-    # mock GsPortfolioApi.get_reports()
-    mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
-    mock.return_value = [Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                                           'type': 'Portfolio Performance Analytics',
-                                           'parameters': {'transactionCostModel': 'FIXED'}})]
-
-    # mock PerformanceReport.get()
-    mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
-
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
-        actual = mp.portfolio_pnl('MP1')
-        assert actual.index.equals(idx)
-        assert all(actual.values == data['pnl'])
     replace.restore()
 
 
@@ -521,22 +478,22 @@ def test_aggregate_factor_support():
     }]
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
-        actual = mp.factor_proportion_of_risk('portfolio_id', 'report_id', 'Factor')
+        actual = mp.portfolio_factor_proportion_of_risk('portfolio_id', 'report_id', 'Factor')
         assert all(actual.values == [1, 2, 3])
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
-        actual = mp.daily_risk('portfolio_id', 'report_id', 'Factor')
+        actual = mp.portfolio_daily_risk('portfolio_id', 'report_id', 'Factor')
         assert all(actual.values == [1, 2, 3])
 
     with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
-        actual = mp.annual_risk('portfolio_id', 'report_id', 'Factor')
+        actual = mp.portfolio_annual_risk('portfolio_id', 'report_id', 'Factor')
         assert all(actual.values == [1, 2, 3])
 
     with pytest.raises(MqValueError):
-        mp.daily_risk('portfolio_id', 'report_id', 'Factor Name')
+        mp.portfolio_daily_risk('portfolio_id', 'report_id', 'Factor Name')
 
     with pytest.raises(MqValueError):
-        mp.annual_risk('portfolio_id', 'report_id', 'Factor Name')
+        mp.portfolio_annual_risk('portfolio_id', 'report_id', 'Factor Name')
     replace.restore()
 
 

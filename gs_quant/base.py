@@ -287,7 +287,7 @@ class Base(ABC):
             return value.item()
         elif hasattr(value, 'tolist'):
             # tolist converts scalar or array to native python type if not already native.
-            return value()
+            return value.tolist()
         elif typ in (DictBase, Optional[DictBase]) and isinstance(value, Base):
             return value.to_dict()
         is_supported_generic = _get_is_supported_generic(typ)

@@ -520,6 +520,7 @@ class PositionedEntity(metaclass=ABCMeta):
         if risk_model_id:
             reports = [report for report in reports if report.parameters.risk_model == risk_model_id]
         reports = [report for report in reports if report.parameters.benchmark == benchmark_id]
+        reports = [report for report in reports if report.parameters.tags == tags]
         if len(reports) == 0:
             raise MqError(f'This {position_source_type} has no factor risk reports that match '
                           'your parameters. Please edit the risk model ID, fxHedged, and/or benchmark value in the '
@@ -538,6 +539,7 @@ class PositionedEntity(metaclass=ABCMeta):
                                               position_source_id=self.id,
                                               report_type=f'{position_source_type} Thematic Analytics',
                                               tags=tags)
+            reports = [report for report in reports if report.parameters.tags == tags]
             if len(reports) == 0:
                 raise MqError(f'This {position_source_type} has no thematic analytics report.')
             return ThematicReport.from_target(reports[0])

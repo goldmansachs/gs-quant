@@ -55,15 +55,15 @@ class ResultWithInfoAggregator(Transformer[Iterable[ResultType], FloatWithInfo])
                 elif isinstance(result, SeriesWithInfo):
                     val = getattr(result, self.risk_col).sum()
                 elif isinstance(result, DataFrameWithInfo):
-                    if self.filter_coord is not None:
+                    if result.empty:
+                        val = 0
+                    elif self.filter_coord is not None:
                         df = result.filter_by_coord(self.filter_coord)
                         val = getattr(df, self.risk_col).sum()
-                    elif result.empty:
-                        val = 0
                     else:
                         val = getattr(result, self.risk_col).sum()
                 else:
-                    raise ValueError(f'Aggregation of {type(result).__name__} not currently supported')
+                    raise ValueError(f'Aggregation of {type(result).__name__} not currently supported.')
                 risk_key = result.risk_key
                 unit = result.unit
                 error = result.error

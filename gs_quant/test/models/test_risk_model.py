@@ -16,6 +16,11 @@ under the License.
 import pytest
 from unittest import mock
 
+from pandas._testing import assert_frame_equal
+
+from gs_quant.models.risk_model_utils import get_optional_data_as_dataframe
+from gs_quant.target.common import Currency
+
 from gs_quant.models.risk_model import FactorRiskModel, MacroRiskModel, ReturnFormat, Unit
 from gs_quant.session import *
 from gs_quant.target.risk_models import RiskModel as Risk_Model, RiskModelCoverage, RiskModelTerm, \
@@ -1583,6 +1588,161 @@ def test_get_pre_vra_covariance_matrix(mocker):
     GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
                                                query, timeout=200)
     assert response == pre_vra_covariance_matrix_response
+
+
+def test_get_risk_free_rate(mocker):
+    model = mock_risk_model(mocker)
+
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'measures': [Measure.Risk_Free_Rate],
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, []),
+        'limitFactors': False
+    }
+    currencies = ["EUR", "INR"]
+    risk_free_rate = [1.08, 0.012]
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "currencyRatesData": {
+                    "riskFreeRate": risk_free_rate,
+                    "currency": currencies,
+                },
+            }
+        ],
+        'totalResults': 1
+    }
+
+    risk_free_rate_response = {
+        "currency": {('2022-04-05', 0): 'EUR', ('2022-04-05', 1): 'INR'},
+        "riskFreeRate": {('2022-04-05', 0): 1.08, ('2022-04-05', 1): 0.012}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    response = model.get_risk_free_rate(start_date=dt.date(2022, 4, 5),
+                                        end_date=dt.date(2022, 4, 5),
+                                        format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == risk_free_rate_response
+
+    # fitler risk free rates by currency
+    expected_filtered_rates = {
+        "currency": {('2022-04-05', 1): 'INR'},
+        "riskFreeRate": {('2022-04-05', 1): 0.012}
+    }
+    actual_filtered_rates = model.get_risk_free_rate(start_date=dt.date(2022, 4, 5),
+                                                     end_date=dt.date(2022, 4, 5),
+                                                     currencies=[Currency.INR],
+                                                     format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+
+    assert actual_filtered_rates == expected_filtered_rates
+
+    # test DataFrame return format
+    expected_data_frame = get_optional_data_as_dataframe([
+        {
+            "date": "2022-04-05",
+            "currencyRatesData": {
+                "riskFreeRate": risk_free_rate,
+                "currency": currencies,
+            },
+        }
+    ], "currencyRatesData")
+
+    expected_data_frame = expected_data_frame.loc[expected_data_frame['currency'].isin(['INR'])]
+    actual_data_frame = model.get_risk_free_rate(start_date=dt.date(2022, 4, 5),
+                                                 end_date=dt.date(2022, 4, 5),
+                                                 currencies=[Currency.INR])
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+
+    assert_frame_equal(expected_data_frame, actual_data_frame, check_like=True)
+
+
+def test_get_currency_exchange_rate(mocker):
+    model = mock_risk_model(mocker)
+
+    query = {
+        'startDate': '2022-04-05',
+        'endDate': '2022-04-05',
+        'measures': [Measure.Currency_Exchange_Rate],
+        'assets': DataAssetsRequest(UniverseIdentifier.gsid, []),
+        'limitFactors': False
+    }
+    currencies = ["EUR", "INR"]
+    currency_exchange_rate = [1.08, 0.012]
+    results = {
+        'results': [
+            {
+                "date": "2022-04-05",
+                "currencyRatesData": {
+                    "exchangeRate": currency_exchange_rate,
+                    "currency": currencies,
+                },
+            }
+        ],
+        'totalResults': 1
+    }
+
+    currency_exchange_rate_response = {
+        "currency": {('2022-04-05', 0): 'EUR', ('2022-04-05', 1): 'INR'},
+        "exchangeRate": {('2022-04-05', 0): 1.08, ('2022-04-05', 1): 0.012}
+    }
+
+    mocker.patch.object(GsSession.current, '_post', return_value=results)
+
+    response = model.get_currency_exchange_rate(start_date=dt.date(2022, 4, 5),
+                                                end_date=dt.date(2022, 4, 5),
+                                                format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+    assert response == currency_exchange_rate_response
+
+    # fitler risk free rates by currency
+    expected_filtered_rates = {
+        "currency": {('2022-04-05', 1): 'INR'},
+        "exchangeRate": {('2022-04-05', 1): 0.012}
+    }
+    actual_filtered_rates = model.get_currency_exchange_rate(start_date=dt.date(2022, 4, 5),
+                                                             end_date=dt.date(2022, 4, 5),
+                                                             currencies=[Currency.INR],
+                                                             format=ReturnFormat.JSON)
+
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+
+    assert actual_filtered_rates == expected_filtered_rates
+
+    # test DataFrame return format
+
+    expected_data_frame = get_optional_data_as_dataframe([
+        {
+            "date": "2022-04-05",
+            "currencyRatesData": {
+                "exchangeRate": currency_exchange_rate,
+                "currency": currencies,
+            },
+        }
+    ], "currencyRatesData")
+
+    expected_data_frame = expected_data_frame.loc[expected_data_frame['currency'].isin(['INR'])]
+
+    actual_data_frame = model.get_currency_exchange_rate(start_date=dt.date(2022, 4, 5),
+                                                         end_date=dt.date(2022, 4, 5),
+                                                         currencies=[Currency.INR])
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
+                                               query, timeout=200)
+
+    assert_frame_equal(expected_data_frame, actual_data_frame, check_like=True)
 
 
 if __name__ == "__main__":

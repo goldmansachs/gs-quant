@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from datetime import date
 
 import pytest
 from pandas.testing import assert_series_equal
@@ -527,6 +526,26 @@ def test_smooth_spikes():
     s = pd.Series([8, 10.1, 8, 6.4], index=sparse_index)
     actual = smooth_spikes(s, 0.25)
     expected = pd.Series([8.0, 8], index=sparse_index[1:3])
+    assert_series_equal(actual, expected)
+
+    s = pd.Series([0.1, 1.5, 0.2, 2], index=sparse_index)
+    actual = smooth_spikes(s, threshold=1, threshold_type=ThresholdType.absolute)
+    expected = pd.Series([0.15, 1.75], index=sparse_index[1:3])
+    assert_series_equal(actual, expected)
+
+    s = pd.Series([10.1, 8, 12, 10], index=sparse_index)
+    actual = smooth_spikes(s, 1, ThresholdType.absolute)
+    expected = pd.Series([11.05, 9], index=sparse_index[1:3])
+    assert_series_equal(actual, expected)
+
+    s = pd.Series([1, 2, 3, 4], index=sparse_index)
+    actual = smooth_spikes(s, 0.25, ThresholdType.absolute)
+    expected = pd.Series([2, 3], index=sparse_index[1:3])
+    assert_series_equal(actual, expected)
+
+    s = pd.Series([1, 3, 2, 4], index=sparse_index)
+    actual = smooth_spikes(s, 0.5, ThresholdType.absolute)
+    expected = pd.Series([1.5, 3.5], index=sparse_index[1:3])
     assert_series_equal(actual, expected)
 
 
