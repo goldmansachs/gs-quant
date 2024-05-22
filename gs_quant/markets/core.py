@@ -112,6 +112,7 @@ class PricingContext(ContextBaseWithDefault):
         :param market_behaviour: the behaviour to build the curve for pricing ('ContraintsBased' or 'Calibrated'
             (defaults to ContraintsBased))
         :param set_parameters_only: if true don't stop embedded pricing contexts submitting their jobs.
+        :param use_historical_diddles_only: if true only use historical diddles
         :param provider: GenericRiskApi implementation to use for pricing requests
 
         **Examples**
@@ -215,6 +216,7 @@ class PricingContext(ContextBaseWithDefault):
         attr_dict['provider'] = self.__provider
         attr_dict['_max_concurrent'] = self.__max_concurrent
         attr_dict['_max_per_batch'] = self.__max_per_batch
+        attr_dict['use_historical_diddles_only'] = self.__use_historical_diddles_only
 
     def _inherited_val(self, parameter, default=None, from_active=False):
         if from_active:
@@ -253,6 +255,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__provider = self.provider
         self.__max_concurrent = self._max_concurrent
         self.__max_per_batch = self._max_per_batch
+        self.__use_historical_diddles_only = self.use_historical_diddles_only
 
     def __reset_atts(self):
         self.__pricing_date = self.__attrs_on_entry.get('pricing_date')
@@ -322,7 +325,7 @@ class PricingContext(ContextBaseWithDefault):
 
                 for (params, scenario, dates_markets, risk_measures), instruments in grouped_requests.items():
                     date_chunk_size = (1 if self._group_by_date else self._max_per_batch) if provider.batch_dates \
-                                                                                            else len(dates_markets)
+                        else len(dates_markets)
                     for insts_chunk in [tuple(filter(None, i)) for i in
                                         zip_longest(*[iter(instruments)] * self._max_per_batch)]:
                         for dates_chunk in [tuple(filter(None, i)) for i in
@@ -489,6 +492,12 @@ class PricingContext(ContextBaseWithDefault):
     @property
     def set_parameters_only(self) -> bool:
         return self.__set_parameters_only
+
+    @property
+    def use_historical_diddles_only(self) -> bool:
+        if self.__use_historical_diddles_only is not None:
+            return self.__use_historical_diddles_only
+        return self._inherited_val('self.__use_historical_diddles_only', default=False)
 
     def clone(self, **kwargs):
         clone_kwargs = {k: getattr(self, k, None) for k in signature(self.__init__).parameters.keys()}
