@@ -61,13 +61,22 @@ class Environment(Enum):
 class CustomHttpAdapter(requests.adapters.HTTPAdapter):
     # "Transport adapter" that allows us to use custom ssl_context.
 
-    def __init__(self, ssl_context=None, **kwargs):
-        self.ssl_context = ssl_context
-        super().__init__(**kwargs)
+    __ssl_ctx = None
+
+    @classmethod
+    def ssl_context(cls) -> ssl.SSLContext:
+        if cls.__ssl_ctx is None:
+            cls.__ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            cls.__ssl_ctx.check_hostname = False
+            cls.__ssl_ctx.verify_mode = 0
+            cls.__ssl_ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
+            cls.__ssl_ctx.load_default_certs()
+            cls.__ssl_ctx.load_verify_locations(certifi.where())
+        return cls.__ssl_ctx
 
     def init_poolmanager(self, connections, maxsize=100, block=False):
         self.poolmanager = urllib3.poolmanager.PoolManager(num_pools=connections, maxsize=maxsize, block=block,
-                                                           ssl_context=self.ssl_context)
+                                                           ssl_context=self.ssl_context())
 
 
 class Domain:
@@ -78,7 +87,6 @@ class Domain:
 
 class GsSession(ContextBase):
     __config = None
-    __ssl_ctx = None
 
     class Scopes(Enum):
         READ_CONTENT = 'read_content'
@@ -119,7 +127,7 @@ class GsSession(ContextBase):
         self.verify = verify
         if http_adapter is None:
             if ssl.OPENSSL_VERSION_INFO >= (3, 0, 0):
-                self.http_adapter = CustomHttpAdapter(self.__ssl_context())
+                self.http_adapter = CustomHttpAdapter()
             else:
                 self.http_adapter = requests.adapters.HTTPAdapter(pool_maxsize=100)
         else:
@@ -213,18 +221,6 @@ class GsSession(ContextBase):
 
     def __del__(self):
         self.close()
-
-    @staticmethod
-    def __ssl_context() -> ssl.SSLContext:
-        if GsSession.__ssl_ctx is None:
-            GsSession.__ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            GsSession.__ssl_ctx.check_hostname = False
-            GsSession.__ssl_ctx.verify_mode = 0
-            GsSession.__ssl_ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
-            GsSession.__ssl_ctx.load_default_certs()
-            GsSession.__ssl_ctx.load_verify_locations(certifi.where())
-
-        return GsSession.__ssl_ctx
 
     @staticmethod
     def __unpack(results: Union[dict, list], cls: type) -> Union[Base, tuple, dict]:
@@ -473,15 +469,15 @@ class GsSession(ContextBase):
                                          return_request_id=return_request_id)
         return ret
 
-    def _connect_websocket(self, path: str, headers: Optional[dict] = None):
+    def _connect_websocket(self, path: str, headers: Optional[dict] = None, include_version=True):
         import websockets
-        url = 'ws{}{}{}'.format(self.domain[4:], '/' + self.api_version, path)
+        url = 'ws{}{}{}'.format(self.domain[4:], '/' + self.api_version if include_version else '', path)
         extra_headers = self._headers() + list((headers or {}).items())
         return websockets.connect(url,
                                   extra_headers=extra_headers,
                                   max_size=2 ** 32,
                                   read_limit=2 ** 32,
-                                  ssl=self.__ssl_context() if url.startswith('wss') else None)
+                                  ssl=CustomHttpAdapter.ssl_context() if url.startswith('wss') else None)
 
     def _headers(self):
         return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]

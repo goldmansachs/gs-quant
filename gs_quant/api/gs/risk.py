@@ -43,6 +43,7 @@ class WebsocketUnavailable(Exception):
 class GsRiskApi(RiskApi):
     USE_MSGPACK = True
     POLL_FOR_BATCH_RESULTS = False
+    PRICING_API_VERSION = None
 
     @classmethod
     def calc_multi(cls, requests: Iterable[RiskRequest]) -> dict:
@@ -62,11 +63,14 @@ class GsRiskApi(RiskApi):
     def _exec(cls, request: Union[RiskRequest, Iterable[RiskRequest]]) -> Union[Iterable, dict]:
         use_msgpack = cls.USE_MSGPACK and not isinstance(request, RiskRequest)
         headers = {'Content-Type': 'application/x-msgpack'} if use_msgpack else {}
-        result, request_id = cls.get_session()._post(cls.__url(request),
-                                                     request,
-                                                     request_headers=headers,
-                                                     timeout=181,
-                                                     return_request_id=True)
+        risk_session = cls.get_session()
+        version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
+        result, request_id = risk_session._post(f'/{version}' + cls.__url(request),
+                                                request,
+                                                include_version=False,
+                                                request_headers=headers,
+                                                timeout=181,
+                                                return_request_id=True)
 
         for sub_request in request:
             sub_request._id = request_id
@@ -121,7 +125,10 @@ class GsRiskApi(RiskApi):
             # ... poll for completed requests ...
 
             try:
-                calc_results = cls.get_session()._post('/risk/calculate/results/bulk', list(pending_requests.keys()))
+                risk_session = cls.get_session()
+                version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
+                calc_results = risk_session._post(f'/{version}/risk/calculate/results/bulk',
+                                                  list(pending_requests.keys()), include_version=False)
 
                 # ... enqueue the request and result for the listener to handle ...
                 for result in calc_results:
@@ -244,8 +251,10 @@ class GsRiskApi(RiskApi):
                 _logger.error(f'{error} error, retrying (attempt {attempts + 1} of {max_attempts})')
 
             try:
-                ws_url = '/risk/calculate/results/subscribe'
-                async with cls.get_session()._connect_websocket(ws_url) as ws:
+                risk_session = cls.get_session()
+                api_version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
+                ws_url = f'/{api_version}/risk/calculate/results/subscribe'
+                async with risk_session._connect_websocket(ws_url, include_version=False) as ws:
                     if span:
                         Tracer.get_instance().scope_manager.activate(span, finish_on_close=False)
                         with Tracer(f'wss:/{ws_url}') as scope:

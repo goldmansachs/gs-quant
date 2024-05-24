@@ -232,6 +232,7 @@ class GsReportApi:
                                         currency: Currency = None,
                                         include_interaction: bool = None,
                                         aggregation_type: str = None,
+                                        aggregation_category: str = None,
                                         start_date: dt.date = None,
                                         end_date: dt.date = None):
         url = f'/attribution/{portfolio_id}/brinson?'
@@ -243,6 +244,8 @@ class GsReportApi:
             url += f'&includeInteraction={str(include_interaction).lower()}'
         if aggregation_type is not None:
             url += f'&aggregationType={aggregation_type}'
+        if aggregation_category is not None:
+            url += f'&aggregationCategory={aggregation_category}'
         if start_date is not None:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
         if end_date is not None:

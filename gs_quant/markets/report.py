@@ -78,6 +78,13 @@ class AttributionAggregationType(Enum):
     Geometric = 'geometric'
 
 
+class AggregationCategoryType(Enum):
+    Sector = 'assetClassificationsGicsSector'
+    Industry = 'assetClassificationsGicsIndustry'
+    Region = 'region'
+    Country = 'assetClassificationsCountryName'
+
+
 class CustomAUMDataPoint:
     """
 
@@ -814,6 +821,7 @@ class PerformanceReport(Report):
                                 currency: Currency = None,
                                 include_interaction: bool = False,
                                 aggregation_type: AttributionAggregationType = AttributionAggregationType.Arithmetic,
+                                aggregation_category: AggregationCategoryType = None,
                                 start_date: dt.date = None,
                                 end_date: dt.date = None,
                                 return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
@@ -824,6 +832,7 @@ class PerformanceReport(Report):
         :param currency: currency of results; if none passed results default to your portfolio's currency
         :param include_interaction: show interaction independent of security selection
         :param aggregation_type: either artihmetic or geometric
+        :param aggregation_category: aggregate results by sector, industry, region or country name
         :param start_date: start date
         :param end_date: end date
         :param return_format: return format; defaults to a Pandas DataFrame, but can be manually
@@ -845,6 +854,8 @@ class PerformanceReport(Report):
                                                               currency=currency,
                                                               include_interaction=include_interaction,
                                                               aggregation_type=aggregation_type.value,
+                                                              aggregation_category=aggregation_category.value
+                                                              if aggregation_category else None,
                                                               start_date=start_date,
                                                               end_date=end_date)
         if return_format == ReturnFormat.DATA_FRAME:
