@@ -822,23 +822,27 @@ class PositionSet:
 
     @staticmethod
     def __resolve_identifiers(identifiers: List[str], date: datetime.date, **kwargs) -> List:
-        response = GsAssetApi.resolve_assets(
-            identifier=identifiers,
-            fields=['name', 'id', 'tradingRestriction'],
-            limit=1,
-            as_of=date,
-            **kwargs
-        )
         unmapped_assets = []
         id_map = {}
+        batch_size = 500
+        logging.debug(f'Resolving positions in {len(identifiers)/batch_size} batches')
+        for i in range(0, len(identifiers), batch_size):
+            identifier_batch = identifiers[i: i + batch_size]
+            response = GsAssetApi.resolve_assets(
+                identifier=identifier_batch,
+                fields=['name', 'id', 'tradingRestriction'],
+                limit=1,
+                as_of=date,
+                **kwargs
+            )
 
-        for identifier in response:
-            if len(response[identifier]) > 0:
-                id_map[identifier] = {'id': response[identifier][0]['id'],
-                                      'name': response[identifier][0]['name'],
-                                      'restricted': response[identifier][0].get('tradingRestriction')}
-            else:
-                unmapped_assets.append(identifier)
+            for identifier in response:
+                if response[identifier] is not None and len(response[identifier]) > 0:
+                    id_map[identifier] = {'id': response[identifier][0]['id'],
+                                          'name': response[identifier][0]['name'],
+                                          'restricted': response[identifier][0].get('tradingRestriction')}
+                else:
+                    unmapped_assets.append(identifier)
 
         if len(unmapped_assets) > 0:
             logging.info(f'Error in resolving the following identifiers: {unmapped_assets}. Sifting them out and '

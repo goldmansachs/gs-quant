@@ -81,7 +81,8 @@ class ReportStatus(EnumBase, Enum):
     done = 'done'
     error = 'error'
     cancelled = 'cancelled'
-    waiting = 'waiting'    
+    waiting = 'waiting'
+    queued = 'queued'
 
 
 class ReportType(EnumBase, Enum):    
