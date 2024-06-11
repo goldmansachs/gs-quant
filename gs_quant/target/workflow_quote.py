@@ -50,6 +50,14 @@ class ImgType(EnumBase, Enum):
     WEBP = 'WEBP'    
 
 
+class MarketRefOverrideType(EnumBase, Enum):    
+    
+    """Market Ref Override Type Spot or Fwd"""
+
+    Spot = 'Spot'
+    Fwd = 'Fwd'    
+
+
 class OverlayType(EnumBase, Enum):    
     
     """Type"""
@@ -89,16 +97,6 @@ class CustomDeltaHedge(HedgeTypes):
 class HyperLinkImageComments(CustomComments):
     url: Optional[str] = field(default=None, metadata=field_metadata)
     comment_type: Optional[str] = field(init=False, default='hyperLinkImageComments', metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class MarketDataParameters(Base):
-    max_history: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    timestamp: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    spot_ref: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -162,6 +160,17 @@ class DeltaHedge(HedgeTypes):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class MarketRefOverride(Base):
+    asset: Optional[str] = field(default=None, metadata=field_metadata)
+    value: Optional[float] = field(default=None, metadata=field_metadata)
+    mkt_ref_override_type: Optional[MarketRefOverrideType] = field(default=None, metadata=field_metadata)
+    ref_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class OverlayParameters(Base):
     overlay_type: Optional[OverlayType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
@@ -193,6 +202,17 @@ class WorkflowEntitlements(Base):
     version: Optional[int] = field(default=None, metadata=field_metadata)
     readers: Optional[Tuple[WorkflowEntitlement, ...]] = field(default=None, metadata=field_metadata)
     writers: Optional[Tuple[WorkflowEntitlement, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class MarketDataParameters(Base):
+    max_history: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    timestamp: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    spot_ref: Optional[float] = field(default=None, metadata=field_metadata)
+    mkt_ref_override: Optional[Tuple[MarketRefOverride, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

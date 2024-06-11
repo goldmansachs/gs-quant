@@ -28,7 +28,7 @@ from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.price import GsPriceApi
 from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.target.common import Position as CommonPosition, PositionPriceInput, PositionSet as CommonPositionSet, \
-    PositionTag, Currency, PositionSetWeightingStrategy
+    PositionTag, Currency, PositionSetWeightingStrategy, MarketDataFrequency
 from gs_quant.target.price import PriceParameters, PositionSetPriceInput
 from gs_quant.target.positions_v2_pricing import PositionsPricingParameters, PositionsRequest, PositionSetRequest, \
     PositionsPricingRequest
@@ -662,13 +662,18 @@ class PositionSet:
         positions = self.__convert_positions_for_pricing(self.positions, weighting_strategy)
         price_parameters = PriceParameters(currency=currency,
                                            divisor=self.divisor,
-                                           asset_data_set_id='GSEOD',
+                                           frequency=MarketDataFrequency.End_Of_Day,
                                            target_notional=self.reference_notional,
                                            notional_type='Gross',
                                            pricing_date=self.date,
                                            price_regardless_of_assets_missing_prices=True,
                                            weighting_strategy=weighting_strategy,
                                            use_unadjusted_close_price=use_unadjusted_close_price)
+
+        if 'dataset' in kwargs:
+            price_parameters.asset_data_set_id = kwargs['dataset']
+            price_parameters.frequency = None
+
         for k, v in kwargs.items():
             price_parameters[k] = v
         results = GsPriceApi.price_positions(PositionSetPriceInput(positions=positions, parameters=price_parameters))
