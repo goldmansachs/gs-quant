@@ -45,6 +45,11 @@ def decode_date_tuple(blob: Tuple[str, ...]):
     return tuple(decode_optional_date(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
+def encode_date_tuple(values: Tuple[Optional[Union[str, dt.date]], ...]):
+    return tuple(encode_date_or_str(value) if isinstance(value, (str, dt.date)) else None for value in values) if \
+        values is not None else None
+
+
 def optional_from_isodatetime(datetime: Union[str, dt.datetime, None]) -> Optional[dt.datetime]:
     if datetime is None or isinstance(datetime, dt.datetime):
         return datetime
