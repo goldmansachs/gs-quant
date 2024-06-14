@@ -95,7 +95,7 @@ class HistoricalPricingContext(PricingContext):
             raise ValueError('Must supply start or dates')
 
     def _market(self, date: dt.date, location: str) -> CloseMarket:
-        date = prev_business_date(date) if date == dt.date.today() else date
+        date = prev_business_date(date) if date >= dt.date.today() else date
         return CloseMarket(location=location, date=date, check=False)
 
     def calc(self, instrument: InstrumentBase, risk_measure: RiskMeasure) -> PricingFuture:

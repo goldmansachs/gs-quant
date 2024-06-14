@@ -171,7 +171,8 @@ class GsSession(ContextBase):
     def _init_async(self):
         import httpx
         if not self._has_async_session():
-            self._session_async = httpx.AsyncClient(follow_redirects=True, verify=self.verify, proxies=self.proxies)
+            self._session_async = httpx.AsyncClient(follow_redirects=True, verify=CustomHttpAdapter.ssl_context(),
+                                                    proxies=self.proxies)
             self._session_async.headers.update({'X-Application': self.application})
             self._session_async.headers.update({'X-Version': self.application_version})
             self._authenticate_async()
