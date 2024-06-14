@@ -4810,7 +4810,7 @@ def thematic_model_exposure(asset: Asset, basket_identifier: str, notional: int 
     Thematic exposure of an asset to a requested GS thematic flagship basket
 
     :param asset: asset object loaded from security master
-    :param basket_identifier: identifer of the requested basket (ticker, bbid, etc.)
+    :param basket_identifier: identifier of the requested basket (ticker, bbid, etc.)
     :param notional: Optional notional, will default to $10mm for if not entered
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
@@ -4831,7 +4831,7 @@ def thematic_model_beta(asset: Asset, basket_identifier: str, *, source: str = N
     Thematic beta values of an asset to a requested GS thematic flagship basket
 
     :param asset: asset object loaded from security master
-    :param basket_identifier: identifer of the requested basket (ticker, bbid, etc.)
+    :param basket_identifier: identifier of the requested basket (ticker, bbid, etc.)
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
     :return: Timeseries of daily thematic beta of asset to requested flagship basket
