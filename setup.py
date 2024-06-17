@@ -68,6 +68,7 @@ setuptools.setup(
         "msgpack",
         "nest-asyncio",
         "opentracing",
+        "numpy<2.0.0",
         "pandas>1.0.0,<2.0.0;python_version<'3.7'",
         "pandas>=1.4,<2.2;python_version>'3.7'",
         "pydash<7.0.0",
