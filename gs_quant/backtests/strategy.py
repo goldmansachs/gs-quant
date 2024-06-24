@@ -15,14 +15,15 @@ under the License.
 """
 
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json
-from typing import Tuple
+from dataclasses_json import dataclass_json, config
+from typing import Tuple, Optional, Union, Iterable
 
 from gs_quant.backtests.triggers import *
 from gs_quant.backtests.generic_engine import GenericEngine
 from gs_quant.backtests.predefined_asset_engine import PredefinedAssetEngine
 from gs_quant.backtests.equity_vol_engine import EquityVolEngine
 from gs_quant.base import Priceable
+from gs_quant.json_convertors import decode_named_instrument, encode_named_instrument, dc_decode
 
 
 backtest_engines = [GenericEngine(), PredefinedAssetEngine(), EquityVolEngine()]
@@ -34,8 +35,13 @@ class Strategy(object):
     """
     A strategy object on which one may run a backtest
     """
-    initial_portfolio: Optional[Tuple[Priceable, ...]]
-    triggers: Union[Trigger, Iterable[Trigger]]
+    initial_portfolio: Optional[Tuple[Priceable, ...]] = field(default=None,
+                                                               metadata=config(decoder=decode_named_instrument,
+                                                                               encoder=encode_named_instrument))
+    triggers: Union[Trigger, Iterable[Trigger]] = field(default=None,
+                                                        metadata=config(decoder=dc_decode(*Trigger.sub_classes(),
+                                                                                          allow_missing=True)))
+    risks = None
 
     def __post_init__(self):
         self.initial_portfolio = make_list(self.initial_portfolio)

@@ -13,26 +13,28 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime as dt
 from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 from queue import Queue as FifoQueue
-from typing import Iterable, TypeVar, Optional
+from typing import Iterable, TypeVar, Optional, Union
 
+import datetime as dt
 import numpy as np
 import pandas as pd
 
-from gs_quant.common import RiskMeasure
-from gs_quant.instrument import Cash
-from gs_quant.markets.portfolio import Portfolio
 from gs_quant.backtests.backtest_utils import make_list
 from gs_quant.backtests.core import ValuationMethod
 from gs_quant.backtests.data_handler import DataHandler
 from gs_quant.backtests.event import FillEvent
 from gs_quant.backtests.order import OrderBase, OrderCost
+from gs_quant.base import static_field
+from gs_quant.common import RiskMeasure
+from gs_quant.instrument import Cash
+from gs_quant.markets import PricingContext
+from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk.transform import Transformer
 
 
@@ -49,6 +51,7 @@ class BackTest(BaseBacktest):
     strategy: object
     states: Iterable
     risks: Iterable[RiskMeasure]
+    holiday_calendar: Iterable[dt.date] = None
 
     def __post_init__(self):
         self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
@@ -144,7 +147,7 @@ class BackTest(BaseBacktest):
         cash = pd.concat([pd.Series(cash_dict, name='Cumulative Cash')
                           for name, cash_dict in cash_summary.items()], axis=1, sort=True)
         transaction_costs = pd.Series(self.transaction_costs, name='Transaction Costs')
-        df = pd.concat([summary, cash, transaction_costs], axis=1, sort=True).fillna(0)
+        df = pd.concat([summary, cash, transaction_costs], axis=1, sort=True).ffill().fillna(0)
         df['Total'] = df.sum(numeric_only=True, axis=1)
         return df[:self.states[-1]]
 
@@ -265,17 +268,39 @@ class Hedge:
 @dataclass_json()
 @dataclass
 class TransactionModel:
-    def get_cost(self, state, backtest, info) -> float:
+    def get_cost(self, state, backtest, info, instrument) -> float:
         pass
 
 
 @dataclass_json()
 @dataclass
 class ConstantTransactionModel(TransactionModel):
-    cost: float = 0
+    cost: Union[float, int] = 0
+    class_type: str = static_field('constant_transaction_model')
 
-    def get_cost(self, state, backtest, info) -> float:
+    def get_cost(self, state, backtest, info, instrument) -> float:
         return self.cost
+
+
+@dataclass_json()
+@dataclass
+class ScaledTransactionModel:
+    scaling_type: Union[str, RiskMeasure] = 'notional_amount'
+    scaling_level: Union[float, int] = 0.0001
+    class_type: str = static_field('scaled_transaction_model')
+
+    def get_cost(self, state, backtest, info, instrument) -> float:
+        if isinstance(self.scaling_type, str):
+            try:
+                return getattr(instrument, self.scaling_type) * self.scaling_level
+            except AttributeError:
+                raise RuntimeError(f'{self.scaling_type} not recognised for instrument {instrument.type}')
+
+        with PricingContext(state):
+            risk = instrument.calc(self.scaling_type)
+            backtest.calc_calls += 1
+            backtest.calculations += 1
+        return risk.result() * self.scaling_level
 
 
 @dataclass_json

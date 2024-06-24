@@ -5,5 +5,5 @@
     "tests": [
         "test_exit_action_noarg"
     ],
-    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 0.0, \"children\": {}}]]], [[[{\"$type\": \"Risk\", \"unit\": {\"United States Dollar\": 1.0}, \"val\": 0.0, \"children\": {}}]]]]"
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"United States Dollar\":1.0},\"val\":0.0}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"United States Dollar\":1.0},\"val\":0.0}]]]]"
 }

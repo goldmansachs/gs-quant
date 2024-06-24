@@ -1011,9 +1011,12 @@ class Basket(Asset, PositionedEntity):
 
         # handle nested objects and make sure required/default values are input correctly
         if should_rebal:
-            set_(rebal_inputs, 'position_set', self.position_set.to_target(common=False))
-            set_(rebal_inputs, 'pricing_parameters', CustomBasketsPricingParameters(**pricing))
-            set_(rebal_inputs, 'publish_parameters', PublishParameters(**publish))
+            if positions_updated:
+                set_(rebal_inputs, 'position_set', self.position_set.to_target(common=False))
+            if pricing_updated:
+                set_(rebal_inputs, 'pricing_parameters', CustomBasketsPricingParameters(**pricing))
+            if publish_updated:
+                set_(rebal_inputs, 'publish_parameters', PublishParameters(**publish))
         if should_edit:
             set_(edit_inputs, 'publish_parameters', PublishParameters(**publish))
 

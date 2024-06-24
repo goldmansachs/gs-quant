@@ -525,7 +525,7 @@ class PositionSet:
         >>>
         >>> my_positions = [Position(identifier='AAPL UW', quantity=100), Position(identifier='MSFT UW', quantity=100)]
         >>> position_set = PositionSet(positions=my_positions)
-        >>> position_set.get_unpriced_positions()
+        >>> position_set.to_frame()
 
         **See also**
 
@@ -675,7 +675,7 @@ class PositionSet:
             price_parameters.frequency = None
 
         for k, v in kwargs.items():
-            price_parameters[k] = v
+            price_parameters.__setattr__(k, v)
         results = GsPriceApi.price_positions(PositionSetPriceInput(positions=positions, parameters=price_parameters))
         position_result_map = {f'{p.asset_id}{self.__hash_position_tag_list(p.tags)}': p for p in results.positions}
         priced_positions, unpriced_positions = [], []
@@ -816,13 +816,13 @@ class PositionSet:
 
     @staticmethod
     def __get_tag_columns(positions: pd.DataFrame) -> List[str]:
-        return [c for c in positions.columns if c.lower() not in ['identifier', 'quantity', 'weight', 'date']]
+        return [c for c in positions.columns if c.lower() not in ['identifier', 'id', 'quantity', 'weight', 'date']]
 
     @staticmethod
     def __normalize_position_columns(positions: pd.DataFrame) -> List[str]:
         columns = []
         for c in positions.columns:
-            columns.append(c.lower() if c.lower() in ['identifier', 'quantity', 'weight', 'date'] else c)
+            columns.append(c.lower() if c.lower() in ['identifier', 'id', 'quantity', 'weight', 'date'] else c)
         return columns
 
     @staticmethod

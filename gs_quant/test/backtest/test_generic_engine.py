@@ -13,24 +13,22 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
 from datetime import date
 from unittest.mock import patch
 
-from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap
-from gs_quant.backtests.triggers import *
 from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction, EnterPositionQuantityScaledAction
+from gs_quant.backtests.backtest_objects import ScaledTransactionModel
 from gs_quant.backtests.data_sources import GenericDataSource
-from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.generic_engine import GenericEngine
-from gs_quant.markets.portfolio import Portfolio
-from gs_quant.target.backtests import BacktestTradingQuantityType
-from gs_quant.target.common import OptionType, OptionStyle
-from gs_quant.target.instrument import EqOption
-from gs_quant.test.utils.mock_calc import MockCalc
-from gs_quant.risk import Price, FXDelta, DollarPrice
+from gs_quant.backtests.strategy import Strategy
+from gs_quant.backtests.triggers import *
+from gs_quant.common import Currency, PayReceive, OptionType, OptionStyle
+from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap, EqOption
 from gs_quant.markets import PricingContext
-from gs_quant.common import Currency, PayReceive
+from gs_quant.markets.portfolio import Portfolio
+from gs_quant.risk import Price, FXDelta, DollarPrice, IRDelta
+from gs_quant.target.backtests import BacktestTradingQuantityType
+from gs_quant.test.utils.mock_calc import MockCalc
 
 
 def mock_pricing_context(self):
@@ -62,7 +60,6 @@ def test_generic_engine_simple(mocker):
 
         # run backtest daily
         engine = GenericEngine()
-        # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
         backtest = engine.run_backtest(strategy, states=[date(2021, 12, 1), date(2021, 12, 2), date(2021, 12, 3)],
                                        show_progress=True)
         summary = backtest.result_summary
@@ -143,26 +140,27 @@ def test_hedge_without_risk(mocker):
         assert Price in summary.columns
 
 
+s = pd.Series({date(2021, 10, 1): 0.984274,
+               date(2021, 10, 4): 1.000706,
+               date(2021, 10, 5): 1.044055,
+               date(2021, 10, 6): 1.095361,
+               date(2021, 10, 7): 1.129336,
+               date(2021, 10, 8): 1.182954,
+               date(2021, 10, 12): 1.200108,
+               date(2021, 10, 13): 1.220607,
+               date(2021, 10, 14): 1.172837,
+               date(2021, 10, 15): 1.163660,
+               date(2021, 10, 18): 1.061084,
+               date(2021, 10, 19): 1.025012,
+               date(2021, 10, 20): 1.018035,
+               date(2021, 10, 21): 1.080751,
+               date(2021, 10, 22): 1.069340,
+               date(2021, 10, 25): 1.033413})
+
+
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_mkt_trigger_data_sources(mocker):
     with MockCalc(mocker):
-        s = pd.Series({date(2021, 10, 1): 0.984274,
-                       date(2021, 10, 4): 1.000706,
-                       date(2021, 10, 5): 1.044055,
-                       date(2021, 10, 6): 1.095361,
-                       date(2021, 10, 7): 1.129336,
-                       date(2021, 10, 8): 1.182954,
-                       date(2021, 10, 12): 1.200108,
-                       date(2021, 10, 13): 1.220607,
-                       date(2021, 10, 14): 1.172837,
-                       date(2021, 10, 15): 1.163660,
-                       date(2021, 10, 18): 1.061084,
-                       date(2021, 10, 19): 1.025012,
-                       date(2021, 10, 20): 1.018035,
-                       date(2021, 10, 21): 1.080751,
-                       date(2021, 10, 22): 1.069340,
-                       date(2021, 10, 25): 1.033413})
-
         action = AddTradeAction(IRSwaption(notional_currency='USD', expiration_date='1y', termination_date='1y'),
                                 'expiration_date', name='Action1')
         data_source = GenericDataSource(s, MissingDataStrategy.fill_forward)
@@ -345,6 +343,68 @@ def test_quantity_scaled_action(mocker):
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_scaled_transaction_cost(mocker):
+    with MockCalc(mocker):
+        start_date = date(2024, 5, 6)
+        end_date = date(2024, 5, 10)
+
+        # notional based transaction cost.  charge 1/10000th of the notional
+        transaction_cost = ScaledTransactionModel('notional_amount', 0.0001)
+
+        swap = IRSwap(notional_currency=Currency.GBP, notional_amount='50k', termination_date='1y', name='GBP1y')
+        trade_action = AddTradeAction(priceables=swap, trade_duration='1m', name='Action1',
+                                      transaction_cost=transaction_cost)
+        trade_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date,
+                                                                                         end_date=end_date,
+                                                                                         frequency='1b'),
+                                        actions=trade_action)
+
+        strategy = Strategy(None, trade_trigger)
+
+        GE = GenericEngine()
+        backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+        summary = backtest.result_summary
+        ledger = backtest.trade_ledger()
+
+        assert len(summary) == 5
+        assert len(ledger) == 5
+        assert round(summary[Price].sum()) == 90
+        assert round(summary['Transaction Costs'].sum()) == 50000 * 0.0001 * 5 * -1
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_risk_scaled_transaction_cost(mocker):
+    with MockCalc(mocker):
+        start_date = dt.date(2023, 6, 5)
+        end_date = dt.date(2023, 6, 9)
+
+        # risk based transaction cost.  Charge a 2 times the delta.
+        transaction_cost = ScaledTransactionModel(IRDelta(aggregation_level='Type'), 2)
+
+        swap = IRSwap(notional_currency=Currency.GBP, notional_amount='50k', termination_date='1y', name='GBP1y')
+        trade_action = AddTradeAction(priceables=swap, trade_duration='1m', name='Action1',
+                                      transaction_cost=transaction_cost)
+        trade_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date,
+                                                                                         end_date=end_date,
+                                                                                         frequency='1b'),
+                                        actions=trade_action)
+
+        strategy = Strategy(None, trade_trigger)
+
+        GE = GenericEngine()
+        backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+        summary = backtest.result_summary
+        ledger = backtest.trade_ledger()
+
+        assert len(summary) == 5
+        assert len(ledger) == 5
+        assert round(summary[Price].sum()) == -64
+        assert round(summary['Transaction Costs'].sum()) == 62
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_quantity_scaled_action_nav(mocker):
     with MockCalc(mocker):
         start_date = date(2021, 12, 6)
@@ -411,3 +471,55 @@ def test_generic_engine_custom_price_measure(mocker):
         assert len(summary) == 3
         assert round(summary[DollarPrice].sum()) == 804
         assert round(summary['Cumulative Cash'][-1]) == -291
+
+
+def test_serialisation(mocker):
+    call = FXOption(buy_sell='Buy', option_type='Call', pair='USDJPY', strike_price='ATMF',
+                    notional_amount=1e5, expiration_date='2y', name='2y_call')
+    hedge = FXForward(pair='USDJPY', settlement_date='2y', name='2y_hedge')
+    d1 = dt.date(2023, 4, 11)
+    d2 = dt.date(2023, 12, 25)
+    d3 = dt.date(2024, 2, 29)
+    dt1 = dt.datetime(2024, 4, 11, 9, 17, 34)
+    dt2 = dt.datetime(2024, 4, 12, 10, 7, 57)
+    sample_data_source = GsDataSource('DATASET_ABC', 'ASSET123', d1, d2)
+    generic_data_source = GenericDataSource(s, MissingDataStrategy.fill_forward)
+    # Actions to check
+    add_trade_action_1 = AddTradeAction(call, '1m', name='Action1')
+    add_trade_action_2 = AddTradeAction(call, d1, name='Action2')
+    add_trade_action_3 = AddTradeAction(call, d2, name='Action3')
+    hedge_action = HedgeAction(FXDelta(aggregation_level='type'), hedge, name='HedgeAction')
+    exit_trade_action = ExitTradeAction('2y_call', name='ExitAction1')
+    exit_all_trades_action = ExitAllPositionsAction(name='ExitEverything')
+    add_scaled_trade = EnterPositionQuantityScaledAction(priceables=call, trade_duration='1b',
+                                                         trade_quantity=100,
+                                                         trade_quantity_type=BacktestTradingQuantityType.NAV,
+                                                         name='QuantityScaledAction1')
+
+    # Triggers to check (randomly assign actions to triggers to cover all above actions)
+    date_trigger = DateTrigger(DateTriggerRequirements(dates=(date(2021, 12, 1),)), add_trade_action_1)
+    periodic_trigger = PeriodicTrigger(PeriodicTriggerRequirements(d1, d2, "3m", (d3,)), add_trade_action_2)
+    triggers = (
+        date_trigger,
+        periodic_trigger,
+        DateTrigger(DateTriggerRequirements(dates=(date(2021, 12, 1),)), [add_trade_action_3, hedge_action]),
+        PeriodicTrigger(PeriodicTriggerRequirements(d1, d2, "3m", (d3, ))),
+        IntradayPeriodicTrigger(IntradayTriggerRequirements(dt1.time(), dt2.time(), 5.0)),
+        MktTrigger(MktTriggerRequirements(generic_data_source, 1.1, TriggerDirection.BELOW), exit_trade_action),
+        StrategyRiskTrigger(RiskTriggerRequirements(DollarPrice, -1.4, TriggerDirection.BELOW), exit_all_trades_action),
+        AggregateTrigger(AggregateTriggerRequirements((date_trigger, periodic_trigger)), add_scaled_trade),
+        NotTrigger(NotTriggerRequirements(date_trigger)),
+        PortfolioTrigger(PortfolioTriggerRequirements('len', 2)),
+        MeanReversionTrigger(MeanReversionTriggerRequirements(sample_data_source, 1.5, 0, 5)),
+    )
+    strategy = Strategy(None, triggers)
+
+    # Test to_dict()
+    strategy_dict = strategy.to_dict()
+    reconstituted_strategy = Strategy.from_dict(strategy_dict)
+    assert reconstituted_strategy == strategy
+
+    # Test to_json()
+    strategy_json = json.dumps(strategy.to_dict(), cls=JSONEncoder)
+    reconstituted_strategy = Strategy.from_json(strategy_json)
+    assert reconstituted_strategy == strategy

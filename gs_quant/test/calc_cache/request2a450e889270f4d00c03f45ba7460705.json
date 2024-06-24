@@ -1,0 +1,9 @@
+{
+    "request_id": "1_Action1_GBP1y_2023-06-06IRDelta(aggregation_level:Type)2023Jul06",
+    "request_hash": "2a450e889270f4d00c03f45ba7460705",
+    "type": "MockCalc",
+    "tests": [
+        "test_risk_scaled_transaction_cost"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Basis Point\":-1.0,\"United States Dollar\":1.0},\"val\":-5.719841404853528}]]]]"
+}

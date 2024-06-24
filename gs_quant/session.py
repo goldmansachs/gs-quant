@@ -575,7 +575,7 @@ class GsSession(ContextBase):
                     raise MqUninitialisedError('This option requires gs_quant_auth to be installed')
             else:
                 return PassThroughSession(environment_or_domain, token, api_version=api_version,
-                                          application=application, http_adapter=http_adapter)
+                                          application=application, http_adapter=http_adapter, domain=domain)
         else:
             if domain == Domain.MDS_WEB:
                 try:
@@ -640,8 +640,8 @@ class OAuth2Session(GsSession):
 class PassThroughSession(GsSession):
 
     def __init__(self, environment: str, token, api_version=API_VERSION,
-                 application=DEFAULT_APPLICATION, http_adapter=None):
-        domain = self._config_for_environment(environment)['AppDomain']
+                 application=DEFAULT_APPLICATION, http_adapter=None, domain=None):
+        domain = domain if domain is not None else self._config_for_environment(environment)['AppDomain']
         verify = True
 
         super().__init__(domain, environment, api_version=api_version, application=application, verify=verify,

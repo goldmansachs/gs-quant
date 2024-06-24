@@ -19,6 +19,7 @@ import json
 
 import pytz
 
+from gs_quant.json_convertors import decode_iso_date_or_datetime
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.workflow import BinaryImageComments, ImgType, Encoding, HyperLinkImageComments, \
     VisualStructuringReport, ChartingParameters, OverlayType
@@ -40,6 +41,29 @@ def test_datetime_serialisation():
     for d, e in zip(dates, expected):
         encoded = json.dumps(d, cls=JSONEncoder)
         assert encoded == e
+
+
+def test_date_or_datetime():
+    d1 = dt.date(2023, 4, 11)
+    d2 = dt.date(2024, 12, 25)
+    dt1 = dt.datetime(2023, 4, 11, 6, 19, 18, 59876)
+    dt2 = dt.datetime(2024, 12, 25, 10, 39, 19, 59876)
+    # Single date
+    assert d1 == decode_iso_date_or_datetime(d1.isoformat())
+    # list of dates
+    assert (d1, d2) == decode_iso_date_or_datetime([d1.isoformat(), d2.isoformat()])
+    # Single datetime
+    assert dt1 == decode_iso_date_or_datetime(dt1.isoformat())
+    # list of datetimes
+    assert (dt1, dt2) == decode_iso_date_or_datetime([dt1.isoformat(), dt2.isoformat()])
+    # Mixed
+    assert (dt1, d2) == decode_iso_date_or_datetime([dt1.isoformat(), d2.isoformat()])
+
+
+def test_time():
+    t = dt.time(10, 14, 59, 59876)
+    json_time = json.dumps(t, cls=JSONEncoder)
+    assert json_time == '"10:14:59.059"'
 
 
 def test_custom_comments():

@@ -34,7 +34,7 @@ from inflection import camelize, underscore
 from gs_quant.context_base import ContextBase, ContextMeta
 from gs_quant.json_convertors import encode_date_or_str, decode_date_or_str, decode_optional_date, encode_datetime, \
     decode_datetime, decode_float_or_str, decode_instrument, encode_dictable, decode_quote_report, decode_quote_reports, \
-    decode_custom_comment, decode_custom_comments
+    decode_custom_comment, decode_custom_comments, decode_optional_time, encode_optional_time
 
 _logger = logging.getLogger(__name__)
 
@@ -100,6 +100,10 @@ def handle_camel_case_args(cls):
     cls.__init__ = update_wrapper(wrapper=wrapper, wrapped=init)
 
     return cls
+
+
+def static_field(val):
+    return field(init=False, default=val)
 
 
 field_metadata = config(exclude=exclude_none)
@@ -674,6 +678,10 @@ global_config.encoders[Union[dt.date, str]] = encode_date_or_str
 global_config.encoders[Optional[Union[dt.date, str]]] = encode_date_or_str
 global_config.decoders[Union[dt.date, str]] = decode_date_or_str
 global_config.decoders[Optional[Union[dt.date, str]]] = decode_date_or_str
+global_config.encoders[dt.time] = dt.time.isoformat
+global_config.decoders[dt.time] = dt.time.fromisoformat
+global_config.encoders[Optional[dt.time]] = encode_optional_time
+global_config.decoders[Optional[dt.time]] = decode_optional_time
 global_config.encoders[dt.datetime] = encode_datetime
 global_config.encoders[Optional[dt.datetime]] = encode_datetime
 global_config.decoders[dt.datetime] = decode_datetime

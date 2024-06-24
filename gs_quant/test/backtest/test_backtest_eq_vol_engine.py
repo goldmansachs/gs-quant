@@ -19,9 +19,8 @@ from unittest import mock
 import datetime as dt
 from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.backtests.strategy import Strategy
-from gs_quant.backtests.triggers import PeriodicTrigger, PeriodicTriggerRequirements, DateTrigger, \
-    DateTriggerRequirements, AggregateTrigger, AggregateTriggerRequirements, PortfolioTrigger, \
-    PortfolioTriggerRequirements, TriggerDirection
+from gs_quant.backtests.triggers import PeriodicTrigger, PeriodicTriggerRequirements, DateTriggerRequirements, \
+    AggregateTrigger, AggregateTriggerRequirements, PortfolioTriggerRequirements, TriggerDirection
 from gs_quant.backtests.actions import EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction
 from gs_quant.backtests.equity_vol_engine import *
 from gs_quant.common import Currency, AssetClass
@@ -272,17 +271,15 @@ def test_engine_mapping_with_signals(mocker):
     entry_dates = entry_signal_series[entry_signal_series > 0].keys()
 
     entry_trigger = AggregateTrigger(AggregateTriggerRequirements(triggers=[
-        DateTrigger(trigger_requirements=DateTriggerRequirements(dates=entry_dates), actions=entry_action),
-        PortfolioTrigger(trigger_requirements=PortfolioTriggerRequirements('len', 0, TriggerDirection.EQUAL))
-    ]))
+        DateTriggerRequirements(dates=entry_dates), PortfolioTriggerRequirements('len', 0, TriggerDirection.EQUAL)]),
+        actions=entry_action)
 
     exit_signal_series = pd.Series(data={dt.date(2019, 2, 20): 1})
     exit_dates = exit_signal_series[exit_signal_series > 0].keys()
 
     exit_trigger = AggregateTrigger(AggregateTriggerRequirements(triggers=[
-        DateTrigger(trigger_requirements=DateTriggerRequirements(dates=exit_dates), actions=ExitPositionAction()),
-        PortfolioTrigger(trigger_requirements=PortfolioTriggerRequirements('len', 0, TriggerDirection.ABOVE))
-    ]))
+        DateTriggerRequirements(dates=exit_dates), PortfolioTriggerRequirements('len', 0, TriggerDirection.ABOVE)]),
+        actions=ExitPositionAction())
 
     strategy = Strategy(initial_portfolio=None, triggers=[entry_trigger, exit_trigger])
 

@@ -15,15 +15,16 @@ under the License.
 """
 
 from collections import namedtuple
-import copy
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
-from typing import TypeVar, Callable
+from dataclasses_json import dataclass_json, config
+from typing import TypeVar, Callable, ClassVar
 
 from gs_quant.backtests.backtest_utils import *
 from gs_quant.backtests.backtest_objects import ConstantTransactionModel, TransactionModel
-from gs_quant.base import Priceable
+from gs_quant.base import Priceable, static_field
 from gs_quant.common import RiskMeasure
+from gs_quant.json_convertors import decode_named_instrument, dc_decode, encode_named_instrument, decode_date_or_str
+from gs_quant.json_convertors_common import decode_risk_measure, encode_risk_measure
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.markets.securities import *
 from gs_quant.risk.transform import Transformer
@@ -32,8 +33,8 @@ from gs_quant.target.backtests import BacktestTradingQuantityType
 action_count = 1
 
 
-def default_transaction_cost(obj):
-    return field(default_factory=lambda: copy.copy(obj))
+def default_transaction_cost():
+    return ConstantTransactionModel(0)
 
 
 @dataclass_json
@@ -44,6 +45,15 @@ class Action(object):
     _risk = None
     _transaction_cost = ConstantTransactionModel(0)
     name = None
+    __sub_classes: ClassVar[List[type]] = []
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        Action.__sub_classes.append(cls)
+
+    @staticmethod
+    def sub_classes():
+        return tuple(Action.__sub_classes)
 
     def __post_init__(self):
         self.set_name(self.name)
@@ -77,6 +87,7 @@ TAction = TypeVar('TAction', bound='Action')
 @dataclass_json
 @dataclass
 class AddTradeAction(Action):
+
     """
     create an action which adds a trade when triggered.  The trades are resolved on the trigger date (state) and
     last until the trade_duration if specified or for all future dates if not.
@@ -88,20 +99,31 @@ class AddTradeAction(Action):
     :param transaction_cost: optional a cash amount paid for each transaction, paid on both enter and exit
     """
 
-    priceables: Union[Priceable, Iterable[Priceable]] = None
-    trade_duration: Union[str, dt.date, dt.timedelta] = None
+    priceables: Union[Instrument, Iterable[Instrument]] = field(default=None,
+                                                                metadata=config(decoder=decode_named_instrument,
+                                                                                encoder=encode_named_instrument))
+    trade_duration: Union[str, dt.date, dt.timedelta] = field(default=None,  # de/encoder doesn't handle timedelta
+                                                              metadata=config(decoder=decode_date_or_str))
     name: str = None
-    transaction_cost: TransactionModel = default_transaction_cost(ConstantTransactionModel())
+    transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
+                                               metadata=config(decoder=dc_decode(ConstantTransactionModel)))
+    holiday_calendar: Iterable[dt.date] = None
+    class_type: str = static_field('add_trade_action')
 
     def __post_init__(self):
+        super().__post_init__()
         self._dated_priceables = {}
         named_priceables = []
         for i, p in enumerate(make_list(self.priceables)):
             if p.name is None:
                 named_priceables.append(p.clone(name=f'{self.name}_Priceable{i}'))
+            elif p.name.startswith(self.name):
+                named_priceables.append(p)
             else:
                 named_priceables.append(p.clone(name=f'{self.name}_{p.name}'))
         self.priceables = named_priceables
+        if self.transaction_cost is None:
+            self.transaction_cost = ConstantTransactionModel(0)
 
     def set_dated_priceables(self, state, priceables):
         self._dated_priceables[state] = make_list(priceables)
@@ -132,17 +154,24 @@ class EnterPositionQuantityScaledAction(Action):
         :param trade_quantity_type: the quantity type used to scale trade. eg. quantity for units, notional for
                                     underlier notional
     """
-    priceables: Union[Priceable, Iterable[Priceable]] = None
-    trade_duration: Union[str, dt.date, dt.timedelta] = None
+    priceables: Union[Priceable, Iterable[Priceable]] = field(default=None,
+                                                              metadata=config(decoder=decode_named_instrument,
+                                                                              encoder=encode_named_instrument))
+    trade_duration: Union[str, dt.date, dt.timedelta] = field(default=None,  # de/encoder doesn't handle timedelta
+                                                              metadata=config(decoder=decode_date_or_str))
     name: str = None
     trade_quantity: float = 1
-    trade_quantity_type: Union[BacktestTradingQuantityType, str] = BacktestTradingQuantityType.quantity
+    trade_quantity_type: BacktestTradingQuantityType = BacktestTradingQuantityType.quantity
+    class_type: str = static_field('enter_position_quantity_scaled_action')
 
     def __post_init__(self):
+        super().__post_init__()
         named_priceables = []
         for i, p in enumerate(make_list(self.priceables)):
             if p.name is None:
                 named_priceables.append(p.clone(name=f'{self.name}_Priceable{i}'))
+            elif p.name.startswith(self.name):
+                named_priceables.append(p)
             else:
                 named_priceables.append(p.clone(name=f'{self.name}_{p.name}'))
         self.priceables = named_priceables
@@ -152,6 +181,7 @@ class EnterPositionQuantityScaledAction(Action):
 @dataclass
 class ExitPositionAction(Action):
     name: str = None
+    class_type: str = 'exit_position_action'
 
 
 @dataclass_json
@@ -159,8 +189,10 @@ class ExitPositionAction(Action):
 class ExitTradeAction(Action):
     priceable_names: Union[str, Iterable[str]] = None
     name: str = None
+    class_type: str = static_field('exit_trade_action')
 
     def __post_init__(self):
+        super().__post_init__()
         self.priceables_names = make_list(self.priceable_names)
 
 
@@ -170,22 +202,30 @@ class ExitAllPositionsAction(ExitTradeAction):
     """
     Fully exit all held positions
     """
+    class_type: str = static_field('exit_all_positions_action')
 
     def __post_init__(self):
+        super().__post_init__()
         self._calc_type = CalcType.path_dependent
 
 
 @dataclass_json
 @dataclass
 class HedgeAction(Action):
-    risk: RiskMeasure = None
-    priceables: Optional[Priceable] = None
-    trade_duration: Union[str, dt.date, dt.timedelta] = None
+    risk: RiskMeasure = field(default=None, metadata=config(decoder=decode_risk_measure,
+                                                            encoder=encode_risk_measure))
+    priceables: Optional[Priceable] = field(default=None, metadata=config(decoder=decode_named_instrument,
+                                                                          encoder=encode_named_instrument))
+    trade_duration: Union[str, dt.date, dt.timedelta] = field(default=None,  # de/encoder doesn't handle timedelta
+                                                              metadata=config(decoder=decode_date_or_str))
     name: str = None
     csa_term: str = None
     scaling_parameter: str = 'notional_amount'
-    transaction_cost: TransactionModel = default_transaction_cost(ConstantTransactionModel())
+    transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
+                                               metadata=config(decoder=dc_decode(ConstantTransactionModel)))
     risk_transformation: Transformer = None
+    holiday_calendar: Iterable[dt.date] = None
+    class_type: str = static_field('hedge_action')
 
     def __post_init__(self):
         self._calc_type = CalcType.semi_path_dependent
@@ -194,12 +234,16 @@ class HedgeAction(Action):
             for i, priceable in enumerate(self.priceables):
                 if priceable.name is None:
                     named_priceables.append(priceable.clone(name=f'{self.name}_Priceable{i}'))
+                elif priceable.name.startswith(self.name):
+                    named_priceables.append(priceable)
                 else:
                     named_priceables.append(priceable.clone(name=f'{self.name}_{priceable.name}'))
             named_priceable = Portfolio(named_priceables)
         elif isinstance(self.priceables, Priceable):
             if self.priceables.name is None:
                 named_priceable = self.priceables.clone(name=f'{self.name}_Priceable0')
+            elif self.priceable.name.startswith(self.name):
+                named_priceable = self.priceable
             else:
                 named_priceable = self.priceables.clone(name=f'{self.name}_{self.priceables.name}')
         else:
@@ -214,13 +258,16 @@ class HedgeAction(Action):
 @dataclass_json
 @dataclass
 class RebalanceAction(Action):
-    priceable: Priceable = None
+    priceable: Priceable = field(default=None, metadata=config(decoder=decode_named_instrument,
+                                                               encoder=encode_named_instrument))
     size_parameter: Union[str, float] = None
     method: Callable = None
-    transaction_cost: TransactionModel = default_transaction_cost(ConstantTransactionModel())
+    transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
+                                               metadata=config(decoder=dc_decode(ConstantTransactionModel)))
     name: str = None
 
     def __post_init__(self):
+        super().__post_init__()
         self._calc_type = CalcType.path_dependent
         if self.priceable.unresolved is None:
             raise ValueError("Please specify a resolved priceable to rebalance.")

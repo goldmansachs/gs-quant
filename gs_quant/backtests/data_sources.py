@@ -14,18 +14,20 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json
+from dataclasses import dataclass, field
+from dataclasses_json import dataclass_json, config
 import datetime as dt
 from enum import Enum
 import numpy as np
 import pandas as pd
 import pytz
-from typing import Union, Iterable
+from typing import Union, Iterable, ClassVar, List
 
 from gs_quant.backtests.core import ValuationFixingType
+from gs_quant.base import field_metadata, static_field
 from gs_quant.data import DataFrequency, Dataset
 from gs_quant.instrument import Instrument
+from gs_quant.json_convertors import decode_pandas_series, encode_pandas_series
 
 
 class MissingDataStrategy(Enum):
@@ -37,6 +39,16 @@ class MissingDataStrategy(Enum):
 @dataclass_json
 @dataclass
 class DataSource:
+    __sub_classes: ClassVar[List[type]] = []
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        DataSource.__sub_classes.append(cls)
+
+    @staticmethod
+    def sub_classes():
+        return tuple(DataSource.__sub_classes)
+
     def get_data(self, state):
         raise RuntimeError("Implemented by subclass")
 
@@ -53,6 +65,7 @@ class GsDataSource(DataSource):
     min_date: dt.date = None
     max_date: dt.date = None
     value_header: str = 'rate'
+    class_type: str = static_field('gs_data_source')
 
     def __post_init__(self):
         self.loaded_data = None
@@ -88,8 +101,16 @@ class GenericDataSource(DataSource):
                                   effect if using get_data, get_data_range has no expectations of the number of
                                   expected data points.
     """
-    data_set: pd.Series
-    missing_data_strategy: MissingDataStrategy = MissingDataStrategy.fail
+    data_set: pd.Series = field(default=None, metadata=config(decoder=decode_pandas_series,
+                                                              encoder=encode_pandas_series))
+
+    missing_data_strategy: MissingDataStrategy = field(default=MissingDataStrategy.fail, metadata=field_metadata)
+    class_type: str = static_field('generic_data_source')
+
+    def __eq__(self, other):
+        if not isinstance(other, GenericDataSource):
+            return False
+        return self.missing_data_strategy == other.missing_data_strategy and self.data_set.equals(other.data_set)
 
     def __post_init__(self):
         self._tz_aware = isinstance(self.data_set.index[0], dt.datetime) and self.data_set.index[0].tzinfo is not None

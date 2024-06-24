@@ -89,18 +89,20 @@ class AddTradeActionImpl(ActionHandler):
         for create_date, portfolio in orders.items():
             for inst in portfolio.all_instruments:
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
-                backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                                 trigger_info)
-                final_date = get_final_date(inst, create_date, self.action.trade_duration)
+                backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(create_date, backtest,
+                                                                                                 trigger_info, inst)
+                final_date = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
-                backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                                trigger_info)
+                backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
+                                                                                                backtest,
+                                                                                                trigger_info, inst)
 
         for s in backtest.states:
             pos = []
             for create_date, portfolio in orders.items():
                 pos += [inst for inst in portfolio.instruments
-                        if get_final_date(inst, create_date, self.action.trade_duration) > s >= create_date]
+                        if get_final_date(inst, create_date, self.action.trade_duration,
+                                          self.action.holiday_calendar) > s >= create_date]
             if len(pos):
                 backtest.portfolio_dict[s].append(pos)
 
@@ -269,7 +271,8 @@ class HedgeActionImpl(ActionHandler):
             if isinstance(hedge_trade, Portfolio):
                 for instrument in hedge_trade.all_instruments:
                     instrument.name = f'{hedge_trade.name}_{instrument.name}'
-            final_date = get_final_date(hedge_trade, create_date, self.action.trade_duration)
+            final_date = get_final_date(hedge_trade, create_date, self.action.trade_duration,
+                                        self.action.holiday_calendar)
             active_dates = [s for s in backtest.states if create_date <= s < final_date]
 
             if len(active_dates):
@@ -280,12 +283,14 @@ class HedgeActionImpl(ActionHandler):
                 entry_payment = CashPayment(trade=hedge_trade, effective_date=create_date, direction=-1,
                                             scaling_parameter=self.action.scaling_parameter)
                 backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                                 trigger_info)
+                                                                                                 trigger_info,
+                                                                                                 hedge_trade)
                 exit_payment = CashPayment(trade=hedge_trade, effective_date=final_date, scale_date=create_date,
                                            scaling_parameter=self.action.scaling_parameter) \
                     if final_date <= dt.date.today() else None
                 backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                                trigger_info)
+                                                                                                trigger_info,
+                                                                                                hedge_trade)
                 hedge = Hedge(scaling_portfolio=scaling_portfolio,
                               entry_payment=entry_payment,
                               exit_payment=exit_payment)
@@ -359,10 +364,11 @@ class ExitTradeActionImpl(ActionHandler):
                             cp.effective_date = s
                             backtest.cash_payments[s].append(cp)
                         backtest.transaction_costs[s] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                               trigger_info)
+                                                                                               trigger_info, cp.trade)
                         del backtest.cash_payments[cp_date][index]
                         backtest.transaction_costs[cp_date] += self.action.transaction_cost.get_cost(state, backtest,
-                                                                                                     trigger_info)
+                                                                                                     trigger_info,
+                                                                                                     cp.trade)
 
                     if not backtest.cash_payments[cp_date]:
                         del backtest.cash_payments[cp_date]
@@ -396,7 +402,7 @@ class RebalanceActionImpl(ActionHandler):
 
         backtest.cash_payments[state].append(CashPayment(pos, effective_date=state, direction=-1,
                                                          scaling_parameter=self.action.size_parameter))
-        backtest.transaction_costs[state] -= self.action.transaction_cost.get_cost(state, backtest, trigger_info)
+        backtest.transaction_costs[state] -= self.action.transaction_cost.get_cost(state, backtest, trigger_info, pos)
         unwind_payment = None
         cash_payment_dates = backtest.cash_payments.keys()
         for d in reversed(sorted(cash_payment_dates)):
@@ -405,7 +411,7 @@ class RebalanceActionImpl(ActionHandler):
                     unwind_payment = CashPayment(pos, effective_date=d, scaling_parameter=self.action.size_parameter)
                     backtest.cash_payments[d].append(unwind_payment)
                     backtest.transaction_costs[d] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                           trigger_info)
+                                                                                           trigger_info, pos)
                     break
             if unwind_payment:
                 break
@@ -564,12 +570,12 @@ class GenericEngine(BacktestBaseEngine):
         else:
             price_risk = self.price_measure
 
-        backtest = BackTest(strategy, strategy_pricing_dates, risks)
+        backtest = BackTest(strategy, strategy_pricing_dates, risks, holiday_calendar)
 
         logger.info('Resolving initial portfolio')
         with self._trace('Resolve initial portfolio'):
             self._resolve_initial_portfolio(strategy, backtest, strategy_start_date,
-                                            strategy_pricing_dates)
+                                            strategy_pricing_dates, holiday_calendar)
 
         logger.info('Building simple and semi-deterministic triggers and actions')
         self._build_simple_and_semi_triggers_and_actions(strategy, backtest, strategy_pricing_dates)
@@ -602,7 +608,8 @@ class GenericEngine(BacktestBaseEngine):
         logger.info(f'Finished Backtest:- {dt.datetime.now()}')
         return backtest
 
-    def _resolve_initial_portfolio(self, strategy, backtest, strategy_start_date, strategy_pricing_dates):
+    def _resolve_initial_portfolio(self, strategy, backtest, strategy_start_date, strategy_pricing_dates,
+                                   holiday_calendar):
         if len(strategy.initial_portfolio):
             for index in range(len(strategy.initial_portfolio)):
                 old_name = strategy.initial_portfolio[index].name
@@ -610,7 +617,8 @@ class GenericEngine(BacktestBaseEngine):
                 entry_payment = CashPayment(strategy.initial_portfolio[index],
                                             effective_date=strategy_start_date, direction=-1)
                 backtest.cash_payments[strategy_start_date].append(entry_payment)
-                final_date = get_final_date(strategy.initial_portfolio[index], strategy_start_date, None)
+                final_date = get_final_date(strategy.initial_portfolio[index], strategy_start_date, None,
+                                            holiday_calendar)
                 exit_payment = CashPayment(strategy.initial_portfolio[index],
                                            effective_date=final_date)
                 backtest.cash_payments[final_date].append(exit_payment)

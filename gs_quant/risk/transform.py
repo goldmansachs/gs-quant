@@ -15,7 +15,9 @@ under the License.
 """
 
 from abc import ABC, abstractmethod
-from typing import Generic, Callable, Sequence, Any, TypeVar, Iterable, Union
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
+from typing import Generic, Callable, Sequence, Any, TypeVar, Iterable, Union, Optional
 
 from gs_quant.risk.core import ResultType, DataFrameWithInfo, SeriesWithInfo, FloatWithInfo
 
@@ -37,10 +39,11 @@ class GenericResultWithInfoTransformer(Transformer[ResultType, ResultType]):
         return self.__fn(data, *args, **kwargs)
 
 
+@dataclass_json
+@dataclass
 class ResultWithInfoAggregator(Transformer[Iterable[ResultType], FloatWithInfo]):
-    def __init__(self, risk_col: str = 'value', filter_coord=None):
-        self.__risk_col = risk_col
-        self.__filter_coord = filter_coord
+    risk_col: str = 'value'
+    filter_coord: Optional[object] = None
 
     def apply(self, results: Iterable[Union[float, FloatWithInfo, SeriesWithInfo, DataFrameWithInfo]],
               *args, **kwargs) -> Iterable[Union[float, FloatWithInfo]]:
@@ -70,11 +73,3 @@ class ResultWithInfoAggregator(Transformer[Iterable[ResultType], FloatWithInfo])
                 flattened_results.append(FloatWithInfo(value=val, risk_key=risk_key, unit=unit, error=error))
 
         return flattened_results
-
-    @property
-    def risk_col(self):
-        return self.__risk_col
-
-    @property
-    def filter_coord(self):
-        return self.__filter_coord

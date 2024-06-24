@@ -52,7 +52,7 @@ class AggregationLevel(EnumBase, Enum):
     Point = 'Point'    
 
 
-class AssetClass(EnumBase, Enum):    
+class AssetClass(EnumBase, Enum):
     
     """Asset classification of security. Assets are classified into broad groups which
        exhibit similar characteristics and behave in a consistent way under
@@ -94,7 +94,7 @@ class AssetStatsType(EnumBase, Enum):
     YTD = 'YTD'    
 
 
-class AssetType(EnumBase, Enum):    
+class AssetType(EnumBase, Enum):
     
     """Asset type differentiates the product categorization or contract type"""
 

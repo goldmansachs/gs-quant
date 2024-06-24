@@ -104,15 +104,16 @@ class EquityVolEngine(object):
         # aggregate triggers composed of a dated and portfolio trigger define a signal
         aggregate_triggers = [x for x in strategy.triggers if isinstance(x, t.AggregateTrigger)]
         for at in aggregate_triggers:
-            if not len(at.triggers) == 2:
+            if not len(at.trigger_requirements.triggers) == 2:
                 check_results.append('Error: AggregateTrigger must be composed of 2 triggers')
-            if not len([x for x in at.triggers if isinstance(x, t.DateTrigger)]) == 1:
+            if not len([x for x in at.trigger_requirements.triggers if isinstance(x, t.DateTriggerRequirements)]) == 1:
                 check_results.append('Error: AggregateTrigger must be contain 1 DateTrigger')
-            portfolio_triggers = [x for x in at.triggers if isinstance(x, t.PortfolioTrigger)]
+            portfolio_triggers = [x for x in at.trigger_requirements.triggers
+                                  if isinstance(x, t.PortfolioTriggerRequirements)]
             if not len(portfolio_triggers) == 1:
                 check_results.append('Error: AggregateTrigger must be contain 1 PortfolioTrigger')
-            if not (portfolio_triggers[0].trigger_requirements.data_source == 'len' and
-                    portfolio_triggers[0].trigger_requirements.trigger_level == 0):
+            if not (portfolio_triggers[0].data_source == 'len' and
+                    portfolio_triggers[0].trigger_level == 0):
                 check_results.append(
                     'Error: PortfolioTrigger.trigger_requirements must have data_source = \'len\' '
                     'and trigger_level = 0')
@@ -134,9 +135,8 @@ class EquityVolEngine(object):
         if not len(set(map(lambda x: type(x), all_actions))) == len(all_actions):
             check_results.append('Error: There are multiple actions of the same type')
 
-        all_child_triggers = reduce(lambda acc, x: acc + x,
-                                    map(lambda x: x.triggers if isinstance(x, t.AggregateTrigger) else [x],
-                                        strategy.triggers), [])
+        all_child_triggers = reduce(lambda acc, x: acc + x, map(lambda x: x.trigger_requirements.triggers if isinstance(
+            x, t.AggregateTriggerRequirements) else [x], strategy.triggers), [])
 
         for trigger in all_child_triggers:
             if isinstance(trigger, t.PortfolioTrigger):
@@ -215,16 +215,15 @@ class EquityVolEngine(object):
         index_initial_value = 0
         for trigger in strategy.triggers:
             if isinstance(trigger, t.AggregateTrigger):
-                child_triggers = trigger.triggers
+                child_triggers = trigger.trigger_requirements.triggers
 
-                date_trigger = [x for x in child_triggers if isinstance(x, t.DateTrigger)][0]
+                date_trigger = [x for x in child_triggers if isinstance(x, t.DateTriggerRequirements)][0]
                 date_signal = list(map(lambda x: BacktestSignalSeriesItem(x, True),
-                                       date_trigger.trigger_requirements.dates))
+                                       date_trigger.dates))
 
-                portfolio_trigger = [x for x in child_triggers if isinstance(x, t.PortfolioTrigger)][0]
-                trigger_requirements = portfolio_trigger.trigger_requirements
-                if trigger_requirements.direction == t.TriggerDirection.EQUAL and \
-                        trigger_requirements.trigger_level == 0:
+                portfolio_trigger = [x for x in child_triggers if isinstance(x, t.PortfolioTriggerRequirements)][0]
+                if portfolio_trigger.direction == t.TriggerDirection.EQUAL and \
+                        portfolio_trigger.trigger_level == 0:
                     is_trade_in = True
                 else:
                     is_trade_in = False

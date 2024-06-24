@@ -62,9 +62,10 @@ def test_aggregate_triggger():
 
     assert not agg_trigger.has_triggered(dt.date(2021, 11, 9))
     assert agg_trigger.has_triggered(dt.date(2021, 11, 10))
-    assert len(agg_trigger.actions) == 2
+    assert len(agg_trigger.actions) == 0
 
-    agg_trigger = AggregateTrigger(AggregateTriggerRequirements([trigger_1, trigger_2], aggregate_type=AggType.ANY_OF))
+    agg_trigger = AggregateTrigger(AggregateTriggerRequirements([trigger_1, trigger_2], aggregate_type=AggType.ANY_OF),
+                                   [action_1, action_2])
 
     assert agg_trigger.has_triggered(dt.date(2021, 11, 8))
     assert isinstance(agg_trigger.actions[1].priceables[0], IRSwaption)

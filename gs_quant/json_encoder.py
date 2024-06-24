@@ -27,6 +27,8 @@ def encode_default(o):
         return encode_datetime(o)
     if isinstance(o, dt.date):
         return encode_date_or_str(o)
+    elif isinstance(o, dt.time):
+        return o.isoformat(timespec='milliseconds')
     elif isinstance(o, Enum):
         return o.value
     elif isinstance(o, (Base, Market)):

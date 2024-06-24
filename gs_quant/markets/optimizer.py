@@ -15,6 +15,7 @@ under the License.
 """
 import logging
 from enum import Enum
+from functools import wraps
 from typing import List, Dict
 
 from dateutil.relativedelta import relativedelta
@@ -893,6 +894,16 @@ class TurnoverConstraint:
         }
 
 
+def _ensure_completed(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        if self._OptimizerStrategy__result is None:
+            raise MqValueError('Please run the optimization before calling this method')
+        return func(*args, **kwargs)
+    return wrapper
+
+
 class OptimizerStrategy:
 
     def __init__(self,
@@ -1032,7 +1043,7 @@ class OptimizerStrategy:
             'parameters': {
                 'currency': 'USD',
                 'pricingDate': self.initial_position_set.date.strftime('%Y-%m-%d'),
-                'useUnadjustedClosePrice': True,
+                'useUnadjustedClosePrice': False,  # Optimizer uses adjusted prices for all calculations
                 'frequency': 'End Of Day',
                 'priceRegardlessOfAssetsMissingPrices': not fail_on_unpriced_positions,
                 'fallbackDate': '5d'
@@ -1094,22 +1105,30 @@ class OptimizerStrategy:
                             'Error calculating an optimization. Please contact the Marquee team for assistance.')
                     counter -= 1
 
-    def get_optimization(self):
-        if self.__result is None:
-            raise MqValueError('You must run your strategy before pulling the results.')
-        optimization = self.__result['hedge']
-        return PositionSet(date=self.initial_position_set.date,
-                           positions=[Position(identifier=asset.get('bbid', asset['name']),
-                                               asset_id=asset['assetId'],
-                                               quantity=asset['shares'],
-                                               weight=asset['weight']) for asset in optimization['constituents']])
+    def __construct_position_set_from_hedge_result(self, result_key: str, by_weight: bool = True):
+        result = self.__result[result_key]
+        return PositionSet(
+            date=self.initial_position_set.date,
+            reference_notional=result['grossExposure'] if by_weight else None,
+            positions=[Position(identifier=asset.get('bbid', asset['name']),
+                                asset_id=asset['assetId'],
+                                quantity=asset['shares'] if not by_weight else None,
+                                weight=asset['weight']) for asset in result['constituents']])
 
-    def get_optimized_position_set(self):
-        if self.__result is None:
-            raise MqValueError('You must run your strategy before pulling the results.')
-        optimization = self.__result['hedgedTarget']
-        return PositionSet(date=self.initial_position_set.date,
-                           positions=[Position(identifier=asset.get('bbid', asset['name']),
-                                               asset_id=asset['assetId'],
-                                               quantity=asset['shares'],
-                                               weight=asset['weight']) for asset in optimization['constituents']])
+    @_ensure_completed
+    def get_optimization(self, by_weight: bool = False):
+        """
+        Get the optimization results
+
+        :param by_weight: whether to return position set with weights instead of quantities
+        """
+        return self.__construct_position_set_from_hedge_result('hedge', by_weight)
+
+    @_ensure_completed
+    def get_optimized_position_set(self, by_weight: bool = False):
+        """
+        Get the optimized position set, which is a result of applying the optimization to the target
+
+        :param by_weight: whether to return position set with weights instead of quantities
+        """
+        return self.__construct_position_set_from_hedge_result('hedgedTarget', by_weight)
