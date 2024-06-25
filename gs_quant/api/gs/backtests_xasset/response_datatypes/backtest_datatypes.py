@@ -27,7 +27,7 @@ from gs_quant.instrument import Instrument
 from gs_quant.json_convertors import decode_optional_date
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
-from gs_quant.target.common import PricingLocation
+from gs_quant.common import PricingLocation, Currency
 
 
 class TransactionCostModel(Enum):
@@ -40,6 +40,7 @@ class Transaction:
     portfolio: Tuple[Instrument, ...]
     portfolio_price: Optional[float] = None
     cost: Optional[float] = None
+    currency: Optional[Currency] = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

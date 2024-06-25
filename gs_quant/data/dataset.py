@@ -107,6 +107,33 @@ class Dataset:
         from gs_quant.api.gs.data import GsDataApi
         return self.__provider or GsDataApi
 
+    def _build_data_query(
+            self, start: Union[dt.date, dt.datetime], end: Union[dt.date, dt.datetime], as_of: dt.datetime,
+            since: dt.datetime, fields: Iterable[Union[str, Fields]], empty_intervals: bool, **kwargs):
+        field_names = None if fields is None else list(map(lambda f: f if isinstance(f, str) else f.value, fields))
+        # check whether a function is called e.g. difference(tradePrice)
+        schema_varies = field_names is not None and any(map(lambda s: re.match("\\w+\\(", s), field_names))
+        if kwargs and "date" in kwargs:
+            d = kwargs["date"]
+            if type(d) is str:
+                try:
+                    kwargs["date"] = dt.datetime.strptime(d, "%Y-%m-%d").date()
+                except ValueError:
+                    pass  # Ignore error if date parameter is in some other format
+            if "dates" not in kwargs and start is None and end is None:
+                kwargs["dates"] = (kwargs["date"],)
+        return self.provider.build_query(start=start, end=end, as_of=as_of, since=since, fields=field_names,
+                                         empty_intervals=empty_intervals, **kwargs), schema_varies
+
+    def _build_data_frame(self, data, schema_varies, standard_fields) -> pd.DataFrame:
+        if type(data) is tuple:
+            df = self.provider.construct_dataframe_with_types(self.id, data[0], schema_varies,
+                                                              standard_fields=standard_fields)
+            return df.groupby(data[1], group_keys=True).apply(lambda x: x)
+        else:
+            return self.provider.construct_dataframe_with_types(self.id, data, schema_varies,
+                                                                standard_fields=standard_fields)
+
     def get_data(
             self,
             start: Optional[Union[dt.date, dt.datetime]] = None,
@@ -141,35 +168,82 @@ class Dataset:
         >>> weather_data = weather.get_data(dt.date(2016, 1, 15), dt.date(2016, 1, 16), city=('Boston', 'Austin'))
         """
 
-        field_names = None if fields is None else list(map(lambda f: f if isinstance(f, str) else f.value, fields))
-        # check whether a function is called e.g. difference(tradePrice)
-        schema_varies = field_names is not None and any(map(lambda s: re.match("\\w+\\(", s), field_names))
-        if kwargs and "date" in kwargs:
-            d = kwargs["date"]
-            if type(d) is str:
-                try:
-                    kwargs["date"] = dt.datetime.strptime(d, "%Y-%m-%d").date()
-                except ValueError:
-                    pass  # Ignore error if date parameter is in some other format
-            if "dates" not in kwargs and start is None and end is None:
-                kwargs["dates"] = (kwargs["date"],)
+        query, schema_varies = self._build_data_query(start, end, as_of, since, fields, empty_intervals, **kwargs)
+        data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
+        return self._build_data_frame(data, schema_varies, standard_fields)
+
+    async def get_data_async(
+            self,
+            start: Optional[Union[dt.date, dt.datetime]] = None,
+            end: Optional[Union[dt.date, dt.datetime]] = None,
+            as_of: Optional[dt.datetime] = None,
+            since: Optional[dt.datetime] = None,
+            fields: Optional[Iterable[Union[str, Fields]]] = None,
+            empty_intervals: Optional[bool] = None,
+            standard_fields: Optional[bool] = False,
+            **kwargs
+    ) -> pd.DataFrame:
+        """
+        Get data for the given range and parameters
+
+        :param start: Requested start date/datetime for data
+        :param end: Requested end date/datetime for data
+        :param as_of: Request data as_of
+        :param since: Request data since
+        :param fields: DataSet fields to include
+        :param empty_intervals: whether to request empty intervals
+        :param standard_fields: If set, will use fields api instead of catalog api to get fieldTypes
+        :param kwargs: Extra query arguments, e.g. ticker='EDZ19'
+        :return: A Dataframe of the requested data
+
+        **Examples**
+
+        >>> from gs_quant.data import Dataset
+        >>> import datetime as dt
+        >>>
+        >>> weather = Dataset('WEATHER')
+        >>> weather_data = await weather.get_data_async(dt.date(2016, 1, 15), dt.date(2016, 1, 16),
+        >>>                                             city=('Boston', 'Austin'))
+        """
+
+        query, schema_varies = self._build_data_query(start, end, as_of, since, fields, empty_intervals, **kwargs)
+        data = await self.provider.query_data_async(query, self.id)
+        return self._build_data_frame(data, schema_varies, standard_fields)
+
+    def _build_data_series_query(self, field: Union[str, Fields], start: Union[dt.date, dt.datetime],
+                                 end: Union[dt.date, dt.datetime], as_of: dt.datetime, since: dt.datetime,
+                                 dates: List[dt.date], **kwargs):
+        field_value = field if isinstance(field, str) else field.value
         query = self.provider.build_query(
             start=start,
             end=end,
             as_of=as_of,
             since=since,
-            fields=field_names,
-            empty_intervals=empty_intervals,
+            fields=(field_value,),
+            dates=dates,
             **kwargs
         )
-        data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
-        if type(data) is tuple:
-            df = self.provider.construct_dataframe_with_types(self.id, data[0], schema_varies,
-                                                              standard_fields=standard_fields)
-            return df.groupby(data[1], group_keys=True).apply(lambda x: x)
-        else:
-            return self.provider.construct_dataframe_with_types(self.id, data, schema_varies,
-                                                                standard_fields=standard_fields)
+        symbol_dimensions = self.provider.symbol_dimensions(self.id)
+        if len(symbol_dimensions) != 1:
+            raise MqValueError('get_data_series only valid for symbol_dimensions of length 1')
+        symbol_dimension = symbol_dimensions[0]
+        return field_value, query, symbol_dimension
+
+    def _build_data_series(self, data, field_value, symbol_dimension, standard_fields: bool) -> pd.Series:
+        df = self.provider.construct_dataframe_with_types(self.id, data, standard_fields=standard_fields)
+
+        from gs_quant.api.gs.data import GsDataApi
+
+        if isinstance(self.provider, GsDataApi):
+            gb = df.groupby(symbol_dimension)
+            if len(gb.groups) > 1:
+                raise MqValueError('Not a series for a single {}'.format(symbol_dimension))
+        if df.empty:
+            return pd.Series(dtype=float)
+        if '(' in field_value:
+            field_value = field_value.replace('(', '_')
+            field_value = field_value.replace(')', '')
+        return pd.Series(index=df.index, data=df.loc[:, field_value].values)
 
     def get_data_series(
             self,
@@ -190,6 +264,7 @@ class Dataset:
         :param end: Requested end date/datetime for data
         :param as_of: Request data as_of
         :param since: Request data since
+        :param dates: Requested dates for data
         :param standard_fields: If set, will use fields api instead of catalog api to get fieldTypes
         :param kwargs: Extra query arguments, e.g. ticker='EDZ19'
         :return: A Series of the requested data, indexed by date or time, depending on the DataSet
@@ -203,40 +278,48 @@ class Dataset:
         >>> dew_point = weather
         >>>>    .get_data_series('dewPoint', dt.date(2016, 1, 15), dt.date(2016, 1, 16), city=('Boston', 'Austin'))
         """
-
-        field_value = field if isinstance(field, str) else field.value
-
-        query = self.provider.build_query(
-            start=start,
-            end=end,
-            as_of=as_of,
-            since=since,
-            fields=(field_value,),
-            dates=dates,
-            **kwargs
-        )
-
-        symbol_dimensions = self.provider.symbol_dimensions(self.id)
-        if len(symbol_dimensions) != 1:
-            raise MqValueError('get_data_series only valid for symbol_dimensions of length 1')
-
-        symbol_dimension = symbol_dimensions[0]
+        field_value, query, symbol_dimension = self._build_data_series_query(field, start, end, as_of, since, dates,
+                                                                             **kwargs)
         data = self.provider.query_data(query, self.id)
-        df = self.provider.construct_dataframe_with_types(self.id, data, standard_fields=standard_fields)
+        return self._build_data_series(data, field_value, symbol_dimension, standard_fields)
 
-        from gs_quant.api.gs.data import GsDataApi
+    async def get_data_series_async(
+            self,
+            field: Union[str, Fields],
+            start: Optional[Union[dt.date, dt.datetime]] = None,
+            end: Optional[Union[dt.date, dt.datetime]] = None,
+            as_of: Optional[dt.datetime] = None,
+            since: Optional[dt.datetime] = None,
+            dates: Optional[List[dt.date]] = None,
+            standard_fields: Optional[bool] = False,
+            **kwargs
+    ) -> pd.Series:
+        """
+        Get a time series of data for a field of a dataset
 
-        if isinstance(self.provider, GsDataApi):
-            gb = df.groupby(symbol_dimension)
-            if len(gb.groups) > 1:
-                raise MqValueError('Not a series for a single {}'.format(symbol_dimension))
+        :param field: The DataSet field to use
+        :param start: Requested start date/datetime for data
+        :param end: Requested end date/datetime for data
+        :param as_of: Request data as_of
+        :param since: Request data since
+        :param dates: Requested dates for data
+        :param standard_fields: If set, will use fields api instead of catalog api to get fieldTypes
+        :param kwargs: Extra query arguments, e.g. ticker='EDZ19'
+        :return: A Series of the requested data, indexed by date or time, depending on the DataSet
 
-        if df.empty:
-            return pd.Series(dtype=float)
-        if '(' in field_value:
-            field_value = field_value.replace('(', '_')
-            field_value = field_value.replace(')', '')
-        return pd.Series(index=df.index, data=df.loc[:, field_value].values)
+        **Examples**
+
+        >>> from gs_quant.data import Dataset
+        >>> import datetime as dt
+        >>>
+        >>> weather = Dataset('WEATHER')
+        >>> dew_point = await weather.get_data_series_async('dewPoint', dt.date(2016, 1, 15), dt.date(2016, 1, 16),
+        >>>                                                 city=('Boston', 'Austin'))
+        """
+        field_value, query, symbol_dimension = self._build_data_series_query(field, start, end, as_of, since, dates,
+                                                                             **kwargs)
+        data = await self.provider.query_data_async(query, self.id)
+        return self._build_data_series(data, field_value, symbol_dimension, standard_fields)
 
     def get_data_last(
             self,

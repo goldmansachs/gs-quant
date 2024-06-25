@@ -13,11 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import asyncio
 import datetime as dt
 import json
 import logging
 import time
-from copy import copy
+from copy import copy, deepcopy
 from enum import Enum
 from itertools import chain
 from typing import Iterable, List, Optional, Tuple, Union, Dict
@@ -178,16 +179,31 @@ class GsDataApi(DataApi):
         cls._api_request_cache = cache
 
     @classmethod
-    def _post_with_cache_check(cls, url, **kwargs):
+    def _check_cache(cls, url, **kwargs):
         session = cls.get_session()
+        cache_key = None
+        cached_val = None
         if cls._api_request_cache:
             cache_key = (url, 'POST', kwargs)
             cached_val = cls._api_request_cache.get(session, cache_key)
-            if cached_val is not None:
-                return cached_val
-        result = session._post(url, **kwargs)
-        if cls._api_request_cache:
-            cls._api_request_cache.put(session, cache_key, result)
+        return cached_val, cache_key, session
+
+    @classmethod
+    def _post_with_cache_check(cls, url, **kwargs):
+        result, cache_key, session = cls._check_cache(url, **kwargs)
+        if result is None:
+            result = session._post(url, **kwargs)
+            if cls._api_request_cache:
+                cls._api_request_cache.put(session, cache_key, result)
+        return result
+
+    @classmethod
+    async def _post_with_cache_check_async(cls, url, **kwargs):
+        result, cache_key, session = cls._check_cache(url, **kwargs)
+        if result is None:
+            result = await session._post_async(url, **kwargs)
+            if cls._api_request_cache:
+                cls._api_request_cache.put(session, cache_key, result)
         return result
 
     @classmethod
@@ -205,15 +221,36 @@ class GsDataApi(DataApi):
         return cls.get_results(dataset_id, response, query)
 
     @classmethod
+    async def query_data_async(cls, query: Union[DataQuery, MDAPIDataQuery], dataset_id: str = None) \
+            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+        if isinstance(query, MDAPIDataQuery) and query.market_data_coordinates:
+            # Don't use MDAPIDataBatchResponse for now - it doesn't handle quoting style correctly
+            results: Union[MDAPIDataBatchResponse, dict] = await cls.execute_query_async('coordinates', query)
+            if isinstance(results, dict):
+                return results.get('responses', ())
+            else:
+                return results.responses if results.responses is not None else ()
+        response: Union[DataQueryResponse, dict] = await cls.execute_query_async(dataset_id, query)
+        results = await cls.get_results_async(dataset_id, response, query)
+        return results
+
+    @classmethod
     def execute_query(cls, dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
         kwargs = {'payload': query}
         if getattr(query, 'format', None) in (Format.MessagePack, 'MessagePack'):
             kwargs['request_headers'] = {'Accept': 'application/msgpack'}
         return cls._post_with_cache_check('/data/{}/query'.format(dataset_id), **kwargs)
 
+    @classmethod
+    async def execute_query_async(cls, dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
+        kwargs = {'payload': query}
+        if getattr(query, 'format', None) in (Format.MessagePack, 'MessagePack'):
+            kwargs['request_headers'] = {'Accept': 'application/msgpack'}
+        result = await cls._post_with_cache_check_async('/data/{}/query'.format(dataset_id), **kwargs)
+        return result
+
     @staticmethod
-    def get_results(dataset_id: str, response: Union[DataQueryResponse, dict], query: DataQuery) -> \
-            Union[list, Tuple[list, list]]:
+    def _get_results(response: Union[DataQueryResponse, dict]):
         if isinstance(response, dict):
             total_pages = response.get('totalPages')
             results = response.get('data', [])
@@ -228,7 +265,12 @@ class GsDataApi(DataApi):
         else:
             total_pages = response.total_pages if response.total_pages is not None else 0
             results = response.data if response.data is not None else ()
+        return results, total_pages
 
+    @staticmethod
+    def get_results(dataset_id: str, response: Union[DataQueryResponse, dict], query: DataQuery) -> \
+            Union[list, Tuple[list, list]]:
+        results, total_pages = GsDataApi._get_results(response)
         if total_pages:
             if query.page is None:
                 query.page = total_pages - 1
@@ -238,7 +280,21 @@ class GsDataApi(DataApi):
                 results = results + GsDataApi.get_results(dataset_id, GsDataApi.execute_query(dataset_id, query), query)
             else:
                 return results
+        return results
 
+    @staticmethod
+    async def get_results_async(dataset_id: str, response: Union[DataQueryResponse, dict], query: DataQuery) -> \
+            Union[list, Tuple[list, list]]:
+        results, total_pages = GsDataApi._get_results(response)
+        if total_pages and total_pages > 1:
+            futures = []
+            for page in range(1, total_pages):
+                query = deepcopy(query)
+                query.page = page
+                futures.append(GsDataApi.execute_query_async(dataset_id, query))
+            all_responses = await asyncio.gather(*futures, return_exceptions=True)
+            for response_crt in all_responses:
+                results += GsDataApi._get_results(response_crt)[0]
         return results
 
     @classmethod
@@ -298,7 +354,10 @@ class GsDataApi(DataApi):
         results = scroll_results = body['results']
         total_results = body['totalResults']
         while len(scroll_results) and len(results) < total_results:
-            params['scrollId'] = body['scrollId']
+            scroll_id = body.get('scrollId')
+            if scroll_id is None:
+                break
+            params['scrollId'] = scroll_id
             body = session._get(f'/data/{dataset_id}/coverage', payload=params)
             scroll_results = body['results']
             results += scroll_results
