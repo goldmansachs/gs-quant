@@ -14,14 +14,19 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 import pandas as pd
 
-from typing import Dict, Any
+from typing import Dict, Any, Tuple, Union
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import \
     encode_series_result, encode_dataframe_result
-from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_encoders import decode_risk_result
-from gs_quant.common import RiskMeasure
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_encoders import decode_risk_result, \
+    decode_risk_result_with_data
+from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction
+from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
+from gs_quant.backtests import FlowVolBacktestMeasure
+from gs_quant.common import Currency, CurrencyName, RiskMeasure
 from gs_quant.instrument import Instrument
 from gs_quant.json_convertors_common import encode_risk_measure, decode_risk_measure
 from gs_quant.priceable import PriceableImpl
@@ -37,8 +42,12 @@ def encode_response_obj(data: Any) -> Dict:
     return data.to_dict()
 
 
+def _decode_inst_tuple(t: tuple) -> Tuple[Instrument, ...]:
+    return tuple(Instrument.from_dict(i) for i in t)
+
+
 def decode_leg_refs(d: dict) -> Dict[str, PriceableImpl]:
-    return {k: Instrument.from_dict(v) for k, v in d.items()}
+    return {k: _decode_inst_tuple(v) for k, v in d.items()}
 
 
 def decode_risk_measure_refs(d: dict) -> Dict[str, RiskMeasure]:
@@ -47,3 +56,26 @@ def decode_risk_measure_refs(d: dict) -> Dict[str, RiskMeasure]:
 
 def decode_result_tuple(results: tuple):
     return tuple(decode_risk_result(r) for r in results)
+
+
+def decode_basic_bt_measure_dict(results: dict) -> Dict[FlowVolBacktestMeasure, Dict[dt.date, RiskResultWithData]]:
+    return {FlowVolBacktestMeasure(k): {dt.date.fromisoformat(d): decode_risk_result_with_data(r) for d, r in v.items()}
+            for k, v in results.items()}
+
+
+def decode_basic_bt_portfolio(results: dict) -> Dict[dt.date, Tuple[Instrument, ...]]:
+    return {dt.date.fromisoformat(k): _decode_inst_tuple(v) for k, v in results.items()}
+
+
+def decode_basic_bt_transactions(results: dict) -> Dict[dt.date, Tuple[Transaction, ...]]:
+    def to_ccy(s: str) -> Union[Currency, CurrencyName, str]:
+        if s in [x.value for x in Currency]:
+            return Currency(s)
+        elif s in [x.value for x in CurrencyName]:
+            return CurrencyName(s)
+        else:
+            return s
+
+    return {dt.date.fromisoformat(k): tuple(
+            Transaction(_decode_inst_tuple(t['portfolio']), t['portfolio_price'], t['cost'], to_ccy(t['currency']))
+            for t in v) for k, v in results.items()}

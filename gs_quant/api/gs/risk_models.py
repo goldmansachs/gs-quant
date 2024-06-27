@@ -182,8 +182,11 @@ class GsFactorRiskModelApi(GsRiskModelApi):
             if final_upload is not None:
                 final_upload_flag = 'true' if final_upload else 'false'
                 url += f'&finalUpload={final_upload_flag}'
-        if aws_upload:
-            url += '&awsUpload=true'
+            if aws_upload:
+                url += '&awsUpload=true'
+        else:
+            if aws_upload:
+                url += '?awsUpload=true'
         return GsSession.current._post(url, model_data, timeout=200)
 
     @classmethod

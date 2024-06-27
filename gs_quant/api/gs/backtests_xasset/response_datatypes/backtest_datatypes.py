@@ -18,7 +18,7 @@ import datetime as dt
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Tuple, Dict
+from typing import Optional, Tuple, Dict, Union
 
 from dataclasses_json import dataclass_json, LetterCase, config
 
@@ -27,7 +27,7 @@ from gs_quant.instrument import Instrument
 from gs_quant.json_convertors import decode_optional_date
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
-from gs_quant.common import PricingLocation, Currency
+from gs_quant.common import Currency, CurrencyName, PricingLocation
 
 
 class TransactionCostModel(Enum):
@@ -40,7 +40,7 @@ class Transaction:
     portfolio: Tuple[Instrument, ...]
     portfolio_price: Optional[float] = None
     cost: Optional[float] = None
-    currency: Optional[Currency] = None
+    currency: Optional[Union[Currency, CurrencyName, str]] = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -73,7 +73,7 @@ class Trade:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class CostPerTransaction:
-    cost_model: str = TransactionCostModel.Fixed
+    cost_model: TransactionCostModel = TransactionCostModel.Fixed
     cost: float = 0.0
 
 

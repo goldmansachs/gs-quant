@@ -14,8 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.api.gs.backtests_xasset.request import RiskRequest
-from gs_quant.api.gs.backtests_xasset.response import RiskResponse
+from gs_quant.api.gs.backtests_xasset.request import RiskRequest, BasicBacktestRequest
+from gs_quant.api.gs.backtests_xasset.response import RiskResponse, BasicBacktestResponse
 from gs_quant.session import GsSession
 
 
@@ -24,4 +24,10 @@ class GsBacktestXassetApi:
     def calculate_risk(cls, risk_request: RiskRequest) -> RiskResponse:
         response = GsSession.current._post('/backtests/xasset/risk', risk_request.to_json())
         result = RiskResponse.from_dict(response)
+        return result
+
+    @classmethod
+    def calculate_basic_backtest(cls, backtest_request: BasicBacktestRequest) -> BasicBacktestResponse:
+        response = GsSession.current._post('/backtests/xasset/strategy/basic', backtest_request.to_json())
+        result = BasicBacktestResponse.from_dict(response)
         return result

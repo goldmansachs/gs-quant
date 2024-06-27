@@ -38,7 +38,11 @@ def map_result_to_datatype(data: Any) -> Type[RiskResultWithData]:
     raise ValueError('Cannot assign result type to data')
 
 
+def decode_risk_result_with_data(r: dict) -> RiskResultWithData:
+    return _type_to_datatype_map[r['type']].from_dict(r)
+
+
 def decode_risk_result(d: dict) -> RiskResultsByDate:
     refs = {RefType(k): v for k, v in d['refs'].items()}
-    result = {dt.date.fromisoformat(k): _type_to_datatype_map[v['type']].from_dict(v) for k, v in d['result'].items()}
+    result = {dt.date.fromisoformat(k): decode_risk_result_with_data(v) for k, v in d['result'].items()}
     return RiskResultsByDate(refs, result)
