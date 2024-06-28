@@ -31,7 +31,20 @@ BACKTEST_TYPE_VALUE = 'Volatility Flow'
 ISO_FORMAT = r"^([0-9]{4})-([0-9]{2})-([0-9]{2})$"
 
 
-class StrategySystematic:
+class StrategySystematicBase(metaclass=ABCMeta):
+    @abstractmethod
+    def backtest(
+            self,
+            start: datetime.date = None,
+            end: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
+            is_async: bool = False,
+            measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,),
+            correlation_id: str = None
+    ) -> Union[Backtest, BacktestResult]:
+        ...
+
+
+class StrategySystematic(StrategySystematicBase):
     """Equity back testing systematic strategy"""
 
     def __init__(self,

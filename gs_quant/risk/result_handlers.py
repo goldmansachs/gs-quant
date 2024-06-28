@@ -18,11 +18,10 @@ import logging
 from typing import Iterable, Optional, Union
 
 from gs_quant.base import InstrumentBase, RiskKey
+from gs_quant.common import RiskMeasure, AssetClass, RiskMeasureType
 from gs_quant.risk.measures import PnlExplain
-
 from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
     sort_values, MQVSValidatorDefnsWithInfo, MQVSValidatorDefn
-from gs_quant.common import RiskMeasure, AssetClass, RiskMeasureType
 
 _logger = logging.getLogger(__name__)
 
@@ -219,9 +218,13 @@ def fixing_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrumen
 
 def simple_valtable_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
                             request_id: Optional[str] = None) -> DataFrameWithInfo:
+    def get_value(value):
+        handler = result_handlers.get(value.get('$type'))
+        return handler(value, risk_key, _instrument, request_id)
+
     raw_res = result['rows']
     # simplevaltable's values contain all the information on units which needs to be extracted into the dataframe
-    df = DataFrameWithInfo([(res['label'], res['value']['val']) for res in raw_res], risk_key=risk_key,
+    df = DataFrameWithInfo([(res['label'], get_value(res['value'])) for res in raw_res], risk_key=risk_key,
                            request_id=request_id, unit=raw_res[0]['value'].get('unit'))
     df.columns = ['label', 'value']
     return df
