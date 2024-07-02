@@ -21,9 +21,10 @@ from typing import Dict, Optional, Tuple
 
 from dataclasses_json import dataclass_json, LetterCase, config
 
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import \
+    decode_daily_portfolio
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_encoders import decode_leg_refs, \
-    decode_risk_measure_refs, decode_result_tuple, decode_basic_bt_measure_dict, decode_basic_bt_portfolio, \
-    decode_basic_bt_transactions
+    decode_risk_measure_refs, decode_result_tuple, decode_basic_bt_measure_dict, decode_basic_bt_transactions
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction, AdditionalResults
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import RiskResultsByDate
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
@@ -47,7 +48,7 @@ class BasicBacktestResponse:
     measures: Dict[FlowVolBacktestMeasure, Dict[dt.date, RiskResultWithData]] = \
         field(default=None, metadata=config(decoder=decode_basic_bt_measure_dict))
     portfolio: Dict[dt.date, Tuple[Instrument, ...]] \
-        = field(default=None, metadata=config(decoder=decode_basic_bt_portfolio))
+        = field(default=None, metadata=config(decoder=decode_daily_portfolio))
     transactions: Dict[dt.date, Tuple[Transaction, ...]] \
         = field(default=None, metadata=config(decoder=decode_basic_bt_transactions))
     additional_results: Optional[AdditionalResults] = field(default=None)
