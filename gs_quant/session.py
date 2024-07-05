@@ -641,11 +641,11 @@ class PassThroughSession(GsSession):
 
     def __init__(self, environment: str, token, api_version=API_VERSION,
                  application=DEFAULT_APPLICATION, http_adapter=None, domain=None):
-        domain = domain if domain is not None else self._config_for_environment(environment)['AppDomain']
+        domain = domain if domain is not None else 'AppDomain'
         verify = True
 
-        super().__init__(domain, environment, api_version=api_version, application=application, verify=verify,
-                         http_adapter=http_adapter)
+        super().__init__(self._config_for_environment(environment)[domain], environment, api_version=api_version,
+                         application=application, verify=verify, http_adapter=http_adapter)
 
         self.token = token
 
