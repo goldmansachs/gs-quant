@@ -25,7 +25,6 @@ from gs_quant.backtests.equity_vol_engine import EquityVolEngine
 from gs_quant.base import Priceable
 from gs_quant.json_convertors import decode_named_instrument, encode_named_instrument, dc_decode
 
-
 backtest_engines = [GenericEngine(), PredefinedAssetEngine(), EquityVolEngine()]
 
 

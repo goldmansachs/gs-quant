@@ -24,7 +24,7 @@ from dataclasses_json import dataclass_json, LetterCase, config
 from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs_encoder, legs_decoder
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, \
     CostPerTransaction, Configuration
-from gs_quant.backtests.strategy import Strategy
+from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import Strategy
 from gs_quant.common import RiskMeasure
 from gs_quant.json_convertors import decode_optional_date, decode_date_tuple, encode_date_tuple
 from gs_quant.json_convertors_common import encode_risk_measure_tuple, decode_risk_measure_tuple

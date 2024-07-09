@@ -23,6 +23,7 @@ from gs_quant.api.api_session import ApiWithCustomSession
 from gs_quant.common import PositionType
 from gs_quant.common import RiskRequest, Currency
 from gs_quant.instrument import Instrument
+from gs_quant.session import GsSession
 from gs_quant.target.portfolios import Portfolio, Position, PositionSet
 from gs_quant.target.reports import Report
 from gs_quant.target.risk_models import RiskModelTerm as Term
@@ -54,11 +55,11 @@ class GsPortfolioApi(ApiWithCustomSession):
                     url += f'&{k}={i}'
             else:
                 url += f'&{k}={v}'
-        return cls.get_session()._get(f'{url}&limit={limit}', cls=Portfolio)['results']
+        return GsSession.current._get(f'{url}&limit={limit}', cls=Portfolio)['results']
 
     @classmethod
     def get_portfolio(cls, portfolio_id: str) -> Portfolio:
-        return cls.get_session()._get('/portfolios/{id}'.format(id=portfolio_id), cls=Portfolio)
+        return GsSession.current._get('/portfolios/{id}'.format(id=portfolio_id), cls=Portfolio)
 
     @classmethod
     def get_portfolio_by_name(cls, name: str) -> Portfolio:
@@ -74,15 +75,15 @@ class GsPortfolioApi(ApiWithCustomSession):
 
     @classmethod
     def create_portfolio(cls, portfolio: Portfolio) -> Portfolio:
-        return cls.get_session()._post('/portfolios', portfolio, cls=Portfolio)
+        return GsSession.current._post('/portfolios', portfolio, cls=Portfolio)
 
     @classmethod
     def update_portfolio(cls, portfolio: Portfolio):
-        return cls.get_session()._put('/portfolios/{id}'.format(id=portfolio.id), portfolio, cls=Portfolio)
+        return GsSession.current._put('/portfolios/{id}'.format(id=portfolio.id), portfolio, cls=Portfolio)
 
     @classmethod
     def delete_portfolio(cls, portfolio_id: str) -> dict:
-        return cls.get_session()._delete('/portfolios/{id}'.format(id=portfolio_id))
+        return GsSession.current._delete('/portfolios/{id}'.format(id=portfolio_id))
 
     # manage portfolio positions
 
@@ -95,7 +96,7 @@ class GsPortfolioApi(ApiWithCustomSession):
         if end_date is not None:
             url += '&endDate={sd}'.format(sd=end_date.isoformat())
 
-        res = cls.get_session()._get(url)
+        res = GsSession.current._get(url)
         return tuple(PositionSet.from_dict(v) for v in res.get('positionSets', ()))
 
     @classmethod
@@ -103,7 +104,7 @@ class GsPortfolioApi(ApiWithCustomSession):
                                position_type: str = 'close') -> PositionSet:
         url = '/portfolios/{id}/positions/{date}?type={ptype}'.format(
             id=portfolio_id, date=position_date.isoformat(), ptype=position_type)
-        position_sets = cls.get_session()._get(url, cls=PositionSet)['results']
+        position_sets = GsSession.current._get(url, cls=PositionSet)['results']
         return position_sets[0] if len(position_sets) > 0 else None
 
     @classmethod
@@ -150,7 +151,7 @@ class GsPortfolioApi(ApiWithCustomSession):
     @classmethod
     def get_latest_positions(cls, portfolio_id: str, position_type: str = 'close') -> Union[PositionSet, dict]:
         url = '/portfolios/{id}/positions/last?type={ptype}'.format(id=portfolio_id, ptype=position_type)
-        results = cls.get_session()._get(url)['results']
+        results = GsSession.current._get(url)['results']
 
         # Annoyingly, different types are returned depending on position_type
 
@@ -190,7 +191,7 @@ class GsPortfolioApi(ApiWithCustomSession):
                          position_sets: List[PositionSet],
                          net_positions: bool = True) -> float:
         url = f'/portfolios/{portfolio_id}/positions?netPositions={str(net_positions).lower()}'
-        return cls.get_session()._put(url, position_sets)
+        return GsSession.current._put(url, position_sets)
 
     @classmethod
     def get_positions_data(cls,
@@ -213,7 +214,7 @@ class GsPortfolioApi(ApiWithCustomSession):
         if include_all_business_days:
             url += '&includeAllBusinessDays=true'
 
-        return cls.get_session()._get(url)['results']
+        return GsSession.current._get(url)['results']
 
     @classmethod
     def update_quote(cls, quote_id: str, request: RiskRequest):
@@ -322,7 +323,7 @@ class GsPortfolioApi(ApiWithCustomSession):
             url += f"&startDate={start_date.strftime('%Y-%m-%d')}"
         if end_date:
             url += f"&endDate={end_date.strftime('%Y-%m-%d')}"
-        return cls.get_session()._get(url)['data']
+        return GsSession.current._get(url)['data']
 
     @classmethod
     @deprecation.deprecated(deprecated_in='1.0.10',
@@ -336,11 +337,11 @@ class GsPortfolioApi(ApiWithCustomSession):
         payload = {'data': aum_data}
         if clear_existing_data:
             url += '?clearExistingData=true'
-        return cls.get_session()._post(url, payload)
+        return GsSession.current._post(url, payload)
 
     @classmethod
     def update_portfolio_tree(cls, portfolio_id: str):
-        return cls.get_session()._post(f'/portfolios/{portfolio_id}/tree', {})
+        return GsSession.current._post(f'/portfolios/{portfolio_id}/tree', {})
 
     @classmethod
     def get_attribution(cls,
@@ -358,4 +359,4 @@ class GsPortfolioApi(ApiWithCustomSession):
             url += f"&currency={currency.value}"
         if performance_report_id:
             url += f'&reportId={performance_report_id}'
-        return cls.get_session()._get(url)['results']
+        return GsSession.current._get(url)['results']

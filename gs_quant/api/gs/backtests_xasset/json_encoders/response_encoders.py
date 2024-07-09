@@ -27,10 +27,10 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_resu
     decode_risk_result_with_data
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
-from gs_quant.backtests import FlowVolBacktestMeasure
 from gs_quant.common import Currency, CurrencyName, RiskMeasure
 from gs_quant.json_convertors_common import encode_risk_measure, decode_risk_measure
 from gs_quant.priceable import PriceableImpl
+from gs_quant.target.backtests import FlowVolBacktestMeasure
 
 
 def encode_response_obj(data: Any) -> Dict:
