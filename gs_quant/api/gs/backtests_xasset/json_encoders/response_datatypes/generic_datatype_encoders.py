@@ -20,8 +20,12 @@ from typing import Dict, Tuple
 from gs_quant.instrument import Instrument
 
 
+def decode_inst(i: dict) -> Instrument:
+    return Instrument.from_dict(i)
+
+
 def decode_inst_tuple(t: tuple) -> Tuple[Instrument, ...]:
-    return tuple(Instrument.from_dict(i) for i in t)
+    return tuple(decode_inst(i) for i in t)
 
 
 def decode_daily_portfolio(results: dict) -> Dict[dt.date, Tuple[Instrument, ...]]:

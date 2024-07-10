@@ -35,6 +35,11 @@ class TransactionCostModel(Enum):
     Fixed = 'Fixed'
 
 
+class TransactionDirection(Enum):
+    Entry = 'Entry'
+    Exit = 'Exit'
+
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class Transaction:
@@ -42,6 +47,7 @@ class Transaction:
     portfolio_price: Optional[float] = None
     cost: Optional[float] = None
     currency: Optional[Union[Currency, CurrencyName, str]] = None
+    direction: Optional[TransactionDirection] = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

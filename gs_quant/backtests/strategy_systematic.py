@@ -145,10 +145,10 @@ class StrategySystematic:
     def __run_service_based_backtest(self, start: datetime.date, end: datetime.date,
                                      measures: Iterable[FlowVolBacktestMeasure]) -> BacktestResult:
         date_cfg = DateConfig(start, end)
-        measures = tuple(m for m in measures if m != FlowVolBacktestMeasure.portfolio)
-        if not measures:
-            measures = (FlowVolBacktestMeasure.PNL,)
-        basic_bt_request = BasicBacktestRequest(date_cfg, self.__trades, measures, self.__delta_hedge_frequency,
+        calc_measures = tuple(m for m in measures if m != FlowVolBacktestMeasure.portfolio)
+        if not calc_measures:
+            calc_measures = (FlowVolBacktestMeasure.PNL,)
+        basic_bt_request = BasicBacktestRequest(date_cfg, self.__trades, calc_measures, self.__delta_hedge_frequency,
                                                 CostPerTransaction(TransactionCostModel.Fixed, 0), None)
         basic_bt_response = GsBacktestXassetApi.calculate_basic_backtest(basic_bt_request)
         risks = tuple(
@@ -156,7 +156,22 @@ class StrategySystematic:
                          timeseries=tuple(FieldValueMap(date=d, value=r.result) for d, r in v.items()))
             for k, v in basic_bt_response.measures.items()
         )
-        portfolio = None
+        portfolio = []
+        if FlowVolBacktestMeasure.portfolio in measures:
+            for d in sorted(set().union(basic_bt_response.portfolio.keys(), basic_bt_response.transactions.keys())):
+                if d in basic_bt_response.portfolio:
+                    positions = [{'instrument': i.to_dict() if i is not None else {}} for
+                                 i in basic_bt_response.portfolio[d]]
+                else:
+                    positions = []
+                transactions = []
+                if d in basic_bt_response.transactions:
+                    for t in basic_bt_response.transactions[d]:
+                        trades = [{'instrument': i.to_dict() if i is not None else {},
+                                   'price': t.portfolio_price}
+                                  for i in t.portfolio] if t.portfolio is not None else []
+                        transactions.append({'type': t.direction.value, 'trades': trades})
+                portfolio.append({'date': d, 'positions': positions, 'transactions': transactions})
         return BacktestResult(risks=risks, portfolio=portfolio)
 
     def backtest(
