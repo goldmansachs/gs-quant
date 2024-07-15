@@ -24,7 +24,7 @@ import sys
 from abc import abstractmethod
 from configparser import ConfigParser
 from enum import Enum, auto, unique
-from typing import Optional, Union, Iterable, Tuple
+from typing import Optional, Union, Iterable
 
 import backoff
 import certifi
@@ -34,7 +34,7 @@ import requests
 import requests.adapters
 import requests.cookies
 import urllib3
-from opentracing import Format
+from opentracing import Format, Scope
 from opentracing.tags import HTTP_URL, HTTP_METHOD, HTTP_STATUS_CODE
 
 from gs_quant import version as APP_VERSION
@@ -111,7 +111,8 @@ class GsSession(ContextBase):
 
     def __init__(self, domain: str, environment: str = None, api_version: str = API_VERSION,
                  application: str = DEFAULT_APPLICATION, verify=True,
-                 http_adapter: requests.adapters.HTTPAdapter = None, application_version=APP_VERSION, proxies=None):
+                 http_adapter: requests.adapters.HTTPAdapter = None, application_version=APP_VERSION,
+                 proxies=None, redirect_to_mds=False):
         super().__init__()
         self._session = None
         self._session_async = None
@@ -134,6 +135,7 @@ class GsSession(ContextBase):
             self.http_adapter = http_adapter
         self.application_version = application_version
         self.proxies = proxies
+        self.redirect_to_mds = redirect_to_mds
 
     @backoff.on_exception(lambda: backoff.expo(factor=2),
                           (requests.exceptions.HTTPError, requests.exceptions.Timeout),
@@ -252,8 +254,8 @@ class GsSession(ContextBase):
             timeout: Optional[int],
             use_body: bool,
             data_key: str,
-            tracing_scope: Optional[dict]
-    ) -> Tuple[dict, str]:
+            tracing_scope: Optional[Scope]
+    ) -> dict:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
             payload = payload or {}
@@ -285,6 +287,9 @@ class GsSession(ContextBase):
 
             if 'Content-Type' not in headers:
                 headers.update({'Content-Type': 'application/json; charset=utf-8'})
+
+            if tracing_scope:
+                tracing_scope.span.set_tag('request.content.type', headers.get('Content-Type'))
 
             use_msgpack = headers.get('Content-Type') == 'application/x-msgpack'
             if use_msgpack:
@@ -350,6 +355,7 @@ class GsSession(ContextBase):
             if scope:
                 scope.span.set_tag(HTTP_STATUS_CODE, response.status_code)
                 scope.span.set_tag('dash.request.id', request_id)
+                scope.span.set_tag('response.content.type', response.headers.get('Content-Type'))
         if response.status_code == 401:
             # Expired token or other authorization issue
             if not try_auth:
@@ -482,6 +488,19 @@ class GsSession(ContextBase):
 
     def _headers(self):
         return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]
+
+    def _get_mds_domain(self):
+        env_config = GsSession._config_for_environment(self.environment.name)
+        current_domain = self.domain.replace('marquee.web', 'marquee')  # remove .web from prod domain
+
+        is_mds_web = current_domain == Domain.MDS_WEB
+        is_env_mds_web = current_domain == env_config['MdsWebDomain']
+        is_env_marquee_web = current_domain == env_config['MarqueeWebDomain']
+
+        if is_mds_web or is_env_mds_web or is_env_marquee_web:
+            return env_config['MdsWebDomain']
+        else:
+            return env_config['MdsDomainEast']
 
     @classmethod
     def _config_for_environment(cls, environment):

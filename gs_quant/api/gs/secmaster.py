@@ -241,9 +241,8 @@ class GsSecurityMasterApi:
         }
         if effective_date is not None:
             if (start_date or end_date) is not None:
-                raise ValueError('provide (start date / end date) or as-of date, but not both')
-            params['startDate'] = effective_date
-            params['endDate'] = effective_date
+                raise ValueError('provide (start date / end date) or effective_date, but not both')
+            params['effectiveDate'] = effective_date
 
         if start_date is not None:
             params['startDate'] = start_date

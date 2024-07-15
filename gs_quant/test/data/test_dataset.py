@@ -344,6 +344,7 @@ def test_data_series_format(mocker):
         'data': test_data
     }
     mocker.patch.object(GsSession.current, '_post', side_effect=lambda *args, **kwargs: mock_response)
+    mocker.patch.object(GsSession.current, '_get', return_value={"id": "TREOD"})
     mocker.patch.object(GsDataApi, 'symbol_dimensions', return_value=('assetId',))
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
 

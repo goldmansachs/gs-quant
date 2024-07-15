@@ -51,6 +51,7 @@ class BackTest(BaseBacktest):
     strategy: object
     states: Iterable
     risks: Iterable[RiskMeasure]
+    price_measure: RiskMeasure
     holiday_calendar: Iterable[dt.date] = None
 
     def __post_init__(self):
@@ -148,7 +149,7 @@ class BackTest(BaseBacktest):
                           for name, cash_dict in cash_summary.items()], axis=1, sort=True)
         transaction_costs = pd.Series(self.transaction_costs, name='Transaction Costs')
         df = pd.concat([summary, cash, transaction_costs], axis=1, sort=True).ffill().fillna(0)
-        df['Total'] = df.sum(numeric_only=True, axis=1)
+        df['Total'] = df[self.price_measure] + df['Cumulative Cash'] + df['Transaction Costs']
         return df[:self.states[-1]]
 
     def trade_ledger(self):
@@ -282,7 +283,7 @@ class ConstantTransactionModel(TransactionModel):
         return self.cost
 
 
-@dataclass_json()
+@dataclass_json
 @dataclass
 class ScaledTransactionModel:
     scaling_type: Union[str, RiskMeasure] = 'notional_amount'

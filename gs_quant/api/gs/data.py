@@ -27,6 +27,7 @@ import cachetools
 import pandas as pd
 from cachetools import TTLCache
 from dateutil import parser
+from pydash import get
 
 from gs_quant.api.data import DataApi
 from gs_quant.base import Base
@@ -189,19 +190,37 @@ class GsDataApi(DataApi):
         return cached_val, cache_key, session
 
     @classmethod
-    def _post_with_cache_check(cls, url, **kwargs):
+    def _post_with_cache_check(cls, url, domain=None, **kwargs):
         result, cache_key, session = cls._check_cache(url, **kwargs)
         if result is None:
-            result = session._post(url, **kwargs)
+            result = session._post(url, domain=domain, **kwargs)
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
         return result
 
     @classmethod
-    async def _post_with_cache_check_async(cls, url, **kwargs):
+    def _get_with_cache_check(cls, url, domain=None, **kwargs):
         result, cache_key, session = cls._check_cache(url, **kwargs)
         if result is None:
-            result = await session._post_async(url, **kwargs)
+            result = session._get(url, domain=domain, **kwargs)
+            if cls._api_request_cache:
+                cls._api_request_cache.put(session, cache_key, result)
+        return result
+
+    @classmethod
+    async def _get_with_cache_check_async(cls, url, domain=None, **kwargs):
+        result, cache_key, session = cls._check_cache(url, **kwargs)
+        if result is None:
+            result = await session._get_async(url, domain=domain, **kwargs)
+            if cls._api_request_cache:
+                cls._api_request_cache.put(session, cache_key, result)
+        return result
+
+    @classmethod
+    async def _post_with_cache_check_async(cls, url, domain=None, **kwargs):
+        result, cache_key, session = cls._check_cache(url, **kwargs)
+        if result is None:
+            result = await session._post_async(url, domain=domain, **kwargs)
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
         return result
@@ -239,15 +258,41 @@ class GsDataApi(DataApi):
         kwargs = {'payload': query}
         if getattr(query, 'format', None) in (Format.MessagePack, 'MessagePack'):
             kwargs['request_headers'] = {'Accept': 'application/msgpack'}
-        return cls._post_with_cache_check('/data/{}/query'.format(dataset_id), **kwargs)
+
+        domain = cls._check_data_on_cloud(dataset_id)
+        return cls._post_with_cache_check('/data/{}/query'.format(dataset_id), domain=domain, **kwargs)
 
     @classmethod
     async def execute_query_async(cls, dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
         kwargs = {'payload': query}
         if getattr(query, 'format', None) in (Format.MessagePack, 'MessagePack'):
             kwargs['request_headers'] = {'Accept': 'application/msgpack'}
-        result = await cls._post_with_cache_check_async('/data/{}/query'.format(dataset_id), **kwargs)
+
+        domain = await cls._check_data_on_cloud_async(dataset_id)
+        result = await cls._post_with_cache_check_async('/data/{}/query'.format(dataset_id), domain=domain, **kwargs)
         return result
+
+    @classmethod
+    def _check_data_on_cloud(cls, dataset_id: str):
+        session = cls.get_session()
+        if session.redirect_to_mds and dataset_id != 'coordinates':
+            dataset_data = cls._get_with_cache_check('/data/datasets/{}'.format(dataset_id))
+            database_id_exists = get(dataset_data, 'parameters.databaseId')
+
+            if database_id_exists:
+                return cls.get_session()._get_mds_domain()
+        return None
+
+    @classmethod
+    async def _check_data_on_cloud_async(cls, dataset_id: str):
+        session = cls.get_session()
+        if session.redirect_to_mds and dataset_id != 'coordinates':
+            dataset_data = await cls._get_with_cache_check(f'/data/datasets/{dataset_id}')
+            database_id_exists = get(dataset_data, 'parameters.databaseId')
+
+            if database_id_exists:
+                return cls.get_session()._get_mds_domain()
+        return None
 
     @staticmethod
     def _get_results(response: Union[DataQueryResponse, dict]):
@@ -307,7 +352,13 @@ class GsDataApi(DataApi):
             result = cls._post_with_cache_check('/data/coordinates/query/last', payload=query, **kwargs)
             return result.get('responses', ())
         else:
-            result = cls._post_with_cache_check('/data/{}/last/query'.format(dataset_id), payload=query, **kwargs)
+            domain = cls._check_data_on_cloud(dataset_id)
+            result = cls._post_with_cache_check(
+                '/data/{}/last/query'.format(dataset_id),
+                payload=query,
+                domain=domain,
+                **kwargs
+            )
             return result.get('data', ())
 
     @classmethod

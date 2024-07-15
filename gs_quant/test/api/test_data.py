@@ -161,6 +161,7 @@ def test_coordinates_data(mocker):
     assert_frame_equal(str_coords_data_result[0], bond_expected_frame)
     assert_frame_equal(str_coords_data_result[1], swap_expected_frame)
     GsSession.current._post.assert_called_once_with('/data/coordinates/query',
+                                                    domain=None,
                                                     payload=MDAPIDataQuery(market_data_coordinates=test_coordinates,
                                                                            start_time=start,
                                                                            end_time=end,
@@ -204,6 +205,7 @@ def test_coordinate_data_series(mocker):
     assert_series_equal(str_coords_data_result[0], bond_expected_series)
     assert_series_equal(str_coords_data_result[1], swap_expected_series)
     GsSession.current._post.assert_called_with('/data/coordinates/query',
+                                               domain=None,
                                                payload=MDAPIDataQuery(market_data_coordinates=test_coordinates,
                                                                       start_time=start,
                                                                       end_time=end,
@@ -262,6 +264,7 @@ def test_coordinate_last(mocker):
     result_from_str = GsDataApi.coordinates_last(coordinates=test_str_coordinates, as_of=as_of, as_dataframe=True)
     assert result_from_str.equals(expected_result)
     GsSession.current._post.assert_called_once_with('/data/coordinates/query/last',
+                                                    domain=None,
                                                     payload=MDAPIDataQuery(market_data_coordinates=test_coordinates,
                                                                            end_time=as_of,
                                                                            vendor=MarketDataVendor.Goldman_Sachs,

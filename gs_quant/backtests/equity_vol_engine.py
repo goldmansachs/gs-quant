@@ -19,7 +19,7 @@ from gs_quant.backtests import actions as a
 from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import EqDelta
+from gs_quant.risk import EqDelta, EqSpot, EqGamma, EqVega
 from gs_quant.target.backtests import BacktestSignalSeriesItem, BacktestTradingQuantityType, EquityMarketModel
 import pandas as pd
 import re
@@ -28,6 +28,20 @@ from functools import reduce
 import warnings
 
 from gs_quant.target.common import OptionType, BuySell
+
+
+def get_backtest_trading_quantity_type(scaling_type, risk):
+    if scaling_type == a.ScalingActionType.size:
+        return a.BacktestTradingQuantityType.quantity
+    if scaling_type == a.ScalingActionType.NAV:
+        return a.BacktestTradingQuantityType.NAV
+    if risk == EqSpot:
+        return BacktestTradingQuantityType.notional
+    if risk == EqGamma:
+        return BacktestTradingQuantityType.gamma
+    if risk == EqVega:
+        return BacktestTradingQuantityType.vega
+    raise ValueError(f"unable to translate {scaling_type} and {risk}")
 
 
 def is_synthetic_forward(priceable):
@@ -126,10 +140,10 @@ class EquityVolEngine(object):
             warnings.warn('ExitPositionAction will be deprecated soon, use ExitTradeAction.', DeprecationWarning, 2)
 
         if not all(isinstance(x, (a.EnterPositionQuantityScaledAction, a.HedgeAction, a.ExitPositionAction,
-                                  a.ExitTradeAction)) for x in all_actions):
+                                  a.ExitTradeAction, a.AddTradeAction, a.AddScaledTradeAction)) for x in all_actions):
             check_results.append(
                 'Error: actions must be one of EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction, '
-                'ExitTradeAction')
+                'ExitTradeAction, AddTradeAction, AddScaledTradeAction')
 
         # no duplicate actions
         if not len(set(map(lambda x: type(x), all_actions))) == len(all_actions):
@@ -147,29 +161,33 @@ class EquityVolEngine(object):
                 check_results.append('Error: All triggers must contain only 1 action')
 
             for action in trigger.actions:
-                if isinstance(action, a.EnterPositionQuantityScaledAction):
+                if isinstance(action, (a.EnterPositionQuantityScaledAction, a.AddTradeAction, a.AddScaledTradeAction)):
                     if isinstance(trigger, t.PeriodicTrigger) and \
                             not trigger.trigger_requirements.frequency == action.trade_duration:
                         check_results.append(
-                            'Error: EnterPositionQuantityScaledAction: PeriodicTrigger frequency must be the same '
+                            f'Error: {type(action).__name__}: PeriodicTrigger frequency must be the same '
                             'as trade_duration')
-                    if not all((isinstance(p, EqOption) | isinstance(p, EqVarianceSwap))
+                    if not all((isinstance(p, (EqOption, EqVarianceSwap)))
                                for p in action.priceables):
                         check_results.append(
-                            'Error: EnterPositionQuantityScaledAction: Only EqOption or EqVarianceSwap supported')
-                    if action.trade_quantity is None or action.trade_quantity_type is None:
-                        check_results.append(
-                            'Error: EnterPositionQuantityScaledAction trade_quantity or trade_quantity_type is None')
+                            f'Error: {type(action).__name__}: Only EqOption or EqVarianceSwap supported')
+                    if isinstance(action, a.EnterPositionQuantityScaledAction):
+                        if action.trade_quantity is None or action.trade_quantity_type is None:
+                            check_results.append('Error: EnterPositionQuantityScaledAction trade_quantity or '
+                                                 'trade_quantity_type is None')
+                    if isinstance(action, a.AddScaledTradeAction):
+                        if action.scaling_level is None or action.scaling_type is None:
+                            check_results.append('Error: AddScaledTradeAction scaling_level or scaling_type is None')
                     expiry_date_modes = map(lambda x: ExpirationDateParser(x.expirationDate).get_mode(),
                                             action.priceables)
                     expiry_date_modes = list(set(expiry_date_modes))
                     if len(expiry_date_modes) > 1:
                         check_results.append(
-                            'Error: EnterPositionQuantityScaledAction all priceable expiration_date modifiers must '
+                            f'Error: {type(action).__name__} all priceable expiration_date modifiers must '
                             'be the same. Found [' + ', '.join(expiry_date_modes) + ']')
                     if expiry_date_modes[0] not in ['otc', 'listed']:
                         check_results.append(
-                            'Error: EnterPositionQuantityScaledAction invalid expiration_date '
+                            f'Error: {type(action).__name__} invalid expiration_date '
                             'modifier ' + expiry_date_modes[0])
                 elif isinstance(action, a.HedgeAction):
                     if not is_synthetic_forward(action.priceable):
@@ -200,7 +218,7 @@ class EquityVolEngine(object):
         return True
 
     @classmethod
-    def run_backtest(cls, strategy, start, end, market_model=EquityMarketModel.SFK):
+    def run_backtest(cls, strategy, start, end, market_model=EquityMarketModel.SFK, cash_accrual=True):
         check_result = cls.check_strategy(strategy)
         if len(check_result):
             raise RuntimeError(check_result)
@@ -242,6 +260,20 @@ class EquityVolEngine(object):
                 if trade_quantity_type is BacktestTradingQuantityType.NAV:
                     index_initial_value = trade_quantity
                 expiry_date_mode = ExpirationDateParser(action.priceables[0].expiration_date).get_mode()
+            elif isinstance(action, a.AddTradeAction):
+                underlier_list = cls.__get_underlier_list(action.priceables)
+                roll_frequency = action.trade_duration
+                trade_quantity = 1
+                trade_quantity_type = BacktestTradingQuantityType.quantity
+                expiry_date_mode = ExpirationDateParser(action.priceables[0].expiration_date).get_mode()
+            elif isinstance(action, a.AddScaledTradeAction):
+                underlier_list = cls.__get_underlier_list(action.priceables)
+                roll_frequency = action.trade_duration
+                trade_quantity = action.scaling_level
+                trade_quantity_type = get_backtest_trading_quantity_type(action.scaling_type, action.scaling_risk)
+                if trade_quantity_type is BacktestTradingQuantityType.NAV:
+                    index_initial_value = trade_quantity
+                expiry_date_mode = ExpirationDateParser(action.priceables[0].expiration_date).get_mode()
             elif isinstance(action, a.HedgeAction):
                 if trigger.trigger_requirements.frequency == '1b':
                     frequency = 'Daily'
@@ -260,7 +292,8 @@ class EquityVolEngine(object):
                                       trade_in_signals=trade_in_signals,
                                       trade_out_signals=trade_out_signals,
                                       market_model=market_model,
-                                      expiry_date_mode=expiry_date_mode
+                                      expiry_date_mode=expiry_date_mode,
+                                      cash_accrual=cash_accrual
                                       )
 
         result = strategy.backtest(start, end)

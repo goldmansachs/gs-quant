@@ -37,6 +37,12 @@ def default_transaction_cost():
     return ConstantTransactionModel(0)
 
 
+class ScalingActionType(Enum):
+    risk_measure = 'risk_measure'
+    size = 'size'
+    NAV = 'NAV'
+
+
 @dataclass_json
 @dataclass
 class Action(object):
@@ -138,6 +144,46 @@ EnterPositionQuantityScaledActionInfo = namedtuple('EnterPositionQuantityScaledA
 HedgeActionInfo = namedtuple('HedgeActionInfo', 'not_applicable')
 ExitTradeActionInfo = namedtuple('ExitTradeActionInfo', 'not_applicable')
 RebalanceActionInfo = namedtuple('RebalanceActionInfo', 'not_applicable')
+
+
+@dataclass_json
+@dataclass
+class AddScaledTradeAction(Action):
+
+    """
+    create an action which adds a trade when triggered.  The trade is scaled by a measure or trade property.
+    The trades are resolved on the trigger date (state) and last until the trade_duration if specified or for
+    all future dates if not.
+    :param priceables: a priceable or a list of pricables.
+    :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor or timedelta
+                           if left as None the
+                           trade will be added for all future dates
+    :param scaling_parameters: a ScaledActionParameters object which defines the type and level of scaling
+    :param name: optional additional name to the priceable name
+    :param transaction_cost: optional a cash amount paid for each transaction, paid on both enter and exit
+    """
+    priceables: Union[Priceable, Iterable[Priceable]] = field(default=None,
+                                                              metadata=config(decoder=decode_named_instrument,
+                                                                              encoder=encode_named_instrument))
+    trade_duration: Union[str, dt.date, dt.timedelta] = field(default=None,  # de/encoder doesn't handle timedelta
+                                                              metadata=config(decoder=decode_date_or_str))
+    name: str = None
+    scaling_type: ScalingActionType = ScalingActionType.size
+    scaling_risk: RiskMeasure = None
+    scaling_level: Union[float, int] = 1
+    class_type: str = static_field('add_scaled_trade_action')
+
+    def __post_init__(self):
+        super().__post_init__()
+        named_priceables = []
+        for i, p in enumerate(make_list(self.priceables)):
+            if p.name is None:
+                named_priceables.append(p.clone(name=f'{self.name}_Priceable{i}'))
+            elif p.name.startswith(self.name):
+                named_priceables.append(p)
+            else:
+                named_priceables.append(p.clone(name=f'{self.name}_{p.name}'))
+        self.priceables = named_priceables
 
 
 @dataclass_json

@@ -24,9 +24,16 @@ from gs_quant.data import Dataset, DataContext
 
 
 class NotExpectedToBeCalledSession():
+    redirect_to_mds = True
+
     @classmethod
     def _get(cls, url, **kwargs):
-        raise Exception("Not expecting to be called at this point")
+        if url == '/data/datasets/FXSPOT_STANDARD':
+            return {
+                "id": "FXSPOT_STANDARD"
+            }
+        else:
+            raise Exception("Not expecting to be called at this point")
 
     @classmethod
     def _post(cls, url, **kwargs):
@@ -34,6 +41,7 @@ class NotExpectedToBeCalledSession():
 
 
 class FakeSession():
+    redirect_to_mds = True
 
     @classmethod
     def _get(cls, url, **kwargs):
@@ -46,6 +54,10 @@ class FakeSession():
                     'spot': {'type': 'number', },
                     'updateTime': {'type': 'string', 'format': 'date-time'}
                 }
+            }
+        elif url == '/data/datasets/FXSPOT_STANDARD':
+            return {
+                "id": "FXSPOT_STANDARD"
             }
         else:
             raise Exception("Need to mock _get request here")
@@ -114,9 +126,11 @@ class TestDataApiCache:
         assert not df.empty
         assert_frame_equal(df, df2)
         cache_events = self.cache.get_events()
-        assert len(cache_events) == 2
+        assert len(cache_events) == 4
         assert cache_events[0][0] == CacheEvent.PUT
-        assert cache_events[1][0] == CacheEvent.GET
+        assert cache_events[1][0] == CacheEvent.PUT
+        assert cache_events[2][0] == CacheEvent.GET
+        assert cache_events[3][0] == CacheEvent.GET
 
     def test_query_data(self):
         ds = Dataset("FXSPOT_STANDARD")
@@ -127,9 +141,11 @@ class TestDataApiCache:
 
         assert_frame_equal(df, df2)
         cache_events = self.cache.get_events()
-        assert len(cache_events) == 2
+        assert len(cache_events) == 4
         assert cache_events[0][0] == CacheEvent.PUT
-        assert cache_events[1][0] == CacheEvent.GET
+        assert cache_events[1][0] == CacheEvent.PUT
+        assert cache_events[2][0] == CacheEvent.GET
+        assert cache_events[3][0] == CacheEvent.GET
 
     def test_market_data(self):
         asset_id = "MATGYV0J9MPX534Z"
