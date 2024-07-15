@@ -139,7 +139,7 @@ class CloseMarket(Market):
         return _CloseMarket(date=self.date, location=self.location)
 
     def to_dict(self):
-        return {'date': self.date, 'location': self.location}
+        return {'date': self.date, 'location': self.location, 'marketType': 'CloseMarket'}
 
     def __hash__(self):
         return hash((self.date, self.location))
