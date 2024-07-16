@@ -86,6 +86,11 @@ class GsPortfolioApi(ApiWithCustomSession):
         return GsSession.current._delete('/portfolios/{id}'.format(id=portfolio_id))
 
     # manage portfolio positions
+    @classmethod
+    def get_portfolio_analyze(cls, portfolio_id: str) -> dict:
+        url = '/portfolios/{id}/analyze'.format(id=portfolio_id)
+        res = GsSession.current._get(url)
+        return res
 
     @classmethod
     def get_positions(cls, portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None,

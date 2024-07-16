@@ -716,6 +716,8 @@ class FXForward(Instrument):
             self.buy_sell = flip_dict[self.buy_sell]
             
         self.notional_amount *= abs(scaling)
+        self.notional_amount_in_other_currency *= abs(scaling)
+
         return
 
 
@@ -849,6 +851,8 @@ class FXOption(Instrument):
             self.buy_sell = flip_dict[self.buy_sell]
             
         self.notional_amount *= abs(scaling)
+        self.notional_amount_in_other_currency *= abs(scaling)
+
         return
 
 

@@ -410,3 +410,542 @@ def test_get_risk_models_by_coverage(mocker):
     GsSession.current._get.assert_called_with('/portfolios/portfolio_id/models?sortByTerm=Medium')
 
     assert response == expected_response
+
+
+def test_get_portfolio_analyze(mocker):
+    mock_response = {
+        "positionDate": "2024-05-27",
+        "bonds": {
+            "summary": {
+                "trade": {
+                    "numberOfBonds": 1,
+                    "faceValue": 1000000.0,
+                    "marketValue": 972564.12,
+                    "DV01": 223.5730399056,
+                    "bvalMidPrice": 97.256412,
+                    "bvalUpdateTime": "2024-07-15T20:00:00Z",
+                    "gSpread": 19.588,
+                    "zSpread": 36.634,
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "ratingSecondHighest": "AAA",
+                    "ratingStandardAndPoors": "AA+",
+                    "gsLiquidityScore": 1.75825,
+                    "illiquidPercentage": 0.0,
+                    "percentOfIssueOutstanding": 0.044444444444444446,
+                    "didNotQuotePercentage": 0.0,
+                    "chargeInDollars": 0.055893259976399996,
+                    "chargeInBps": 2.5,
+                    "chargeInEntityCurrency": 0.055893259976399996,
+                    "weight": 100.0,
+                    "girESG": {
+                        "gPercentile": 87.88,
+                        "gRegionalPercentile": 74.57,
+                        "esPercentile": 92.78,
+                        "esDisclosurePercentage": 80.95,
+                        "esMomentumPercentile": 0.0
+                    },
+                    "carbon": {
+                        "emissionsIntensityEnterpriseValue": 0.0,
+                        "emissionsIntensityRevenue": 0.0
+                    }
+                },
+                "buys": {
+                    "numberOfBonds": 1,
+                    "faceValue": 1000000.0,
+                    "marketValue": 972564.12,
+                    "DV01": 223.5730399056,
+                    "bvalMidPrice": 97.256412,
+                    "bvalUpdateTime": "2024-07-15T20:00:00Z",
+                    "gSpread": 19.588,
+                    "zSpread": 36.634,
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "ratingSecondHighest": "AAA",
+                    "ratingStandardAndPoors": "AA+",
+                    "gsLiquidityScore": 1.75825,
+                    "illiquidPercentage": 0.0,
+                    "percentOfIssueOutstanding": 0.044444444444444446,
+                    "didNotQuotePercentage": 0.0,
+                    "chargeInDollars": 0.055893259976399996,
+                    "chargeInBps": 2.5,
+                    "chargeInEntityCurrency": 0.055893259976399996,
+                    "weight": 100.0,
+                    "girESG": {
+                        "gPercentile": 87.88,
+                        "gRegionalPercentile": 74.57,
+                        "esPercentile": 92.78,
+                        "esDisclosurePercentage": 80.95,
+                        "esMomentumPercentile": 0.0
+                    },
+                    "carbon": {
+                        "emissionsIntensityEnterpriseValue": 0.0,
+                        "emissionsIntensityRevenue": 0.0
+                    }
+                },
+                "sells": {
+                    "numberOfBonds": 0,
+                    "faceValue": 0.0,
+                    "marketValue": 0.0,
+                    "weight": 0.0
+                }
+            },
+            "secondHighestRatingGroups": [
+                {
+                    "name": "AAA",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "standardAndPoorsRatingGroups": [
+                {
+                    "name": "AA+",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0,
+                    "buyDirectionWeight": 1.0,
+                    "sellDirectionWeight": "NaN"
+                }
+            ],
+            "maturityGroups": [
+                {
+                    "name": "1-3y",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "sectorGroups": [
+                {
+                    "name": "Information Technology",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0,
+                    "buyDirectionWeight": 1.0,
+                    "sellDirectionWeight": "NaN"
+                }
+            ],
+            "modifiedDurationGroups": [
+                {
+                    "name": "1-3y",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "gsLiquidityScoreGroups": [
+                {
+                    "name": "L1",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "seniorityGroups": [
+                {
+                    "name": "Senior",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "tradesByTicker": [
+                {
+                    "id": "MA3VNAYYHWQ52SA5",
+                    "ticker": "AAPL",
+                    "numberOfTrades": 1,
+                    "weight": 100.0,
+                    "faceValue": 1000000.0,
+                    "marketValue": 972564.12,
+                    "gsLiquidityScore": 1.75825,
+                    "percentOfIssueOutstanding": 0.044444444444444446
+                }
+            ],
+            "constituents": [
+                {
+                    "assetId": "MA3VNAYYHWQ52SA5",
+                    "name": "AAPL 3.350 02/09/2027",
+                    "assetClass": "Credit",
+                    "type": "Bond",
+                    "isin": "US037833CJ77",
+                    "bbid": "AM3834018",
+                    "cusip": "037833CJ7",
+                    "ticker": "AAPL",
+                    "currency": "USD",
+                    "region": "Americas",
+                    "sector": "Information Technology",
+                    "seniority": "Senior",
+                    "ratingSecondHighest": "AAA",
+                    "ratingSecondHighestLinear": 1,
+                    "ratingStandardAndPoors": "AA+",
+                    "ratingStandardAndPoorsLinear": 2,
+                    "gsLiquidityScore": 1.75825,
+                    "gsLiquidityScoreGroup": "L1",
+                    "percentOfIssueOutstanding": 0.044444444444444446,
+                    "maturity": 2.0,
+                    "coupon": 3.35,
+                    "bvalMidPrice": 97.256412,
+                    "dirtyPrice": 97.270928666667,
+                    "gSpread": 19.588,
+                    "zSpread": 36.634,
+                    "bvalUpdateTime": "2024-07-15T20:00:00Z",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "benchmark": "GV91282CKZ3",
+                    "quoteConvention": "Spread",
+                    "chargeInQuoteConvention": "2.5 bps",
+                    "chargeInQuoteConventionTwo": "2.5 bps",
+                    "chargeInLocalCurrency": 0.055893259976399996,
+                    "chargeInEntityCurrency": 0.055893259976399996,
+                    "chargeInBps": 2.5,
+                    "fxSpot": 1.0,
+                    "direction": "Buy",
+                    "faceValue": 1000000.0,
+                    "currentFaceValue": 1000000.0,
+                    "accruedInterestStandard": 0.014516666667,
+                    "marketValue": 972564.12,
+                    "dirtyMarketValue": 972709.28666667,
+                    "DV01": 223.5730399056,
+                    "weightOfFaceValue": 100.0,
+                    "weightOfMarketValue": 100.0,
+                    "weightOfDV01": 100.0,
+                    "indicativePrice": 97.289,
+                    "indicativeQuantity": 5000000.0,
+                    "indicativeSpread": 25.0,
+                    "indicativeYield": 4.48,
+                    "girFactors": {
+                        "carry": 1.0,
+                        "value": 3.0,
+                        "risk": 1.0,
+                        "momentum": 1.0,
+                        "liquidity": 4.0,
+                        "highLeverage": 0.0,
+                        "lowLeverage": 0.0,
+                        "highInterestCoverage": 0.0,
+                        "lowInterestCoverage": 0.0,
+                        "cyclical": 1.0,
+                        "defensive": 0.0,
+                        "commoditiesRelated": 0.0,
+                        "tax": 4.0
+                    },
+                    "girESG": {
+                        "gPercentile": 87.88,
+                        "gRegionalPercentile": 74.57,
+                        "esPercentile": 92.78,
+                        "esDisclosurePercentage": 80.95,
+                        "esMomentumPercentile": 0.0
+                    },
+                    "carbon": {
+                        "scienceBasedTarget": "Yes",
+                        "netZeroEmissionsTarget": "Yes"
+                    },
+                    "pbData": {
+                        "indicativeShortFinancingLabel": "GC",
+                        "indicativeLongFinancingLabel": "IG Funding Rate"
+                    },
+                    "bbgData": {
+                        "countryOfRisk": "US",
+                        "paymentRank": "Sr Unsecured",
+                        "industrySector": "Technology",
+                        "industryGroup": "Computers",
+                        "industrySubGroup": "Computers"
+                    }
+                }
+            ]
+        }
+    }
+
+    expected_response = {
+        "positionDate": "2024-05-27",
+        "bonds": {
+            "summary": {
+                "trade": {
+                    "numberOfBonds": 1,
+                    "faceValue": 1000000.0,
+                    "marketValue": 972564.12,
+                    "DV01": 223.5730399056,
+                    "bvalMidPrice": 97.256412,
+                    "bvalUpdateTime": "2024-07-15T20:00:00Z",
+                    "gSpread": 19.588,
+                    "zSpread": 36.634,
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "ratingSecondHighest": "AAA",
+                    "ratingStandardAndPoors": "AA+",
+                    "gsLiquidityScore": 1.75825,
+                    "illiquidPercentage": 0.0,
+                    "percentOfIssueOutstanding": 0.044444444444444446,
+                    "didNotQuotePercentage": 0.0,
+                    "chargeInDollars": 0.055893259976399996,
+                    "chargeInBps": 2.5,
+                    "chargeInEntityCurrency": 0.055893259976399996,
+                    "weight": 100.0,
+                    "girESG": {
+                        "gPercentile": 87.88,
+                        "gRegionalPercentile": 74.57,
+                        "esPercentile": 92.78,
+                        "esDisclosurePercentage": 80.95,
+                        "esMomentumPercentile": 0.0
+                    },
+                    "carbon": {
+                        "emissionsIntensityEnterpriseValue": 0.0,
+                        "emissionsIntensityRevenue": 0.0
+                    }
+                },
+                "buys": {
+                    "numberOfBonds": 1,
+                    "faceValue": 1000000.0,
+                    "marketValue": 972564.12,
+                    "DV01": 223.5730399056,
+                    "bvalMidPrice": 97.256412,
+                    "bvalUpdateTime": "2024-07-15T20:00:00Z",
+                    "gSpread": 19.588,
+                    "zSpread": 36.634,
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "ratingSecondHighest": "AAA",
+                    "ratingStandardAndPoors": "AA+",
+                    "gsLiquidityScore": 1.75825,
+                    "illiquidPercentage": 0.0,
+                    "percentOfIssueOutstanding": 0.044444444444444446,
+                    "didNotQuotePercentage": 0.0,
+                    "chargeInDollars": 0.055893259976399996,
+                    "chargeInBps": 2.5,
+                    "chargeInEntityCurrency": 0.055893259976399996,
+                    "weight": 100.0,
+                    "girESG": {
+                        "gPercentile": 87.88,
+                        "gRegionalPercentile": 74.57,
+                        "esPercentile": 92.78,
+                        "esDisclosurePercentage": 80.95,
+                        "esMomentumPercentile": 0.0
+                    },
+                    "carbon": {
+                        "emissionsIntensityEnterpriseValue": 0.0,
+                        "emissionsIntensityRevenue": 0.0
+                    }
+                },
+                "sells": {
+                    "numberOfBonds": 0,
+                    "faceValue": 0.0,
+                    "marketValue": 0.0,
+                    "weight": 0.0
+                }
+            },
+            "secondHighestRatingGroups": [
+                {
+                    "name": "AAA",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "standardAndPoorsRatingGroups": [
+                {
+                    "name": "AA+",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0,
+                    "buyDirectionWeight": 1.0,
+                    "sellDirectionWeight": "NaN"
+                }
+            ],
+            "maturityGroups": [
+                {
+                    "name": "1-3y",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "sectorGroups": [
+                {
+                    "name": "Information Technology",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0,
+                    "buyDirectionWeight": 1.0,
+                    "sellDirectionWeight": "NaN"
+                }
+            ],
+            "modifiedDurationGroups": [
+                {
+                    "name": "1-3y",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "gsLiquidityScoreGroups": [
+                {
+                    "name": "L1",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "seniorityGroups": [
+                {
+                    "name": "Senior",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "marketValue": 972564.12,
+                    "weight": 100.0
+                }
+            ],
+            "tradesByTicker": [
+                {
+                    "id": "MA3VNAYYHWQ52SA5",
+                    "ticker": "AAPL",
+                    "numberOfTrades": 1,
+                    "weight": 100.0,
+                    "faceValue": 1000000.0,
+                    "marketValue": 972564.12,
+                    "gsLiquidityScore": 1.75825,
+                    "percentOfIssueOutstanding": 0.044444444444444446
+                }
+            ],
+            "constituents": [
+                {
+                    "assetId": "MA3VNAYYHWQ52SA5",
+                    "name": "AAPL 3.350 02/09/2027",
+                    "assetClass": "Credit",
+                    "type": "Bond",
+                    "isin": "US037833CJ77",
+                    "bbid": "AM3834018",
+                    "cusip": "037833CJ7",
+                    "ticker": "AAPL",
+                    "currency": "USD",
+                    "region": "Americas",
+                    "sector": "Information Technology",
+                    "seniority": "Senior",
+                    "ratingSecondHighest": "AAA",
+                    "ratingSecondHighestLinear": 1,
+                    "ratingStandardAndPoors": "AA+",
+                    "ratingStandardAndPoorsLinear": 2,
+                    "gsLiquidityScore": 1.75825,
+                    "gsLiquidityScoreGroup": "L1",
+                    "percentOfIssueOutstanding": 0.044444444444444446,
+                    "maturity": 2.0,
+                    "coupon": 3.35,
+                    "bvalMidPrice": 97.256412,
+                    "dirtyPrice": 97.270928666667,
+                    "gSpread": 19.588,
+                    "zSpread": 36.634,
+                    "bvalUpdateTime": "2024-07-15T20:00:00Z",
+                    "yieldToConvention": 4.494023,
+                    "modifiedDuration": 2.2988,
+                    "spreadToBenchmark": 28.5952,
+                    "benchmark": "GV91282CKZ3",
+                    "quoteConvention": "Spread",
+                    "chargeInQuoteConvention": "2.5 bps",
+                    "chargeInQuoteConventionTwo": "2.5 bps",
+                    "chargeInLocalCurrency": 0.055893259976399996,
+                    "chargeInEntityCurrency": 0.055893259976399996,
+                    "chargeInBps": 2.5,
+                    "fxSpot": 1.0,
+                    "direction": "Buy",
+                    "faceValue": 1000000.0,
+                    "currentFaceValue": 1000000.0,
+                    "accruedInterestStandard": 0.014516666667,
+                    "marketValue": 972564.12,
+                    "dirtyMarketValue": 972709.28666667,
+                    "DV01": 223.5730399056,
+                    "weightOfFaceValue": 100.0,
+                    "weightOfMarketValue": 100.0,
+                    "weightOfDV01": 100.0,
+                    "indicativePrice": 97.289,
+                    "indicativeQuantity": 5000000.0,
+                    "indicativeSpread": 25.0,
+                    "indicativeYield": 4.48,
+                    "girFactors": {
+                        "carry": 1.0,
+                        "value": 3.0,
+                        "risk": 1.0,
+                        "momentum": 1.0,
+                        "liquidity": 4.0,
+                        "highLeverage": 0.0,
+                        "lowLeverage": 0.0,
+                        "highInterestCoverage": 0.0,
+                        "lowInterestCoverage": 0.0,
+                        "cyclical": 1.0,
+                        "defensive": 0.0,
+                        "commoditiesRelated": 0.0,
+                        "tax": 4.0
+                    },
+                    "girESG": {
+                        "gPercentile": 87.88,
+                        "gRegionalPercentile": 74.57,
+                        "esPercentile": 92.78,
+                        "esDisclosurePercentage": 80.95,
+                        "esMomentumPercentile": 0.0
+                    },
+                    "carbon": {
+                        "scienceBasedTarget": "Yes",
+                        "netZeroEmissionsTarget": "Yes"
+                    },
+                    "pbData": {
+                        "indicativeShortFinancingLabel": "GC",
+                        "indicativeLongFinancingLabel": "IG Funding Rate"
+                    },
+                    "bbgData": {
+                        "countryOfRisk": "US",
+                        "paymentRank": "Sr Unsecured",
+                        "industrySector": "Technology",
+                        "industryGroup": "Computers",
+                        "industrySubGroup": "Computers"
+                    }
+                }
+            ]
+        }
+    }
+
+    # mock GsSession
+    mocker.patch.object(
+        GsSession.__class__,
+        'default_value',
+        return_value=GsSession.get(
+            Environment.QA,
+            'client_id',
+            'secret'))
+    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+
+    # run test
+    response = GsPortfolioApi.get_portfolio_analyze('portfolio_id')
+
+    GsSession.current._get.assert_called_with('/portfolios/portfolio_id/analyze')
+
+    assert response == expected_response
