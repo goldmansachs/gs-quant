@@ -16,7 +16,7 @@ under the License.
 import logging
 from enum import Enum
 from functools import wraps
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from dateutil.relativedelta import relativedelta
 
@@ -53,6 +53,12 @@ class PrioritySetting(Enum):
     THREE = '3'
     FOUR = '4'
     FIVE = '5'
+
+
+class TurnoverNotionalType(Enum):
+    NET = 'Net'
+    LONG = 'Long'
+    GROSS = 'Gross'
 
 
 class AssetConstraint:
@@ -859,7 +865,8 @@ class TurnoverConstraint:
 
     def __init__(self,
                  turnover_portfolio: PositionSet,
-                 max_turnover_percent: float):
+                 max_turnover_percent: float,
+                 turnover_notional_type: Optional[TurnoverNotionalType] = None):
         """
         Specifying a list of positions and max turnover from those positions in the optimization result
 
@@ -869,6 +876,7 @@ class TurnoverConstraint:
         """
         self.__turnover_portfolio = turnover_portfolio
         self.__max_turnover_percent = max_turnover_percent
+        self.__turnover_notional_type = turnover_notional_type
 
     @property
     def turnover_portfolio(self) -> PositionSet:
@@ -886,12 +894,23 @@ class TurnoverConstraint:
     def max_turnover_percent(self, value: float):
         self.__max_turnover_percent = value
 
+    @property
+    def turnover_notional_type(self):
+        return self.__turnover_notional_type
+
+    @turnover_notional_type.setter
+    def turnover_notional_type(self, value: Optional[TurnoverNotionalType]):
+        self.__turnover_notional_type = value
+
     def to_dict(self):
         positions = self.turnover_portfolio.positions
-        return {
+        payload = {
             'turnoverPortfolio': [{'assetId': p.asset_id, 'quantity': p.quantity} for p in positions],
             'maxTurnoverPercentage': self.max_turnover_percent
         }
+        if self.turnover_notional_type:
+            payload['turnoverNotionalType'] = self.turnover_notional_type.value
+        return payload
 
 
 def _ensure_completed(func):
