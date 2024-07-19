@@ -21,7 +21,8 @@ from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.triggers import PeriodicTrigger, PeriodicTriggerRequirements, DateTriggerRequirements, \
     AggregateTrigger, AggregateTriggerRequirements, PortfolioTriggerRequirements, TriggerDirection
-from gs_quant.backtests.actions import EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction
+from gs_quant.backtests.actions import EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction, \
+    AddTradeAction, AddScaledTradeAction, ScalingActionType
 from gs_quant.backtests.equity_vol_engine import *
 from gs_quant.common import Currency, AssetClass
 from gs_quant.session import GsSession, Environment
@@ -692,7 +693,7 @@ def test_supports_strategy():
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedge_trigger])
     assert not EquityVolEngine.supports_strategy(strategy)
 
-    # 6. Invalid - non-daily hedge trade
+    # 7. Invalid - non-daily hedge trade
 
     action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m')
     trigger = PeriodicTrigger(
@@ -704,7 +705,7 @@ def test_supports_strategy():
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedge_trigger])
     assert not EquityVolEngine.supports_strategy(strategy)
 
-    # 7. Invalid - expiration date modifiers must be the same
+    # 8. Invalid - expiration date modifiers must be the same
 
     option_listed = EqOption('.STOXX50E', expirationDate='3m@listed', strikePrice='ATM', optionType=OptionType.Call,
                              optionStyle=OptionStyle.European)
@@ -716,10 +717,7 @@ def test_supports_strategy():
     strategy = Strategy(initial_portfolio=None, triggers=[trigger])
     assert not EquityVolEngine.supports_strategy(strategy)
 
-    option_listed = EqOption('.STOXX50E', expirationDate='3m@listed', strikePrice='ATM', optionType=OptionType.Call,
-                             optionStyle=OptionStyle.European)
-
-    # 8. Invalid - expiration date modifier not in [otc, listed]
+    # 9. Invalid - expiration date modifier not in [otc, listed]
 
     option_invalid = EqOption('.STOXX50E', expirationDate='3m@invalid', strikePrice='ATM', optionType=OptionType.Call)
     action = EnterPositionQuantityScaledAction(priceables=[option_invalid], trade_duration='1m')
@@ -729,7 +727,7 @@ def test_supports_strategy():
     strategy = Strategy(initial_portfolio=None, triggers=[trigger])
     assert not EquityVolEngine.supports_strategy(strategy)
 
-    # 9. Invalid - hedging without synthetic forward (not a portfolio)
+    # 10. Invalid - hedging without synthetic forward (not a portfolio)
     hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call])
 
     hedge_trigger = PeriodicTrigger(
@@ -739,7 +737,7 @@ def test_supports_strategy():
 
     assert not EquityVolEngine.supports_strategy(strategy)
 
-    # 10. Invalid - hedging without synthetic forward (two calls)
+    # 11. Invalid - hedging without synthetic forward (two calls)
 
     long_call_2 = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
                            option_style=OptionStyle.European, buy_sell=BuySell.Buy)
@@ -753,7 +751,7 @@ def test_supports_strategy():
 
     assert not EquityVolEngine.supports_strategy(strategy)
 
-    # 10. Invalid - hedging without synthetic forward (more than two options)
+    # 12. Invalid - hedging without synthetic forward (more than two options)
 
     hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put, long_call_2])
 
@@ -764,7 +762,7 @@ def test_supports_strategy():
 
     assert not EquityVolEngine.supports_strategy(strategy)
 
-    # 10. Invalid - hedging without synthetic forward (properties mismatch)
+    # 13. Invalid - hedging without synthetic forward (properties mismatch)
 
     long_call_2m = EqOption('.STOXX50E', expiration_date='2m', strike_price='ATM', option_type=OptionType.Call,
                             option_style=OptionStyle.European, buy_sell=BuySell.Buy)
@@ -779,3 +777,42 @@ def test_supports_strategy():
     strategy = Strategy(initial_portfolio=None, triggers=[trigger, hedge_trigger])
 
     assert not EquityVolEngine.supports_strategy(strategy)
+
+    # 14. Valid - AddTradeAction
+
+    add_trade_action = AddTradeAction(priceables=option, trade_duration='1m')
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=add_trade_action)
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger])
+    assert EquityVolEngine.supports_strategy(strategy)
+
+    # 15. Valid - AddScaledTradeAction
+
+    add_scaled_trade_action = AddScaledTradeAction(priceables=option, trade_duration='1m',
+                                                   scaling_type=ScalingActionType.size, scaling_level=2)
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=add_scaled_trade_action)
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger])
+    assert EquityVolEngine.supports_strategy(strategy)
+
+    # 16. Invalid - transaction_costs not supported
+
+    add_trade_action_tc = AddTradeAction(priceables=option, trade_duration='1m',
+                                         transaction_cost=ConstantTransactionModel(100))
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=add_trade_action_tc)
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger])
+    assert not EquityVolEngine.supports_strategy(strategy)
+
+    # 17. Valid - transaction_costs supported if 0
+
+    add_trade_action_tc0 = AddTradeAction(priceables=option, trade_duration='1m',
+                                          transaction_cost=ConstantTransactionModel(0))
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=add_trade_action_tc0)
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger])
+    assert EquityVolEngine.supports_strategy(strategy)

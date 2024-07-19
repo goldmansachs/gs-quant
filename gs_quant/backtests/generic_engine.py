@@ -222,8 +222,13 @@ class AddScaledTradeActionImpl(ActionHandler):
         for create_date, portfolio in orders.items():
             for inst in portfolio.all_instruments:
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
+                backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(create_date, backtest,
+                                                                                                 trigger_info, inst)
                 final_date = get_final_date(inst, create_date, self.action.trade_duration)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
+                backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
+                                                                                                backtest,
+                                                                                                trigger_info, inst)
 
         for s in backtest.states:
             pos = []

@@ -370,7 +370,7 @@ def test_scaled_transaction_cost(mocker):
         assert len(summary) == 5
         assert len(ledger) == 5
         assert round(summary[Price].sum()) == 90
-        assert round(summary['Transaction Costs'].sum()) == 50000 * 0.0001 * 5 * -1
+        assert round(summary['Transaction Costs'][-1]) == 50000 * 0.0001 * 5 * -1
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -401,7 +401,7 @@ def test_risk_scaled_transaction_cost(mocker):
         assert len(summary) == 5
         assert len(ledger) == 5
         assert round(summary[Price].sum()) == -64
-        assert round(summary['Transaction Costs'].sum()) == 62
+        assert round(summary['Transaction Costs'][-1]) == 62
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)

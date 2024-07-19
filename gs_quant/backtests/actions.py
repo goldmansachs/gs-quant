@@ -158,8 +158,10 @@ class AddScaledTradeAction(Action):
     :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor or timedelta
                            if left as None the
                            trade will be added for all future dates
-    :param scaling_parameters: a ScaledActionParameters object which defines the type and level of scaling
     :param name: optional additional name to the priceable name
+    :param scaling_type: the type of scaling we are doing
+    :param scaling_risk: if the scaling type is a measure then this is the definition of the measure
+    :param scaling_level: the level of scaling to be done
     :param transaction_cost: optional a cash amount paid for each transaction, paid on both enter and exit
     """
     priceables: Union[Priceable, Iterable[Priceable]] = field(default=None,
@@ -171,6 +173,8 @@ class AddScaledTradeAction(Action):
     scaling_type: ScalingActionType = ScalingActionType.size
     scaling_risk: RiskMeasure = None
     scaling_level: Union[float, int] = 1
+    transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
+                                               metadata=config(decoder=dc_decode(ConstantTransactionModel)))
     class_type: str = static_field('add_scaled_trade_action')
 
     def __post_init__(self):

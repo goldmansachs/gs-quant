@@ -1098,9 +1098,8 @@ class OptimizerStrategy:
         functions to pull results
 
         :param optimizer_type: optimizer type
-        :param fail_on_unpriced_positions: whether or
-        not to fail the calculations if some of the portfolio positions do not have pricing data in Marquee. If set
-        to false, unpriced assets will be sifted out before the optimization is run
+        :param fail_on_unpriced_positions: whether to fail the calculations if some of the portfolio positions do not
+        have pricing data in Marquee. If set to false, unpriced assets will be sifted out before the optimization is run
         """
         if optimizer_type is None:
             raise MqValueError('You must pass an optimizer type.')

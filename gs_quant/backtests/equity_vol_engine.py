@@ -17,6 +17,7 @@ from gs_quant.backtests import FlowVolBacktestMeasure
 from gs_quant.backtests import triggers as t
 from gs_quant.backtests import actions as a
 from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
+from gs_quant.backtests.backtest_objects import ConstantTransactionModel
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import EqDelta, EqSpot, EqGamma, EqVega
@@ -178,6 +179,8 @@ class EquityVolEngine(object):
                     if isinstance(action, a.AddScaledTradeAction):
                         if action.scaling_level is None or action.scaling_type is None:
                             check_results.append('Error: AddScaledTradeAction scaling_level or scaling_type is None')
+                    if hasattr(action, 'transaction_cost') and action.transaction_cost != ConstantTransactionModel(0):
+                        check_results.append('Error: Transaction costs not supported')
                     expiry_date_modes = map(lambda x: ExpirationDateParser(x.expirationDate).get_mode(),
                                             action.priceables)
                     expiry_date_modes = list(set(expiry_date_modes))

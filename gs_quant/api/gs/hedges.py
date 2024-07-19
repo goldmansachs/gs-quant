@@ -23,6 +23,7 @@ from gs_quant.target.hedge import Hedge
 from gs_quant.target.hedge import PerformanceHedgeParameters, ClassificationConstraint, AssetConstraint, Target
 
 _logger = logging.getLogger(__name__)
+CALCULATION_TIMEOUT = 180
 
 
 class GsHedgeApi:
@@ -176,4 +177,4 @@ class GsHedgeApi:
         :param hedge_query: dict, hedge data that is sent to the Marquee API as input to the performance hedger
         :return: dict, the results of calling the Marquee performance hedger
         """
-        return GsSession.current._post('/hedges/calculations', payload=hedge_query)
+        return GsSession.current._post('/hedges/calculations', payload=hedge_query, timeout=CALCULATION_TIMEOUT)

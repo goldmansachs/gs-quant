@@ -149,6 +149,8 @@ class BackTest(BaseBacktest):
                           for name, cash_dict in cash_summary.items()], axis=1, sort=True)
         transaction_costs = pd.Series(self.transaction_costs, name='Transaction Costs')
         df = pd.concat([summary, cash, transaction_costs], axis=1, sort=True).ffill().fillna(0)
+        # cum sum the transaction_costs
+        df['Transaction Costs'] = df['Transaction Costs'].cumsum()
         df['Total'] = df[self.price_measure] + df['Cumulative Cash'] + df['Transaction Costs']
         return df[:self.states[-1]]
 

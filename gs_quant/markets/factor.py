@@ -18,6 +18,7 @@ from typing import Dict, Union
 
 import numpy as np
 import pandas as pd
+import math
 
 from gs_quant.data.core import DataContext
 from gs_quant.datetime import date
@@ -137,7 +138,7 @@ class Factor:
                                                                        factors=[self.name],
                                                                        limit_factors=False).get('results')
 
-        volatility_data_df = build_factor_volatility_dataframe(volatility_raw_data, True, None) * 252
+        volatility_data_df = build_factor_volatility_dataframe(volatility_raw_data, True, None) * math.sqrt(252)
         if format == ReturnFormat.JSON:
             return volatility_data_df.squeeze(axis=1).to_dict()
 
