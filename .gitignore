@@ -1,2 +1,3 @@
 *.pyc
 gs_quant/.idea/
+/gs_venv
