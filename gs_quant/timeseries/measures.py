@@ -3606,7 +3606,9 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                         *, source: str = None, real_time: bool = False,
                                         request_id: Optional[str] = None) -> Series:
@@ -3638,7 +3640,9 @@ def current_constituents_dividend_yield(asset: Asset, period: str, period_direct
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_earnings_per_share(asset: Asset, period: str,
                                             period_direction: FundamentalMetricPeriodDirection, *,
                                             source: str = None, real_time: bool = False,
@@ -3671,7 +3675,9 @@ def current_constituents_earnings_per_share(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_earnings_per_share_positive(asset: Asset, period: str,
                                                      period_direction: FundamentalMetricPeriodDirection, *,
                                                      source: str = None, real_time: bool = False,
@@ -3704,7 +3710,9 @@ def current_constituents_earnings_per_share_positive(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_net_debt_to_ebitda(asset: Asset, period: str,
                                             period_direction: FundamentalMetricPeriodDirection,
                                             *, source: str = None, real_time: bool = False,
@@ -3737,7 +3745,9 @@ def current_constituents_net_debt_to_ebitda(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_price_to_book(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                        *, source: str = None, real_time: bool = False,
                                        request_id: Optional[str] = None) -> Series:
@@ -3769,7 +3779,9 @@ def current_constituents_price_to_book(asset: Asset, period: str, period_directi
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                        *, source: str = None, real_time: bool = False,
                                        request_id: Optional[str] = None) -> Series:
@@ -3801,7 +3813,9 @@ def current_constituents_price_to_cash(asset: Asset, period: str, period_directi
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_price_to_earnings(asset: Asset, period: str,
                                            period_direction: FundamentalMetricPeriodDirection,
                                            *, source: str = None, real_time: bool = False,
@@ -3834,7 +3848,9 @@ def current_constituents_price_to_earnings(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_price_to_earnings_positive(asset: Asset, period: str,
                                                     period_direction: FundamentalMetricPeriodDirection,
                                                     *, source: str = None, real_time: bool = False,
@@ -3867,7 +3883,9 @@ def current_constituents_price_to_earnings_positive(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                         *, source: str = None, real_time: bool = False,
                                         request_id: Optional[str] = None) -> Series:
@@ -3899,7 +3917,9 @@ def current_constituents_price_to_sales(asset: Asset, period: str, period_direct
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_return_on_equity(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                           *, source: str = None, real_time: bool = False,
                                           request_id: Optional[str] = None) -> Series:
@@ -3931,7 +3951,9 @@ def current_constituents_return_on_equity(asset: Asset, period: str, period_dire
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Research_Basket,), [QueryType.FUNDAMENTAL_METRIC])
+@plot_measure((AssetClass.Equity,),
+              (AssetType.Research_Basket, AssetType.Custom_Basket,),
+              [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                          *, source: str = None, real_time: bool = False,
                                          request_id: Optional[str] = None) -> Series:

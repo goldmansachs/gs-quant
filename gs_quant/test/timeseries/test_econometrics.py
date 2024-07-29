@@ -16,10 +16,11 @@ under the License.
 from unittest.mock import Mock
 
 import pytest
-from gs_quant.timeseries import *
-from gs_quant.timeseries.econometrics import _get_ratio
 from pandas.testing import assert_series_equal
 from testfixtures import Replacer
+
+from gs_quant.timeseries import *
+from gs_quant.timeseries.econometrics import _get_ratio
 
 
 def test_returns():
@@ -357,6 +358,33 @@ def test_correlation():
     result = correlation(x, y, "3m")
     expected = pd.Series(dtype=float, index=[])
     assert_series_equal(result, expected, obj="Correlation strdate as window with too large of window")
+
+
+def test_correlation_returns():
+    x = generate_series(50, Direction.END_TODAY)
+    y = generate_series(50, Direction.END_TODAY)
+    base_corr = correlation(x, y)
+    corr_simple = correlation(x, y, returns_type=Returns.SIMPLE)
+    assert_series_equal(base_corr, corr_simple)
+
+    #  Log returns
+    corr_log = correlation(x, y, returns_type=Returns.LOGARITHMIC)
+    returns_x = returns(x, type=Returns.LOGARITHMIC)
+    returns_y = returns(y, type=Returns.LOGARITHMIC)
+    corr_log_manual = correlation(returns_x, returns_y, type_=SeriesType.RETURNS)
+    assert_series_equal(corr_log, corr_log_manual)
+
+    # Mixed returns type
+    corr_log_abs = correlation(x, y, returns_type=(Returns.LOGARITHMIC, Returns.ABSOLUTE))
+    returns_y = returns(y, type=Returns.ABSOLUTE)
+    corr_log_manual = correlation(returns_x, returns_y, type_=SeriesType.RETURNS)
+    assert_series_equal(corr_log_abs, corr_log_manual)
+
+    # Error cases
+    with pytest.raises(MqValueError):
+        correlation(x, y, returns_type=[Returns.SIMPLE])
+    with pytest.raises(MqTypeError):
+        correlation(x, y, returns_type=["simple", "logarithmic"])
 
 
 def test_beta():

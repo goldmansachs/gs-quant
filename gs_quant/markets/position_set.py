@@ -14,27 +14,27 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime
+import datetime as dt
 import logging
+import math
+from time import time
 from typing import Dict, List, Union, Optional
 
-import pandas as pd
 import numpy as np
-import datetime as dt
-import math
+import pandas as pd
 from pydash import get
-from time import time
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.price import GsPriceApi
 from gs_quant.errors import MqValueError, MqRequestError
-from gs_quant.target.common import Position as CommonPosition, PositionPriceInput, PositionSet as CommonPositionSet, \
-    PositionTag, Currency, PositionSetWeightingStrategy, MarketDataFrequency
-from gs_quant.target.price import PriceParameters, PositionSetPriceInput
-from gs_quant.target.positions_v2_pricing import PositionsPricingParameters, PositionsRequest, PositionSetRequest, \
-    PositionsPricingRequest
 from gs_quant.markets.position_set_utils import _get_asset_temporal_xrefs, \
     _group_temporal_xrefs_into_discrete_time_ranges, _resolve_many_assets
 from gs_quant.models.risk_model_utils import _repeat_try_catch_request
+from gs_quant.target.common import Position as CommonPosition, PositionPriceInput, PositionSet as CommonPositionSet, \
+    PositionTag, Currency, PositionSetWeightingStrategy, MarketDataFrequency
+from gs_quant.target.positions_v2_pricing import PositionsPricingParameters, PositionsRequest, PositionSetRequest, \
+    PositionsPricingRequest
+from gs_quant.target.price import PriceParameters, PositionSetPriceInput
 
 _logger = logging.getLogger(__name__)
 
@@ -569,7 +569,7 @@ class PositionSet:
             resolved_positions = []
             for p in self.positions:
                 if p.identifier in id_map:
-                    asset = get(id_map, p.identifier.replace('.', '\.'))
+                    asset = get(id_map, p.identifier.replace('.', '\\.'))
                     p.asset_id = get(asset, 'id')
                     p.name = get(asset, 'name')
                     p._restricted = get(asset, 'restricted')

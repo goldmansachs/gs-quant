@@ -14,17 +14,10 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
-from typing import Union
 
-import numpy as np
-import pandas as pd
 from gs_quant.api.gs.data import GsDataApi
-from gs_quant.data import DataContext
-from gs_quant.datetime.date import DayCountConvention
 from gs_quant.markets.securities import Asset
 from gs_quant.target.common import Currency
-from gs_quant.timeseries.datetime import align
-
 from .analysis import LagMode, lag
 from .statistics import *
 from ..errors import *
@@ -576,7 +569,8 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
 
 @plot_function
 def correlation(x: pd.Series, y: pd.Series,
-                w: Union[Window, int, str] = Window(None, 0), type_: SeriesType = SeriesType.PRICES) -> pd.Series:
+                w: Union[Window, int, str] = Window(None, 0), type_: SeriesType = SeriesType.PRICES,
+                returns_type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Rolling correlation of two price series
 
@@ -586,6 +580,8 @@ def correlation(x: pd.Series, y: pd.Series,
               and 10 the ramp up value. If w is a string, it should be a relative date like '1m', '1d', etc.
               Window size defaults to length of series.
     :param type_: type of both input series: prices or returns
+    :param returns_type: Method to calculate returns when type_ is PRICES, simple, logarithmic or absolute. You can
+                        also pass two methods to calculate returns for x and y respectively.
     :return: date-based time series of correlation
 
     **Usage**
@@ -598,7 +594,7 @@ def correlation(x: pd.Series, y: pd.Series,
     where N is the number of observations in each rolling window, :math:`w`, and :math:`R_t` and :math:`S_t` are the
     simple returns for each series on time :math:`t`
 
-    If prices are provided:
+    If prices are provided then returns are calculated based on the returns_type e.g. for simple returns:
 
     :math:`R_t = \\frac{X_t}{X_{t-1}} - 1` and :math:`S_t = \\frac{Y_t}{Y_{t-1}} - 1`
 
@@ -631,8 +627,20 @@ def correlation(x: pd.Series, y: pd.Series,
         return x
 
     given_prices = type_ == SeriesType.PRICES
-    ret_1 = returns(x) if given_prices else x
-    ret_2 = returns(y) if given_prices else y
+    if given_prices:
+        if isinstance(returns_type, (tuple, list)):
+            if len(returns_type) != 2:
+                raise MqValueError('Expected a list of length 2 for "returns_type"')
+            if not all(isinstance(r, Returns) for r in returns_type):
+                raise MqTypeError('Expected a list of Returns for "returns_type"')
+            returns_type_x, returns_type_y = returns_type
+        else:
+            returns_type_x = returns_type_y = returns_type
+        ret_1 = returns(x, type=returns_type_x)
+        ret_2 = returns(y, type=returns_type_y)
+    else:
+        ret_1 = x
+        ret_2 = y
 
     clean_ret1 = ret_1.dropna()
     clean_ret2 = ret_2.dropna()
