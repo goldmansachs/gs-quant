@@ -90,7 +90,7 @@ class PricingContext(ContextBaseWithDefault):
                  use_server_cache: Optional[bool] = None,
                  market_behaviour: Optional[str] = 'ContraintsBased',
                  set_parameters_only: bool = False,
-                 use_historical_diddles_only: bool = False,
+                 use_historical_diddles_only: Optional[bool] = None,
                  provider: Optional[Type[GenericRiskApi]] = None):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
@@ -382,7 +382,7 @@ class PricingContext(ContextBaseWithDefault):
     def _parameters(self) -> RiskRequestParameters:
         return RiskRequestParameters(csa_term=self.__csa_term, raw_results=True,
                                      market_behaviour=self.__market_behaviour,
-                                     use_historical_diddles_only=self.__use_historical_diddles_only)
+                                     use_historical_diddles_only=self.use_historical_diddles_only)
 
     @property
     def _scenario(self) -> Optional[MarketDataScenario]:
@@ -497,7 +497,7 @@ class PricingContext(ContextBaseWithDefault):
     def use_historical_diddles_only(self) -> bool:
         if self.__use_historical_diddles_only is not None:
             return self.__use_historical_diddles_only
-        return self._inherited_val('self.__use_historical_diddles_only', default=False)
+        return self._inherited_val('use_historical_diddles_only', default=False)
 
     def clone(self, **kwargs):
         clone_kwargs = {k: getattr(self, k, None) for k in signature(self.__init__).parameters.keys()}

@@ -156,7 +156,7 @@ def test_creation():
 def test_inheritance():
     c1 = PricingContext(pricing_date=datetime.date(2022, 6, 16), market_data_location='NYC', provider=TestProvider)
     c2 = PricingContext(pricing_date=datetime.date(2022, 7, 1))
-    c3 = PricingContext()
+    c3 = PricingContext(use_historical_diddles_only=True)
 
     with c1:
         with c2:
@@ -170,6 +170,7 @@ def test_inheritance():
             assert c2.is_batch is False
             assert c2.use_cache is False
             assert c2._max_concurrent == 1000
+            assert not c2.use_historical_diddles_only
             with c3:
                 # market data location is inherited from c1 (the active context)
                 assert c3.market_data_location == c1.market_data_location
@@ -179,6 +180,7 @@ def test_inheritance():
                 assert c3.is_batch is False
                 assert c3.use_cache is False
                 assert c3._max_concurrent == 1000
+                assert c3.use_historical_diddles_only
 
 
 def test_max_concurrent():

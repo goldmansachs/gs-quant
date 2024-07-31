@@ -41,6 +41,7 @@ from gs_quant.risk import Price
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.target.backtests import BacktestTradingQuantityType
 from gs_quant.common import AssetClass
+from gs_quant.target.measures import ResolvedInstrumentValues
 from gs_quant.tracing import Tracer
 
 # priority set to contexts making requests to the pricing API (min. 1 - max. 10)
@@ -113,7 +114,7 @@ class AddScaledTradeActionImpl(ActionHandler):
     def __init__(self, action: AddScaledTradeAction):
         super().__init__(action)
 
-    def _nav_scale_orders(self, orders, first_quantity):
+    def _nav_scale_orders(self, orders):
         sorted_order_days = sorted(make_list(orders.keys()))
         final_days_orders = {}
 
@@ -126,7 +127,7 @@ class AddScaledTradeActionImpl(ActionHandler):
                 final_days_orders[d].append(inst)
 
         # Start with first_quantity, then only use proceeds from selling instruments
-        available_cash = first_quantity
+        available_cash = self.action.scaling_level
 
         # Go through each order day of the strategy in sorted order
         for idx, cur_day in enumerate(sorted_order_days):
@@ -165,48 +166,45 @@ class AddScaledTradeActionImpl(ActionHandler):
             for val in unwind_vals:
                 available_cash += val.result()
 
-    def _scale_order(self, orders, scaling_type, scaling_risk, scaling_level):
-        if scaling_type == ScalingActionType.size:
+    def _scale_order(self, orders, daily_risk):
+        if self.action.scaling_type == ScalingActionType.size:
             for _, portfolio in orders.items():
-                portfolio.scale(scaling_level)
-        elif scaling_type == ScalingActionType.NAV:
-            self._nav_scale_orders(orders, scaling_level)
-        elif scaling_type == ScalingActionType.risk_measure:
-            # Scale risk daily risk to specified value otherwise
-            orders_risk = {}
-            with PricingContext():
-                for day, portfolio in orders.items():
-                    with PricingContext(pricing_date=day):
-                        orders_risk[day] = portfolio.calc(scaling_risk)
-
+                portfolio.scale(self.action.scaling_level)
+        elif self.action.scaling_type == ScalingActionType.NAV:
+            self._nav_scale_orders(orders)
+        elif self.action.scaling_type == ScalingActionType.risk_measure:
             for day, portfolio in orders.items():
-                risk_to_scale = orders_risk[day].aggregate()
-                scaling_factor = scaling_level / risk_to_scale
+                scaling_factor = self.action.scaling_level / daily_risk[day]
                 portfolio.scale(scaling_factor)
         else:
-            raise RuntimeError(f'Scaling Type {scaling_type} not supported by engine')
+            raise RuntimeError(f'Scaling Type {self.action.scaling_type} not supported by engine')
 
     def _raise_order(self,
                      state: Union[date, Iterable[date]]):
         state_list = make_list(state)
         orders = {}
-
+        order_valuations = (ResolvedInstrumentValues,)
+        if self.action.scaling_type == ScalingActionType.risk_measure:
+            order_valuations += (self.action.scaling_risk,)
         with PricingContext():
             for s in state_list:
-                active_portfolio = self.action.priceables
                 with PricingContext(pricing_date=s):
-                    orders[s] = Portfolio(active_portfolio).resolve(in_place=False)
+                    orders[s] = Portfolio(self.action.priceables).calc(order_valuations)
 
         final_orders = {}
-        for d, p in orders.items():
+        for d, res in orders.items():
             new_port = []
-            for t in p.result():
-                t.name = f'{t.name}_{d}'
-                new_port.append(t)
+            for inst in self.action.priceables:
+                new_inst = res[inst]
+                if len(order_valuations) > 1:
+                    new_inst = new_inst[ResolvedInstrumentValues]
+                new_inst.name = f'{new_inst.name}_{d}'
+                new_port.append(new_inst)
             final_orders[d] = Portfolio(new_port)
+        daily_risk = {d: res[self.action.scaling_risk].aggregate() for d, res in orders.items()} if \
+            self.action.scaling_type == ScalingActionType.risk_measure else None
 
-        self._scale_order(final_orders, self.action.scaling_type,
-                          self.action.scaling_risk, self.action.scaling_level)
+        self._scale_order(final_orders, daily_risk)
 
         return final_orders
 
@@ -576,6 +574,7 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
             if hasattr(leg, 'asset_class'):
                 return isinstance(leg.asset_class, AssetClass) and leg.asset_class == AssetClass.Equity
             return leg.__class__.__name__.lower().startswith('eq')
+
         if isinstance(action, EnterPositionQuantityScaledAction) and \
                 not all([is_eq_underlier(p) for p in action.priceables]):
             raise RuntimeError('EnterPositionQuantityScaledAction only supported for equity underliers')
@@ -620,7 +619,7 @@ class GenericEngine(BacktestBaseEngine):
 
         context = PricingContext(set_parameters_only=True, show_progress=show_progress, csa_term=csa_term,
                                  market_data_location=market_data_location, request_priority=request_priority,
-                                 is_batch=is_batch)
+                                 is_batch=is_batch, use_historical_diddles_only=True)
 
         context._max_concurrent = 10000
 

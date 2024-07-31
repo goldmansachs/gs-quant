@@ -278,6 +278,7 @@ class HedgeAction(Action):
     class_type: str = static_field('hedge_action')
 
     def __post_init__(self):
+        super().__post_init__()
         self._calc_type = CalcType.semi_path_dependent
         if isinstance(self.priceables, Portfolio):
             named_priceables = []
