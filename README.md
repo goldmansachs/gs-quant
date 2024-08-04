@@ -43,13 +43,49 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+## Building the Project
+If the project requires a build step, describe it here. For example:
+
+```
+# Example build command
+python setup.py build
+```
+
+## Running Tests
+To run tests, use the following command:
+```
+pytest
+```
+Make sure to run tests before submitting any changes.
+
+
+## Contributing
+Contributions are welcome! Please follow these guidelines:
+1.) Fork the Repository: Use the GitHub interface to fork the repository to your own account.
+2.) Create a Branch: Create a feature branch for your changes
+```
+git checkout -b feature/your-feature-name
+```
+
+3.) Commit Your Changes: Write descriptive commit messages.
+```
+git commit -m "Add feature X"
+```
+
+4.) Push to Your Fork: Push your changes to your forked repository.
+```
+git push origin feature/your-feature-name
+```
+
+5.) Submit a Pull Request: Go to the original repository on GitHub and submit a pull request.
+
+Please see [CONTRIBUTING](CONTRIBUTING.md) for more details.
+ 
 ## Examples
 
 You can find examples, guides and tutorials in the respective folders as well as on [Goldman Sachs Developer](https://developer.gs.com/docs/gsquant/).
 
-## Contributions
 
-Contributions are encouraged! Please see [CONTRIBUTING](CONTRIBUTING.md) for more details.
 
 ## Help
 
