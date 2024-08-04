@@ -12,11 +12,35 @@ Please refer to [Goldman Sachs Developer](https://developer.gs.com/docs/gsquant/
 
 * Python 3.6 or greater
 * Access to PIP package manager
+* Client ID and secret for API access (for institutional clients)
 
 ## Installation
 
 ```
 pip install gs-quant
+```
+
+## Development Setup
+* 1. Clone the Repository
+```
+git clone https://github.com/your-organization/gs-quant.git
+cd gs-quant
+```
+
+* 2. Create a Virtual Environment
+```
+python -m venv env
+source env/bin/activate  # On Windows use `env\Scripts\activate`
+```
+
+* 3. Install Dependencies
+```
+pip install -r requirements.txt
+```
+
+* 4. Install GS Quant Locally
+```
+pip install -e .
 ```
 
 ## Examples
