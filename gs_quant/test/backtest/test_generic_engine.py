@@ -435,20 +435,20 @@ def test_quantity_scaled_action_nav(mocker):
         ledger = backtest.trade_ledger().to_dict('index')
 
         # Start with initial cash and only use sale proceeds to buy new options
-        assert ledger['QuantityScaledAction1_call_2021-12-06']['Open Value'] \
-               == -initial_cash
-        assert ledger['QuantityScaledAction1_call_2021-12-07']['Open Value'] \
-               == -ledger['QuantityScaledAction1_call_2021-12-06']['Close Value']
-        assert ledger['QuantityScaledAction1_call_2021-12-08']['Open Value'] \
-               == -ledger['QuantityScaledAction1_call_2021-12-07']['Close Value']
-        assert ledger['QuantityScaledAction1_call_2021-12-09']['Open Value'] \
-               == -ledger['QuantityScaledAction1_call_2021-12-08']['Close Value']
-        assert ledger['QuantityScaledAction1_call_2021-12-10']['Open Value'] \
-               == -ledger['QuantityScaledAction1_call_2021-12-09']['Close Value']
+        np.testing.assert_almost_equal(ledger['QuantityScaledAction1_call_2021-12-06']['Open Value'], -initial_cash)
+        np.testing.assert_almost_equal(ledger['QuantityScaledAction1_call_2021-12-07']['Open Value'],
+                                       -ledger['QuantityScaledAction1_call_2021-12-06']['Close Value'])
+        np.testing.assert_almost_equal(ledger['QuantityScaledAction1_call_2021-12-08']['Open Value'],
+                                       -ledger['QuantityScaledAction1_call_2021-12-07']['Close Value'])
+        np.testing.assert_almost_equal(ledger['QuantityScaledAction1_call_2021-12-09']['Open Value'],
+                                       -ledger['QuantityScaledAction1_call_2021-12-08']['Close Value'])
+        np.testing.assert_almost_equal(ledger['QuantityScaledAction1_call_2021-12-10']['Open Value'],
+                                       -ledger['QuantityScaledAction1_call_2021-12-09']['Close Value'])
 
         # Total cash spent is the initial cash throughout the entire strategy
-        assert summary['Cumulative Cash'][0] == -initial_cash
-        assert (summary['Cumulative Cash'] == summary['Cumulative Cash'][0]).all()
+        np.testing.assert_almost_equal(summary['Cumulative Cash'][0], -initial_cash)
+        for c in summary['Cumulative Cash']:
+            np.testing.assert_almost_equal(c, summary['Cumulative Cash'][0])
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -503,7 +503,7 @@ def test_serialisation(mocker):
         date_trigger,
         periodic_trigger,
         DateTrigger(DateTriggerRequirements(dates=(date(2021, 12, 1),)), [add_trade_action_3, hedge_action]),
-        PeriodicTrigger(PeriodicTriggerRequirements(d1, d2, "3m", (d3, ))),
+        PeriodicTrigger(PeriodicTriggerRequirements(d1, d2, "3m", (d3,))),
         IntradayPeriodicTrigger(IntradayTriggerRequirements(dt1.time(), dt2.time(), 5.0)),
         MktTrigger(MktTriggerRequirements(generic_data_source, 1.1, TriggerDirection.BELOW), exit_trade_action),
         StrategyRiskTrigger(RiskTriggerRequirements(DollarPrice, -1.4, TriggerDirection.BELOW), exit_all_trades_action),

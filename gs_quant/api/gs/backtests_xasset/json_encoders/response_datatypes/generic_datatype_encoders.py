@@ -28,5 +28,5 @@ def decode_inst_tuple(t: tuple) -> Tuple[Instrument, ...]:
     return tuple(decode_inst(i) for i in t)
 
 
-def decode_daily_portfolio(results: dict) -> Dict[dt.date, Tuple[Instrument, ...]]:
-    return {dt.date.fromisoformat(k): decode_inst_tuple(v) for k, v in results.items()}
+def decode_daily_portfolio(results: dict, decode_instruments: bool = True) -> Dict[dt.date, Tuple[Instrument, ...]]:
+    return {dt.date.fromisoformat(k): decode_inst_tuple(v) if decode_instruments else v for k, v in results.items()}

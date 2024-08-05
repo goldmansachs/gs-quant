@@ -150,7 +150,7 @@ class StrategySystematic:
             calc_measures = (FlowVolBacktestMeasure.PNL,)
         basic_bt_request = BasicBacktestRequest(date_cfg, self.__trades, calc_measures, self.__delta_hedge_frequency,
                                                 CostPerTransaction(TransactionCostModel.Fixed, 0), None)
-        basic_bt_response = GsBacktestXassetApi.calculate_basic_backtest(basic_bt_request)
+        basic_bt_response = GsBacktestXassetApi.calculate_basic_backtest(basic_bt_request, decode_instruments=False)
         risks = tuple(
             BacktestRisk(name=k.value,
                          timeseries=tuple(FieldValueMap(date=d, value=r.result) for d, r in v.items()))
@@ -160,14 +160,14 @@ class StrategySystematic:
         if FlowVolBacktestMeasure.portfolio in measures:
             for d in sorted(set().union(basic_bt_response.portfolio.keys(), basic_bt_response.transactions.keys())):
                 if d in basic_bt_response.portfolio:
-                    positions = [{'instrument': i.to_dict() if i is not None else {}} for
+                    positions = [{'instrument': i if i is not None else {}} for
                                  i in basic_bt_response.portfolio[d]]
                 else:
                     positions = []
                 transactions = []
                 if d in basic_bt_response.transactions:
                     for t in basic_bt_response.transactions[d]:
-                        trades = [{'instrument': i.to_dict() if i is not None else {},
+                        trades = [{'instrument': i if i is not None else {},
                                    'price': t.portfolio_price}
                                   for i in t.portfolio] if t.portfolio is not None else []
                         transactions.append({'type': t.direction.value, 'trades': trades})

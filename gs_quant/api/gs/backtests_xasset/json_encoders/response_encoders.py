@@ -60,7 +60,8 @@ def decode_basic_bt_measure_dict(results: dict) -> Dict[FlowVolBacktestMeasure, 
             for k, v in results.items()}
 
 
-def decode_basic_bt_transactions(results: dict) -> Dict[dt.date, Tuple[Transaction, ...]]:
+def decode_basic_bt_transactions(results: dict, decode_instruments: bool = True) -> \
+        Dict[dt.date, Tuple[Transaction, ...]]:
     def to_ccy(s: str) -> Union[Currency, CurrencyName, str]:
         if s in [x.value for x in Currency]:
             return Currency(s)
@@ -70,6 +71,7 @@ def decode_basic_bt_transactions(results: dict) -> Dict[dt.date, Tuple[Transacti
             return s
 
     return {dt.date.fromisoformat(k): tuple(
-            Transaction(decode_inst_tuple(t['portfolio']), t['portfolio_price'], t['cost'], to_ccy(t['currency']),
+            Transaction(decode_inst_tuple(t['portfolio']) if decode_instruments else t['portfolio'],
+                        t['portfolio_price'], t['cost'], to_ccy(t['currency']),
                         TransactionDirection(t['direction']) if t['direction'] else None)
             for t in v) for k, v in results.items()}

@@ -18,7 +18,7 @@ import datetime as dt
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Tuple, Dict, Union
+from typing import Optional, Tuple, Dict, Union, Any
 
 from dataclasses_json import dataclass_json, LetterCase, config
 
@@ -57,6 +57,14 @@ class AdditionalResults:
                                                                     metadata=config(decoder=decode_daily_portfolio))
     hedge_pnl: Optional[Dict[dt.date, float]] = None
     no_of_calculations: Optional[int] = None
+
+    @classmethod
+    def from_dict_custom(cls, data: Any, decode_instruments: bool = True):
+        if decode_instruments:
+            return cls.from_dict(data)
+        return AdditionalResults(hedges=decode_daily_portfolio(data['hedges'], decode_instruments),
+                                 hedge_pnl=data['hedge_pnl'],
+                                 no_of_calculations=data['no_of_calculations'])
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

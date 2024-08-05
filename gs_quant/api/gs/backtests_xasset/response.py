@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any
 
 from dataclasses_json import dataclass_json, LetterCase, config
 
@@ -52,6 +52,16 @@ class BasicBacktestResponse:
     transactions: Dict[dt.date, Tuple[Transaction, ...]] \
         = field(default=None, metadata=config(decoder=decode_basic_bt_transactions))
     additional_results: Optional[AdditionalResults] = field(default=None)
+
+    @classmethod
+    def from_dict_custom(cls, data: Any, decode_instruments: bool = True):
+        if decode_instruments:
+            return cls.from_dict(data)
+        return BasicBacktestResponse(measures=decode_basic_bt_measure_dict(data['measures']),
+                                     portfolio=decode_daily_portfolio(data['portfolio'], decode_instruments),
+                                     transactions=decode_basic_bt_transactions(data['transactions'],
+                                                                               decode_instruments),
+                                     additional_results=AdditionalResults.from_dict_custom(data['additional_results']))
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
