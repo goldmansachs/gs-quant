@@ -1,9 +1,0 @@
-{
-    "request_id": "1_QuantityScaledAction1_call_2021-12-08Price2021Dec08",
-    "request_hash": "e01ef0f9a9f18d5aa78ac77bd481e3da",
-    "type": "MockCalc",
-    "tests": [
-        "test_quantity_scaled_action_nav"
-    ],
-    "mocked_data": "[[[[{\"$type\": \"Risk\", \"unit\": {\"European Euro\": 1.0}, \"val\": 89.33151346325529}]]]]"
-}

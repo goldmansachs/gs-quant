@@ -27,7 +27,8 @@ class GsBacktestXassetApi:
         return result
 
     @classmethod
-    def calculate_basic_backtest(cls, backtest_request: BasicBacktestRequest) -> BasicBacktestResponse:
+    def calculate_basic_backtest(cls, backtest_request: BasicBacktestRequest, decode_instruments: bool = True) -> \
+            BasicBacktestResponse:
         response = GsSession.current._post('/backtests/xasset/strategy/basic', backtest_request.to_json())
-        result = BasicBacktestResponse.from_dict(response)
+        result = BasicBacktestResponse.from_dict_custom(response, decode_instruments)
         return result
