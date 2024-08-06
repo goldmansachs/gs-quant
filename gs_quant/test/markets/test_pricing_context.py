@@ -149,6 +149,7 @@ def test_creation():
     assert c1.use_cache is False
     assert c1._max_concurrent == 1000
     assert c1.provider is None
+    assert c1._dates_per_batch == 1
 
     assert c1.pricing_date == datetime.date(2022, 6, 15)
 
@@ -171,6 +172,7 @@ def test_inheritance():
             assert c2.use_cache is False
             assert c2._max_concurrent == 1000
             assert not c2.use_historical_diddles_only
+            assert c2._dates_per_batch == 1
             with c3:
                 # market data location is inherited from c1 (the active context)
                 assert c3.market_data_location == c1.market_data_location
@@ -181,6 +183,7 @@ def test_inheritance():
                 assert c3.use_cache is False
                 assert c3._max_concurrent == 1000
                 assert c3.use_historical_diddles_only
+                assert c3._dates_per_batch == 1
 
 
 def test_max_concurrent():
@@ -201,6 +204,26 @@ def test_max_concurrent():
             assert PricingContext.current._max_concurrent == 2000  # should be same as above property accessor
         with c:
             assert PricingContext.current._max_concurrent == 3000  # should be same as above property accessor
+
+
+def test_dates_per_batch():
+    a = PricingContext()
+    assert a._dates_per_batch == 1
+
+    b = PricingContext()
+    b._dates_per_batch = 2
+
+    c = PricingContext()
+    c._dates_per_batch = 3
+
+    assert b._dates_per_batch == 2
+    with b:
+        assert a._dates_per_batch == 2
+        assert c._dates_per_batch == 3
+        with a:
+            assert PricingContext.current._dates_per_batch == 2
+        with c:
+            assert PricingContext.current._dates_per_batch == 3
 
 
 def test_current_inheritance():
