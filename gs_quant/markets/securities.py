@@ -1521,7 +1521,7 @@ class SecurityMaster:
 
         Get asset by bloomberg id:
 
-        >>> gs = SecurityMaster.get_asset("GS UN", AssetIdentifier.BLOOMBERG_ID)
+        >>> gs = SecurityMaster.get_asset("GS UN", AssetIdentifier.BLOOMBERG_ID, as_of=dt.datetime(2022, 2, 2, 22, 22))
 
         Get asset by ticker and exchange code:
 
@@ -1590,7 +1590,7 @@ class SecurityMaster:
         type_ = id_type.value
         params = {
             type_: id_value,
-            'asOfDate': as_of.strftime('%Y-%m-%d')  # TODO: update endpoint to take times
+            'asOfDate': as_of.strftime('%Y-%m-%dT%H:%M:%S') if isinstance(as_of, dt.datetime) else as_of.strftime('%Y-%m-%d')
         }
         if fields is not None:
             request_fields = {
@@ -1651,7 +1651,7 @@ class SecurityMaster:
         params = {
             type_: id_values,
             'fields': ['id', 'identifiers'],
-            'asOfDate': as_of.strftime('%Y-%m-%d')  # TODO: update endpoint to take times
+            'asOfDate': as_of.strftime('%Y-%m-%dT%H:%M:%S') if isinstance(as_of, dt.datetime) else as_of.strftime('%Y-%m-%d')
         }
 
         r = GsSession.current._get('/markets/securities', payload=params)

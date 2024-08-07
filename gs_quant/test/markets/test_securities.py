@@ -44,10 +44,12 @@ def test_get_asset(mocker):
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID, as_of=dt.date.today())
 
+
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.STOCK
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID, as_of=dt.datetime.utcnow())
+    # asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID, as_of=dt.datetime(2022, 2, 2, 22, 22))
 
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.STOCK

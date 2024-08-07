@@ -676,7 +676,7 @@ def _zscore(x):
     if x.size == 1:
         return 0
 
-    return stats.zscore(x, ddof=1)[-1]
+    return stats.zscore(x, ddof=1).iloc[-1]
 
 
 @plot_function
@@ -911,7 +911,9 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
     elif not y.empty:
         min_periods = 0 if isinstance(w.r, pd.DateOffset) else w.r
         rolling_window = x[:y.index[-1]].rolling(w.w, min_periods)
-        percentile_on_x_index = rolling_window.apply(lambda a: percentileofscore(a, y[a.index[-1]:][0], kind="mean"))
+        percentile_on_x_index = rolling_window.apply(
+            lambda a: percentileofscore(a, y.iloc[y.index.get_loc(a.index[-1])], kind="mean")
+        )
         joined_index = pd.concat([x, y], axis=1).index
         res = percentile_on_x_index.reindex(joined_index, method="ffill")[y.index]
     return apply_ramp(res, w)
