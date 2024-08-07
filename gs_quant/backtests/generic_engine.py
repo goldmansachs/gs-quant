@@ -97,15 +97,9 @@ class AddTradeActionImpl(ActionHandler):
                 backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
                                                                                                 backtest,
                                                                                                 trigger_info, inst)
-
-        for s in backtest.states:
-            pos = []
-            for create_date, portfolio in orders.items():
-                pos += [inst for inst in portfolio.instruments
-                        if get_final_date(inst, create_date, self.action.trade_duration,
-                                          self.action.holiday_calendar) > s >= create_date]
-            if len(pos):
-                backtest.portfolio_dict[s].append(pos)
+                backtest_states = (s for s in backtest.states if final_date > s >= create_date)
+                for s in backtest_states:
+                    backtest.portfolio_dict[s].append(inst)
 
         return backtest
 
@@ -121,7 +115,7 @@ class AddScaledTradeActionImpl(ActionHandler):
         # Populate dict of dates and instruments sold on those dates
         for create_date, portfolio in orders.items():
             for inst in portfolio.all_instruments:
-                d = get_final_date(inst, create_date, self.action.trade_duration)
+                d = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar)
                 if d not in final_days_orders.keys():
                     final_days_orders[d] = []
                 final_days_orders[d].append(inst)
@@ -219,19 +213,14 @@ class AddScaledTradeActionImpl(ActionHandler):
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
                 backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(create_date, backtest,
                                                                                                  trigger_info, inst)
-                final_date = get_final_date(inst, create_date, self.action.trade_duration)
+                final_date = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
                 backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
                                                                                                 backtest,
                                                                                                 trigger_info, inst)
-
-        for s in backtest.states:
-            pos = []
-            for create_date, portfolio in orders.items():
-                pos += [inst for inst in portfolio.instruments
-                        if get_final_date(inst, create_date, self.action.trade_duration) > s >= create_date]
-            if len(pos):
-                backtest.portfolio_dict[s].append(pos)
+                backtest_states = (s for s in backtest.states if final_date > s >= create_date)
+                for s in backtest_states:
+                    backtest.portfolio_dict[s].append(inst)
 
         return backtest
 

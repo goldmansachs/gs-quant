@@ -175,6 +175,7 @@ class AddScaledTradeAction(Action):
     scaling_level: Union[float, int] = 1
     transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
                                                metadata=config(decoder=dc_decode(ConstantTransactionModel)))
+    holiday_calendar: Iterable[dt.date] = None
     class_type: str = static_field('add_scaled_trade_action')
 
     def __post_init__(self):
