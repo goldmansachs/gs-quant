@@ -191,6 +191,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__provider = provider
         self.__max_per_batch = None
         self.__max_concurrent = None
+        self.__dates_per_batch = None
         self.__use_historical_diddles_only = use_historical_diddles_only
         self.__set_parameters_only = set_parameters_only
 
@@ -216,6 +217,7 @@ class PricingContext(ContextBaseWithDefault):
         attr_dict['provider'] = self.__provider
         attr_dict['_max_concurrent'] = self.__max_concurrent
         attr_dict['_max_per_batch'] = self.__max_per_batch
+        attr_dict['_dates_per_batch'] = self.__dates_per_batch
         attr_dict['use_historical_diddles_only'] = self.__use_historical_diddles_only
 
     def _inherited_val(self, parameter, default=None, from_active=False):
@@ -255,6 +257,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__provider = self.provider
         self.__max_concurrent = self._max_concurrent
         self.__max_per_batch = self._max_per_batch
+        self.__dates_per_batch = self._dates_per_batch
         self.__use_historical_diddles_only = self.use_historical_diddles_only
 
     def __reset_atts(self):
@@ -274,6 +277,7 @@ class PricingContext(ContextBaseWithDefault):
         self.__provider = self.__attrs_on_entry.get('provider')
         self.__max_concurrent = self.__attrs_on_entry.get('_max_concurrent')
         self.__max_per_batch = self.__attrs_on_entry.get('_max_per_batch')
+        self.__dates_per_batch = self.__attrs_on_entry.get('_dates_per_batch')
 
         self.__attrs_on_entry = {}
 
@@ -324,7 +328,8 @@ class PricingContext(ContextBaseWithDefault):
                 # Restrict to 1,000 instruments and 1 date in a batch, until server side changes are made
 
                 for (params, scenario, dates_markets, risk_measures), instruments in grouped_requests.items():
-                    date_chunk_size = (1 if self._group_by_date else self._max_per_batch) if provider.batch_dates \
+                    date_chunk_size = (self._dates_per_batch if self._group_by_date
+                                       else self._max_per_batch) if provider.batch_dates \
                         else len(dates_markets)
                     for insts_chunk in [tuple(filter(None, i)) for i in
                                         zip_longest(*[iter(instruments)] * self._max_per_batch)]:
@@ -418,6 +423,14 @@ class PricingContext(ContextBaseWithDefault):
     @_max_per_batch.setter
     def _max_per_batch(self, value):
         self.__max_per_batch = value
+
+    @property
+    def _dates_per_batch(self) -> int:
+        return self.__dates_per_batch if self.__dates_per_batch else self._inherited_val('_dates_per_batch', default=1)
+
+    @_dates_per_batch.setter
+    def _dates_per_batch(self, value):
+        self.__dates_per_batch = value
 
     @property
     def is_async(self) -> bool:

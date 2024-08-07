@@ -108,6 +108,12 @@ class PortfolioManager(PositionedEntity):
                                           position_source_id=self.id,
                                           report_type='Portfolio Performance Analytics',
                                           tags=tags)
+
+        # If tags is set to None, it returns all PPA reports for the portfolio,
+        # and returning reports[0] can return any one PPA, so specifically if tags is None it means we are
+        # looking for the root PPA, we need to explicitly filter out and get the one report where tags is None
+        if tags is None:
+            reports = [report for report in reports if report.parameters.tags is None]
         if len(reports) == 0:
             raise MqError('No performance report found.')
         return PerformanceReport.from_target(reports[0])
