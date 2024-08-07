@@ -686,6 +686,84 @@ def test_rolling_linear_regression():
     expected = pd.Series([np.nan, np.nan, np.nan, 0.0, 2.236068, 4.472136], index=pd.date_range('2019-1-1', periods=6))
     assert_series_equal(regression.standard_deviation_of_errors(), expected, check_names=False)
 
+def test_si_model():
+    n = 1000
+    d = 100
+    i0 = 100
+    s0 = n - i0  
+    beta = 0.5
+
+    t = np.linspace(0, d, d)
+
+    def deriv(y, t_loc, n_loc, beta_loc):
+        s, i = y
+        dsdt = -beta_loc * s * i / n_loc
+        didt = beta_loc * s * i / n_loc
+
+        return dsdt, didt
+
+    def get_series(beta_loc):
+        # Initial conditions vector
+        y0 = s0, i0
+        # Integrate the SI equations over the time grid, t.
+        ret = odeint(deriv, y0, t, args=(n, beta_loc))
+        s, i = ret.T
+
+        dr = pd.date_range(dt.date.today(), dt.date.today() + dt.timedelta(days=d - 1))
+        return pd.Series(s, dr), pd.Series(i, dr)
+
+    # Test 'mass action' incidence
+    (s, i) = get_series(beta)
+    si_mass_action = SIModel(beta, s, i, n, incidence_type='mass_action')
+
+    assert abs(si_mass_action.beta() - beta) < 0.01
+
+    beta = 0.4
+
+    (s, i) = get_series(beta)
+
+    s_predict_mass_action = si_mass_action.predict_s()
+    i_predic_mass_action = si_mass_action.predict_i()
+
+    assert s_predict_mass_action.size == d
+    assert i_predic_mass_action.size == d
+
+    # Test 'standard' incidence
+    (s, i) = get_series(beta)
+    si_standard = SIModel(beta, s, i, n, incidence_type='standard')
+
+    assert abs(si_standard.beta() - beta) < 0.01
+
+    beta = 0.4
+
+    (s, i) = get_series(beta)
+
+    s_predict_standard = si_standard.predict_s()
+    i_predic_standard = si_standard.predict_i()
+
+    assert s_predict_standard.size == d
+    assert i_predic_standard.size == d
+
+    # Test for type error in fit parameter
+    with pytest.raises(MqTypeError):
+        SIModel(beta, s, i, n, fit=0)
+
+    si_standard_no_fit = SIModel(beta, s, i, n, fit=False, incidence_type='standard')
+
+    assert si_standard_no_fit.beta() == beta
+
+    si1 = SIModel(beta, s, i, n, fit=False, incidence_type='standard')
+
+    with DataContext(end=dt.date.today() + dt.timedelta(days=d - 1)):
+        si2 = SIModel(beta, s.iloc[0], i, n, fit=False, incidence_type='standard')
+
+    assert si1.beta() == si1.beta()
+    assert (si1.predict_i() == si2.predict_i()).all()
+    assert (si1.predict_s() == si2.predict_s()).all()
+
+    # Additional checks for mass action and standard
+    assert not (si_mass_action.predict_i() == si_standard.predict_i()).all()
+    assert not (si_mass_action.predict_s() == si_standard.predict_s()).all()
 
 def test_sir_model():
     n = 1000

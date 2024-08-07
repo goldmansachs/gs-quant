@@ -10,7 +10,10 @@ Epidemiology
 .. autosummary::
    :toctree: classes
 
+   SI
+   SIS
    SIR
+   SIRS
    SEIR
    EpidemicModel
 

@@ -149,6 +149,7 @@ Statistics
 
    LinearRegression
    RollingLinearRegression
+   SIModel
    SIRModel
    SEIRModel
 

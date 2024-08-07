@@ -256,7 +256,7 @@ def test_trend():
     long_x = pd.Series(range(len(long_dates)), index=long_dates)
     res = trend(long_x)  # Should not be all NaN, make sure it's correct length
     assert len(res) == len(long_x)
-    assert np.isclose(res[int(len(res) / 2)], long_x[int(len(res) / 2)], 0.1)
+    assert np.isclose(res.iloc[int(len(res) / 2)], long_x.iloc[int(len(res) / 2)], atol=0.1)
     assert res.notnull().any()
     with pytest.raises(ValueError):
         trend(long_x, SeasonalModel.MULTIPLICATIVE)  # Should not be all NaN, make sure it's correct length

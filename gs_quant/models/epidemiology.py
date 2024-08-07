@@ -39,18 +39,150 @@ class CompartmentalModel(ABC):
     def get_parameters(cls, *args, **kwargs) -> tuple:
         raise NotImplementedError
 
+class SI(CompartmentalModel):
+    """SI Model"""
+
+    @classmethod
+    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple], incidence_type: str = 'mass_action') -> tuple:
+        """
+        SI model derivatives at t.
+
+        :param xs: variables that we are solving for, i.e. [S]usceptible, [I]nfected
+        :param t: time parameter, inactive for this model
+        :param parameters: parameters of the model (not including initial conditions), i.e. beta, N
+        :param incidence_type: type of incidence ('standard' or 'mass_action')
+        :return: tuple, the derivatives dSdt, dIdt of each of the S, I variables
+        """
+        s, i = xs
+
+        if isinstance(parameters, Parameters):
+            beta = parameters['beta'].value
+            N = parameters['N'].value
+        elif isinstance(parameters, tuple):
+            beta, N = parameters
+        else:
+            raise ValueError("Cannot recognize parameter input")
+
+        if incidence_type == 'mass_action':
+            dSdt = - beta * s * i / N
+            dIdt = beta * s * i / N
+        elif incidence_type == 'standard':
+            dSdt = - beta * s * i
+            dIdt = beta * s * i
+        else:
+            raise ValueError("Invalid incidence type. Choose 'mass_action' or 'standard'.")
+
+        return dSdt, dIdt
+
+    @classmethod
+    def get_parameters(cls, S0: float, I0: float, N: float, beta: float = 0.2,
+                       beta_max: float = 10, S0_fixed: bool = True, S0_max: float = 1e6,
+                       beta_fixed: bool = False,I0_fixed: bool = True, I0_max: float = 1e6) \
+            -> tuple:
+        """
+        Produce a set of parameters for the SI model.
+
+        :param S0: initial number of susceptible in the population
+        :param I0: initial number of infected in the population, usually set to 1
+        :param N: size of the population
+        :param beta: transmission rate parameter
+        :param beta_max: maximum value to consider for beta during parameter fitting
+        :param S0_fixed: whether to keep S0 fixed during fitting
+        :param S0_max: maximum value of S0 to consider during parameter fitting
+        :param I0_fixed: whether to keep I0 fixed during fitting
+        :param I0_max: maximum value of I0 to consider during parameter fitting
+        :return: tuple[Parameters, list]: (parameters, a list of the names of the variables for initial conditions)
+        """
+        parameters = Parameters()
+        parameters.add('N', value=N, min=0, max=N, vary=False)
+        parameters.add('S0', value=S0, min=0, max=S0_max, vary=not S0_fixed)
+        parameters.add('I0', value=I0, min=0, max=I0_max, vary=not I0_fixed)
+        parameters.add('beta', value=beta, min=0, max=beta_max, vary=not beta_fixed)
+        initial_conditions = ['S0', 'I0']
+
+        return parameters, initial_conditions
+    
+class SIS(CompartmentalModel):
+    """SIS Model"""
+
+    @classmethod
+    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple], incidence_type: str = 'mass_action') -> tuple:
+        """
+        SIS model derivatives at t.
+
+        :param xs: variables that we are solving for, i.e. [S]usceptible, [I]nfected
+        :param t: time parameter, inactive for this model
+        :param parameters: parameters of the model (not including initial conditions), i.e. beta, delta, N
+        :param incidence_type: type of incidence ('standard' or 'mass_action')
+        :return: tuple, the derivatives dSdt, dIdt of each of the S, I variables
+        """
+        s, i = xs
+
+        if isinstance(parameters, Parameters):
+            beta = parameters['beta'].value
+            delta = parameters['delta'].value
+            N = parameters['N'].value
+        elif isinstance(parameters, tuple):
+            beta, delta , N = parameters
+        else:
+            raise ValueError("Cannot recognize parameter input")
+
+        if incidence_type == 'mass_action':
+            dSdt = - beta * s * i / N + delta * i
+            dIdt = beta * s * i / N - delta * i
+        elif incidence_type == 'standard':
+            dSdt = - beta * s * i + delta * i
+            dIdt = beta * s * i - delta * i
+        else:
+            raise ValueError("Invalid incidence type. Choose 'mass_action' or 'standard'.")
+
+        return dSdt, dIdt
+
+    @classmethod
+    def get_parameters(cls, S0: float, I0: float, N: float, beta: float = 0.2, delta: float = 0.1,
+                       beta_max: float = 10, delta_max: float = 1, S0_fixed: bool = True, S0_max: float = 1e6,
+                       beta_fixed: bool = False, delta_fixed: bool = False,
+                       I0_fixed: bool = True, I0_max: float = 1e6) \
+            -> tuple:
+        """
+        Produce a set of parameters for the SI model.
+
+        :param S0: initial number of susceptible in the population
+        :param I0: initial number of infected in the population, usually set to 1
+        :param N: size of the population
+        :param beta: transmission rate parameter
+        :param beta_max: maximum value to consider for beta during parameter fitting
+        :param delta: loss of imunity rate parameter (recovered individuals return to the susceptible statue due to loss of immunity)
+        :param beta_max: maximum value to consider for beta during parameter fitting
+        :param S0_fixed: whether to keep S0 fixed during fitting
+        :param S0_max: maximum value of S0 to consider during parameter fitting
+        :param I0_fixed: whether to keep I0 fixed during fitting
+        :param I0_max: maximum value of I0 to consider during parameter fitting
+        :return: tuple[Parameters, list]: (parameters, a list of the names of the variables for initial conditions)
+        """
+        parameters = Parameters()
+        parameters.add('N', value=N, min=0, max=N, vary=False)
+        parameters.add('S0', value=S0, min=0, max=S0_max, vary=not S0_fixed)
+        parameters.add('I0', value=I0, min=0, max=I0_max, vary=not I0_fixed)
+        parameters.add('beta', value=beta, min=0, max=beta_max, vary=not beta_fixed)
+        parameters.add('delta', value=delta, min=0, max=delta_max, vary=not delta_fixed)
+        initial_conditions = ['S0', 'I0']
+
+        return parameters, initial_conditions
+
 
 class SIR(CompartmentalModel):
     """SIR Model"""
 
     @classmethod
-    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple]) -> tuple:
+    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple], incidence_type: str = 'mass_action') -> tuple:
         """
         SIR model derivatives at t.
 
         :param xs: variables that we are solving for, i.e. [S]usceptible, [I]nfected, [R]emoved
         :param t: time parameter, inactive for this model
         :param parameters: parameters of the model (not including initial conditions), i.e. beta, gamma, N
+        :param incidence_type: type of incidence ('standard' or 'mass_action')
         :return: tuple, the derivatives dSdt, dIdt, dRdt of each of the S, I, R variables
         """
         s, i, r = xs
@@ -64,8 +196,15 @@ class SIR(CompartmentalModel):
         else:
             raise ValueError("Cannot recognize parameter input")
 
-        dSdt = - beta * s * i / N
-        dIdt = beta * s * i / N - gamma * i
+        if incidence_type == 'mass_action':
+            dSdt = - beta * s * i / N
+            dIdt = beta * s * i / N - gamma * i
+        elif incidence_type == 'standard':
+            dSdt = - beta * s * i
+            dIdt = beta * s * i - gamma * i
+        else:
+            raise ValueError("Invalid incidence type. Choose 'mass_action' or 'standard'.")
+        
         dRdt = gamma * i
 
         return dSdt, dIdt, dRdt
@@ -105,13 +244,92 @@ class SIR(CompartmentalModel):
         initial_conditions = ['S0', 'I0', 'R0']
 
         return parameters, initial_conditions
+    
+class SIRS(CompartmentalModel):
+    """SIRS Model"""
+
+    @classmethod
+    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple], incidence_type: str = 'mass_action') -> tuple:
+        """
+        SIRS model derivatives at t.
+
+        :param xs: variables that we are solving for, i.e. [S]usceptible, [I]nfected, [R]emoved
+        :param t: time parameter, inactive for this model
+        :param parameters: parameters of the model (not including initial conditions), i.e. beta, gamma, delta, N
+        :param incidence_type: type of incidence ('standard' or 'mass_action')
+        :return: tuple, the derivatives dSdt, dIdt, dRdt of each of the S, I, R variables
+        """
+        s, i, r = xs
+
+        if isinstance(parameters, Parameters):
+            beta = parameters['beta'].value
+            gamma = parameters['gamma'].value
+            delta = parameters['gamma'].value
+            N = parameters['N'].value
+        elif isinstance(parameters, tuple):
+            beta, gamma, delta, N = parameters
+        else:
+            raise ValueError("Cannot recognize parameter input")
+
+        if incidence_type == 'mass_action':
+            dSdt = - beta * s * i / N + delta * r
+            dIdt = beta * s * i / N - gamma * i
+        elif incidence_type == 'standard':
+            dSdt = - beta * s * i + delta * r
+            dIdt = beta * s * i - gamma * i
+        else:
+            raise ValueError("Invalid incidence type. Choose 'mass_action' or 'standard'.")
+        
+        dRdt = gamma * i - delta * r
+
+        return dSdt, dIdt, dRdt
+
+    @classmethod
+    def get_parameters(cls, S0: float, I0: float, R0: float, N: float, beta: float = 0.2, gamma: float = 0.1, delta: float = 0.1,
+                       beta_max: float = 10, gamma_max: float = 1, delta_max: float = 1, S0_fixed: bool = True, S0_max: float = 1e6,
+                       beta_fixed: bool = False, gamma_fixed: bool = False, delta_fixed: bool = False,
+                       R0_fixed: bool = True, R0_max: float = 1e6, I0_fixed: bool = True, I0_max: float = 1e6) \
+            -> tuple:
+        """
+        Produce a set of parameters for the SIR model.
+
+        :param S0: initial number of susceptible in the population
+        :param I0: initial number of infected in the population, usually set to 1
+        :param R0: initial number of recovered/removed in the population, usually set to 0
+        :param N: size of the population
+        :param beta: transmission rate parameter
+        :param gamma: recovery rate parameter
+        :param delta: loss of imunity rate parameter (recovered individuals return to the susceptible statue due to loss of immunity)
+        :param beta_max: maximum value to consider for beta during parameter fitting
+        :param gamma_max: maximum value of gamma to consider during parameter fitting
+        :param delta_max: maximum value of delta to consider during parameter fitting
+        :param S0_fixed: whether to keep S0 fixed during fitting
+        :param S0_max: maximum value of S0 to consider during parameter fitting
+        :param R0_fixed: whether to keep R0 fixed during fitting
+        :param R0_max: maximum value of R0 to consider during parameter fitting
+        :param I0_fixed: whether to keep I0 fixed during fitting
+        :param I0_max: maximum value of I0 to consider during parameter fitting
+        :return: tuple[Parameters, list]: (parameters, a list of the names of the variables for initial conditions)
+        """
+        parameters = Parameters()
+        parameters.add('N', value=N, min=0, max=N, vary=False)
+        parameters.add('S0', value=S0, min=0, max=S0_max, vary=not S0_fixed)
+        parameters.add('I0', value=I0, min=0, max=I0_max, vary=not I0_fixed)
+        parameters.add('R0', value=R0, min=0, max=R0_max, vary=not R0_fixed)
+        parameters.add('beta', value=beta, min=0, max=beta_max, vary=not beta_fixed)
+        parameters.add('gamma', value=gamma, min=0, max=gamma_max, vary=not gamma_fixed)
+        parameters.add('delta', value=delta, min=0, max=delta_max, vary=not delta_fixed)
+        initial_conditions = ['S0', 'I0', 'R0']
+
+        return parameters, initial_conditions
+
 
 
 class SEIR(CompartmentalModel):
     """SEIR Model"""
 
     @classmethod
-    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple]) -> tuple:
+    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple], incidence_type: str = 'mass_action') -> tuple:
         """
         SEIR model derivatives at t.
 
@@ -131,9 +349,17 @@ class SEIR(CompartmentalModel):
             beta, gamma, sigma, N = parameters
         else:
             raise ValueError("Cannot recognize parameter input")
+        
+        
+        if incidence_type == 'mass_action':
+            dSdt = - beta * s * i / N
+            dEdt = beta * s * i / N - sigma * e
+        elif incidence_type == 'standard':
+            dSdt = - beta * s * i
+            dEdt = beta * s * i - sigma * e
+        else:
+            raise ValueError("Invalid incidence type. Choose 'mass_action' or 'standard'.")
 
-        dSdt = -beta * s * i / N
-        dEdt = beta * s * i / N - sigma * e
         dIdt = sigma * e - gamma * i
         dRdt = gamma * i
 
@@ -214,7 +440,7 @@ class SEIRCM(CompartmentalModel):
         with cumulative cases (C) and cumulative fatalities (M) """
 
     @classmethod
-    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple]) -> tuple:
+    def calibrate(cls, xs: tuple, t: float, parameters: Union[Parameters, tuple], incidence_type: str = 'mass_action') -> tuple:
         """
         SEIRCM model derivatives at t.
 
@@ -244,9 +470,17 @@ class SEIRCM(CompartmentalModel):
 
         # if T_quarantine is 0, we are not considering effect of quarantine policy so scale factor is fixed at 1
         quarantine_factor = switch(t, T_quarantine, eta=eta) if T_quarantine else 1
+        
+        
+        if incidence_type == 'mass_action':
+            dSdt = -(quarantine_factor * beta) * s * i / N  # susceptible -> exposed
+            dEdt = (quarantine_factor * beta) * s * i / N - sigma * e  # exposed -> infected AND recorded cases
+        elif incidence_type == 'standard':
+            dSdt = -(quarantine_factor * beta) * s * i  # susceptible -> exposed
+            dEdt = (quarantine_factor * beta) * s * i - sigma * e  # exposed -> infected AND recorded cases
+        else:
+            raise ValueError("Invalid incidence type. Choose 'mass_action' or 'standard'.")
 
-        dSdt = -(quarantine_factor * beta) * s * i / N  # susceptible -> exposed
-        dEdt = (quarantine_factor * beta) * s * i / N - sigma * e  # exposed -> infected AND recorded cases
         dIdt = sigma * e - gamma * i  # infected -> removed (recovered AND dead)
         dRdt = (1 - epsilon) * gamma * i  # recovered (from removed)
         dCdt = sigma * e  # recorded cases (from infected)
@@ -332,7 +566,7 @@ class SEIRCMAgeStratified(CompartmentalModel):
     """ Age-structured SEIRCM Model from https://www.medrxiv.org/content/10.1101/2020.03.04.20031104v1.full.pdf """
 
     @classmethod
-    def calibrate(cls, y: list, t: float, parameters: Parameters) -> list:
+    def calibrate(cls, y: list, t: float, parameters: Parameters, incidence_type: str = 'mass_action') -> list:
         """
         SEIR model derivatives at t.
 
@@ -365,8 +599,15 @@ class SEIRCMAgeStratified(CompartmentalModel):
         quarantine_factor = switch(t, T_quarantine, eta=eta) if T_quarantine else 1
 
         for k in range(K):
-            dydt[k] = -(quarantine_factor * beta) * s(k) * I_total / N  # susceptible -> exposed
-            dydt[K + k] = (quarantine_factor * beta) * s(k) * I_total / N - sigma * e(k)  # exposed -> infected
+                
+            if incidence_type == 'mass_action':
+                dydt[k] = -(quarantine_factor * beta) * s(k) * I_total / N  # susceptible -> exposed
+                dydt[K + k] = (quarantine_factor * beta) * s(k) * I_total / N - sigma * e(k)  # exposed -> infected
+            elif incidence_type == 'standard':
+                dydt[k] = -(quarantine_factor * beta) * s(k) * I_total # susceptible -> exposed
+                dydt[K + k] = (quarantine_factor * beta) * s(k) * I_total - sigma * e(k)  # exposed -> infected
+            else:
+                raise ValueError("Invalid incidence type. Choose 'mass_action' or 'standard'.")
             dydt[2 * K + k] = sigma * e(k) - gamma * i(k)  # infected -> removed
             dydt[3 * K + k] = (1 - epsilon(k)) * gamma * i(k)  # -> cumulative recovered (from removed)
             dydt[4 * K + k] = sigma * e(k)  # -> cumulative recorded cases (from infected)
@@ -458,7 +699,7 @@ class EpidemicModel:
 
     def __init__(self, model: Type[CompartmentalModel], parameters: tuple = None, data: np.array = None,
                  initial_conditions: list = None, fit_method: str = 'leastsq', error: callable = None,
-                 fit_period: float = None):
+                 fit_period: float = None, incidence_type: str = 'mass_action'):
         """
         A class to standardize fitting and solving epidemiological models.
 
@@ -470,6 +711,7 @@ class EpidemicModel:
                            lmfit.minimizer.minimize function. Default is Levenberg-Marquardt least squares minimization.
         :param error: callable, control which residuals (and in what form) to minimize for fitting.
         :param fit_period: float, how far back to fit the data, defaults to fitting all data
+        incidence_type: str, the type of incidence  ('mass_action' or 'standard')
         """
         self.model = model
         self.parameters = parameters
@@ -480,6 +722,7 @@ class EpidemicModel:
         self.fit_period = fit_period
         self.result = None
         self.fitted_parameters = None
+        self.incidence_type = incidence_type
 
     def solve(self, time_range: np.ndarray, initial_conditions: Union[list, tuple], parameters) -> np.ndarray:
         """
@@ -490,7 +733,7 @@ class EpidemicModel:
         :param parameters: the parameters for the solution
         :return:
         """
-        x = odeint(self.model.calibrate, initial_conditions, time_range, args=(parameters,))
+        x = odeint(self.model.calibrate, initial_conditions, time_range, args=(parameters, self.incidence_type))
         x = np.array(x)
         return x
 
