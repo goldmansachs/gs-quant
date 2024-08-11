@@ -15,6 +15,8 @@
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
 
+# //Portions copyright Maximilian Boeck. Licensed under Apache 2.0 license
+
 import datetime
 
 import numpy

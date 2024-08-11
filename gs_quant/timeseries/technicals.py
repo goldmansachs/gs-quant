@@ -14,6 +14,9 @@
 # Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
+
+# //Portions copyright Maximilian Boeck. Licensed under Apache 2.0 license
+
 import pandas as pd
 import statsmodels.tsa.seasonal
 
