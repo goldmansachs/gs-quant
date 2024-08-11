@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+//Portions copyright Maximilian Boeck. Licensed under Apache 2.0 license
 """
 
 import datetime
@@ -3507,18 +3509,23 @@ def test_skew_term():
         _skew_term_typical(tm.SkewReference.DELTA, 25)
         _skew_term_empty()
         _skew_term_no_data()
+        
     with DataContext('2018-01-16', '2018-12-31'):
         out = _skew_term_typical(tm.SkewReference.DELTA, 25)
         assert out.empty
         assert set(out.dataset_ids) == set(_test_datasets + _test_datasets2)
+        
     with DataContext('2018-01-16', '2018-12-31'):
         out = _skew_term_typical_fx(tm.SkewReference.DELTA, 25)
         assert out.empty
+        
     with pytest.raises(NotImplementedError):
         tm.skew_term(..., tm.SkewReference.SPOT, 100, real_time=True)
+        
     with DataContext('2020-01-01', '2021-01-01'):
         with pytest.raises(MqError, match='forward looking date range'):
             tm.skew_term(Index('MA123', AssetClass.Equity, '123'), tm.SkewReference.SPOT, 100, source='plottool')
+            
     with DataContext(datetime.date.today(), datetime.date.today()):
         with pytest.raises(MqError, match='forward looking date range'):
             tm.skew_term(Index('MA123', AssetClass.Equity, '123'), tm.SkewReference.SPOT, 100, source='plottool')
@@ -5497,11 +5504,11 @@ def test_retail_interest_agg():
 
     replace = Replacer()
     positions_df = replace('gs_quant.timeseries.measures.PositionedEntity.get_positions_data', Mock())
-    positions_df.return_value = {
+    positions_df.return_value = pd.DataFrame({
         'id': ['MA4B66MW5E27UALNBLL', 'MA4B66MW5E27UALNBLL'],
         'assetClassificationsGicsSector': ['Energy', 'Health Care'],
-        'positionDate': ['2012-12-20', '2012-12-20']
-    }
+        'positionDate': [pd.Timestamp('2012-12-20'), pd.Timestamp('2012-12-20')]
+    })
 
     retail_df = pd.DataFrame(
         data={
@@ -5514,7 +5521,9 @@ def test_retail_interest_agg():
             'impliedRetailPctNotional': [60.0, 30.0],
             'assetId': ['MA4B66MW5E27UALNBLL', 'MA4B66MW5E27UALNBLL'],
         },
-        index=[pd.Timestamp('2021-12-20'), pd.Timestamp('2021-12-20')])
+        index=[pd.Timestamp('2021-12-20'), pd.Timestamp('2021-12-20')]
+    )
+
     retail_df_energy = pd.DataFrame(
         data={
             'shares': [10.0],
@@ -5526,35 +5535,45 @@ def test_retail_interest_agg():
             'impliedRetailPctNotional': [60.0],
             'assetId': ['MA4B66MW5E27UALNBLL'],
         },
-        index=[pd.Timestamp('2021-12-20')])
+        index=[pd.Timestamp('2021-12-20')]
+    )
+
     mock_retail = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
     mock_retail.return_value = retail_df
+
     expected_df = pd.DataFrame(
         data={'shares': [20.0], 'impliedRetailPctShares': [40.0], 'impliedRetailPctNotional': [60.0]},
-        index=[pd.Timestamp('2021-12-20')])
+        index=[pd.Timestamp('2021-12-20')]
+    )
 
     assert_series_equal(ExtendedSeries(expected_df['shares']),
                         tm.retail_interest_agg(mock_spx,
                                                tm.RetailMeasures.SHARES,
                                                tm.UnderlyingSourceCategory.ALL,
                                                tm.GICSSector.ALL))
+
     assert_series_equal(ExtendedSeries(expected_df['impliedRetailPctShares']),
                         tm.retail_interest_agg(mock_spx,
                                                tm.RetailMeasures.RETAIL_PCT_SHARES,
                                                tm.UnderlyingSourceCategory.ALL,
                                                tm.GICSSector.ALL))
+
     mock_retail.return_value = retail_df_energy
+
     assert_series_equal(ExtendedSeries(expected_df['impliedRetailPctNotional']),
                         tm.retail_interest_agg(mock_spx,
                                                tm.RetailMeasures.RETAIL_PCT_NOTIONAL,
                                                tm.UnderlyingSourceCategory.ALL,
                                                tm.GICSSector.ENERGY))
+
     mock_retail.return_value = pd.DataFrame(dtype=float)
+
     assert_series_equal(ExtendedSeries(dtype=float),
                         tm.retail_interest_agg(mock_spx,
                                                tm.RetailMeasures.RETAIL_PCT_NOTIONAL,
                                                tm.UnderlyingSourceCategory.ALL,
                                                tm.GICSSector.ENERGY))
+
     replace.restore()
 
 

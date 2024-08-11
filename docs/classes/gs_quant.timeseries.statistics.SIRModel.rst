@@ -1,4 +1,5 @@
-﻿gs\_quant.timeseries.statistics.SIRModel
+﻿.. This product contains code copyright Maximilian Boeck, licensed under Apache 2.0 license
+gs\_quant.timeseries.statistics.SIRModel
 ========================================
 
 .. currentmodule:: gs_quant.timeseries.statistics

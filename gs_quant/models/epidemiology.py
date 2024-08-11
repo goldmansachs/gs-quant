@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+//Portions copyright Maximilian Boeck. Licensed under Apache 2.0 license
 """
 from abc import ABC, abstractmethod
 from typing import Type, Union

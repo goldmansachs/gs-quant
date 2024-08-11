@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+//Portions copyright Maximilian Boeck. Licensed under Apache 2.0 license
 """
 
 import pytest
@@ -396,8 +398,8 @@ def test_exponential_std():
             ema = sum(weights * x) / sum(weights)
             debias_fact = sum(weights) ** 2 / (sum(weights) ** 2 - sum(weights ** 2))
             var = debias_fact * sum(weights * (x - ema) ** 2) / sum(weights)
-            std.iloc[i] = np.sqrt(var)
-        std[0] = np.NaN
+            std.iat[i] = np.sqrt(var)
+        std.iat[0] = np.NaN
         return std
 
     dates = [
