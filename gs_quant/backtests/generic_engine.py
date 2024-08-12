@@ -605,6 +605,7 @@ class GenericEngine(BacktestBaseEngine):
                                  is_batch=is_batch, use_historical_diddles_only=True)
 
         context._max_concurrent = 10000
+        context._dates_per_batch = 200
 
         return context
 
@@ -792,7 +793,7 @@ class GenericEngine(BacktestBaseEngine):
                         p.results = port.calc(tuple(risks))
 
     def _process_triggers_and_actions_for_date(self, d, strategy, backtest, risks):
-        logger.info(f'{d}: Processing triggers and actions')
+        logger.debug(f'{d}: Processing triggers and actions')
         # path dependent
         for trigger in strategy.triggers:
             if trigger.calc_type == CalcType.path_dependent:
@@ -892,7 +893,7 @@ class GenericEngine(BacktestBaseEngine):
                 leaves = []
                 for leaf in portfolio:
                     if leaf.name not in trades_for_date:
-                        logger.info(f'{day}: new portfolio position {leaf} scheduled for calculation')
+                        logger.debug(f'{day}: new portfolio position {leaf.name} scheduled for calculation')
                         leaves.append(leaf)
 
                 if len(leaves):

@@ -3632,6 +3632,10 @@ def current_constituents_dividend_yield(asset: Asset, period: str, period_direct
     if real_time:
         raise NotImplementedError('real-time current_constituents_dividend_yield not implemented')
 
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_dividend_yield not implemented for this basket. '
+                                  'Only available for flagship baskets')
+
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_DIVIDEND_YIELD.value
 
@@ -3667,6 +3671,9 @@ def current_constituents_earnings_per_share(asset: Asset, period: str,
     if real_time:
         raise NotImplementedError('real-time current_constituents_earnings_per_share not implemented')
 
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_earnings_per_share not implemented for this basket. '
+                                  'Only available for flagship baskets')
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE.value
 
@@ -3701,6 +3708,10 @@ def current_constituents_earnings_per_share_positive(asset: Asset, period: str,
     """
     if real_time:
         raise NotImplementedError('real-time current_constituents_earnings_per_share_positive not implemented')
+
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_earnings_per_share_positive not implemented for this basket. '
+                                  'Only available for flagship baskets')
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE_POSITIVE.value
@@ -3737,6 +3748,10 @@ def current_constituents_net_debt_to_ebitda(asset: Asset, period: str,
     if real_time:
         raise NotImplementedError('real-time current_constituents_net_debt_to_ebitda not implemented')
 
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_net_debt_to_ebitda not implemented for this basket. '
+                                  'Only available for flagship baskets')
+
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_NET_DEBT_TO_EBITDA.value
 
@@ -3771,6 +3786,10 @@ def current_constituents_price_to_book(asset: Asset, period: str, period_directi
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_book not implemented')
 
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_price_to_book not implemented for this basket. '
+                                  'Only available for flagship baskets')
+
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_BOOK.value
 
@@ -3804,6 +3823,10 @@ def current_constituents_price_to_cash(asset: Asset, period: str, period_directi
     """
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_cash not implemented')
+
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_price_to_cash not implemented for this basket. '
+                                  'Only available for flagship baskets')
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_CASH.value
@@ -3840,6 +3863,10 @@ def current_constituents_price_to_earnings(asset: Asset, period: str,
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_earnings not implemented')
 
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_price_to_earnings not implemented for this basket. '
+                                  'Only available for flagship baskets')
+
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS.value
 
@@ -3875,6 +3902,10 @@ def current_constituents_price_to_earnings_positive(asset: Asset, period: str,
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_earnings_positive not implemented')
 
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_price_to_earnings_positive not implemented for this basket. '
+                                  'Only available for flagship baskets')
+
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS_POSITIVE.value
 
@@ -3908,6 +3939,10 @@ def current_constituents_price_to_sales(asset: Asset, period: str, period_direct
     """
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_sales not implemented')
+
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_price_to_sales not implemented for this basket. '
+                                  'Only available for flagship baskets')
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_SALES.value
@@ -3943,6 +3978,10 @@ def current_constituents_return_on_equity(asset: Asset, period: str, period_dire
     if real_time:
         raise NotImplementedError('real-time current_constituents_return_on_equity not implemented')
 
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_return_on_equity not implemented for this basket. '
+                                  'Only available for flagship baskets')
+
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_RETURN_ON_EQUITY.value
 
@@ -3976,6 +4015,10 @@ def current_constituents_sales_per_share(asset: Asset, period: str, period_direc
     """
     if real_time:
         raise NotImplementedError('real-time current_constituents_sales_per_share not implemented')
+
+    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+        raise NotImplementedError('current_constituents_sales_per_share not implemented for this basket. '
+                                  'Only available for flagship baskets')
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_SALES_PER_SHARE.value

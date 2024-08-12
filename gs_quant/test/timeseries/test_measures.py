@@ -4601,7 +4601,17 @@ def test_weighted_average_valuation_curve_for_calendar_strip():
 def test_fundamental_metrics():
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
-    mock_rb = CustomBasket(GsAsset(AssetClass.Equity, AssetType.Research_Basket, 'GSTEST01'))
+    mock_rb = CustomBasket(GsAsset(AssetClass.Equity, AssetType.Research_Basket, 'GSTEST01', None, None, None, None,
+                                   None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+                                   None, None, {'flagship': True}))
+    mock_non_flagship = CustomBasket(GsAsset(AssetClass.Equity, AssetType.Research_Basket, 'GSTEST01', None, None, None,
+                                             None, None, None, None, None, None, None, None, None, None, None, None,
+                                             None, None, None, None, None, {'flagship': False}))
+    mock_basket_no_parameters = CustomBasket(GsAsset(AssetClass.Equity, AssetType.Research_Basket, 'GSTEST01'))
+    mock_basket_no_flagship_parameter = CustomBasket(GsAsset(AssetClass.Equity, AssetType.Research_Basket, 'GSTEST01',
+                                                             None, None, None, None, None, None, None, None, None,
+                                                             None, None, None, None, None, None, None, None, None,
+                                                             None, None, {}))
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_eq)
     period = '1y'
     direction = tm.FundamentalMetricPeriodDirection.FORWARD
@@ -4743,6 +4753,105 @@ def test_fundamental_metrics():
     assert actual.dataset_ids == _test_datasets
     with pytest.raises(NotImplementedError):
         tm.current_constituents_sales_per_share(..., period, direction, real_time=True)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_dividend_yield(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_earnings_per_share(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_earnings_per_share_positive(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_net_debt_to_ebitda(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_book(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_cash(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_earnings(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_earnings_positive(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_sales(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_return_on_equity(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_sales_per_share(mock_non_flagship, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_dividend_yield(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_earnings_per_share(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_earnings_per_share_positive(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_net_debt_to_ebitda(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_book(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_cash(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_earnings(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_earnings_positive(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_sales(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_return_on_equity(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_sales_per_share(mock_basket_no_parameters, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_dividend_yield(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_earnings_per_share(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_earnings_per_share_positive(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_net_debt_to_ebitda(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_book(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_cash(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_earnings(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_earnings_positive(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_price_to_sales(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_return_on_equity(mock_basket_no_flagship_parameter, period, direction)
+
+    with pytest.raises(NotImplementedError):
+        tm.current_constituents_sales_per_share(mock_basket_no_flagship_parameter, period, direction)
 
     replace.restore()
 
