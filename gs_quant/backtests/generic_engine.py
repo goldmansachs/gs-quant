@@ -34,7 +34,6 @@ from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_dat
 from gs_quant.common import ParameterisedRiskMeasure, RiskMeasure
 from gs_quant.context_base import nullcontext
 from gs_quant.datetime.relative_date import RelativeDateSchedule
-from gs_quant.instrument import Instrument
 from gs_quant.markets import PricingContext, HistoricalPricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import Price
@@ -863,10 +862,7 @@ class GenericEngine(BacktestBaseEngine):
                         hedge.exit_payment.scale_date = None
                 else:
                     new_notional = getattr(p.trade, p.scaling_parameter) * -scaling_factor
-                    scaled_trade = p.trade.as_dict()
-                    scaled_trade[p.scaling_parameter] = new_notional
-                    scaled_trade = Instrument.from_dict(scaled_trade)
-                    scaled_trade.name = p.trade.name
+                    scaled_trade = p.trade.clone(**{p.scaling_parameter: new_notional, 'name': p.trade.name})
                     for day in p.dates:
                         backtest.add_results(day, p.results[day] * -scaling_factor)
                         backtest.portfolio_dict[day] += Portfolio(scaled_trade)
