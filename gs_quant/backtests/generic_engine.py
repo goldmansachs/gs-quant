@@ -909,12 +909,11 @@ class GenericEngine(BacktestBaseEngine):
         for _, cash_payments in backtest.cash_payments.items():
             for cp in cash_payments:
                 # only calc if additional point is required
-                cp_day_results = backtest.results[cp.effective_date]
                 trades = cp.trade.all_instruments if isinstance(cp.trade, Portfolio) else [cp.trade]
                 for trade in trades:
                     if cp.effective_date and cp.effective_date <= strategy_end_date:
                         if cp.effective_date not in backtest.results or \
-                                trade not in cp_day_results:
+                                trade not in backtest.results[cp.effective_date]:
                             cash_trades_by_date[cp.effective_date].append(trade)
                         else:
                             cp.scale_date = None
@@ -934,12 +933,12 @@ class GenericEngine(BacktestBaseEngine):
                     backtest.cash_dict[d] = current_value
                 if d in backtest.cash_payments:
                     for cp in backtest.cash_payments[d]:
-                        cp_day_risk_results = backtest.results[cp.effective_date][price_risk]
                         trades = cp.trade.all_instruments if isinstance(cp.trade, Portfolio) else [cp.trade]
                         for trade in trades:
                             value = cash_results.get(cp.effective_date, {}).get(price_risk, {}).get(trade.name, {})
                             try:
-                                value = cp_day_risk_results[trade.name] if value == {} else value
+                                value = backtest.results[cp.effective_date][price_risk][trade.name] \
+                                    if value == {} else value
                             except (KeyError, ValueError):
                                 raise RuntimeError(f'failed to get cash value for {trade.name} on '
                                                    f'{cp.effective_date} received value of {value}')
