@@ -476,9 +476,11 @@ class GsSession(ContextBase):
                                          return_request_id=return_request_id)
         return ret
 
-    def _connect_websocket(self, path: str, headers: Optional[dict] = None, include_version=True):
+    def _connect_websocket(self, path: str, headers: Optional[dict] = None, include_version=True,
+                           domain: Optional[str] = None):
         import websockets
-        url = 'ws{}{}{}'.format(self.domain[4:], '/' + self.api_version if include_version else '', path)
+        version_path = '/' + self.api_version if include_version else ''
+        url = f'{domain}{version_path}{path}' if domain else f'ws{self.domain[4:]}{version_path}{path}'
         extra_headers = self._headers() + list((headers or {}).items())
         return websockets.connect(url,
                                   extra_headers=extra_headers,
