@@ -266,6 +266,14 @@ class GsAssetApi:
         return GsSession.current._get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
 
     @classmethod
+    @_cached
+    async def get_asset_async(
+            cls,
+            asset_id: str,
+    ) -> GsAsset:
+        return await GsSession.current._get_async('/assets/{id}'.format(id=asset_id), cls=GsAsset)
+
+    @classmethod
     def get_asset_by_name(cls, name: str) -> GsAsset:
         ret = GsSession.current._get('/assets?name={}'.format(name))
         num_found = ret.get('totalResults', 0)
