@@ -16,6 +16,8 @@ under the License.
 
 import dataclasses
 
+import pytest
+
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData, \
     FloatWithData, StringWithData, VectorWithData, MatrixWithData
 
@@ -25,3 +27,19 @@ def test_request_types():
     for c in cls:
         assert dataclasses.is_dataclass(c)
         assert issubclass(c, RiskResultWithData)
+
+
+def test_arithmetics():
+    assert FloatWithData(result=2) + FloatWithData(result=3) == FloatWithData(result=5)
+    assert FloatWithData(result=2) - FloatWithData(result=3) == FloatWithData(result=-1)
+    assert FloatWithData(result=2) * FloatWithData(result=3) == FloatWithData(result=6)
+    assert FloatWithData(result=2, unit='EUR') / FloatWithData(result=3, unit='EUR') == FloatWithData(result=2 / 3,
+                                                                                                      unit='EUR')
+    assert 3 + FloatWithData(result=2, unit='EUR') == FloatWithData(result=5, unit='EUR')
+    with pytest.raises(ValueError):
+        FloatWithData(result=2) + 'a'
+    with pytest.raises(ValueError):
+        FloatWithData(result=2, unit='EUR') + FloatWithData(result=3, unit='USD')
+
+    assert StringWithData(result='ab') + StringWithData(result='cd') == StringWithData(result='abcd')
+    assert StringWithData(result='ab') + 'cd' == StringWithData(result='abcd')

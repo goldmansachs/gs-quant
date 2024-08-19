@@ -30,6 +30,44 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_resu
 class RiskResultWithData:
     unit: Optional[str] = None
 
+    def check_can_aggregate(self, other):
+        if isinstance(other, RiskResultWithData):
+            if self.unit != other.unit:
+                raise ValueError(f'Cannot aggregate risk results with different units: {self.unit}, {other.unit}')
+        else:
+            if not isinstance(other, type(self.result)):
+                raise ValueError(f'Incorrect type for other operand {type(other)}')
+
+    def __add__(self, other):
+        self.check_can_aggregate(other)
+        other_operand = other.result if isinstance(other, RiskResultWithData) else other
+        return type(self)(unit=self.unit, result=self.result + other_operand)
+
+    def __radd__(self, other):
+        self.check_can_aggregate(other)
+        other_operand = other.result if isinstance(other, RiskResultWithData) else other
+        return type(self)(unit=self.unit, result=other_operand + self.result)
+
+    def __sub__(self, other):
+        self.check_can_aggregate(other)
+        other_operand = other.result if isinstance(other, RiskResultWithData) else other
+        return type(self)(unit=self.unit, result=self.result - other_operand)
+
+    def __mul__(self, other):
+        self.check_can_aggregate(other)
+        other_operand = other.result if isinstance(other, RiskResultWithData) else other
+        return type(self)(unit=self.unit, result=self.result * other_operand)
+
+    def __rmul__(self, other):
+        self.check_can_aggregate(other)
+        other_operand = other.result if isinstance(other, RiskResultWithData) else other
+        return type(self)(unit=self.unit, result=other_operand * self.result)
+
+    def __truediv__(self, other):
+        self.check_can_aggregate(other)
+        other_operand = other.result if isinstance(other, RiskResultWithData) else other
+        return type(self)(unit=self.unit, result=self.result / other_operand)
+
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
