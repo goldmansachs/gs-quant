@@ -62,6 +62,7 @@ class BackTest(BaseBacktest):
         self._transaction_costs = defaultdict(int)  # list of transaction costs by date
         self.strategy = deepcopy(self.strategy)  # the strategy definition
         self._results = defaultdict(list)
+        self._trade_exit_risk_results = defaultdict(list)
         self.risks = make_list(self.risks)  # list of risks to calculate
         self._calc_calls = 0
         self._calculations = 0
@@ -110,6 +111,10 @@ class BackTest(BaseBacktest):
             self._results[date] += results
         else:
             self._results[date] = results
+
+    @property
+    def trade_exit_risk_results(self):
+        return self._trade_exit_risk_results
 
     @property
     def calc_calls(self):

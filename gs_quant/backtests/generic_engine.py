@@ -610,7 +610,7 @@ class GenericEngine(BacktestBaseEngine):
 
     def run_backtest(self, strategy, start=None, end=None, frequency='1m', states=None, risks=None,
                      show_progress=True, csa_term=None, visible_to_gs=False, initial_value=0, result_ccy=None,
-                     holiday_calendar=None, market_data_location=None, is_batch=True):
+                     holiday_calendar=None, market_data_location=None, is_batch=True, calc_risk_at_trade_exits=False):
         """
         run the backtest following the triggers and actions defined in the strategy.  If states are entered run on
         those dates otherwise build a schedule from the start, end, frequency
@@ -629,6 +629,8 @@ class GenericEngine(BacktestBaseEngine):
         :param holiday_calendar for date maths - list of dates
         :param market_data_location: location for the market data
         :param is_batch: use websockets to reduce timeout issues
+        :param calc_risk_at_trade_exits: separate results for requested risk measures on tradable exit dates;
+                                         not to be included in main results but useful for PnL decomposition
         :return: a backtest object containing the portfolios on each day and results which show all risks on all days
 
         """
@@ -643,7 +645,7 @@ class GenericEngine(BacktestBaseEngine):
 
         with self.new_pricing_context():
             return self.__run(strategy, start, end, frequency, states, risks, initial_value,
-                              result_ccy, holiday_calendar)
+                              result_ccy, holiday_calendar, calc_risk_at_trade_exits)
 
     def _trace(self, label: str):
         if self._tracing_enabled:
@@ -651,7 +653,8 @@ class GenericEngine(BacktestBaseEngine):
         else:
             return nullcontext()
 
-    def __run(self, strategy, start, end, frequency, states, risks, initial_value, result_ccy, holiday_calendar):
+    def __run(self, strategy, start, end, frequency, states, risks, initial_value, result_ccy, holiday_calendar,
+              calc_risk_at_trade_exits):
         """
         Run the backtest strategy using the ambient pricing context
         """
@@ -718,7 +721,8 @@ class GenericEngine(BacktestBaseEngine):
             self._calc_new_trades(backtest, risks)
 
         with self._trace('Handle Cash'):
-            self._handle_cash(backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value)
+            self._handle_cash(backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value,
+                              calc_risk_at_trade_exits)
 
         logger.info(f'Finished Backtest:- {dt.datetime.now()}')
         return backtest
@@ -901,11 +905,13 @@ class GenericEngine(BacktestBaseEngine):
         for day, leaves in leaves_by_date.items():
             backtest.add_results(day, leaves)
 
-    def _handle_cash(self, backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value):
+    def _handle_cash(self, backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value,
+                     calc_risk_at_trade_exits):
         logger.info('Calculating prices for cash payments')
         # run any additional calcs to handle cash scaling (e.g. unwinds)
         cash_results = {}
         cash_trades_by_date = defaultdict(list)
+        exited_cash_trades_by_date = defaultdict(list)
         for _, cash_payments in backtest.cash_payments.items():
             for cp in cash_payments:
                 # only calc if additional point is required
@@ -915,6 +921,8 @@ class GenericEngine(BacktestBaseEngine):
                         if cp.effective_date not in backtest.results or \
                                 trade not in backtest.results[cp.effective_date]:
                             cash_trades_by_date[cp.effective_date].append(trade)
+                            if calc_risk_at_trade_exits and cp.direction == 1:
+                                exited_cash_trades_by_date[cp.effective_date].append(trade)
                         else:
                             cp.scale_date = None
 
@@ -924,6 +932,9 @@ class GenericEngine(BacktestBaseEngine):
                 with PricingContext(cash_date):
                     backtest.calculations += len(risks)
                     cash_results[cash_date] = Portfolio(trades).calc(price_risk)
+                    if calc_risk_at_trade_exits and cash_date in exited_cash_trades_by_date:
+                        expiring_trades = exited_cash_trades_by_date[cash_date]
+                        backtest.trade_exit_risk_results[cash_date] = Portfolio(expiring_trades).calc(risks)
 
         # handle cash
         current_value = None
