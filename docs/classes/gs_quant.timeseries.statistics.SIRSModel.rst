@@ -1,30 +1,32 @@
 ﻿.. This product contains code copyright Maximilian Boeck, licensed under Apache 2.0 license
-gs\_quant.timeseries.statistics.SIRModel
+gs\_quant.timeseries.statistics.SIRSModel
 ========================================
 
 .. currentmodule:: gs_quant.timeseries.statistics
 
-.. autoclass:: SIRModel
+.. autoclass:: SIRSModel
 
    
    
    .. rubric:: Methods
    .. autosummary::
    
-      ~SIRModel.beta
+      ~SIRSModel.beta
    
-      ~SIRModel.gamma
+      ~SIRSModel.gamma
+
+      ~SIRSModel.delta
    
-      ~SIRModel.i0
+      ~SIRSModel.i0
    
-      ~SIRModel.predict_i
+      ~SIRSModel.predict_i
    
-      ~SIRModel.predict_r
+      ~SIRSModel.predict_r
    
-      ~SIRModel.predict_s
+      ~SIRSModel.predict_s
    
-      ~SIRModel.r0
+      ~SIRSModel.r0
    
-      ~SIRModel.s0
+      ~SIRSModel.s0
    
    

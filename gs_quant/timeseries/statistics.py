@@ -15,6 +15,8 @@
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
 
+# //Portions copyright Maximilian Boeck. Licensed under Apache 2.0 license
+
 import datetime
 
 import numpy
@@ -25,7 +27,7 @@ from statsmodels.regression.rolling import RollingOLS
 
 from .algebra import *
 from ..data import DataContext
-from ..models.epidemiology import SIR, SEIR, EpidemicModel
+from ..models.epidemiology import SI, SIR, SEIR, EpidemicModel
 
 """
 Stats library is for basic arithmetic and statistical operations on timeseries.
@@ -676,7 +678,7 @@ def _zscore(x):
     if x.size == 1:
         return 0
 
-    return stats.zscore(x, ddof=1)[-1]
+    return stats.zscore(x, ddof=1).iloc[-1]
 
 
 @plot_function
@@ -911,7 +913,9 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
     elif not y.empty:
         min_periods = 0 if isinstance(w.r, pd.DateOffset) else w.r
         rolling_window = x[:y.index[-1]].rolling(w.w, min_periods)
-        percentile_on_x_index = rolling_window.apply(lambda a: percentileofscore(a, y[a.index[-1]:][0], kind="mean"))
+        percentile_on_x_index = rolling_window.apply(
+            lambda a: percentileofscore(a, y.iloc[y.index.get_loc(a.index[-1])], kind="mean")
+        )
         joined_index = pd.concat([x, y], axis=1).index
         res = percentile_on_x_index.reindex(joined_index, method="ffill")[y.index]
     return apply_ramp(res, w)
@@ -1140,6 +1144,145 @@ class RollingLinearRegression:
         """
         return np.sqrt(self._res.mse_resid)
 
+class SIModel:
+    """SIR Compartmental model for transmission of infectious disease
+
+    :param beta: transmission rate of the infection
+    :param s: number of susceptible individuals in population
+    :param i: number of infectious individuals in population
+    :param n: total population size
+    :param end_date: end date for the evolution of the model
+    :param fit: whether to fit the model to the data
+    :param fit_period: on how many days back to fit the model
+    :param incidence_type: string, type of incidence ('mass action' or 'standard')
+
+    **Usage**
+
+    Fit `SI Model <https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#Variations_on_the_basic_SIR_model>`_ based on the
+    population in each compartment over a given time period.
+
+    The SI models the movement of individuals between two compartments: susceptible (S), infected (I). The model calibrates parameters :
+
+    ===========   =======================================================
+    Parameter     Description
+    ===========   =======================================================
+    S0            initial susceptible individuals
+    I0            initial infected individuals
+    beta          Transmission rate from susceptible to infected
+    ===========   =======================================================
+
+    The parameter beta model how fast people move from being susceptible to infected (beta). This model can be used to forecast the populations of each
+    compartment once calibrated
+
+    """
+
+    def __init__(self, beta: float = None, s: Union[pd.Series, float] = None,
+                 i: Union[pd.Series, float] = None, n: Union[pd.Series, float] = None, fit: bool = True,
+                 fit_period: int = None, incidence_type: str = 'mass_action'):
+        
+        if not isinstance(fit, bool):
+            raise MqTypeError('expected a boolean value for "fit"')
+
+        n = n.dropna()[0] if isinstance(n, pd.Series) else n
+        n = 100 if n is None else n
+        fit = False if s is None and i is None else fit
+        s = n if s is None else s
+        i = 1 if i is None else i
+
+        data_start = [ts.index.min().date() for ts in [s, i] if isinstance(ts, pd.Series)]
+        data_start.append(DataContext.current.start_date)
+        start_date = max(data_start)
+
+        data_end = [ts.index.max().date() for ts in [s, i] if isinstance(ts, pd.Series)]
+        data_end.append(DataContext.current.end_date)
+        end_date = max(data_end)
+
+        self.s = s if isinstance(s, pd.Series) else pd.Series([s])
+        self.i = i if isinstance(i, pd.Series) else pd.Series([i])
+        self.n = n
+        self.beta_init = beta
+        self.fit = fit
+        self.fit_period = fit_period
+        self.incidence_type = incidence_type
+
+        self.beta_fixed = not (self.fit or (self.beta_init is None))
+
+        lens = [len(x) for x in (self.s, self.i)]
+        dtype = float if max(lens) == min(lens) else object
+        data = np.array([self.s, self.i], dtype=dtype).T
+
+        beta_init = self.beta_init if self.beta_init is not None else 0.9
+
+        parameters, initial_conditions = SI.get_parameters(self.s.iloc[0], self.i.iloc[0], n,
+                                                            beta=beta_init,
+                                                            beta_fixed=self.beta_fixed,
+                                                            S0_fixed=True, I0_fixed=True)
+        self.parameters = parameters
+
+        self._model = EpidemicModel(SI, parameters=parameters, data=data, initial_conditions=initial_conditions,
+                                    fit_period=self.fit_period, incidence_type=self.incidence_type)
+        if self.fit:
+            self._model.fit(verbose=False)
+
+        t = np.arange((end_date - start_date).days + 1)
+        predict = self._model.solve(t, (self.s0(), self.i0()), (self.beta(), n))
+
+        predict_dates = pd.date_range(start_date, end_date)
+
+        self._model.s_predict = pd.Series(predict[:, 0], predict_dates)
+        self._model.i_predict = pd.Series(predict[:, 1], predict_dates)
+
+    @plot_method
+    def s0(self) -> float:
+        """
+        Model calibration for initial susceptible individuals
+
+        :return: initial susceptible individuals
+        """
+        if self.fit:
+            return self._model.fitted_parameters['S0']
+        return self.parameters['S0'].value
+
+    @plot_method
+    def i0(self) -> float:
+        """
+        Model calibration for initial infectious individuals
+
+        :return: initial infectious individuals
+        """
+        if self.fit:
+            return self._model.fitted_parameters['I0']
+        return self.parameters['I0'].value
+
+    @plot_method
+    def beta(self) -> float:
+        """
+        Model calibration for transmission rate (susceptible to infected)
+
+        :return: beta
+        """
+        if self.fit:
+            return self._model.fitted_parameters['beta']
+        return self.parameters['beta'].value
+
+    @plot_method
+    def predict_s(self) -> pd.Series:
+        """
+        Model calibration for susceptible individuals through time
+
+        :return: susceptible predict
+        """
+        return self._model.s_predict
+
+    @plot_method
+    def predict_i(self) -> pd.Series:
+        """
+        Model calibration for infected individuals through time
+
+        :return: infected predict
+        """
+        return self._model.i_predict
+    
 
 class SIRModel:
     """SIR Compartmental model for transmission of infectious disease
@@ -1153,6 +1296,7 @@ class SIRModel:
     :param end_date: end date for the evolution of the model
     :param fit: whether to fit the model to the data
     :param fit_period: on how many days back to fit the model
+    :param incidence_type: string, type of incidence ('mass action' or 'standard')
 
     **Usage**
 
@@ -1181,7 +1325,7 @@ class SIRModel:
     def __init__(self, beta: float = None, gamma: float = None, s: Union[pd.Series, float] = None,
                  i: Union[pd.Series, float] = None, r: Union[pd.Series, float] = None,
                  n: Union[pd.Series, float] = None, fit: bool = True,
-                 fit_period: int = None):
+                 fit_period: int = None, incidence_type: str = 'mass_action'):
         if not isinstance(fit, bool):
             raise MqTypeError('expected a boolean value for "fit"')
 
@@ -1208,6 +1352,8 @@ class SIRModel:
         self.gamma_init = gamma
         self.fit = fit
         self.fit_period = fit_period
+        self.incidence_type = incidence_type
+
         self.beta_fixed = not (self.fit or (self.beta_init is None))
         self.gamma_fixed = not (self.fit or (self.gamma_init is None))
 
@@ -1225,7 +1371,7 @@ class SIRModel:
         self.parameters = parameters
 
         self._model = EpidemicModel(SIR, parameters=parameters, data=data, initial_conditions=initial_conditions,
-                                    fit_period=self.fit_period)
+                                    fit_period=self.fit_period, incidence_type=self.incidence_type)
         if self.fit:
             self._model.fit(verbose=False)
 
@@ -1287,7 +1433,7 @@ class SIRModel:
         """
         Model calibration for immunity (infected to resistant)
 
-        :return: beta
+        :return: gamma
         """
         if self.fit:
             return self._model.fitted_parameters['gamma']

@@ -1,4 +1,4 @@
-
+.. This product contains code copyright Maximilian Boeck, licensed under Apache 2.0 license
 Timeseries Package
 ==================
 
@@ -149,6 +149,7 @@ Statistics
 
    LinearRegression
    RollingLinearRegression
+   SIModel
    SIRModel
    SEIRModel
 

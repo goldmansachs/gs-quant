@@ -14,6 +14,9 @@
 # Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
+
+# //Portions copyright Maximilian Boeck. Licensed under Apache 2.0 license
+
 import pandas as pd
 import statsmodels.tsa.seasonal
 
@@ -240,7 +243,7 @@ def relative_strength_index(x: pd.Series, w: Union[Window, int, str] = 14) -> pd
             rsi.iloc[index] = 100
         else:
             relative_strength = moving_avg_gains.iloc[index] / moving_avg_losses.iloc[index]
-            rsi[index] = 100 - (100 / (1 + relative_strength))
+            rsi.iloc[index] = 100 - (100 / (1 + relative_strength))
 
     return rsi
 

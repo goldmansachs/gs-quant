@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+//Portions copyright Maximilian Boeck. Licensed under Apache 2.0 license
 """
 import copy
 import datetime
@@ -44,10 +46,12 @@ def test_get_asset(mocker):
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID, as_of=dt.date.today())
 
+
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.STOCK
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID, as_of=dt.datetime.utcnow())
+    # asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID, as_of=dt.datetime(2022, 2, 2, 22, 22))
 
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.STOCK
