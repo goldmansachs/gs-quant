@@ -446,7 +446,7 @@ def test_union():
 
     actual = union([x, y, z])
     expected = pd.Series([1.0, np.nan, 3.1, 4.1, 5.0, 6.0, 70], index=pd.date_range('2019-01-01', '2019-01-07'))
-    assert_series_equal(actual, expected, obj='union of three series')
+    assert_series_equal(actual, expected, check_freq=False, obj='union of three series')
 
     x = pd.Series([3.1, 4.1, np.nan], index=pd.date_range('2019-01-01 02:00', periods=3, freq='H'))
     y = pd.Series([1.0, np.nan, 3.0, 4.0, 5.0, 6.0], index=pd.date_range('2019-01-01', periods=6, freq='H'))
@@ -476,14 +476,16 @@ def test_day_count():
         day_count(dt.date(2021, 5, 7), '2021-05-10')
 
 
+@mock.patch.object(Dataset, 'get_coverage')
 @mock.patch.object(Dataset, 'get_data')
-def test_align_calendar(mocker):
+def test_align_calendar(mocker_data, mocker_cov):
     dates = pd.date_range(start='1/1/2023', end='1/31/2023')
     series = pd.Series(range(len(dates)), index=dates)
 
     set_session()
-    mocker.return_value = pd.DataFrame(index=[dt.datetime(2023, 1, 3)],
-                                       data={'holiday': 'New Year'})
+    mocker_data.return_value = pd.DataFrame(index=[dt.datetime(2023, 1, 3)],
+                                            data={'holiday': 'New Year'})
+    mocker_cov.return_value = pd.DataFrame()
 
     GsCalendar.reset()
 

@@ -133,6 +133,7 @@ class TestSortingAndFiltering:
         datagrid = self.get_test_datagrid()
         datagrid.add_filter(DataGridFilter('Value', FilterOperation.GREATER_THAN, 0))
         datagrid.add_filter(DataGridFilter('Value', FilterOperation.LESS_THAN, 0, FilterCondition.OR))
+        datagrid.sorts = [DataGridSort('Value', order=SortOrder.DESCENDING)]  # Filtering can give different order
         df = datagrid._post_process()
         assert df['Name'].iloc[0] == spx.name
         assert df['Value'].iloc[0] == 10

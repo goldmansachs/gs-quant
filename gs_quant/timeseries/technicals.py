@@ -14,7 +14,6 @@
 # Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
-import pandas as pd
 import statsmodels.tsa.seasonal
 
 from gs_quant.timeseries import diff, annualize, returns
@@ -421,6 +420,8 @@ def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEAR):
     if not isinstance(x.index, pd.DatetimeIndex):
         raise MqValueError("Series must have a pandas.DateTimeIndex.")
     pfreq = getattr(getattr(x, 'index', None), 'inferred_freq', None)
+    pfreq = 'MS' if pfreq in ('ME', 'MS') else pfreq  # Convert Month[Start|End] into Monthly
+    pfreq = 'QS' if pfreq in ('QE-DEC', 'QE') else pfreq  # Convert Month[Start|End] into Monthly
     period = None if pfreq is None else statsmodels.tsa.seasonal.freq_to_period(pfreq)
     if period in [7, None]:  # daily
         x = x.asfreq('D', method='ffill')
