@@ -94,6 +94,10 @@ class ResultInfo(metaclass=ABCMeta):
 
             if isinstance(component, (ErrorValue, Exception)):
                 errors[date] = component
+            elif isinstance(component, UnsupportedValue):
+                values.append(component)
+                dates.append(date)
+                unit = None
             else:
                 values.append(component.raw_value)
                 dates.append(date)
@@ -133,6 +137,14 @@ class UnsupportedValue(ResultInfo):
     @property
     def raw_value(self):
         return 'Unsupported Value'
+
+    @staticmethod
+    def compose(components: Iterable):
+        dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
+        return SeriesWithInfo(pd.Series(index=pd.DatetimeIndex(dates).date, data=values),
+                              risk_key=risk_key,
+                              unit=unit,
+                              error=errors)
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
         if display_options is not None and not isinstance(display_options, DisplayOptions):

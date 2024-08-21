@@ -152,7 +152,7 @@ def _value_for_date(result: Union[DataFrameWithInfo, SeriesWithInfo], date: Unio
 
 
 def _get_value_with_info(value, risk_key, unit, error):
-    if isinstance(value, ErrorValue):
+    if isinstance(value, (ErrorValue, UnsupportedValue)):
         return value
     elif isinstance(value, pd.DataFrame):
         return DataFrameWithInfo(value, risk_key=risk_key, unit=unit, error=error)
@@ -484,7 +484,7 @@ class HistoricalPricingFuture(CompositeResultFuture):
 
     def _set_result(self):
         results = [f.result() for f in self.futures]
-        base = next((r for r in results if not isinstance(r, (ErrorValue, UnsupportedValue, Exception))), None)
+        base = next((r for r in results if not isinstance(r, (ErrorValue, Exception))), None)
 
         if base is None:
             _logger.error(f'Historical pricing failed: {results[0]}')

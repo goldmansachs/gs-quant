@@ -35,6 +35,7 @@ from gs_quant.common import RiskMeasure
 from gs_quant.instrument import Cash
 from gs_quant.markets import PricingContext
 from gs_quant.markets.portfolio import Portfolio
+from gs_quant.risk import ErrorValue
 from gs_quant.risk.transform import Transformer
 
 
@@ -142,8 +143,16 @@ class BackTest(BaseBacktest):
         :rtype: pandas.dataframe
         """
         dates_with_results = list(filter(lambda x: len(x[1]), self._results.items()))
-        summary = pd.DataFrame({date: {risk: results[risk].aggregate(True, True)
-                                       for risk in results.risk_measures} for date, results in dates_with_results}).T
+        summary_dict = {}
+        for date, results in dates_with_results:
+            summary_dict[date] = {}
+            for risk in results.risk_measures:
+                try:
+                    value = results[risk].aggregate(True, True)
+                except TypeError:
+                    value = ErrorValue(None, error='Could not aggregate risk results')
+                summary_dict[date][risk] = value
+        summary = pd.DataFrame(summary_dict).T
         cash_summary = defaultdict(dict)
         for date, results in self._cash_dict.items():
             for ccy, value in results.items():
