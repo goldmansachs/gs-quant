@@ -571,6 +571,19 @@ class FXBinary(Instrument):
     type_: Optional[AssetType] = field(init=False, default=AssetType.Binary, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
+    def scale_in_place(self, scaling: Optional[float] = None):
+        if self.unresolved is None:
+            raise RuntimeError('Can only scale resolved instruments')
+        if scaling is None or scaling == 1:
+            return
+    
+        if scaling < 0:
+            flip_dict = {BuySell.Buy: BuySell.Sell, BuySell.Sell: BuySell.Buy}
+            self.buy_sell = flip_dict[self.buy_sell]
+            
+        self.notional_amount *= abs(scaling)
+        return
+
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)

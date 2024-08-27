@@ -14,23 +14,27 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json, config
+from dataclasses import dataclass, field
 from typing import Tuple, Optional, Union, Iterable
 
-from gs_quant.backtests.triggers import *
-from gs_quant.backtests.generic_engine import GenericEngine
-from gs_quant.backtests.predefined_asset_engine import PredefinedAssetEngine
-from gs_quant.backtests.equity_vol_engine import EquityVolEngine
+from dataclasses_json import dataclass_json, config
+
+from gs_quant.backtests.backtest_utils import make_list
+from gs_quant.backtests.triggers import Trigger
 from gs_quant.base import Priceable
 from gs_quant.json_convertors import decode_named_instrument, encode_named_instrument, dc_decode
 
-backtest_engines = [GenericEngine(), PredefinedAssetEngine(), EquityVolEngine()]
+
+def _backtest_engines():
+    from gs_quant.backtests.equity_vol_engine import EquityVolEngine
+    from gs_quant.backtests.generic_engine import GenericEngine
+    from gs_quant.backtests.predefined_asset_engine import PredefinedAssetEngine
+    return [GenericEngine(), PredefinedAssetEngine(), EquityVolEngine()]
 
 
 @dataclass_json
 @dataclass
-class Strategy(object):
+class Strategy:
     """
     A strategy object on which one may run a backtest
     """
@@ -54,4 +58,4 @@ class Strategy(object):
         return risk_list
 
     def get_available_engines(self):
-        return [engine for engine in backtest_engines if engine.supports_strategy(self)]
+        return [engine for engine in _backtest_engines() if engine.supports_strategy(self)]

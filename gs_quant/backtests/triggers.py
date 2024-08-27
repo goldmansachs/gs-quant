@@ -101,7 +101,14 @@ class PeriodicTriggerRequirements(TriggerRequirements):
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
         if not self.trigger_dates:
             self.get_trigger_times()
-        return TriggerInfo(state in self.trigger_dates)
+        if state in self.trigger_dates:
+            next_state = None
+            if self.trigger_dates.index(state) != len(self.trigger_dates) - 1:
+                next_state = self.trigger_dates[self.trigger_dates.index(state) + 1]
+            return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=None, next_schedule=next_state),
+                                      AddScaledTradeAction: AddScaledTradeActionInfo(next_schedule=next_state),
+                                      HedgeAction: HedgeActionInfo(next_schedule=next_state)})
+        return TriggerInfo(False)
 
 
 @dataclass_json

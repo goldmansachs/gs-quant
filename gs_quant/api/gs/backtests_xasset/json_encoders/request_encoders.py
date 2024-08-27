@@ -49,4 +49,4 @@ def legs_decoder(data: Any):
 
 
 def legs_encoder(data: Iterable[Instrument]):
-    return [i.as_dict() for i in data]
+    return [i.to_dict() for i in data]

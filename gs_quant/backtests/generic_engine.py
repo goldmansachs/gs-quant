@@ -25,12 +25,15 @@ from typing import Union, Iterable, Optional
 
 from gs_quant import risk
 from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
-from gs_quant.backtests.actions import Action, AddTradeAction, HedgeAction, EnterPositionQuantityScaledAction, \
-    AddTradeActionInfo, HedgeActionInfo, ExitTradeAction, ExitTradeActionInfo, EnterPositionQuantityScaledActionInfo, \
-    RebalanceAction, RebalanceActionInfo, ExitAllPositionsAction, AddScaledTradeAction, ScalingActionType
+from gs_quant.backtests.actions import (Action, AddTradeAction, HedgeAction, EnterPositionQuantityScaledAction,
+                                        AddTradeActionInfo, HedgeActionInfo, ExitTradeAction, ExitTradeActionInfo,
+                                        EnterPositionQuantityScaledActionInfo, RebalanceAction, RebalanceActionInfo,
+                                        ExitAllPositionsAction, AddScaledTradeAction, ScalingActionType,
+                                        AddScaledTradeActionInfo)
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment, Hedge
 from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date
+from gs_quant.common import AssetClass
 from gs_quant.common import ParameterisedRiskMeasure, RiskMeasure
 from gs_quant.context_base import nullcontext
 from gs_quant.datetime.relative_date import RelativeDateSchedule
@@ -39,7 +42,6 @@ from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import Price
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.target.backtests import BacktestTradingQuantityType
-from gs_quant.common import AssetClass
 from gs_quant.target.measures import ResolvedInstrumentValues
 from gs_quant.tracing import Tracer
 
@@ -74,7 +76,7 @@ class AddTradeActionImpl(ActionHandler):
         final_orders = {}
         for d, p in orders.items():
             new_port = Portfolio([t.clone(name=f'{t.name}_{d}') for t in p[0].result()])
-            final_orders[d] = new_port.scale(None if p[1] is None else p[1].scaling, in_place=False)
+            final_orders[d] = (new_port.scale(None if p[1] is None else p[1].scaling, in_place=False), p[1])
 
         return final_orders
 
@@ -86,12 +88,13 @@ class AddTradeActionImpl(ActionHandler):
         orders = self._raise_order(state, trigger_info)
 
         # record entry and unwind cashflows
-        for create_date, portfolio in orders.items():
+        for create_date, (portfolio, info) in orders.items():
             for inst in portfolio.all_instruments:
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
                 backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(create_date, backtest,
                                                                                                  trigger_info, inst)
-                final_date = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar)
+                final_date = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar,
+                                            info)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
                 backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
                                                                                                 backtest,
@@ -169,9 +172,8 @@ class AddScaledTradeActionImpl(ActionHandler):
             raise RuntimeError(f'Scaling Type {self.action.scaling_type} not supported by engine')
 
     def _raise_order(self,
-                     state: Union[date, Iterable[date]],
+                     state_list: Iterable[date],
                      price_measure: RiskMeasure):
-        state_list = make_list(state)
         orders = {}
         order_valuations = (ResolvedInstrumentValues,)
         if self.action.scaling_type == ScalingActionType.risk_measure:
@@ -201,18 +203,24 @@ class AddScaledTradeActionImpl(ActionHandler):
     def apply_action(self,
                      state: Union[date, Iterable[date]],
                      backtest: BackTest,
-                     trigger_info: Optional[Union[EnterPositionQuantityScaledActionInfo,
-                                                  Iterable[EnterPositionQuantityScaledActionInfo]]] = None):
+                     trigger_info: Optional[Union[AddScaledTradeActionInfo,
+                                                  Iterable[AddScaledTradeActionInfo]]] = None):
 
-        orders = self._raise_order(state, backtest.price_measure)
+        state_list = make_list(state)
+        if trigger_info is None or isinstance(trigger_info, AddScaledTradeActionInfo):
+            trigger_info = [trigger_info for _ in range(len(state_list))]
+        orders = self._raise_order(state_list, backtest.price_measure)
+        trigger_infos = dict(zip_longest(state_list, trigger_info))
 
         # record entry and unwind cashflows
         for create_date, portfolio in orders.items():
+            info = trigger_infos[create_date]
             for inst in portfolio.all_instruments:
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
                 backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(create_date, backtest,
                                                                                                  trigger_info, inst)
-                final_date = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar)
+                final_date = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar,
+                                            info)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
                 backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
                                                                                                 backtest,
@@ -372,19 +380,25 @@ class HedgeActionImpl(ActionHandler):
                      state: Union[date, Iterable[date]],
                      backtest: BackTest,
                      trigger_info: Optional[Union[HedgeActionInfo, Iterable[HedgeActionInfo]]] = None):
-        with HistoricalPricingContext(dates=make_list(state), csa_term=self.action.csa_term):
+        state_list = make_list(state)
+        if trigger_info is None or isinstance(trigger_info, HedgeActionInfo):
+            trigger_info = [trigger_info for _ in range(len(state_list))]
+        trigger_infos = dict(zip_longest(state_list, trigger_info))
+
+        with HistoricalPricingContext(dates=state_list, csa_term=self.action.csa_term):
             backtest.calc_calls += 1
-            backtest.calculations += len(make_list(state))
+            backtest.calculations += len(state_list)
             f = Portfolio(self.action.priceable).resolve(in_place=False)
 
         for create_date, portfolio in f.result().items():
+            info = trigger_infos[create_date]
             hedge_trade = portfolio.priceables[0]
             hedge_trade.name = f'{hedge_trade.name}_{create_date.strftime("%Y-%m-%d")}'
             if isinstance(hedge_trade, Portfolio):
                 for instrument in hedge_trade.all_instruments:
                     instrument.name = f'{hedge_trade.name}_{instrument.name}'
             final_date = get_final_date(hedge_trade, create_date, self.action.trade_duration,
-                                        self.action.holiday_calendar)
+                                        self.action.holiday_calendar, info)
             active_dates = [s for s in backtest.states if create_date <= s < final_date]
 
             if len(active_dates):
@@ -711,10 +725,12 @@ class GenericEngine(BacktestBaseEngine):
             self._price_semi_det_triggers(backtest, risks)
 
         logger.info('Scaling semi-determ triggers and actions and calculating path dependent triggers and actions')
-        for d in strategy_pricing_dates:
-            with self._trace('Process date') as scope:
+        with self._trace('Process dates') as scope:
+            if scope:
+                scope.span.set_tag('dates.length', len(strategy_pricing_dates))
+            for d in strategy_pricing_dates:
                 if scope:
-                    scope.span.set_tag('date', str(d))
+                    scope.span.log_kv({'date': str(d)})
                 self._process_triggers_and_actions_for_date(d, strategy, backtest, risks)
 
         with self._trace('Calc New Trades'):
@@ -795,7 +811,7 @@ class GenericEngine(BacktestBaseEngine):
                         port = p.trade if isinstance(p.trade, Portfolio) else Portfolio([p.trade])
                         p.results = port.calc(tuple(risks))
 
-    def _process_triggers_and_actions_for_date(self, d, strategy, backtest, risks):
+    def _process_triggers_and_actions_for_date(self, d, strategy, backtest: BackTest, risks):
         logger.debug(f'{d}: Processing triggers and actions')
         # path dependent
         for trigger in strategy.triggers:

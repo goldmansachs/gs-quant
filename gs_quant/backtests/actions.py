@@ -101,6 +101,7 @@ class AddTradeAction(Action):
     :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor or timedelta
                            if left as None the
                            trade will be added for all future dates
+                           can also specify 'next schedule' in order to exit at the next periodic trigger date
     :param name: optional additional name to the priceable name
     :param transaction_cost: optional a cash amount paid for each transaction, paid on both enter and exit
     """
@@ -139,11 +140,12 @@ class AddTradeAction(Action):
         return self._dated_priceables
 
 
-AddTradeActionInfo = namedtuple('AddTradeActionInfo', 'scaling')
+AddTradeActionInfo = namedtuple('AddTradeActionInfo', ['scaling', 'next_schedule'])
 EnterPositionQuantityScaledActionInfo = namedtuple('EnterPositionQuantityScaledActionInfo', 'not_applicable')
-HedgeActionInfo = namedtuple('HedgeActionInfo', 'not_applicable')
+HedgeActionInfo = namedtuple('HedgeActionInfo', 'next_schedule')
 ExitTradeActionInfo = namedtuple('ExitTradeActionInfo', 'not_applicable')
 RebalanceActionInfo = namedtuple('RebalanceActionInfo', 'not_applicable')
+AddScaledTradeActionInfo = namedtuple('AddScaledActionInfo', 'next_schedule')
 
 
 @dataclass_json
@@ -158,6 +160,7 @@ class AddScaledTradeAction(Action):
     :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor or timedelta
                            if left as None the
                            trade will be added for all future dates
+                           can also specify 'next schedule' in order to exit at the next periodic trigger date
     :param name: optional additional name to the priceable name
     :param scaling_type: the type of scaling we are doing
     :param scaling_risk: if the scaling type is a measure then this is the definition of the measure
@@ -263,6 +266,23 @@ class ExitAllPositionsAction(ExitTradeAction):
 @dataclass_json
 @dataclass
 class HedgeAction(Action):
+
+    """
+    create an action which adds a hedge trade when triggered.  This trade will be scaled to hedge the risk
+    specified.  The trades are resolved on the trigger date (state) and
+    last until the trade_duration if specified or for all future dates if not.
+    :param risk: a risk measure which should be hedged
+    :param priceables: a priceable or a list of pricables these should have sensitivity to the risk.
+    :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor or timedelta
+                           if left as None the
+                           trade will be added for all future dates
+                           can also specify 'next schedule' in order to exit at the next periodic trigger date
+    :param name: optional additional name to the priceable name
+    :param transaction_cost: optional a transaction cost model, paid on both enter and exit
+    :param risk_transformation: optional a Transformer which will be applied to the raw risk numbers before hedging
+    :param holiday_calendar: optional an iterable list of holiday dates
+    """
+
     risk: RiskMeasure = field(default=None, metadata=config(decoder=decode_risk_measure,
                                                             encoder=encode_risk_measure))
     priceables: Optional[Priceable] = field(default=None, metadata=config(decoder=decode_named_instrument,

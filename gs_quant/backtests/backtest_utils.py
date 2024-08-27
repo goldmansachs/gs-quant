@@ -43,7 +43,7 @@ def make_list(thing):
 final_date_cache = {}
 
 
-def get_final_date(inst, create_date, duration, holiday_calendar=None):
+def get_final_date(inst, create_date, duration, holiday_calendar=None, trigger_info=None):
     global final_date_cache
     cache_key = (inst, create_date, duration, holiday_calendar)
     if cache_key in final_date_cache:
@@ -58,6 +58,10 @@ def get_final_date(inst, create_date, duration, holiday_calendar=None):
     if hasattr(inst, str(duration)):
         final_date_cache[cache_key] = getattr(inst, str(duration))
         return getattr(inst, str(duration))
+    if str(duration).lower() == 'next schedule':
+        if hasattr(trigger_info, 'next_schedule'):
+            return trigger_info.next_schedule or dt.date.max
+        raise RuntimeError('Next schedule not supported by action')
 
     final_date_cache[cache_key] = RelativeDate(duration, create_date).apply_rule(holiday_calendar=holiday_calendar)
     return final_date_cache[cache_key]

@@ -449,6 +449,7 @@ def test_max_drawdown():
         date(2019, 1, 7),
         date(2019, 1, 8),
     ]
+    daily_dates = pd.to_datetime(daily_dates)
 
     series = pd.Series([1, 5, 5, 4, 4, 1], index=daily_dates)
 

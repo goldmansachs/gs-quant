@@ -758,7 +758,7 @@ def max_drawdown(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> 
     """
     Compute the maximum peak to trough drawdown over a rolling window as a ratio.
 
-    i.e. if the max drawdown for a period is 20%, this function will return 0.2.
+    i.e. if the max drawdown for a period is 20%, this function will return -0.2.
 
     :param x: time series
     :param w: Window, int, or str: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
@@ -780,10 +780,10 @@ def max_drawdown(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> 
     """
     w = normalize_window(x, w)
     if isinstance(w.w, pd.DateOffset):
-        if np.issubdtype(x.index, dt.date):
-            scores = pd.Series([x[idx] / x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].max() - 1
+        if pd.api.types.is_datetime64_dtype(x.index):
+            scores = pd.Series([x[idx] / x.loc[(x.index > (idx - w.w)) & (x.index <= idx)].max() - 1
                                 for idx in x.index], index=x.index)
-            result = pd.Series([scores.loc[(scores.index > (idx - w.w).date()) & (scores.index <= idx)].min()
+            result = pd.Series([scores.loc[(scores.index > (idx - w.w)) & (scores.index <= idx)].min()
                                 for idx in scores.index], index=scores.index)
         else:
             raise TypeError('Please pass in list of dates as index')

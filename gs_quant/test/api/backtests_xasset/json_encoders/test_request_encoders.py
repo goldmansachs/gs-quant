@@ -20,9 +20,9 @@ from gs_quant.target.instrument import FXOption, EqOption
 
 
 def test_legs_decoder():
-    fx_leg_1 = {"pair": "EURUSD", "asset_class": "FX", "type": "Option", "name": "leg_0"}
-    fx_leg_2 = {"pair": "GBPUSD", "asset_class": "FX", "type": "Option"}
-    eq_leg = {"underlier": ".SPX", "asset_class": "Equity", "type": "Option", "name": "test_eq"}
+    fx_leg_1 = {"pair": "EURUSD", "assetClass": "FX", "type": "Option", "name": "leg_0"}
+    fx_leg_2 = {"pair": "GBPUSD", "assetClass": "FX", "type": "Option"}
+    eq_leg = {"underlier": ".SPX", "assetClass": "Equity", "type": "Option", "name": "test_eq"}
     [inst_1, inst_2, inst_3] = legs_decoder([fx_leg_1, fx_leg_2, eq_leg])
     assert isinstance(inst_1, FXOption)
     assert inst_1.name == "leg_0"
@@ -41,16 +41,14 @@ def test_legs_encoder():
     eq_leg = EqOption(underlier=".SPX", name="test_eq")
     [inst_1, inst_2, inst_3] = legs_encoder([fx_leg_1, fx_leg_2, eq_leg])
     assert isinstance(inst_1, dict)
-    assert inst_1["asset_class"] == AssetClass.FX
+    assert inst_1["assetClass"] == AssetClass.FX
     assert inst_1["type"] == AssetType.Option
-    assert inst_1["name"] == "leg_0"
     assert inst_1["pair"] == "EURUSD"
     assert isinstance(inst_2, dict)
-    assert inst_2["asset_class"] == AssetClass.FX
+    assert inst_2["assetClass"] == AssetClass.FX
     assert inst_2["type"] == AssetType.Option
     assert inst_2["pair"] == "GBPUSD"
     assert isinstance(inst_3, dict)
-    assert inst_3["asset_class"] == AssetClass.Equity
+    assert inst_3["assetClass"] == AssetClass.Equity
     assert inst_3["type"] == AssetType.Option
-    assert inst_3["name"] == "test_eq"
     assert inst_3["underlier"] == ".SPX"

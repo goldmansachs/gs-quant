@@ -420,8 +420,9 @@ def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEAR):
     if not isinstance(x.index, pd.DatetimeIndex):
         raise MqValueError("Series must have a pandas.DateTimeIndex.")
     pfreq = getattr(getattr(x, 'index', None), 'inferred_freq', None)
-    pfreq = 'MS' if pfreq in ('ME', 'MS') else pfreq  # Convert Month[Start|End] into Monthly
-    pfreq = 'QS' if pfreq in ('QE-DEC', 'QE') else pfreq  # Convert Month[Start|End] into Monthly
+    # Some older versions of statsmodels don't handle some of the newer pandas frequencies, so we manually adjust them
+    pfreq = 'MS' if pfreq in ('ME', 'M') else pfreq  # Convert Month[End] into MonthlyStart
+    pfreq = 'QS' if pfreq in ('QE-DEC', 'QE') else pfreq  # Convert Quarter[End] into QuarterlyStart
     period = None if pfreq is None else statsmodels.tsa.seasonal.freq_to_period(pfreq)
     if period in [7, None]:  # daily
         x = x.asfreq('D', method='ffill')

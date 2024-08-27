@@ -328,7 +328,8 @@ class PerformanceHedgeParameters:
             max_market_cap: Optional[float] = None,
             market_participation_rate: float = 10,
             lasso_weight: float = 0,
-            ridge_weight: float = 0):
+            ridge_weight: float = 0,
+            benchmarks: List[str] = None):
         self.__initial_portfolio = initial_portfolio
         self.__universe = universe
         self.__exclusions = exclusions
@@ -350,6 +351,7 @@ class PerformanceHedgeParameters:
         self.__market_participation_rate = market_participation_rate
         self.__lasso_weight = lasso_weight
         self.__ridge_weight = ridge_weight
+        self.__benchmarks = benchmarks
 
     @property
     def initial_portfolio(self) -> PositionSet:
@@ -555,7 +557,7 @@ class PerformanceHedgeParameters:
     def ridge_weight(self, value: float):
         self.__ridge_weight = value
 
-    def to_dict(self):
+    def to_dict(self, resolved_identifiers):
         positions_to_price = []
         for position in self.initial_portfolio.positions:
             pos_to_price = {'assetId': position.asset_id}
@@ -591,24 +593,17 @@ class PerformanceHedgeParameters:
 
         # Resolve any assets in the hedge universe, asset constraints, and asset exclusions
         hedge_date = self.initial_portfolio.date
-        identifiers = [identifier for identifier in self.universe]
-        if self.exclusions is not None and self.exclusions.assets is not None:
-            identifiers = identifiers + [asset for asset in self.exclusions.assets]
-        if self.constraints is not None:
-            if self.constraints.assets is not None:
-                identifiers = identifiers + [asset.constraint_name for asset in self.constraints.assets]
-        resolver = GsAssetApi.resolve_assets(identifier=identifiers,
-                                             fields=['id'],
-                                             as_of=hedge_date)
-        self.universe = [resolver.get(asset, [{'id': asset}])[0].get('id') for asset in self.universe]
+        self.universe = [resolved_identifiers.get(asset, [{'id': asset}])[0].get('id') for asset in self.universe]
+        self.benchmarks = [resolved_identifiers.get(asset, [{'id': asset}])[0].get('id') for asset in self.benchmarks]
         if self.exclusions is not None:
             if self.exclusions.assets is not None:
-                self.exclusions.assets = [resolver.get(asset, [{'id': asset}])[0].get('id')
+                self.exclusions.assets = [resolved_identifiers.get(asset, [{'id': asset}])[0].get('id')
                                           for asset in self.exclusions.assets]
         if self.constraints is not None and self.constraints.assets is not None:
             for con in self.constraints.assets:
-                if len(resolver.get(con.constraint_name, [])) > 0:
-                    con.constraint_name = resolver.get(con.constraint_name)[0].get('id', con.constraint_name)
+                if len(resolved_identifiers.get(con.constraint_name, [])) > 0:
+                    con.constraint_name = resolved_identifiers.get(con.constraint_name)[0].get('id',
+                                                                                               con.constraint_name)
 
         # Parse and return dictionary
         observation_start_date = self.observation_start_date or hedge_date - relativedelta(years=1)
@@ -657,8 +652,28 @@ class PerformanceHedgeParameters:
             as_dict['minMarketCap'] = self.min_market_cap
         if self.max_market_cap is not None:
             as_dict['maxMarketCap'] = self.max_market_cap
+        if self.benchmarks is not None and len(self.benchmarks):
+            as_dict['benchmarks'] = self.benchmarks
 
         return as_dict
+
+    def resolve_identifiers_in_payload(self, hedge_date) -> tuple:
+        """
+        The hedge payload has identifiers which need to be resolved
+        The resolved values here are used to convert back from asset Id to provided identifier for benchmark curves
+        """
+        identifiers = [identifier for identifier in self.universe]
+        if self.exclusions is not None and self.exclusions.assets is not None:
+            identifiers = identifiers + [asset for asset in self.exclusions.assets]
+        if self.benchmarks is not None:
+            identifiers = identifiers + [asset for asset in self.benchmarks]
+        if self.constraints is not None:
+            if self.constraints.assets is not None:
+                identifiers = identifiers + [asset.constraint_name for asset in self.constraints.assets]
+        resolver = GsAssetApi.resolve_assets(identifier=identifiers,
+                                             fields=['id'],
+                                             as_of=hedge_date)
+        return resolver
 
 
 class Hedge:
@@ -695,10 +710,14 @@ class Hedge:
         Calculates the hedge
         :return: a dictionary with calculation results
         """
-        params = self.parameters.to_dict()
+        resolved_identifiers = self.parameters.resolve_identifiers_in_payload(self.parameters.initial_portfolio.date)
+        params = self.parameters.to_dict(resolved_identifiers)
         calculation_results = GsHedgeApi.calculate_hedge({'objective': self.objective.value,
                                                           'parameters': params}).get('result')
         formatted_results = self._format_hedge_calculate_results(calculation_results)
+        formatted_results = self._enhance_result_with_benchmark_curves(formatted_results,
+                                                                       calculation_results.get('benchmarks', []),
+                                                                       resolved_identifiers)
 
         self.__result = formatted_results
         return formatted_results
@@ -767,11 +786,30 @@ class Hedge:
 
         formatted_results = {}
         for key in renamed_results:
-            formatted_results[key] = {}
-            for inner_key in renamed_results[key]:
-                formatted_results[key][inner_key[0].capitalize() +
-                                       ''.join(map(lambda x: x if x.islower() else f' {x}',
-                                                   inner_key[1:]))] = renamed_results[key][inner_key]
+            formatted_results[key] = Hedge.format_dictionary_key_to_readable_format(renamed_results[key])
+
+        return formatted_results
+
+    @staticmethod
+    def _enhance_result_with_benchmark_curves(formatted_results, benchmark_results, resolver):
+        asset_id_to_provided_identifier_map = dict(
+            (x['id'], provided_identifier)
+            for provided_identifier, marquee_assets in resolver.items()
+            for x in marquee_assets)
+
+        if len(benchmark_results):
+            for x in benchmark_results:
+                benchmark_asset_id = asset_id_to_provided_identifier_map[x['assetId']]
+                formatted_results[benchmark_asset_id] = Hedge.format_dictionary_key_to_readable_format(x)
+
+        return formatted_results
+
+    @staticmethod
+    def format_dictionary_key_to_readable_format(renamed_results):
+        formatted_results = {}
+        for inner_key in renamed_results:
+            formatted_results[inner_key[0].capitalize() + ''.join(map(lambda x: x if x.islower() else f' {x}',
+                                                                      inner_key[1:]))] = renamed_results[inner_key]
         return formatted_results
 
     @staticmethod

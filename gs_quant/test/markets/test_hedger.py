@@ -1957,6 +1957,7 @@ def test_format_hedge_calculate_results():
 
 def get_mock_hedge(mocker):
     mocker.patch.object(PerformanceHedgeParameters, 'to_dict', return_value={})
+    mocker.patch.object(PerformanceHedgeParameters, 'resolve_identifiers_in_payload', return_value={})
     mocker.patch.object(GsHedgeApi, 'calculate_hedge', return_value={'result': calculation_results})
     hedge = PerformanceHedge(parameters=PerformanceHedgeParameters(
         initial_portfolio=PositionSet(positions=[Position(asset_id='fakeId', identifier='fakeId', quantity=1)],
