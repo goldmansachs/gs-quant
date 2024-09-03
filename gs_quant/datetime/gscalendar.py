@@ -105,7 +105,7 @@ class GsCalendar:
         return []
 
     @property
-    def holidays(self) -> Tuple[dt.date]:
+    def holidays(self) -> Tuple[dt.date, ...]:
         cached_data = _calendar_cache.get(hashkey(str(self.__calendars)))
         if cached_data:
             return cached_data

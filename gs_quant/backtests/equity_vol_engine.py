@@ -192,6 +192,16 @@ class EquityVolEngine(object):
                         check_results.append(
                             f'Error: {type(action).__name__} invalid expiration_date '
                             'modifier ' + expiry_date_modes[0])
+
+                    size_fields = ('quantity', 'number_of_options', 'multiplier')
+                    priceable_size_values = [[getattr(p, sf, 1) or 1 for sf in size_fields] for p in action.priceables]
+                    priceable_sizes = [reduce(lambda x, y: x * y, size_vals, 1) for size_vals in priceable_size_values]
+
+                    if not all(priceable_size == 1 for priceable_size in priceable_sizes):
+                        check_results.append(
+                            f'Error: {type(action).__name__} every priceable should have a unit size of 1. '
+                            'Found [' + ', '.join([str(s) for s in priceable_sizes]) + ']'
+                        )
                 elif isinstance(action, a.HedgeAction):
                     if not is_synthetic_forward(action.priceable):
                         check_results.append(

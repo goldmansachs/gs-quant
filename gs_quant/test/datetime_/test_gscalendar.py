@@ -14,23 +14,24 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.datetime import GsCalendar
-from gs_quant.common import PricingLocation
-from gs_quant.test.api.test_risk import set_session
-from gs_quant.data import Dataset
-
+import datetime as dt
 from unittest import mock
+
 import pandas as pd
-import datetime
+
+from gs_quant.common import PricingLocation
+from gs_quant.data import Dataset
+from gs_quant.datetime import GsCalendar
+from gs_quant.test.api.test_risk import set_session
+
+MOCK_HOLIDAY = pd.DataFrame(index=[dt.datetime(1999, 9, 12)], data={'holiday': 'Labor Day'})
 
 
 # Test GsCalendar initiated with single PricingLocation
 @mock.patch.object(Dataset, 'get_coverage', return_value=pd.DataFrame())
-@mock.patch.object(Dataset, 'get_data')
-def test_gs_calendar_single(mocker, mocker_cov):
+@mock.patch.object(Dataset, 'get_data', return_value=MOCK_HOLIDAY)
+def test_gs_calendar_single(mocker, _mocker_cov):
     set_session()
-    mocker.return_value = pd.DataFrame(index=[datetime.datetime(1999, 9, 12)],
-                                       data={'holiday': 'Labor Day'})
     nyc = PricingLocation.NYC
     GsCalendar.reset()
     days = GsCalendar(nyc).holidays
@@ -38,12 +39,10 @@ def test_gs_calendar_single(mocker, mocker_cov):
 
 
 # Test GsCalendar initiated with tuple
-@mock.patch.object(Dataset, 'get_data')
 @mock.patch.object(Dataset, 'get_coverage', return_value=pd.DataFrame())
-def test_gs_calendar_tuple(mocker_coverage, mocker):
+@mock.patch.object(Dataset, 'get_data', return_value=MOCK_HOLIDAY)
+def test_gs_calendar_tuple(mocker, _mocker_cov):
     set_session()
-    mocker.return_value = pd.DataFrame(index=[datetime.datetime(1999, 9, 12)],
-                                       data={'holiday': 'Labor Day'})
     locs = (PricingLocation.NYC, PricingLocation.LDN)
     days = GsCalendar(locs).holidays
     assert days

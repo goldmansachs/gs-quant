@@ -103,6 +103,7 @@ class StrategySystematic:
                 if not isinstance(instrument, self._supported_instruments):
                     raise MqValueError('The format of the backtest asset is incorrect.')
                 elif isinstance(instrument, self._supported_fx_instruments):
+                    instrument = instrument.clone()
                     instrument.notional_amount *= notional_percentage / 100
 
                 instrument = self.check_underlier_fields(instrument)

@@ -497,7 +497,7 @@ def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=Fa
 
         if result.unit:
             if unit and unit != result.unit:
-                raise ValueError('Cannot aggregate results with different units')
+                raise ValueError(f'Cannot aggregate results with different units for {result.risk_key.risk_measure}')
 
             unit = unit or result.unit
 

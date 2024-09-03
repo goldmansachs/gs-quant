@@ -816,3 +816,27 @@ def test_supports_strategy():
         actions=add_trade_action_tc0)
     strategy = Strategy(initial_portfolio=None, triggers=[trigger])
     assert EquityVolEngine.supports_strategy(strategy)
+
+    # 18. Invalid - instrument non unit contract size
+
+    option_with_mult = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                                option_style=OptionStyle.European, multiplier=100)
+
+    action = AddTradeAction(priceables=option_with_mult, trade_duration='1m')
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=action)
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger])
+    assert not EquityVolEngine.supports_strategy(strategy)
+
+    # 19. Invalid - instrument non unit contract count
+
+    option_with_contracts = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                                     option_style=OptionStyle.European, number_of_options=100)
+
+    action = AddTradeAction(priceables=option_with_contracts, trade_duration='1m')
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
+        actions=action)
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger])
+    assert not EquityVolEngine.supports_strategy(strategy)
