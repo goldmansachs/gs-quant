@@ -594,7 +594,9 @@ class PerformanceHedgeParameters:
         # Resolve any assets in the hedge universe, asset constraints, and asset exclusions
         hedge_date = self.initial_portfolio.date
         self.universe = [resolved_identifiers.get(asset, [{'id': asset}])[0].get('id') for asset in self.universe]
-        self.benchmarks = [resolved_identifiers.get(asset, [{'id': asset}])[0].get('id') for asset in self.benchmarks]
+        if self.benchmarks is not None:
+            self.benchmarks = [resolved_identifiers.get(asset, [{'id': asset}])[0].get('id')
+                               for asset in self.benchmarks]
         if self.exclusions is not None:
             if self.exclusions.assets is not None:
                 self.exclusions.assets = [resolved_identifiers.get(asset, [{'id': asset}])[0].get('id')

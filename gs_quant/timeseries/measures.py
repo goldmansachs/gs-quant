@@ -4105,9 +4105,15 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
     if len(weighted_vols) == 0:
         raise MqValueError(f'no data for constituents of {asset}')
 
-    s1 = pd.concat(weighted_vols, axis=1).sum(1, min_count=1)
-    s2 = pd.concat(map(lambda x: x * x, weighted_vols), axis=1).sum(1, min_count=1)
+    # expected number of data points for each pricing date. All assets required, i.e. do not calculate
+    # if constituent is missing on that day
+    min_no_of_assets = top_n_of_index
+    s1 = pd.concat(weighted_vols, axis=1).sum(1, min_count=min_no_of_assets).dropna()
+    s2 = pd.concat(map(lambda x: x * x, weighted_vols), axis=1).sum(1, min_count=min_no_of_assets).dropna()
+
     idx_vol = volatility(df_asset['spot'], Window(tenor, tenor)) / 100
+    idx_vol = idx_vol[idx_vol.index.isin(s1.index)]
+
     values = (idx_vol * idx_vol - s2) / (s1 * s1 - s2) * 100
     series = ExtendedSeries(values)
     series.dataset_ids = getattr(df, 'dataset_ids', ())

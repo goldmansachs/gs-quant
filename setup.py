@@ -73,6 +73,7 @@ setuptools.setup(
         "pandas>=1.4;python_version>'3.7'",
         "pydash<7.0.0",
         "python-dateutil>=2.7.0",
+        "pytz==2024.1",
         "requests",
         "httpx>=0.23.3;python_version>'3.6'",
         "scipy>=1.2.0;python_version>'3.8'",

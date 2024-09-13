@@ -235,7 +235,13 @@ class MockRequest:
             return False
         if report_only:
             if log:
-                log_mock_data_event(f'Noticed BAD INDEX {mock_file_key.file_name}. {existing_used} != {sorted_tests}')
+                missing = set(existing_used) - set(sorted_tests)
+                extra = set(sorted_tests) - set(existing_used)
+                missing_txt = f" {len(missing)} test(s) are listed in the file but weren't used: {missing}." \
+                    if len(missing) else ""
+                extra_txt = f" {len(extra)} test(s) that accessed this file were NOT listed in the file : {extra}." \
+                    if len(extra) else ""
+                log_mock_data_event(f'Noticed BAD INDEX {mock_file_key.file_name}. {missing_txt}{extra_txt}')
             return True
 
         new_data = cls._make_mock_file_data(mock_file_key, existing_meta['type'], json.dumps(data), sorted_tests)
