@@ -21,7 +21,7 @@ from collections import defaultdict
 from datetime import date
 from functools import reduce
 from itertools import zip_longest
-from typing import Union, Iterable, Optional
+from typing import Union, Iterable, Optional, Dict
 
 from gs_quant import risk
 from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
@@ -110,14 +110,15 @@ class AddScaledTradeActionImpl(ActionHandler):
     def __init__(self, action: AddScaledTradeAction):
         super().__init__(action)
 
-    def _nav_scale_orders(self, orders, price_measure):
+    def _nav_scale_orders(self, orders, price_measure, trigger_infos):
         sorted_order_days = sorted(make_list(orders.keys()))
         final_days_orders = {}
 
         # Populate dict of dates and instruments sold on those dates
         for create_date, portfolio in orders.items():
+            info = trigger_infos[create_date]
             for inst in portfolio.all_instruments:
-                d = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar)
+                d = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar, info)
                 if d not in final_days_orders.keys():
                     final_days_orders[d] = []
                 final_days_orders[d].append(inst)
@@ -158,12 +159,12 @@ class AddScaledTradeActionImpl(ActionHandler):
                     available_cash += sum(unscaled_unwind_prices_by_day[d][inst] * scaling_factors_by_inst[inst] for
                                           inst in p)
 
-    def _scale_order(self, orders, daily_risk, price_measure):
+    def _scale_order(self, orders, daily_risk, price_measure, trigger_infos):
         if self.action.scaling_type == ScalingActionType.size:
             for _, portfolio in orders.items():
                 portfolio.scale(self.action.scaling_level)
         elif self.action.scaling_type == ScalingActionType.NAV:
-            self._nav_scale_orders(orders, price_measure)
+            self._nav_scale_orders(orders, price_measure, trigger_infos)
         elif self.action.scaling_type == ScalingActionType.risk_measure:
             for day, portfolio in orders.items():
                 scaling_factor = self.action.scaling_level / daily_risk[day]
@@ -173,7 +174,9 @@ class AddScaledTradeActionImpl(ActionHandler):
 
     def _raise_order(self,
                      state_list: Iterable[date],
-                     price_measure: RiskMeasure):
+                     price_measure: RiskMeasure,
+                     trigger_infos: Dict[dt.date, Optional[Union[AddScaledTradeActionInfo,
+                                                                 Iterable[AddScaledTradeActionInfo]]]]):
         orders = {}
         order_valuations = (ResolvedInstrumentValues,)
         if self.action.scaling_type == ScalingActionType.risk_measure:
@@ -196,7 +199,7 @@ class AddScaledTradeActionImpl(ActionHandler):
         daily_risk = {d: res[self.action.scaling_risk].aggregate() for d, res in orders.items()} if \
             self.action.scaling_type == ScalingActionType.risk_measure else None
 
-        self._scale_order(final_orders, daily_risk, price_measure)
+        self._scale_order(final_orders, daily_risk, price_measure, trigger_infos)
 
         return final_orders
 
@@ -209,8 +212,8 @@ class AddScaledTradeActionImpl(ActionHandler):
         state_list = make_list(state)
         if trigger_info is None or isinstance(trigger_info, AddScaledTradeActionInfo):
             trigger_info = [trigger_info for _ in range(len(state_list))]
-        orders = self._raise_order(state_list, backtest.price_measure)
         trigger_infos = dict(zip_longest(state_list, trigger_info))
+        orders = self._raise_order(state_list, backtest.price_measure, trigger_infos)
 
         # record entry and unwind cashflows
         for create_date, portfolio in orders.items():
@@ -617,7 +620,7 @@ class GenericEngine(BacktestBaseEngine):
                                  market_data_location=market_data_location, request_priority=request_priority,
                                  is_batch=is_batch, use_historical_diddles_only=True)
 
-        context._max_concurrent = 10000
+        context._max_concurrent = 1500
         context._dates_per_batch = 200
 
         return context

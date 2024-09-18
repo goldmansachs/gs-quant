@@ -628,7 +628,7 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
 def fwd_points(asset: Asset, settlement_date: str,
                location: str = None, *, source: str = None, real_time: bool = False) -> Series:
     """
-    GS end-of-day FX vanilla implied volatilities across major crosses.
+    GS End-of-day FX forward points for G3, G10, and EM crosses.
 
     :param asset: asset object loaded from security master
     :param settlement_date: relative date representation of expiration date e.g. 1m

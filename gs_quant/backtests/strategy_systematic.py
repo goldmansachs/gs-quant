@@ -115,7 +115,11 @@ class StrategySystematic:
                     market_model=market_model,
                     expiry_date_mode=expiry_date_mode))
         # xasset backtesting service fields
-        self.__trades = (Trade(tuple(trade_instruments), roll_frequency, roll_frequency, quantity, quantity_type),)
+        trade_buy_dates = tuple(s.date for s in trade_in_signals if s.value) if trade_in_signals is not None else None
+        trade_exit_dates = tuple(s.date for s in trade_out_signals if s.value) if trade_out_signals is not None else \
+            None
+        self.__trades = (Trade(tuple(trade_instruments), roll_frequency, trade_buy_dates, roll_frequency,
+                               trade_exit_dates, quantity, quantity_type),)
         self.__delta_hedge_frequency = '1b' if delta_hedge else None
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')

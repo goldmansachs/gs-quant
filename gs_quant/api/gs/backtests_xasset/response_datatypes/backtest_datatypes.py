@@ -26,7 +26,7 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import \
     decode_daily_portfolio
 from gs_quant.instrument import Instrument
-from gs_quant.json_convertors import decode_optional_date
+from gs_quant.json_convertors import decode_optional_date, encode_date_tuple, decode_date_tuple
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
 from gs_quant.common import Currency, CurrencyName, PricingLocation
 
@@ -80,8 +80,12 @@ class DateConfig:
 @dataclass(unsafe_hash=True, repr=False)
 class Trade:
     legs: Optional[Tuple[Instrument, ...]] = field(default=None, metadata=config(decoder=legs_decoder))
-    buy_frequency: Optional[str] = None
-    holding_period: Optional[str] = None
+    buy_frequency: str = None
+    buy_dates: Optional[Tuple[dt.date, ...]] = field(default=None, metadata=config(encoder=encode_date_tuple,
+                                                                                   decoder=decode_date_tuple))
+    holding_period: str = None
+    exit_dates: Optional[Tuple[dt.date, ...]] = field(default=None, metadata=config(encoder=encode_date_tuple,
+                                                                                    decoder=decode_date_tuple))
     quantity: Optional[float] = None
     quantity_type: BacktestTradingQuantityType = BacktestTradingQuantityType.quantity
 
