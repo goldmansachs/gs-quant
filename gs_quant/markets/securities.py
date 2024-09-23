@@ -1149,7 +1149,7 @@ class FutureContract(Asset):
     def __init__(self,
                  id_: str,
                  asset_class: Union[AssetClass, str],
-                 name: Union[AssetClass, str],
+                 name: str,
                  entity: Optional[Dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
@@ -1456,7 +1456,7 @@ class SecurityMaster:
             return Fund(gs_asset.id, gs_asset.name, gs_asset.assetClass, entity=asset_entity)
 
         if asset_type == GsAssetType.Default_Swap.value:
-            return DefaultSwap(gs_asset.id, gs_asset.asset_class, entity=asset_entity)
+            return DefaultSwap(gs_asset.id, gs_asset.name, entity=asset_entity)
 
         if asset_type == GsAssetType.Swaption.value:
             return Swaption(gs_asset.id, gs_asset.name, entity=asset_entity)

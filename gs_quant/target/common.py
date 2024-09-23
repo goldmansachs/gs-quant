@@ -4757,6 +4757,15 @@ class DateRange(Base):
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False, order=True)
+class DoubleParameter(RiskMeasureParameter):
+    value: Optional[float] = field(default=None, metadata=field_metadata)
+    parameter_type: Optional[str] = field(init=False, default='Double', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class EqBasketRebalanceDateOverride(Base):
     new_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
