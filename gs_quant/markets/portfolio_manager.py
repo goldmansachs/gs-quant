@@ -23,7 +23,7 @@ import pandas as pd
 
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
-from gs_quant.entities.entitlements import Entitlements
+from gs_quant.entities.entitlements import Entitlements, EntitlementBlock, User
 from gs_quant.entities.entity import PositionedEntity, EntityType, ScenarioCalculationMeasure
 from gs_quant.errors import MqError
 from gs_quant.errors import MqValueError
@@ -272,6 +272,29 @@ class PortfolioManager(PositionedEntity):
         portfolio_as_target = GsPortfolioApi.get_portfolio(self.__portfolio_id)
         portfolio_as_target.entitlements = entitlements_as_target
         GsPortfolioApi.update_portfolio(portfolio_as_target)
+
+    def share(self, emails: List[str], admin: bool = False):
+        """
+        Share a portfolio with a list of emails
+
+        :param emails: list of emails to share the portfolio with
+        :param admin: true if the users should have admin access; defaults to false
+
+        **Examples**
+
+        >>> pm = PortfolioManager("PORTFOLIO ID")
+        >>> pm.share(['EMAIL1', 'EMAIL2'])
+        """
+        current_entitlements = self.get_entitlements()
+        users = User.get_many(emails=emails)
+        found_emails = [user.email for user in users]
+        if len(found_emails) != len(emails):
+            missing_emails = [email for email in emails if email not in found_emails]
+            raise MqValueError(f'Users with emails {missing_emails} not found')
+        if admin:
+            current_entitlements.admin = EntitlementBlock(users=set(current_entitlements.admin.users + users))
+        current_entitlements.view = EntitlementBlock(users=set(current_entitlements.view.users + users))
+        self.set_entitlements(current_entitlements)
 
     def set_currency(self, currency: Currency):
         """

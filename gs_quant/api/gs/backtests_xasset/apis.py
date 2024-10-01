@@ -21,11 +21,12 @@ from gs_quant.session import GsSession
 
 class GsBacktestXassetApi:
     HEADERS = {'Accept': 'application/json'}
+    TIMEOUT = 90
 
     @classmethod
     def calculate_risk(cls, risk_request: RiskRequest) -> RiskResponse:
         response = GsSession.current._post('/backtests/xasset/risk', risk_request.to_json(),
-                                           request_headers=cls.HEADERS)
+                                           request_headers=cls.HEADERS, timeout=cls.TIMEOUT)
         result = RiskResponse.from_dict(response)
         return result
 
@@ -33,6 +34,6 @@ class GsBacktestXassetApi:
     def calculate_basic_backtest(cls, backtest_request: BasicBacktestRequest, decode_instruments: bool = True) -> \
             BasicBacktestResponse:
         response = GsSession.current._post('/backtests/xasset/strategy/basic', backtest_request.to_json(),
-                                           request_headers=cls.HEADERS)
+                                           request_headers=cls.HEADERS, timeout=cls.TIMEOUT)
         result = BasicBacktestResponse.from_dict_custom(response, decode_instruments)
         return result

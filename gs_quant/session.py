@@ -24,7 +24,7 @@ import sys
 from abc import abstractmethod
 from configparser import ConfigParser
 from enum import Enum, auto, unique
-from typing import Optional, Union, Iterable
+from typing import Optional, Union, Iterable, Any
 
 import backoff
 import certifi
@@ -477,7 +477,7 @@ class GsSession(ContextBase):
         return ret
 
     def _connect_websocket(self, path: str, headers: Optional[dict] = None, include_version=True,
-                           domain: Optional[str] = None):
+                           domain: Optional[str] = None, **kwargs: Any):
         import websockets
         version_path = '/' + self.api_version if include_version else ''
         url = f'{domain}{version_path}{path}' if domain else f'ws{self.domain[4:]}{version_path}{path}'
@@ -486,7 +486,8 @@ class GsSession(ContextBase):
                                   extra_headers=extra_headers,
                                   max_size=2 ** 32,
                                   read_limit=2 ** 32,
-                                  ssl=CustomHttpAdapter.ssl_context() if url.startswith('wss') else None)
+                                  ssl=CustomHttpAdapter.ssl_context() if url.startswith('wss') else None,
+                                  **kwargs)
 
     def _headers(self):
         return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]
