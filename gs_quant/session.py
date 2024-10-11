@@ -568,6 +568,7 @@ class GsSession(ContextBase):
             scopes: Optional[Union[Iterable[Union[Scopes, str]], str]] = (),
             token: str = '',
             is_gssso: bool = False,
+            is_marquee_login: bool = False,
             api_version: str = API_VERSION,
             application: str = DEFAULT_APPLICATION,
             http_adapter: requests.adapters.HTTPAdapter = None,
@@ -595,6 +596,10 @@ class GsSession(ContextBase):
                                                    application=application, http_adapter=http_adapter)
                 except NameError:
                     raise MqUninitialisedError('This option requires gs_quant_auth to be installed')
+            elif is_marquee_login:
+                return MQLoginSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter,
+                                      application_version=application_version, application=application,
+                                      mq_login_token=token)
             else:
                 return PassThroughSession(environment_or_domain, token, api_version=api_version,
                                           application=application, http_adapter=http_adapter, domain=domain)

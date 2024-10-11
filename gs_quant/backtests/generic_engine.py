@@ -31,10 +31,10 @@ from gs_quant.backtests.actions import (Action, AddTradeAction, HedgeAction, Ent
                                         ExitAllPositionsAction, AddScaledTradeAction, ScalingActionType,
                                         AddScaledTradeActionInfo)
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
-from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment, Hedge
+from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment, Hedge, PnlDefinition
 from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date
-from gs_quant.common import AssetClass
-from gs_quant.common import ParameterisedRiskMeasure, RiskMeasure
+from gs_quant.backtests.strategy import Strategy
+from gs_quant.common import AssetClass, Currency, ParameterisedRiskMeasure, RiskMeasure
 from gs_quant.context_base import nullcontext
 from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.markets import PricingContext, HistoricalPricingContext
@@ -625,9 +625,13 @@ class GenericEngine(BacktestBaseEngine):
 
         return context
 
-    def run_backtest(self, strategy, start=None, end=None, frequency='1m', states=None, risks=None,
-                     show_progress=True, csa_term=None, visible_to_gs=False, initial_value=0, result_ccy=None,
-                     holiday_calendar=None, market_data_location=None, is_batch=True, calc_risk_at_trade_exits=False):
+    def run_backtest(self, strategy: Strategy, start: Optional[dt.date] = None, end: Optional[dt.date] = None,
+                     frequency: Optional[str] = '1m', states: Optional[Iterable[dt.date]] = None,
+                     risks: Optional[Iterable[RiskMeasure]] = None, show_progress: bool = True,
+                     csa_term: Optional[str] = None, visible_to_gs: bool = False, initial_value: float = 0,
+                     result_ccy: Optional[Union[str, Currency]] = None, holiday_calendar: Optional[str] = None,
+                     market_data_location: Optional[str] = None, is_batch: bool = True,
+                     calc_risk_at_trade_exits: bool = False, pnl_explain: Optional[PnlDefinition] = None):
         """
         run the backtest following the triggers and actions defined in the strategy.  If states are entered run on
         those dates otherwise build a schedule from the start, end, frequency
@@ -648,6 +652,7 @@ class GenericEngine(BacktestBaseEngine):
         :param is_batch: use websockets to reduce timeout issues
         :param calc_risk_at_trade_exits: separate results for requested risk measures on tradable exit dates;
                                          not to be included in main results but useful for PnL decomposition
+        :param pnl_explain: a Pnl Definition object which defines the risk attribution and mkt data for a pnl explain
         :return: a backtest object containing the portfolios on each day and results which show all risks on all days
 
         """
@@ -662,7 +667,7 @@ class GenericEngine(BacktestBaseEngine):
 
         with self.new_pricing_context():
             return self.__run(strategy, start, end, frequency, states, risks, initial_value,
-                              result_ccy, holiday_calendar, calc_risk_at_trade_exits)
+                              result_ccy, holiday_calendar, calc_risk_at_trade_exits, pnl_explain)
 
     def _trace(self, label: str):
         if self._tracing_enabled:
@@ -671,7 +676,7 @@ class GenericEngine(BacktestBaseEngine):
             return nullcontext()
 
     def __run(self, strategy, start, end, frequency, states, risks, initial_value, result_ccy, holiday_calendar,
-              calc_risk_at_trade_exits):
+              calc_risk_at_trade_exits, pnl_explain):
         """
         Run the backtest strategy using the ambient pricing context
         """
@@ -690,9 +695,8 @@ class GenericEngine(BacktestBaseEngine):
 
         strategy_pricing_dates = list(set(strategy_pricing_dates))
         strategy_pricing_dates.sort()
-
-        risks = list(set(make_list(risks) + strategy.risks))
-        risks = risks if self.price_measure in risks else risks + [self.price_measure]
+        pnl_risks = [] if pnl_explain is None else pnl_explain.get_risks()
+        risks = list(set(make_list(risks) + strategy.risks + pnl_risks + [self.price_measure]))
         if result_ccy is not None:
             risks = [(r(currency=result_ccy) if isinstance(r, ParameterisedRiskMeasure)
                       else raiser(f'Unparameterised risk: {r}')) for r in risks]
@@ -705,7 +709,7 @@ class GenericEngine(BacktestBaseEngine):
         else:
             price_risk = self.price_measure
 
-        backtest = BackTest(strategy, strategy_pricing_dates, risks, price_risk, holiday_calendar)
+        backtest = BackTest(strategy, strategy_pricing_dates, risks, price_risk, holiday_calendar, pnl_explain)
 
         logger.info('Resolving initial portfolio')
         with self._trace('Resolve initial portfolio'):

@@ -450,7 +450,7 @@ class MultipleScenarioResult(dict):
                 raise ValueError('Can only index by date on historical results')
         return super().__getitem__(item)
 
-    def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
+    def to_frame(self, values='default', index='default', columns='default', aggfunc="sum",
                  display_options: DisplayOptions = None):
         df = pd.DataFrame.from_records(self._to_records({}, display_options=display_options))
         if values is None and index is None and columns is None:
@@ -809,7 +809,7 @@ class PortfolioRiskResult(CompositeResultFuture):
                 records.extend(future_records[i]._to_records({**portfolio_records[i]}, display_options))
         return records
 
-    def to_frame(self, values='default', index='default', columns='default', aggfunc=sum,
+    def to_frame(self, values='default', index='default', columns='default', aggfunc="sum",
                  display_options: DisplayOptions = None):
         final_records = self._to_records(display_options=display_options)
         if len(final_records) > 0:

@@ -607,3 +607,26 @@ class Portfolio(PriceableImpl):
         portfolio_clone.__id = self.__id
         portfolio_clone.__quote_id = self.__quote_id
         return portfolio_clone
+
+
+@dataclass
+class Grid(Portfolio):
+    """A grid of instruments
+
+    A grid is a type of portfolio which represents a grid of similar instruments
+
+    """
+
+    def __init__(self,
+                 priceable: PriceableImpl,
+                 x_param: str,
+                 x_values: Iterable,
+                 y_param: str,
+                 y_values: Iterable,
+                 name: Optional[str] = None):
+
+        x_overrides = [{x_param: v,
+                        'name': v} for v in x_values]
+        y_overrides = [{y_param: v} for v in y_values]
+        super().__init__([Portfolio([priceable.clone(**{**x, **y}) for x in x_overrides], name=next(iter(y.values())))
+                          for y in y_overrides], name)

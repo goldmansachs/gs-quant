@@ -46,6 +46,28 @@ class BaseBacktest(ABC):
 TBaseBacktest = TypeVar('TBaseBacktest', bound='BaseBacktest')
 
 
+@dataclass_json()
+@dataclass
+class PnlAttribute:
+    attribute_name: str
+    attribute_metric: RiskMeasure
+    market_data_metric: RiskMeasure
+    scaling_factor: float
+    second_order: bool = False
+
+    def get_risks(self):
+        return [self.attribute_metric, self.market_data_metric]
+
+
+@dataclass_json()
+@dataclass
+class PnlDefinition:
+    attributes: Iterable[PnlAttribute]
+
+    def get_risks(self):
+        return [risk for attribute in self.attributes for risk in attribute.get_risks()]
+
+
 @dataclass_json
 @dataclass
 class BackTest(BaseBacktest):
@@ -54,6 +76,7 @@ class BackTest(BaseBacktest):
     risks: Iterable[RiskMeasure]
     price_measure: RiskMeasure
     holiday_calendar: Iterable[dt.date] = None
+    pnl_explain_def: Optional[PnlDefinition] = None
 
     def __post_init__(self):
         self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
@@ -137,10 +160,6 @@ class BackTest(BaseBacktest):
     def result_summary(self):
         """
         Get a dataframe showing the PV and other risks and cash on each day in the backtest
-        :param show_units: choose to show the units in the column names
-        :type show_units: bool default False
-        :return: bool default False
-        :rtype: pandas.dataframe
         """
         dates_with_results = list(filter(lambda x: len(x[1]), self._results.items()))
         summary_dict = {}
@@ -242,6 +261,50 @@ class BackTest(BaseBacktest):
         result = static_inst_info.join(risk_and_cp_joined, how='outer')
 
         return result.sort_index()
+
+    def pnl_explain(self):
+        """
+        Get a dictionary of risk attributions which explain the pnl
+        """
+        if self.pnl_explain_def is None:
+            return None
+
+        risk_results = self.results
+        exit_risk_results = self.trade_exit_risk_results
+        dates = sorted(set(risk_results.keys()).union(exit_risk_results.keys()))
+
+        pnl_explain_results = {}
+
+        for attribute in self.pnl_explain_def.attributes:
+            result = {}
+            cum_total = 0.0
+            for idx in range(1, len(dates)):
+                metric_pnl = 0.0
+                cur_date = dates[idx]
+                prev_date = dates[idx - 1]
+                if prev_date not in risk_results:
+                    result[cur_date] = cum_total
+                    continue
+                for prev_date_inst in risk_results[prev_date].portfolio.all_instruments:
+                    prev_date_risk = risk_results[prev_date][prev_date_inst][attribute.attribute_metric]
+                    if prev_date_risk == 0:
+                        continue
+                    prev_date_mkt_data = risk_results[prev_date][prev_date_inst][attribute.market_data_metric]
+                    if cur_date in risk_results and prev_date_inst in risk_results[cur_date].portfolio:
+                        cur_date_mkt_data = risk_results[cur_date][prev_date_inst][attribute.market_data_metric]
+                    else:
+                        cur_date_mkt_data = exit_risk_results[cur_date][prev_date_inst][attribute.market_data_metric]
+                    if attribute.second_order:
+                        metric_pnl += (0.5 * attribute.scaling_factor * prev_date_risk *
+                                       (cur_date_mkt_data - prev_date_mkt_data) *
+                                       (cur_date_mkt_data - prev_date_mkt_data))
+                    else:
+                        metric_pnl += (attribute.scaling_factor * prev_date_risk *
+                                       (cur_date_mkt_data - prev_date_mkt_data))
+                cum_total += metric_pnl
+                result[cur_date] = cum_total
+            pnl_explain_results[attribute.attribute_name] = result
+        return pnl_explain_results
 
 
 class ScalingPortfolio:
