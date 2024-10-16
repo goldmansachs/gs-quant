@@ -22,6 +22,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: calculate_mean_return
    
    
+   .. autoattribute:: dataclass_json_config
+   
+   
    .. autoattribute:: first_fixing_date
    
    
@@ -37,6 +40,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: last_fixing_date
    
    
+   .. autoattribute:: metadata
+   
+   
+   .. autoattribute:: name
+   
+   
    .. autoattribute:: notional_amount
    
    
@@ -46,7 +55,19 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: pair
    
    
+   .. autoattribute:: premium
+   
+   
+   .. autoattribute:: premium_currency
+   
+   
+   .. autoattribute:: premium_payment_date
+   
+   
    .. autoattribute:: provider
+   
+   
+   .. autoattribute:: quantity_
    
    
    .. autoattribute:: resolution_key
@@ -57,6 +78,8 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    .. autoattribute:: strike_vol
    
+   
+   .. autoattribute:: type_
    
    
    .. autoattribute:: unresolved

@@ -1345,8 +1345,8 @@ class FactorRiskModel(MarqueeRiskModel):
         >>> start_date = dt.date(2022, 1, 1)
         >>> end_date = dt.date(2022, 5, 2)
         >>> model = FactorRiskModel.get("MODEL_ID")
-        >>> bid_ask_spread_30d = model.get_bid_ask_spread(start_date, end_date, 30,
-                                                          DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
+        >>> bid_ask_spread_30d = model.get_bid_ask_spread(start_date, end_date, 30, \
+        ...                                               DataAssetsRequest(UniverseIdentifier.bbid, ['GS UN']))
 
         **See also**
         :func:`get_composite_volume` :func:`get_trading_volume`
@@ -2420,7 +2420,9 @@ class MacroRiskModel(MarqueeRiskModel):
         :param limit: limit of number of models in response
 
         :return: list of Macro Risk Model object
+
         """
+
         models = GsRiskModelApi.get_risk_models(ids=ids,
                                                 terms=terms,
                                                 vendors=vendors,

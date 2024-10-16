@@ -16,16 +16,22 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: buy_sell
    
    
+   .. autoattribute:: dataclass_json_config
+   
+   
    .. autoattribute:: expiration_date
    
    
    .. autoattribute:: expiration_time
    
    
-   .. autoattribute:: fixing_source
-   
-   
    .. autoattribute:: instrument_quantity
+   
+   
+   .. autoattribute:: metadata
+   
+   
+   .. autoattribute:: name
    
    
    .. autoattribute:: notional_amount
@@ -52,14 +58,22 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: provider
    
    
+   .. autoattribute:: quantity_
+   
+   
    .. autoattribute:: resolution_key
    
    
    .. autoattribute:: settlement_date
    
    
+   .. autoattribute:: settlement_rate_option
+   
+   
    .. autoattribute:: strike_price
    
+   
+   .. autoattribute:: type_
    
    
    .. autoattribute:: unresolved

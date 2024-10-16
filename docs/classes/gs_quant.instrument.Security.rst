@@ -33,10 +33,16 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: cm_id
    
    
+   .. autoattribute:: coin_metrics_id
+   
+   
    .. autoattribute:: cross
    
    
    .. autoattribute:: cusip
+   
+   
+   .. autoattribute:: dataclass_json_config
    
    
    .. autoattribute:: delisted
@@ -90,10 +96,16 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: mdapi_class
    
    
+   .. autoattribute:: metadata
+   
+   
    .. autoattribute:: mic
    
    
    .. autoattribute:: mq_symbol
+   
+   
+   .. autoattribute:: name
    
    
    .. autoattribute:: pl_id
@@ -117,6 +129,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: ps_id
    
    
+   .. autoattribute:: quantity_
+   
+   
    .. autoattribute:: rcic
    
    
@@ -124,6 +139,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: ric
+   
+   
+   .. autoattribute:: sec_master_id
    
    
    .. autoattribute:: sec_name
@@ -142,6 +160,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: ticker
+   
+   
+   .. autoattribute:: tsdb_shortname
    
    
    .. autoattribute:: unresolved

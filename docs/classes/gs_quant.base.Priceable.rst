@@ -21,11 +21,13 @@
       ~Priceable.dollar_price
       ~Priceable.from_dict
       ~Priceable.from_instance
+      ~Priceable.from_json
       ~Priceable.price
-      ~Priceable.prop_item_type
-      ~Priceable.prop_type
       ~Priceable.properties
+      ~Priceable.properties_init
       ~Priceable.resolve
+      ~Priceable.schema
+      ~Priceable.to_dict
       ~Priceable.to_json
    
    

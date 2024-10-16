@@ -30,12 +30,38 @@ Instruments
    EqSynthetic
    EqVarianceSwap
    Forward
+   FXAccumulator
+   FXAccumulatorScheduleLeg
    FXBinary
+   FXCorrelationSwap
+   FXCorrelationSwapLeg
+   FXDoubleKnockout
+   FXDoubleOneTouch
+   FXDualDoubleKnockout
+   FXDualDoubleKnockoutLeg
+   FXEuropeanKnockout
    FXForward
+   FXKnockout
    FXMultiCrossBinary
    FXMultiCrossBinaryLeg
+   FXMultiCrossDoubleBinary
+   FXMultiCrossDoubleBinaryLeg
+   FXMultiCrossDoubleOneTouch
+   FXMultiCrossDoubleOneTouchLeg
+   FXOneTouch
    FXOption
+   FXOptionLeg
+   FXOptionStrategy
+   FXPivot
+   FXPivotScheduleLeg
+   FXShiftingBermForward
+   FXTarf
+   FXTarfScheduleLeg
+   FXVarianceSwap
    FXVolatilitySwap
+   FXWorstOf
+   FXWorstOfKO
+   FXWorstOfKOLeg
    InflationSwap
    IRBasisSwap
    IRCap

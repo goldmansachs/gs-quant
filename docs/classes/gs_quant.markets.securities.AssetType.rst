@@ -17,29 +17,63 @@
 
    .. autosummary::
    
-      ~AssetType.BOND
-      ~AssetType.CASH
-      ~AssetType.COMMODITY
-      ~AssetType.COMMODITY_EU_NATURAL_GAS_HUB
-      ~AssetType.COMMODITY_NATURAL_GAS_HUB
-      ~AssetType.COMMODITY_POWER_AGGREGATED_NODES
-      ~AssetType.COMMODITY_POWER_NODE
-      ~AssetType.COMMODITY_REFERENCE_PRICE
-      ~AssetType.CROSS
-      ~AssetType.CRYPTOCURRENCY
-      ~AssetType.CURRENCY
-      ~AssetType.CUSTOM_BASKET
-      ~AssetType.ETF
-      ~AssetType.FORWARD
-      ~AssetType.FUTURE
-      ~AssetType.FUTURE_CONTRACT
-      ~AssetType.FUTURE_MARKET
       ~AssetType.INDEX
-      ~AssetType.OPTION
-      ~AssetType.RATE
+      ~AssetType.ETF
+      ~AssetType.CUSTOM_BASKET
       ~AssetType.RESEARCH_BASKET
       ~AssetType.STOCK
-      ~AssetType.SWAP
+      ~AssetType.FUTURE
+      ~AssetType.CROSS
+      ~AssetType.CURRENCY
+      ~AssetType.RATE
+      ~AssetType.CASH
       ~AssetType.WEATHER_INDEX
+      ~AssetType.SWAP
+      ~AssetType.SWAPTION
+      ~AssetType.OPTION
+      ~AssetType.BINARY
+      ~AssetType.COMMODITY_REFERENCE_PRICE
+      ~AssetType.COMMODITY_NATURAL_GAS_HUB
+      ~AssetType.COMMODITY_EU_NATURAL_GAS_HUB
+      ~AssetType.COMMODITY_POWER_NODE
+      ~AssetType.COMMODITY_POWER_AGGREGATED_NODES
+      ~AssetType.BOND
+      ~AssetType.FUTURE_MARKET
+      ~AssetType.FUTURE_CONTRACT
+      ~AssetType.COMMODITY
+      ~AssetType.CRYPTOCURRENCY
+      ~AssetType.FORWARD
+      ~AssetType.FUND
+      ~AssetType.DEFAULT_SWAP
+      ~AssetType.SYSTEMATIC_HEDGING
+      ~AssetType.ACCESS
+      ~AssetType.RISK_PREMIA
+      ~AssetType.MULTI_ASSET_ALLOCATION
+      ~AssetType.ADR
+      ~AssetType.GDR
+      ~AssetType.DUTCH_CERT
+      ~AssetType.NYRS
+      ~AssetType.RECEIPT
+      ~AssetType.UNIT
+      ~AssetType.MUTUAL_FUND
+      ~AssetType.RIGHT
+      ~AssetType.PREFERRED
+      ~AssetType.MISC
+      ~AssetType.REIT
+      ~AssetType.PRIVATE_COMP
+      ~AssetType.PREFERENCE
+      ~AssetType.LIMITED_PARTNERSHIP
+      ~AssetType.TRACKING_STOCK
+      ~AssetType.ROYALTY_TRUST
+      ~AssetType.CLOSED_END_FUND
+      ~AssetType.OPEN_END_FUND
+      ~AssetType.FUND_OF_FUNDS
+      ~AssetType.MLP
+      ~AssetType.STAPLED_SECURITY
+      ~AssetType.SAVINGS_SHARE
+      ~AssetType.EQUITY_WRT
+      ~AssetType.SAVINGS_PLAN
+      ~AssetType.EQUITY_INDEX
+      ~AssetType.COMMON_STOCK
    
    

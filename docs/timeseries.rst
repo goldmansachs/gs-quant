@@ -26,8 +26,6 @@ Algebra
    not_
    or_
    power
-   repeat
-   smooth_spikes
    sqrt
    subtract
    weighted_sum
@@ -57,7 +55,6 @@ Backtesting
 .. autosummary::
    :toctree: functions
 
-   basket
    basket_series
 
 .. autosummary::

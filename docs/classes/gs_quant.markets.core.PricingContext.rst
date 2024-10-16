@@ -33,10 +33,17 @@
       ~PricingContext.is_current
       ~PricingContext.is_entered
       ~PricingContext.market
+      ~PricingContext.market_behaviour
       ~PricingContext.market_data_location
       ~PricingContext.pricing_date
-      ~PricingContext.prior_context
+      ~PricingContext.provider
+      ~PricingContext.request_priority
+      ~PricingContext.set_parameters_only
+      ~PricingContext.show_progress
+      ~PricingContext.timeout
       ~PricingContext.use_cache
+      ~PricingContext.use_historical_diddles_only
+      ~PricingContext.use_server_cache
       ~PricingContext.visible_to_gs
    
    

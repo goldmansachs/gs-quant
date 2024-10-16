@@ -69,6 +69,7 @@ Portfolio
    :toctree: classes
 
    Portfolio
+   Grid
 
 
 PortfolioManager
@@ -125,16 +126,3 @@ Report
    PerformanceReport
    FactorRiskReport
    ThematicReport
-
-
-Optimizer
----------
-
-.. currentmodule:: gs_quant.markets.optimizer
-
-.. autosummary::
-   :toctree: classes
-   :template: portfolio_manager.rst
-
-   Optimizer
-

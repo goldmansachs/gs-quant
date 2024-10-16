@@ -55,7 +55,7 @@ DATAGRID_HEADERS: Dict[str, str] = {'Content-Type': 'application/json;charset=ut
 
 class DataGrid:
     """
-    DataGrid is a object for fetching Marquee data and applying processors (functions). DataGrids can be
+    DataGrid is an object for fetching Marquee data and applying processors (functions). DataGrids can be
     persisted via the DataGrid API and utilized on the Marquee Markets platform.
 
     :param name: Name of the DataGrid
@@ -66,6 +66,7 @@ class DataGrid:
     :param sorts: Optional list of DataGridSort. Use this if you want to sort your columns.
     :param filters: Optional list of DataGridFilter. Use this to filter column's data.
     :param multiColumnGroups: Optional list of MultiColumnGroup. Useful to group columns for heatmaps.
+
     **Usage**
 
     To create a DataGrid, we define two components, rows and columns:

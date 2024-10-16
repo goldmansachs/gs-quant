@@ -16,6 +16,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: buy_sell
    
    
+   .. autoattribute:: dataclass_json_config
+   
+   
    .. autoattribute:: expiration_date
    
    
@@ -26,6 +29,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: legs
+   
+   
+   .. autoattribute:: metadata
+   
+   
+   .. autoattribute:: name
    
    
    .. autoattribute:: notional_amount
@@ -46,11 +55,16 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: provider
    
    
+   .. autoattribute:: quantity_
+   
+   
    .. autoattribute:: resolution_key
    
    
    .. autoattribute:: settlement_date
    
+   
+   .. autoattribute:: type_
    
    
    .. autoattribute:: unresolved

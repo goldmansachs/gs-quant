@@ -13,6 +13,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    
+   .. autoattribute:: dataclass_json_config
+   
+   
    .. autoattribute:: end
    
    
@@ -22,6 +25,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: legs
    
    
+   .. autoattribute:: metadata
+   
+   
+   .. autoattribute:: name
+   
+   
    .. autoattribute:: number_of_periods
    
    
@@ -29,6 +38,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: quantity
+   
+   
+   .. autoattribute:: quantity_
    
    
    .. autoattribute:: quantity_period
@@ -48,6 +60,8 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    .. autoattribute:: strategy
    
+   
+   .. autoattribute:: type_
    
    
    .. autoattribute:: unresolved

@@ -1,60 +1,118 @@
-﻿gs\_quant.markets.report.PerformanceReport
-==========================================
+﻿PerformanceReport
+=================
 
 .. currentmodule:: gs_quant.markets.report
 
 .. autoclass:: PerformanceReport
 
    
-   .. automethod:: __init__
-
    
    .. rubric:: Methods
-
-   .. autosummary::
-
-      ~PerformanceReport.delete
-      ~PerformanceReport.get
-      ~PerformanceReport.get_asset_count
-      ~PerformanceReport.get_asset_count_long
-      ~PerformanceReport.get_asset_count_priced
-      ~PerformanceReport.get_asset_count_short
-      ~PerformanceReport.get_gross_exposure
-      ~PerformanceReport.get_long_exposure
-      ~PerformanceReport.get_many_measures
-      ~PerformanceReport.get_measure
-      ~PerformanceReport.get_most_recent_job
-      ~PerformanceReport.get_net_exposure
-      ~PerformanceReport.get_pnl
-      ~PerformanceReport.get_portfolio_constituents
-      ~PerformanceReport.get_servicing_cost_long_pnl
-      ~PerformanceReport.get_servicing_cost_short_pnl
-      ~PerformanceReport.get_short_exposure
-      ~PerformanceReport.get_trading_cost_pnl
-      ~PerformanceReport.get_trading_pnl
-      ~PerformanceReport.get_turnover
-      ~PerformanceReport.run
-      ~PerformanceReport.save
-      ~PerformanceReport.schedule
-      ~PerformanceReport.set_position_source
    
    
-
+   .. automethod:: __init__
    
    
-   .. rubric:: Attributes
-
-   .. autosummary::
+   .. automethod:: delete
    
-      ~PerformanceReport.id
-      ~PerformanceReport.latest_end_date
-      ~PerformanceReport.latest_execution_time
-      ~PerformanceReport.name
-      ~PerformanceReport.parameters
-      ~PerformanceReport.percentage_complete
-      ~PerformanceReport.position_source_id
-      ~PerformanceReport.position_source_type
-      ~PerformanceReport.status
-      ~PerformanceReport.type
+   
+   .. automethod:: from_target
+   
+   
+   .. automethod:: get
+   
+   
+   .. automethod:: get_asset_count
+   
+   
+   .. automethod:: get_asset_count_long
+   
+   
+   .. automethod:: get_asset_count_priced
+   
+   
+   .. automethod:: get_asset_count_short
+   
+   
+   .. automethod:: get_aum
+   
+   
+   .. automethod:: get_aum_source
+   
+   
+   .. automethod:: get_brinson_attribution
+   
+   
+   .. automethod:: get_custom_aum
+   
+   
+   .. automethod:: get_gross_exposure
+   
+   
+   .. automethod:: get_long_exposure
+   
+   
+   .. automethod:: get_many_measures
+   
+   
+   .. automethod:: get_measure
+   
+   
+   .. automethod:: get_most_recent_job
+   
+   
+   .. automethod:: get_net_exposure
+   
+   
+   .. automethod:: get_pnl
+   
+   
+   .. automethod:: get_pnl_contribution
+   
+   
+   .. automethod:: get_pnl_measure
+   
+   
+   .. automethod:: get_portfolio_constituents
+   
+   
+   .. automethod:: get_positions_data
+   
+   
+   .. automethod:: get_servicing_cost_long_pnl
+   
+   
+   .. automethod:: get_servicing_cost_short_pnl
+   
+   
+   .. automethod:: get_short_exposure
+   
+   
+   .. automethod:: get_trading_cost_pnl
+   
+   
+   .. automethod:: get_trading_pnl
+   
+   
+   .. automethod:: get_turnover
+   
+   
+   .. automethod:: run
+   
+   
+   .. automethod:: save
+   
+   
+   .. automethod:: schedule
+   
+   
+   .. automethod:: set_aum_source
+   
+   
+   .. automethod:: set_position_source
+   
+   
+   .. automethod:: upload_custom_aum
+   
    
    

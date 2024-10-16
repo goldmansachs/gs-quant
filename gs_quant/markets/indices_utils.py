@@ -484,7 +484,7 @@ def get_flagships_constituents(fields: List[str] = [],
                                  dataset_id=ds))
 
     # run 5 parallel dataset queries at a time
-    tasks = [tasks[i * 5:(i + 1) * 5] for i in range((len(tasks) + 5 - 1) // 5)]
+    tasks = [tasks[i * 2:(i + 1) * 2] for i in range((len(tasks) + 2 - 1) // 2)]
     for task in tasks:
         constituents_data += ThreadPoolManager.run_async(task)
         sleep(1)

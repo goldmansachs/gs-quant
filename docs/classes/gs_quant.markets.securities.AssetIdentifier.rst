@@ -17,15 +17,15 @@
 
    .. autosummary::
    
-      ~AssetIdentifier.BLOOMBERG_COMPOSITE_ID
-      ~AssetIdentifier.BLOOMBERG_ID
-      ~AssetIdentifier.CUSIP
-      ~AssetIdentifier.GSID
-      ~AssetIdentifier.ISIN
       ~AssetIdentifier.MARQUEE_ID
-      ~AssetIdentifier.PLOT_ID
       ~AssetIdentifier.REUTERS_ID
+      ~AssetIdentifier.BLOOMBERG_ID
+      ~AssetIdentifier.BLOOMBERG_COMPOSITE_ID
+      ~AssetIdentifier.CUSIP
+      ~AssetIdentifier.ISIN
       ~AssetIdentifier.SEDOL
       ~AssetIdentifier.TICKER
+      ~AssetIdentifier.PLOT_ID
+      ~AssetIdentifier.GSID
    
    

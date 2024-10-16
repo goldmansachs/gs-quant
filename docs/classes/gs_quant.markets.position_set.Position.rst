@@ -1,4 +1,4 @@
-gs\_quant.markets.position\_set.Position
+﻿gs\_quant.markets.position\_set.Position
 ========================================
 
 .. currentmodule:: gs_quant.markets.position_set
@@ -26,9 +26,11 @@ gs\_quant.markets.position\_set.Position
    .. autosummary::
    
       ~Position.asset_id
+      ~Position.hard_to_borrow
       ~Position.identifier
       ~Position.name
       ~Position.quantity
+      ~Position.restricted
       ~Position.tags
       ~Position.weight
    

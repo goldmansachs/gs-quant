@@ -67,4 +67,10 @@
 
    
    
+   .. rubric:: Properties
+   
+   
+   .. autoattribute:: polling_time
+   
+   
    

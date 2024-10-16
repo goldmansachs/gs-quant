@@ -16,6 +16,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: clearing_house
    
    
+   .. autoattribute:: dataclass_json_config
+   
+   
    .. autoattribute:: effective_date
    
    
@@ -40,6 +43,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: fixed_rate
    
    
+   .. autoattribute:: fixed_rate_accrual_convention
+   
+   
    .. autoattribute:: fixed_rate_business_day_convention
    
    
@@ -56,6 +62,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    
    .. autoattribute:: floating_last_stub
+   
+   
+   .. autoattribute:: floating_rate_accrual_convention
    
    
    .. autoattribute:: floating_rate_business_day_convention
@@ -82,6 +91,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: instrument_quantity
    
    
+   .. autoattribute:: metadata
+   
+   
+   .. autoattribute:: name
+   
+   
    .. autoattribute:: notional_amount
    
    
@@ -97,6 +112,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: provider
    
    
+   .. autoattribute:: quantity_
+   
+   
    .. autoattribute:: resolution_key
    
    
@@ -105,6 +123,8 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    .. autoattribute:: termination_date
    
+   
+   .. autoattribute:: type_
    
    
    .. autoattribute:: unresolved

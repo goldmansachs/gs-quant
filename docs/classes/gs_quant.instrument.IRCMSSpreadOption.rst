@@ -19,6 +19,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: cap_floor
    
    
+   .. autoattribute:: dataclass_json_config
+   
+   
    .. autoattribute:: effective_date
    
    
@@ -40,6 +43,12 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: instrument_quantity
    
    
+   .. autoattribute:: metadata
+   
+   
+   .. autoattribute:: name
+   
+   
    .. autoattribute:: notional_amount
    
    
@@ -55,6 +64,9 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    .. autoattribute:: provider
    
    
+   .. autoattribute:: quantity_
+   
+   
    .. autoattribute:: resolution_key
    
    
@@ -63,6 +75,8 @@ For methods of this class, see :doc:`gs_quant.base.Priceable`
    
    .. autoattribute:: termination_date
    
+   
+   .. autoattribute:: type_
    
    
    .. autoattribute:: unresolved

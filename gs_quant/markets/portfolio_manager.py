@@ -101,6 +101,7 @@ class PortfolioManager(PositionedEntity):
 
         :param tags: If the portfolio is a fund of funds, pass in a dictionary corresponding to the tag values
         to retrieve results for a sub-portfolio
+
         :return: returns the PerformanceReport associated with portfolio if one exists
         """
         reports = GsReportApi.get_reports(limit=100,
@@ -492,6 +493,7 @@ class PortfolioManager(PositionedEntity):
         :param tags: If the portfolio is a fund of funds, pass in a dictionary corresponding to the tag values
         to retrieve results for a sub-portfolio
         :param return_format: whether to return a dict or a pandas dataframe
+
         :return: a Pandas Dataframe or a Dict of portfolio exposure to macro factors
 
         **Examples**

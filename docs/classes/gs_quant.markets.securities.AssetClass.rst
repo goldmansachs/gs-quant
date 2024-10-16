@@ -21,14 +21,16 @@
       ~AssetClass.Commod
       ~AssetClass.Credit
       ~AssetClass.Cross_Asset
-      ~AssetClass.Cryptocurrency
+      ~AssetClass.Digital_Asset
       ~AssetClass.Econ
       ~AssetClass.Equity
-      ~AssetClass.FX
       ~AssetClass.Fund
-      ~AssetClass.Loan
+      ~AssetClass.FX
       ~AssetClass.Mortgage
       ~AssetClass.Rates
+      ~AssetClass.Repo
+      ~AssetClass.Loan
       ~AssetClass.Social
+      ~AssetClass.Cryptocurrency
    
    

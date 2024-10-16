@@ -23,6 +23,7 @@
       ~Basket.get
       ~Basket.get_all_esg_data
       ~Basket.get_all_thematic_exposures
+      ~Basket.get_asset_measures
       ~Basket.get_bottom_five_thematic_exposures
       ~Basket.get_carbon_analytics
       ~Basket.get_carbon_attribution_table
@@ -46,16 +47,17 @@
       ~Basket.get_esg_top_ten
       ~Basket.get_factor_risk_report
       ~Basket.get_factor_risk_reports
+      ~Basket.get_factor_scenario_analytics
       ~Basket.get_fundamentals
       ~Basket.get_hloc_prices
       ~Basket.get_identifier
       ~Basket.get_identifiers
+      ~Basket.get_last_positions_data
       ~Basket.get_latest_close_price
       ~Basket.get_latest_position_set
       ~Basket.get_latest_rebalance_data
       ~Basket.get_latest_rebalance_date
       ~Basket.get_live_date
-      ~Basket.get_macro_exposure
       ~Basket.get_marquee_id
       ~Basket.get_position_dates
       ~Basket.get_position_set_for_date
@@ -88,6 +90,11 @@
    
       ~Basket.allow_ca_restricted_assets
       ~Basket.allow_limited_access_assets
+      ~Basket.asset_class
+      ~Basket.backtest_parameters
+      ~Basket.benchmark
+      ~Basket.bloomberg_publish_parameters
+      ~Basket.cash_reinvestment_treatment
       ~Basket.clone_parent_id
       ~Basket.currency
       ~Basket.data_dimension
@@ -97,6 +104,7 @@
       ~Basket.entitlements
       ~Basket.flagship
       ~Basket.hedge_id
+      ~Basket.historical_methodology
       ~Basket.id
       ~Basket.include_price_history
       ~Basket.initial_price
@@ -104,9 +112,11 @@
       ~Basket.parent_basket
       ~Basket.position_set
       ~Basket.positioned_entity_type
+      ~Basket.preferred_risk_model
       ~Basket.publish_to_bloomberg
       ~Basket.publish_to_factset
       ~Basket.publish_to_reuters
+      ~Basket.rebalance_calendar
       ~Basket.return_type
       ~Basket.reweight
       ~Basket.target_notional

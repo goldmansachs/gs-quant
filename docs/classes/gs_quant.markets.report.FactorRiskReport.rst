@@ -1,50 +1,73 @@
-﻿gs\_quant.markets.report.FactorRiskReport
-=========================================
+﻿FactorRiskReport
+================
 
 .. currentmodule:: gs_quant.markets.report
 
 .. autoclass:: FactorRiskReport
 
    
-   .. automethod:: __init__
-
    
    .. rubric:: Methods
-
-   .. autosummary::
-
-      ~FactorRiskReport.delete
-      ~FactorRiskReport.get
-      ~FactorRiskReport.get_annual_risk
-      ~FactorRiskReport.get_daily_risk
-      ~FactorRiskReport.get_factor_exposure
-      ~FactorRiskReport.get_factor_pnl
-      ~FactorRiskReport.get_factor_proportion_of_risk
-      ~FactorRiskReport.get_most_recent_job
-      ~FactorRiskReport.get_results
-      ~FactorRiskReport.get_risk_model_id
-      ~FactorRiskReport.run
-      ~FactorRiskReport.save
-      ~FactorRiskReport.schedule
-      ~FactorRiskReport.set_position_source
    
    
-
+   .. automethod:: __init__
    
    
-   .. rubric:: Attributes
-
-   .. autosummary::
+   .. automethod:: delete
    
-      ~FactorRiskReport.id
-      ~FactorRiskReport.latest_end_date
-      ~FactorRiskReport.latest_execution_time
-      ~FactorRiskReport.name
-      ~FactorRiskReport.parameters
-      ~FactorRiskReport.percentage_complete
-      ~FactorRiskReport.position_source_id
-      ~FactorRiskReport.position_source_type
-      ~FactorRiskReport.status
-      ~FactorRiskReport.type
+   
+   .. automethod:: from_target
+   
+   
+   .. automethod:: get
+   
+   
+   .. automethod:: get_annual_risk
+   
+   
+   .. automethod:: get_benchmark_id
+   
+   
+   .. automethod:: get_daily_risk
+   
+   
+   .. automethod:: get_ex_ante_var
+   
+   
+   .. automethod:: get_factor_exposure
+   
+   
+   .. automethod:: get_factor_pnl
+   
+   
+   .. automethod:: get_factor_proportion_of_risk
+   
+   
+   .. automethod:: get_most_recent_job
+   
+   
+   .. automethod:: get_results
+   
+   
+   .. automethod:: get_risk_model_id
+   
+   
+   .. automethod:: get_table
+   
+   
+   .. automethod:: get_view
+   
+   
+   .. automethod:: run
+   
+   
+   .. automethod:: save
+   
+   
+   .. automethod:: schedule
+   
+   
+   .. automethod:: set_position_source
+   
    
    
