@@ -14,6 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+
+import backoff
 import deprecation
 import logging
 from time import sleep
@@ -22,6 +24,7 @@ from typing import Tuple, Union, List, Dict
 from gs_quant.api.api_session import ApiWithCustomSession
 from gs_quant.common import PositionType
 from gs_quant.common import RiskRequest, Currency
+from gs_quant.errors import MqInternalServerError, MqTimeoutError, MqRateLimitedError
 from gs_quant.instrument import Instrument
 from gs_quant.session import GsSession
 from gs_quant.target.portfolios import Portfolio, Position, PositionSet
@@ -93,6 +96,12 @@ class GsPortfolioApi(ApiWithCustomSession):
         return res
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_positions(cls, portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None,
                       position_type: str = 'close') -> Tuple[PositionSet, ...]:
         url = '/portfolios/{id}/positions?type={positionType}'.format(id=portfolio_id, positionType=position_type)
@@ -191,6 +200,12 @@ class GsPortfolioApi(ApiWithCustomSession):
         return tuple(dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates)
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def update_positions(cls,
                          portfolio_id: str,
                          position_sets: List[PositionSet],
@@ -199,6 +214,12 @@ class GsPortfolioApi(ApiWithCustomSession):
         return GsSession.current._put(url, position_sets)
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_positions_data(cls,
                            portfolio_id: str,
                            start_date: dt.date,
@@ -276,6 +297,12 @@ class GsPortfolioApi(ApiWithCustomSession):
         return cls.get_session()._get(f'/portfolios/{portfolio_id}/models?sortByTerm={term.value}')['results']
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_reports(cls, portfolio_id: str, tags: Dict) -> Tuple[Report, ...]:
         results = cls.get_session()._get('/portfolios/{id}/reports'.format(id=portfolio_id), cls=Report)['results']
         if tags is not None:
@@ -284,6 +311,12 @@ class GsPortfolioApi(ApiWithCustomSession):
         return results
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def schedule_reports(cls,
                          portfolio_id: str,
                          start_date: dt.date = None,
@@ -308,6 +341,12 @@ class GsPortfolioApi(ApiWithCustomSession):
                     count -= 1
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_schedule_dates(cls,
                            portfolio_id: str,
                            backcast: bool = False) -> List[dt.date]:

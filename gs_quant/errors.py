@@ -58,3 +58,31 @@ class MqAuthorizationError(MqRequestError):
 
 class MqUninitialisedError(MqError):
     pass
+
+
+# Creating errors based on status code to be able to effectively use backoff decorator
+class MqRateLimitedError(MqRequestError):
+    pass
+
+
+class MqTimeoutError(MqRequestError):
+    pass
+
+
+class MqInternalServerError(MqRequestError):
+    pass
+
+
+def error_builder(status, message, context=None):
+    if status == 401:
+        return MqAuthenticationError(status, message, context)
+    elif status == 403:
+        return MqAuthorizationError(status, message, context)
+    elif status == 429:
+        return MqRateLimitedError(status, message, context)
+    elif status == 500:
+        return MqInternalServerError(status, message, context)
+    elif status == 504:
+        return MqTimeoutError(status, message, context)
+    else:
+        return MqRequestError(status, message, context)

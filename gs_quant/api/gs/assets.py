@@ -21,6 +21,7 @@ from enum import auto, Enum
 from functools import wraps
 from typing import Iterable, List, Optional, Tuple, Union, Callable
 
+import backoff
 import cachetools
 import cachetools.keys
 import pandas as pd
@@ -29,7 +30,7 @@ from requests.exceptions import HTTPError
 
 from gs_quant.api.api_cache import ApiRequestCache, InMemoryApiRequestCache
 from gs_quant.common import PositionType
-from gs_quant.errors import MqValueError
+from gs_quant.errors import MqValueError, MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
 from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, AssetToInstrumentResponse, TemporalXRef, \
@@ -267,6 +268,12 @@ class GsAssetApi:
 
     @classmethod
     @_cached
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def resolve_assets(
             cls,
             identifier: [str],

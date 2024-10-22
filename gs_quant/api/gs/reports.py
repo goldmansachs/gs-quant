@@ -18,8 +18,10 @@ import logging
 import urllib.parse
 from enum import Enum
 from typing import Tuple, List, Dict
+import backoff
 
 from gs_quant.base import EnumBase
+from gs_quant.errors import MqTimeoutError, MqInternalServerError, MqRateLimitedError
 from gs_quant.session import GsSession
 from gs_quant.target.common import Currency, PositionTag
 from gs_quant.target.reports import Report
@@ -86,6 +88,12 @@ class GsReportApi:
         return GsSession.current._delete('/reports/{id}'.format(id=report_id))
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def schedule_report(cls, report_id: str, start_date: dt.date, end_date: dt.date, backcast: bool = False) -> dict:
         report_schedule_request = {
             'startDate': start_date.strftime('%Y-%m-%d'),
@@ -147,6 +155,12 @@ class GsReportApi:
         return GsSession.current._post(url, payload)
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_factor_risk_report_results(cls,
                                        risk_report_id: str,
                                        view: str = None,

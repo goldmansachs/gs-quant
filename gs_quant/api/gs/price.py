@@ -13,7 +13,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import backoff
 
+from gs_quant.errors import MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.session import GsSession
 from gs_quant.target.price import *
 from gs_quant.target.positions_v2_pricing import *
@@ -23,6 +25,12 @@ class GsPriceApi:
     """GS Price API client implementation"""
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(60),
+                          MqRateLimitedError,
+                          max_tries=5)
     def price_positions(cls, inputs: PositionSetPriceInput) -> PositionSetPriceResponse:
         url = '/price/positions'
         return GsSession.current._post(url, payload=inputs, cls=PositionSetPriceResponse)

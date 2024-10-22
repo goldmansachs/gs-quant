@@ -17,8 +17,11 @@ under the License.
 import datetime as dt
 from typing import Dict, List
 
+import backoff
+
 from gs_quant.api.gs.assets import IdList
 from gs_quant.common import PositionType
+from gs_quant.errors import MqTimeoutError, MqInternalServerError, MqRateLimitedError
 from gs_quant.session import GsSession
 from gs_quant.target.indices import *
 
@@ -111,6 +114,12 @@ class GsIndexApi:
         return GsSession.current._post(url, payload=inputs)
 
     @staticmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_positions_data(
             asset_id: str,
             start_date: dt.date,

@@ -33,6 +33,9 @@ from gs_quant.target.backtests import BacktestTradingQuantityType
 action_count = 1
 
 
+Duration = Union[str, dt.date, dt.timedelta, CustomDuration]
+
+
 def default_transaction_cost():
     return ConstantTransactionModel(0)
 
@@ -109,8 +112,8 @@ class AddTradeAction(Action):
     priceables: Union[Instrument, Iterable[Instrument]] = field(default=None,
                                                                 metadata=config(decoder=decode_named_instrument,
                                                                                 encoder=encode_named_instrument))
-    trade_duration: Union[str, dt.date, dt.timedelta] = field(default=None,  # de/encoder doesn't handle timedelta
-                                                              metadata=config(decoder=decode_date_or_str))
+    trade_duration: Duration = field(default=None,  # de/encoder doesn't handle timedelta
+                                     metadata=config(decoder=decode_date_or_str))
     name: str = None
     transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
                                                metadata=config(decoder=dc_decode(ConstantTransactionModel)))
@@ -170,8 +173,8 @@ class AddScaledTradeAction(Action):
     priceables: Union[Priceable, Iterable[Priceable]] = field(default=None,
                                                               metadata=config(decoder=decode_named_instrument,
                                                                               encoder=encode_named_instrument))
-    trade_duration: Union[str, dt.date, dt.timedelta] = field(default=None,  # de/encoder doesn't handle timedelta
-                                                              metadata=config(decoder=decode_date_or_str))
+    trade_duration: Duration = field(default=None,  # de/encoder doesn't handle timedelta
+                                     metadata=config(decoder=decode_date_or_str))
     name: str = None
     scaling_type: ScalingActionType = ScalingActionType.size
     scaling_risk: RiskMeasure = None
@@ -211,8 +214,8 @@ class EnterPositionQuantityScaledAction(Action):
     priceables: Union[Priceable, Iterable[Priceable]] = field(default=None,
                                                               metadata=config(decoder=decode_named_instrument,
                                                                               encoder=encode_named_instrument))
-    trade_duration: Union[str, dt.date, dt.timedelta] = field(default=None,  # de/encoder doesn't handle timedelta
-                                                              metadata=config(decoder=decode_date_or_str))
+    trade_duration: Duration = field(default=None,  # de/encoder doesn't handle timedelta
+                                     metadata=config(decoder=decode_date_or_str))
     name: str = None
     trade_quantity: float = 1
     trade_quantity_type: BacktestTradingQuantityType = BacktestTradingQuantityType.quantity
@@ -287,8 +290,8 @@ class HedgeAction(Action):
                                                             encoder=encode_risk_measure))
     priceables: Optional[Priceable] = field(default=None, metadata=config(decoder=decode_named_instrument,
                                                                           encoder=encode_named_instrument))
-    trade_duration: Union[str, dt.date, dt.timedelta] = field(default=None,  # de/encoder doesn't handle timedelta
-                                                              metadata=config(decoder=decode_date_or_str))
+    trade_duration: Duration = field(default=None,  # de/encoder doesn't handle timedelta
+                                     metadata=config(decoder=decode_date_or_str))
     name: str = None
     csa_term: str = None
     scaling_parameter: str = 'notional_amount'

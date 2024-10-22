@@ -18,6 +18,9 @@ import datetime as dt
 import logging
 from typing import Tuple, Dict, List, Union
 
+import backoff
+
+from gs_quant.errors import MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.session import GsSession
 from gs_quant.target.risk_models import RiskModel, RiskModelCalendar, Factor, RiskModelData, \
     RiskModelDataAssetsRequest, RiskModelDataMeasure, RiskModelEventType, RiskModelTerm
@@ -33,6 +36,12 @@ class GsRiskModelApi:
         return GsSession.current._post('/risk/models', model, cls=RiskModel)
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_risk_model(cls, model_id: str) -> RiskModel:
         return GsSession.current._get(f'/risk/models/{model_id}', cls=RiskModel)
 
@@ -77,6 +86,12 @@ class GsRiskModelApi:
         return GsSession.current._delete(f'/risk/models/{model_id}')
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_risk_model_calendar(cls, model_id: str) -> RiskModelCalendar:
         return GsSession.current._get(f'/risk/models/{model_id}/calendar', cls=RiskModelCalendar)
 
@@ -85,6 +100,12 @@ class GsRiskModelApi:
         return GsSession.current._put(f'/risk/models/{model_id}/calendar', model_calendar, cls=RiskModelCalendar)
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_risk_model_dates(cls,
                              model_id: str,
                              start_date: dt.date = None,
@@ -128,6 +149,12 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         return GsSession.current._delete(f'/risk/models/{model_id}/factors/{factor_id}')
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_risk_model_factor_data(cls,
                                    model_id: str,
                                    start_date: dt.date = None,
@@ -190,6 +217,12 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         return GsSession.current._post(url, model_data, timeout=200)
 
     @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
     def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date = None,
                             assets: RiskModelDataAssetsRequest = None, measures: List[RiskModelDataMeasure] = None,
                             factors: list = None, limit_factors: bool = None) -> Dict:

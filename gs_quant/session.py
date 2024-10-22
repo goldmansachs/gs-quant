@@ -40,7 +40,7 @@ from opentracing.tags import HTTP_URL, HTTP_METHOD, HTTP_STATUS_CODE
 from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase, nullcontext
-from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError
+from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError, error_builder
 from gs_quant.json_encoder import JSONEncoder, encode_default
 from gs_quant.tracing import Tracer
 
@@ -308,8 +308,8 @@ class GsSession(ContextBase):
                         cls: Optional[type], return_request_id: Optional[bool]):
         if not 199 < response.status_code < 300:
             reason = response.reason if hasattr(response, 'reason') else response.reason_phrase
-            raise MqRequestError(response.status_code, f'{reason}: {response.text}',
-                                 context=f'{request_id}: {method} {url}')
+            raise error_builder(response.status_code, f'{reason}: {response.text}',
+                                context=f'{request_id}: {method} {url}')
         elif 'Content-Type' in response.headers:
             if 'application/x-msgpack' in response.headers['Content-Type']:
                 ret = msgpack.unpackb(response.content, raw=False)

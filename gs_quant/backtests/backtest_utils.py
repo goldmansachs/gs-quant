@@ -16,6 +16,12 @@ under the License.
 
 import datetime as dt
 from enum import Enum
+
+from dataclasses import dataclass
+from dataclasses_json import dataclass_json
+
+from typing import Callable, Tuple, Union
+
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.instrument import Instrument
 
@@ -24,6 +30,16 @@ class CalcType(Enum):
     simple = 'simple'
     semi_path_dependent = 'semi_path_dependent'
     path_dependent = 'path_dependent'
+
+
+@dataclass_json
+@dataclass
+class CustomDuration:
+    durations: Tuple[Union[str, dt.date, dt.timedelta], ...]
+    function: Callable[[Tuple[Union[str, dt.date, dt.timedelta], ...]], Union[str, dt.date, dt.timedelta]]
+
+    def __hash__(self):
+        return hash((self.durations, self.function))
 
 
 def make_list(thing):
@@ -62,6 +78,9 @@ def get_final_date(inst, create_date, duration, holiday_calendar=None, trigger_i
         if hasattr(trigger_info, 'next_schedule'):
             return trigger_info.next_schedule or dt.date.max
         raise RuntimeError('Next schedule not supported by action')
+    if isinstance(duration, CustomDuration):
+        return duration.function(*(get_final_date(inst, create_date, d, holiday_calendar, trigger_info) for
+                                 d in duration.durations))
 
     final_date_cache[cache_key] = RelativeDate(duration, create_date).apply_rule(holiday_calendar=holiday_calendar)
     return final_date_cache[cache_key]

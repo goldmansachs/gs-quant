@@ -231,6 +231,7 @@ class SecurityIdentifier(EntityIdentifier):
     ID = "id"
     CUSIP = "cusip"
     CUSIP8 = "cusip8"
+    CINS = "cins"
     SEDOL = "sedol"
     ISIN = "isin"
     TICKER = "ticker"

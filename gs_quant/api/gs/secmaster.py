@@ -44,6 +44,7 @@ class SecMasterIdentifiers(Enum):
     ASSET_ID = 'assetId'
     CUSIP8 = 'cusip8'
     SEDOL = 'sedol'
+    CINS = 'cins'
     PRIMEID = 'primeId'
     FACTSET_REGIONAL_ID = 'factSetRegionalId'
     TOKEN_ID = 'tokenId'
