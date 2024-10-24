@@ -88,6 +88,7 @@ class BackTest(BaseBacktest):
         self._results = defaultdict(list)
         self._trade_exit_risk_results = defaultdict(list)
         self.risks = make_list(self.risks)  # list of risks to calculate
+        self._risk_summary_dict = None  # Summary dict shared between output views, only initialized once
         self._calc_calls = 0
         self._calculations = 0
 
@@ -156,21 +157,34 @@ class BackTest(BaseBacktest):
     def calculations(self, calculations):
         self._calculations = calculations
 
+    def get_risk_summary_dict(self, zero_on_empty_dates=False):
+        if self._risk_summary_dict is not None:
+            summary_dict = self._risk_summary_dict
+        else:
+            if not self._results:
+                raise ValueError('Must run generic engine and populate results before results summary dict')
+            dates_with_results = list(filter(lambda x: len(x[1]), self._results.items()))
+            summary_dict = defaultdict(dict)
+            for date, results in dates_with_results:
+                for risk in results.risk_measures:
+                    try:
+                        value = results[risk].aggregate(True, True)
+                    except TypeError:
+                        value = ErrorValue(None, error='Could not aggregate risk results')
+                    summary_dict[date][risk] = value
+            self._risk_summary_dict = summary_dict
+        if zero_on_empty_dates:
+            for cash_only_date in set(self._cash_dict.keys()).difference(summary_dict.keys()):
+                for risk in self.risks:
+                    summary_dict[cash_only_date][risk] = 0
+        return summary_dict
+
     @property
     def result_summary(self):
         """
         Get a dataframe showing the PV and other risks and cash on each day in the backtest
         """
-        dates_with_results = list(filter(lambda x: len(x[1]), self._results.items()))
-        summary_dict = {}
-        for date, results in dates_with_results:
-            summary_dict[date] = {}
-            for risk in results.risk_measures:
-                try:
-                    value = results[risk].aggregate(True, True)
-                except TypeError:
-                    value = ErrorValue(None, error='Could not aggregate risk results')
-                summary_dict[date][risk] = value
+        summary_dict = self.get_risk_summary_dict()
         summary = pd.DataFrame(summary_dict).T
         cash_summary = defaultdict(dict)
         for date, results in self._cash_dict.items():
@@ -186,6 +200,14 @@ class BackTest(BaseBacktest):
         df['Transaction Costs'] = df['Transaction Costs'].cumsum()
         df['Total'] = df[self.price_measure] + df['Cumulative Cash'] + df['Transaction Costs']
         return df[:self.states[-1]]
+
+    @property
+    def risk_summary(self):
+        """
+        Get a dataframe showing the risks in the backtest with zero values for days with no instruments held
+        """
+        summary_dict = self.get_risk_summary_dict(zero_on_empty_dates=True)
+        return pd.DataFrame(summary_dict).T.sort_index()
 
     def trade_ledger(self):
         # this is a ledger of each instrument when it was entered and when it was closed out.  The cash associated
