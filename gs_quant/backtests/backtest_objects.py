@@ -173,11 +173,12 @@ class BackTest(BaseBacktest):
                         value = ErrorValue(None, error='Could not aggregate risk results')
                     summary_dict[date][risk] = value
             self._risk_summary_dict = summary_dict
+        zero_risk_sd_copy = summary_dict.copy()
         if zero_on_empty_dates:
-            for cash_only_date in set(self._cash_dict.keys()).difference(summary_dict.keys()):
+            for cash_only_date in set(self._cash_dict.keys()).difference(zero_risk_sd_copy.keys()):
                 for risk in self.risks:
-                    summary_dict[cash_only_date][risk] = 0
-        return summary_dict
+                    zero_risk_sd_copy[cash_only_date][risk] = 0
+        return zero_risk_sd_copy
 
     @property
     def result_summary(self):
