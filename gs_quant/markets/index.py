@@ -286,7 +286,7 @@ class Index(Asset, PositionedEntity):
 
         :param refresh_tree: Refresh the underliers information of the entire tree
 
-        Please refer to the documenation of the AssetTreeNode class for more information.
+        Please refer to the documentation of the AssetTreeNode class for more information.
         Currently supports STS indices only.
 
         :return: root node of the tree formed by the Index, as an AssetTreeNode object.
