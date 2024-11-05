@@ -22,6 +22,7 @@ import inflection
 
 from gs_quant.api.gs.data import QueryType, GsDataApi
 from gs_quant.data import Dataset
+from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.timeseries import plot_measure_entity
 from gs_quant.timeseries.measures import _market_data_timed, _extract_series_from_df, \
@@ -63,9 +64,10 @@ def fci(country_id: str, measure: _FCI_MEASURE = _FCI_MEASURE.FCI, *, source: st
         raise NotImplementedError('real-time FCI data is not available')
 
     type_ = QueryType(inflection.titleize(measure.value))
+    start, end = DataContext.current.start_date, DataContext.current.end_date
     if measure == _FCI_MEASURE.REAL_FCI or measure == _FCI_MEASURE.REAL_TWI_CONTRIBUTION:
         ds = Dataset('FCI')
-        df = ds.get_data(geographyId=country_id)
+        df = ds.get_data(geographyId=country_id, start=start, end=end)
         if measure == _FCI_MEASURE.REAL_FCI:
             measure = 'realFCI'
         else:

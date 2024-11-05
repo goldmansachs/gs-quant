@@ -382,7 +382,7 @@ class GsAssetApi:
         start_date_str = start_date.isoformat()
 
         if periods > 1:
-            end_dates = pd.date_range(start=start_date, end=end_date, periods=periods, closed='right')
+            end_dates = pd.date_range(start=start_date, end=end_date, periods=periods, inclusive='right')
             for date in end_dates:
                 end_date_str = date.date().isoformat()
                 url = f'/assets/{asset_id}/positions?startDate={start_date_str}&endDate={end_date_str}&type={position_type}'

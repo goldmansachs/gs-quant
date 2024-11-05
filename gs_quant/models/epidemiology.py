@@ -444,10 +444,16 @@ class SEIRCMAgeStratified(CompartmentalModel):
 
         # add initial state conditions that vary by age group
         initial_conditions = []
-        for param in ['S0', 'E0', 'I0', 'R0', 'C0', 'M0']:
+        for param, param_value, param_value_max, param_fixed in [
+            ('S0', S0, S0_max, S0_fixed),
+            ('E0', E0, E0_max, E0_fixed),
+            ('I0', I0, I0_max, I0_fixed),
+            ('R0', R0, R0_max, R0_fixed),
+            ('C0', C0, C0_max, C0_fixed),
+            ('M0', M0, M0_max, M0_fixed),
+        ]:
             for k in range(K):
-                parameters.add(f'{param}_{k}', value=eval(param)[k], min=0, max=eval(f'{param}_max'),
-                               vary=not eval(f'{param}_fixed'))
+                parameters.add(f'{param}_{k}', value=param_value[k], min=0, max=param_value_max, vary=not param_fixed)
                 initial_conditions.append(f'{param}_{k}')
 
         return parameters, initial_conditions
