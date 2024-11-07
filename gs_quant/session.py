@@ -597,17 +597,17 @@ class GsSession(ContextBase):
                 except NameError:
                     raise MqUninitialisedError('This option requires gs_quant_auth to be installed')
             elif is_marquee_login:
-                return MQLoginSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter,
-                                      application_version=application_version, application=application,
-                                      mq_login_token=token)
+                return MQLoginSession(environment_or_domain, domain=domain, api_version=api_version,
+                                      http_adapter=http_adapter, application_version=application_version,
+                                      application=application, mq_login_token=token)
             else:
                 return PassThroughSession(environment_or_domain, token, api_version=api_version,
                                           application=application, http_adapter=http_adapter, domain=domain)
         else:
             try:
-                return MQLoginSession(environment_or_domain, api_version=api_version, http_adapter=http_adapter,
-                                      application_version=application_version, application=application,
-                                      mq_login_token=token)
+                return MQLoginSession(environment_or_domain, domain=domain, api_version=api_version,
+                                      http_adapter=http_adapter, application_version=application_version,
+                                      application=application, mq_login_token=token)
             except NameError:
                 raise MqUninitialisedError('Unable to obtain MarqueeLogin token. '
                                            'Please use client_id and client_secret to make the query')
@@ -720,12 +720,15 @@ try:
 
     class MQLoginSession(MQLoginMixin, GsSession):
 
-        def __init__(self, environment_or_domain: str, api_version: str = API_VERSION,
+        def __init__(self, environment_or_domain: str, domain: str = Domain.APP, api_version: str = API_VERSION,
                      application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None,
                      application_version: str = APP_VERSION, mq_login_token=None):
-            domain, verify = self.domain_and_verify(environment_or_domain)
+            selected_domain, verify = self.domain_and_verify(environment_or_domain)
+            env_config = self._config_for_environment(environment_or_domain)
+            if domain == Domain.MDS_WEB:
+                selected_domain = env_config[domain]
             self.mq_login_token = mq_login_token
-            GsSession.__init__(self, domain, environment_or_domain, api_version=api_version,
+            GsSession.__init__(self, selected_domain, environment_or_domain, api_version=api_version,
                                application=application, verify=verify, http_adapter=http_adapter,
                                application_version=application_version)
 
