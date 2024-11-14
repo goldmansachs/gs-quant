@@ -77,6 +77,15 @@ class OverlayType(EnumBase, Enum):
     _None = 'None'    
 
 
+class PriceFormat(EnumBase, Enum):    
+    
+    """display unit for price"""
+
+    Absolute = 'Absolute'
+    Relative = 'Relative'
+    Cents = 'Cents'    
+
+
 @dataclass
 class HedgeTypes(Base):
     pass
@@ -89,6 +98,10 @@ class CustomDeltaHedge(HedgeTypes):
     amount: float = field(default=None, metadata=field_metadata)
     type_: Optional[str] = field(init=False, default='CustomDeltaHedge', metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+class GenericResponse(DictBase):
+    pass
 
 
 @handle_camel_case_args
@@ -233,6 +246,7 @@ class VisualStructuringReport(QuoteReport):
     asset_class: Optional[str] = field(default=None, metadata=field_metadata)
     hedge_instruction: Optional[HedgeTypes] = field(default=None, metadata=field_metadata)
     sales_premium_adjustment: Optional[SalesPremiumAdjustment] = field(default=None, metadata=field_metadata)
+    price_format: Optional[PriceFormat] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

@@ -724,8 +724,8 @@ try:
                      application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None,
                      application_version: str = APP_VERSION, mq_login_token=None):
             selected_domain, verify = self.domain_and_verify(environment_or_domain)
-            env_config = self._config_for_environment(environment_or_domain)
             if domain == Domain.MDS_WEB:
+                env_config = self._config_for_environment(environment_or_domain)
                 selected_domain = env_config[domain]
             self.mq_login_token = mq_login_token
             GsSession.__init__(self, selected_domain, environment_or_domain, api_version=api_version,

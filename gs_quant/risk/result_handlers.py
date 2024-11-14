@@ -377,6 +377,7 @@ def mmapi_pca_table_handler(result: dict, risk_key: RiskKey, _instrument: Instru
         r['coordinate'].update({'level': r['level']})
         r['coordinate'].update({'sensitivity': r['sensitivity']})
         r['coordinate'].update({'irDelta': r['irDelta']})
+        r['coordinate'].update({'endDate': r['endDate']})
         coordinates.append(r['coordinate'])
 
     mappings = (('mkt_type', 'type'),
@@ -391,7 +392,8 @@ def mmapi_pca_table_handler(result: dict, risk_key: RiskKey, _instrument: Instru
                 ('layer4', 'layer4'),
                 ('level', 'level'),
                 ('sensitivity', 'sensitivity'),
-                ('irDelta', 'irDelta'))
+                ('irDelta', 'irDelta'),
+                ('endDate', 'endDate'))
 
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
 

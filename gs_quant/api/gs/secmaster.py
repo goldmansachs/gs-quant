@@ -16,10 +16,11 @@ under the License.
 import datetime as dt
 import json
 import math
+from _typeshed import SupportsLessThan
 from enum import Enum
 from functools import partial
 from itertools import groupby
-from typing import Union, Iterable, Dict
+from typing import Union, Iterable, Dict, Any
 
 import tqdm
 
@@ -288,7 +289,7 @@ class GsSecurityMasterApi:
         return str(bool_value).lower()
 
     @classmethod
-    def __fetch_all(cls, fetch_fn, offset_key, total_batches=None):
+    def __fetch_all(cls, fetch_fn, offset_key, total_batches=None, extract_results=True):
         accumulator = []
         offset = offset_key
         progress_info = tqdm.tqdm(desc="Processing", unit=" batch") if total_batches is None else tqdm.tqdm(
@@ -297,7 +298,10 @@ class GsSecurityMasterApi:
             progress_info.update(1)
             data = fetch_fn(offset_key=offset)
             if data is not None:
-                accumulator.extend(data['results'])
+                if extract_results is True:
+                    accumulator.extend(data['results'])
+                else:
+                    accumulator.append(data)
                 if 'offsetKey' not in data:
                     progress_info.close()
                     break
@@ -413,27 +417,53 @@ class GsSecurityMasterApi:
             params["effectiveDate"] = effective_date
 
     @classmethod
-    def get_deltas(cls, start_time: dt.datetime = None, end_time: dt.datetime = None, raw: bool = None) -> \
+    def _get_deltas(cls, start_time: dt.datetime = None, end_time: dt.datetime = None, raw: bool = None,
+                    scope: list = None, limit: int = None, offset_key: str = None) -> \
             Iterable[dict]:
-        """
-        Get all identifier changes betwen two time stamps
-        @param start_time: start time
-        @param end_time: end time
-        @param raw: flag, if true (default) aggregates data to more readable form, if false shows unprocessed results.
-        @return: list of dict
-        """
-        params = {}
 
+        params = {}
         if raw is not None:
             params["raw"] = GsSecurityMasterApi.__stringify_boolean(raw)
         if start_time is not None:
             params["startTime"] = start_time
-
         if end_time is not None:
             params["endTime"] = end_time
+        if scope is not None:
+            params["scope"] = scope
+        if limit is not None:
+            params["limit"] = limit
+        if offset_key is not None:
+            params["offsetKey"] = offset_key
+
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
         r = GsSession.current._get("/markets/securities/identifiers/updates-feed", payload=payload)
         return r
+
+    @classmethod
+    def get_deltas(cls, start_time: dt.datetime = None, end_time: dt.datetime = None, raw: bool = None,
+                   scope: list = None, limit: int = None, offset_key: str = None, scroll_all_pages: bool = True) -> \
+            Union[dict[str, Union[Union[list[Any], None, SupportsLessThan], Any]], Iterable[dict]]:
+        """
+        Get all identifier changes between two time stamps
+        @param scroll_all_pages:
+        @param start_time: start time
+        @param end_time: end time
+        @param limit: page size of returned matches
+        @param scope: narrow down the search to a specific set of events
+        @param offset_key: offset key to fetch next page
+        @param raw: flag, if true (default) aggregates data to more readable form, if false shows unprocessed results.
+        @return: list of dict
+        """
+        if scroll_all_pages:
+            fn = partial(cls._get_deltas, start_time, end_time, raw, scope, limit)
+            results = cls.__fetch_all(fn, offset_key, extract_results=False)
+            latest_update_time = max(result['lastUpdateTime'] for result in results)
+            res = [item for result in results for item in result["results"]]
+            request_id = results[0]["requestId"] if results else None
+            return {"results": res, "lastUpdateTime": latest_update_time, "requestId": request_id}
+        else:
+            results = cls._get_deltas(start_time, end_time, raw, scope, limit, offset_key)
+        return results
 
     @classmethod
     def get_exchanges(cls, effective_date: dt.date = None,
