@@ -54,6 +54,10 @@ class TriggerRequirements:
     def get_trigger_times(self):
         return []
 
+    @property
+    def calc_type(self):
+        return CalcType.simple
+
 
 @dataclass_json
 @dataclass
@@ -170,6 +174,10 @@ class RiskTriggerRequirements(TriggerRequirements):
                 allow_mismatch_risk_keys=True)
         return check_barrier(self.direction, risk_value, self.trigger_level)
 
+    @property
+    def calc_type(self):
+        return CalcType.path_dependent
+
 
 @dataclass_json
 @dataclass
@@ -206,6 +214,19 @@ class AggregateTriggerRequirements(TriggerRequirements):
             return TriggerInfo(True, info_dict) if triggered else TriggerInfo(False)
         else:
             raise RuntimeError(f'Unrecognised aggregation type: {self.aggregate_type}')
+
+    @property
+    def calc_type(self):
+        seen_types = set()
+        for trigger in self.triggers:
+            seen_types.add(trigger.calc_type)
+
+        if CalcType.path_dependent in seen_types:
+            return CalcType.path_dependent
+        elif CalcType.semi_path_dependent in seen_types:
+            return CalcType.semi_path_dependent
+        else:
+            return CalcType.simple
 
 
 @dataclass_json
@@ -315,6 +336,31 @@ class MeanReversionTriggerRequirements(TriggerRequirements):
 
 @dataclass_json
 @dataclass
+class TradeCountTriggerRequirements(TriggerRequirements):
+    trade_count: float = field(default=None, metadata=field_metadata)
+    direction: TriggerDirection = field(default=None, metadata=field_metadata)
+    class_type: str = static_field('trade_count_requirements')
+
+    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
+        value = len(backtest.portfolio_dict.get(state, []))
+        if self.direction == TriggerDirection.ABOVE:
+            if value > self.trade_count:
+                return TriggerInfo(True)
+        elif self.direction == TriggerDirection.BELOW:
+            if value < self.trade_count:
+                return TriggerInfo(True)
+        else:
+            if value == self.trade_count:
+                return TriggerInfo(True)
+        return TriggerInfo(False)
+
+    @property
+    def calc_type(self):
+        return CalcType.path_dependent
+
+
+@dataclass_json
+@dataclass
 class Trigger:
     trigger_requirements: Optional[TriggerRequirements] = field(default=None, metadata=field_metadata)
     actions: Union[Action, Iterable[Action]] = field(default=None,
@@ -349,7 +395,7 @@ class Trigger:
 
     @property
     def calc_type(self):
-        return CalcType.simple
+        return self.trigger_requirements.calc_type
 
     @property
     def risks(self):
@@ -383,10 +429,6 @@ class MktTrigger(Trigger):
 class StrategyRiskTrigger(Trigger):
     trigger_requirements: RiskTriggerRequirements = field(default=None, metadata=field_metadata)
     class_type: str = static_field('strategy_risk_trigger')
-
-    @property
-    def calc_type(self):
-        return CalcType.path_dependent
 
     @property
     def risks(self):
@@ -426,6 +468,13 @@ class PortfolioTrigger(Trigger):
 class MeanReversionTrigger(Trigger):
     trigger_requirements: MeanReversionTriggerRequirements = field(default=None, metadata=field_metadata)
     class_type: str = static_field('mean_reversion_trigger')
+
+
+@dataclass_json
+@dataclass
+class TradeCountTrigger(Trigger):
+    trigger_requirements: TradeCountTriggerRequirements = field(default=None, metadata=field_metadata)
+    class_type: str = static_field('trade_count_trigger')
 
 
 @dataclass_json

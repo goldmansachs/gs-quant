@@ -241,6 +241,7 @@ class GsRiskApi(RiskApi):
         pending_requests = {}
         dispatched = set()
         error = ''
+        exc_info = None
         attempts = 0
         max_attempts = 5
         send_timeout = 30
@@ -255,7 +256,7 @@ class GsRiskApi(RiskApi):
                 risk_session = cls.get_session()
                 api_version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
                 ws_url = f'/{api_version}/risk/calculate/results/subscribe'
-                trace = Tracer(f'wss:/{ws_url}') if span else nullcontext
+                trace = Tracer(f'wss:/{ws_url}') if span else nullcontext()
                 with trace as scope:
                     tracing_headers = {}
                     if scope and scope.span:
@@ -276,10 +277,11 @@ class GsRiskApi(RiskApi):
                 raise WebsocketUnavailable()
             except Exception as e:
                 error = str(e)
+                exc_info = e
                 attempts = max_attempts
 
         if error != '':
-            _logger.error(f'Fatal error with websocket: {error}')
+            _logger.error(f'Fatal error with websocket: {error}', exc_info=exc_info)
             if span:
                 span.set_tag('error', True)
                 span.log_kv({'event': 'error', 'message': error})

@@ -16,11 +16,10 @@ under the License.
 import datetime as dt
 import json
 import math
-from _typeshed import SupportsLessThan
 from enum import Enum
 from functools import partial
 from itertools import groupby
-from typing import Union, Iterable, Dict, Any
+from typing import Union, Iterable, Dict
 
 import tqdm
 
@@ -442,7 +441,7 @@ class GsSecurityMasterApi:
     @classmethod
     def get_deltas(cls, start_time: dt.datetime = None, end_time: dt.datetime = None, raw: bool = None,
                    scope: list = None, limit: int = None, offset_key: str = None, scroll_all_pages: bool = True) -> \
-            Union[dict[str, Union[Union[list[Any], None, SupportsLessThan], Any]], Iterable[dict]]:
+            Union[dict, Iterable[dict]]:
         """
         Get all identifier changes between two time stamps
         @param scroll_all_pages:
