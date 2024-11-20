@@ -37,6 +37,11 @@ ENABLE_DISPLAY_NAME = 'GSQ_ENABLE_MEASURE_DISPLAY_NAME'
 USE_DISPLAY_NAME = os.environ.get(ENABLE_DISPLAY_NAME) == "1"
 _logger = logging.getLogger(__name__)
 
+
+class Entitlement(Enum):
+    INTERNAL = 'internal'
+
+
 try:
     from quant_extensions.timeseries.rolling import rolling_apply
 except ImportError as e:
@@ -203,7 +208,7 @@ def check_forward_looking(pricing_date, source, name="function"):
 
 def plot_measure(asset_class: tuple, asset_type: Optional[tuple] = None,
                  dependencies: Optional[List[QueryType]] = tuple(), asset_type_excluded: Optional[tuple] = None,
-                 display_name: Optional[str] = None):
+                 display_name: Optional[str] = None, entitlements: Optional[List[Entitlement]] = []):
     # Indicates that fn should be exported to plottool as a member function / pseudo-measure.
     # Set category to None for no restrictions, else provide a tuple of allowed values.
     def decorator(fn):
@@ -219,6 +224,7 @@ def plot_measure(asset_class: tuple, asset_type: Optional[tuple] = None,
         fn.asset_type = asset_type
         fn.asset_type_excluded = asset_type_excluded
         fn.dependencies = dependencies
+        fn.entitlements = entitlements
 
         if USE_DISPLAY_NAME:
             fn.display_name = display_name

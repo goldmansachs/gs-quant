@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from unittest.mock import patch
 
@@ -23,15 +24,13 @@ from gs_quant.api.gs.data import GsDataApi, QueryType
 from gs_quant.data import Dataset, DataContext
 
 
-class NotExpectedToBeCalledSession():
+class NotExpectedToBeCalledSession:
     redirect_to_mds = True
 
     @classmethod
     def _get(cls, url, **kwargs):
-        if url == '/data/datasets/FXSPOT_STANDARD':
-            return {
-                "id": "FXSPOT_STANDARD"
-            }
+        if url == "/data/datasets/FXSPOT_STANDARD":
+            return {"id": "FXSPOT_STANDARD"}
         else:
             raise Exception("Not expecting to be called at this point")
 
@@ -40,71 +39,106 @@ class NotExpectedToBeCalledSession():
         raise Exception("Not expecting to be called at this point")
 
 
-class FakeSession():
+class MarketDataErrorSession:
+    redirect_to_mds = True
+
+    @classmethod
+    def _post(cls, url, **kwargs):
+        return {
+            "requestId": "890",
+            "responses": [{"queryResponse": [{"errorMessages": ["Test Failure"]}]}],
+        }
+
+
+class FakeSession:
     redirect_to_mds = True
 
     @classmethod
     def _get(cls, url, **kwargs):
-        if url == '/data/catalog/FXSPOT_STANDARD':
+        if url == "/data/catalog/FXSPOT_STANDARD":
             return {
-                'id': 'FXSPOT_STANDARD',
-                'fields': {
-                    'date': {'type': 'string', 'format': 'date'},
-                    'assetId': {'type': 'string'},
-                    'spot': {'type': 'number', },
-                    'updateTime': {'type': 'string', 'format': 'date-time'}
-                }
+                "id": "FXSPOT_STANDARD",
+                "fields": {
+                    "date": {"type": "string", "format": "date"},
+                    "assetId": {"type": "string"},
+                    "spot": {
+                        "type": "number",
+                    },
+                    "updateTime": {"type": "string", "format": "date-time"},
+                },
             }
-        elif url == '/data/datasets/FXSPOT_STANDARD':
-            return {
-                "id": "FXSPOT_STANDARD"
-            }
+        elif url == "/data/datasets/FXSPOT_STANDARD":
+            return {"id": "FXSPOT_STANDARD"}
         else:
             raise Exception("Need to mock _get request here")
 
     @classmethod
     def _post(cls, url, **kwargs):
-        if url == '/data/FXSPOT_STANDARD/last/query':
+        if url == "/data/FXSPOT_STANDARD/last/query":
             return {
-                'requestId': '1234',
-                'data': [
+                "requestId": "1234",
+                "data": [
                     {
-                        'date': '2023-10-25',
-                        'assetId': 'MATGYV0J9MPX534Z',
-                        'bbid': 'USDJPY',
-                        'spot': 150.123,
-                        'updateTime': '2023-10-25T21:53:56Z'
+                        "date": "2023-10-25",
+                        "assetId": "MATGYV0J9MPX534Z",
+                        "bbid": "USDJPY",
+                        "spot": 150.123,
+                        "updateTime": "2023-10-25T21:53:56Z",
                     }
-                ]}
-        elif url == '/data/FXSPOT_STANDARD/query':
-            return {
-                'requestId': '5678',
-                'data': [
-                    {
-                        'date': '2023-10-26',
-                        'assetId': 'MATGYV0J9MPX534Z',
-                        'bbid': 'USDJPY',
-                        'spot': 152.234,
-                        'updateTime': '2023-10-26T21:53:56Z'
-                    }
-                ]
+                ],
             }
-        elif url == '/data/measures':
+        elif url == "/data/FXSPOT_STANDARD/query":
             return {
-                'requestId': '890', 'responses': [
+                "requestId": "5678",
+                "data": [
                     {
-                        'queryResponse': [
-                            {'measure': 'Curve', 'dataSetIds': ['DATASET_FOO'], 'entityTypes': ['ASSET'],
-                             'response': {
-                                 'data': [
-                                     {'date': '2023-04-11', 'assetId': 'MATGYV0J9MPX534Z', 'pricingLocation': 'HKG',
-                                      'name': 'USDJPY', 'spot': 133.},
-                                     {'date': '2023-04-11', 'assetId': 'MATGYV0J9MPX534Z', 'pricingLocation': 'LDN',
-                                      'name': 'USDJPY', 'spot': 134.0},
-                                     {'date': '2023-04-11', 'assetId': 'MATGYV0J9MPX534Z', 'pricingLocation': 'NYC',
-                                      'name': 'USDJPY', 'spot': 136.0}]}}]
+                        "date": "2023-10-26",
+                        "assetId": "MATGYV0J9MPX534Z",
+                        "bbid": "USDJPY",
+                        "spot": 152.234,
+                        "updateTime": "2023-10-26T21:53:56Z",
                     }
-                ]
+                ],
+            }
+        elif url == "/data/measures":
+            return {
+                "requestId": "890",
+                "responses": [
+                    {
+                        "queryResponse": [
+                            {
+                                "measure": "Curve",
+                                "dataSetIds": ["DATASET_FOO"],
+                                "entityTypes": ["ASSET"],
+                                "response": {
+                                    "data": [
+                                        {
+                                            "date": "2023-04-11",
+                                            "assetId": "MATGYV0J9MPX534Z",
+                                            "pricingLocation": "HKG",
+                                            "name": "USDJPY",
+                                            "spot": 133.0,
+                                        },
+                                        {
+                                            "date": "2023-04-11",
+                                            "assetId": "MATGYV0J9MPX534Z",
+                                            "pricingLocation": "LDN",
+                                            "name": "USDJPY",
+                                            "spot": 134.0,
+                                        },
+                                        {
+                                            "date": "2023-04-11",
+                                            "assetId": "MATGYV0J9MPX534Z",
+                                            "pricingLocation": "NYC",
+                                            "name": "USDJPY",
+                                            "spot": 136.0,
+                                        },
+                                    ]
+                                },
+                            }
+                        ]
+                    }
+                ],
             }
 
 
@@ -119,10 +153,12 @@ class TestDataApiCache:
 
     def test_last_data(self):
         ds = Dataset("FXSPOT_STANDARD")
-        with patch.object(GsDataApi, 'get_session', return_value=FakeSession()):
-            df = ds.get_data_last(as_of=dt.date(2023, 10, 25), bbid='USDJPY')
-        with patch.object(GsDataApi, 'get_session', return_value=NotExpectedToBeCalledSession()):
-            df2 = ds.get_data_last(dt.date(2023, 10, 25), bbid='USDJPY')
+        with patch.object(GsDataApi, "get_session", return_value=FakeSession()):
+            df = ds.get_data_last(as_of=dt.date(2023, 10, 25), bbid="USDJPY")
+        with patch.object(
+            GsDataApi, "get_session", return_value=NotExpectedToBeCalledSession()
+        ):
+            df2 = ds.get_data_last(dt.date(2023, 10, 25), bbid="USDJPY")
         assert not df.empty
         assert_frame_equal(df, df2)
         cache_events = self.cache.get_events()
@@ -134,10 +170,16 @@ class TestDataApiCache:
 
     def test_query_data(self):
         ds = Dataset("FXSPOT_STANDARD")
-        with patch.object(GsDataApi, 'get_session', return_value=FakeSession()):
-            df = ds.get_data(dt.date(2023, 10, 26), dt.date(2023, 10, 26), bbid='USDJPY')
-        with patch.object(GsDataApi, 'get_session', return_value=NotExpectedToBeCalledSession()):
-            df2 = ds.get_data(dt.date(2023, 10, 26), dt.date(2023, 10, 26), bbid='USDJPY')
+        with patch.object(GsDataApi, "get_session", return_value=FakeSession()):
+            df = ds.get_data(
+                dt.date(2023, 10, 26), dt.date(2023, 10, 26), bbid="USDJPY"
+            )
+        with patch.object(
+            GsDataApi, "get_session", return_value=NotExpectedToBeCalledSession()
+        ):
+            df2 = ds.get_data(
+                dt.date(2023, 10, 26), dt.date(2023, 10, 26), bbid="USDJPY"
+            )
 
         assert_frame_equal(df, df2)
         cache_events = self.cache.get_events()
@@ -152,9 +194,20 @@ class TestDataApiCache:
         with DataContext(dt.date(2023, 4, 11), dt.date(2023, 4, 11)):
             q = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT)
 
-        with patch.object(GsDataApi, 'get_session', return_value=FakeSession()):
+        with patch.object(
+            GsDataApi, "get_session", return_value=MarketDataErrorSession()
+        ):
+            try:
+                df = GsDataApi.get_market_data(q)
+            except Exception:
+                pass
+        cache_events = self.cache.get_events()
+        assert len(cache_events) == 0
+        with patch.object(GsDataApi, "get_session", return_value=FakeSession()):
             df = GsDataApi.get_market_data(q)
-        with patch.object(GsDataApi, 'get_session', return_value=NotExpectedToBeCalledSession()):
+        with patch.object(
+            GsDataApi, "get_session", return_value=NotExpectedToBeCalledSession()
+        ):
             df2 = GsDataApi.get_market_data(q)
 
         assert_frame_equal(df, df2)

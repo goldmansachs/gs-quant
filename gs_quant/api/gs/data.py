@@ -190,37 +190,39 @@ class GsDataApi(DataApi):
         return cached_val, cache_key, session
 
     @classmethod
-    def _post_with_cache_check(cls, url, domain=None, **kwargs):
-        result, cache_key, session = cls._check_cache(url, **kwargs)
+    def _post_with_cache_check(cls, url, validator=lambda x: x, domain=None, **kwargs):
+        result, cache_key, session = cls._check_cache(url=url, **kwargs)
         if result is None:
-            result = session._post(url, domain=domain, **kwargs)
+            result = validator(session._post(url, domain=domain, **kwargs))
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
         return result
 
     @classmethod
-    def _get_with_cache_check(cls, url, domain=None, **kwargs):
+    def _get_with_cache_check(cls, url, validator=lambda x: x, domain=None, **kwargs):
         result, cache_key, session = cls._check_cache(url, **kwargs)
         if result is None:
-            result = session._get(url, domain=domain, **kwargs)
+            result = validator(session._get(url, domain=domain, **kwargs))
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
         return result
 
     @classmethod
-    async def _get_with_cache_check_async(cls, url, domain=None, **kwargs):
+    async def _get_with_cache_check_async(cls, url, validator=lambda x: x, domain=None, **kwargs):
         result, cache_key, session = cls._check_cache(url, **kwargs)
         if result is None:
             result = await session._get_async(url, domain=domain, **kwargs)
+            result = validator(result)
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
         return result
 
     @classmethod
-    async def _post_with_cache_check_async(cls, url, domain=None, **kwargs):
+    async def _post_with_cache_check_async(cls, url, validator=lambda x: x, domain=None, **kwargs):
         result, cache_key, session = cls._check_cache(url, **kwargs)
         if result is None:
             result = await session._post_async(url, domain=domain, **kwargs)
+            result = validator(result)
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
         return result
@@ -945,9 +947,16 @@ class GsDataApi(DataApi):
 
     @classmethod
     def get_market_data(cls, query, request_id=None, ignore_errors: bool = False) -> pd.DataFrame:
+        def validate(body):
+            for e in body['responses']:
+                container = e['queryResponse'][0]
+                if 'errorMessages' in container:
+                    msg = f'measure service request {body["requestId"]} failed: {container["errorMessages"]}'
+                    raise MqValueError(msg)
+            return body
         start = time.perf_counter()
         try:
-            body = cls._post_with_cache_check('/data/measures', payload=query)
+            body = cls._post_with_cache_check(url='/data/measures', validator=validate, payload=query)
         except Exception as e:
             log_warning(request_id, _logger, f'Market data query {query} failed due to {e}')
             raise e

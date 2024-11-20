@@ -116,6 +116,38 @@ def _cached(fn):
     return wrapper
 
 
+def _cached_async(fn):
+    _fn_cache_lock = threading.Lock()
+    # short-term cache to avoid retrieving the same data several times in succession
+    fallback_cache: AssetCache = get_default_cache()
+
+    @wraps(fn)
+    async def wrapper(cls, *args, **kwargs):
+        if os.environ.get(ENABLE_ASSET_CACHING):
+            _logger.info("Asset caching is enabled")
+            asset_cache = cls.get_cache() or fallback_cache
+            k = asset_cache.construct_key(GsSession.current, fn.__name__, *args, **kwargs)
+            with Tracer("acquiring cache lock"):
+                _logger.debug('cache get: %s', k)
+                with _fn_cache_lock:
+                    result = asset_cache.cache.get(GsSession.current, k)
+            if result:
+                _logger.debug('cache hit: %s', k)
+                return result
+            with Tracer("Executing function"):
+                result = await fn(cls, *args, **kwargs)
+            with Tracer("acquiring cache lock"):
+                _logger.debug('cache set: %s', k)
+                with _fn_cache_lock:
+                    asset_cache.cache.put(GsSession.current, k, result, ttl=asset_cache.ttl)
+        else:
+            _logger.info("Asset caching is disabled, calling function")
+            result = await fn(cls, *args, **kwargs)
+        return result
+
+    return wrapper
+
+
 class GsIdType(Enum):
     """GS Asset API identifier type enumeration"""
 
@@ -199,7 +231,7 @@ class GsAssetApi:
         return response['results']
 
     @classmethod
-    @_cached
+    @_cached_async
     async def get_many_assets_async(
             cls,
             fields: IdList = None,
@@ -322,7 +354,7 @@ class GsAssetApi:
         return GsSession.current._get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
 
     @classmethod
-    @_cached
+    @_cached_async
     async def get_asset_async(
             cls,
             asset_id: str,

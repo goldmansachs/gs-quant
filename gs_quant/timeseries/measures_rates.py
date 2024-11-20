@@ -34,7 +34,7 @@ from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset
 from gs_quant.target.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation, SwapClearingHouse
 from gs_quant.timeseries import currency_to_default_ois_asset, convert_asset_for_rates_data_set, RatesConversionType
-from gs_quant.timeseries.helper import _to_offset, check_forward_looking, plot_measure
+from gs_quant.timeseries.helper import _to_offset, check_forward_looking, plot_measure, Entitlement
 from gs_quant.timeseries.measures import _market_data_timed, _range_from_pricing_date, \
     _get_custom_bd, ExtendedSeries, SwaptionTenorType, _extract_series_from_df, GENERIC_DATE, \
     _asset_from_spec, ASSET_SPEC, MeasureDependency, _logger
@@ -1363,7 +1363,7 @@ def forward_rate(asset: Asset, forward_start_tenor: str = None, forward_term: st
 
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset_for_intraday,
-                                 query_type=QueryType.SPOT)])
+                                 query_type=QueryType.SPOT)], entitlements=[Entitlement.INTERNAL])
 def discount_factor(asset: Asset, tenor: str = None, csa: str = None, close_location: str = None,
                     *, source: str = None, real_time: bool = False) -> Series:
     """
