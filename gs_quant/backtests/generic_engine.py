@@ -32,7 +32,7 @@ from gs_quant.backtests.actions import (Action, AddTradeAction, HedgeAction, Ent
                                         AddScaledTradeActionInfo)
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment, Hedge, PnlDefinition
-from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date
+from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date, map_ccy_name_to_ccy
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.common import AssetClass, Currency, ParameterisedRiskMeasure, RiskMeasure
 from gs_quant.context_base import nullcontext
@@ -745,7 +745,7 @@ class GenericEngine(BacktestBaseEngine):
 
         with self._trace('Handle Cash'):
             self._handle_cash(backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value,
-                              calc_risk_at_trade_exits)
+                              calc_risk_at_trade_exits, strategy.cash_accrual)
 
         logger.info(f'Finished Backtest:- {dt.datetime.now()}')
         return backtest
@@ -929,7 +929,7 @@ class GenericEngine(BacktestBaseEngine):
             backtest.add_results(day, leaves)
 
     def _handle_cash(self, backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value,
-                     calc_risk_at_trade_exits):
+                     calc_risk_at_trade_exits, cash_accrual):
         logger.info('Calculating prices for cash payments')
         # run any additional calcs to handle cash scaling (e.g. unwinds)
         cash_results = {}
@@ -964,7 +964,8 @@ class GenericEngine(BacktestBaseEngine):
         for d in sorted(set(strategy_pricing_dates + list(backtest.cash_payments.keys()))):
             if d <= strategy_end_date:
                 if current_value is not None:
-                    backtest.cash_dict[d] = current_value
+                    backtest.cash_dict[d] = current_value[
+                        0] if cash_accrual is None else cash_accrual.get_accrued_value(current_value, d)
                 if d in backtest.cash_payments:
                     for cp in backtest.cash_payments[d]:
                         trades = cp.trade.all_instruments if isinstance(cp.trade, Portfolio) else [cp.trade]
@@ -979,7 +980,7 @@ class GenericEngine(BacktestBaseEngine):
                             if not isinstance(value, float):
                                 raise RuntimeError(f'failed to get cash value for {trade.name} on '
                                                    f'{cp.effective_date} received value of {value}')
-                            ccy = next(iter(value.unit))
+                            ccy = map_ccy_name_to_ccy(next(iter(value.unit)))
                             if d not in backtest.cash_dict:
                                 backtest.cash_dict[d] = {ccy: initial_value}
                             if ccy not in backtest.cash_dict[d]:
@@ -995,6 +996,6 @@ class GenericEngine(BacktestBaseEngine):
                         for ccy, cash_paid in cp.cash_paid.items():
                             backtest.cash_dict[d][ccy] += cash_paid
 
-                    current_value = backtest.cash_dict[d]
+                    current_value = backtest.cash_dict[d], d
 
                 current_value = copy.deepcopy(current_value)

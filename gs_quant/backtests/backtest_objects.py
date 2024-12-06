@@ -16,8 +16,8 @@ under the License.
 from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json
+from dataclasses import dataclass, field
+from dataclasses_json import dataclass_json, config
 from queue import Queue as FifoQueue
 from typing import Iterable, TypeVar, Optional, Union
 
@@ -28,14 +28,17 @@ import pandas as pd
 from gs_quant.backtests.backtest_utils import make_list
 from gs_quant.backtests.core import ValuationMethod
 from gs_quant.backtests.data_handler import DataHandler
+from gs_quant.backtests.data_sources import DataSource, GenericDataSource, MissingDataStrategy
 from gs_quant.backtests.event import FillEvent
 from gs_quant.backtests.order import OrderBase, OrderCost
 from gs_quant.base import static_field
 from gs_quant.common import RiskMeasure
-from gs_quant.instrument import Cash
+from gs_quant.datetime.relative_date import RelativeDate
+from gs_quant.instrument import Cash, IRSwap
+from gs_quant.json_convertors import dc_decode
 from gs_quant.markets import PricingContext
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import ErrorValue
+from gs_quant.risk import ErrorValue, Cashflows
 from gs_quant.risk.transform import Transformer
 
 
@@ -524,3 +527,79 @@ class PredefinedAssetBacktest(BaseBacktest):
     def get_orders_for_date(self, date: dt.date) -> pd.DataFrame():
         return pd.DataFrame([order.to_dict(self.data_handler) for order in self.orders
                              if order.execution_end_time().date() == date])
+
+
+@dataclass_json
+@dataclass
+class CashAccrualModel:
+    class_type: str = static_field('cash_accrual_model')
+
+    def get_accrued_value(self, current_value, to_state) -> dict:
+        pass
+
+
+@dataclass_json
+@dataclass
+class ConstantCashAccrualModel(CashAccrualModel):
+    rate: float = 0
+    annual: bool = True
+    class_type: str = static_field('cash_accrual_model')
+
+    def get_accrued_value(self, current_value, to_state) -> dict:
+        new_value = {}
+        from_state = current_value[1]
+        days = (to_state - from_state).days
+        for currency, value in current_value[0].items():
+            new_value[currency] = value * (1 + (self.rate / (365 if self.annual else 1))) ** days
+
+        return new_value
+
+
+@dataclass_json
+@dataclass
+class DataCashAccrualModel(CashAccrualModel):
+    data_source: DataSource = field(default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(),
+                                                                                    allow_missing=True)))
+    annual: bool = True
+    class_type: str = static_field('cash_accrual_model')
+
+    def get_accrued_value(self, current_value, to_state) -> dict:
+        new_value = {}
+        from_state = current_value[1]
+        days = (to_state - from_state).days
+        rate = self.data_source.get_data(from_state)
+        for currency, value in current_value[0].items():
+            new_value[currency] = value * (1 + (rate / (365 if self.annual else 1))) ** days
+        return new_value
+
+
+ois_fixings = {}
+
+
+@dataclass_json
+@dataclass
+class OisFixingCashAccrualModel(CashAccrualModel):
+    start_date: Union[dt.date, str] = '-1y'
+    end_date: Union[dt.date, str] = dt.date.today()
+    class_type: str = static_field('ois_fixing_cash_accrual_model')
+
+    def get_accrued_value(self, current_value, to_state) -> dict:
+        for currency in current_value[0].keys():
+            if currency not in ois_fixings:
+                start_date = self.start_date if isinstance(self.start_date, dt.date) else RelativeDate(
+                    self.start_date).apply_rule()
+                start_date = (start_date - dt.timedelta(days=7))
+                swap = IRSwap(notional_currency=currency,
+                              floating_rate_frequency='1b',
+                              effective_date=start_date,
+                              termination_date=self.end_date if isinstance(self.end_date, dt.date) else RelativeDate(
+                                  self.end_date).apply_rule(),
+                              floating_rate_option='OIS')
+                with PricingContext():
+                    result = swap.calc(Cashflows)
+
+                ois_fixings[currency] = GenericDataSource(
+                    result.result()[result.result()['payment_type'] == 'Flt'].set_index(['accrual_start_date'])['rate'],
+                    MissingDataStrategy.fill_forward)
+            ds_accrual_model = DataCashAccrualModel(ois_fixings[currency], True)
+            return ds_accrual_model.get_accrued_value(current_value, to_state)

@@ -1,1 +1,10 @@
-productGuid: "product::262589"
+productGuid: "product::820010"
+
+
+#etch section
+etch:
+  testResultPaths:
+    - type: "JUNIT"
+      paths:
+        - "pytest.xml"
+

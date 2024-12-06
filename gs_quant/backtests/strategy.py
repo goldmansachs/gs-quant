@@ -19,6 +19,7 @@ from typing import Tuple, Optional, Union, Iterable
 
 from dataclasses_json import dataclass_json, config
 
+from gs_quant.backtests.backtest_objects import CashAccrualModel
 from gs_quant.backtests.backtest_utils import make_list
 from gs_quant.backtests.triggers import Trigger
 from gs_quant.base import Priceable
@@ -44,6 +45,7 @@ class Strategy:
     triggers: Union[Trigger, Iterable[Trigger]] = field(default=None,
                                                         metadata=config(decoder=dc_decode(*Trigger.sub_classes(),
                                                                                           allow_missing=True)))
+    cash_accrual: CashAccrualModel = None
     risks = None
 
     def __post_init__(self):

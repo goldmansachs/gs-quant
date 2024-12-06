@@ -4875,6 +4875,10 @@ def test_realized_volatility():
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
 
+    actual = tm.realized_volatility(Stock('MA4B66MW5E27U9VBB94', 'AAPL'), window, type_)
+    assert_series_equal(expected, pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
     replace.restore()
 
 

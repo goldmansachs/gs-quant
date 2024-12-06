@@ -45,6 +45,7 @@ from ..api_cache import ApiRequestCache
 from ...target.assets import EntityQuery, FieldFilterMap
 
 _logger = logging.getLogger(__name__)
+_REQUEST_HEADERS = "request_headers"
 
 
 class QueryType(Enum):
@@ -180,12 +181,22 @@ class GsDataApi(DataApi):
         cls._api_request_cache = cache
 
     @classmethod
+    def _construct_cache_key(cls, url, **kwargs) -> tuple:
+        json_kwargs = {
+            k: v.to_json(sort_keys=True) if any(isinstance(v, class_) for class_ in {MDAPIDataQuery, DataQuery})
+            else v
+            for k, v in kwargs.items()
+            if k not in {_REQUEST_HEADERS}
+        }
+        cache_key = (url, 'POST', json_kwargs)
+        return cache_key
+
+    @classmethod
     def _check_cache(cls, url, **kwargs):
         session = cls.get_session()
-        cache_key = None
-        cached_val = None
+        cached_val, cache_key = None, None
         if cls._api_request_cache:
-            cache_key = (url, 'POST', kwargs)
+            cache_key = cls._construct_cache_key(url, **kwargs)
             cached_val = cls._api_request_cache.get(session, cache_key)
         return cached_val, cache_key, session
 
@@ -259,7 +270,7 @@ class GsDataApi(DataApi):
     def execute_query(cls, dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
         kwargs = {'payload': query}
         if getattr(query, 'format', None) in (Format.MessagePack, 'MessagePack'):
-            kwargs['request_headers'] = {'Accept': 'application/msgpack'}
+            kwargs[_REQUEST_HEADERS] = {'Accept': 'application/msgpack'}
 
         domain = cls._check_data_on_cloud(dataset_id)
         return cls._post_with_cache_check('/data/{}/query'.format(dataset_id), domain=domain, **kwargs)
@@ -268,7 +279,7 @@ class GsDataApi(DataApi):
     async def execute_query_async(cls, dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
         kwargs = {'payload': query}
         if getattr(query, 'format', None) in (Format.MessagePack, 'MessagePack'):
-            kwargs['request_headers'] = {'Accept': 'application/msgpack'}
+            kwargs[_REQUEST_HEADERS] = {'Accept': 'application/msgpack'}
 
         domain = await cls._check_data_on_cloud_async(dataset_id)
         result = await cls._post_with_cache_check_async('/data/{}/query'.format(dataset_id), domain=domain, **kwargs)
@@ -954,6 +965,7 @@ class GsDataApi(DataApi):
                     msg = f'measure service request {body["requestId"]} failed: {container["errorMessages"]}'
                     raise MqValueError(msg)
             return body
+
         start = time.perf_counter()
         try:
             body = cls._post_with_cache_check(url='/data/measures', validator=validate, payload=query)

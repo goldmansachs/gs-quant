@@ -28,6 +28,7 @@ from typing import Optional, Union, Iterable, Any
 
 import backoff
 import certifi
+import httpx
 import msgpack
 import pandas as pd
 import requests
@@ -135,6 +136,7 @@ class GsSession(ContextBase):
             self.http_adapter = http_adapter
         self.application_version = application_version
         self.proxies = proxies
+        self.mounts = {key: httpx.HTTPTransport(proxy=val) for key, val in proxies} if proxies else None
         self.redirect_to_mds = redirect_to_mds
 
     @backoff.on_exception(lambda: backoff.expo(factor=2),
@@ -171,10 +173,9 @@ class GsSession(ContextBase):
         return self._session_async and not self._session_async.is_closed
 
     def _init_async(self):
-        import httpx
         if not self._has_async_session():
             self._session_async = httpx.AsyncClient(follow_redirects=True, verify=CustomHttpAdapter.ssl_context(),
-                                                    proxies=self.proxies)
+                                                    mounts=self.mounts)
             self._session_async.headers.update({'X-Application': self.application})
             self._session_async.headers.update({'X-Version': self.application_version})
             self._authenticate_async()

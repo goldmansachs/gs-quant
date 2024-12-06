@@ -31,7 +31,7 @@ from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
 from gs_quant.timeseries.measures import _extract_series_from_df
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.FACTOR_RETURN])
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
 def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
                   source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """

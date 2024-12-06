@@ -166,6 +166,8 @@ class RiskTriggerRequirements(TriggerRequirements):
     class_type: str = static_field('risk_trigger_requirements')
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
+        if state not in backtest.results:
+            return TriggerInfo(False)
         if self.risk_transformation is None:
             risk_value = backtest.results[state][self.risk].aggregate()
         else:

@@ -15,7 +15,18 @@ stages:
   - .pre
   - test
   - clmscan
+  - etch_upload
   - .post
+  
+cloud_etch_upload:
+  stage: etch_upload
+  tags:
+  - linux
+  - default
+  - kubernetes
+  image: registry.aws.site.gs.com:443/dx/ete/cloudetch-uploader:current
+  script:
+  - "$CLOUD_ETCH_UPLOAD"
   
 test:py39:
   image: "registry.aws.site.gs.com:443/dsml/python/python-raw-image/python3.9-rhel7:current"
