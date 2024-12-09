@@ -659,13 +659,28 @@ class OAuth2Session(GsSession):
 
 
 class PassThroughSession(GsSession):
+    __config = None
+
+    @classmethod
+    def domain_and_verify(cls, environment_or_domain: str, domain: Optional[str]):
+        if cls.__config is None:
+            cls.__config = ConfigParser()
+            cls.__config.read(os.path.join(os.path.dirname(inspect.getfile(cls)), 'config.ini'))
+
+        verify = False
+        try:
+            domain = cls.__config[environment_or_domain][domain]
+            verify = True
+        except KeyError:
+            domain = environment_or_domain
+        return domain, verify
 
     def __init__(self, environment: str, token, api_version=API_VERSION,
                  application=DEFAULT_APPLICATION, http_adapter=None, domain=None):
         domain = domain if domain is not None else 'AppDomain'
-        verify = True
+        domain, verify = self.domain_and_verify(environment, domain)
 
-        super().__init__(self._config_for_environment(environment)[domain], environment, api_version=api_version,
+        super().__init__(domain, environment, api_version=api_version,
                          application=application, verify=verify, http_adapter=http_adapter)
 
         self.token = token
@@ -690,7 +705,6 @@ try:
                                verify=verify, http_adapter=http_adapter, application_version=application_version)
 
     class PassThroughGSSSOSession(KerberosSessionMixin, GsSession):
-
         def __init__(self, environment: str, token, api_version=API_VERSION,
                      application=DEFAULT_APPLICATION, http_adapter=None, csrf_token=None):
             domain, verify = self.domain_and_verify(environment)
@@ -720,7 +734,6 @@ try:
     from gs_quant_auth.kerberos.session_kerberos import MQLoginMixin
 
     class MQLoginSession(MQLoginMixin, GsSession):
-
         def __init__(self, environment_or_domain: str, domain: str = Domain.APP, api_version: str = API_VERSION,
                      application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None,
                      application_version: str = APP_VERSION, mq_login_token=None):
