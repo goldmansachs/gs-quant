@@ -108,6 +108,51 @@ def mock_risk_model():
     return actual
 
 
+def test_risk_model_measure():
+    replace = Replacer()
+
+    # mock getting risk model entity()
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
+    mock.return_value = mock_risk_model_obj
+
+    # mock getting risk model factor entity
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
+    mock.return_value = mock_risk_model_data
+
+    # mock getting risk model factor entity
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
+    mock.return_value = mock_risk_model_factor_data
+
+    # mock getting asset gsid
+    mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
+    mock.return_value = '14593'
+
+    # mock getting risk model dates
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_dates', Mock())
+    mock.return_value = ['2020-01-01', '2020-01-02', '2020-01-03']
+
+    # mock getting risk model data
+    mock = replace('gs_quant.models.risk_model.MarqueeRiskModel.get_data', Mock())
+    mock.return_value = {
+        'totalResults': 3,
+        'missingDates': [],
+        'results': [
+            {'date': '2024-08-19', 'assetData': {'universe': ['14593'], 'bidAskSpread30d': [0.1]}},
+            {'date': '2024-08-20', 'assetData': {'universe': ['14593'], 'bidAskSpread30d': [0.2]}},
+            {'date': '2024-08-21', 'assetData': {'universe': ['14593'], 'bidAskSpread30d': [0.3]}}
+        ]
+    }
+
+    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+        actual = mrm.risk_model_measure(Stock(id_='id', name='Fake Asset'), 'model_id',
+                                        mrm.ModelMeasureString.BID_AKS_SPREAD_30D)
+        assert all(actual.values == [0.1, 0.2, 0.3])
+
+    with pytest.raises(AttributeError):
+        mrm.risk_model_measure(Stock(id_='id', name='Fake Asset'), 'model_id', 'Wrong Factor Name')
+    replace.restore()
+
+
 def test_factor_zscore():
     replace = Replacer()
 

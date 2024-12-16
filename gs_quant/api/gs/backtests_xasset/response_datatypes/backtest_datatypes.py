@@ -40,6 +40,20 @@ class TransactionDirection(Enum):
     Exit = 'Exit'
 
 
+class RollDateMode(Enum):
+    OTC = 'OTC'
+    Listed = 'Listed'
+
+    @classmethod
+    def _missing_(cls, value):
+        if value is None:
+            return None
+        for member in cls:
+            if member.value.lower() == value.lower():
+                return member
+        return None
+
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class Transaction:
@@ -103,3 +117,4 @@ class Configuration:
     market_data_location: Optional[PricingLocation] = None
     market_model: Optional[EquityMarketModel] = None
     cash_accrual: bool = False
+    roll_date_mode: Optional[RollDateMode] = None

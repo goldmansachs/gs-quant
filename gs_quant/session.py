@@ -496,6 +496,8 @@ class GsSession(ContextBase):
     def _get_mds_domain(self):
         env_config = GsSession._config_for_environment(self.environment.name)
         current_domain = self.domain.replace('marquee.web', 'marquee')  # remove .web from prod domain
+        if self.environment.name == Environment.QA.name:
+            current_domain = self.domain.replace('marquee-qa.web', 'marquee-qa')  # remove .web from qa domain
 
         is_mds_web = current_domain == Domain.MDS_WEB
         is_env_mds_web = current_domain == env_config['MdsWebDomain']

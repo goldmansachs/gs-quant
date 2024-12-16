@@ -21,7 +21,7 @@ from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.api.gs.backtests_xasset.apis import GsBacktestXassetApi
 from gs_quant.api.gs.backtests_xasset.request import BasicBacktestRequest
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, \
-    CostPerTransaction, TransactionCostModel
+    CostPerTransaction, TransactionCostModel, Configuration, RollDateMode
 from gs_quant.backtests.core import Backtest, TradeInMethod
 from gs_quant.errors import MqValueError
 from gs_quant.target.backtests import *
@@ -121,6 +121,8 @@ class StrategySystematic:
         self.__trades = (Trade(tuple(trade_instruments), roll_frequency, trade_buy_dates, roll_frequency,
                                trade_exit_dates, quantity, quantity_type),)
         self.__delta_hedge_frequency = '1b' if delta_hedge else None
+        self.__xasset_bt_service_config = Configuration(roll_date_mode=RollDateMode(roll_date_mode) if
+                                                        roll_date_mode is not None else None)
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         backtest_parameter_args = {
@@ -154,7 +156,8 @@ class StrategySystematic:
         if not calc_measures:
             calc_measures = (FlowVolBacktestMeasure.PNL,)
         basic_bt_request = BasicBacktestRequest(date_cfg, self.__trades, calc_measures, self.__delta_hedge_frequency,
-                                                CostPerTransaction(TransactionCostModel.Fixed, 0), None)
+                                                CostPerTransaction(TransactionCostModel.Fixed, 0),
+                                                self.__xasset_bt_service_config)
         basic_bt_response = GsBacktestXassetApi.calculate_basic_backtest(basic_bt_request, decode_instruments=False)
         risks = tuple(
             BacktestRisk(name=k.value,

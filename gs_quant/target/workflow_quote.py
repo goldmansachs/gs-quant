@@ -86,6 +86,18 @@ class PriceFormat(EnumBase, Enum):
     Cents = 'Cents'    
 
 
+class RelativeExpiryType(EnumBase, Enum):
+    Relative = 'Relative'
+    Fixed = 'Fixed'
+
+
+class RelativeStrikeType(EnumBase, Enum):
+    Relative_Delta = 'Relative Delta'
+    Relative_Spot = 'Relative Spot'
+    Relative_Fwd = 'Relative Fwd'
+    Fixed = 'Fixed'
+
+
 @dataclass
 class HedgeTypes(Base):
     pass
@@ -284,6 +296,8 @@ class WorkflowPosition(Base):
     creator: Optional[str] = field(default=None, metadata=field_metadata)
     originating_system: Optional[str] = field(default=None, metadata=field_metadata)
     is_read_only: Optional[bool] = field(default=None, metadata=field_metadata)
+    strike_and_barrier_type: Optional[RelativeStrikeType] = field(default=None, metadata=field_metadata)
+    expiry_type: Optional[RelativeExpiryType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

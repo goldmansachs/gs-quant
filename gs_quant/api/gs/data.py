@@ -131,6 +131,7 @@ class QueryType(Enum):
     COVARIANCE = "Covariance"
     FACTOR_EXPOSURE = "Factor Exposure"
     FACTOR_RETURN = "Factor Return"
+    HISTORICAL_BETA = "Historical Beta"
     FACTOR_PNL = "Factor Pnl"
     FACTOR_PROPORTION_OF_RISK = "Factor Proportion Of Risk"
     DAILY_RISK = "Daily Risk"
