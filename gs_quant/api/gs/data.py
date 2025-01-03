@@ -183,9 +183,15 @@ class GsDataApi(DataApi):
 
     @classmethod
     def _construct_cache_key(cls, url, **kwargs) -> tuple:
+        def serialize_value(v):
+            if any(isinstance(v, class_) for class_ in {MDAPIDataQuery, DataQuery}):
+                return v.to_json(sort_keys=True)
+            elif isinstance(v, dt.date):
+                return v.isoformat()
+            return v
+
         json_kwargs = {
-            k: v.to_json(sort_keys=True) if any(isinstance(v, class_) for class_ in {MDAPIDataQuery, DataQuery})
-            else v
+            k: serialize_value(v)
             for k, v in kwargs.items()
             if k not in {_REQUEST_HEADERS}
         }

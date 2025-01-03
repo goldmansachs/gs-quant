@@ -1591,13 +1591,16 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
     id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)])
-def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHorizon.THREE_MONTH, *,
+def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHorizon.THREE_MONTH,
+                relative_period: Optional[FxForecastHorizon] = None,
+                *,
                 source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
     """
     FX forecasts made by Global Investment Research (GIR) macro analysts.
 
     :param asset: asset object loaded from security master
-    :param relativePeriod: Forecast horizon. One of: 3m, 6m, 12m, EOY1, EOY2, EOY3, EOY4
+    :param relativePeriod: (deprecated) Forecast horizon. One of: 3m, 6m, 12m, EOY1, EOY2, EOY3, EOY4
+    :param relative_period: Forecast horizon. One of: 3m, 6m, 12m, EOY1, EOY2, EOY3, EOY4
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -1606,6 +1609,9 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
     if real_time:
         raise NotImplementedError('realtime fx_forecast not implemented')
 
+    if relativePeriod:
+        log_warning(request_id, _logger, "'relativePeriod' is deprecated, please use 'relative_period' instead.")
+
     cross_mqid = asset.get_marquee_id()
     usd_based_cross_mqid = cross_to_usd_based_cross(cross_mqid)
     query_type = QueryType.FX_FORECAST
@@ -1613,7 +1619,7 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
     q = GsDataApi.build_market_data_query(
         [usd_based_cross_mqid],
         query_type,
-        where=dict(relativePeriod=relativePeriod),
+        where=dict(relativePeriod=relative_period or relativePeriod),
         source=source,
         real_time=real_time
     )
