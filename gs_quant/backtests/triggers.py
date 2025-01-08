@@ -266,12 +266,19 @@ class DateTriggerRequirements(TriggerRequirements):
 
     def has_triggered(self, state: Union[dt.date, dt.datetime], backtest: BackTest = None) -> TriggerInfo:
         if self.entire_day:
+            dates = sorted(self.dates_from_datetimes)
             if isinstance(state, dt.datetime):
-                return TriggerInfo(state.date() in self.dates_from_datetimes)
-            elif isinstance(state, dt.date):
-                return TriggerInfo(state in self.dates_from_datetimes)
-
-        return TriggerInfo(state in self.dates)
+                state = state.date()
+        else:
+            dates = sorted(self.dates)
+        if state in dates:
+            next_state = None
+            if dates.index(state) < len(dates) - 1:
+                next_state = dates[dates.index(state) + 1]
+            return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=None, next_schedule=next_state),
+                                      AddScaledTradeAction: AddScaledTradeActionInfo(next_schedule=next_state),
+                                      HedgeAction: HedgeActionInfo(next_schedule=next_state)})
+        return TriggerInfo(False)
 
     def get_trigger_times(self):
         return self.dates_from_datetimes or self.dates

@@ -45,7 +45,7 @@ class AddTradeActionImpl(ActionHandler):
 
         orders = []
         for pricable in self.action.priceables:
-            quantity = pricable.instrument_quantity * 1 if info is None else info.scaling
+            quantity = pricable.instrument_quantity * 1 if info is None or info.scaling is None else info.scaling
             orders.append(OrderAtMarket(instrument=pricable,
                                         quantity=quantity,
                                         generation_time=state,
