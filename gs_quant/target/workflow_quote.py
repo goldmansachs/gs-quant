@@ -259,6 +259,8 @@ class VisualStructuringReport(QuoteReport):
     hedge_instruction: Optional[HedgeTypes] = field(default=None, metadata=field_metadata)
     sales_premium_adjustment: Optional[SalesPremiumAdjustment] = field(default=None, metadata=field_metadata)
     price_format: Optional[PriceFormat] = field(default=None, metadata=field_metadata)
+    strike_and_barrier_type: Optional[RelativeStrikeType] = field(default=None, metadata=field_metadata)
+    expiry_type: Optional[RelativeExpiryType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -296,8 +298,6 @@ class WorkflowPosition(Base):
     creator: Optional[str] = field(default=None, metadata=field_metadata)
     originating_system: Optional[str] = field(default=None, metadata=field_metadata)
     is_read_only: Optional[bool] = field(default=None, metadata=field_metadata)
-    strike_and_barrier_type: Optional[RelativeStrikeType] = field(default=None, metadata=field_metadata)
-    expiry_type: Optional[RelativeExpiryType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

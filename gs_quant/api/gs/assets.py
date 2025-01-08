@@ -109,7 +109,7 @@ def _cached(fn):
                 with _fn_cache_lock:
                     asset_cache.cache.put(GsSession.current, k, result, ttl=asset_cache.ttl)
         else:
-            _logger.info("Asset caching is disabled, calling function")
+            _logger.debug("Asset caching is disabled, calling function")
             result = fn(cls, *args, **kwargs)
         return result
 
@@ -141,7 +141,7 @@ def _cached_async(fn):
                 with _fn_cache_lock:
                     asset_cache.cache.put(GsSession.current, k, result, ttl=asset_cache.ttl)
         else:
-            _logger.info("Asset caching is disabled, calling function")
+            _logger.debug("Asset caching is disabled, calling function")
             result = await fn(cls, *args, **kwargs)
         return result
 
