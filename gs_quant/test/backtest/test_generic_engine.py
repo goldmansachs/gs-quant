@@ -16,7 +16,7 @@ under the License.
 from datetime import date
 from unittest.mock import patch
 
-from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction, EnterPositionQuantityScaledAction
+from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction
 from gs_quant.backtests.backtest_objects import ScaledTransactionModel
 from gs_quant.backtests.data_sources import GenericDataSource
 from gs_quant.backtests.generic_engine import GenericEngine
@@ -27,7 +27,6 @@ from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap, EqOptio
 from gs_quant.markets import PricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import Price, FXDelta, DollarPrice, IRDelta
-from gs_quant.target.backtests import BacktestTradingQuantityType
 from gs_quant.test.utils.mock_calc import MockCalc
 
 
@@ -284,7 +283,7 @@ def test_exit_action_bytradename(mocker):
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
-def test_quantity_scaled_action(mocker):
+def test_add_scaled_action(mocker):
     with MockCalc(mocker):
         start_date = date(2021, 12, 6)
         end_date = date(2021, 12, 10)
@@ -300,8 +299,8 @@ def test_quantity_scaled_action(mocker):
         portfolio = Portfolio(name='portfolio', priceables=[call, put])
 
         # Trade the position monthly without any scaling
-        trade_action = EnterPositionQuantityScaledAction(priceables=portfolio, trade_duration='1m',
-                                                         name='QuantityScaledAction1')
+        trade_action = AddScaledTradeAction(priceables=portfolio, trade_duration='1m',
+                                            name='QuantityScaledAction1')
         trade_trigger = PeriodicTrigger(
             trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
             actions=trade_action)
@@ -320,9 +319,8 @@ def test_quantity_scaled_action(mocker):
         assert round(summary['Cumulative Cash'][-1]) == -922
 
         # Trade the position monthly and scale the quantity of the trade
-        trade_action_scaled = EnterPositionQuantityScaledAction(priceables=portfolio, trade_duration='1m',
-                                                                trade_quantity=scale_factor,
-                                                                name='QuantityScaledAction2')
+        trade_action_scaled = AddScaledTradeAction(priceables=portfolio, trade_duration='1m',
+                                                   scaling_level=scale_factor, name='QuantityScaledAction2')
         trade_trigger_scaled = PeriodicTrigger(
             trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
             actions=trade_action_scaled)
@@ -405,7 +403,7 @@ def test_risk_scaled_transaction_cost(mocker):
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
-def test_quantity_scaled_action_nav(mocker):
+def test_add_scaled_action_nav(mocker):
     with MockCalc(mocker):
         start_date = date(2021, 12, 6)
         end_date = date(2021, 12, 10)
@@ -417,10 +415,10 @@ def test_quantity_scaled_action_nav(mocker):
                         option_style=OptionStyle.European, name='call')
 
         # NAV trading strategy with specified initial cash
-        trade_action_scaled = EnterPositionQuantityScaledAction(priceables=call, trade_duration='1b',
-                                                                trade_quantity=initial_cash,
-                                                                trade_quantity_type=BacktestTradingQuantityType.NAV,
-                                                                name='QuantityScaledAction1')
+        trade_action_scaled = AddScaledTradeAction(priceables=call, trade_duration='1b',
+                                                   scaling_level=initial_cash,
+                                                   scaling_type=ScalingActionType.NAV,
+                                                   name='QuantityScaledAction1')
 
         trade_trigger_scaled = PeriodicTrigger(
             trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
@@ -491,10 +489,10 @@ def test_serialisation(mocker):
     hedge_action = HedgeAction(FXDelta(aggregation_level='type'), hedge, name='HedgeAction')
     exit_trade_action = ExitTradeAction('2y_call', name='ExitAction1')
     exit_all_trades_action = ExitAllPositionsAction(name='ExitEverything')
-    add_scaled_trade = EnterPositionQuantityScaledAction(priceables=call, trade_duration='1b',
-                                                         trade_quantity=100,
-                                                         trade_quantity_type=BacktestTradingQuantityType.NAV,
-                                                         name='QuantityScaledAction1')
+    add_scaled_trade = AddScaledTradeAction(priceables=call, trade_duration='1b',
+                                            scaling_level=100,
+                                            scaling_type=ScalingActionType.NAV,
+                                            name='QuantityScaledAction1')
 
     # Triggers to check (randomly assign actions to triggers to cover all above actions)
     date_trigger = DateTrigger(DateTriggerRequirements(dates=(date(2021, 12, 1),)), add_trade_action_1)

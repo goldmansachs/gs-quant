@@ -139,6 +139,9 @@ class EquityVolEngine(object):
 
         if any(isinstance(x, a.ExitPositionAction) for x in all_actions):
             warnings.warn('ExitPositionAction will be deprecated soon, use ExitTradeAction.', DeprecationWarning, 2)
+        if any(isinstance(x, a.EnterPositionQuantityScaledAction) for x in all_actions):
+            warnings.warn('EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.',
+                          DeprecationWarning, 2)
 
         if not all(isinstance(x, (a.EnterPositionQuantityScaledAction, a.HedgeAction, a.ExitPositionAction,
                                   a.ExitTradeAction, a.AddTradeAction, a.AddScaledTradeAction)) for x in all_actions):

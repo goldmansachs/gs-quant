@@ -16,6 +16,7 @@ under the License.
 
 from collections import namedtuple
 from dataclasses import dataclass, field
+
 from dataclasses_json import dataclass_json, config
 from typing import TypeVar, Callable, ClassVar
 
@@ -144,7 +145,6 @@ class AddTradeAction(Action):
 
 
 AddTradeActionInfo = namedtuple('AddTradeActionInfo', ['scaling', 'next_schedule'])
-EnterPositionQuantityScaledActionInfo = namedtuple('EnterPositionQuantityScaledActionInfo', 'not_applicable')
 HedgeActionInfo = namedtuple('HedgeActionInfo', 'next_schedule')
 ExitTradeActionInfo = namedtuple('ExitTradeActionInfo', 'not_applicable')
 RebalanceActionInfo = namedtuple('RebalanceActionInfo', 'not_applicable')

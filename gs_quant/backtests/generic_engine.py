@@ -17,17 +17,16 @@ under the License.
 import copy
 import datetime as dt
 import logging
-from collections import defaultdict
+from abc import ABCMeta
+from collections import defaultdict, namedtuple
 from datetime import date
 from functools import reduce
 from itertools import zip_longest
-from typing import Union, Iterable, Optional, Dict
+from typing import Union, Iterable, Optional, Dict, Collection
 
-from gs_quant import risk
 from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
-from gs_quant.backtests.actions import (Action, AddTradeAction, HedgeAction, EnterPositionQuantityScaledAction,
-                                        AddTradeActionInfo, HedgeActionInfo, ExitTradeAction, ExitTradeActionInfo,
-                                        EnterPositionQuantityScaledActionInfo, RebalanceAction, RebalanceActionInfo,
+from gs_quant.backtests.actions import (Action, AddTradeAction, HedgeAction, AddTradeActionInfo, HedgeActionInfo,
+                                        ExitTradeAction, ExitTradeActionInfo, RebalanceAction, RebalanceActionInfo,
                                         ExitAllPositionsAction, AddScaledTradeAction, ScalingActionType,
                                         AddScaledTradeActionInfo)
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
@@ -37,11 +36,11 @@ from gs_quant.backtests.strategy import Strategy
 from gs_quant.common import AssetClass, Currency, ParameterisedRiskMeasure, RiskMeasure
 from gs_quant.context_base import nullcontext
 from gs_quant.datetime.relative_date import RelativeDateSchedule
+from gs_quant.instrument import Instrument
 from gs_quant.markets import PricingContext, HistoricalPricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import Price
 from gs_quant.risk.results import PortfolioRiskResult
-from gs_quant.target.backtests import BacktestTradingQuantityType
 from gs_quant.target.measures import ResolvedInstrumentValues
 from gs_quant.tracing import Tracer
 
@@ -57,26 +56,44 @@ logger = logging.getLogger(__name__)
 
 
 # Action Implementations
-class AddTradeActionImpl(ActionHandler):
+class OrderBasedActionImpl(ActionHandler, metaclass=ABCMeta):
+    def __init__(self, action: Action):
+        self._order_valuations = [ResolvedInstrumentValues]
+        super().__init__(action)
+
+    def get_base_orders_for_states(self, states: Collection[date], **kwargs):
+        orders = {}
+        dated_priceables = getattr(self.action, 'dated_priceables', {})
+        with PricingContext():
+            for s in states:
+                active_portfolio = dated_priceables.get(s) or self.action.priceables
+                with PricingContext(pricing_date=s):
+                    orders[s] = Portfolio(active_portfolio).calc(tuple(self._order_valuations))
+        return orders
+
+    def get_instrument_final_date(self, inst: Instrument, order_date: dt.date, info: namedtuple):
+        return get_final_date(inst, order_date, self.action.trade_duration, self.action.holiday_calendar, info)
+
+
+class AddTradeActionImpl(OrderBasedActionImpl):
     def __init__(self, action: AddTradeAction):
         super().__init__(action)
 
     def _raise_order(self,
                      state: Union[date, Iterable[date]],
                      trigger_info: Optional[Union[AddTradeActionInfo, Iterable[AddTradeActionInfo]]] = None):
-        with PricingContext():
-            state_list = make_list(state)
-            orders = {}
-            if trigger_info is None or isinstance(trigger_info, AddTradeActionInfo):
-                trigger_info = [trigger_info for _ in range(len(state_list))]
-            for s, ti in zip_longest(state_list, trigger_info):
-                active_portfolio = self.action.dated_priceables.get(s) or self.action.priceables
-                with PricingContext(pricing_date=s):
-                    orders[s] = (Portfolio(active_portfolio).resolve(in_place=False), ti)
+        state_list = make_list(state)
+        if trigger_info is None or isinstance(trigger_info, AddTradeActionInfo):
+            trigger_info = [trigger_info for _ in range(len(state_list))]
+        ti_by_state = {}
+        for s, ti in zip_longest(state_list, trigger_info):
+            ti_by_state[s] = ti
+        orders = self.get_base_orders_for_states(state_list)
         final_orders = {}
         for d, p in orders.items():
-            new_port = Portfolio([t.clone(name=f'{t.name}_{d}') for t in p[0].result()])
-            final_orders[d] = (new_port.scale(None if p[1] is None else p[1].scaling, in_place=False), p[1])
+            new_port = Portfolio([t.clone(name=f'{t.name}_{d}') for t in p.result()])
+            ti = ti_by_state[d]
+            final_orders[d] = (new_port.scale(None if ti is None else ti.scaling, in_place=False), ti)
 
         return final_orders
 
@@ -93,8 +110,7 @@ class AddTradeActionImpl(ActionHandler):
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
                 backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(create_date, backtest,
                                                                                                  trigger_info, inst)
-                final_date = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar,
-                                            info)
+                final_date = self.get_instrument_final_date(inst, create_date, info)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
                 backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
                                                                                                 backtest,
@@ -106,7 +122,7 @@ class AddTradeActionImpl(ActionHandler):
         return backtest
 
 
-class AddScaledTradeActionImpl(ActionHandler):
+class AddScaledTradeActionImpl(OrderBasedActionImpl):
     def __init__(self, action: AddScaledTradeAction):
         super().__init__(action)
 
@@ -118,7 +134,7 @@ class AddScaledTradeActionImpl(ActionHandler):
         for create_date, portfolio in orders.items():
             info = trigger_infos[create_date]
             for inst in portfolio.all_instruments:
-                d = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar, info)
+                d = self.get_instrument_final_date(inst, create_date, info)
                 if d not in final_days_orders.keys():
                     final_days_orders[d] = []
                 final_days_orders[d].append(inst)
@@ -173,25 +189,20 @@ class AddScaledTradeActionImpl(ActionHandler):
             raise RuntimeError(f'Scaling Type {self.action.scaling_type} not supported by engine')
 
     def _raise_order(self,
-                     state_list: Iterable[date],
+                     state_list: Collection[date],
                      price_measure: RiskMeasure,
                      trigger_infos: Dict[dt.date, Optional[Union[AddScaledTradeActionInfo,
                                                                  Iterable[AddScaledTradeActionInfo]]]]):
-        orders = {}
-        order_valuations = (ResolvedInstrumentValues,)
         if self.action.scaling_type == ScalingActionType.risk_measure:
-            order_valuations += (self.action.scaling_risk,)
-        with PricingContext():
-            for s in state_list:
-                with PricingContext(pricing_date=s):
-                    orders[s] = Portfolio(self.action.priceables).calc(order_valuations)
+            self._order_valuations.append(self.action.scaling_risk)
+        orders = self.get_base_orders_for_states(state_list)
 
         final_orders = {}
         for d, res in orders.items():
             new_port = []
             for inst in self.action.priceables:
                 new_inst = res[inst]
-                if len(order_valuations) > 1:
+                if len(self._order_valuations) > 1:
                     new_inst = new_inst[ResolvedInstrumentValues]
                 new_inst.name = f'{new_inst.name}_{d}'
                 new_port.append(new_inst)
@@ -222,8 +233,7 @@ class AddScaledTradeActionImpl(ActionHandler):
                 backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
                 backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(create_date, backtest,
                                                                                                  trigger_info, inst)
-                final_date = get_final_date(inst, create_date, self.action.trade_duration, self.action.holiday_calendar,
-                                            info)
+                final_date = self.get_instrument_final_date(inst, create_date, info)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
                 backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
                                                                                                 backtest,
@@ -235,149 +245,14 @@ class AddScaledTradeActionImpl(ActionHandler):
         return backtest
 
 
-class EnterPositionQuantityScaledActionImpl(ActionHandler):
-    def __init__(self, action: EnterPositionQuantityScaledAction):
-        super().__init__(action)
-
-    @staticmethod
-    def _quantity_type_to_risk_measure(quantity_type: BacktestTradingQuantityType):
-        map = {BacktestTradingQuantityType.notional: risk.EqSpot,
-               BacktestTradingQuantityType.gamma: risk.EqGamma,
-               BacktestTradingQuantityType.vega: risk.EqVega}
-
-        if quantity_type not in map:
-            raise ValueError(f'No risk measure found for quantity type: {quantity_type}')
-
-        return map[quantity_type]
-
-    def _nav_scale_orders(self, orders, first_quantity, price_measure):
-        sorted_order_days = sorted(make_list(orders.keys()))
-        final_days_orders = {}
-
-        # Populate dict of dates and instruments sold on those dates
-        for create_date, portfolio in orders.items():
-            for inst in portfolio.all_instruments:
-                d = get_final_date(inst, create_date, self.action.trade_duration)
-                if d not in final_days_orders.keys():
-                    final_days_orders[d] = []
-                final_days_orders[d].append(inst)
-
-        unscaled_prices_by_day = {}
-        unscaled_unwind_prices_by_day = {}
-        with PricingContext(is_async=True):
-            for day, portfolio in orders.items():
-                with PricingContext(pricing_date=day):
-                    unscaled_prices_by_day[day] = portfolio.calc(price_measure)
-            for unwind_day, unwind_instruments in final_days_orders.items():
-                if unwind_day <= dt.date.today():
-                    with PricingContext(pricing_date=unwind_day):
-                        unscaled_unwind_prices_by_day[unwind_day] = Portfolio(unwind_instruments).calc(price_measure)
-
-        # Start with first_quantity, then only use proceeds from selling instruments
-        available_cash = first_quantity
-        scaling_factors_by_inst = {}
-        # Go through each order day of the strategy in sorted order
-        for idx, cur_day in enumerate(sorted_order_days):
-            scale_factor = available_cash / unscaled_prices_by_day[cur_day].aggregate()
-            portfolio = orders[cur_day]
-            portfolio.scale(scale_factor)
-            for inst in portfolio:
-                scaling_factors_by_inst[inst] = scale_factor
-
-            available_cash = 0
-
-            if idx + 1 < len(sorted_order_days):
-                next_day = sorted_order_days[idx + 1]
-            else:
-                break
-
-            # Cash received from unwinds is the cash available for the next order
-            for d, p in final_days_orders.items():
-                # Only consider final days between current order date and the next in an iteration
-                if cur_day < d <= next_day:
-                    available_cash += sum(unscaled_unwind_prices_by_day[d][inst] * scaling_factors_by_inst[inst] for
-                                          inst in p)
-
-    def _scale_order(self, orders, price_measure):
-        quantity_type = self.action.trade_quantity_type
-        quantity = self.action.trade_quantity
-
-        if quantity_type == BacktestTradingQuantityType.quantity:
-            for _, portfolio in orders.items():
-                portfolio.scale(quantity)
-        else:
-            orders_risk = {}
-            if quantity_type == BacktestTradingQuantityType.NAV:
-                # Scale separately if strategy is NAV
-                self._nav_scale_orders(orders, quantity, price_measure)
-            else:
-                # Scale risk daily risk to specified value otherwise
-                risk_measure = EnterPositionQuantityScaledActionImpl._quantity_type_to_risk_measure(quantity_type)
-                with PricingContext():
-                    for day, portfolio in orders.items():
-                        with PricingContext(pricing_date=day):
-                            orders_risk[day] = portfolio.calc(risk_measure)
-
-                for day, portfolio in orders.items():
-                    risk_to_scale = orders_risk[day].aggregate()
-                    scaling_factor = quantity / risk_to_scale
-                    portfolio.scale(scaling_factor)
-
-    def _raise_order(self,
-                     state: Union[date, Iterable[date]],
-                     price_measure: RiskMeasure):
-        state_list = make_list(state)
-        orders = {}
-
-        with PricingContext():
-            for s in state_list:
-                active_portfolio = self.action.priceables
-                with PricingContext(pricing_date=s):
-                    orders[s] = Portfolio(active_portfolio).resolve(in_place=False)
-
-        final_orders = {}
-        for d, p in orders.items():
-            new_port = []
-            for t in p.result():
-                t.name = f'{t.name}_{d}'
-                new_port.append(t)
-            final_orders[d] = Portfolio(new_port)
-
-        self._scale_order(final_orders, price_measure)
-
-        return final_orders
-
-    def apply_action(self,
-                     state: Union[date, Iterable[date]],
-                     backtest: BackTest,
-                     trigger_info: Optional[Union[EnterPositionQuantityScaledActionInfo,
-                                                  Iterable[EnterPositionQuantityScaledActionInfo]]] = None):
-
-        orders = self._raise_order(state, backtest.price_measure)
-
-        # record entry and unwind cashflows
-        for create_date, portfolio in orders.items():
-            for inst in portfolio.all_instruments:
-                backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1,
-                                                                       scaling_parameter=self.action.trade_quantity))
-                final_date = get_final_date(inst, create_date, self.action.trade_duration)
-                backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date,
-                                                                      scaling_parameter=self.action.trade_quantity))
-
-        for s in backtest.states:
-            pos = []
-            for create_date, portfolio in orders.items():
-                pos += [inst for inst in portfolio.instruments
-                        if get_final_date(inst, create_date, self.action.trade_duration) > s >= create_date]
-            if len(pos):
-                backtest.portfolio_dict[s].append(pos)
-
-        return backtest
-
-
-class HedgeActionImpl(ActionHandler):
+class HedgeActionImpl(OrderBasedActionImpl):
     def __init__(self, action: HedgeAction):
         super().__init__(action)
+
+    def get_base_orders_for_states(self, states: Collection[date], **kwargs):
+        with HistoricalPricingContext(dates=states, csa_term=self.action.csa_term):
+            f = Portfolio(self.action.priceable).resolve(in_place=False)
+        return f.result()
 
     def apply_action(self,
                      state: Union[date, Iterable[date]],
@@ -387,21 +262,18 @@ class HedgeActionImpl(ActionHandler):
         if trigger_info is None or isinstance(trigger_info, HedgeActionInfo):
             trigger_info = [trigger_info for _ in range(len(state_list))]
         trigger_infos = dict(zip_longest(state_list, trigger_info))
+        backtest.calc_calls += 1
+        backtest.calculations += len(state_list)
+        orders = self.get_base_orders_for_states(state_list)
 
-        with HistoricalPricingContext(dates=state_list, csa_term=self.action.csa_term):
-            backtest.calc_calls += 1
-            backtest.calculations += len(state_list)
-            f = Portfolio(self.action.priceable).resolve(in_place=False)
-
-        for create_date, portfolio in f.result().items():
+        for create_date, portfolio in orders.items():
             info = trigger_infos[create_date]
             hedge_trade = portfolio.priceables[0]
             hedge_trade.name = f'{hedge_trade.name}_{create_date.strftime("%Y-%m-%d")}'
             if isinstance(hedge_trade, Portfolio):
                 for instrument in hedge_trade.all_instruments:
                     instrument.name = f'{hedge_trade.name}_{instrument.name}'
-            final_date = get_final_date(hedge_trade, create_date, self.action.trade_duration,
-                                        self.action.holiday_calendar, info)
+            final_date = self.get_instrument_final_date(hedge_trade, create_date, info)
             active_dates = [s for s in backtest.states if create_date <= s < final_date]
 
             if len(active_dates):
@@ -559,7 +431,6 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
     def __init__(self, action_impl_map=None):
         self.action_impl_map = {
             AddTradeAction: AddTradeActionImpl,
-            EnterPositionQuantityScaledAction: EnterPositionQuantityScaledActionImpl,
             HedgeAction: HedgeActionImpl,
             ExitTradeAction: ExitTradeActionImpl,
             ExitAllPositionsAction: ExitTradeActionImpl,
@@ -574,9 +445,6 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
                 return isinstance(leg.asset_class, AssetClass) and leg.asset_class == AssetClass.Equity
             return leg.__class__.__name__.lower().startswith('eq')
 
-        if isinstance(action, EnterPositionQuantityScaledAction) and \
-                not all([is_eq_underlier(p) for p in action.priceables]):
-            raise RuntimeError('EnterPositionQuantityScaledAction only supported for equity underliers')
         if type(action) in self.action_impl_map:
             return self.action_impl_map[type(action)](action)
         raise RuntimeError(f'Action {type(action)} not supported by engine')

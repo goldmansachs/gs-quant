@@ -3,7 +3,7 @@
     "request_hash": "e6d7f90423e2ce1c3be3b513f67aed72",
     "type": "MockCalc",
     "tests": [
-        "test_quantity_scaled_action_nav"
+        "test_add_scaled_action_nav"
     ],
     "mocked_data": "[[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":83.47791729987946}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":97.16417775446901}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":122.37019698602137}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":173.53895000226558}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":100.0}]]]]"
 }
