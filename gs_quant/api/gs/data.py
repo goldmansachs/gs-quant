@@ -183,12 +183,15 @@ class GsDataApi(DataApi):
 
     @classmethod
     def _construct_cache_key(cls, url, **kwargs) -> tuple:
+        def fallback_encoder(v) -> str:
+            if isinstance(v, dt.date):
+                return v.isoformat()
+
         def serialize_value(v):
             if any(isinstance(v, class_) for class_ in {MDAPIDataQuery, DataQuery}):
-                return v.to_json(sort_keys=True)
-            elif isinstance(v, dt.date):
-                return v.isoformat()
-            return v
+                return v.to_json(sort_keys=True, default=fallback_encoder)
+            encoded_v = fallback_encoder(v)
+            return encoded_v or v
 
         json_kwargs = {
             k: serialize_value(v)
