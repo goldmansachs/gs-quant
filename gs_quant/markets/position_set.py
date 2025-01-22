@@ -31,12 +31,20 @@ from gs_quant.markets.position_set_utils import _get_asset_temporal_xrefs, \
     _group_temporal_xrefs_into_discrete_time_ranges, _resolve_many_assets
 from gs_quant.models.risk_model_utils import _repeat_try_catch_request
 from gs_quant.target.common import Position as CommonPosition, PositionPriceInput, PositionSet as CommonPositionSet, \
-    PositionTag, Currency, PositionSetWeightingStrategy, MarketDataFrequency
+    PositionTag as PositionTagTarget, Currency, PositionSetWeightingStrategy, MarketDataFrequency
 from gs_quant.target.positions_v2_pricing import PositionsPricingParameters, PositionsRequest, PositionSetRequest, \
     PositionsPricingRequest
-from gs_quant.target.price import PriceParameters, PositionSetPriceInput
+from gs_quant.target.price import PriceParameters, PositionSetPriceInput, PositionPriceResponse
 
 _logger = logging.getLogger(__name__)
+
+
+class PositionTag(PositionTagTarget):
+    @classmethod
+    def from_dict(cls, tag_dict: Dict):
+        if len(tag_dict) > 1:
+            raise MqValueError('PositionTag.from_dict only accepts a single key-value pair')
+        return cls(name=list(tag_dict.keys())[0], value=list(tag_dict.values())[0])
 
 
 class Position:
@@ -46,13 +54,16 @@ class Position:
                  quantity: float = None,
                  name: str = None,
                  asset_id: str = None,
-                 tags: List[PositionTag] = None):
+                 tags: Optional[List[Union[PositionTag, Dict]]] = None):
         self.__identifier = identifier
         self.__weight = weight
         self.__quantity = quantity
         self.__name = name
         self.__asset_id = asset_id
-        self.__tags = tags
+        if tags is not None:
+            self.__tags = [PositionTag.from_dict(tag) if isinstance(tag, dict) else tag for tag in tags]
+        else:
+            self.__tags = tags
         self.__restricted, self.__hard_to_borrow = None, None
 
     def __eq__(self, other) -> bool:
@@ -132,11 +143,46 @@ class Position:
     def _restricted(self, value: bool):
         self.__restricted = value
 
-    def as_dict(self) -> Dict:
+    def add_tag(self, name: str, value: str):
+        if self.tags is None:
+            self.tags = []
+        if not any(tag.name == name for tag in self.tags):
+            self.tags.append(PositionTag(name=name, value=value))
+        else:
+            raise MqValueError(f'Position already has tag with name {name}')
+
+    def tags_as_dict(self):
+        return {tag.name: tag.value for tag in self.tags}
+
+    def as_dict(self, tags_as_keys: bool = False) -> Dict:
         position_dict = dict(identifier=self.identifier, weight=self.weight,
-                             quantity=self.quantity, name=self.name, asset_id=self.asset_id, restricted=self.restricted,
-                             tags=self.tags)
+                             quantity=self.quantity, name=self.name, asset_id=self.asset_id, restricted=self.restricted)
+        if self.tags and tags_as_keys:
+            position_dict.update(self.tags_as_dict())
+        else:
+            position_dict['tags'] = self.tags
         return {k: v for k, v in position_dict.items() if v is not None}
+
+    @classmethod
+    def from_dict(cls, position_dict: Dict, add_tags: bool = True):
+        fields = [k.lower() for k in position_dict.keys()]
+        if 'id' in fields and 'asset_id' in fields:
+            raise MqValueError('Position cannot have both id and asset_id')
+        if 'id' in fields:
+            position_dict['asset_id'] = position_dict.pop('id')
+        position_fields = ['identifier', 'weight', 'quantity', 'name', 'asset_id']
+        tag_dict = {k: v for k, v in position_dict.items() if k not in position_fields}
+        return cls(
+            identifier=position_dict['identifier'],
+            weight=position_dict.get('weight'),
+            quantity=position_dict.get('quantity'),
+            name=position_dict.get('name'),
+            asset_id=position_dict.get('asset_id'),
+            tags=[PositionTag(name=k, value=v) for k, v in tag_dict.items()] if add_tags else position_dict.get('tags')
+        )
+
+    def clone(self):
+        return Position.from_dict(self.as_dict(tags_as_keys=True), add_tags=True)
 
     def to_target(self, common: bool = True) -> Union[CommonPosition, PositionPriceInput]:
         """ Returns Position type defined in target file for API payloads """
@@ -224,6 +270,27 @@ class PositionSet:
     @property
     def unpriced_positions(self) -> List[Position]:
         return self.__unpriced_positions
+
+    def clone(self, keep_reference_notional: bool = False):
+        """Create a clone of the current position set
+
+        :param keep_reference_notional: Whether to keep the reference notional of the original position set in case it
+        has both quantity and reference notional
+        """
+        frame = self.to_frame(add_tags=True)
+        ref_notional = self.reference_notional
+        if 'quantity' in frame.columns and ref_notional is not None:
+            if keep_reference_notional:
+                frame = frame.drop(columns=['quantity'])
+            else:
+                ref_notional = None
+        return PositionSet.from_frame(
+            frame,
+            date=self.date,
+            reference_notional=ref_notional,
+            divisor=self.divisor,
+            add_tags=True
+        )
 
     def get_positions(self) -> pd.DataFrame:
         """
@@ -507,7 +574,7 @@ class PositionSet:
             equally_weighted_positions.append(p)
         self.positions = equally_weighted_positions
 
-    def to_frame(self) -> pd.DataFrame:
+    def to_frame(self, add_tags: bool = False) -> pd.DataFrame:
         """
         Retrieve formatted position set
 
@@ -527,6 +594,16 @@ class PositionSet:
         >>> position_set = PositionSet(positions=my_positions)
         >>> position_set.to_frame()
 
+        Retrieve tags in the pd DataFrame:
+
+        >>> from gs_quant.markets.position_set import PositionSet
+        >>> pset = PositionSet.from_dicts([
+        >>>     {'identifier': 'AAPL UW', 'quantity': 100, 'MyTag': 'Name 1'},
+        >>>     {'identifier': 'AAPL UW', 'quantity': 100, 'MyTag': 'Name 2'},
+        >>>     {'identifier': 'META UW', 'quantity': 100, 'MyTag': 'Name 1'}
+        >>> ], add_tags=True)
+        >>> pset.to_frame(add_tags=True)
+
         **See also**
 
         :func:`from_frame` :func:`from_dicts` :func:`from_list`
@@ -536,7 +613,7 @@ class PositionSet:
             position = dict(date=self.date.isoformat())
             if self.divisor is not None:
                 position.update(dict(divisor=self.divisor))
-            position.update(p.as_dict())
+            position.update(p.as_dict(tags_as_keys=add_tags))
             positions.append(position)
         return pd.DataFrame(positions)
 
@@ -618,7 +695,8 @@ class PositionSet:
 
     def price(self, currency: Optional[Currency] = Currency.USD,
               use_unadjusted_close_price: bool = True,
-              weighting_strategy: Optional[PositionSetWeightingStrategy] = None, **kwargs):
+              weighting_strategy: Optional[PositionSetWeightingStrategy] = None,
+              handle_long_short: bool = False, **kwargs):
         """
         Fetch positions weights from quantities, or vice versa
 
@@ -626,6 +704,9 @@ class PositionSet:
         :param use_unadjusted_close_price: Use adjusted or unadjusted close prices (defaults to unadjusted)
         :param weighting_strategy: Quantity or Weighted weighting strategy (defaults based on positions info)
         :param use_tags: Determines if tags are used to index the position response for non-netted positions
+        :param handle_long_short: Whether to handle the loss of directionality in weights that comes from pricing using
+        gross notional. Useful when input position iset is a long/short. Note, this also sets the reference notional to
+        Gross Notional if not already so
 
         **Usage**
 
@@ -682,14 +763,59 @@ class PositionSet:
         for p in self.positions:
             asset_key = f'{p.asset_id}{self.__hash_position_tag_list(p.tags)}'
             if asset_key in position_result_map:
-                p.weight = position_result_map.get(asset_key).weight
-                p.quantity = position_result_map.get(asset_key).quantity
-                p._hard_to_borrow = position_result_map.get(asset_key).hard_to_borrow
+                pos: PositionPriceResponse = position_result_map.get(asset_key)
+                p.quantity = pos.quantity
+                w = pos.weight
+                if handle_long_short:
+                    # In case of long/short positions, we need to convert the returned gross weight to reference weight
+                    w = math.copysign(w, pos.notional)
+                p.weight = w
+                p._hard_to_borrow = pos.hard_to_borrow
                 priced_positions.append(p)
             else:
                 unpriced_positions.append(p)
         self.positions = priced_positions
         self.__unpriced_positions = unpriced_positions
+        if handle_long_short:
+            # Set notional to gross notional because in case of L/S pricing the API normalizes all weights wrt gross
+            self.reference_notional = results.gross_notional
+
+    def get_subset(self, copy: bool = True, **kwargs):
+        """Extract a subset of the position set based on values of tags.
+
+        Not that weights are returned with respect to original position set. Use redistribute_weights function.
+        For more advanced filtering, use .to_frame() to get the frame as a pandas DataFrame.
+
+        **Usage**
+        Given a position set that has tags, extract a subset of the positions based on the values of one or more of the
+        tags.
+
+        **Examples**
+        Extract a subset of the position set based on the value of a single tag:
+
+        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>> from gs_quant.target.common import PositionTag
+        >>> pset = PositionSet.from_dicts([
+        >>>     {'identifier': 'AAPL UW', 'quantity': 1000, 'MyTag': 'Name 1', 'MyOtherTag': 'Class 1'},
+        >>>     {'identifier': 'MSFT UW', 'quantity': 2000, 'MyTag': 'Name 2', 'MyOtherTag': 'Class 1'},
+        >>>     {'identifier': 'GOOGL UW', 'quantity': 3000, 'MyTag': 'Name 1', 'MyOtherTag': 'Class 2'}
+        >>> ])
+        >>>
+        >>> subset = pset.get_subset(MyTag='Name 1')
+
+        Extract a subset of the position set based on the values of multiple tags:
+
+        >>> subset = pset.get_subset(MyTag='Name 1', MyOtherTag='Class 2')
+
+        """
+        subset = []
+        for p in self.positions:
+            if not p.tags:
+                raise MqValueError(f'PositionSet has position {p.identifier} that does not have tags')
+            tags_dict = p.tags_as_dict()
+            if all(tags_dict.get(k) == v for k, v in kwargs.items()):
+                subset.append(p if not copy else p.clone())
+        return PositionSet(positions=subset, date=self.date, reference_notional=self.reference_notional)
 
     def to_target(self, common: bool = True) -> Union[CommonPositionSet, List[PositionPriceInput]]:
         """ Returns PostionSet type defined in target file for API payloads """
@@ -763,13 +889,14 @@ class PositionSet:
         :func:`get_positions` :func:`resolve` :func:`from_list` :func:`from_frame` :func:`to_frame`
         """
         positions_df = pd.DataFrame(positions)
-        return cls.from_frame(positions_df, date, reference_notional, add_tags)
+        return cls.from_frame(positions_df, date, reference_notional, add_tags=add_tags)
 
     @classmethod
     def from_frame(cls,
                    positions: pd.DataFrame,
                    date: datetime.date = datetime.date.today(),
                    reference_notional: float = None,
+                   divisor: float = None,
                    add_tags: bool = False):
         """
         Create PostionSet instance from a dataframe of positions
@@ -812,17 +939,22 @@ class PositionSet:
                 )
             )
 
-        return cls(positions_list, date, reference_notional=reference_notional)
+        return cls(positions_list, date, reference_notional=reference_notional, divisor=divisor)
 
     @staticmethod
     def __get_tag_columns(positions: pd.DataFrame) -> List[str]:
-        return [c for c in positions.columns if c.lower() not in ['identifier', 'id', 'quantity', 'weight', 'date']]
+        return [c for c in positions.columns if c.lower() not in
+                ['identifier', 'id', 'quantity', 'weight', 'date', 'restricted']]
 
     @staticmethod
     def __normalize_position_columns(positions: pd.DataFrame) -> List[str]:
         columns = []
+        if 'asset_id' in positions.columns and 'id' not in positions.columns:
+            positions = positions.rename(columns={'asset_id': 'id'})
         for c in positions.columns:
-            columns.append(c.lower() if c.lower() in ['identifier', 'id', 'quantity', 'weight', 'date'] else c)
+            columns.append(
+                c.lower() if c.lower() in ['identifier', 'id', 'quantity', 'weight', 'date', 'restricted'] else c
+            )
         return columns
 
     @staticmethod

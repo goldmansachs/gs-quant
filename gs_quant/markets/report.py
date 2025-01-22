@@ -130,6 +130,14 @@ class ReportJobFuture:
         self.__start_date = start_date
         self.__end_date = end_date
 
+    @property
+    def job_id(self) -> str:
+        return self.__job_id
+
+    @property
+    def end_date(self) -> dt.date:
+        return self.__end_date
+
     def status(self) -> ReportStatus:
         """
         :return: the status of the report job
@@ -167,6 +175,26 @@ class ReportJobFuture:
             results = GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
             return pd.DataFrame(results)
         return None
+
+    def wait_for_completion(self, sleep_time: int = 10, max_retries: int = 10, error_on_timeout: bool = True) -> bool:
+        """Periodically query status and sleep till the status become done. If error_on_timeout is false, returns
+        boolean value indicating if the job is done or not"""
+        retries = 0
+        while not self.done() and retries < max_retries:
+            sleep(sleep_time)
+            retries += 1
+        if retries == max_retries:
+            if error_on_timeout:
+                raise MqValueError(f'Report job {self.__job_id} is taking longer than expected to finish. '
+                                   f'Please contact the Marquee Analytics team at gs-marquee-analytics-support@gs.com '
+                                   'if the issue persists.')
+            else:
+                print(f'Report job {self.__job_id} is taking longer than expected to finish.')
+                return False
+        return True
+
+    def reschedule(self):
+        GsReportApi.reschedule_report_job(self.__job_id)
 
 
 class Report:
@@ -778,6 +806,7 @@ class PerformanceReport(Report):
                                    fields: List[str] = None,
                                    start_date: dt.date = None,
                                    end_date: dt.date = None,
+                                   prefer_rebalance_positions: bool = False,
                                    return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """
         Get historical portfolio constituents
@@ -785,6 +814,7 @@ class PerformanceReport(Report):
         :param fields: list of fields to include in the results
         :param start_date: start date
         :param end_date: end date
+        :param prefer_rebalance_positions: If both Holding and Rebalance entries are present, prefer rebalance entries
         :param return_format: return format; defaults to a Pandas DataFrame, but can be manually
         set to ReturnFormat.JSON
         :return: Portfolio constituent data for each day in the requested date range
@@ -799,6 +829,16 @@ class PerformanceReport(Report):
         results = [GsDataApi.query_data(query=query, dataset_id=ReportDataset.PORTFOLIO_CONSTITUENTS.value)
                    for query in queries]
         results = sum(results, [])
+        if prefer_rebalance_positions:
+            rebalance_dates = set()
+            for result in results:
+                if result['entryType'] == 'Rebalance':
+                    rebalance_dates.add(result['date'])
+
+            results = [
+                result for result in results
+                if result['date'] not in rebalance_dates or result['entryType'] == 'Rebalance'
+            ]
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
     def get_pnl_contribution(self,

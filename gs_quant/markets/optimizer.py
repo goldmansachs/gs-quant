@@ -536,6 +536,16 @@ class OptimizerConstraints:
                  factor_constraints: List[FactorConstraint] = [],
                  max_factor_proportion_of_risk: MaxFactorProportionOfRiskConstraint = None,
                  max_proportion_of_risk_by_groups: List[MaxProportionOfRiskByGroupConstraint] = None):
+        """Set of Constraints for the optimizer
+
+        :param asset_constraints: list of asset constraints
+        :param country_constraints: list of country constraints
+        :param sector_constraints: list of sector constraints
+        :param industry_constraints: list of industry constraints
+        :param factor_constraints: list of factor constraints
+        :param max_factor_proportion_of_risk: maximum proportion of risk
+        :param max_proportion_of_risk_by_groups: maximum proportion of risk by groups
+        """
         self.__asset_constraints = asset_constraints
         self.__country_constraints = country_constraints
         self.__sector_constraints = sector_constraints
@@ -1010,18 +1020,21 @@ class OptimizerStrategy:
         self.__objective = value
 
     def to_dict(self, fail_on_unpriced_positions: bool = True):
+        """Converts input to suitable json payload for optimizer. Does not modify initial_position_set"""
         if self.constraints is None:
             self.constraints = OptimizerConstraints()
         if self.settings is None:
             self.settings = OptimizerSettings()
 
         backtest_start_date = self.initial_position_set.date - relativedelta(weeks=1)
-        if self.initial_position_set.reference_notional is None:
-            positions_as_dict = [{'assetId': p.asset_id, 'quantity': p.quantity}
-                                 for p in self.initial_position_set.positions]
+        positions_frame = self.initial_position_set.to_frame()
+        if self.initial_position_set.reference_notional:
+            positions_as_dict = positions_frame[['asset_id', 'weight']]
         else:
-            positions_as_dict = [{'assetId': p.asset_id, 'weight': p.weight}
-                                 for p in self.initial_position_set.positions]
+            positions_as_dict = positions_frame[['asset_id', 'quantity']]
+
+        positions_as_dict = positions_as_dict.rename(columns={'asset_id': 'assetId'}).to_dict(orient='records')
+
         parameters = {
             'hedgeTarget': {
                 'positions': positions_as_dict
