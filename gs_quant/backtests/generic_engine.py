@@ -88,7 +88,7 @@ class AddTradeActionImpl(OrderBasedActionImpl):
         ti_by_state = {}
         for s, ti in zip_longest(state_list, trigger_info):
             ti_by_state[s] = ti
-        orders = self.get_base_orders_for_states(state_list)
+        orders = self.get_base_orders_for_states(state_list, trigger_infos=ti_by_state)
         final_orders = {}
         for d, p in orders.items():
             new_port = Portfolio([t.clone(name=f'{t.name}_{d}') for t in p.result()])
@@ -195,7 +195,7 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
                                                                  Iterable[AddScaledTradeActionInfo]]]]):
         if self.action.scaling_type == ScalingActionType.risk_measure:
             self._order_valuations.append(self.action.scaling_risk)
-        orders = self.get_base_orders_for_states(state_list)
+        orders = self.get_base_orders_for_states(state_list, trigger_infos=trigger_infos)
 
         final_orders = {}
         for d, res in orders.items():
@@ -264,7 +264,7 @@ class HedgeActionImpl(OrderBasedActionImpl):
         trigger_infos = dict(zip_longest(state_list, trigger_info))
         backtest.calc_calls += 1
         backtest.calculations += len(state_list)
-        orders = self.get_base_orders_for_states(state_list)
+        orders = self.get_base_orders_for_states(state_list, trigger_infos=trigger_infos)
 
         for create_date, portfolio in orders.items():
             info = trigger_infos[create_date]
@@ -661,11 +661,18 @@ class GenericEngine(BacktestBaseEngine):
                             with self._trace('Build semi-det action') as scope:
                                 if scope:
                                     scope.span.set_tag('action.type', type(action).__name__)
+                                trigger_info = None
+                                if type(action) in trigger_infos:
+                                    trigger_info = trigger_infos[type(action)]
+                                else:
+                                    for mapped_action_type, action_trigger_info in trigger_infos.items():
+                                        if isinstance(action, mapped_action_type):
+                                            trigger_info = action_trigger_info
+                                            break
                                 self.get_action_handler(action).apply_action(
                                     triggered_dates,
                                     backtest,
-                                    trigger_infos[type(action)]
-                                    if type(action) in trigger_infos else None
+                                    trigger_info
                                 )
 
     def _price_semi_det_triggers(self, backtest, risks):
