@@ -52,7 +52,7 @@ class AggregationLevel(EnumBase, Enum):
     Point = 'Point'    
 
 
-class AssetClass(EnumBase, Enum):
+class AssetClass(EnumBase, Enum):    
     
     """Asset classification of security. Assets are classified into broad groups which
        exhibit similar characteristics and behave in a consistent way under
@@ -94,7 +94,7 @@ class AssetStatsType(EnumBase, Enum):
     YTD = 'YTD'    
 
 
-class AssetType(EnumBase, Enum):
+class AssetType(EnumBase, Enum):    
     
     """Asset type differentiates the product categorization or contract type"""
 
@@ -136,6 +136,7 @@ class AssetType(EnumBase, Enum):
     CommodityEUNaturalGasHub = 'CommodityEUNaturalGasHub'
     CommodityNaturalGasHub = 'CommodityNaturalGasHub'
     Company = 'Company'
+    ContractDivOption = 'ContractDivOption'
     Convertible = 'Convertible'
     CorrelationSwap = 'CorrelationSwap'
     CorrelationSwapLeg = 'CorrelationSwapLeg'
@@ -180,6 +181,7 @@ class AssetType(EnumBase, Enum):
     Inter_Commodity_Spread = 'Inter-Commodity Spread'
     InvoiceSpread = 'InvoiceSpread'
     Knockout = 'Knockout'
+    ListedOption = 'ListedOption'
     MacroBasket = 'MacroBasket'
     Market_Location = 'Market Location'
     MLF = 'MLF'
@@ -219,6 +221,7 @@ class AssetType(EnumBase, Enum):
     Swap = 'Swap'
     SwapData = 'SwapData'
     SwapLeg = 'SwapLeg'
+    SwapLPeriod = 'SwapLPeriod'
     SwapPeriod = 'SwapPeriod'
     SwapStrategy = 'SwapStrategy'
     Swaption = 'Swaption'
@@ -228,6 +231,7 @@ class AssetType(EnumBase, Enum):
     TarfScheduleLeg = 'TarfScheduleLeg'
     Token = 'Token'
     VarianceSwap = 'VarianceSwap'
+    VolatilityKnockout = 'VolatilityKnockout'
     VolatilitySwap = 'VolatilitySwap'
     VolVarSwap = 'VolVarSwap'
     WeatherIndex = 'WeatherIndex'
@@ -612,6 +616,17 @@ class CountryCode(EnumBase, Enum):
     YE = 'YE'    
 
 
+class CreditBasketType(EnumBase, Enum):    
+    
+    """Credit basket type with regards to its constituents"""
+
+    Corporate_Bond = 'Corporate Bond'
+    CDS = 'CDS'
+    Treasury = 'Treasury'
+    Mixed = 'Mixed'
+    Unknown = 'Unknown'    
+
+
 class CreditOptionStrikeType(EnumBase, Enum):    
     
     Spread_Adj = 'Spread Adj'
@@ -645,6 +660,7 @@ class Currency(EnumBase, Enum):
     ATS = 'ATS'
     AUD = 'AUD'
     AUZ = 'AUZ'
+    AWG = 'AWG'
     AZM = 'AZM'
     AZN = 'AZN'
     B03 = 'B03'
@@ -672,6 +688,7 @@ class Currency(EnumBase, Enum):
     BTN = 'BTN'
     BTR = 'BTR'
     BWP = 'BWP'
+    BYN = 'BYN'
     BYR = 'BYR'
     BZD = 'BZD'
     C23 = 'C23'
@@ -803,12 +820,14 @@ class Currency(EnumBase, Enum):
     LYD = 'LYD'
     MAD = 'MAD'
     MDL = 'MDL'
+    MGA = 'MGA'
     MGF = 'MGF'
     MKD = 'MKD'
     MMK = 'MMK'
     MNT = 'MNT'
     MOP = 'MOP'
     MRO = 'MRO'
+    MRU = 'MRU'
     MTL = 'MTL'
     MTP = 'MTP'
     MUR = 'MUR'
@@ -851,6 +870,7 @@ class Currency(EnumBase, Enum):
     PTE = 'PTE'
     PYG = 'PYG'
     QAR = 'QAR'
+    QOF = 'QOF'
     R2K = 'R2K'
     ROL = 'ROL'
     RON = 'RON'
@@ -862,6 +882,7 @@ class Currency(EnumBase, Enum):
     SAR = 'SAR'
     SBD = 'SBD'
     SCR = 'SCR'
+    SDG = 'SDG'
     SDP = 'SDP'
     SDR = 'SDR'
     SEK = 'SEK'
@@ -872,7 +893,9 @@ class Currency(EnumBase, Enum):
     SIL = 'SIL'
     SIT = 'SIT'
     SKK = 'SKK'
+    SLE = 'SLE'
     SLL = 'SLL'
+    SRD = 'SRD'
     SRG = 'SRG'
     SSI = 'SSI'
     STD = 'STD'
@@ -896,6 +919,7 @@ class Currency(EnumBase, Enum):
     TMM = 'TMM'
     TND = 'TND'
     TNT = 'TNT'
+    TOF = 'TOF'
     TOP = 'TOP'
     TPE = 'TPE'
     TPX = 'TPX'
@@ -1206,6 +1230,7 @@ class Field(EnumBase, Enum):
     adv22DayPct = 'adv22DayPct'
     contractMonthLetters = 'contractMonthLetters'
     gateType = 'gateType'
+    currentRatio = 'currentRatio'
     matchedMaturitySwapSpread12m = 'matchedMaturitySwapSpread12m'
     priceRangeInTicksLabel = 'priceRangeInTicksLabel'
     ticker = 'ticker'
@@ -1602,6 +1627,7 @@ class Field(EnumBase, Enum):
     priceUnit = 'priceUnit'
     tradeReportRefId = 'tradeReportRefId'
     subdivisionId = 'subdivisionId'
+    tokenId = 'tokenId'
     primaryMarketVolume = 'primaryMarketVolume'
     unadjustedLow = 'unadjustedLow'
     buy160cents = 'buy160cents'
@@ -1831,11 +1857,13 @@ class Field(EnumBase, Enum):
     leg2ResetFrequency = 'leg2ResetFrequency'
     controversyScore = 'controversyScore'
     proceedAssetSwapSpread = 'proceedAssetSwapSpread'
+    debtEquityRatio = 'debtEquityRatio'
     concentrationLevel = 'concentrationLevel'
     weightOfFaceValue = 'weightOfFaceValue'
     importance = 'importance'
     assetClassificationsGicsSector = 'assetClassificationsGicsSector'
     stsAssetName = 'stsAssetName'
+    figi = 'figi'
     netExposureClassification = 'netExposureClassification'
     settlementMethod = 'settlementMethod'
     receiverDesignatedMaturity = 'receiverDesignatedMaturity'
@@ -1884,11 +1912,13 @@ class Field(EnumBase, Enum):
     valueActual = 'valueActual'
     upi = 'upi'
     tradeRejectionReason = 'tradeRejectionReason'
+    shortInterestNotional = 'shortInterestNotional'
     fixedRate1 = 'fixedRate1'
     collateralCurrency = 'collateralCurrency'
     originalCountry = 'originalCountry'
     fixedRate2 = 'fixedRate2'
     field = 'field'
+    dailyMarkToMarketPnl = 'dailyMarkToMarketPnl'
     geographicFocus = 'geographicFocus'
     daysOpenRealizedBps = 'daysOpenRealizedBps'
     hedgeGroupId = 'hedgeGroupId'
@@ -1961,6 +1991,7 @@ class Field(EnumBase, Enum):
     pressure = 'pressure'
     shortDescription = 'shortDescription'
     factorProfile = 'factorProfile'
+    daysToCover30day = 'daysToCover30day'
     futureMonthZ24 = 'futureMonthZ24'
     feed = 'feed'
     futureMonthZ23 = 'futureMonthZ23'
@@ -2115,12 +2146,14 @@ class Field(EnumBase, Enum):
     _42 = '42'
     _43 = '43'
     _44 = '44'
+    daysToCover10day = 'daysToCover10day'
     _45 = '45'
     cusip = 'cusip'
     totalConfirmedByState = 'totalConfirmedByState'
     _46 = '46'
     ideaActivityTime = 'ideaActivityTime'
     _47 = '47'
+    crowdedScore = 'crowdedScore'
     _48 = '48'
     _49 = '49'
     tagsToExclude = 'tagsToExclude'
@@ -2135,6 +2168,7 @@ class Field(EnumBase, Enum):
     assetCount = 'assetCount'
     matchingOrderFwdPointAsk = 'matchingOrderFwdPointAsk'
     _50 = '50'
+    s3Float = 's3Float'
     _51 = '51'
     isOrderInLimit = 'isOrderInLimit'
     _52 = '52'
@@ -2213,6 +2247,7 @@ class Field(EnumBase, Enum):
     factorReturn = 'factorReturn'
     passiveFlowRatio = 'passiveFlowRatio'
     composite5DayAdv = 'composite5DayAdv'
+    squeezeRisk = 'squeezeRisk'
     marginalContributionToRisk = 'marginalContributionToRisk'
     closeDate = 'closeDate'
     temperatureHourForecast = 'temperatureHourForecast'
@@ -2248,6 +2283,7 @@ class Field(EnumBase, Enum):
     chargeInQuoteConventionTwo = 'chargeInQuoteConventionTwo'
     assetParametersIndex = 'assetParametersIndex'
     freeFloatMarketCap = 'freeFloatMarketCap'
+    shortMomentum = 'shortMomentum'
     mdapi = 'mdapi'
     payoffQtd = 'payoffQtd'
     loss = 'loss'
@@ -2290,6 +2326,7 @@ class Field(EnumBase, Enum):
     confirmedPerMillion = 'confirmedPerMillion'
     aggregatedUsdSpotExposure = 'aggregatedUsdSpotExposure'
     exchangeRateBasis = 'exchangeRateBasis'
+    assetClassOrgDrgname = 'assetClassOrgDrgname'
     dataSourceId = 'dataSourceId'
     integratedScore = 'integratedScore'
     buy7bps = 'buy7bps'
@@ -2354,6 +2391,7 @@ class Field(EnumBase, Enum):
     fixedRateFrequency = 'fixedRateFrequency'
     rate360 = 'rate360'
     medianDailyVolume22d = 'medianDailyVolume22d'
+    dailyNetMarkToMarketPnl = 'dailyNetMarkToMarketPnl'
     globalPredictedBeta = 'globalPredictedBeta'
     notionalQuantity2 = 'notionalQuantity2'
     notionalQuantity1 = 'notionalQuantity1'
@@ -2657,6 +2695,7 @@ class Field(EnumBase, Enum):
     futureMonthJ26 = 'futureMonthJ26'
     lendingSecType = 'lendingSecType'
     futureMonthJ25 = 'futureMonthJ25'
+    exposureOrgDrgname = 'exposureOrgDrgname'
     leverage = 'leverage'
     factorExposure = 'factorExposure'
     forecastDay = 'forecastDay'
@@ -2705,12 +2744,14 @@ class Field(EnumBase, Enum):
     pbClientId = 'pbClientId'
     istatRegionCode = 'istatRegionCode'
     sell9bps = 'sell9bps'
+    shortInterestPercent = 'shortInterestPercent'
     ownerId = 'ownerId'
     composite10DayAdv = 'composite10DayAdv'
     maxLoanBalance = 'maxLoanBalance'
     ideaActivityType = 'ideaActivityType'
     sell60cents = 'sell60cents'
     ideaSource = 'ideaSource'
+    compositeFigi = 'compositeFigi'
     everOnVent = 'everOnVent'
     otcVolume = 'otcVolume'
     buy15cents = 'buy15cents'
@@ -2723,6 +2764,7 @@ class Field(EnumBase, Enum):
     soprOut = 'soprOut'
     clientSpotAsk = 'clientSpotAsk'
     shortConvictionSmall = 'shortConvictionSmall'
+    daysToCover90day = 'daysToCover90day'
     upfrontPaymentCurrency = 'upfrontPaymentCurrency'
     spotSettlementDate = 'spotSettlementDate'
     matrixOrder = 'matrixOrder'
@@ -2742,6 +2784,7 @@ class Field(EnumBase, Enum):
     subAccount = 'subAccount'
     buy65cents = 'buy65cents'
     bondCdsBasis = 'bondCdsBasis'
+    s3Utilization = 's3Utilization'
     vendor = 'vendor'
     passMessage = 'passMessage'
     dataSet = 'dataSet'
@@ -2856,6 +2899,7 @@ class Field(EnumBase, Enum):
     proceedsAssetSwapSpread3m = 'proceedsAssetSwapSpread3m'
     totalQuantity = 'totalQuantity'
     internalUser = 'internalUser'
+    factSetRegionalId = 'factSetRegionalId'
     sell40bps = 'sell40bps'
     redemptionOption = 'redemptionOption'
     notionalUnit2 = 'notionalUnit2'
@@ -2996,6 +3040,7 @@ class Field(EnumBase, Enum):
     fwdPointsBid = 'fwdPointsBid'
     assetParametersPayerDayCountFraction = 'assetParametersPayerDayCountFraction'
     universeId2 = 'universeId2'
+    bbg = 'bbg'
     bidLow = 'bidLow'
     bucketizePrice = 'bucketizePrice'
     fairVarianceVolatility = 'fairVarianceVolatility'
@@ -3033,6 +3078,7 @@ class Field(EnumBase, Enum):
     tradeDayCount = 'tradeDayCount'
     transactionType = 'transactionType'
     priceToSales = 'priceToSales'
+    secMasterId = 'secMasterId'
     newIdeasQtd = 'newIdeasQtd'
     subdivisionName = 'subdivisionName'
     adjustedAskPrice = 'adjustedAskPrice'
@@ -3107,6 +3153,7 @@ class Field(EnumBase, Enum):
     precipitationDailyForecastInches = 'precipitationDailyForecastInches'
     exchangeId = 'exchangeId'
     leg2FixedPayment = 'leg2FixedPayment'
+    indicativeAvailability = 'indicativeAvailability'
     tcmCostHorizon20Day = 'tcmCostHorizon20Day'
     assetClassificationsDigitalAssetIndustry = 'assetClassificationsDigitalAssetIndustry'
     realm = 'realm'
@@ -3209,6 +3256,8 @@ class Field(EnumBase, Enum):
     assetParametersSettlement = 'assetParametersSettlement'
     maxTemperature = 'maxTemperature'
     acquirerShareholderMeetingDate = 'acquirerShareholderMeetingDate'
+    countryExchange = 'countryExchange'
+    cusip8 = 'cusip8'
     countIdeasWtd = 'countIdeasWtd'
     arrivalRtNormalized = 'arrivalRtNormalized'
     reportType = 'reportType'
@@ -3629,6 +3678,7 @@ class Field(EnumBase, Enum):
     sell8bps = 'sell8bps'
     bidPrice = 'bidPrice'
     optionCallPremium = 'optionCallPremium'
+    s3ShortInterestPercentFloat = 's3ShortInterestPercentFloat'
     sell8point5bps = 'sell8point5bps'
     targetPriceUnrealizedBps = 'targetPriceUnrealizedBps'
     clientSpotBid = 'clientSpotBid'
@@ -3646,6 +3696,7 @@ class Field(EnumBase, Enum):
     stationName = 'stationName'
     passPct = 'passPct'
     openingReport = 'openingReport'
+    dailyShortInterest = 'dailyShortInterest'
     eventTimestamp = 'eventTimestamp'
     tcm = 'tcm'
     midcurveAtmFwdRate = 'midcurveAtmFwdRate'
@@ -3659,6 +3710,7 @@ class Field(EnumBase, Enum):
     stsRatesMaturity = 'stsRatesMaturity'
     stsIncludeSstkAnalytics = 'stsIncludeSstkAnalytics'
     nonOwnerId = 'nonOwnerId'
+    dividendsPerShare = 'dividendsPerShare'
     liqDly = 'liqDly'
     contributorRole = 'contributorRole'
     totalFatalities = 'totalFatalities'
@@ -3913,7 +3965,13 @@ class MarketDataVendor(EnumBase, Enum):
     FactSet = 'FactSet'
     WorldScope = 'WorldScope'
     GS_Muni = 'GS Muni'
-    BlackRock = 'BlackRock'    
+    BlackRock = 'BlackRock'
+    S3_Partners = 'S3 Partners'
+    Turnleaf_Analytics = 'Turnleaf Analytics'
+    Alpharoc = 'Alpharoc'
+    LSEG = 'LSEG'
+    ETF_GLobal = 'ETF GLobal'
+    Northfield = 'Northfield'    
 
 
 class NewOrUnwind(EnumBase, Enum):    
@@ -4533,6 +4591,7 @@ class UnderlierType(EnumBase, Enum):
     """Type of underlyer"""
 
     BBID = 'BBID'
+    BID = 'BID'
     CUSIP = 'CUSIP'
     ISIN = 'ISIN'
     SEDOL = 'SEDOL'
@@ -4574,6 +4633,12 @@ class WeightingType(EnumBase, Enum):
     Notional = 'Notional'
     Market_Value = 'Market Value'
     Dollar_Duration = 'Dollar Duration'    
+
+
+class YesNo(EnumBase, Enum):    
+    
+    Yes = 'Yes'
+    No = 'No'    
 
 
 @dataclass
@@ -5431,6 +5496,7 @@ class ISelectNewParameter(Base):
     execution_style: Optional[str] = field(default=None, metadata=field_metadata)
     execution_timezone: Optional[str] = field(default=None, metadata=field_metadata)
     notional: Optional[Union[AssetValueParameters, float]] = field(default=None, metadata=field_metadata)
+    unwind_pct: Optional[Union[AssetValueParameters, float]] = field(default=None, metadata=field_metadata)
     leverage: Optional[float] = field(default=None, metadata=field_metadata)
     quantity: Optional[float] = field(default=None, metadata=field_metadata)
     hedge_ratio: Optional[float] = field(default=None, metadata=field_metadata)
@@ -5830,8 +5896,8 @@ class FieldFilterMap(Base):
     portfolio_type: Optional[Union[Tuple[str, ...], str]] = field(default=None, metadata=field_metadata)
     vendor: Optional[Union[Tuple[Union[MarketDataVendor, str], ...], Union[MarketDataVendor, str]]] = field(default=None, metadata=field_metadata)
     popularity: Optional[Union[Tuple[float, ...], float]] = field(default=None, metadata=field_metadata)
-    currency: Optional[Union[Tuple[str, ...], str]] = field(default=None, metadata=field_metadata)
     term: Optional[Union[Tuple[str, ...], str]] = field(default=None, metadata=field_metadata)
+    currency: Optional[Union[Tuple[str, ...], str]] = field(default=None, metadata=field_metadata)
     real_time_restriction_status: Optional[Union[Tuple[Tuple[str, ...], ...], Tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     rating_fitch: Optional[Union[Tuple[str, ...], str]] = field(default=None, metadata=field_metadata)
     asset_parameters_clearing_house: Optional[Union[Tuple[str, ...], str]] = field(default=None, metadata=field_metadata)
@@ -6171,6 +6237,7 @@ class PCOExposureLeg(Base):
     local_fx_forward: Optional[str] = field(default=None, metadata=field_metadata)
     auto_roll: Optional[bool] = field(default=None, metadata=field_metadata)
     exposure_currencies: Optional[Tuple[Currency, ...]] = field(default=None, metadata=field_metadata)
+    roll_date: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -6531,8 +6598,8 @@ class RelativeMarket(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class PositionSetRequest(Base):
     date: datetime.date = field(default=None, metadata=field_metadata)
+    target_notional: float = field(default=None, metadata=field_metadata)
     positions: Tuple[PositionsRequest, ...] = field(default=None, metadata=field_metadata)
-    target_notional: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

@@ -35,7 +35,7 @@ def test_fix_mock_data():
     MockRequest.remove_unused_files()
 
 
-@pytest.mark.last
+@pytest.mark.order("last")
 def test_mock_data_file_sanity():
     # Important that this test runs last, it asserts all the test files are used so we can cleanup unused ones
     saved_files = MockRequest.get_saved_files()

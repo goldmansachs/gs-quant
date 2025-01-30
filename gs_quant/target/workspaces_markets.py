@@ -396,7 +396,7 @@ class WorkspaceComponent(Base):
     tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     selections: Optional[Tuple[ComponentSelection, ...]] = field(default=None, metadata=field_metadata)
     container_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    parameters: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    parameters: Optional[Union[ArticleComponentParameters, AssetPlotComponentParameters, BarChartComponentParameters, ChartComponentParameters, CommentaryComponentParameters, CommentaryPromoComponentParameters, ContainerComponentParameters, DataGridComponentParameters, LegendComponentParameters, MarketComponentParameters, MonitorComponentParameters, PlotComponentParameters, PromoComponentParameters, RelatedLinksComponentParameters, ResearchComponentParameters, ScreenerComponentParameters, SelectorComponentParameters, SeparatorComponentParameters, TreemapComponentParameters, VideoComponentParameters, WebinarComponentParameters]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

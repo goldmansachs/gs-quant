@@ -16,10 +16,11 @@ under the License.
 import datetime as dt
 import logging
 from enum import Enum, EnumMeta
+from threading import Lock
 from typing import Tuple, Union, List
 
 import numpy as np
-from cachetools import TTLCache
+from cachetools import TTLCache, cached
 from cachetools.keys import hashkey
 
 from gs_quant.common import PricingLocation, Currency
@@ -81,14 +82,16 @@ class GsCalendar:
         except (ValueError, AttributeError):
             return False
 
+    @cached(_coverage_cache, key=lambda s, d, q: d.id, lock=Lock())
+    def _get_dataset_coverage(self, dataset: Dataset, query_key: str):
+        coverage_df = dataset.get_coverage()
+        coverage = set() if coverage_df.empty else set(coverage_df[query_key])
+        return coverage
+
     def holidays_from_dataset(self, dataset: Dataset, query_key: str, query_values: Tuple[str, ...]) -> List[dt.date]:
         if not len(query_values):
             return []
-        coverage = _coverage_cache.get(dataset.id, default=None)
-        if coverage is None:
-            coverage_df = dataset.get_coverage()
-            coverage = set() if coverage_df.empty else set(coverage_df[query_key])
-            _coverage_cache[dataset.id] = coverage
+        coverage = self._get_dataset_coverage(dataset, query_key)
         for item in query_values:
             if item not in coverage:
                 if self._skip_valid_check:
@@ -105,16 +108,12 @@ class GsCalendar:
         return []
 
     @property
+    @cached(_calendar_cache, key=lambda s: hashkey(str(s.__calendars)), lock=Lock())
     def holidays(self) -> Tuple[dt.date, ...]:
-        cached_data = _calendar_cache.get(hashkey(str(self.__calendars)))
-        if cached_data:
-            return cached_data
         currencies, exchanges = _split_list(self.__calendars, GsCalendar.is_currency)
         holidays = self.holidays_from_dataset(Dataset(Dataset.GS.HOLIDAY), 'exchange', exchanges)
         holidays = holidays + self.holidays_from_dataset(Dataset(Dataset.GS.HOLIDAY_CURRENCY), 'currency', currencies)
-
         holidays = tuple(set(holidays))
-        _calendar_cache[hashkey(str(self.__calendars))] = holidays
         return holidays
 
     def business_day_calendar(self, week_mask: str = None) -> np.busdaycalendar:

@@ -82,10 +82,10 @@ setuptools.setup(
         "internal": ["gs_quant_internal>=1.4.9"],
         "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib", "seaborn", "treelib"],
-        "test": ["pytest", "pytest-cov", "pytest-mock", "pytest-ordering", "testfixtures", "nbconvert", "nbformat",
+        "test": ["pytest", "pytest-cov", "pytest-mock", "pytest-order", "testfixtures", "nbconvert", "nbformat",
                  "jupyter_client"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
-                    "pytest-mock", "pytest-ordering", "testfixtures"]
+                    "pytest-mock", "pytest-order", "testfixtures"]
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -93,6 +93,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Operating System :: OS Independent",
         "License :: OSI Approved :: Apache Software License"
     ],

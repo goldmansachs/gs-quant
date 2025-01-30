@@ -86,16 +86,18 @@ class PriceFormat(EnumBase, Enum):
     Cents = 'Cents'    
 
 
-class RelativeExpiryType(EnumBase, Enum):
+class RelativeExpiryType(EnumBase, Enum):    
+    
     Relative = 'Relative'
-    Fixed = 'Fixed'
+    Fixed = 'Fixed'    
 
 
-class RelativeStrikeType(EnumBase, Enum):
+class RelativeStrikeType(EnumBase, Enum):    
+    
     Relative_Delta = 'Relative Delta'
     Relative_Spot = 'Relative Spot'
     Relative_Fwd = 'Relative Fwd'
-    Fixed = 'Fixed'
+    Fixed = 'Fixed'    
 
 
 @dataclass
