@@ -79,12 +79,13 @@ class SecMasterAssetType(EnumBase, Enum):
     Financial_index_future_ = 'Financial index future.'
     Single_Stock_Future = 'Single Stock Future'
     Pool = 'Pool'
-    Certificate_of_Deposit = 'Certificate of Deposit'
+    Certificate_of_Deposit = 'Certificate Of Deposit'
     Debt_Structured_Note = 'Debt Structured Note'
     Agency_CMO = 'Agency CMO'
     Future_Option = 'Future Option'
     Convertible_Bond = 'Convertible Bond'
     Singapore_DR = 'Singapore DR'
+    Basket = 'Basket'
 
 
 

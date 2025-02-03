@@ -49,6 +49,7 @@ class SecMasterIdentifiers(Enum):
     FACTSET_REGIONAL_ID = 'factSetRegionalId'
     TOKEN_ID = 'tokenId'
     COMPOSITE_FIGI = 'compositeFigi'
+    BARRA_ID = 'barraId'
 
 
 def __extend_enum(base_enum, new_values):

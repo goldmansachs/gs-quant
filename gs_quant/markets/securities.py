@@ -242,6 +242,7 @@ class SecurityIdentifier(EntityIdentifier):
     BBG = "bbg"
     ASSET_ID = "assetId"
     ANY = "identifiers"
+    BARRA_ID = "barraId"
 
 
 class ReturnType(Enum):
