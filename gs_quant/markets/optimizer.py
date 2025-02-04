@@ -1088,10 +1088,10 @@ class OptimizerStrategy:
         except Exception as e:
             raise MqValueError(f'There was an error pricing your positions: {e}')
         if 'errorMessage' in price_results:
+            if len(price_results.get('assetIdsMissingPrices', [])) > 0:
+                logging.info(f'Marquee is missing prices on {self.initial_position_set.date} for the following assets: '
+                             f'{price_results["assetIdsMissingPrices"]}. ')
             raise MqValueError(f'There was an error pricing your positions: {price_results["errorMessage"]}')
-        if len(price_results.get('assetIdsMissingPrices', [])) > 0:
-            logging.info(f'Error in resolving the following Marquee assets: {price_results["assetIdsMissingPrices"]}. '
-                         f'Sifting them out and optimizing the rest...')
         if self.initial_position_set.reference_notional is None:
             parameters['targetNotional'] = price_results.get('actualNotional')
         else:
