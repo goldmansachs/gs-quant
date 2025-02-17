@@ -18,6 +18,7 @@ from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
+from enum import Enum
 from queue import Queue as FifoQueue
 from typing import Iterable, TypeVar, Optional, Union
 
@@ -31,7 +32,7 @@ from gs_quant.backtests.data_handler import DataHandler
 from gs_quant.backtests.data_sources import DataSource, GenericDataSource, MissingDataStrategy
 from gs_quant.backtests.event import FillEvent
 from gs_quant.backtests.order import OrderBase, OrderCost
-from gs_quant.base import static_field
+from gs_quant.base import field_metadata, static_field
 from gs_quant.common import RiskMeasure
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.instrument import Cash, IRSwap
@@ -47,6 +48,12 @@ class BaseBacktest(ABC):
 
 
 TBaseBacktest = TypeVar('TBaseBacktest', bound='BaseBacktest')
+
+
+class TransactionAggType(Enum):
+    SUM = 'sum'
+    MAX = 'max'
+    MIN = 'min'
 
 
 @dataclass_json()
@@ -199,9 +206,8 @@ class BackTest(BaseBacktest):
         cash = pd.concat([pd.Series(cash_dict, name='Cumulative Cash')
                           for name, cash_dict in cash_summary.items()], axis=1, sort=True)
         transaction_costs = pd.Series(self.transaction_costs, name='Transaction Costs')
+        transaction_costs = transaction_costs.sort_index().cumsum()
         df = pd.concat([summary, cash, transaction_costs], axis=1, sort=True).ffill().fillna(0)
-        # cum sum the transaction_costs
-        df['Transaction Costs'] = df['Transaction Costs'].cumsum()
         df['Total'] = df[self.price_measure] + df['Cumulative Cash'] + df['Transaction Costs']
         return df[:self.states[-1]]
 
@@ -407,6 +413,23 @@ class ScaledTransactionModel:
             backtest.calc_calls += 1
             backtest.calculations += 1
         return risk.result() * self.scaling_level
+
+
+@dataclass_json()
+@dataclass
+class AggregateTransactionModel:
+    transaction_models: tuple = tuple()
+    aggregate_type: TransactionAggType = field(default=TransactionAggType.SUM, metadata=field_metadata)
+
+    def get_cost(self, state, backtest, info, instrument) -> float:
+        if self.aggregate_type == TransactionAggType.SUM:
+            return sum(model.get_cost(state, backtest, info, instrument) for model in self.transaction_models)
+        elif self.aggregate_type == TransactionAggType.MAX:
+            return max(model.get_cost(state, backtest, info, instrument) for model in self.transaction_models)
+        elif self.aggregate_type == TransactionAggType.MIN:
+            return min(model.get_cost(state, backtest, info, instrument) for model in self.transaction_models)
+        else:
+            raise RuntimeError(f'unrecognised aggregation type:{str(self.aggregation_type)}')
 
 
 @dataclass_json

@@ -76,7 +76,7 @@ setuptools.setup(
         "scipy>=1.2.0",
         "statsmodels>=0.13.0",
         "tqdm",
-        "websockets"
+        "websockets<14.0"
     ],
     extras_require={
         "internal": ["gs_quant_internal>=1.4.9"],

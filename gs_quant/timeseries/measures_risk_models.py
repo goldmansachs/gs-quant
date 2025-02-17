@@ -108,7 +108,7 @@ class ModelMeasureString(Enum):
     DIVIDEND_YIELD = 'Dividend Yield'
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.HISTORICAL_BETA])
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
 def risk_model_measure(asset: Asset, risk_model_id: str,
                        risk_model_measure_selected: ModelMeasureString = ModelMeasureString.HISTORICAL_BETA,
                        start_date: dt.date = dt.date.today(),

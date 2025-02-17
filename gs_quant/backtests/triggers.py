@@ -370,6 +370,47 @@ class TradeCountTriggerRequirements(TriggerRequirements):
 
 @dataclass_json
 @dataclass
+class EventTriggerRequirements(TriggerRequirements):
+    event_name: str = field(default=None, metadata=field_metadata)
+    offset_days: int = 0
+    data_source: DataSource = field(default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(),
+                                                                                    allow_missing=True)))
+    class_type: str = static_field('event_requirements')
+    trigger_dates = []
+
+    def __post_init__(self):
+        if self.data_source is None:
+            self.data_source = GsDataSource(data_set='MACRO_EVENTS_CALENDAR', asset_id=None, value_header='eventName')
+
+    def get_trigger_times(self) -> [dt.date]:
+        if not self.trigger_dates:
+            kwargs = {'eventName': self.event_name}
+            self.trigger_dates = [d.date() + dt.timedelta(days=self.offset_days) for d in
+                                  self.data_source.get_data(None, **kwargs).index]
+        return self.trigger_dates
+
+    def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
+        dates = sorted(self.trigger_dates)
+        if state in dates:
+            next_state = None
+            if dates.index(state) < len(dates) - 1:
+                next_state = dates[dates.index(state) + 1]
+            return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=None, next_schedule=next_state),
+                                      AddScaledTradeAction: AddScaledTradeActionInfo(next_schedule=next_state),
+                                      HedgeAction: HedgeActionInfo(next_schedule=next_state)})
+        return TriggerInfo(False)
+
+    @staticmethod
+    def list_events(currency: str,
+                    start=Optional[dt.datetime],
+                    end=Optional[dt.datetime], **kwargs):
+        kwargs['currency'] = currency
+        dataset = Dataset('MACRO_EVENTS_CALENDAR')
+        return dataset.get_data(start, end, **kwargs)['eventName'].unique()
+
+
+@dataclass_json
+@dataclass
 class Trigger:
     trigger_requirements: Optional[TriggerRequirements] = field(default=None, metadata=field_metadata)
     actions: Union[Action, Iterable[Action]] = field(default=None,
@@ -484,6 +525,13 @@ class MeanReversionTrigger(Trigger):
 class TradeCountTrigger(Trigger):
     trigger_requirements: TradeCountTriggerRequirements = field(default=None, metadata=field_metadata)
     class_type: str = static_field('trade_count_trigger')
+
+
+@dataclass_json
+@dataclass
+class EventTrigger(Trigger):
+    trigger_requirements: EventTriggerRequirements = field(default=None, metadata=field_metadata)
+    class_type: str = static_field('event_trigger')
 
 
 @dataclass_json

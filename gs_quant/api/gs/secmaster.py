@@ -19,7 +19,7 @@ import math
 from enum import Enum
 from functools import partial
 from itertools import groupby
-from typing import Union, Iterable, Dict
+from typing import Union, Iterable, Dict, Optional
 
 import tqdm
 
@@ -111,7 +111,7 @@ class GsSecurityMasterApi:
                             is_primary=None,
                             offset_key: str = None,
                             **query_params: Dict[SecMasterIdentifiers, Union[str, Iterable[str]]]) \
-            -> Union[Iterable[dict], None]:
+            -> Optional[dict]:
         """
         Get reference data for a single page of a given asset type. Use returned offsetKey to fetch next page.
 
@@ -148,8 +148,7 @@ class GsSecurityMasterApi:
     def get_all_securities(cls, type_: SecMasterAssetType,
                            effective_date: dt.date = None,
                            is_primary=None,
-                           flatten=False, **query_params) -> \
-            Union[Iterable[dict], None]:
+                           flatten=False, **query_params) -> Optional[dict]:
         """
         Get all securities reference data matching the type, with respect of effective_date property.
         Function runs in batches fetching all securities.
@@ -190,7 +189,7 @@ class GsSecurityMasterApi:
     @classmethod
     def get_security_data(cls, id_value: str,
                           id_type: SecMasterIdentifiers,
-                          effective_date: dt.date = None) -> Union[dict, None]:
+                          effective_date: dt.date = None) -> Optional[dict]:
         """
         Get flatten asset reference data
 

@@ -49,11 +49,11 @@ class DataSource:
     def sub_classes():
         return tuple(DataSource.__sub_classes)
 
-    def get_data(self, state):
+    def get_data(self, state, **kwargs):
         raise RuntimeError("Implemented by subclass")
 
     def get_data_range(self, start: Union[dt.date, dt.datetime],
-                       end: Union[dt.date, dt.datetime, int]):
+                       end: Union[dt.date, dt.datetime, int], **kwargs):
         raise RuntimeError("Implemented by subclass")
 
 
@@ -70,22 +70,26 @@ class GsDataSource(DataSource):
     def __post_init__(self):
         self.loaded_data = None
 
-    def get_data(self, state: Union[dt.date, dt.datetime] = None):
+    def get_data(self, state: Union[dt.date, dt.datetime] = None, **kwargs):
         if self.loaded_data is None:
             ds = Dataset(self.data_set)
             if self.min_date:
                 self.loaded_data = ds.get_data(self.min_date, self.max_date, assetId=(self.asset_id,))
-            else:
+            elif state is not None:
                 return ds.get_data(state, state, assetId=(self.asset_id,))[self.value_header]
+            else:
+                return ds.get_data(dt.datetime(2000, 1, 1), **kwargs)[self.value_header]
         return self.loaded_data[self.value_header].at[pd.to_datetime(state)]
 
-    def get_data_range(self, start: Union[dt.date, dt.datetime], end: Union[dt.date, dt.datetime, int]):
+    def get_data_range(self, start: Union[dt.date, dt.datetime], end: Union[dt.date, dt.datetime, int], **kwargs):
         if self.loaded_data is None:
             ds = Dataset(self.data_set)
+            if self.asset_id is not None:
+                kwargs['assetId'] = (self.asset_id,)
             if self.min_date:
-                self.loaded_data = ds.get_data(self.min_date, self.max_date, assetId=(self.asset_id,))
+                self.loaded_data = ds.get_data(self.min_date, self.max_date, **kwargs)
             else:
-                self.loaded_data = ds.get_data(start, self.max_date, assetId=(self.asset_id,))
+                self.loaded_data = ds.get_data(start, self.max_date, **kwargs)
         if isinstance(end, int):
             return self.loaded_data.loc[self.loaded_data.index < start].tail(end)
         return self.loaded_data.loc[(start < self.loaded_data.index) & (self.loaded_data.index <= end)]
@@ -121,6 +125,10 @@ class GenericDataSource(DataSource):
         :param state: a date, datetime or a list of dates or datetimes
         :return: float value
         """
+
+        if state is None:
+            return self.data_set
+
         if isinstance(state, Iterable):
             return [self.get_data(i) for i in state]
 

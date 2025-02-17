@@ -268,6 +268,10 @@ class PortfolioManager(PositionedEntity):
         >>>
         >>> pm = PortfolioManager("PORTFOLIO ID")
         >>> pm.set_entitlements(entitlements)
+
+        **See Also**
+        :func: PortfolioManager.share
+        :func: PortfolioManager.get_entitlements
         """
         entitlements_as_target = entitlements.to_target()
         portfolio_as_target = GsPortfolioApi.get_portfolio(self.__portfolio_id)

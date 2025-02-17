@@ -355,6 +355,8 @@ class GsSession(ContextBase):
             logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
             if scope:
                 scope.span.set_tag(HTTP_STATUS_CODE, response.status_code)
+                if response.status_code > 399:
+                    scope.span.set_tag('error', True)
                 scope.span.set_tag('dash.request.id', request_id)
                 scope.span.set_tag('response.content.type', response.headers.get('Content-Type'))
         if response.status_code == 401:

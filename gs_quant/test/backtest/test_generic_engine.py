@@ -17,7 +17,8 @@ from datetime import date
 from unittest.mock import patch
 
 from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction
-from gs_quant.backtests.backtest_objects import ScaledTransactionModel
+from gs_quant.backtests.backtest_objects import (ScaledTransactionModel, AggregateTransactionModel, TransactionAggType,
+                                                 ConstantTransactionModel)
 from gs_quant.backtests.data_sources import GenericDataSource
 from gs_quant.backtests.generic_engine import GenericEngine
 from gs_quant.backtests.strategy import Strategy
@@ -369,6 +370,38 @@ def test_scaled_transaction_cost(mocker):
         assert len(ledger) == 5
         assert round(summary[Price].sum()) == 90
         assert round(summary['Transaction Costs'][-1]) == 50000 * 0.0001 * 5 * -1
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_agg_transaction_cost(mocker):
+    with MockCalc(mocker):
+        start_date = date(2024, 5, 6)
+        end_date = date(2024, 5, 10)
+
+        # aggregation based transaction cost.  charge 1/10000th of the notional + 1 for evey transaction
+        models = tuple([ScaledTransactionModel('notional_amount', 0.0001), ConstantTransactionModel(1)])
+        transaction_cost = AggregateTransactionModel(models, TransactionAggType.SUM)
+
+        swap = IRSwap(notional_currency=Currency.GBP, notional_amount='50k', termination_date='1y', name='GBP1y')
+        trade_action = AddTradeAction(priceables=swap, trade_duration='1m', name='Action1',
+                                      transaction_cost=transaction_cost)
+        trade_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date,
+                                                                                         end_date=end_date,
+                                                                                         frequency='1b'),
+                                        actions=trade_action)
+
+        strategy = Strategy(None, trade_trigger)
+
+        GE = GenericEngine()
+        backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+        summary = backtest.result_summary
+        ledger = backtest.trade_ledger()
+
+        assert len(summary) == 5
+        assert len(ledger) == 5
+        assert round(summary[Price].sum()) == 90
+        assert round(summary['Transaction Costs'][-1]) == (50000 * 0.0001 * 5 * -1) - 5
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
