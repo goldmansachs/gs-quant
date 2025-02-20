@@ -25,8 +25,7 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes impo
 from gs_quant.backtests.core import Backtest, TradeInMethod
 from gs_quant.errors import MqValueError
 from gs_quant.target.backtests import *
-from gs_quant.instrument import EqOption, EqVarianceSwap, Instrument
-from gs_quant.target.instrument import FXOption, FXBinary
+from gs_quant.instrument import EqOption, EqVarianceSwap, FXOption, FXBinary, Instrument, IRSwaption
 
 _logger = logging.getLogger(__name__)
 
@@ -39,7 +38,8 @@ class StrategySystematic:
     """Equity back testing systematic strategy"""
     _supported_eq_instruments = (EqOption, EqVarianceSwap)
     _supported_fx_instruments = (FXOption, FXBinary)
-    _supported_instruments = _supported_eq_instruments + _supported_fx_instruments
+    _supported_ir_instruments = (IRSwaption,)
+    _supported_instruments = _supported_eq_instruments + _supported_fx_instruments + _supported_ir_instruments
 
     def __init__(self,
                  underliers: Union[Instrument, Iterable[Instrument]],
@@ -102,7 +102,8 @@ class StrategySystematic:
 
                 if not isinstance(instrument, self._supported_instruments):
                     raise MqValueError('The format of the backtest asset is incorrect.')
-                elif isinstance(instrument, self._supported_fx_instruments):
+                elif (isinstance(instrument, self._supported_fx_instruments) or
+                      isinstance(instrument, self._supported_ir_instruments)):
                     instrument = instrument.clone()
                     instrument.notional_amount *= notional_percentage / 100
 
@@ -135,9 +136,10 @@ class StrategySystematic:
         self.__backtest_parameters = backtest_parameters_class.from_dict(backtest_parameter_args)
         all_eq = all(isinstance(i, self._supported_eq_instruments) for i in trade_instruments)
         all_fx = all(isinstance(i, self._supported_fx_instruments) for i in trade_instruments)
-        if not (all_eq or all_fx):
+        all_ir = all(isinstance(i, self._supported_ir_instruments) for i in trade_instruments)
+        if not (all_eq or all_fx or all_ir):
             raise MqValueError('Cannot run backtests for different asset classes.')
-        self.__use_xasset_backtesting_service = all_fx
+        self.__use_xasset_backtesting_service = all_fx or all_ir
 
     @staticmethod
     def check_underlier_fields(

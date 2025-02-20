@@ -407,7 +407,8 @@ class ScaledTransactionModel:
                 return getattr(instrument, self.scaling_type) * self.scaling_level
             except AttributeError:
                 raise RuntimeError(f'{self.scaling_type} not recognised for instrument {instrument.type}')
-
+        if state > dt.date.today():
+            return np.nan
         with PricingContext(state):
             risk = instrument.calc(self.scaling_type)
             backtest.calc_calls += 1

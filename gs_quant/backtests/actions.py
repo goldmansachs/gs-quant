@@ -246,6 +246,8 @@ class ExitPositionAction(Action):
 class ExitTradeAction(Action):
     priceable_names: Union[str, Iterable[str]] = None
     name: str = None
+    transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
+                                               metadata=config(decoder=dc_decode(ConstantTransactionModel)))
     class_type: str = static_field('exit_trade_action')
 
     def __post_init__(self):
