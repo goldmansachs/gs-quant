@@ -17,7 +17,6 @@ from enum import Enum
 from typing import Dict, Optional
 
 import pandas as pd
-import datetime as dt
 from pydash import decapitalize
 
 from gs_quant.api.gs.data import QueryType
@@ -110,9 +109,7 @@ class ModelMeasureString(Enum):
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
 def risk_model_measure(asset: Asset, risk_model_id: str,
-                       risk_model_measure_selected: ModelMeasureString = ModelMeasureString.HISTORICAL_BETA,
-                       start_date: dt.date = dt.date.today(),
-                       end_date: dt.date = dt.date.today() - dt.timedelta(7), *,
+                       risk_model_measure_selected: ModelMeasureString = ModelMeasureString.HISTORICAL_BETA, *,
                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Retrieve risk model measures for a given asset.
@@ -120,8 +117,6 @@ def risk_model_measure(asset: Asset, risk_model_id: str,
     :param asset: Asset object loaded from security master
     :param risk_model_id: ID of the risk model
     :param risk_model_measure_selected: Selected risk model measure
-    :param start_date: Start date for the data retrieval
-    :param end_date: End date for the data retrieval
     :param source: Name of function caller
     :param real_time: Whether to retrieve intraday data instead of EOD
     :param request_id: Service request ID, if any
@@ -134,8 +129,8 @@ def risk_model_measure(asset: Asset, risk_model_id: str,
     query_results = model.get_data(
         measures=[risk_model_measure_selected,
                   RiskModelDataMeasure.Asset_Universe],
-        start_date=start_date,
-        end_date=end_date,
+        start_date=DataContext.current.start_time,
+        end_date=DataContext.current.end_time,
         assets=RiskModelDataAssetsRequest(identifier=RiskModelUniverseIdentifierRequest.gsid, universe=[gsid]),
         limit_factors=False
     ).get('results', [])

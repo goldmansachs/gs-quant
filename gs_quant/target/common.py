@@ -112,6 +112,7 @@ class AssetType(EnumBase, Enum):
     Benchmark = 'Benchmark'
     Benchmark_Rate = 'Benchmark Rate'
     Binary = 'Binary'
+    BinaryDoubleKnockout = 'BinaryDoubleKnockout'
     Bond = 'Bond'
     Bond_Forward = 'Bond Forward'
     BondFuture = 'BondFuture'

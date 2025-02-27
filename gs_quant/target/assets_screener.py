@@ -34,6 +34,27 @@ class AssetScreenerRequestStringOptions(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class AssetScreenerBbgRequestFilter(Base):
+    country_of_risk: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    payment_rank: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    industry_sector: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    industry_group: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    industry_sub_group: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class AssetScreenerPbRequestFilter(Base):
+    indicative_short_financing_label: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    indicative_long_financing_label: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class AssetScreenerCarbonRequestFilter(Base):
     science_based_target: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
     net_zero_emissions_target: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
@@ -64,6 +85,7 @@ class AssetScreenerCreditRequestFilters(Base):
     gs_charge_bps: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     gs_charge_dollars: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     duration: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    bbg_data: Optional[AssetScreenerBbgRequestFilter] = field(default=None, metadata=field_metadata)
     carbon_data: Optional[AssetScreenerCarbonRequestFilter] = field(default=None, metadata=field_metadata)
     esg_data: Optional[AssetScreenerESGRequestFilter] = field(default=None, metadata=field_metadata)
     issue_date: Optional[AssetScreenerRequestFilterDateLimits] = field(default=None, metadata=field_metadata)
@@ -73,6 +95,7 @@ class AssetScreenerCreditRequestFilters(Base):
     g_spread: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     mid_price: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     maturity: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
+    pbData: Optional[AssetScreenerPbRequestFilter] = field(default=None, metadata=field_metadata)
     amount_outstanding: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
     rating_standard_and_poors: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
     seniority: Optional[AssetScreenerRequestStringOptions] = field(default=None, metadata=field_metadata)
@@ -143,6 +166,13 @@ class AssetScreenerCreditResponseItem(Base):
     es_momentum_percentile: Optional[float] = field(default=None, metadata=field_metadata)
     direction: Optional[str] = field(default=None, metadata=field_metadata)
     face_value: Optional[float] = field(default=None, metadata=field_metadata)
+    country_of_risk: Optional[str] = field(default=None, metadata=field_metadata)
+    payment_rank: Optional[str] = field(default=None, metadata=field_metadata)
+    industry_sector: Optional[str] = field(default=None, metadata=field_metadata)
+    industry_group: Optional[str] = field(default=None, metadata=field_metadata)
+    industry_sub_group: Optional[str] = field(default=None, metadata=field_metadata)
+    indicative_short_financing_label: Optional[str] = field(default=None, metadata=field_metadata)
+    indicative_long_financing_label: Optional[str] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args

@@ -635,6 +635,33 @@ class FXBinary(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class FXBinaryDoubleKnockout(Instrument):
+    pair: Optional[str] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    option_type: Optional[OptionType] = field(default=None, metadata=field_metadata)
+    notional_amount: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    notional_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    strike_price: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    settlement_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    settlement_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    settlement_rate_option: Optional[str] = field(default=None, metadata=field_metadata)
+    expiration_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    expiration_time: Optional[str] = field(default=None, metadata=field_metadata)
+    premium: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    premium_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    premium_payment_date: Optional[str] = field(default=None, metadata=field_metadata)
+    knock_in_or_out: Optional[InOut] = field(default=None, metadata=field_metadata)
+    lower_barrier_level: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    upper_barrier_level: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    knockout_convention: Optional[KnockoutConvention] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.FX, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.BinaryDoubleKnockout, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class FXCorrelationSwap(Instrument):
     legs: Tuple[FXCorrelationSwapLeg, ...] = field(default=None, metadata=field_metadata)
     buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
