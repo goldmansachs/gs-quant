@@ -263,7 +263,10 @@ class GsRiskApi(RiskApi):
                         Tracer.inject(Format.HTTP_HEADERS, tracing_headers)
                     async with risk_session._connect_websocket(ws_url, tracing_headers, include_version=False) as ws:
                         if scope and scope.span:
-                            scope.span.set_tag('wss.host', ws.request_headers.get('host'))
+                            if hasattr(ws, 'request_headers'):  # For websockets < 14
+                                scope.span.set_tag('wss.host', ws.request_headers.get('host'))
+                            else:
+                                scope.span.set_tag('wss.host', ws.request.headers.get('host'))
                         error = await handle_websocket()
 
                 attempts = max_attempts

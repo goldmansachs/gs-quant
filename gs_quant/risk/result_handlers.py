@@ -405,11 +405,10 @@ def mmapi_pca_hedge_table_handler(result: dict, risk_key: RiskKey, _instrument: 
         raw_point = r['coordinate'].get('point', '')
         point = ';'.join(raw_point) if isinstance(raw_point, list) else raw_point
         r['coordinate'].update({'point': point})
-        r['coordinate'].update({'size': r['size']})
-        r['coordinate'].update({'fixedRate': r['fixedRate']})
-        r['coordinate'].update({'irDelta': r['irDelta']})
+        r['coordinate'].update({'size': r.get('size')})
+        r['coordinate'].update({'fixedRate': r.get('fixedRate')})
+        r['coordinate'].update({'irDelta': r.get('irDelta')})
         coordinates.append(r['coordinate'])
-
     mappings = (('mkt_type', 'type'),
                 ('mkt_asset', 'asset'),
                 ('mkt_class', 'assetClass'),

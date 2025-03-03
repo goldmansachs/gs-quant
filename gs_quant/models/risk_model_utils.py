@@ -67,6 +67,9 @@ def _map_measure_to_field_name(measure: Measure):
         Measure.Price: 'price',
         Measure.Unadjusted_Specific_Risk: 'unadjustedSpecificRisk',
         Measure.Model_Price: 'modelPrice',
+        Measure.Factor_Mean: 'factorMean',
+        Measure.Factor_Cross_Sectional_Mean: 'factorCrossSectionalMean',
+        Measure.Factor_Cross_Sectional_Standard_Deviation: 'factorCrossSectionalStandardDeviation',
     }
 
     return measure_to_field.get(measure, '')

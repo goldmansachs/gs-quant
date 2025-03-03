@@ -59,6 +59,9 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Factor_Standard_Deviation = 'Factor Standard Deviation'
     Factor_Z_Score = 'Factor Z Score'
     Factor_Volatility = 'Factor Volatility'
+    Factor_Mean = 'Factor Mean'
+    Factor_Cross_Sectional_Mean = 'Factor Cross Sectional Mean'
+    Factor_Cross_Sectional_Standard_Deviation = 'Factor Cross Sectional Standard Deviation'
     Covariance_Matrix = 'Covariance Matrix'
     Issuer_Specific_Covariance = 'Issuer Specific Covariance'
     Factor_Portfolios = 'Factor Portfolios'
@@ -183,6 +186,9 @@ class RiskModelFactorData(Base):
     factor_return: float = field(default=None, metadata=field_metadata)
     factor_standard_deviation: Optional[float] = field(default=None, metadata=field_metadata)
     factor_z_score: Optional[float] = field(default=None, metadata=field_metadata)
+    factor_mean: Optional[float] = field(default=None, metadata=field_metadata)
+    factor_cross_sectional_mean: Optional[float] = field(default=None, metadata=field_metadata)
+    factor_cross_sectional_standard_deviation: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

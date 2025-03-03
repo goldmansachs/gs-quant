@@ -482,14 +482,23 @@ class GsSession(ContextBase):
     def _connect_websocket(self, path: str, headers: Optional[dict] = None, include_version=True,
                            domain: Optional[str] = None, **kwargs: Any):
         import websockets
+        _WEBSOCKETS_VERSION = tuple(int(x) for x in websockets.__version__.split("."))
+
         version_path = '/' + self.api_version if include_version else ''
         url = f'{domain}{version_path}{path}' if domain else f'ws{self.domain[4:]}{version_path}{path}'
         extra_headers = self._headers() + list((headers or {}).items())
+        # websockets 14 supports python >= 3.9 only. When we drop support for python 3.8 we can clean this up
+        if _WEBSOCKETS_VERSION >= (14, 0):
+            ws_library_headers = {"additional_headers": extra_headers}
+        else:
+            ws_library_headers = {
+                "extra_headers": extra_headers,
+                "read_limit": 2 ** 32
+            }
         return websockets.connect(url,
-                                  extra_headers=extra_headers,
                                   max_size=2 ** 32,
-                                  read_limit=2 ** 32,
                                   ssl=CustomHttpAdapter.ssl_context() if url.startswith('wss') else None,
+                                  **ws_library_headers,
                                   **kwargs)
 
     def _headers(self):

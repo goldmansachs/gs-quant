@@ -16,11 +16,12 @@ under the License.
 import logging
 from enum import Enum
 from functools import wraps
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 from dateutil.relativedelta import relativedelta
 
 from gs_quant.api.gs.hedges import GsHedgeApi
+from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.position_set import PositionSet, Position
@@ -28,8 +29,41 @@ from gs_quant.markets.securities import Asset
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import GsSession
 from gs_quant.target.hedge import CorporateActionsTypes
+import pandas as pd
+import numpy as np
+import math
+import datetime as dt
 
 _logger = logging.getLogger(__name__)
+
+
+def resolve_assets_in_batches(identifiers: List[str],
+                              fields: List[str] = None,
+                              as_of_date: dt.date = dt.date.today(),
+                              batch_size: int = 100,
+                              **kwargs) -> List[Dict]:
+    all_fields = ["id", "name", "bbid"]
+    if fields:
+        all_fields += fields
+    identifiers_batches = np.array_split(identifiers, math.ceil(len(identifiers) / batch_size)) \
+        if len(identifiers) > batch_size else [identifiers]
+
+    all_assets_resolved = {}
+    for batch in identifiers_batches:
+        res = GsAssetApi.resolve_assets(identifier=list(batch),
+                                        as_of=dt.datetime.combine(as_of_date, dt.datetime.min.time()),
+                                        fields=all_fields,
+                                        limit=1,
+                                        **kwargs
+                                        )
+        all_assets_resolved = {**all_assets_resolved, **res}
+
+    assets_resolved_as_records = []
+    for identifier in all_assets_resolved:
+        if all_assets_resolved[identifier]:
+            assets_resolved_as_records.append({"identifier": identifier, **all_assets_resolved[identifier][0]})
+
+    return assets_resolved_as_records
 
 
 class OptimizationConstraintUnit(Enum):
@@ -61,10 +95,56 @@ class TurnoverNotionalType(Enum):
     GROSS = 'Gross'
 
 
+class AssetUniverse:
+    def __init__(self,
+                 identifiers: List[str],
+                 asset_ids: List[str] = None,
+                 as_of_date: dt.date = dt.date.today()):
+        self.__identifiers = identifiers
+        self.__as_of_date = as_of_date
+        self.__asset_ids = asset_ids
+
+    @property
+    def identifiers(self):
+        return self.__identifiers
+
+    @identifiers.setter
+    def identifiers(self, identifiers: List[str]):
+        self.__identifiers = identifiers
+
+    @property
+    def asset_ids(self):
+        return self.__asset_ids
+
+    @asset_ids.setter
+    def asset_ids(self, asset_ids: List[str]):
+        self.__asset_ids = asset_ids
+
+    @property
+    def as_of_date(self):
+        return self.__as_of_date
+
+    @as_of_date.setter
+    def as_of_date(self, date: dt.date):
+        self.__as_of_date = date
+
+    def resolve(self):
+        if not self.__asset_ids:
+            assets_resolved_as_records = resolve_assets_in_batches(identifiers=self.identifiers,
+                                                                   as_of_date=self.as_of_date,
+                                                                   batch_size=250
+                                                                   )
+
+            assets_resolved_df = (pd.DataFrame(assets_resolved_as_records).set_index("identifier")
+                                  .reindex(self.identifiers))
+
+            self.asset_ids = assets_resolved_df['id'].values.tolist()
+
+
 class AssetConstraint:
 
     def __init__(self,
-                 asset: Asset,
+                 asset: Union[Asset, str],
                  minimum: float = 0,
                  maximum: float = 100,
                  unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
@@ -74,11 +154,11 @@ class AssetConstraint:
         self.__unit = unit
 
     @property
-    def asset(self) -> Asset:
+    def asset(self) -> Union[Asset, str]:
         return self.__asset
 
     @asset.setter
-    def asset(self, value: Asset):
+    def asset(self, value: Union[Asset, str]):
         self.__asset = value
 
     @property
@@ -107,10 +187,105 @@ class AssetConstraint:
 
     def to_dict(self):
         return {
-            'assetId': self.asset.get_marquee_id(),
+            'assetId': self.asset if isinstance(self.asset, str) else self.asset.get_marquee_id(),
             'min': self.minimum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.minimum,
             'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
         }
+
+    @classmethod
+    def build_many_constraints(cls,
+                               asset_constraints: Union[pd.DataFrame, List[Dict]],
+                               as_of_date: dt.date = dt.date.today(),
+                               fail_on_unresolved_positions: bool = True,
+                               **kwargs):
+
+        """Create many asset constraints from a dataframe or a list of dictionaries
+        :param asset_constraints: dataframe or list of dictionaries containing the asset constraints
+        :param as_of_date: the date on which to resolve the assets
+        :param fail_on_unresolved_positions: whether to raise an error if any assets cannot be resolved
+        :param kwargs: additional arguments to pass to the resolve_assets_in_batches function.
+
+        :return: list of AssetConstraint objects
+
+        :raises MqValueError: if the input is missing required columns "identifier", "minimum", "maximum", or "unit"
+        :raises MqValueError: if any assets cannot be resolved and fail_on_unresolved_positions is True
+        :raises MqValueError: if the input asset constraints are in more than one unit
+
+        **Examples**
+
+        1. The input is a list of dictionaries
+        >>> asset_constraints = AssetConstraint.build_many_constraints(
+        >>>     [{"identifier": "AAPL UW", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>      {"identifier": "MSFT UW", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>      {"identifier": "NVDA UW", "minimum": 0, "maximum": 5, "unit": "Percent"}
+        >>>      ],
+        >>>     as_of_date=dt.date(2025, 2, 24))
+
+        2. The input is a dataframe
+
+        >>> asset_constraints = AssetConstraint.build_many_constraints(
+        >>>     pd.DataFrame([{"identifier": "AAPL UW", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"identifier": "MSFT UW", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"identifier": "NVDA UW", "minimum": 0, "maximum": 5, "unit": "Percent"}]),
+        >>>     as_of_date=dt.date(2025, 2, 24)
+        >>>     )
+
+        Additional arguments can also be provided to the function and these will be used to resolve assets.
+        Below we are adding a `type` and `assetClass` argument to tell the internal GS Security master to only return
+        Single Stocks, Equity Indices, and ETFs.
+
+         >>> asset_constraints = AssetConstraint.build_many_constraints(
+        >>>     pd.DataFrame([{"identifier": "AAPL UW", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"identifier": "MSFT UW", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"identifier": "NVDA UW", "minimum": 0, "maximum": 5, "unit": "Percent"}]),
+        >>>     as_of_date=dt.date(2025, 2, 24),
+        >>>     fail_on_unresolved_positions=True,
+        >>>     type=["Single Stock", "Index", "ETF"],
+        >>>     assetClass=["Equity"]
+        >>>     )
+
+        """
+
+        asset_constraints_df = pd.DataFrame(asset_constraints) if isinstance(asset_constraints, list) \
+            else asset_constraints
+        missing_columns = [col for col in ['identifier', 'minimum', "maximum", "unit"]
+                           if col not in asset_constraints_df.columns]
+        if missing_columns:
+            raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
+
+        if len(set(asset_constraints_df['unit'].values.tolist())) > 1:
+            raise MqValueError('All asset constraints must be in the same unit')
+
+        if 'assetId' not in asset_constraints_df:
+            identifiers = asset_constraints_df['identifier'].values.tolist()
+
+            assets_resolved_as_records = resolve_assets_in_batches(identifiers=identifiers,
+                                                                   as_of_date=as_of_date,
+                                                                   batch_size=250,
+                                                                   **kwargs
+                                                                   )
+
+            asset_constraints_df = pd.merge(asset_constraints_df, pd.DataFrame(assets_resolved_as_records),
+                                            on='identifier',
+                                            how='left')
+
+            if fail_on_unresolved_positions and asset_constraints_df['id'].isnull().any():
+                missing_ids = asset_constraints_df[asset_constraints_df['id'].isnull()]['identifier'].values.tolist()
+                raise MqValueError(
+                    f"The following identifiers could not be resolved on {as_of_date.strftime('%Y-%m-%d')}: "
+                    f"{', '.join(missing_ids)}")
+            else:
+                asset_constraints_df = asset_constraints_df[asset_constraints_df['id'].notnull()]
+
+            asset_constraints_df = asset_constraints_df.rename(
+                columns={'id': 'assetId'})[['assetId', 'minimum', 'maximum', 'unit']]
+
+        asset_constraints_df = asset_constraints_df.to_dict(orient='records')
+
+        return [cls(asset=row.get('assetId'),
+                    minimum=row.get('minimum'),
+                    maximum=row.get('maximum'),
+                    unit=OptimizationConstraintUnit(row.get('unit'))) for row in asset_constraints_df]
 
 
 class CountryConstraint:
@@ -177,6 +352,48 @@ class CountryConstraint:
             'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
         }
 
+    @classmethod
+    def build_many_constraints(cls,
+                               country_constraints: Union[pd.DataFrame, List[Dict]]):
+        """
+        Create many country constraints from a dataframe or a list of dictionaries
+        :param country_constraints: dataframe or list of dictionaries containing the country constraints
+
+        :return: list of CountryConstraint objects
+
+        :raises MqValueError: if the input is missing required columns "country", "minimum", "maximum", or "unit"
+        :raises MqValueError: if the input country constraints are in more than one unit
+
+        **Examples**
+
+        1. The input is a list of dictionaries
+        >>> country_constraints = CountryConstraint.build_many_constraints(
+        >>>     [{"country": "USA", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>      {"country": "Canada", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>      {"country": "Germany", "minimum": 0, "maximum": 5, "unit": "Percent"}
+        >>>      ])
+
+        2. The input is a dataframe
+        >>> country_constraints = CountryConstraint.build_many_constraints(
+        >>>     pd.DataFrame([{"country": "USA", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"country": "Canada", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"country": "Germany", "minimum": 0, "maximum": 5, "unit": "Percent"}])
+        >>>     )
+        """
+        country_constraints = pd.DataFrame(country_constraints) \
+            if isinstance(country_constraints, list) else country_constraints
+
+        missing_columns = [col for col in ['country', 'minimum', 'maximum', 'unit']
+                           if col not in country_constraints.columns]
+        if missing_columns:
+            raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
+        country_constraints_as_records = country_constraints.to_dict(orient='records')
+
+        return [cls(country_name=row.get('industry'),
+                    minimum=row.get('minimum'),
+                    maximum=row.get('maximum'),
+                    unit=OptimizationConstraintUnit(row.get('unit'))) for row in country_constraints_as_records]
+
 
 class SectorConstraint:
 
@@ -241,6 +458,48 @@ class SectorConstraint:
             'min': self.minimum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.minimum,
             'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
         }
+
+    @classmethod
+    def build_many_constraints(cls,
+                               sector_constraints: Union[pd.DataFrame, List[Dict]]):
+        """
+        Create many sector constraints from a dataframe or a list of dictionaries
+        :param sector_constraints: dataframe or list of dictionaries containing the sector constraints
+
+        :return: list of SectorConstraint objects
+
+        :raises MqValueError: if the input is missing required columns "sector", "minimum", "maximum", or "unit"
+        :raises MqValueError: if the input sector constraints are in more than one unit
+
+        **Examples**
+
+        1. The input is a list of dictionaries
+        >>> sector_constraints = SectorConstraint.build_many_constraints(
+        >>>     [{"sector": "Technology", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>      {"sector": "Healthcare", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>      {"sector": "Finance", "minimum": 0, "maximum": 5, "unit": "Percent"}
+        >>>      ])
+
+        2. The input is a dataframe
+        >>> sector_constraints = SectorConstraint.build_many_constraints(
+        >>>     pd.DataFrame([{"sector": "Technology", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"sector": "Healthcare", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"sector": "Finance", "minimum": 0, "maximum": 5, "unit": "Percent"}])
+        >>>     )
+        """
+        sector_constraints = pd.DataFrame(sector_constraints) \
+            if isinstance(sector_constraints, list) else sector_constraints
+
+        missing_columns = [col for col in ['sector', 'minimum', 'maximum', 'unit']
+                           if col not in sector_constraints.columns]
+        if missing_columns:
+            raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
+        sector_constraints_as_records = sector_constraints.to_dict(orient='records')
+
+        return [cls(sector_name=row.get('sector'),
+                    minimum=row.get('minimum'),
+                    maximum=row.get('maximum'),
+                    unit=OptimizationConstraintUnit(row.get('unit'))) for row in sector_constraints_as_records]
 
 
 class IndustryConstraint:
@@ -307,6 +566,49 @@ class IndustryConstraint:
             'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
         }
 
+    @classmethod
+    def build_many_constraints(cls,
+                               industry_constraints: Union[pd.DataFrame, List[Dict]]):
+
+        """
+        Create many industry constraints from a dataframe or a list of dictionaries
+        :param industry_constraints: dataframe or list of dictionaries containing the industry constraints
+
+        :return: list of IndustryConstraint objects
+
+        :raises MqValueError: if the input is missing required columns "industry", "minimum", "maximum", or "unit"
+        :raises MqValueError: if the input industry constraints are in more than one unit
+
+        **Examples**
+
+        1. The input is a list of dictionaries
+        >>> industry_constraints = IndustryConstraint.build_many_constraints(
+        >>>     [{"industry": "Software", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>      {"industry": "Pharmaceuticals", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>      {"industry": "Banking", "minimum": 0, "maximum": 5, "unit": "Percent"}
+        >>>      ])
+
+        2. The input is a dataframe
+        >>> industry_constraints = IndustryConstraint.build_many_constraints(
+        >>>     pd.DataFrame([{"industry": "Software", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"industry": "Pharmaceuticals", "minimum": 0, "maximum": 5, "unit": "Percent"},
+        >>>                   {"industry": "Banking", "minimum": 0, "maximum": 5, "unit": "Percent"}])
+        >>>     )
+        """
+        industry_constraints = pd.DataFrame(industry_constraints) \
+            if isinstance(industry_constraints, list) else industry_constraints
+
+        missing_columns = [col for col in ['industry', 'minimum', 'maximum', 'unit']
+                           if col not in industry_constraints.columns]
+        if missing_columns:
+            raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
+        industry_constraints_as_records = industry_constraints.to_dict(orient='records')
+
+        return [cls(industry_name=row.get('industry'),
+                    minimum=row.get('minimum'),
+                    maximum=row.get('maximum'),
+                    unit=OptimizationConstraintUnit(row.get('unit'))) for row in industry_constraints_as_records]
+
 
 class FactorConstraint:
 
@@ -344,11 +646,61 @@ class FactorConstraint:
             'exposure': self.max_exposure
         }
 
+    @classmethod
+    def build_many_constraints(cls,
+                               factor_constraints: Union[pd.DataFrame, List[Dict]],
+                               risk_model_id: str):
+        """
+        Create many factor constraints from a dataframe or a list of dictionaries
+        :param factor_constraints: dataframe or list of dictionaries containing the factor constraints
+        :param risk_model_id: the id of the risk model
+
+        :return: list of FactorConstraint objects
+        :raises MqValueError: if the input is missing required columns "factor" or "exposure"
+
+        **Examples**
+        1. The input is a list of dictionaries
+        >>> factor_constraints = FactorConstraint.build_many_constraints(
+        >>>     [{"factor": "Value", "exposure": 5000},
+        >>>      {"factor": "Growth", "exposure": 1000},
+        >>>      {"factor": "Beta", "exposure": 10000}
+        >>>      ], "BARRA_USFAST")
+
+        2. The input is a dataframe
+        >>> factor_constraints = FactorConstraint.build_many_constraints(
+        >>>     pd.DataFrame([{"factor": "Value", "exposure": 5000},
+        >>>                   {"factor": "Growth", "exposure": 1000},
+        >>>                   {"factor": "Beta", "exposure": 10000}
+        >>>                   ]), "BARRA_USFAST")
+
+        """
+        factor_constraints_df = pd.DataFrame(factor_constraints) if isinstance(factor_constraints, list) \
+            else factor_constraints
+
+        missing_columns = [col for col in ['factor', 'exposure'] if col not in factor_constraints_df.columns]
+        if missing_columns:
+            raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
+
+        risk_model = FactorRiskModel.get(risk_model_id)
+        factors = risk_model.get_many_factors(factor_names=factor_constraints_df['factor'].values.tolist())
+
+        name_to_factor_obj = [{"factor": f.name, "factorObj": f} for f in factors]
+        name_to_factor_obj_df = pd.DataFrame(name_to_factor_obj)
+
+        factor_constraints_df = factor_constraints_df.merge(name_to_factor_obj_df, on='factor', how='inner')
+
+        factor_constraints_df = (factor_constraints_df[["factorObj", "exposure"]]
+                                 .rename(columns={"factorObj": "factor"}))
+
+        all_constraints = factor_constraints_df.to_dict(orient='records')
+
+        return [cls(factor=row.get('factor'), max_exposure=row.get('exposure')) for row in all_constraints]
+
 
 class OptimizerUniverse:
 
     def __init__(self,
-                 assets: List[Asset],
+                 assets: Union[List[Asset], AssetUniverse] = None,
                  explode_composites: bool = True,
                  exclude_initial_position_set_assets: bool = True,
                  exclude_corporate_actions_types: List[CorporateActionsTypes] = [],
@@ -367,6 +719,7 @@ class OptimizerUniverse:
         :param exclude_restricted_assets: exclude restricted assets
         :param min_market_cap: exclude assets below the requested minimum market cap
         :param max_market_cap: exclude assets above the requested maximum market cap
+        specify the identifier type
         """
         self.__assets = assets
         self.__explode_composites = explode_composites
@@ -382,8 +735,8 @@ class OptimizerUniverse:
         return self.__assets
 
     @assets.setter
-    def assets(self, value: List[Asset]):
-        self.__assets = value
+    def assets(self, assets: List[Asset]):
+        self.__assets = assets
 
     @property
     def explode_composites(self) -> bool:
@@ -442,9 +795,14 @@ class OptimizerUniverse:
         self.__max_market_cap = value
 
     def to_dict(self):
+        if isinstance(self.assets, AssetUniverse):
+            self.assets.resolve()
+            asset_ids = self.assets.asset_ids
+        else:
+            asset_ids = [asset.get_marquee_id() for asset in self.assets]
         as_dict = {
             'hedgeUniverse': {
-                'assetIds': [asset.get_marquee_id() for asset in self.assets],
+                'assetIds': asset_ids,
                 'assetTypes': []
             },
             'excludeCorporateActions': len(self.exclude_corporate_actions_types) != 0,
@@ -930,6 +1288,7 @@ def _ensure_completed(func):
         if self._OptimizerStrategy__result is None:
             raise MqValueError('Please run the optimization before calling this method')
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -1123,7 +1482,12 @@ class OptimizerStrategy:
                 try:
                     optimization_results = GsHedgeApi.calculate_hedge(strategy_as_dict)
                     if optimization_results.get('result') is None:
-                        if 'errorMessage' in optimization_results or counter == 1:
+                        if 'errorMessage' in optimization_results:
+                            raise MqValueError(f"The optimizer returned an error: "
+                                               f"{optimization_results.get('errorMessage')}. "
+                                               f"Please adjust the constraints"
+                                               f"or contact the Marquee team for assistance")
+                        elif counter == 1:
                             raise MqValueError(
                                 'Error calculating an optimization. Please contact the Marquee team for assistance.')
                         counter -= 1

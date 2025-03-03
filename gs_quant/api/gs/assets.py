@@ -92,7 +92,7 @@ def _cached(fn):
     @wraps(fn)
     def wrapper(cls, *args, **kwargs):
         if os.environ.get(ENABLE_ASSET_CACHING):
-            _logger.info("Asset caching is enabled")
+            _logger.debug("Asset caching is enabled")
             asset_cache = cls.get_cache() or fallback_cache
             k = asset_cache.construct_key(GsSession.current, fn.__name__, *args, **kwargs)
             with Tracer("acquiring cache lock"):
@@ -124,7 +124,7 @@ def _cached_async(fn):
     @wraps(fn)
     async def wrapper(cls, *args, **kwargs):
         if os.environ.get(ENABLE_ASSET_CACHING):
-            _logger.info("Asset caching is enabled")
+            _logger.debug("Asset caching is enabled")
             asset_cache = cls.get_cache() or fallback_cache
             k = asset_cache.construct_key(GsSession.current, fn.__name__, *args, **kwargs)
             with Tracer("acquiring cache lock"):

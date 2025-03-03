@@ -3,6 +3,8 @@
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
+   :inherited-members:
+   :undoc-members:
 
    {% block methods %}
    {% if methods %}

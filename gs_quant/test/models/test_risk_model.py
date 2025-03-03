@@ -18,7 +18,7 @@ from unittest import mock
 
 from pandas._testing import assert_frame_equal
 
-from gs_quant.models.risk_model_utils import get_optional_data_as_dataframe
+from gs_quant.models.risk_model_utils import get_optional_data_as_dataframe, _map_measure_to_field_name
 from gs_quant.target.common import Currency
 
 from gs_quant.models.risk_model import FactorRiskModel, MacroRiskModel, ReturnFormat, Unit
@@ -343,14 +343,21 @@ def test_get_fair_value_gap_percent(mocker):
     assert response == fvg_response
 
 
-def test_get_factor_standard_deviation(mocker):
-    macro_model = mock_macro_risk_model(mocker)
+@pytest.mark.parametrize("statistical_measure, fieldKey", [
+    (Measure.Factor_Mean, _map_measure_to_field_name(Measure.Factor_Mean)),
+    (Measure.Factor_Cross_Sectional_Mean, _map_measure_to_field_name(Measure.Factor_Cross_Sectional_Mean)),
+    (Measure.Factor_Standard_Deviation, _map_measure_to_field_name(Measure.Factor_Standard_Deviation)),
+    (Measure.Factor_Cross_Sectional_Standard_Deviation,
+     _map_measure_to_field_name(Measure.Factor_Cross_Sectional_Standard_Deviation))
+])
+def test_get_statistical_factor_data(mocker, statistical_measure, fieldKey):
+    risk_model = mock_risk_model(mocker)
     universe = ["904026", "232128", "24985", "160444"]
     query = {
         'startDate': '2022-04-04',
         'endDate': '2022-04-06',
         'assets': DataAssetsRequest(UniverseIdentifier.gsid, universe),
-        'measures': [Measure.Factor_Standard_Deviation, Measure.Factor_Name, Measure.Factor_Id,
+        'measures': [statistical_measure, Measure.Factor_Name, Measure.Factor_Id,
                      Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
         'limitFactors': True
     }
@@ -363,12 +370,12 @@ def test_get_factor_standard_deviation(mocker):
                 "factorData": [
                     {
                         "factorId": "1",
-                        "factorStandardDeviation": 89.0,
+                        f"{fieldKey}": 89.0,
                         "factorName": "Factor1"
                     },
                     {
                         "factorId": "2",
-                        "factorStandardDeviation": 0.67,
+                        f"{fieldKey}": 0.67,
                         "factorName": "Factor2"
                     }
                 ],
@@ -382,22 +389,33 @@ def test_get_factor_standard_deviation(mocker):
         'totalResults': 1
     }
 
-    factor_standard_deviation_response = {
+    expected_response = {
         'Factor1': {'2022-04-05': 89.0},
         'Factor2': {'2022-04-05': 0.67}
     }
 
+    kwargs = {
+        "start_date": dt.date(2022, 4, 4),
+        "end_date": dt.date(2022, 4, 6),
+        "assets": DataAssetsRequest(UniverseIdentifier.gsid, universe),
+        "format": ReturnFormat.JSON
+    }
+
+    field_key_to_getter_ref = {
+        _map_measure_to_field_name(Measure.Factor_Mean): risk_model.get_factor_mean,
+        _map_measure_to_field_name(Measure.Factor_Cross_Sectional_Mean): risk_model.get_factor_cross_sectional_mean,
+        _map_measure_to_field_name(Measure.Factor_Standard_Deviation): risk_model.get_factor_standard_deviation,
+        _map_measure_to_field_name(
+            Measure.Factor_Cross_Sectional_Standard_Deviation): risk_model.get_factor_cross_sectional_standard_deviation
+    }
+
     mocker.patch.object(GsSession.current, '_post', return_value=results)
 
-    # run test
-    response = macro_model.get_factor_standard_deviation(start_date=dt.date(2022, 4, 4),
-                                                         end_date=dt.date(2022, 4, 6),
-                                                         assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
-                                                         format=ReturnFormat.JSON)
-
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='macro_model_id'),
+    actual_response = field_key_to_getter_ref[fieldKey](**kwargs)
+    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'),
                                                query, timeout=200)
-    assert response == factor_standard_deviation_response
+
+    assert actual_response == expected_response
 
 
 def test_get_factor_z_score(mocker):

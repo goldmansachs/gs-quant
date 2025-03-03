@@ -714,8 +714,12 @@ class Hedge:
         """
         resolved_identifiers = self.parameters.resolve_identifiers_in_payload(self.parameters.initial_portfolio.date)
         params = self.parameters.to_dict(resolved_identifiers)
-        calculation_results = GsHedgeApi.calculate_hedge({'objective': self.objective.value,
-                                                          'parameters': params}).get('result')
+        results = GsHedgeApi.calculate_hedge({'objective': self.objective.value,
+                                              'parameters': params})
+        if 'errorMessage' in results and 'result' not in results:
+            raise MqValueError(f"Error calculating hedge: {results['errorMessage']}. Please adjust your constraints "
+                               f"and try again.")
+        calculation_results = results.get('result')
         formatted_results = self._format_hedge_calculate_results(calculation_results)
         formatted_results = self._enhance_result_with_benchmark_curves(formatted_results,
                                                                        calculation_results.get('benchmarks', []),

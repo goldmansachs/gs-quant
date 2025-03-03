@@ -865,6 +865,197 @@ class MarqueeRiskModel(RiskModel):
         """
         return self._get_asset_data_measure(Measure.Specific_Risk, start_date, end_date, assets, format)
 
+    def get_factor_standard_deviation(self,
+                                      start_date: dt.date,
+                                      end_date: dt.date = None,
+                                      assets: DataAssetsRequest = None,
+                                      factors: List[str] = [],
+                                      factors_by_name: bool = True,
+                                      format: ReturnFormat =
+                                      ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get factor standard deviation data for existing risk model keyed by name or id
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to limit the factors by
+        :param factors: the factors to get standard deviation for. If empty, the data for all factors is returned
+        :param factors_by_name: whether to identify factors by their name or id. If true, the list of factors must \
+         be a list of factor names. Otherwise, it should be a list of factor ids
+        :param format: which format to return the results in
+
+        :return: factor standard deviation
+
+        **Usage**
+
+        Get the value of one standard deviation of the factors specified in `factors`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MarqueeRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MarqueeRiskModel.get("MODEL_ID")
+        >>> factor_standard_deviation = model.get_factor_standard_deviation(start_date, end_date,
+        ...                                                                 factors=['factor1', 'factor2'])
+
+        **See also**
+
+        :func:`get_specific_risk` :func:`get_factor_mean`
+        """
+
+        return self._get_factor_data_measure(Measure.Factor_Standard_Deviation,
+                                             start_date,
+                                             end_date,
+                                             assets,
+                                             factors_by_name,
+                                             factors,
+                                             format)
+
+    def get_factor_mean(self,
+                        start_date: dt.date,
+                        end_date: dt.date = None,
+                        assets: DataAssetsRequest = None,
+                        factors: List[str] = [],
+                        factors_by_name: bool = True,
+                        format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get factor mean data for existing risk model keyed by name or id
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to limit the factors by
+        :param factors: the factors to get standard deviation for. If empty, the data for all factors is returned
+        :param factors_by_name: whether to identify factors by their name or id. If true, the list of factors must \
+         be a list of factor names. Otherwise, it should be a list of factor ids
+        :param format: which format to return the results in
+
+        :return: factor mean
+
+        **Usage**
+
+        Get the value of one mean of the factors specified in `factors`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MarqueeRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MarqueeRiskModel.get("MODEL_ID")
+        >>> factor_mean = model.get_factor_mean(start_date, end_date, factors=['factor1', 'factor2'])
+
+        **See also**
+
+        :func:`get_specific_risk` :func:`get_factor_standard_deviation`
+        """
+
+        return self._get_factor_data_measure(Measure.Factor_Mean,
+                                             start_date,
+                                             end_date,
+                                             assets,
+                                             factors_by_name,
+                                             factors,
+                                             format)
+
+    def get_factor_cross_sectional_mean(self,
+                                        start_date: dt.date,
+                                        end_date: dt.date = None,
+                                        assets: DataAssetsRequest = None,
+                                        factors: List[str] = [],
+                                        factors_by_name: bool = True,
+                                        format: ReturnFormat = ReturnFormat.DATA_FRAME
+                                        ) -> (Union)[List[Dict], pd.DataFrame]:
+        """ Get factor cross-sectional mean data for existing risk model keyed by name or id
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to limit the factors by
+        :param factors: the factors to get standard deviation for. If empty, the data for all factors is returned
+        :param factors_by_name: whether to identify factors by their name or id. If true, the list of factors must \
+         be a list of factor names. Otherwise, it should be a list of factor ids
+        :param format: which format to return the results in
+
+        :return: factor cross-sectional mean
+
+        **Usage**
+
+        Get the value of one cross-sectional mean of the factors specified in `factors`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MarqueeRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MarqueeRiskModel.get("MODEL_ID")
+        >>> factor_cross_sectional_mean = model.get_factor_cross_sectional_mean(start_date, end_date,
+                                                                                factors=['factor1', 'factor2'])
+
+        **See also**
+
+        :func:`get_factor_mean` :func:`get_factor_cross_sectional_standard_deviation`
+        """
+
+        return self._get_factor_data_measure(Measure.Factor_Cross_Sectional_Mean,
+                                             start_date,
+                                             end_date,
+                                             assets,
+                                             factors_by_name,
+                                             factors,
+                                             format)
+
+    def get_factor_cross_sectional_standard_deviation(self,
+                                                      start_date: dt.date,
+                                                      end_date: dt.date = None,
+                                                      assets: DataAssetsRequest = None,
+                                                      factors: List[str] = [],
+                                                      factors_by_name: bool = True,
+                                                      format: ReturnFormat = ReturnFormat.DATA_FRAME
+                                                      ) -> Union[List[Dict], pd.DataFrame]:
+        """ Get factor cross-sectional standard deviation data for existing risk model keyed by name or id
+
+        :param start_date: start date for data request
+        :param end_date: end date for data request
+        :param assets: DataAssetsRequest object with identifier and list of assets to limit the factors by
+        :param factors: the factors to get standard deviation for. If empty, the data for all factors is returned
+        :param factors_by_name: whether to identify factors by their name or id. If true, the list of factors must \
+         be a list of factor names. Otherwise, it should be a list of factor ids
+        :param format: which format to return the results in
+
+        :return: factor cross-sectional standard deviation
+
+        **Usage**
+
+        Get the value of one cross-sectional standard deviation of the factors specified in `factors`
+
+        **Examples**
+
+        >>> from gs_quant.models.risk_model import MarqueeRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> start_date = dt.date(2022, 1, 1)
+        >>> end_date = dt.date(2022, 5, 2)
+        >>> model = MarqueeRiskModel.get("MODEL_ID")
+        >>> factor_cross_sectional_sd = model.get_factor_cross_sectional_standard_deviation(start_date, end_date,
+                                                                                            factors=['factor1',
+                                                                                                    'factor2'])
+
+        **See also**
+
+        :func:`get_factor_standard_deviation` :func:`get_factor_cross_sectional_mean`
+        """
+
+        return self._get_factor_data_measure(Measure.Factor_Cross_Sectional_Standard_Deviation,
+                                             start_date,
+                                             end_date,
+                                             assets,
+                                             factors_by_name,
+                                             factors,
+                                             format)
+
     def get_data(self,
                  measures: List[Measure],
                  start_date: dt.date,
@@ -1792,9 +1983,9 @@ class FactorRiskModel(MarqueeRiskModel):
             measures=measures,
             limit_factors=limit_factors
         ).get('results')
-        covariance_data = results if format == ReturnFormat.JSON \
-            else get_covariance_matrix_dataframe(results, covariance_matrix_key=measure_to_field_name_map[
-                                                 covariance_matrix_type])
+        covariance_data = results if format == ReturnFormat.JSON else get_covariance_matrix_dataframe(
+            results, covariance_matrix_key=measure_to_field_name_map[covariance_matrix_type]
+        )
         return covariance_data
 
     def get_covariance_matrix(self,
@@ -2600,54 +2791,6 @@ class MacroRiskModel(MarqueeRiskModel):
             end_date,
             assets,
             format)
-
-    def get_factor_standard_deviation(self,
-                                      start_date: dt.date,
-                                      end_date: dt.date = None,
-                                      assets: DataAssetsRequest = None,
-                                      factors: List[str] = [],
-                                      factors_by_name: bool = True,
-                                      format: ReturnFormat =
-                                      ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
-        """ Get factor standard deviation data for existing risk model keyed by name or id
-
-        :param start_date: start date for data request
-        :param end_date: end date for data request
-        :param assets: DataAssetsRequest object with identifier and list of assets to limit the factors by
-        :param factors: the factors to get standard deviation for. If empty, the data for all factors is returned
-        :param factors_by_name: whether to identify factors by their name or id. If true, the list of factors must \
-         be a list of factor names. Otherwise, it should be a list of factor ids
-        :param format: which format to return the results in
-
-        :return: factor standard deviation
-
-        **Usage**
-
-        Get the value of one standard deviation of the factors specified in `factors`
-
-        **Examples**
-
-        >>> from gs_quant.models.risk_model import MacroRiskModel
-        >>> import datetime as dt
-        >>>
-        >>> start_date = dt.date(2022, 1, 1)
-        >>> end_date = dt.date(2022, 5, 2)
-        >>> model = MacroRiskModel.get("MODEL_ID")
-        >>> factor_standard_deviation = model.get_factor_standard_deviation(start_date, end_date,
-        ...                                                                 factors=['factor1', 'factor2'])
-
-        **See also**
-
-        :func:`factor_standard_deviation` :func:`factor_z_score`
-        """
-
-        return self._get_factor_data_measure(Measure.Factor_Standard_Deviation,
-                                             start_date,
-                                             end_date,
-                                             assets,
-                                             factors_by_name,
-                                             factors,
-                                             format)
 
     def get_factor_z_score(self,
                            start_date: dt.date,

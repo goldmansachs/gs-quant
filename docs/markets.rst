@@ -126,3 +126,26 @@ Report
    PerformanceReport
    FactorRiskReport
    ThematicReport
+
+
+Optimizer
+------------
+
+.. currentmodule:: gs_quant.markets.optimizer
+
+.. autosummary::
+   :toctree: classes
+   :template: report.rst
+
+   AssetUniverse
+   AssetConstraint
+   FactorConstraint
+   MaxProportionOfRiskByGroupConstraint
+   CountryConstraint
+   IndustryConstraint
+   SectorConstraint
+   TurnoverConstraint
+   ConstraintPriorities
+   OptimizerSettings
+   OptimizerUniverse
+   OptimizerStrategy
