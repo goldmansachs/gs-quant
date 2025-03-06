@@ -29,6 +29,7 @@ from .measures_rates import *
 from .measures_reports import *
 from .measures_risk_models import *
 from .measures_xccy import *
+from .measures_factset import *
 from .statistics import *
 from .tca import (
     covariance
