@@ -1,0 +1,9 @@
+{
+    "request_id": "4_Scaled_None_2023-06-08_HedgeAction1_syn_fwd_call-Scaled_None_2023-06-08_HedgeAction1_syn_fwd_putPrice2023Jun09_Scaled_None_2023-06-07_HedgeAction1_syn_fwd_call-Scaled_None_2023-06-07_HedgeAction1_syn_fwd_putPrice2023Jun08_Scaled_None_2023-06-06_HedgeAction1_syn_fwd_call-Scaled_None_2023-06-06_HedgeAction1_syn_fwd_putPrice2023Jun07_Scaled_None_2023-06-05_HedgeAction1_syn_fwd_call-Scaled_None_2023-06-05_HedgeAction1_syn_fwd_putPrice2023Jun06",
+    "request_hash": "3b32c8827e837e80d886649d06558ef9",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_transaction_costs"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-49383.77659177569}],[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-29442.675462475407}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-48685.59058475203}],[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-30201.99182165767}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-45734.494192928905}],[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-34663.91900898249}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-49056.16867956639}],[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-36108.83459402832}]]]]"
+}

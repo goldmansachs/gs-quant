@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
 from enum import Enum
 from queue import Queue as FifoQueue
-from typing import Iterable, TypeVar, Optional, Union
+from typing import Iterable, TypeVar, Optional, Union, Callable, Tuple
 
 import datetime as dt
 import numpy as np
@@ -35,12 +35,13 @@ from gs_quant.backtests.order import OrderBase, OrderCost
 from gs_quant.base import field_metadata, static_field
 from gs_quant.common import RiskMeasure
 from gs_quant.datetime.relative_date import RelativeDate
-from gs_quant.instrument import Cash, IRSwap
+from gs_quant.instrument import Cash, IRSwap, Instrument
 from gs_quant.json_convertors import dc_decode
 from gs_quant.markets import PricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import ErrorValue, Cashflows
 from gs_quant.risk.transform import Transformer
+from gs_quant.risk.results import PricingFuture, PortfolioRiskResult
 
 
 class BaseBacktest(ABC):
@@ -94,6 +95,7 @@ class BackTest(BaseBacktest):
         self._hedges = defaultdict(list)  # list of Hedge by date
         self._cash_payments = defaultdict(list)  # list of cash payments (entry, unwind)
         self._transaction_costs = defaultdict(int)  # list of transaction costs by date
+        self._transaction_cost_entries = defaultdict(list)  # entries tracking transaction costs by state
         self.strategy = deepcopy(self.strategy)  # the strategy definition
         self._results = defaultdict(list)
         self._trade_exit_risk_results = defaultdict(list)
@@ -125,6 +127,14 @@ class BackTest(BaseBacktest):
     @property
     def transaction_costs(self):
         return self._transaction_costs
+
+    @transaction_costs.setter
+    def transaction_costs(self, transaction_costs):
+        self._transaction_costs = transaction_costs
+
+    @property
+    def transaction_cost_entries(self):
+        return self._transaction_cost_entries
 
     @property
     def hedges(self):
@@ -351,14 +361,149 @@ class ScalingPortfolio:
         self.results = None
 
 
+@dataclass_json()
+@dataclass(frozen=True)
+class TransactionModel:
+    def get_unit_cost(self, state, info, instrument) -> float:
+        pass
+
+
+@dataclass_json()
+@dataclass(frozen=True)
+class ConstantTransactionModel(TransactionModel):
+    cost: Union[float, int] = 0
+    class_type: str = static_field('constant_transaction_model')
+
+    def get_unit_cost(self, state, info, instrument) -> float:
+        return self.cost
+
+
+@dataclass_json
+@dataclass(frozen=True)
+class ScaledTransactionModel(TransactionModel):
+    scaling_type: Union[str, RiskMeasure] = 'notional_amount'
+    scaling_level: Union[float, int] = 0.0001
+    class_type: str = static_field('scaled_transaction_model')
+
+    def get_unit_cost(self, state, info, instrument) -> Union[float, PricingFuture]:
+        if isinstance(self.scaling_type, str):
+            try:
+                return getattr(instrument, self.scaling_type)
+            except AttributeError:
+                raise RuntimeError(f'{self.scaling_type} not recognised for instrument {instrument.type}')
+        if state > dt.date.today():
+            return np.nan
+        with PricingContext(state):
+            risk = instrument.calc(self.scaling_type)
+        return risk
+
+
+@dataclass_json()
+@dataclass(frozen=True)
+class AggregateTransactionModel(TransactionModel):
+    transaction_models: tuple = tuple()
+    aggregate_type: TransactionAggType = field(default=TransactionAggType.SUM, metadata=field_metadata)
+
+    def get_unit_cost(self, state, info, instrument) -> float:
+        if self.aggregate_type == TransactionAggType.SUM:
+            return sum(model.get_unit_cost(state, info, instrument) for model in self.transaction_models)
+        elif self.aggregate_type == TransactionAggType.MAX:
+            return max(model.get_unit_cost(state, info, instrument) for model in self.transaction_models)
+        elif self.aggregate_type == TransactionAggType.MIN:
+            return min(model.get_unit_cost(state, info, instrument) for model in self.transaction_models)
+        else:
+            raise RuntimeError(f'unrecognised aggregation type:{str(self.aggregation_type)}')
+
+
+class TransactionCostEntry:
+    """
+        Stateful wrapper around TransactionModel used in the Generic Engine.
+        Used to link costs to CashPayments, which can be scaled throughout the backtest (e.g. hedges), and
+        to resolve risk-based costs under the same PricingContext for efficiency.
+    """
+    def __init__(self, date: dt.date, instrument: Instrument, transaction_model: TransactionModel):
+        self._date = date
+        self._instrument = instrument
+        self._transaction_model = transaction_model
+        self._unit_cost_by_model_by_inst = {}
+        self._additional_scaling = 1
+
+    @property
+    def all_instruments(self) -> Tuple[Instrument, ...]:
+        return self._instrument.all_instruments if isinstance(self._instrument, Portfolio) else (self._instrument,)
+
+    @property
+    def all_transaction_models(self):
+        return self._transaction_model.transaction_models if \
+            isinstance(self._transaction_model, AggregateTransactionModel) else (self._transaction_model,)
+
+    @property
+    def cost_aggregation_func(self) -> Callable:
+        if isinstance(self._transaction_model, AggregateTransactionModel):
+            if self._transaction_model.aggregate_type is TransactionAggType.SUM:
+                return sum
+            if self._transaction_model.aggregate_type is TransactionAggType.MAX:
+                return max
+            if self._transaction_model.aggregate_type is TransactionAggType.MIN:
+                return min
+        return sum
+
+    @property
+    def additional_scaling(self):
+        return self._additional_scaling
+
+    @additional_scaling.setter
+    def additional_scaling(self, value: float):
+        self._additional_scaling = value
+
+    @property
+    def date(self):
+        return self._date
+
+    @date.setter
+    def date(self, value: dt.date):
+        self._date = value
+
+    @property
+    def no_of_risk_calcs(self) -> int:
+        return len([m for m in self.all_transaction_models if isinstance(m, ScaledTransactionModel) and
+                    isinstance(m.scaling_type, RiskMeasure)])
+
+    def calculate_unit_cost(self):
+        for m in self.all_transaction_models:
+            self._unit_cost_by_model_by_inst[m] = {}
+            for i in self.all_instruments:
+                self._unit_cost_by_model_by_inst[m][i] = m.get_unit_cost(self._date, None, i)
+
+    @staticmethod
+    def __resolved_cost(cost: Union[float, PricingFuture]) -> float:
+        if isinstance(cost, PortfolioRiskResult):
+            return cost.aggregate()
+        elif isinstance(cost, PricingFuture):
+            return cost.result()
+        return cost
+
+    def get_final_cost(self):
+        final_costs = []
+        for m in self.all_transaction_models:
+            # charges may net out for portfolios
+            cost = sum(self.__resolved_cost(self._unit_cost_by_model_by_inst[m][i]) for i in self.all_instruments)
+            if isinstance(m, ScaledTransactionModel):
+                cost = abs(cost * m.scaling_level * self._additional_scaling)
+            final_costs.append(cost)
+        return self.cost_aggregation_func(final_costs)
+
+
 class CashPayment:
-    def __init__(self, trade, effective_date=None, scale_date=None, direction=1, scaling_parameter='notional_amount'):
+    def __init__(self, trade, effective_date=None, scale_date=None, direction=1, scaling_parameter='notional_amount',
+                 transaction_cost_entry: Optional[TransactionCostEntry] = None):
         self.trade = trade
         self.effective_date = effective_date
         self.scale_date = scale_date
         self.direction = direction
         self.cash_paid = defaultdict(float)
         self.scaling_parameter = scaling_parameter
+        self.transaction_cost_entry = transaction_cost_entry
 
     def to_frame(self):
         df = pd.DataFrame(self.cash_paid.items(), columns=['Cash Ccy', 'Cash Amount'])
@@ -375,62 +520,6 @@ class Hedge:
         self.scaling_portfolio = scaling_portfolio
         self.entry_payment = entry_payment
         self.exit_payment = exit_payment
-
-
-@dataclass_json()
-@dataclass
-class TransactionModel:
-    def get_cost(self, state, backtest, info, instrument) -> float:
-        pass
-
-
-@dataclass_json()
-@dataclass
-class ConstantTransactionModel(TransactionModel):
-    cost: Union[float, int] = 0
-    class_type: str = static_field('constant_transaction_model')
-
-    def get_cost(self, state, backtest, info, instrument) -> float:
-        return self.cost
-
-
-@dataclass_json
-@dataclass
-class ScaledTransactionModel:
-    scaling_type: Union[str, RiskMeasure] = 'notional_amount'
-    scaling_level: Union[float, int] = 0.0001
-    class_type: str = static_field('scaled_transaction_model')
-
-    def get_cost(self, state, backtest, info, instrument) -> float:
-        if isinstance(self.scaling_type, str):
-            try:
-                return getattr(instrument, self.scaling_type) * self.scaling_level
-            except AttributeError:
-                raise RuntimeError(f'{self.scaling_type} not recognised for instrument {instrument.type}')
-        if state > dt.date.today():
-            return np.nan
-        with PricingContext(state):
-            risk = instrument.calc(self.scaling_type)
-            backtest.calc_calls += 1
-            backtest.calculations += 1
-        return risk.result() * self.scaling_level
-
-
-@dataclass_json()
-@dataclass
-class AggregateTransactionModel:
-    transaction_models: tuple = tuple()
-    aggregate_type: TransactionAggType = field(default=TransactionAggType.SUM, metadata=field_metadata)
-
-    def get_cost(self, state, backtest, info, instrument) -> float:
-        if self.aggregate_type == TransactionAggType.SUM:
-            return sum(model.get_cost(state, backtest, info, instrument) for model in self.transaction_models)
-        elif self.aggregate_type == TransactionAggType.MAX:
-            return max(model.get_cost(state, backtest, info, instrument) for model in self.transaction_models)
-        elif self.aggregate_type == TransactionAggType.MIN:
-            return min(model.get_cost(state, backtest, info, instrument) for model in self.transaction_models)
-        else:
-            raise RuntimeError(f'unrecognised aggregation type:{str(self.aggregation_type)}')
 
 
 @dataclass_json

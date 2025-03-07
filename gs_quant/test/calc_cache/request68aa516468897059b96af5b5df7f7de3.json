@@ -1,0 +1,9 @@
+{
+    "request_id": "1_Action1_SPX_optResolvedInstrumentValues2023Jun05",
+    "request_hash": "68aa516468897059b96af5b5df7f7de3",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_transaction_costs"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"LegDefinition\",\"assetClass\":\"Equity\",\"buySell\":\"Buy\",\"expirationDate\":\"2023-09-05\",\"expirySettleDate\":\"2023-09-07\",\"expirySettlementDays\":\"2b\",\"methodOfSettlement\":\"Cash\",\"multiplier\":100.0,\"numberOfOptions\":1.0,\"optionStyle\":\"European\",\"optionType\":\"Call\",\"premium\":0.0,\"premiumCurrency\":\"USD\",\"premiumPaymentDate\":\"2023-06-07\",\"premiumSettlementDate\":\"2023-06-07\",\"settlementDate\":\"2023-06-07\",\"strikePrice\":4292.06,\"tradeAs\":\"OTC\",\"type\":\"Option\",\"underlier\":\".SPX\",\"underlierCurrency\":\"USD\",\"underlierType\":\"RIC\",\"valuationTime\":\"MktClose\"}]]]]"
+}

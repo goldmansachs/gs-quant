@@ -16,6 +16,8 @@ under the License.
 from datetime import date
 from unittest.mock import patch
 
+from gs_quant.target.measures import EqDelta
+
 from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction
 from gs_quant.backtests.backtest_objects import (ScaledTransactionModel, AggregateTransactionModel, TransactionAggType,
                                                  ConstantTransactionModel)
@@ -432,7 +434,54 @@ def test_risk_scaled_transaction_cost(mocker):
         assert len(summary) == 5
         assert len(ledger) == 5
         assert round(summary[Price].sum()) == -64
-        assert round(summary['Transaction Costs'][-1]) == 62
+        assert round(summary['Transaction Costs'][-1]) == -62
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_hedge_transaction_costs(mocker):
+    with MockCalc(mocker):
+        start_date = dt.date(2023, 6, 5)
+        end_date = dt.date(2023, 6, 9)
+
+        scaled_transaction_cost = ScaledTransactionModel('number_of_options', 1)
+        fixed_transaction_cost = ConstantTransactionModel(0)
+
+        opt = EqOption(underlier='.SPX', option_type=OptionType.Call, number_of_options=1, expiration_date='3m',
+                       name='SPX_opt')
+        trade_action = AddTradeAction(priceables=opt, trade_duration='1m', name='Action1',
+                                      transaction_cost=fixed_transaction_cost)
+        trade_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date,
+                                                                                         end_date=end_date,
+                                                                                         frequency='1m'),
+                                        actions=trade_action)
+        hedge_port = Portfolio([EqOption(underlier='.SPX', option_type=OptionType.Call, number_of_options=1,
+                                         expiration_date='3m', name='syn_fwd_call'),
+                                EqOption(underlier='.SPX', option_type=OptionType.Put, number_of_options=1,
+                                         expiration_date='3m', name='syn_fwd_put')])
+        hedge_action = HedgeAction(risk=EqDelta, priceables=hedge_port, trade_duration='1b',
+                                   transaction_cost=scaled_transaction_cost, name='HedgeAction1')
+        hedge_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date,
+                                                                                         end_date=end_date,
+                                                                                         frequency='1b'),
+                                        actions=hedge_action)
+
+        strategy = Strategy(None, [trade_trigger, hedge_trigger])
+        GE = GenericEngine()
+        backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+        summary = backtest.result_summary
+
+        assert len(summary) == 5
+
+        total_expected_transaction_costs = 0
+        cur_bought_hedges = 0
+        for d, port in backtest.portfolio_dict.items():
+            # sale of prior hedges
+            total_expected_transaction_costs += cur_bought_hedges
+            cur_bought_hedges = sum(i.number_of_options for i in port.priceables if i.name.startswith('Scaled'))
+            # buy next hedge
+            total_expected_transaction_costs += cur_bought_hedges
+            assert summary['Transaction Costs'][d]
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)

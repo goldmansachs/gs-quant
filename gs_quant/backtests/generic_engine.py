@@ -30,7 +30,8 @@ from gs_quant.backtests.actions import (Action, AddTradeAction, HedgeAction, Add
                                         ExitAllPositionsAction, AddScaledTradeAction, ScalingActionType,
                                         AddScaledTradeActionInfo)
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
-from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment, Hedge, PnlDefinition
+from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment, Hedge, PnlDefinition, \
+    TransactionCostEntry
 from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date, map_ccy_name_to_ccy
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.common import AssetClass, Currency, ParameterisedRiskMeasure, RiskMeasure
@@ -104,20 +105,31 @@ class AddTradeActionImpl(OrderBasedActionImpl):
 
         orders = self._raise_order(state, trigger_info)
 
+        current_tc_entries = []
         # record entry and unwind cashflows
         for create_date, (portfolio, info) in orders.items():
             for inst in portfolio.all_instruments:
-                backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
-                backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(create_date, backtest,
-                                                                                                 trigger_info, inst)
+                tc_enter = TransactionCostEntry(create_date, inst, self.action.transaction_cost)
+                current_tc_entries.append(tc_enter)
+                backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1,
+                                                                       transaction_cost_entry=tc_enter))
+                backtest.transaction_cost_entries[create_date].append(tc_enter)
                 final_date = self.get_instrument_final_date(inst, create_date, info)
-                backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
-                backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
-                                                                                                backtest,
-                                                                                                trigger_info, inst)
+                tc_exit = TransactionCostEntry(final_date, inst, self.action.transaction_cost)
+                current_tc_entries.append(tc_exit)
+                backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date,
+                                                                      transaction_cost_entry=tc_exit))
+                backtest.transaction_cost_entries[final_date].append(tc_exit)
                 backtest_states = (s for s in backtest.states if final_date > s >= create_date)
                 for s in backtest_states:
                     backtest.portfolio_dict[s].append(inst)
+
+        with PricingContext(is_async=True):
+            if any(tce.no_of_risk_calcs > 0 for tce in current_tc_entries):
+                backtest.calc_calls += 1
+            for tce in current_tc_entries:
+                backtest.calculations += tce.no_of_risk_calcs
+                tce.calculate_unit_cost()
 
         return backtest
 
@@ -149,6 +161,7 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
                 if unwind_day <= dt.date.today():
                     with PricingContext(pricing_date=unwind_day):
                         unscaled_unwind_prices_by_day[unwind_day] = Portfolio(unwind_instruments).calc(price_measure)
+        # TODO keep track of TCs here
 
         # Start with first_quantity, then only use proceeds from selling instruments
         available_cash = self.action.scaling_level
@@ -226,21 +239,32 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
         trigger_infos = dict(zip_longest(state_list, trigger_info))
         orders = self._raise_order(state_list, backtest.price_measure, trigger_infos)
 
+        current_tc_entries = []
         # record entry and unwind cashflows
         for create_date, portfolio in orders.items():
             info = trigger_infos[create_date]
             for inst in portfolio.all_instruments:
-                backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1))
-                backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(create_date, backtest,
-                                                                                                 trigger_info, inst)
+                tc_enter = TransactionCostEntry(create_date, inst, self.action.transaction_cost)
+                current_tc_entries.append(tc_enter)
+                backtest.cash_payments[create_date].append(CashPayment(inst, effective_date=create_date, direction=-1,
+                                                                       transaction_cost_entry=tc_enter))
+                backtest.transaction_cost_entries[create_date].append(tc_enter)
                 final_date = self.get_instrument_final_date(inst, create_date, info)
-                backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date))
-                backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(final_date,
-                                                                                                backtest,
-                                                                                                trigger_info, inst)
+                tc_exit = TransactionCostEntry(final_date, inst, self.action.transaction_cost)
+                current_tc_entries.append(tc_exit)
+                backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date,
+                                                                      transaction_cost_entry=tc_exit))
+                backtest.transaction_cost_entries[final_date].append(tc_exit)
                 backtest_states = (s for s in backtest.states if final_date > s >= create_date)
                 for s in backtest_states:
                     backtest.portfolio_dict[s].append(inst)
+
+        with PricingContext(is_async=True):
+            if any(tce.no_of_risk_calcs > 0 for tce in current_tc_entries):
+                backtest.calc_calls += 1
+            for tce in current_tc_entries:
+                backtest.calculations += tce.no_of_risk_calcs
+                tce.calculate_unit_cost()
 
         return backtest
 
@@ -266,6 +290,7 @@ class HedgeActionImpl(OrderBasedActionImpl):
         backtest.calculations += len(state_list)
         orders = self.get_base_orders_for_states(state_list, trigger_infos=trigger_infos)
 
+        current_tc_entries = []
         for create_date, portfolio in orders.items():
             info = trigger_infos[create_date]
             hedge_trade = portfolio.priceables[0]
@@ -281,21 +306,30 @@ class HedgeActionImpl(OrderBasedActionImpl):
                                                      csa_term=self.action.csa_term,
                                                      scaling_parameter=self.action.scaling_parameter,
                                                      risk_transformation=self.action.risk_transformation)
+                tc_enter = TransactionCostEntry(create_date, hedge_trade, self.action.transaction_cost)
+                current_tc_entries.append(tc_enter)
                 entry_payment = CashPayment(trade=hedge_trade, effective_date=create_date, direction=-1,
-                                            scaling_parameter=self.action.scaling_parameter)
-                backtest.transaction_costs[create_date] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                                 trigger_info,
-                                                                                                 hedge_trade)
+                                            scaling_parameter=self.action.scaling_parameter,
+                                            transaction_cost_entry=tc_enter)
+                backtest.transaction_cost_entries[create_date].append(tc_enter)
+                tc_exit = TransactionCostEntry(final_date, hedge_trade, self.action.transaction_cost)
+                current_tc_entries.append(tc_exit)
                 exit_payment = CashPayment(trade=hedge_trade, effective_date=final_date, scale_date=create_date,
-                                           scaling_parameter=self.action.scaling_parameter) \
+                                           scaling_parameter=self.action.scaling_parameter,
+                                           transaction_cost_entry=tc_exit) \
                     if final_date <= dt.date.today() else None
-                backtest.transaction_costs[final_date] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                                trigger_info,
-                                                                                                hedge_trade)
+                backtest.transaction_cost_entries[final_date].append(tc_exit)
                 hedge = Hedge(scaling_portfolio=scaling_portfolio,
                               entry_payment=entry_payment,
                               exit_payment=exit_payment)
                 backtest.hedges[create_date].append(hedge)
+
+        with PricingContext(is_async=True):
+            if any(tce.no_of_risk_calcs > 0 for tce in current_tc_entries):
+                backtest.calc_calls += 1
+            for tce in current_tc_entries:
+                backtest.calculations += tce.no_of_risk_calcs
+                tce.calculate_unit_cost()
 
         return backtest
 
@@ -364,19 +398,24 @@ class ExitTradeActionImpl(ActionHandler):
                         else:
                             cp.effective_date = s
                             backtest.cash_payments[s].append(cp)
-                        backtest.transaction_costs[s] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                               trigger_info, cp.trade)
+                        backtest.transaction_cost_entries[s].append(cp.transaction_cost_entry)
+                        backtest.transaction_cost_entries[cp_date].remove(cp.transaction_cost_entry)
+                        cp.transaction_cost_entry.date = s
                         del backtest.cash_payments[cp_date][index]
-                        backtest.transaction_costs[cp_date] += self.action.transaction_cost.get_cost(state, backtest,
-                                                                                                     trigger_info,
-                                                                                                     cp.trade)
 
                     if not backtest.cash_payments[cp_date]:
                         del backtest.cash_payments[cp_date]
 
             for trade in trades_to_remove:
                 if trade.name not in [x.trade.name for x in backtest.cash_payments[s]]:
-                    backtest.cash_payments[s].append(CashPayment(trade, effective_date=s))
+                    # to_dict omits name
+                    trade_instruments = set(t.to_dict() for t in trade.all_instruments) if \
+                        isinstance(trade, Portfolio) else {trade.to_dict()}
+                    # find TCE corresponding to trade
+                    trade_tce = [tce for tce in backtest.transaction_cost_entries[s] if
+                                 set(i.to_dict() for i in tce.all_instruments) == trade_instruments]
+                    tce = trade_tce[0] if trade_tce else None
+                    backtest.cash_payments[s].append(CashPayment(trade, effective_date=s, transaction_cost_entry=tce))
 
         return backtest
 
@@ -401,18 +440,24 @@ class RebalanceActionImpl(ActionHandler):
         pos = self.action.priceable.clone(**{self.action.size_parameter: new_size - current_size,
                                              'name': f'{self.action.priceable.name}_{state}'})
 
+        current_tc_entries = []
+        tc_enter = TransactionCostEntry(state, pos, self.action.transaction_cost)
+        current_tc_entries.append(tc_enter)
         backtest.cash_payments[state].append(CashPayment(pos, effective_date=state, direction=-1,
-                                                         scaling_parameter=self.action.size_parameter))
-        backtest.transaction_costs[state] -= self.action.transaction_cost.get_cost(state, backtest, trigger_info, pos)
+                                                         scaling_parameter=self.action.size_parameter,
+                                                         transaction_cost_entry=tc_enter))
+        backtest.transaction_cost_entries[state].append(tc_enter)
         unwind_payment = None
         cash_payment_dates = backtest.cash_payments.keys()
         for d in reversed(sorted(cash_payment_dates)):
             for cp in backtest.cash_payments[d]:
                 if self.action.priceable.name.split('_')[-1] in cp.trade.name and cp.direction == 1:
-                    unwind_payment = CashPayment(pos, effective_date=d, scaling_parameter=self.action.size_parameter)
+                    tc_exit = TransactionCostEntry(d, pos, self.action.transaction_cost)
+                    current_tc_entries.append(tc_exit)
+                    unwind_payment = CashPayment(pos, effective_date=d, scaling_parameter=self.action.size_parameter,
+                                                 transaction_cost_entry=tc_exit)
                     backtest.cash_payments[d].append(unwind_payment)
-                    backtest.transaction_costs[d] -= self.action.transaction_cost.get_cost(state, backtest,
-                                                                                           trigger_info, pos)
+                    backtest.transaction_cost_entries[d].append(exit)
                     break
             if unwind_payment:
                 break
@@ -423,6 +468,13 @@ class RebalanceActionImpl(ActionHandler):
         for s in backtest.states:
             if unwind_payment.effective_date > s >= state:
                 backtest.portfolio_dict[s].append(pos)
+
+        with PricingContext(is_async=True):
+            if any(tce.no_of_risk_calcs > 0 for tce in current_tc_entries):
+                backtest.calc_calls += 1
+            for tce in current_tc_entries:
+                backtest.calculations += tce.no_of_risk_calcs
+                tce.calculate_unit_cost()
 
         return backtest
 
@@ -615,6 +667,10 @@ class GenericEngine(BacktestBaseEngine):
             self._handle_cash(backtest, risks, price_risk, strategy_pricing_dates, strategy_end_date, initial_value,
                               calc_risk_at_trade_exits, strategy.cash_accrual)
 
+        with self._trace('Populate Transaction Costs'):
+            backtest.transaction_costs = {d: -sum(tce.get_final_cost() for tce in tce_list)
+                                          for d, tce_list in backtest.transaction_cost_entries.items()}
+
         logger.info(f'Finished Backtest:- {dt.datetime.now()}')
         return backtest
 
@@ -741,6 +797,8 @@ class GenericEngine(BacktestBaseEngine):
                 if current_risk.unit != hedge_risk.unit:
                     raise RuntimeError('cannot hedge in a different currency')
                 scaling_factor = current_risk / hedge_risk
+                hedge.entry_payment.transaction_cost_entry.additional_scaling = scaling_factor
+                hedge.exit_payment.transaction_cost_entry.additional_scaling = scaling_factor
                 if isinstance(p.trade, Portfolio):
                     # Scale the portfolio by risk target
                     scaled_portfolio_position = copy.deepcopy(p.trade)
