@@ -28,7 +28,7 @@ from gs_quant.data import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.markets.index import Index
 from gs_quant.timeseries.measures_factset import (EstimateItem, EstimateStatistic, EstimateBasis, FiscalPeriod,
-                                                  FundamentalMetric, FundamentalFormat, FundamentalBasis)
+                                                  FundamentalMetric, FundamentalFormat, FundamentalBasis, RatingType)
 
 _index = [pd.Timestamp('2021-03-30')]
 _test_datasets = ('TEST_DATASET',)
@@ -131,6 +131,32 @@ def mock_fe_estimate_saf(_cls, bbid, start, end, feItem):
     return df
 
 
+def mock_fe_actual(_cls, bbid, start, end, feItem):
+    d = {
+        'date': [
+            datetime.date(2020, 1, 8),
+            datetime.date(2021, 1, 12),
+            datetime.date(2022, 1, 13)
+        ],
+        'isin': ['US0378331005'] * 3,
+        'feItem': ['EPS'] * 3,
+        'adjDate': [datetime.date(2020, 8, 31)] * 3,
+        'currency': ['USD'] * 3,
+        'feFpEnd': [datetime.date(2022, 9, 30),
+                    datetime.date(2021, 9, 30),
+                    datetime.date(2020, 9, 30)
+                    ],
+        'feValue': [15.0, 5.0, 6.0],
+        'fsymId': ['MH33D6-R'] * 3,
+        'bbid': ['AAPL UW'] * 3,
+
+    }
+    df = MarketDataResponseFrame(data=d)
+    df.dataset_id = 'FE_BASIC_ACT_AF_GLOBAL'
+
+    return df
+
+
 def mock_fe_estimate_empty(_cls, bbid, start, end, feItem):
     df = MarketDataResponseFrame()
     df.dataset_id = 'FE_BASIC_CONH_SAF_GLOBAL'
@@ -143,7 +169,7 @@ def mock_factset_fundamentals_basic(_cls, bbid, start, end):
         'isin': ['US0378331005'],
         'adjDate': [Timestamp('2020-08-31 00:00:00')],
         'currency': ['USD'],
-        'ffEpsBasicAf': [6.109],
+        'ffEpsBasic': [6.109],
         'ffEpsAf': [6.0836],
         'fsymId': ['MH33D6-R'],
         'bbid': ['AAPL UW']
@@ -159,7 +185,7 @@ def mock_factset_fundamentals_basic_derived(_cls, bbid, start, end):
         'isin': ['US0378331005'],
         'adjDate': [Timestamp('2020-08-31 00:00:00')],
         'currency': ['USD'],
-        'ffEbitdaOperAf': [6.109],
+        'ffEbitdaOper': [6.109],
         'fsymId': ['MH33D6-R'],
         'bbid': ['AAPL UW']
     }
@@ -174,13 +200,38 @@ def mock_factset_fundamentals_basic_restated(_cls, bbid, start, end):
         'isin': ['US0378331005'],
         'adjDate': [Timestamp('2020-08-31 00:00:00')],
         'currency': ['USD'],
-        'ffEpsBasicRAf': [6.109],
+        'ffEpsBasicR': [6.109],
         'ffEpsRAf': [6.0836],
         'fsymId': ['MH33D6-R'],
         'bbid': ['AAPL UW']
     }
     df = MarketDataResponseFrame(data=d)
     df.dataset_id = 'FF_BASIC_R_AF_GLOBAL'
+    return df
+
+
+def mock_factset_ratings(_cls, bbid, start, end):
+    d = {
+        'date': [Timestamp('2024-12-31 00:00:00')] * 3,
+        'isin': ['US0378331005'] * 3,
+        'feItem': ['REC'] * 3,
+        'adjDate': [datetime.date(2024, 12, 31)] * 3,
+        'consEndDate': [datetime.date(2024, 12, 31)] * 3,
+        'feItemDesc': ['Recommendation'] * 3,
+        'feFpEnd': [datetime.date(2024, 12, 31)] * 3,
+        'feBuy': [21.0, 3.0, 3.0],
+        'feHold': [14.0, 3.0, 3.0],
+        'feNoRec': [1.0, 3.0, 3.0],
+        'feOver': [10.0, 3.0, 3.0],
+        'feSell': [4.0, 3.0, 3.0],
+        'feUnder': [1.0, 3.0, 3.0],
+        'feTotal': [10.0, 3.0, 3.0],
+        'feMark': [1.57] * 3,
+        'fsymId': ['MH33D6-R'] * 3,
+        'bbid': ['AAPL UW'] * 3,
+    }
+    df = MarketDataResponseFrame(data=d)
+    df.dataset_id = 'FE_BASIC_CONH_REC_GLOBAL'
     return df
 
 
@@ -252,6 +303,18 @@ def test_factset_estimates():
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_SAF_GLOBAL'
 
+        replace('gs_quant.data.Dataset.get_data', mock_fe_actual)
+
+        actual = tm.factset_estimates(mock_asset, metric=EstimateItem.EPS,
+                                      statistic=EstimateStatistic.ACTUAL,
+                                      report_basis=EstimateBasis.ANN
+                                      )
+        assert_series_equal(pd.Series([15.0],
+                                      index=DatetimeIndex(['2022-09-30'], dtype='datetime64[ns]', name='date',
+                                                          freq=None),
+                                      name=EstimateStatistic.ACTUAL.value), pd.Series(actual))
+        assert actual.dataset_ids == 'FE_BASIC_ACT_AF_GLOBAL'
+
         with pytest.raises(MqValueError):
             tm.factset_estimates(mock_asset, metric=EstimateItem.EPS,
                                  statistic=EstimateStatistic.MEDIAN,
@@ -305,6 +368,12 @@ def test_factset_estimates():
                                  statistic=EstimateStatistic.MEDIAN,
                                  report_basis='INV',
                                  period=FiscalPeriod(2022, 1),
+                                 )
+        # Invalid report basis for actuals
+        with pytest.raises(MqValueError):
+            tm.factset_estimates(mock_asset, metric=EstimateItem.EPS,
+                                 statistic=EstimateStatistic.ACTUAL,
+                                 report_basis=EstimateBasis.NTM,
                                  )
 
         # Get empty data response
@@ -360,6 +429,26 @@ def test_factset_fundamentals():
                                                           dtype='datetime64[ns]', name='date', freq=None),
                                       name=FundamentalMetric.EPS_BASIC.value), pd.Series(actual))
         assert actual.dataset_ids == 'FF_BASIC_R_AF_GLOBAL'
+
+    replace.restore()
+
+
+def test_factset_ratings():
+    replace = Replacer()
+    bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
+    bbid_mock.return_value = 'AAPL UW'
+    with DataContext(start=datetime.date(2024, 9, 30),
+                     end=datetime.date(2024, 9, 30)):
+        replace('gs_quant.data.Dataset.get_data', mock_factset_ratings)
+
+        actual = tm.factset_ratings(mock_asset, rating_type=RatingType.BUY)
+        assert_series_equal(pd.Series([21.0, 3.0, 3.0],
+                                      index=DatetimeIndex([datetime.date(2024, 12, 31)] * 3,
+                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      name=RatingType.BUY.value), pd.Series(actual))
+        assert actual.dataset_ids == 'FE_BASIC_CONH_REC_GLOBAL'
+
+    replace.restore()
 
 
 def test_fiscal_period():
