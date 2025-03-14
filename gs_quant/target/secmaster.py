@@ -86,6 +86,8 @@ class SecMasterAssetType(EnumBase, Enum):
     Convertible_Bond = 'Convertible Bond'
     Singapore_DR = 'Singapore DR'
     Basket = 'Basket'
+    Financial_Index_Future = 'Financial index future.'
+
 
 
 

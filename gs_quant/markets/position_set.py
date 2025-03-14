@@ -696,17 +696,20 @@ class PositionSet:
     def price(self, currency: Optional[Currency] = Currency.USD,
               use_unadjusted_close_price: bool = True,
               weighting_strategy: Optional[PositionSetWeightingStrategy] = None,
-              handle_long_short: bool = False, **kwargs):
+              handle_long_short: bool = False,
+              fail_on_unpriced_positions: bool = False,
+              **kwargs):
         """
         Fetch positions weights from quantities, or vice versa
 
         :param currency: Reference notional currency (defaults to USD if not passed in)
         :param use_unadjusted_close_price: Use adjusted or unadjusted close prices (defaults to unadjusted)
         :param weighting_strategy: Quantity or Weighted weighting strategy (defaults based on positions info)
-        :param use_tags: Determines if tags are used to index the position response for non-netted positions
         :param handle_long_short: Whether to handle the loss of directionality in weights that comes from pricing using
         gross notional. Useful when input position iset is a long/short. Note, this also sets the reference notional to
         Gross Notional if not already so
+        :param fail_on_unpriced_positions: Whether to raise an exception if any positions are unpriced
+        :param kwargs: Additional parameters to pass to the pricing API
 
         **Usage**
 
@@ -774,6 +777,11 @@ class PositionSet:
                 priced_positions.append(p)
             else:
                 unpriced_positions.append(p)
+
+        if fail_on_unpriced_positions and unpriced_positions:
+            raise MqValueError(f'Failed to price positions: '
+                               f'{", ".join([p.identifier for p in unpriced_positions])} on {self.date}. Please'
+                               f'contat Marquee Support for assistance.')
         self.positions = priced_positions
         self.__unpriced_positions = unpriced_positions
         if handle_long_short:

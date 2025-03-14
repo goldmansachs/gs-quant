@@ -309,8 +309,8 @@ class GsSession(ContextBase):
                         cls: Optional[type], return_request_id: Optional[bool]):
         if not 199 < response.status_code < 300:
             reason = response.reason if hasattr(response, 'reason') else response.reason_phrase
-            raise error_builder(response.status_code, f'{reason}: {response.text}',
-                                context=f'{request_id}: {method} {url}')
+            err_msg = reason if response.headers.get('Content-Type') == 'text/html' else f'{reason}: {response.text}'
+            raise error_builder(response.status_code, err_msg, context=f'{request_id}: {method} {url}')
         elif 'Content-Type' in response.headers:
             if 'application/x-msgpack' in response.headers['Content-Type']:
                 ret = msgpack.unpackb(response.content, raw=False)

@@ -27,6 +27,7 @@ from typing import Iterable, Optional, Union
 
 import msgpack
 from opentracing import Span, Format
+from websockets import ConnectionClosed
 
 from gs_quant.api.risk import RiskApi
 from gs_quant.context_base import nullcontext
@@ -44,6 +45,7 @@ class WebsocketUnavailable(Exception):
 class GsRiskApi(RiskApi):
     USE_MSGPACK = True
     POLL_FOR_BATCH_RESULTS = False
+    WEBSOCKET_RETRY_ON_CLOSE_CODES = (1000, 1001, 1006)
     PRICING_API_VERSION = None
 
     @classmethod
@@ -147,17 +149,14 @@ class GsRiskApi(RiskApi):
     async def __get_results_ws(cls, responses: asyncio.Queue, results: asyncio.Queue, timeout: Optional[int] = None,
                                span: Optional[Span] = None):
         async def handle_websocket():
+            nonlocal all_requests_dispatched
             ret = ''
 
             try:
                 # If we're re-connecting then re-send any in-flight request ids
-
-                outstanding_request_ids = [i for i in pending_requests.keys() if i not in dispatched]
-                if outstanding_request_ids:
-                    _logger.info(f'Re-sending {len(outstanding_request_ids)} requests')
-                    await asyncio.wait_for(ws.send(json.dumps(outstanding_request_ids)), timeout=send_timeout)
-
-                all_requests_dispatched = False
+                if pending_requests:
+                    _logger.info(f'Re-subscribing {len(pending_requests)} requests')
+                    await asyncio.wait_for(ws.send(json.dumps(list(pending_requests.keys()))), timeout=send_timeout)
 
                 while pending_requests or not all_requests_dispatched:
                     # Continue while we have pending or un-dispatched requests
@@ -179,6 +178,23 @@ class GsRiskApi(RiskApi):
                             parsed_res = raw_res.decode() if isinstance(raw_res, bytes) else raw_res
                             request_id, status_result_str = parsed_res.split(';', 1)
                             status, result_str = status_result_str[0], status_result_str[1:]
+                        except ConnectionClosed as conn_closed:
+                            if conn_closed.rcvd and conn_closed.rcvd.code in cls.WEBSOCKET_RETRY_ON_CLOSE_CODES:
+                                # websocket closed, but we can retry
+                                if request_listener:
+                                    if request_listener in complete:
+                                        # WebSocket Closed on us, but had we had results just dispatched
+                                        # They need subscribing so re-queue them to pick up later
+                                        _, res = request_listener.result()
+                                        cls.enqueue(responses, res, wait=False)
+                                    else:
+                                        # Conn Closed, cancelling request listener as no-one will hear the response
+                                        # And we don't want to take anything from the queue
+                                        request_listener.cancel()
+                                # Now re-raise connection closed to be handled and potentially we'll try again
+                                raise
+                            status = 'E'
+                            result_str = str(conn_closed)
                         except Exception as ee:
                             status = 'E'
                             result_str = str(ee)
@@ -231,6 +247,8 @@ class GsRiskApi(RiskApi):
                                 dispatched.update(request_ids)
                         else:
                             request_listener.cancel()
+            except ConnectionClosed:
+                raise
             except Exception as ee:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -238,6 +256,7 @@ class GsRiskApi(RiskApi):
 
             return ret
 
+        all_requests_dispatched = False
         pending_requests = {}
         dispatched = set()
         error = ''
@@ -246,10 +265,9 @@ class GsRiskApi(RiskApi):
         max_attempts = 5
         send_timeout = 30
 
-        from websockets import ConnectionClosedError
         while attempts < max_attempts:
             if attempts > 0:
-                await asyncio.sleep(math.pow(2, attempts))
+                await asyncio.sleep(math.pow(2, attempts - 1))
                 _logger.error(f'{error} error, retrying (attempt {attempts + 1} of {max_attempts})')
 
             try:
@@ -270,8 +288,9 @@ class GsRiskApi(RiskApi):
                         error = await handle_websocket()
 
                 attempts = max_attempts
-            except ConnectionClosedError as cce:
-                error = 'Connection failed: ' + str(cce)
+            except ConnectionClosed as cce:
+                error = (f'Unexpected Connection Closed ({len(pending_requests)}/{len(dispatched)} '
+                         f'request(s) still pending): {cce}')
                 attempts += 1
             except asyncio.TimeoutError:
                 error = 'Timed out'
