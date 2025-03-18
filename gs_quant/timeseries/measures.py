@@ -4997,3 +4997,40 @@ def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.R
     series = ExtendedSeries(category_sums[measure.value], name=measure.value)
     series.dataset_ids = ds.id
     return series
+
+
+class S3Metrics(Enum):
+    LONG_CROWDING = "Long Crowding",
+    SHORT_CROWDING = "Short Crowding",
+    LONG_SHORT_CROWDING_RATION = "Long Short Crowding Ratio",
+    CURRENT_CONSTITUENTS_LONG_CROWDING = "Current Constituents Long Crowding",
+    CURRENT_CONSTITUENTS_SHORT_CROWDING = "Current Constituents Short Crowding",
+    CURRENT_CONSTITUENTS_LONG_SHORT_CROWDING = "Current Constituents Long Short Crowding Ratio",
+    CROWDING_NET_EXPOSURE = "Crowding Net Exposure",
+    CURRENT_CONSTITUENTS_CROWDING_NET_EXPOSURES = "Current Constituents Crowding Net Exposure"
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket,))
+def s3_long_short_concentration(asset: Asset, s3Metric: S3Metrics = S3Metrics.LONG_CROWDING, *, source: str = None,
+                                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    Retrieves the specified metric from the S3 Partners Long/Short Concentration Aggregated Data dataset
+    for a given asset and plots it.
+
+    :param asset: asset object loaded from security master
+    :param s3Metric: The aggregated S3 metric to retrieve (e.g., "Long Crowding", "Short Crowding").
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: service request id, if any
+    :return: time series of the specified metric values
+    """
+    ds = Dataset('S3_BASKETS_AGG')
+
+    start = DataContext.current.start_date
+    end = DataContext.current.end_date
+
+    # Query the timeseries from the dataset:
+    df = ds.get_data(start, end, assetId=asset.get_marquee_id(), s3Metric=s3Metric)
+
+    # Extract the timeseries and format it for PTP
+    return _extract_series_from_df(df, QueryType.S3_AGGREGATE_DATA)

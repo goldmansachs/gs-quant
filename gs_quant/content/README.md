@@ -1,0 +1,62 @@
+# Content Overview
+
+Content and research produced using gs_quant - featuring tactical case studies looking at screens,
+backtesting strategies, attribution analytics and more.
+
+- 📄 [Contents.ipynb](Contents.ipynb)
+- 📄 [README.md](README.md)
+- 📁 **events**
+  - 📁 00_gsquant_meets_markets
+    - 📁 00_us_election_analysis
+      - 📄 [0000_macro_big_picture.ipynb](events/00_gsquant_meets_markets/00_us_election_analysis/0000_macro_big_picture.ipynb)
+      - 📄 [0001_portfolios_and_var.ipynb](events/00_gsquant_meets_markets/00_us_election_analysis/0001_portfolios_and_var.ipynb)
+      - 📄 [0002_past_elections.ipynb](events/00_gsquant_meets_markets/00_us_election_analysis/0002_past_elections.ipynb)
+      - 📄 [0003_trades.ipynb](events/00_gsquant_meets_markets/00_us_election_analysis/0003_trades.ipynb)
+    - 📁 01_ideas_for_risk_re_rating
+      - 📄 [eq_sx5e_spx_vol_spread_trade.ipynb](events/00_gsquant_meets_markets/01_ideas_for_risk_re_rating/eq_sx5e_spx_vol_spread_trade.ipynb)
+      - 📄 [fx_covid19_recovery_trade.ipynb](events/00_gsquant_meets_markets/01_ideas_for_risk_re_rating/fx_covid19_recovery_trade.ipynb)
+      - 📄 [inflation_covid19_recovery_trade.ipynb](events/00_gsquant_meets_markets/01_ideas_for_risk_re_rating/inflation_covid19_recovery_trade.ipynb)
+    - 📁 02_optimizing_equity_trading
+      - 📄 [quants_meet_markets_qes.ipynb](events/00_gsquant_meets_markets/02_optimizing_equity_trading/quants_meet_markets_qes.ipynb)
+      - 📄 [section_a_liquidity_and_clusters.ipynb](events/00_gsquant_meets_markets/02_optimizing_equity_trading/section_a_liquidity_and_clusters.ipynb)
+      - 📄 [section_b_ownership.ipynb](events/00_gsquant_meets_markets/02_optimizing_equity_trading/section_b_ownership.ipynb)
+      - 📄 [section_c_apex.ipynb](events/00_gsquant_meets_markets/02_optimizing_equity_trading/section_c_apex.ipynb)
+    - 📁 03_esg_basket_portfolio_optimisation
+      - 📄 [quants_meet_markets_msci.ipynb](events/00_gsquant_meets_markets/03_esg_basket_portfolio_optimisation/quants_meet_markets_msci.ipynb)
+- 📁 **made_with_gs_quant**
+  - 📄 [1-Navigating Rates.ipynb](made_with_gs_quant/1-Navigating%20Rates.ipynb)
+  - 📄 [10-Explaining Performance Drivers.ipynb](made_with_gs_quant/10-Explaining%20Performance%20Drivers.ipynb)
+  - 📄 [11-FX Election Hedge.ipynb](made_with_gs_quant/11-FX%20Election%20Hedge.ipynb)
+  - 📄 [12-Structuring for Uncertaintly.ipynb](made_with_gs_quant/12-Structuring%20for%20Uncertaintly.ipynb)
+  - 📄 [13-Cyclicals.ipynb](made_with_gs_quant/13-Cyclicals.ipynb)
+  - 📄 [14-Curve Inversions.ipynb](made_with_gs_quant/14-Curve%20Inversions.ipynb)
+  - 📄 [2-Levels and Tails.ipynb](made_with_gs_quant/2-Levels%20and%20Tails.ipynb)
+  - 📄 [3-Systematic Selling.ipynb](made_with_gs_quant/3-Systematic%20Selling.ipynb)
+  - 📄 [4-Delta Hedging.ipynb](made_with_gs_quant/4-Delta%20Hedging.ipynb)
+  - 📄 [5-What's New.ipynb](made_with_gs_quant/5-What's%20New.ipynb)
+  - 📄 [6-Evolving Correlations.ipynb](made_with_gs_quant/6-Evolving%20Correlations.ipynb)
+  - 📄 [7-Predicting Performance and Live Risk.ipynb](made_with_gs_quant/7-Predicting%20Performance%20and%20Live%20Risk.ipynb)
+  - 📄 [8-What's New Internal.ipynb](made_with_gs_quant/8-What's%20New%20Internal.ipynb)
+  - 📄 [9-Hedging using Machine Learning Techniques.ipynb](made_with_gs_quant/9-Hedging%20using%20Machine%20Learning%20Techniques.ipynb)
+- 📁 **reports_and_screens**
+  - 📁 00_fx
+    - 📄 [0000_vol_screen.ipynb](reports_and_screens/00_fx/0000_vol_screen.ipynb)
+    - 📄 [0001_vol_calendar_screen.ipynb](reports_and_screens/00_fx/0001_vol_calendar_screen.ipynb)
+    - 📄 [0002_forward_vol_screen.ipynb](reports_and_screens/00_fx/0002_forward_vol_screen.ipynb)
+    - 📄 [0003_10x_binary_screen.ipynb](reports_and_screens/00_fx/0003_10x_binary_screen.ipynb)
+    - 📄 [0004_bear_put_spread_screen.ipynb](reports_and_screens/00_fx/0004_bear_put_spread_screen.ipynb)
+    - 📄 [0005_vol_skew.ipynb](reports_and_screens/00_fx/0005_vol_skew.ipynb)
+    - 📄 [0006_vol_swap_spread.ipynb](reports_and_screens/00_fx/0006_vol_swap_spread.ipynb)
+    - 📄 [0007_eq_fx_hedges.ipynb](reports_and_screens/00_fx/0007_eq_fx_hedges.ipynb)
+  - 📁 02_rates
+    - 📄 [0000_vol_fixed_strike_grid.ipynb](reports_and_screens/02_rates/0000_vol_fixed_strike_grid.ipynb)
+    - 📄 [0001_vol_moneyness_screen.ipynb](reports_and_screens/02_rates/0001_vol_moneyness_screen.ipynb)
+    - 📄 [0002_swaption_carry_grid.ipynb](reports_and_screens/02_rates/0002_swaption_carry_grid.ipynb)
+    - 📄 [0003_spot_vol_shock.ipynb](reports_and_screens/02_rates/0003_spot_vol_shock.ipynb)
+  - 📁 03_prime
+    - 📄 [0001_gs_pb_data_case_study_sector_positioning.ipynb](reports_and_screens/03_prime/0001_gs_pb_data_case_study_sector_positioning.ipynb)
+    - 📄 [0002_gs_pb_data_case_study_flows.ipynb](reports_and_screens/03_prime/0002_gs_pb_data_case_study_flows.ipynb)
+    - 📄 [0003_gs_pb_data_case_study_factors.ipynb](reports_and_screens/03_prime/0003_gs_pb_data_case_study_factors.ipynb)
+    - 📄 [0004_gs_pb_data_case_study_country_positioning.ipynb](reports_and_screens/03_prime/0004_gs_pb_data_case_study_country_positioning.ipynb)
+    - 📄 [0005_gs_pb_data_case_study_leverage.ipynb](reports_and_screens/03_prime/0005_gs_pb_data_case_study_leverage.ipynb)
+  - 📄 [README.md](reports_and_screens/README.md)

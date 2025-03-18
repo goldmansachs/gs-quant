@@ -167,6 +167,7 @@ class QueryType(Enum):
     RETAIL_SELL_PCT_SHARES = 'impliedRetailSellPctShares'
     RETAIL_SELL_SHARES = 'impliedRetailSellShares'
     FWD_POINTS = 'Fwd Points'
+    S3_AGGREGATE_DATA = 'value'
 
 
 class GsDataApi(DataApi):

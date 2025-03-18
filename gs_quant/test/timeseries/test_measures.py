@@ -5671,5 +5671,30 @@ def test_retail_interest_agg():
     replace.restore()
 
 
+def test_s3_long_short_concentration():
+    replace = Replacer()
+
+    # Mock Returns
+    mock_asset = replace('gs_quant.markets.securities.Asset.get_marquee_id', Mock())
+    mock_asset.return_value = "MAF1701E17G167B0"
+
+    mock_dataset = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+    mock_dataset.return_value = pd.DataFrame({
+        'date': ['2025-02-12', '2025-02-13', '2025-02-14'],
+        'assetId': ['MAF1701E17G167B0', 'MAF1701E17G167B0', 'MAF1701E17G167B0'],
+        's3Metric': ['Long Crowding', 'Long Crowding', 'Long Crowding'],
+        'value': [0.337286, 0.337629, 0.338065],
+        'updateTime': ['2025-02-18 11:23:41+00:00', '2025-02-18 11:23:41+00:00', '2025-02-18 11:23:41+00:00']
+    })
+
+    # Calling Tested Function with DataContext (since only available in PTP)
+    with DataContext(datetime.date(2025, 2, 10), datetime.date(2025, 2, 17)):
+        actual = tm.s3_long_short_concentration(mock_asset, tm.S3Metrics.LONG_CROWDING)
+
+    assert_series_equal(ExtendedSeries(pd.Series([0.337286, 0.337629, 0.338065]), name='value'), actual)
+
+    replace.restore()
+
+
 if __name__ == '__main__':
     pytest.main(args=["test_measures.py"])
