@@ -131,6 +131,60 @@ def mock_fe_estimate_saf(_cls, bbid, start, end, feItem):
     return df
 
 
+def mock_fe_estimate_ntm(_cls, bbid, start, end, feItem):
+    d = {
+        'date': [
+            datetime.date(2022, 1, 8),
+            datetime.date(2022, 1, 9),
+            datetime.date(2022, 1, 10)
+        ],
+        'isin': ['US0378331005'] * 3,
+        'feItem': ['EPS'] * 3,
+        'feHighNtm': [6.353628] * 3,
+        'feLowNtm': [5.2] * 3,
+        'feMeanNtm': [5.749689, 5.748439, 5.756439],
+        'feMedianNtm': [5.745] * 3,
+        'feHighStm': [6.353628] * 3,
+        'feLowStm': [5.2] * 3,
+        'feMeanStm': [5.749689, 5.748439, 5.756439],
+        'feMedianStm': [5.745] * 3,
+        'fsymId': ['MH33D6-R'] * 3,
+        'bbid': ['AAPL UW'] * 3,
+
+    }
+    df = MarketDataResponseFrame(data=d)
+    df.dataset_id = 'FE_NTM'
+    return df
+
+
+def mock_fe_estimate_lt(_cls, bbid, start, end, feItem):
+    d = {
+        'date': [
+            datetime.date(2022, 1, 8),
+            datetime.date(2022, 1, 12),
+            datetime.date(2022, 1, 13)
+        ],
+        'isin': ['US0378331005'] * 3,
+        'feItem': ['PRICE_TGT'] * 3,
+        'adjDate': [datetime.date(2020, 8, 31)] * 3,
+        'consEndDate': [datetime.date(2022, 1, 11)] * 3,
+        'feDownLt': [10.0, 3.0, 3.0],
+        'feHighLt': [6.353628] * 3,
+        'feLowLt': [5.2] * 3,
+        'feMeanLt': [5.749689, 5.748439, 5.756439],
+        'feMedianLt': [5.745] * 3,
+        'feNumEstLt': [40] * 3,
+        'feStdDevLt': [0.259250, 0.258130, 0.258687],
+        'feUpLt': [15.0, 5.0, 6.0],
+        'fsymId': ['MH33D6-R'] * 3,
+        'bbid': ['AAPL UW'] * 3,
+
+    }
+    df = MarketDataResponseFrame(data=d)
+    df.dataset_id = 'FE_BASIC_CONH_LT_GLOBAL'
+    return df
+
+
 def mock_fe_actual(_cls, bbid, start, end, feItem):
     d = {
         'date': [
@@ -303,6 +357,39 @@ def test_factset_estimates():
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_SAF_GLOBAL'
 
+        replace('gs_quant.data.Dataset.get_data', mock_fe_estimate_ntm)
+
+        actual = tm.factset_estimates(mock_asset, metric=EstimateItem.EPS,
+                                      statistic=EstimateStatistic.MEDIAN,
+                                      report_basis=EstimateBasis.NTM
+                                      )
+        assert_series_equal(pd.Series([5.745] * 3,
+                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10'],
+                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
+        assert actual.dataset_ids == 'FE_NTM'
+
+        actual = tm.factset_estimates(mock_asset, metric=EstimateItem.EPS,
+                                      statistic=EstimateStatistic.MEDIAN,
+                                      report_basis=EstimateBasis.STM
+                                      )
+        assert_series_equal(pd.Series([5.745] * 3,
+                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10'],
+                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
+        assert actual.dataset_ids == 'FE_NTM'
+
+        replace('gs_quant.data.Dataset.get_data', mock_fe_estimate_lt)
+
+        actual = tm.factset_estimates(mock_asset, metric=EstimateItem.PRICE_TGT,
+                                      statistic=EstimateStatistic.MEDIAN
+                                      )
+        assert_series_equal(pd.Series([5.745] * 4,
+                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
+                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
+        assert actual.dataset_ids == 'FE_BASIC_CONH_LT_GLOBAL'
+
         replace('gs_quant.data.Dataset.get_data', mock_fe_actual)
 
         actual = tm.factset_estimates(mock_asset, metric=EstimateItem.EPS,
@@ -348,11 +435,6 @@ def test_factset_estimates():
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_AF_GLOBAL'
 
-        with pytest.raises(MqValueError):
-            tm.factset_estimates(mock_asset, metric=EstimateItem.EPS,
-                                 statistic=EstimateStatistic.MEDIAN,
-                                 report_basis=EstimateBasis.NTM)
-
         # Get quarterly data without specifying period
         replace('gs_quant.data.Dataset.get_data', mock_fe_estimate_qf)
         with pytest.raises(MqValueError):
@@ -374,6 +456,12 @@ def test_factset_estimates():
             tm.factset_estimates(mock_asset, metric=EstimateItem.EPS,
                                  statistic=EstimateStatistic.ACTUAL,
                                  report_basis=EstimateBasis.NTM,
+                                 )
+        # Invalid metric for actuals
+        with pytest.raises(MqValueError):
+            tm.factset_estimates(mock_asset, metric=EstimateItem.PRICE_TGT,
+                                 statistic=EstimateStatistic.ACTUAL,
+                                 report_basis=EstimateBasis.ANN,
                                  )
 
         # Get empty data response

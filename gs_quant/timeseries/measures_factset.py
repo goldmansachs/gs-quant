@@ -1099,22 +1099,19 @@ BASIC_MEASURES = [EstimateItem.EPS,
                   EstimateItem.PRICE_TGT,
                   EstimateItem.EPS_LTG]
 
+LT_MEASURES = [EstimateItem.PRICE_TGT, EstimateItem.EPS_LTG]
+
 BASIS_TO_DATASET = {EstimateBasis.ANN: 'AF',
                     EstimateBasis.QTR: 'QF',
                     EstimateBasis.SEMI: 'SAF',
-                    EstimateBasis.NTM: 'NTM',  # placeholder for NTM dataset
-                    EstimateBasis.STM: 'STM'}
-
-STATISTIC_TO_FIELD = {EstimateStatistic.MEAN: 'feMean',
-                      EstimateStatistic.MEDIAN: 'feMedian',
-                      EstimateStatistic.HIGH: 'feHigh',
-                      EstimateStatistic.LOW: 'feLow'}
+                    EstimateBasis.NTM: 'NTM',
+                    EstimateBasis.STM: 'NTM'}
 
 BASIS_TO_FIELD = {
     EstimateBasis.ANN: 'Af',
     EstimateBasis.QTR: 'Qf',
     EstimateBasis.SEMI: 'Saf',
-    EstimateBasis.NTM: 'Ntm',  # placeholder for NTM dataset
+    EstimateBasis.NTM: 'Ntm',
     EstimateBasis.STM: 'Stm'
 }
 
@@ -1165,7 +1162,12 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
     basic = 'BASIC' if metric in BASIC_MEASURES else 'ADVANCED'
     column_prefix = '' if metric in BASIC_MEASURES else 'Adv'
     consensus = 'CONH' if statistic != EstimateStatistic.ACTUAL else 'ACT'
-    ds_id = f'FE_{basic}_{consensus}_{BASIS_TO_DATASET[report_basis]}_GLOBAL'
+    basis_ds = 'LT' if metric in LT_MEASURES else BASIS_TO_DATASET[report_basis]
+    basis_cl = 'Lt' if metric in LT_MEASURES else BASIS_TO_FIELD[report_basis]
+    if report_basis in [EstimateBasis.NTM, EstimateBasis.STM]:
+        ds_id = f'FE_{basis_ds}'
+    else:
+        ds_id = f'FE_{basic}_{consensus}_{basis_ds}_GLOBAL'
     ds = Dataset(ds_id)
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     try:
@@ -1180,18 +1182,20 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
     if statistic == EstimateStatistic.ACTUAL:
         if report_basis in [EstimateBasis.NTM, EstimateBasis.STM]:
             raise MqValueError('NTM and STM are not supported for actual values')
+        elif metric in LT_MEASURES:
+            raise MqValueError(f'No actual data for {metric.value}')
         else:
             df = df[['feFpEnd', 'feValue']]
             df.rename(columns={'feFpEnd': 'date'}, inplace=True)
             df['date'] = pd.to_datetime(df['date'])
             column = 'feValue'
-    else:
-        if isinstance(period, int) and report_basis not in [EstimateBasis.NTM, EstimateBasis.STM]:
+    elif report_basis not in [EstimateBasis.NTM, EstimateBasis.STM]:
+        if metric in LT_MEASURES:
+            pass
+        elif isinstance(period, int):
             df = df[df['fePerRel'] == period]
         else:
-            if report_basis in [EstimateBasis.NTM, EstimateBasis.STM]:
-                raise MqValueError('No Data returned for selected fiscal period')
-            elif report_basis == EstimateBasis.ANN:
+            if report_basis == EstimateBasis.ANN:
                 fiscal_period_start = datetime.datetime(period.y, 1, 1)
                 fiscal_period_end = datetime.datetime(period.y, 12, 31)
             elif report_basis == EstimateBasis.QTR:
@@ -1222,7 +1226,10 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
         df['date_range'] = df.apply(lambda row: pd.date_range(row['date'], row['consEndDate']), axis=1)
         df = df.explode('date_range').drop(columns=['date', 'consEndDate']).rename(
             columns={'date_range': 'date'})
-        column = f'fe{column_prefix}{statistic.value}{BASIS_TO_FIELD[report_basis]}'
+        column = f'fe{column_prefix}{statistic.value}{basis_cl}'
+    else:
+        df['date'] = pd.to_datetime(df['date'])
+        column = f'fe{statistic.value}{basis_cl}'
 
     df = df[df['date'] >= pd.to_datetime(start)]
     df = df.sort_values(by='date', ascending=True).set_index('date')
