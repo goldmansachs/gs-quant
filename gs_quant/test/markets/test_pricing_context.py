@@ -19,6 +19,7 @@ from time import sleep
 from unittest.mock import patch, ANY
 
 import pytest
+from freezegun import freeze_time
 
 from gs_quant import risk
 from gs_quant.api.gs.risk import GsRiskApi
@@ -40,16 +41,6 @@ WEEKEND_DATE = dt.date(2022, 3, 19)
 
 class TestProvider:
     pass
-
-
-@pytest.fixture
-def today_is_saturday(monkeypatch):
-    class MockedDatetime:
-        @classmethod
-        def today(cls):
-            return WEEKEND_DATE
-
-    monkeypatch.setattr(dt, 'date', MockedDatetime)
 
 
 def test_pricing_context(mocker):
@@ -83,7 +74,8 @@ def test_pricing_dates():
         PricingContext(pricing_date=future_date)
 
 
-def test_weekend_dates(today_is_saturday):
+@freeze_time(WEEKEND_DATE)
+def test_weekend_dates():
     assert dt.date.today() == WEEKEND_DATE  # Check mock worked
     next_monday = WEEKEND_DATE + dt.timedelta(2)
     prev_friday = WEEKEND_DATE - dt.timedelta(1)

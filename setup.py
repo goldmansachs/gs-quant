@@ -59,6 +59,7 @@ setuptools.setup(
         "certifi",
         "dataclasses_json",
         "deprecation",
+        "freezegun",
         "funcsigs",
         "inflection",
         "lmfit",

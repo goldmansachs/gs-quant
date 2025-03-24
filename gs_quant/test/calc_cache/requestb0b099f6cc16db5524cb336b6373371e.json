@@ -1,0 +1,9 @@
+{
+    "request_id": "5_QuantityScaledAction2_TransactionAggType.SUM_call_2021-12-10Price2021Dec10_QuantityScaledAction2_TransactionAggType.SUM_call_2021-12-09Price2021Dec09_QuantityScaledAction2_TransactionAggType.SUM_call_2021-12-08Price2021Dec08_QuantityScaledAction2_TransactionAggType.SUM_call_2021-12-07Price2021Dec07_QuantityScaledAction2_TransactionAggType.SUM_call_2021-12-06Price2021Dec06",
+    "request_hash": "b0b099f6cc16db5524cb336b6373371e",
+    "type": "MockCalc",
+    "tests": [
+        "test_add_scaled_action_nav_with_transaction_costs"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":43.22438082958899}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":56.18287458753866}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":77.95047367596331}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":115.08035388930726}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"European Euro\":1.0},\"val\":93.1238592136675}]]]]"
+}

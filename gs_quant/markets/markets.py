@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import pytz
 import re
 from typing import Mapping, Optional, Tuple, Union
 
@@ -25,6 +26,11 @@ from gs_quant.target.common import CloseMarket as _CloseMarket, LiveMarket as _L
     RefMarket as _RefMarket
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate, \
     MarketDataCoordinateValue as __MarketDataCoordinateValue
+
+location_to_tz_mapping = {PricingLocation.NYC: pytz.timezone("America/New_York"),
+                          PricingLocation.LDN: pytz.timezone("Europe/London"),
+                          PricingLocation.HKG: pytz.timezone("Asia/Hong_Kong"),
+                          PricingLocation.TKO: pytz.timezone("Asia/Tokyo")}
 
 
 def historical_risk_key(risk_key: RiskKey) -> RiskKey:
@@ -48,19 +54,27 @@ def market_location(location: Optional[PricingLocation] = None) -> PricingLocati
         return location
 
 
-def close_market_date(_location: Optional[Union[PricingLocation, str]] = None,
-                      date: Optional[dt.date] = None) -> dt.date:
+def close_market_date(location: Optional[Union[PricingLocation, str]] = None, date: Optional[dt.date] = None,
+                      roll_hr_and_min: Tuple[int, int] = (24, 0)) -> dt.date:
     """Determine market data date based on current location (to infer calendar)
     and current pricing date
 
-    :param _location: location (deprecated)
+    :param location: date location, used for the roll timezone
     :param date: pricing date
+    :param roll_hr_and_min: tuple of the hour and minute of the expected market data availability time
+    in the location timezone
     :return: close market date
     """
     from .core import PricingContext
     date = date or PricingContext.current.pricing_date
 
-    if date >= dt.date.today():
+    location_tz = location_to_tz_mapping[PricingLocation(location)]
+    now_time = dt.datetime.now().astimezone(location_tz).replace(tzinfo=None)
+    hr_offset = roll_hr_and_min[0]
+    min_offset = roll_hr_and_min[1]
+    roll_time = dt.datetime(date.year, date.month, date.day).replace(tzinfo=None) + \
+        dt.timedelta(hours=hr_offset, minutes=min_offset)
+    if now_time < roll_time:
         # Don't use the calendars argument here as external users do not (yet) have access to that dataset
         date = prev_business_date(date)
 
@@ -121,6 +135,7 @@ class CloseMarket(Market):
     and close_market_date
     """
     __date_cache = {}
+    roll_hr_and_min = (24, 0)  # tuple of today's expected hr/min of market data availability in the location tz
 
     def __init__(self,
                  date: Optional[dt.date] = None,
@@ -159,7 +174,7 @@ class CloseMarket(Market):
         if self.__date is not None and not self.check:
             return self.__date
         else:
-            return close_market_date(self.location, self.__date)
+            return close_market_date(self.location, self.__date, self.roll_hr_and_min)
 
 
 class TimestampedMarket(Market):

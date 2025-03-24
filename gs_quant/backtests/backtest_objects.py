@@ -493,6 +493,30 @@ class TransactionCostEntry:
             final_costs.append(cost)
         return self.cost_aggregation_func(final_costs)
 
+    def get_cost_by_component(self) -> Tuple[float, float]:
+        fixed_costs = []
+        scaled_costs = []
+        for m in self.all_transaction_models:
+            # charges may net out for portfolios
+            cost = sum(self.__resolved_cost(self._unit_cost_by_model_by_inst[m][i]) for i in self.all_instruments)
+            if isinstance(m, ScaledTransactionModel):
+                cost = abs(cost * m.scaling_level * self._additional_scaling)
+                scaled_costs.append(cost)
+            else:
+                fixed_costs.append(cost)
+        fixed_cost = self.cost_aggregation_func(fixed_costs)
+        scaled_cost = self.cost_aggregation_func(scaled_costs)
+        if self.cost_aggregation_func is sum:
+            return fixed_cost, scaled_cost
+        else:
+            # min or max
+            if self.cost_aggregation_func([fixed_cost, scaled_cost]) == fixed_cost:
+                return fixed_cost, 0
+            elif self.cost_aggregation_func([fixed_cost, scaled_cost]) == scaled_cost:
+                return 0, scaled_cost
+            else:
+                raise ValueError(f"Unable to split cost for aggregation function {self.cost_aggregation_func}")
+
 
 class CashPayment:
     def __init__(self, trade, effective_date=None, scale_date=None, direction=1, scaling_parameter='notional_amount',

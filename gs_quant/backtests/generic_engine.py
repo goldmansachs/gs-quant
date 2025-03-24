@@ -138,21 +138,50 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
     def __init__(self, action: AddScaledTradeAction):
         super().__init__(action)
 
+    @staticmethod
+    def __portfolio_scaling_for_available_cash(portfolio, available_cash, cur_day, unscaled_prices_by_day,
+                                               unscaled_entry_tces_by_day) -> float:
+        fixed_tcs = 0
+        scaling_based_tcs = 0
+        for inst in portfolio:
+            insed_fixed_tc, inst_scaling_tc = unscaled_entry_tces_by_day[cur_day][inst].get_cost_by_component()
+            fixed_tcs += insed_fixed_tc
+            scaling_based_tcs += inst_scaling_tc
+        # solve such that fixed TCs, instrument prices and scaled transaction costs (under the same scaling factor)
+        # add up to available_cash
+        scale_factor = max(available_cash - fixed_tcs, 0) / (unscaled_prices_by_day[cur_day].aggregate() +
+                                                             scaling_based_tcs)
+        # set additional scaling on TCE and solve again in case aggregation (min/max) has been affected by scaling
+        fixed_tcs = 0
+        scaling_based_tcs = 0
+        for inst in portfolio:
+            unscaled_entry_tces_by_day[cur_day][inst].additional_scaling = scale_factor
+            insed_fixed_tc, inst_scaling_tc = unscaled_entry_tces_by_day[cur_day][inst].get_cost_by_component()
+            fixed_tcs += insed_fixed_tc
+            scaling_based_tcs += inst_scaling_tc
+        return max(available_cash - fixed_tcs, 0) / (unscaled_prices_by_day[cur_day].aggregate() + scaling_based_tcs)
+
     def _nav_scale_orders(self, orders, price_measure, trigger_infos):
         sorted_order_days = sorted(make_list(orders.keys()))
         final_days_orders = {}
-
+        unscaled_entry_tces_by_day = defaultdict(dict)
+        unscaled_unwind_tces_by_day = defaultdict(dict)
         # Populate dict of dates and instruments sold on those dates
         for create_date, portfolio in orders.items():
             info = trigger_infos[create_date]
             for inst in portfolio.all_instruments:
+                tc_enter = TransactionCostEntry(create_date, inst, self.action.transaction_cost)
+                unscaled_entry_tces_by_day[create_date][inst] = tc_enter
                 d = self.get_instrument_final_date(inst, create_date, info)
+                tc_exit = TransactionCostEntry(d, inst, self.action.transaction_cost)
+                unscaled_unwind_tces_by_day[d][inst] = tc_exit
                 if d not in final_days_orders.keys():
                     final_days_orders[d] = []
                 final_days_orders[d].append(inst)
 
         unscaled_prices_by_day = {}
         unscaled_unwind_prices_by_day = {}
+        # Send all unscaled prices and transaction costs to calculate together
         with PricingContext(is_async=True):
             for day, portfolio in orders.items():
                 with PricingContext(pricing_date=day):
@@ -161,16 +190,24 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
                 if unwind_day <= dt.date.today():
                     with PricingContext(pricing_date=unwind_day):
                         unscaled_unwind_prices_by_day[unwind_day] = Portfolio(unwind_instruments).calc(price_measure)
-        # TODO keep track of TCs here
+            for day, inst_tce_map in unscaled_entry_tces_by_day.items():
+                for inst, tce in inst_tce_map.items():
+                    tce.calculate_unit_cost()
+            for day, inst_tce_map in unscaled_unwind_tces_by_day.items():
+                for inst, tce in inst_tce_map.items():
+                    tce.calculate_unit_cost()
 
-        # Start with first_quantity, then only use proceeds from selling instruments
+        # Start with scaling_level, then only use proceeds from selling instruments
         available_cash = self.action.scaling_level
         scaling_factors_by_inst = {}
+        scaling_factors_by_day = {}
         # Go through each order day of the strategy in sorted order
         for idx, cur_day in enumerate(sorted_order_days):
-            scale_factor = available_cash / unscaled_prices_by_day[cur_day].aggregate()
             portfolio = orders[cur_day]
-            portfolio.scale(scale_factor)
+            scale_factor = self.__portfolio_scaling_for_available_cash(portfolio, available_cash, cur_day,
+                                                                       unscaled_prices_by_day,
+                                                                       unscaled_entry_tces_by_day)
+            scaling_factors_by_day[cur_day] = scale_factor
             for inst in portfolio:
                 scaling_factors_by_inst[inst] = scale_factor
 
@@ -185,8 +222,17 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
             for d, p in final_days_orders.items():
                 # Only consider final days between current order date and the next in an iteration
                 if cur_day < d <= next_day:
-                    available_cash += sum(unscaled_unwind_prices_by_day[d][inst] * scaling_factors_by_inst[inst] for
-                                          inst in p)
+                    for inst in p:
+                        available_cash += unscaled_unwind_prices_by_day[d][inst] * scaling_factors_by_inst[inst]
+                        tce = unscaled_unwind_tces_by_day[d][inst]
+                        # additional_scaling only scales the scaling part of the TC
+                        tce.additional_scaling = scaling_factors_by_inst[inst]
+                        available_cash -= unscaled_unwind_tces_by_day[d][inst].get_final_cost()
+            available_cash = max(available_cash, 0)
+
+        # portfolio.scale() applies a deepcopy so interferes with inst dict lookup; apply at the end
+        for day in sorted_order_days:
+            orders[day].scale(scaling_factors_by_day[day])
 
     def _scale_order(self, orders, daily_risk, price_measure, trigger_infos):
         if self.action.scaling_type == ScalingActionType.size:
@@ -344,8 +390,9 @@ class ExitTradeActionImpl(ActionHandler):
                      trigger_info: Optional[Union[ExitTradeActionInfo, Iterable[ExitTradeActionInfo]]] = None):
 
         for s in make_list(state):
-
             trades_to_remove = []
+            if self.action.priceable_names is None:
+                current_trade_names = [i.name for i in list(backtest.portfolio_dict[s].all_instruments)]
 
             fut_dates = list(filter(lambda d: d >= s and type(d) is dt.date, backtest.states))
             for port_date in fut_dates:
@@ -366,11 +413,10 @@ class ExitTradeActionImpl(ActionHandler):
                                                 dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s and
                                                 x.name.split('_')[-2] in self.action.priceable_names]
                 else:
-                    # List of trade names not provided -> TradeDate <= exit trigger date
-                    port_indexes_to_remove = [i for i, x in enumerate(pos_fut) if
-                                              dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s]
-                    result_indexes_to_remove = [i for i, x in enumerate(res_fut) if
-                                                dt.datetime.strptime(x.name.split('_')[-1], '%Y-%m-%d').date() <= s]
+                    # List of trade names not provided -> TradeDate <= exit trigger date and trade present on trigger
+                    # date
+                    port_indexes_to_remove = [i for i, x in enumerate(pos_fut) if x.name in current_trade_names]
+                    result_indexes_to_remove = [i for i, x in enumerate(res_fut) if x.name in current_trade_names]
 
                 for index in sorted(port_indexes_to_remove, reverse=True):
                     # Get list of trades that have been removed to check for their future cash flow date
@@ -731,7 +777,8 @@ class GenericEngine(BacktestBaseEngine):
                                     trigger_info
                                 )
 
-    def _price_semi_det_triggers(self, backtest, risks):
+    @staticmethod
+    def _price_semi_det_triggers(backtest, risks):
         with PricingContext():
             backtest.calc_calls += 1
             for day, portfolio in backtest.portfolio_dict.items():

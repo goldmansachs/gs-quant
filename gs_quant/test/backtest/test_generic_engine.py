@@ -16,7 +16,7 @@ under the License.
 from datetime import date
 from unittest.mock import patch
 
-from gs_quant.target.measures import EqDelta
+from gs_quant.target.measures import EqDelta, EqVega
 
 from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction
 from gs_quant.backtests.backtest_objects import (ScaledTransactionModel, AggregateTransactionModel, TransactionAggType,
@@ -529,6 +529,71 @@ def test_add_scaled_action_nav(mocker):
         np.testing.assert_almost_equal(summary['Cumulative Cash'][0], -initial_cash)
         for c in summary['Cumulative Cash']:
             np.testing.assert_almost_equal(c, summary['Cumulative Cash'][0])
+
+
+def nav_scaled_action_transaction_cost_test_for_agg_type(mocker, agg_type):
+    with MockCalc(mocker):
+        start_date = date(2021, 12, 6)
+        end_date = date(2021, 12, 10)
+
+        initial_cash = 100
+
+        # Define instruments for strategy
+        call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                        option_style=OptionStyle.European, name='call')
+
+        scaled_transaction_cost = ScaledTransactionModel(EqVega, 1.2)
+        fixed_transaction_cost = ConstantTransactionModel(1)
+        agg_tc = AggregateTransactionModel((scaled_transaction_cost, fixed_transaction_cost), agg_type)
+
+        # NAV trading strategy with specified initial cash
+        trade_action_scaled = AddScaledTradeAction(priceables=call, trade_duration='1b',
+                                                   scaling_level=initial_cash,
+                                                   scaling_type=ScalingActionType.NAV,
+                                                   transaction_cost=agg_tc,
+                                                   name=f'QuantityScaledAction2_{agg_type}')
+
+        trade_trigger_scaled = PeriodicTrigger(
+            trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+            actions=trade_action_scaled)
+
+        strategy = Strategy(None, trade_trigger_scaled)
+
+        GE = GenericEngine()
+        backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+        summary = backtest.result_summary
+
+        ledger = backtest.trade_ledger().to_dict('index')
+        tc = backtest.transaction_costs
+
+        # Prior close value minus today's transaction costs equal today's value of options bought
+        np.testing.assert_almost_equal(ledger[f'QuantityScaledAction2_{agg_type}_call_2021-12-06']['Open Value'],
+                                       -initial_cash - tc[dt.date(2021, 12, 6)])
+        np.testing.assert_almost_equal(ledger[f'QuantityScaledAction2_{agg_type}_call_2021-12-07']['Open Value'],
+                                       -ledger[f'QuantityScaledAction2_{agg_type}_call_2021-12-06']['Close Value'] -
+                                       tc[dt.date(2021, 12, 7)])
+        np.testing.assert_almost_equal(ledger[f'QuantityScaledAction2_{agg_type}_call_2021-12-08']['Open Value'],
+                                       -ledger[f'QuantityScaledAction2_{agg_type}_call_2021-12-07']['Close Value'] -
+                                       tc[dt.date(2021, 12, 8)])
+        np.testing.assert_almost_equal(ledger[f'QuantityScaledAction2_{agg_type}_call_2021-12-09']['Open Value'],
+                                       -ledger[f'QuantityScaledAction2_{agg_type}_call_2021-12-08']['Close Value'] -
+                                       tc[dt.date(2021, 12, 9)])
+        np.testing.assert_almost_equal(ledger[f'QuantityScaledAction2_{agg_type}_call_2021-12-10']['Open Value'],
+                                       -ledger[f'QuantityScaledAction2_{agg_type}_call_2021-12-09']['Close Value'] -
+                                       tc[dt.date(2021, 12, 10)])
+
+        # Cash spent on trades + Transaction costs are equal to the initial cash throughout the entire strategy
+        total_cash_spent = summary['Cumulative Cash'] + summary['Transaction Costs']
+        np.testing.assert_almost_equal(total_cash_spent[0], -initial_cash)
+        for c in total_cash_spent:
+            np.testing.assert_almost_equal(c, total_cash_spent[0])
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_add_scaled_action_nav_with_transaction_costs(mocker):
+    for agg_type in (TransactionAggType.SUM, TransactionAggType.MAX, TransactionAggType.MIN):
+        nav_scaled_action_transaction_cost_test_for_agg_type(mocker, agg_type)
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)

@@ -445,7 +445,7 @@ class PricingContext(ContextBaseWithDefault):
     @property
     def market(self) -> Market:
         return self.__market if self.__market else CloseMarket(
-            date=close_market_date(self.market_data_location, self.pricing_date),
+            date=close_market_date(self.market_data_location, self.pricing_date, CloseMarket.roll_hr_and_min),
             location=self.market_data_location)
 
     @property
