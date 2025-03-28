@@ -1265,16 +1265,15 @@ def factset_fundamentals(asset: Asset,
 
     if report_format == FundamentalFormat.RESTATED:
         restated = '_R'
-        restated_col_name = 'R'
     else:
         restated = ''
-        restated_col_name = ''
     ds_id = f'FF_{basic}{derived}{restated}_{FF_BASIS_TO_DATASET[report_basis]}_GLOBAL'
     ds = Dataset(ds_id)
     df = ds.get_data(bbid=asset.get_identifier(AssetIdentifier.BLOOMBERG_ID), start=start_new, end=end)
+    if df.empty:
+        raise MqValueError(f'No data found for {metric.value} for {asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)}')
     df.reset_index(inplace=True)
-    column = ('ff' + metric.name.replace('_', ' ').title().replace(' ', '') +
-              restated_col_name)
+    column = 'ff' + metric.name.replace('_', ' ').title().replace(' ', '')
     df = df[['date', column]]
     date_range = pd.date_range(start=start_new, end=end, freq='D')
     date_df = pd.DataFrame({'date': date_range})

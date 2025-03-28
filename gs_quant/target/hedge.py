@@ -95,7 +95,8 @@ class AssetConstraint(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-class BasketConditions(DictBase):
+@dataclass
+class BasketConditions(Base):
     pass
 
 
@@ -308,7 +309,7 @@ class HedgerComparison(Base):
     entity_id: str = field(default=None, metadata=field_metadata)
     entity_type: HedgerComparisonType = field(default=None, metadata=field_metadata)
     hedge_properties: HedgerComparisonProperties = field(default=None, metadata=field_metadata)
-    result: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    result: Optional[Union[FactorHedgeResult, PerformanceHedgeResult]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -317,6 +318,8 @@ class HedgerComparison(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class Target(Base):
     id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    tags: Optional[Tuple[PositionTag, ...]] = field(default=None, metadata=field_metadata)
+    parent_sts_id: Optional[str] = field(default=None, metadata=field_metadata)
     positions: Optional[Tuple[Position, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
@@ -361,9 +364,13 @@ class FactorHedgeParameters(Base):
     constraint_priority_settings: Optional[FactorHedgerConstraintPrioritySettings] = field(default=None, metadata=field_metadata)
     comparisons: Optional[Tuple[HedgerComparison, ...]] = field(default=None, metadata=field_metadata)
     turnover_portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
+    turnover_tags: Optional[Tuple[PositionTag, ...]] = field(default=None, metadata=field_metadata)
     max_turnover_percentage: Optional[float] = field(default=None, metadata=field_metadata)
+    turnover_notional_type: Optional[str] = field(default=None, metadata=field_metadata)
     return_type: Optional[ReturnType] = field(default=None, metadata=field_metadata)
     is_best_basket: Optional[bool] = field(default=None, metadata=field_metadata)
+    is_sector_etf: Optional[bool] = field(default=None, metadata=config(field_name='isSectorETF', exclude=exclude_none))
+    is_sts: Optional[bool] = field(default=None, metadata=config(field_name='isSTS', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -390,6 +397,7 @@ class PerformanceHedgeParameters(Base):
     max_adv_percentage: Optional[float] = field(default=None, metadata=field_metadata)
     max_return_deviation: Optional[float] = field(default=None, metadata=field_metadata)
     max_weight: Optional[float] = field(default=None, metadata=field_metadata)
+    min_weight: Optional[float] = field(default=None, metadata=field_metadata)
     min_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
     max_market_cap: Optional[float] = field(default=None, metadata=field_metadata)
     market_participation_rate: Optional[float] = field(default=10, metadata=field_metadata)
@@ -401,6 +409,7 @@ class PerformanceHedgeParameters(Base):
     lasso_weight: Optional[float] = field(default=None, metadata=field_metadata)
     ridge_weight: Optional[float] = field(default=None, metadata=field_metadata)
     return_type: Optional[ReturnType] = field(default=None, metadata=field_metadata)
+    is_sts: Optional[bool] = field(default=None, metadata=config(field_name='isSTS', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -409,7 +418,7 @@ class PerformanceHedgeParameters(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class Hedge(Base):
     name: str = field(default=None, metadata=field_metadata)
-    parameters: DictBase = field(default=None, metadata=field_metadata)
+    parameters: Union[FactorHedgeParameters, PerformanceHedgeParameters] = field(default=None, metadata=field_metadata)
     id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
     owner_id: Optional[str] = field(default=None, metadata=field_metadata)
     created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
@@ -420,5 +429,5 @@ class Hedge(Base):
     tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
     objective: Optional[HedgeObjective] = field(default=None, metadata=field_metadata)
-    result: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    result: Optional[Union[FactorHedgeResult, PerformanceHedgeResult]] = field(default=None, metadata=field_metadata)
     comparison_results: Optional[Tuple[HedgerComparison, ...]] = field(default=None, metadata=field_metadata)

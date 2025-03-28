@@ -17,10 +17,10 @@ under the License.
 import dataclasses
 
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction, AdditionalResults, \
-    DateConfig, Trade, CostPerTransaction, Configuration
+    DateConfig, Trade, Configuration, TransactionCostConfig
 
 
 def test_request_types():
-    cls = (Transaction, AdditionalResults, DateConfig, Trade, CostPerTransaction, Configuration)
+    cls = (Transaction, AdditionalResults, DateConfig, Trade, TransactionCostConfig, Configuration)
     for c in cls:
         assert dataclasses.is_dataclass(c)

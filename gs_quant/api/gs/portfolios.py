@@ -27,7 +27,7 @@ from gs_quant.common import RiskRequest, Currency
 from gs_quant.errors import MqInternalServerError, MqTimeoutError, MqRateLimitedError
 from gs_quant.instrument import Instrument
 from gs_quant.session import GsSession
-from gs_quant.target.portfolios import Portfolio, Position, PositionSet
+from gs_quant.target.portfolios import Portfolio, Position, PositionSet, PortfolioTree
 from gs_quant.target.reports import Report
 from gs_quant.target.risk_models import RiskModelTerm as Term
 from gs_quant.workflow import WorkflowPosition, WorkflowPositionsResponse, SaveQuoteRequest
@@ -386,6 +386,10 @@ class GsPortfolioApi(ApiWithCustomSession):
     @classmethod
     def update_portfolio_tree(cls, portfolio_id: str):
         return GsSession.current._post(f'/portfolios/{portfolio_id}/tree', {})
+
+    @classmethod
+    def get_portfolio_tree(cls, portfolio_id: str):
+        return GsSession.current._get(f'/portfolios/{portfolio_id}/tree', cls=PortfolioTree)
 
     @classmethod
     def get_attribution(cls,

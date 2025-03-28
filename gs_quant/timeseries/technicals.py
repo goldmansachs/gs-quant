@@ -101,9 +101,9 @@ def bollinger_bands(x: pd.Series, w: Union[Window, int, str] = Window(None, 0), 
     a range around the price level which responds to local volatility changes. Returns two series,
     upper, :math:`u_t` and lower, :math:`l_t`
 
-    :math:`u_t = \\bar{X_t} + k\sigma_t`
+    :math:`u_t = \\bar{X_t} + k\\sigma_t`
 
-    :math:`l_t = \\bar{X_t} - k\sigma_t`
+    :math:`l_t = \\bar{X_t} - k\\sigma_t`
 
     where :math:`\\bar{X_t}` is the moving average over specified window, and :math:`\\sigma_t` is the rolling
     standard deviation over the specified window
@@ -308,7 +308,7 @@ def macd(x: pd.Series, m: int = 12, n: int = 26, s: int = 1) -> pd.Series:
 
     :math:`Y_0 = X_0`
 
-    :math:`Y_t = \\beta \cdot Y_{t-1} + (1 - \\beta) \cdot X_t`
+    :math:`Y_t = \\beta \\cdot Y_{t-1} + (1 - \\beta) \\cdot X_t`
 
     where :math:`\\beta = \\frac{2}{\\text{period} + 1}` is the weight we place on the previous average.
 

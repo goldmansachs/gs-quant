@@ -22,8 +22,8 @@ from typing import Optional, Union, Tuple
 from dataclasses_json import dataclass_json, LetterCase, config
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs_encoder, legs_decoder
-from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, \
-    CostPerTransaction, Configuration
+from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, Configuration, \
+    TransactionCostConfig
 from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import Strategy
 from gs_quant.common import RiskMeasure
 from gs_quant.json_convertors import decode_optional_date, decode_date_tuple, encode_date_tuple
@@ -53,7 +53,7 @@ class BasicBacktestRequest:
     trades: Tuple[Trade, ...]
     measures: Tuple[FlowVolBacktestMeasure, ...]
     delta_hedge_frequency: Optional[str] = None
-    transaction_costs: Optional[CostPerTransaction] = None
+    transaction_costs: Optional[TransactionCostConfig] = None
     configuration: Optional[Configuration] = None
 
 

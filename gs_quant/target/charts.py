@@ -226,11 +226,12 @@ class YAxisSettings(Base):
     id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
     label: Optional[str] = field(default=None, metadata=field_metadata)
     label_format: Optional[str] = field(default=None, metadata=field_metadata)
-    max_: Optional[int] = field(default=None, metadata=config(field_name='max', exclude=exclude_none))
-    min_: Optional[int] = field(default=None, metadata=config(field_name='min', exclude=exclude_none))
+    max_: Optional[float] = field(default=None, metadata=config(field_name='max', exclude=exclude_none))
+    min_: Optional[float] = field(default=None, metadata=config(field_name='min', exclude=exclude_none))
     show_grid_lines: Optional[bool] = field(default=None, metadata=field_metadata)
     hide: Optional[bool] = field(default=None, metadata=field_metadata)
     invert_axis: Optional[bool] = field(default=None, metadata=field_metadata)
+    show_label: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -291,6 +292,7 @@ class ChartExpression(Base):
     line_width: Optional[float] = field(default=None, metadata=field_metadata)
     x_label: Optional[str] = field(default=None, metadata=field_metadata)
     y_label: Optional[str] = field(default=None, metadata=field_metadata)
+    default_gradient: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -355,6 +357,7 @@ class Chart(Base):
     chart_properties: Optional[Tuple[ChartProperties, ...]] = field(default=None, metadata=field_metadata)
     regression_properties: Optional[Tuple[ChartRegression, ...]] = field(default=None, metadata=field_metadata)
     real_time: Optional[bool] = field(default=None, metadata=field_metadata)
+    conversation_id: Optional[str] = field(default=None, metadata=field_metadata)
     show_controls_toolbar: Optional[bool] = field(default=None, metadata=field_metadata)
     interval: Optional[str] = field(default=None, metadata=field_metadata)
     relative_start_date: Optional[str] = field(default=None, metadata=field_metadata)
@@ -377,4 +380,6 @@ class Chart(Base):
     annotations: Optional[Tuple[ChartAnnotation, ...]] = field(default=None, metadata=field_metadata)
     template_variables: Optional[DictBase] = field(default=None, metadata=field_metadata)
     parameters: Optional[ChartControls] = field(default=None, metadata=field_metadata)
-    controls: Optional[Tuple[DictBase, ...]] = field(default=None, metadata=field_metadata)
+    controls: Optional[Tuple[Union[ChartControls, bool, float, str], ...]] = field(default=None, metadata=field_metadata)
+    ai: Optional[str] = field(default=None, metadata=field_metadata)
+    ai_user_prompt: Optional[str] = field(default=None, metadata=field_metadata)

@@ -278,6 +278,7 @@ class CreditBasketParameters(Base):
     hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
     portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
     index_approval_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    credit_basket_type: Optional[CreditBasketType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -304,6 +305,7 @@ class HedgeFundParameters(Base):
     turnover: Optional[str] = field(default=None, metadata=field_metadata)
     vehicle_type: Optional[str] = field(default=None, metadata=field_metadata)
     last_returns_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    open_to_sma: Optional[bool] = field(default=None, metadata=config(field_name='openToSMA', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -448,7 +450,7 @@ class AssetGetRequestPathSchema(Base):
     asset_classifications_is_primary: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     tsdb_shortname: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    live_date: Optional[Tuple[DictBase, ...]] = field(default=None, metadata=field_metadata)
+    live_date: Optional[Tuple[Union[Op, datetime.date], ...]] = field(default=None, metadata=field_metadata)
     prime_id: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     description: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     asset_classifications_is_country_primary: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
@@ -463,7 +465,7 @@ class AssetGetRequestPathSchema(Base):
     region: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     asset_parameters_payer_spread: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     rating_linear: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    type_: Optional[Tuple[DictBase, ...]] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    type_: Optional[Tuple[Union[AssetType, RiskModelType], ...]] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     asset_parameters_index2_tenor: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     rating_standard_and_poors: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     asset_classifications_digital_asset_subsector: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)

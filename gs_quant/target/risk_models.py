@@ -59,9 +59,6 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Factor_Standard_Deviation = 'Factor Standard Deviation'
     Factor_Z_Score = 'Factor Z Score'
     Factor_Volatility = 'Factor Volatility'
-    Factor_Mean = 'Factor Mean'
-    Factor_Cross_Sectional_Mean = 'Factor Cross Sectional Mean'
-    Factor_Cross_Sectional_Standard_Deviation = 'Factor Cross Sectional Standard Deviation'
     Covariance_Matrix = 'Covariance Matrix'
     Issuer_Specific_Covariance = 'Issuer Specific Covariance'
     Factor_Portfolios = 'Factor Portfolios'
@@ -89,7 +86,10 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Pre_VRA_Covariance_Matrix = 'Pre VRA Covariance Matrix'
     Unadjusted_Covariance_Matrix = 'Unadjusted Covariance Matrix'
     Risk_Free_Rate = 'Risk Free Rate'
-    Currency_Exchange_Rate = "Currency Exchange Rate"
+    Currency_Exchange_Rate = 'Currency Exchange Rate'
+    Factor_Mean = 'Factor Mean'
+    Factor_Cross_Sectional_Standard_Deviation = 'Factor Cross Sectional Standard Deviation'
+    Factor_Cross_Sectional_Mean = 'Factor Cross Sectional Mean'    
 
 
 class RiskModelEventType(EnumBase, Enum):    
@@ -178,6 +178,16 @@ class RiskModelCalendar(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class RiskModelCurrencyRatesData(Base):
+    currency: Tuple[str, ...] = field(default=None, metadata=field_metadata)
+    exchange_rate: Tuple[float, ...] = field(default=None, metadata=field_metadata)
+    risk_free_rate: Tuple[float, ...] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class RiskModelFactorData(Base):
     factor_id: str = field(default=None, metadata=field_metadata)
     factor_name: str = field(default=None, metadata=field_metadata)
@@ -185,10 +195,10 @@ class RiskModelFactorData(Base):
     factor_category: str = field(default=None, metadata=field_metadata)
     factor_return: float = field(default=None, metadata=field_metadata)
     factor_standard_deviation: Optional[float] = field(default=None, metadata=field_metadata)
-    factor_z_score: Optional[float] = field(default=None, metadata=field_metadata)
+    factor_cross_sectional_standard_deviation: Optional[float] = field(default=None, metadata=field_metadata)
     factor_mean: Optional[float] = field(default=None, metadata=field_metadata)
     factor_cross_sectional_mean: Optional[float] = field(default=None, metadata=field_metadata)
-    factor_cross_sectional_standard_deviation: Optional[float] = field(default=None, metadata=field_metadata)
+    factor_z_score: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -212,15 +222,6 @@ class RiskModelIssuerSpecificCovarianceData(Base):
     universe_id2: Tuple[str, ...] = field(default=None, metadata=field_metadata)
     covariance: Tuple[float, ...] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class RiskModelCurrencyRatesData(Base):
-    currency: Tuple[str, ...] = field(default=None, metadata=field_metadata)
-    exchangeRate: Tuple[float, ...] = field(default=None, metadata=field_metadata)
-    risk_free_rate: Tuple[float, ...] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -270,6 +271,7 @@ class RiskModelAssetData(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class RiskModelCoverageRequest(Base):
     asset_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
     as_of_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     sort_by_term: Optional[RiskModelTerm] = field(default=None, metadata=field_metadata)
     vendor: Optional[str] = field(default=None, metadata=field_metadata)
@@ -327,8 +329,8 @@ class RiskModelData(Base):
     covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = field(default=None, metadata=field_metadata)
     pre_vra_covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = field(default=None, metadata=config(field_name='preVRACovarianceMatrix', exclude=exclude_none))
     unadjusted_covariance_matrix: Optional[Tuple[Tuple[float, ...], ...]] = field(default=None, metadata=field_metadata)
-    issuer_specific_covariance: Optional[RiskModelIssuerSpecificCovarianceData] = field(default=None, metadata=field_metadata)
     currency_rates_data: Optional[RiskModelCurrencyRatesData] = field(default=None, metadata=field_metadata)
+    issuer_specific_covariance: Optional[RiskModelIssuerSpecificCovarianceData] = field(default=None, metadata=field_metadata)
     factor_portfolios: Optional[RiskModelFactorPortfoliosData] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
@@ -341,9 +343,10 @@ class RiskModelDataRequest(Base):
     end_date: datetime.date = field(default=None, metadata=field_metadata)
     measures: Tuple[RiskModelDataMeasure, ...] = field(default=None, metadata=field_metadata)
     assets: Optional[RiskModelDataAssetsRequest] = field(default=None, metadata=field_metadata)
+    factors: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     limit_factors: Optional[bool] = field(default=True, metadata=field_metadata)
     base_currency_factor: Optional[str] = field(default=None, metadata=field_metadata)
-    format_: Optional[str] = field(default='Json', metadata=config(field_name='format', exclude=exclude_none))
+    format_: Optional[Format] = field(default=Format.Json, metadata=config(field_name='format', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

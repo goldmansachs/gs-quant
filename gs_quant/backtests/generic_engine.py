@@ -115,7 +115,7 @@ class AddTradeActionImpl(OrderBasedActionImpl):
                                                                        transaction_cost_entry=tc_enter))
                 backtest.transaction_cost_entries[create_date].append(tc_enter)
                 final_date = self.get_instrument_final_date(inst, create_date, info)
-                tc_exit = TransactionCostEntry(final_date, inst, self.action.transaction_cost)
+                tc_exit = TransactionCostEntry(final_date, inst, self.action.transaction_cost_exit)
                 current_tc_entries.append(tc_exit)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date,
                                                                       transaction_cost_entry=tc_exit))
@@ -173,7 +173,7 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
                 tc_enter = TransactionCostEntry(create_date, inst, self.action.transaction_cost)
                 unscaled_entry_tces_by_day[create_date][inst] = tc_enter
                 d = self.get_instrument_final_date(inst, create_date, info)
-                tc_exit = TransactionCostEntry(d, inst, self.action.transaction_cost)
+                tc_exit = TransactionCostEntry(d, inst, self.action.transaction_cost_exit)
                 unscaled_unwind_tces_by_day[d][inst] = tc_exit
                 if d not in final_days_orders.keys():
                     final_days_orders[d] = []
@@ -296,7 +296,7 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
                                                                        transaction_cost_entry=tc_enter))
                 backtest.transaction_cost_entries[create_date].append(tc_enter)
                 final_date = self.get_instrument_final_date(inst, create_date, info)
-                tc_exit = TransactionCostEntry(final_date, inst, self.action.transaction_cost)
+                tc_exit = TransactionCostEntry(final_date, inst, self.action.transaction_cost_exit)
                 current_tc_entries.append(tc_exit)
                 backtest.cash_payments[final_date].append(CashPayment(inst, effective_date=final_date,
                                                                       transaction_cost_entry=tc_exit))
@@ -358,7 +358,7 @@ class HedgeActionImpl(OrderBasedActionImpl):
                                             scaling_parameter=self.action.scaling_parameter,
                                             transaction_cost_entry=tc_enter)
                 backtest.transaction_cost_entries[create_date].append(tc_enter)
-                tc_exit = TransactionCostEntry(final_date, hedge_trade, self.action.transaction_cost)
+                tc_exit = TransactionCostEntry(final_date, hedge_trade, self.action.transaction_cost_exit)
                 current_tc_entries.append(tc_exit)
                 exit_payment = CashPayment(trade=hedge_trade, effective_date=final_date, scale_date=create_date,
                                            scaling_parameter=self.action.scaling_parameter,
@@ -498,7 +498,7 @@ class RebalanceActionImpl(ActionHandler):
         for d in reversed(sorted(cash_payment_dates)):
             for cp in backtest.cash_payments[d]:
                 if self.action.priceable.name.split('_')[-1] in cp.trade.name and cp.direction == 1:
-                    tc_exit = TransactionCostEntry(d, pos, self.action.transaction_cost)
+                    tc_exit = TransactionCostEntry(d, pos, self.action.transaction_cost_exit)
                     current_tc_entries.append(tc_exit)
                     unwind_payment = CashPayment(pos, effective_date=d, scaling_parameter=self.action.size_parameter,
                                                  transaction_cost_entry=tc_exit)
@@ -661,7 +661,11 @@ class GenericEngine(BacktestBaseEngine):
 
         strategy_pricing_dates = list(set(strategy_pricing_dates))
         strategy_pricing_dates.sort()
-        pnl_risks = [] if pnl_explain is None else pnl_explain.get_risks()
+        if pnl_explain is not None:
+            calc_risk_at_trade_exits = True
+            pnl_risks = pnl_explain.get_risks()
+        else:
+            pnl_risks = []
         risks = list(set(make_list(risks) + strategy.risks + pnl_risks + [self.price_measure]))
         if result_ccy is not None:
             risks = [(r(currency=result_ccy) if isinstance(r, ParameterisedRiskMeasure)

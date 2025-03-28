@@ -481,7 +481,45 @@ def test_hedge_transaction_costs(mocker):
             cur_bought_hedges = sum(i.number_of_options for i in port.priceables if i.name.startswith('Scaled'))
             # buy next hedge
             total_expected_transaction_costs += cur_bought_hedges
-            assert summary['Transaction Costs'][d]
+            np.testing.assert_almost_equal(-summary['Transaction Costs'][d], total_expected_transaction_costs)
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_exit_transaction_costs(mocker):
+    with MockCalc(mocker):
+        start_date = dt.date(2024, 6, 3)
+        end_date = dt.date(2024, 6, 7)
+
+        scaled_cost = 2
+        scaled_transaction_cost = ScaledTransactionModel('number_of_options', scaled_cost)
+        fixed_cost = 5
+        fixed_transaction_cost = ConstantTransactionModel(fixed_cost)
+
+        opt = EqOption(underlier='.SPX', option_type=OptionType.Call, number_of_options=1, expiration_date='3m',
+                       name='SPX_opt')
+        trade_action = AddTradeAction(priceables=opt, trade_duration='1b', transaction_cost=scaled_transaction_cost,
+                                      transaction_cost_exit=fixed_transaction_cost, name='Action1')
+        trade_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date,
+                                                                                         end_date=end_date,
+                                                                                         frequency='1b'),
+                                        actions=trade_action)
+
+        strategy = Strategy(None, trade_trigger)
+        GE = GenericEngine()
+        backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+        summary = backtest.result_summary
+
+        assert len(summary) == 5
+
+        total_expected_transaction_costs = 0
+        for d, port in backtest.portfolio_dict.items():
+            # sale of prior trades
+            total_expected_transaction_costs += 0 if d == start_date else fixed_cost
+            cur_bought = sum(i.number_of_options for i in port.priceables)
+            # buy next trade
+            total_expected_transaction_costs += scaled_cost * cur_bought
+            np.testing.assert_almost_equal(-summary['Transaction Costs'][d], total_expected_transaction_costs)
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)

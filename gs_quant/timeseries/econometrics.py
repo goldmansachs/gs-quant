@@ -472,7 +472,7 @@ def annualize(x: pd.Series) -> pd.Series:
     Based on number of days between observations, will determine an annualization factor and then adjust values
     accordingly. Useful for annualizing daily or monthly returns
 
-    :math:`Y_t = X_t * \sqrt{F}`
+    :math:`Y_t = X_t * \\sqrt{F}`
 
     Annualization factors as follows, based on period implied by observations:
 
@@ -540,9 +540,9 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
                   where :math:`X_t` is the asset price at time :math:`t`
     ===========   =======================================================
 
-    and :math:`\overline{R_t}` is the mean value over the same window:
+    and :math:`\\overline{R_t}` is the mean value over the same window:
 
-    :math:`\overline{R_t} = \\frac{\sum_{i=t-w+1}^{t} R_t}{N}`
+    :math:`\\overline{R_t} = \\frac{\\sum_{i=t-w+1}^{t} R_t}{N}`
 
     If window is not provided, computes realized volatility over the full series
 
@@ -589,7 +589,8 @@ def correlation(x: pd.Series, y: pd.Series,
     Calculate rolling `realized correlation <https://en.wikipedia.org/wiki/Correlation_and_dependence>`_,
     :math:`\\rho_t` of two price series over a given window:
 
-    :math:`\\rho_t = \\frac{\sum_{i=t-w+1}^t (R_t - \overline{R_t})(Y_t - \overline{S_t})}{(N-1)\sigma R_t\sigma S_t}`
+    :math:`\\rho_t =
+    \\frac{\\sum_{i=t-w+1}^t (R_t - \\overline{R_t})(Y_t - \\overline{S_t})}{(N-1)\\sigma R_t\\sigma S_t}`
 
     where N is the number of observations in each rolling window, :math:`w`, and :math:`R_t` and :math:`S_t` are the
     simple returns for each series on time :math:`t`
@@ -602,8 +603,8 @@ def correlation(x: pd.Series, y: pd.Series,
 
     :math:`R_t = X_t` and :math:`S_t = Y_t`
 
-    :math:`\overline{R_t}`, :math:`\overline{S_t}` are the mean values, and :math:`\sigma R_{t}` and
-    :math:`\sigma S_{t}` are the sample standard deviations, of  series
+    :math:`\\overline{R_t}`, :math:`\\overline{S_t}` are the mean values, and :math:`\\sigma R_{t}` and
+    :math:`\\sigma S_{t}` are the sample standard deviations, of  series
     :math:`R_t` and :math:`S_t` over the same window
 
     If window is not provided, computes realized correlation over the full series

@@ -54,6 +54,7 @@ class Action(object):
     _calc_type = CalcType.simple
     _risk = None
     _transaction_cost = ConstantTransactionModel(0)
+    _transaction_cost_exit = None
     name = None
     __sub_classes: ClassVar[List[type]] = []
 
@@ -90,6 +91,14 @@ class Action(object):
     def transaction_cost(self, value):
         self._transaction_cost = value
 
+    @property
+    def transaction_cost_exit(self):
+        return self._transaction_cost_exit
+
+    @transaction_cost_exit.setter
+    def transaction_cost_exit(self, value):
+        self._transaction_cost_exit = value
+
 
 TAction = TypeVar('TAction', bound='Action')
 
@@ -107,7 +116,8 @@ class AddTradeAction(Action):
                            trade will be added for all future dates
                            can also specify 'next schedule' in order to exit at the next periodic trigger date
     :param name: optional additional name to the priceable name
-    :param transaction_cost: optional a cash amount paid for each transaction, paid on both enter and exit
+    :param transaction_cost: optional a cash amount paid for each transaction
+    :param transaction_cost_exit: optionally specify a different model for exits; defaults to entry cost if None
     """
 
     priceables: Union[Instrument, Iterable[Instrument]] = field(default=None,
@@ -118,6 +128,9 @@ class AddTradeAction(Action):
     name: str = None
     transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
                                                metadata=config(decoder=dc_decode(ConstantTransactionModel)))
+    transaction_cost_exit: Optional[TransactionModel] = field(default=None,
+                                                              metadata=config(
+                                                                  decoder=dc_decode(ConstantTransactionModel)))
     holiday_calendar: Iterable[dt.date] = None
     class_type: str = static_field('add_trade_action')
 
@@ -135,6 +148,8 @@ class AddTradeAction(Action):
         self.priceables = named_priceables
         if self.transaction_cost is None:
             self.transaction_cost = ConstantTransactionModel(0)
+        if self.transaction_cost_exit is None:
+            self.transaction_cost_exit = self.transaction_cost
 
     def set_dated_priceables(self, state, priceables):
         self._dated_priceables[state] = make_list(priceables)
@@ -168,7 +183,8 @@ class AddScaledTradeAction(Action):
     :param scaling_type: the type of scaling we are doing
     :param scaling_risk: if the scaling type is a measure then this is the definition of the measure
     :param scaling_level: the level of scaling to be done
-    :param transaction_cost: optional a cash amount paid for each transaction, paid on both enter and exit
+    :param transaction_cost: optional a cash amount paid for each transaction
+    :param transaction_cost_exit: optionally specify a different model for exits; defaults to entry cost if None
     """
     priceables: Union[Priceable, Iterable[Priceable]] = field(default=None,
                                                               metadata=config(decoder=decode_named_instrument,
@@ -181,6 +197,9 @@ class AddScaledTradeAction(Action):
     scaling_level: Union[float, int] = 1
     transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
                                                metadata=config(decoder=dc_decode(ConstantTransactionModel)))
+    transaction_cost_exit: Optional[TransactionModel] = field(default=None,
+                                                              metadata=config(
+                                                                  decoder=dc_decode(ConstantTransactionModel)))
     holiday_calendar: Iterable[dt.date] = None
     class_type: str = static_field('add_scaled_trade_action')
 
@@ -195,6 +214,8 @@ class AddScaledTradeAction(Action):
             else:
                 named_priceables.append(p.clone(name=f'{self.name}_{p.name}'))
         self.priceables = named_priceables
+        if self.transaction_cost_exit is None:
+            self.transaction_cost_exit = self.transaction_cost
 
 
 @dataclass_json
@@ -283,7 +304,8 @@ class HedgeAction(Action):
                            trade will be added for all future dates
                            can also specify 'next schedule' in order to exit at the next periodic trigger date
     :param name: optional additional name to the priceable name
-    :param transaction_cost: optional a transaction cost model, paid on both enter and exit
+    :param transaction_cost: optional a cash amount paid for each transaction
+    :param transaction_cost_exit: optionally specify a different model for exits; defaults to entry cost if None
     :param risk_transformation: optional a Transformer which will be applied to the raw risk numbers before hedging
     :param holiday_calendar: optional an iterable list of holiday dates
     """
@@ -299,6 +321,9 @@ class HedgeAction(Action):
     scaling_parameter: str = 'notional_amount'
     transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
                                                metadata=config(decoder=dc_decode(ConstantTransactionModel)))
+    transaction_cost_exit: Optional[TransactionModel] = field(default=None,
+                                                              metadata=config(
+                                                                  decoder=dc_decode(ConstantTransactionModel)))
     risk_transformation: Transformer = None
     holiday_calendar: Iterable[dt.date] = None
     class_type: str = static_field('hedge_action')
@@ -326,6 +351,8 @@ class HedgeAction(Action):
         else:
             raise RuntimeError('hedge action only accepts one trade or one portfolio')
         self.priceables = named_priceable
+        if self.transaction_cost_exit is None:
+            self.transaction_cost_exit = self.transaction_cost
 
     @property
     def priceable(self):
@@ -341,6 +368,9 @@ class RebalanceAction(Action):
     method: Callable = None
     transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
                                                metadata=config(decoder=dc_decode(ConstantTransactionModel)))
+    transaction_cost_exit: Optional[TransactionModel] = field(default=None,
+                                                              metadata=config(
+                                                                  decoder=dc_decode(ConstantTransactionModel)))
     name: str = None
 
     def __post_init__(self):
@@ -353,3 +383,5 @@ class RebalanceAction(Action):
                 self.priceable = self.priceable.clone(name=f'{self.name}_Priceable0')
             else:
                 self.priceable = self.priceable.clone(name=f'{self.name}_{self.priceable.name}')
+        if self.transaction_cost_exit is None:
+            self.transaction_cost_exit = self.transaction_cost

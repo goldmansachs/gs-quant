@@ -80,7 +80,7 @@ setuptools.setup(
         "websockets"
     ],
     extras_require={
-        "internal": ["gs_quant_internal>=1.4.9"],
+        "internal": ["gs_quant_internal>=1.5.416"],
         "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib", "seaborn", "treelib"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "pytest-order", "testfixtures", "nbconvert", "nbformat",

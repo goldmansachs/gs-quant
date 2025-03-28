@@ -54,6 +54,19 @@ class RollDateMode(Enum):
         return None
 
 
+class TransactionCostScalingType(Enum):
+    Quantity = 'Quantity'
+    Notional = 'Notional'
+    Delta = 'Delta'
+    Vega = 'Vega'
+
+
+class CostAggregationType(Enum):
+    Sum = 'Sum'
+    Max = 'Max'
+    Min = 'Min'
+
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class Transaction:
@@ -104,11 +117,40 @@ class Trade:
     quantity_type: BacktestTradingQuantityType = BacktestTradingQuantityType.quantity
 
 
+class FixedCostModel:
+    cost: float = 0.0
+    type: str = 'fixed_cost_model'
+
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class CostPerTransaction:
-    cost_model: TransactionCostModel = TransactionCostModel.Fixed
-    cost: float = 0.0
+class ScaledCostModel:
+    scaling_level: float = 0.0
+    scaling_quantity_type: TransactionCostScalingType = TransactionCostScalingType.Quantity
+    type: str = 'scaled_cost_model'
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class AggregateCostModel:
+    models: Tuple[Union[FixedCostModel, ScaledCostModel], ...]
+    aggregation_type: CostAggregationType
+    type: str = 'aggregate_cost_model'
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class TradingCosts:
+    entry: Union[FixedCostModel, ScaledCostModel, AggregateCostModel]
+    exit: Optional[Union[FixedCostModel, ScaledCostModel, AggregateCostModel]] = None
+    type: str = 'trading_costs'
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class TransactionCostConfig:
+    trade_cost_model: TradingCosts
+    hedge_cost_model: Optional[TradingCosts] = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

@@ -110,4 +110,5 @@ class PositionSetPriceResponse(Base):
     unsupported_currencies: Optional[Tuple[Currency, ...]] = field(default=None, metadata=field_metadata)
     asset_ids_missing_multiplier: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     pricing_engine: Optional[BasketPricingEngine] = field(default=None, metadata=field_metadata)
+    pricing_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)

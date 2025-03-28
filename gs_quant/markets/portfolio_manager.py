@@ -34,7 +34,7 @@ from gs_quant.markets.portfolio_manager_utils import build_exposure_df, build_po
 from gs_quant.markets.report import PerformanceReport, ReportJobFuture
 from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType
 from gs_quant.target.common import Currency
-from gs_quant.target.portfolios import RiskAumSource
+from gs_quant.target.portfolios import RiskAumSource, PortfolioTree
 
 _logger = logging.getLogger(__name__)
 
@@ -197,7 +197,7 @@ class PortfolioManager(PositionedEntity):
             print(f'Scheduling reports from {start_date} to {end_date} in {len(batch_boundaries) - 1} batches')
 
             for i in range(len(batch_boundaries) - 1):
-                print(f'Scheduling for {batch_boundaries[i]} to {batch_boundaries[i+1]}')
+                print(f'Scheduling for {batch_boundaries[i]} to {batch_boundaries[i + 1]}')
                 GsPortfolioApi.schedule_reports(self.__portfolio_id,
                                                 batch_boundaries[i],
                                                 batch_boundaries[i + 1],
@@ -336,6 +336,12 @@ class PortfolioManager(PositionedEntity):
         etc), run this function so those changes reflect across all the portfolio's sub-portfolios
         """
         GsPortfolioApi.update_portfolio_tree(self.portfolio_id)
+
+    def get_portfolio_tree(self) -> PortfolioTree:
+        """
+        Get the portfolio tree of a fund of funds portfolio
+        """
+        return GsPortfolioApi.get_portfolio_tree(self.portfolio_id)
 
     def get_all_fund_of_fund_tags(self) -> List:
         """

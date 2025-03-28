@@ -1234,7 +1234,7 @@ def git_pieces_from_vcs(tag_prefix, root, verbose, runner=run_command):
     """
     GITS = ["git"]
     if sys.platform == "win32":
-        GITS = ["git.exe", "I:\sw\gs\git-1.16\dist\win\cmd\git.exe"]
+        GITS = ["git.exe", r"I:\sw\gs\git-1.16\dist\win\cmd\git.exe"]
 
     # GIT_DIR can interfere with correct operation of Versioneer.
     # It may be intended to be passed to the Versioneer-versioned project,
@@ -1365,7 +1365,7 @@ def do_vcs_install(versionfile_source, ipy):
     """
     GITS = ["git"]
     if sys.platform == "win32":
-        GITS = ["git.exe", "I:\sw\gs\git-1.16\dist\win\cmd\git.exe"]
+        GITS = ["git.exe", r"I:\sw\gs\git-1.16\dist\win\cmd\git.exe"]
     files = [versionfile_source]
     if ipy:
         files.append(ipy)

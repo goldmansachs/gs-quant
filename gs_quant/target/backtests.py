@@ -40,7 +40,7 @@ class BacktestRiskMeasureType(EnumBase, Enum):
     Price_ATMF_Volatility = 'Price ATMF Volatility'
     Barrier_Level = 'Barrier Level'
     Strike_Level_Adj_Implied = 'Strike Level Adj Implied'
-    Strike_Level_Adj_Realised = 'Strike Level Adj Realised'
+    Strike_Level_Adj_Realised = 'Strike Level Adj Realised'    
 
 
 class BacktestTradingQuantityType(EnumBase, Enum):    

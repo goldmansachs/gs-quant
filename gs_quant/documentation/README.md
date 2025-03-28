@@ -307,6 +307,7 @@ examples providing a searchable library of short specific snippets.
     - 📄 [05_Get ESG Analytics.ipynb](10_one_delta/demos/05_Get%20ESG%20Analytics.ipynb)
     - 📄 [06_Get Carbon Analytics.ipynb](10_one_delta/demos/06_Get%20Carbon%20Analytics.ipynb)
     - 📄 [07_Continuous_Optimization.ipynb](10_one_delta/demos/07_Continuous_Optimization.ipynb)
+    - 📄 [08_Continuous_Optimization_Preloaded_Portfolio.ipynb](10_one_delta/demos/08_Continuous_Optimization_Preloaded_Portfolio.ipynb)
   - 📁 scripts
     - 📁 hedger
       - 📄 [Optimizer.ipynb](10_one_delta/scripts/hedger/Optimizer.ipynb)

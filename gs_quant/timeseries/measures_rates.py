@@ -501,6 +501,7 @@ class BenchmarkType(Enum):
     NOWA = 'NOWA'
     CORRA = 'CORRA'
     SIOR = 'SIOR'
+    SORA = 'SORA'
 
 
 def _check_benchmark_type(currency, benchmark_type: Union[BenchmarkType, str], nothrow: bool = False) \
@@ -1113,7 +1114,7 @@ def _check_strike_reference(strike_reference):
         to_check = [strike_reference]
 
     for s in to_check:
-        if not re.fullmatch("ATM|ATM[-+]?([0-9]*\.[0-9]+|[0-9]+)", s):
+        if not re.fullmatch(r"ATM|ATM[-+]?([0-9]*\.[0-9]+|[0-9]+)", s):
             raise MqValueError('invalid strike reference ' + s)
     return strike_reference
 

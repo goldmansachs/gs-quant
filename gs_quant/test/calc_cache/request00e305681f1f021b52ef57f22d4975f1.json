@@ -1,0 +1,9 @@
+{
+    "request_id": "4_Action1_SPX_opt_2024-06-06Price2024Jun07_Action1_SPX_opt_2024-06-05Price2024Jun06_Action1_SPX_opt_2024-06-04Price2024Jun05_Action1_SPX_opt_2024-06-03Price2024Jun04",
+    "request_hash": "00e305681f1f021b52ef57f22d4975f1",
+    "type": "MockCalc",
+    "tests": [
+        "test_exit_transaction_costs"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":16448.823232831626}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":17394.03931208903}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":20727.544149823272}]]],[[[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":15860.139946933508}]]]]"
+}

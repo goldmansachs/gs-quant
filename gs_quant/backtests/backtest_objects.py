@@ -489,7 +489,7 @@ class TransactionCostEntry:
             # charges may net out for portfolios
             cost = sum(self.__resolved_cost(self._unit_cost_by_model_by_inst[m][i]) for i in self.all_instruments)
             if isinstance(m, ScaledTransactionModel):
-                cost = abs(cost * m.scaling_level * self._additional_scaling)
+                cost = m.scaling_level * abs(cost * self._additional_scaling)
             final_costs.append(cost)
         return self.cost_aggregation_func(final_costs)
 

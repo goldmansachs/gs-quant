@@ -217,6 +217,12 @@ def mock_fe_estimate_empty(_cls, bbid, start, end, feItem):
     return df
 
 
+def mock_factset_fundamentals_empty(_cls, bbid, start, end):
+    df = MarketDataResponseFrame()
+    df.dataset_id = 'FF_BASIC_R_AF_GLOBAL'
+    return df
+
+
 def mock_factset_fundamentals_basic(_cls, bbid, start, end):
     d = {
         'date': [Timestamp('2024-09-30 00:00:00')],
@@ -224,7 +230,6 @@ def mock_factset_fundamentals_basic(_cls, bbid, start, end):
         'adjDate': [Timestamp('2020-08-31 00:00:00')],
         'currency': ['USD'],
         'ffEpsBasic': [6.109],
-        'ffEpsAf': [6.0836],
         'fsymId': ['MH33D6-R'],
         'bbid': ['AAPL UW']
     }
@@ -254,8 +259,7 @@ def mock_factset_fundamentals_basic_restated(_cls, bbid, start, end):
         'isin': ['US0378331005'],
         'adjDate': [Timestamp('2020-08-31 00:00:00')],
         'currency': ['USD'],
-        'ffEpsBasicR': [6.109],
-        'ffEpsRAf': [6.0836],
+        'ffEpsBasic': [6.109],
         'fsymId': ['MH33D6-R'],
         'bbid': ['AAPL UW']
     }
@@ -517,6 +521,14 @@ def test_factset_fundamentals():
                                                           dtype='datetime64[ns]', name='date', freq=None),
                                       name=FundamentalMetric.EPS_BASIC.value), pd.Series(actual))
         assert actual.dataset_ids == 'FF_BASIC_R_AF_GLOBAL'
+
+        # Get empty data response
+        replace('gs_quant.data.Dataset.get_data', mock_factset_fundamentals_empty)
+        with pytest.raises(MqValueError):
+            tm.factset_fundamentals(mock_asset, metric=FundamentalMetric.EPS_BASIC,
+                                    report_basis=FundamentalBasis.ANN,
+                                    report_format=FundamentalFormat.RESTATED
+                                    )
 
     replace.restore()
 

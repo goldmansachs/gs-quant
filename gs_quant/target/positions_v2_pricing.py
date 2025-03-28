@@ -37,28 +37,6 @@ class PositionsPricingParameters(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class PositionsRequest(Base):
-    asset_id: str = field(default=None, metadata=field_metadata)
-    weight: Optional[float] = field(default=None, metadata=field_metadata)
-    quantity: Optional[float] = field(default=None, metadata=field_metadata)
-    notional: Optional[float] = field(default=None, metadata=field_metadata)
-    tags: Optional[Tuple[PositionTag, ...]] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class PositionSetRequest(Base):
-    date: datetime.date = field(default=None, metadata=field_metadata)
-    positions: Tuple[PositionsRequest, ...] = field(default=None, metadata=field_metadata)
-    target_notional: Optional[float] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class PositionsPricingRequest(Base):
     parameters: PositionsPricingParameters = field(default=None, metadata=field_metadata)
     position_sets: Tuple[PositionSetRequest, ...] = field(default=None, metadata=field_metadata)

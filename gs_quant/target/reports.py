@@ -82,7 +82,7 @@ class ReportStatus(EnumBase, Enum):
     error = 'error'
     cancelled = 'cancelled'
     waiting = 'waiting'
-    queued = 'queued'
+    queued = 'queued'    
 
 
 class ReportType(EnumBase, Enum):    
@@ -105,7 +105,8 @@ class ReportType(EnumBase, Enum):
     Risk_Calculation = 'Risk Calculation'
     Factor_Overview_Email = 'Factor Overview Email'
     FactSet_Fundamentals_Analytics = 'FactSet Fundamentals Analytics'
-    PCO = 'PCO'    
+    PCO = 'PCO'
+    Systematic_Hedging = 'Systematic Hedging'    
 
 
 @handle_camel_case_args

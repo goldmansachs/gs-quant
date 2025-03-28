@@ -71,6 +71,7 @@ class IndicesCurrency(EnumBase, Enum):
     GBP = 'GBP'
     CAD = 'CAD'
     AUD = 'AUD'
+    BRL = 'BRL'
     CHF = 'CHF'
     CNH = 'CNH'
     CNY = 'CNY'
@@ -96,8 +97,8 @@ class IndicesCurrency(EnumBase, Enum):
     THB = 'THB'
     TRY = 'TRY'
     TWD = 'TWD'
-    ZAR = 'ZAR'
-    BRL = 'BRL'    
+    VND = 'VND'
+    ZAR = 'ZAR'    
 
 
 @dataclass
@@ -372,7 +373,6 @@ class ISelectRebalance(Base):
     new_parameters: Optional[Tuple[ISelectNewParameter, ...]] = field(default=None, metadata=field_metadata)
     index_parameters: Optional[Tuple[ISelectIndexParameters, ...]] = field(default=None, metadata=field_metadata)
     waiver_requested: Optional[bool] = field(default=None, metadata=field_metadata)
-    custom_basket_import: Optional[str] = field(default=None, metadata=field_metadata)
     unwind_missing_constituents: Optional[bool] = field(default=True, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
@@ -481,6 +481,7 @@ class CreditCustomBasketCreateInputs(IndicesConstructRequestTypes):
     on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
     clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
     hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
+    credit_basket_type: Optional[CreditBasketType] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -514,6 +515,7 @@ class CreditCustomBasketRebalanceInputs(IndicesRebalanceInputTypes):
     portfolio_id: Optional[str] = field(default=None, metadata=field_metadata)
     hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
     save_as_draft: Optional[bool] = field(default=False, metadata=field_metadata)
+    credit_basket_type: Optional[CreditBasketType] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -578,6 +580,7 @@ class CustomBasketsEditInputs(Base):
     rebalance_calendar: Optional[EqBasketRebalanceCalendar] = field(default=None, metadata=field_metadata)
     benchmark: Optional[str] = field(default=None, metadata=field_metadata)
     on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
+    cash_reinvestment_treatment: Optional[CashReinvestmentTreatment] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -601,6 +604,7 @@ class CustomBasketsRebalanceInputs(Base):
     rebalance_calendar: Optional[EqBasketRebalanceCalendar] = field(default=None, metadata=field_metadata)
     benchmark: Optional[str] = field(default=None, metadata=field_metadata)
     on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
+    cash_reinvestment_treatment: Optional[CashReinvestmentTreatment] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -608,7 +612,7 @@ class CustomBasketsRebalanceInputs(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IndicesEditInputTypes(Base):
-    parameters: DictBase = field(default=None, metadata=field_metadata)
+    parameters: Union[CreditCustomBasketEditInputs, CustomBasketsEditInputs] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -623,7 +627,7 @@ class IndicesEditInputs(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class IndicesRebalanceInputs(IndicesRebalanceInputTypes):
-    parameters: DictBase = field(default=None, metadata=field_metadata)
+    parameters: Union[CustomBasketsRebalanceInputs, ISelectRebalance] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

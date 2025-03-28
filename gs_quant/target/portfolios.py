@@ -23,6 +23,9 @@ from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
 
 
+from gs_quant.target.reports import Report
+
+
 class ActiveWeightType(EnumBase, Enum):    
     
     """Weight type used to calculate active holdings."""
@@ -198,6 +201,20 @@ class Portfolio(Base):
     underlying_portfolio_ids: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     tags: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
     type_: Optional[PortfolioType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
-    parameters: Optional[DictBase] = field(default=None, metadata=field_metadata)
+    parameters: Optional[Union[CreditPreTradePortfolioParameters, GRDBPortfolioParameters, LiquidityRequest, PCOPortfolioParameters, TemporalPortfolioParameters, Tuple[SecDbBookDetail, ...]]] = field(default=None, metadata=field_metadata)
     aum_source: Optional[RiskAumSource] = field(default=None, metadata=field_metadata)
     tag_name_hierarchy: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class PortfolioTree(Base):
+    tag_name: Optional[str] = field(default=None, metadata=field_metadata)
+    tag_value: Optional[str] = field(default=None, metadata=field_metadata)
+    leaf_tag_name: Optional[str] = field(default=None, metadata=field_metadata)
+    reports: Optional[Tuple[Report, ...]] = field(default=None, metadata=field_metadata)
+    # Using forward reference via string instead of Lazy annotations because latter doesn't work very well with
+    # dataclasses - https://bugs.python.org/issue39442
+    sub_portfolios: Optional[Tuple['PortfolioTree', ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)

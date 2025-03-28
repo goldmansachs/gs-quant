@@ -25,25 +25,10 @@ from dataclasses_json import LetterCase, config, dataclass_json
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class ScreenParameters(Base):
-    face_value: Optional[float] = field(default=None, metadata=field_metadata)
-    direction: Optional[str] = field(default=None, metadata=field_metadata)
-    currency: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    gs_liquidity_score: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    gs_charge_bps: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    gs_charge_dollars: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    modified_duration: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    issue_date: Optional[AssetScreenerRequestFilterDateLimits] = field(default=None, metadata=field_metadata)
-    yield_to_convention: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    spread_to_benchmark: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    z_spread: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    g_spread: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    bval_mid_price: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    maturity: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    amount_outstanding: Optional[AssetScreenerRequestFilterLimits] = field(default=None, metadata=field_metadata)
-    rating_standard_and_poors: Optional[AssetScreenerCreditStandardAndPoorsRatingOptions] = field(default=None, metadata=field_metadata)
-    seniority: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    sector: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+class ScreenerQueryBuilder(Base):
+    filters: Optional[AssetScreenerCreditRequestFilters] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[str] = field(init=False, default='Credit', metadata=field_metadata)
+    type_: Optional[str] = field(init=False, default='Bond', metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -52,7 +37,7 @@ class ScreenParameters(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class Screen(Base):
     name: str = field(default=None, metadata=field_metadata)
-    parameters: ScreenParameters = field(default=None, metadata=field_metadata)
+    query_builder: ScreenerQueryBuilder = field(default=None, metadata=field_metadata)
     id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
     active: Optional[bool] = field(default=None, metadata=field_metadata)
     owner_id: Optional[str] = field(default=None, metadata=field_metadata)

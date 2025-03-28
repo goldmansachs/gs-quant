@@ -970,7 +970,7 @@ class PositionSet:
         unmapped_assets = []
         id_map = {}
         batch_size = 500
-        logging.debug(f'Resolving positions in {len(identifiers)/batch_size} batches')
+        logging.debug(f'Resolving positions in {len(identifiers) / batch_size} batches')
         for i in range(0, len(identifiers), batch_size):
             identifier_batch = identifiers[i: i + batch_size]
             response = GsAssetApi.resolve_assets(

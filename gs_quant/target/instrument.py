@@ -26,6 +26,16 @@ from gs_quant.instrument.core import Instrument
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class EqSyntheticDateInfo(Instrument):
+    date: Optional[str] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.SyntheticDateInfo, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class EqSyntheticOETTerms(Instrument):
     client_fee: Optional[str] = field(default=None, metadata=field_metadata)
     client_notice: Optional[str] = field(default=None, metadata=field_metadata)
@@ -38,18 +48,6 @@ class EqSyntheticOETTerms(Instrument):
     oet_type: Optional[str] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.SyntheticOETTerms, metadata=config(field_name='type', exclude=exclude_none))
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class EqSyntheticSchedule(Instrument):
-    period: Optional[str] = field(default=None, metadata=field_metadata)
-    delay: Optional[str] = field(default=None, metadata=field_metadata)
-    date_rule: Optional[str] = field(default=None, metadata=field_metadata)
-    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
-    type_: Optional[AssetType] = field(init=False, default=AssetType.SyntheticSchedule, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -134,6 +132,28 @@ class CommodIndexSwap(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class CommodListedOptionPeriod(Instrument):
+    contract: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    quantity: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Commod, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.ListedOptionPeriod, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CommodListedSwapPeriod(Instrument):
+    contract: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    quantity: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Commod, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.ListedSwapPeriod, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class CommodOTCOptionPeriod(Instrument):
     start: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
     end: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
@@ -203,6 +223,47 @@ class CommodSwapData(Instrument):
     native_quantity_unit: Optional[str] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Commod, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.SwapData, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class EqAsianOption(Instrument):
+    underlier: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    expiration_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    strike_price: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    option_style: Optional[OptionStyle] = field(default=None, metadata=field_metadata)
+    number_of_options: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    valuation_time: Optional[str] = field(default=None, metadata=field_metadata)
+    method_of_settlement: Optional[OptionSettlementMethod] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    holiday_calendar: Optional[str] = field(default=None, metadata=field_metadata)
+    premium_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    notional: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    denominated: Optional[Currency] = field(default=None, metadata=field_metadata)
+    payment_holidays: Optional[Currency] = field(default=None, metadata=field_metadata)
+    composite_ccy: Optional[Currency] = field(default=None, metadata=field_metadata)
+    accumstart_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    margin_id: Optional[str] = field(default=None, metadata=field_metadata)
+    fx_data_source: Optional[str] = field(default=None, metadata=field_metadata)
+    termination_date_bdc: Optional[str] = field(default=None, metadata=field_metadata)
+    observation_date_bdc: Optional[str] = field(default=None, metadata=field_metadata)
+    averaging_date_disruption: Optional[str] = field(default=None, metadata=field_metadata)
+    strike_adjust_type: Optional[str] = field(default=None, metadata=field_metadata)
+    use_dividend_dates: Optional[str] = field(default=None, metadata=field_metadata)
+    include_special_div: Optional[str] = field(default=None, metadata=field_metadata)
+    strike_weights_customized: Optional[str] = field(default=None, metadata=field_metadata)
+    asian_performance: Optional[str] = field(default=None, metadata=field_metadata)
+    use_contract_div: Optional[str] = field(default=None, metadata=field_metadata)
+    use_net_divs: Optional[str] = field(default=None, metadata=field_metadata)
+    asian_dates_customized: Optional[str] = field(default=None, metadata=field_metadata)
+    expiry_settlement_days: Optional[str] = field(default=None, metadata=field_metadata)
+    strike_fixing_dates_customized: Optional[str] = field(default=None, metadata=field_metadata)
+    fixed_share: Optional[str] = field(default=None, metadata=field_metadata)
+    asian_weights_customized: Optional[str] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.AsianOption, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -338,6 +399,19 @@ class EqContractDivOption(Instrument):
     type_: Optional[AssetType] = field(init=False, default=AssetType.ContractDivOption, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
+    def scale_in_place(self, scaling: Optional[float] = None):
+        if self.unresolved is None:
+            raise RuntimeError('Can only scale resolved instruments')
+        if scaling is None or scaling == 1:
+            return
+    
+        if scaling < 0:
+            flip_dict = {BuySell.Buy: BuySell.Sell, BuySell.Sell: BuySell.Buy}
+            self.buy_sell = flip_dict[self.buy_sell]
+            
+        self.number_of_options *= abs(scaling)
+        return
+
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -355,6 +429,43 @@ class EqConvertibleBond(Instrument):
     multiplier: Optional[float] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.Convertible, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class EqDigital(Instrument):
+    underlier: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    expiration_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    strike_price: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    option_type: Optional[OptionType] = field(default=None, metadata=field_metadata)
+    option_style: Optional[OptionStyle] = field(default=None, metadata=field_metadata)
+    number_of_options: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    exchange: Optional[str] = field(default=None, metadata=field_metadata)
+    multiplier: Optional[float] = field(default=None, metadata=field_metadata)
+    settlement_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    settlement_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    premium: Optional[float] = field(default=0.0, metadata=field_metadata)
+    premium_payment_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    valuation_time: Optional[ValuationTime] = field(default=None, metadata=field_metadata)
+    method_of_settlement: Optional[OptionSettlementMethod] = field(default=None, metadata=field_metadata)
+    underlier_type: Optional[UnderlierType] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    premium_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    trade_as: Optional[TradeAs] = field(default=None, metadata=field_metadata)
+    future_contract: Optional[str] = field(default=None, metadata=field_metadata)
+    underlier_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    premium_settlement_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    expiry_settlement_days: Optional[str] = field(default=None, metadata=field_metadata)
+    expiry_settle_date: Optional[str] = field(default=None, metadata=field_metadata)
+    binary_position: Optional[str] = field(default=None, metadata=field_metadata)
+    binary_width_bps: Optional[float] = field(default=None, metadata=field_metadata)
+    denominated: Optional[Currency] = field(default=None, metadata=field_metadata)
+    payment_style: Optional[str] = field(default=None, metadata=field_metadata)
+    strict_barrier: Optional[str] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.Digital, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -421,6 +532,30 @@ class EqFuture(Instrument):
     denominated: Optional[Currency] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.Future, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class EqLockedLadder(Instrument):
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    premium_payment_date: Optional[str] = field(default=None, metadata=field_metadata)
+    premium_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    premium: Optional[float] = field(default=0.0, metadata=field_metadata)
+    underlier: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    expiration_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    notional_amount: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    first_valuation_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    last_valuation_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    valuation_period: Optional[str] = field(default=None, metadata=field_metadata)
+    strike_price: Optional[float] = field(default=None, metadata=field_metadata)
+    payment_frequency: Optional[PaymentFrequency] = field(default=PaymentFrequency.Maturity, metadata=field_metadata)
+    ladder_multipliers: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    weights: Optional[Tuple[float, ...]] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.LockedLadder, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -497,6 +632,30 @@ class EqOptionLeg(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class EqQuantoOption(Instrument):
+    underlier: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    expiration_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    strike_price: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    option_type: Optional[OptionType] = field(default=None, metadata=field_metadata)
+    number_of_options: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    settlement_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    premium: Optional[float] = field(default=0.0, metadata=field_metadata)
+    valuation_time: Optional[ValuationTime] = field(default=None, metadata=field_metadata)
+    underlier_type: Optional[UnderlierType] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    premium_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    future_contract: Optional[str] = field(default=None, metadata=field_metadata)
+    premium_settlement_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    expiry_settlement_days: Optional[str] = field(default=None, metadata=field_metadata)
+    denominated: Optional[Currency] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.QuantoOption, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class EqStock(Instrument):
     identifier: Optional[str] = field(default=None, metadata=field_metadata)
     identifier_type: Optional[UnderlierType] = field(default=None, metadata=field_metadata)
@@ -513,15 +672,13 @@ class EqStock(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class EqSyntheticLeg(Instrument):
-    schedule_type: Optional[str] = field(default=None, metadata=field_metadata)
-    first_roll_date: Optional[str] = field(default=None, metadata=field_metadata)
-    first_roll_date_day_of_month: Optional[float] = field(default=None, metadata=field_metadata)
-    payment_schedule: Optional[Tuple[EqSyntheticSchedule, ...]] = field(default=None, metadata=field_metadata)
-    reset_schedule: Optional[Tuple[EqSyntheticSchedule, ...]] = field(default=None, metadata=field_metadata)
-    valuation_schedule: Optional[Tuple[EqSyntheticSchedule, ...]] = field(default=None, metadata=field_metadata)
+class EqSyntheticSchedule(Instrument):
+    period: Optional[str] = field(default=None, metadata=field_metadata)
+    delay: Optional[str] = field(default=None, metadata=field_metadata)
+    date_rule: Optional[str] = field(default=None, metadata=field_metadata)
+    dates: Optional[Tuple[EqSyntheticDateInfo, ...]] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
-    type_: Optional[AssetType] = field(init=False, default=AssetType.SyntheticLeg, metadata=config(field_name='type', exclude=exclude_none))
+    type_: Optional[AssetType] = field(init=False, default=AssetType.SyntheticSchedule, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -1355,6 +1512,50 @@ class CDIndexOption(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class CommodListedOption(Instrument):
+    buy_sells: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    venue: Optional[str] = field(default=None, metadata=field_metadata)
+    underlier: Optional[str] = field(default=None, metadata=field_metadata)
+    start: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    end: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    quantity: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    native_quantity_unit: Optional[str] = field(default=None, metadata=field_metadata)
+    premium: Optional[str] = field(default=None, metadata=field_metadata)
+    premium_unit: Optional[str] = field(default=None, metadata=field_metadata)
+    strategy: Optional[str] = field(default=None, metadata=field_metadata)
+    strikes: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    quantity_period: Optional[str] = field(default=None, metadata=field_metadata)
+    option_types: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    number_of_periods: Optional[int] = field(default=None, metadata=field_metadata)
+    period_details: Optional[Tuple[CommodListedOptionPeriod, ...]] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Commod, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.ListedOption, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class CommodListedSwap(Instrument):
+    buy_sells: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    venue: Optional[str] = field(default=None, metadata=field_metadata)
+    commodity: Optional[str] = field(default=None, metadata=field_metadata)
+    start: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    end: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    quantity: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    native_quantity_unit: Optional[str] = field(default=None, metadata=field_metadata)
+    fixing_currency: Optional[str] = field(default=None, metadata=field_metadata)
+    strategy: Optional[str] = field(default=None, metadata=field_metadata)
+    number_of_periods: Optional[int] = field(default=None, metadata=field_metadata)
+    period_details: Optional[Tuple[CommodListedSwapPeriod, ...]] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Commod, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.ListedSwap, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class CommodOTCOptionLeg(Instrument):
     option_type: Optional[OptionType] = field(default=None, metadata=field_metadata)
     fixing_currency: Optional[CurrencyName] = field(default=None, metadata=field_metadata)
@@ -1532,38 +1733,15 @@ class EqOptionStrategy(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class EqSynthetic(Instrument):
-    underlier: Union[float, str] = field(default=None, metadata=field_metadata)
-    expiry: Union[datetime.date, str] = field(default=None, metadata=field_metadata)
-    currency: Optional[Currency] = field(default=None, metadata=field_metadata)
-    swap_type: Optional[SwapType] = field(default=SwapType.Eq_Swap, metadata=field_metadata)
-    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
-    underlier_type: Optional[UnderlierType] = field(default=None, metadata=field_metadata)
-    effective_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
-    num_of_underlyers: Optional[float] = field(default=None, metadata=field_metadata)
-    rate_tenor: Optional[str] = field(default=None, metadata=field_metadata)
-    commission: Optional[float] = field(default=None, metadata=field_metadata)
-    commission_units: Optional[str] = field(default=None, metadata=field_metadata)
-    strike: Optional[float] = field(default=None, metadata=field_metadata)
-    initial_valuation_date: Optional[str] = field(default=None, metadata=field_metadata)
+class EqSyntheticLeg(Instrument):
     schedule_type: Optional[str] = field(default=None, metadata=field_metadata)
-    oet_terms: Optional[Tuple[EqSyntheticOETTerms, ...]] = field(default=None, metadata=field_metadata)
-    dividend_pay_ratio: Optional[float] = field(default=None, metadata=field_metadata)
-    trade_date: Optional[str] = field(default=None, metadata=field_metadata)
-    fx_data_source: Optional[str] = field(default=None, metadata=field_metadata)
-    rate_option: Optional[str] = field(default=None, metadata=field_metadata)
-    settlement_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
-    settlement_delay: Optional[str] = field(default=None, metadata=field_metadata)
-    eq_leg: Optional[Tuple[EqSyntheticLeg, ...]] = field(default=None, metadata=field_metadata)
-    funding_leg: Optional[Tuple[EqSyntheticLeg, ...]] = field(default=None, metadata=field_metadata)
-    valuation_bdc: Optional[float] = field(default=None, metadata=field_metadata)
-    payment_bdc: Optional[float] = field(default=None, metadata=field_metadata)
-    commission_type: Optional[str] = field(default=None, metadata=field_metadata)
-    designated_maturity: Optional[str] = field(default=None, metadata=field_metadata)
-    reset_delay: Optional[str] = field(default=None, metadata=field_metadata)
-    payment_delay: Optional[str] = field(default=None, metadata=field_metadata)
+    first_roll_date: Optional[str] = field(default=None, metadata=field_metadata)
+    first_roll_date_day_of_month: Optional[float] = field(default=None, metadata=field_metadata)
+    payment_schedule: Optional[Tuple[EqSyntheticSchedule, ...]] = field(default=None, metadata=field_metadata)
+    reset_schedule: Optional[Tuple[EqSyntheticSchedule, ...]] = field(default=None, metadata=field_metadata)
+    valuation_schedule: Optional[Tuple[EqSyntheticSchedule, ...]] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
-    type_: Optional[AssetType] = field(init=False, default=AssetType.Synthetic, metadata=config(field_name='type', exclude=exclude_none))
+    type_: Optional[AssetType] = field(init=False, default=AssetType.SyntheticLeg, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -2405,6 +2583,50 @@ class CommodOTCOption(Instrument):
     strategy: Optional[str] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Commod, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.OptionStrategy, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class EqSynthetic(Instrument):
+    underlier: Union[float, str] = field(default=None, metadata=field_metadata)
+    expiry: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    swap_type: Optional[SwapType] = field(default=SwapType.Eq_Synthetic_OET, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    underlier_type: Optional[UnderlierType] = field(default=None, metadata=field_metadata)
+    effective_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    num_of_underlyers: Optional[float] = field(default=None, metadata=field_metadata)
+    rate_tenor: Optional[str] = field(default=None, metadata=field_metadata)
+    forwardstartingfixednotional: Optional[float] = field(default=None, metadata=field_metadata)
+    forwardstartingnotionalprecision: Optional[float] = field(default=None, metadata=field_metadata)
+    commission: Optional[float] = field(default=None, metadata=field_metadata)
+    commission_units: Optional[str] = field(default=None, metadata=field_metadata)
+    quantity: Optional[str] = field(default=None, metadata=field_metadata)
+    strike: Optional[float] = field(default=None, metadata=field_metadata)
+    initial_valuation_date: Optional[str] = field(default=None, metadata=field_metadata)
+    schedule_type: Optional[str] = field(default=None, metadata=field_metadata)
+    oet_terms: Optional[Tuple[EqSyntheticOETTerms, ...]] = field(default=None, metadata=field_metadata)
+    dividend_pay_ratio: Optional[float] = field(default=None, metadata=field_metadata)
+    trade_date: Optional[str] = field(default=None, metadata=field_metadata)
+    strike_date: Optional[str] = field(default=None, metadata=field_metadata)
+    fx_data_source: Optional[str] = field(default=None, metadata=field_metadata)
+    rate_option: Optional[str] = field(default=None, metadata=field_metadata)
+    settlement_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    settlement_delay: Optional[str] = field(default=None, metadata=field_metadata)
+    eq_leg: Optional[Tuple[EqSyntheticLeg, ...]] = field(default=None, metadata=field_metadata)
+    funding_leg: Optional[Tuple[EqSyntheticLeg, ...]] = field(default=None, metadata=field_metadata)
+    valuation_bdc: Optional[float] = field(default=None, metadata=field_metadata)
+    payment_bdc: Optional[float] = field(default=None, metadata=field_metadata)
+    commission_type: Optional[str] = field(default=None, metadata=field_metadata)
+    designated_maturity: Optional[str] = field(default=None, metadata=field_metadata)
+    reset_delay: Optional[str] = field(default=None, metadata=field_metadata)
+    payment_delay: Optional[str] = field(default=None, metadata=field_metadata)
+    compounded_funding: Optional[float] = field(default=None, metadata=field_metadata)
+    generate_programmed_dates: Optional[float] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Equity, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.Synthetic, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

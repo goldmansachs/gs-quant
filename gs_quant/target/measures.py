@@ -46,6 +46,29 @@ class RiskMeasureWithCurrencyParameter(ParameterisedRiskMeasure):
         return clone
 
 
+class RiskMeasureWithDoubleParameter(ParameterisedRiskMeasure):
+    @property
+    def double(self):
+        return self.parameters.value if self.parameters else None
+
+    def __call__(self, double=None,  name=None):
+        # hack to prevent ParameterisedRiskMeasure input into pandas LocIndexer as a callable function that returns
+        # output for indexing (https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.loc.html)
+        if isinstance(double, (pd.Series, pd.DataFrame)):
+            return self
+
+        clone = copy.copy(self)
+        if name:
+            clone.name = name
+
+        if double is None and clone.parameters is not None:
+            double = clone.parameters.double
+
+        param = DoubleParameter(value=double)
+        clone.parameters = param
+        return clone
+
+
 class RiskMeasureWithListOfNumberParameter(ParameterisedRiskMeasure):
     @property
     def list_of_number(self):
@@ -373,6 +396,9 @@ FXQuotedDeltaNoPremAdj.__doc__ = "FXQuotedDeltaNoPremAdj"
 
 FXQuotedVega = RiskMeasure(name="FXQuotedVega", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Quoted Vega"))
 FXQuotedVega.__doc__ = "FXQuotedVega"
+
+FXQuotedVegaBps = RiskMeasure(name="FXQuotedVegaBps", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Quoted Vega"))
+FXQuotedVegaBps.__doc__ = "FXQuotedVegaBps"
 
 FXSpot = RiskMeasure(name="FXSpot", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Spot"))
 FXSpot.__doc__ = "FX spot reference"

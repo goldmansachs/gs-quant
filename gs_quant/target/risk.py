@@ -78,6 +78,14 @@ class RiskViewsUnit(EnumBase, Enum):
     Percent = 'Percent'    
 
 
+class ShockUnit(EnumBase, Enum):    
+    
+    """The unit of the shocks passed in."""
+
+    percent = 'percent'
+    standardDeviation = 'standardDeviation'    
+
+
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
@@ -113,6 +121,7 @@ class FactorHistoricalSimulationScenarioParameters(Base):
 class FactorShock(Base):
     factor: str = field(default=None, metadata=field_metadata)
     shock: float = field(default=None, metadata=field_metadata)
+    factor_category: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -455,8 +464,10 @@ class TradeCompleteAtHorizon(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class FactorShockScenarioParameters(Base):
+    risk_model: str = field(default=None, metadata=field_metadata)
     factor_shocks: Tuple[FactorShock, ...] = field(default=None, metadata=field_metadata)
     propagate_shocks: bool = field(default=None, metadata=field_metadata)
+    shock_unit: Optional[ShockUnit] = field(default=ShockUnit.percent, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

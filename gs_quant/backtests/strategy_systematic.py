@@ -21,7 +21,7 @@ from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.api.gs.backtests_xasset.apis import GsBacktestXassetApi
 from gs_quant.api.gs.backtests_xasset.request import BasicBacktestRequest
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, Configuration, \
-    RollDateMode
+    RollDateMode, TransactionCostConfig
 from gs_quant.backtests.core import Backtest, TradeInMethod
 from gs_quant.errors import MqValueError
 from gs_quant.target.backtests import *
@@ -58,7 +58,8 @@ class StrategySystematic:
                  market_model: Union[EquityMarketModel, str] = EquityMarketModel.SFK,
                  roll_date_mode: str = None,
                  expiry_date_mode: str = None,
-                 cash_accrual: bool = True):
+                 cash_accrual: bool = True,
+                 transaction_cost_config: TransactionCostConfig = None):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name
@@ -122,6 +123,7 @@ class StrategySystematic:
         self.__trades = (Trade(tuple(trade_instruments), roll_frequency, trade_buy_dates, roll_frequency,
                                trade_exit_dates, quantity, quantity_type),)
         self.__delta_hedge_frequency = '1b' if delta_hedge else None
+        self.__transaction_cost_config = transaction_cost_config
         self.__xasset_bt_service_config = Configuration(roll_date_mode=RollDateMode(roll_date_mode) if
                                                         roll_date_mode is not None else None)
 
@@ -158,7 +160,7 @@ class StrategySystematic:
         if not calc_measures:
             calc_measures = (FlowVolBacktestMeasure.PNL,)
         basic_bt_request = BasicBacktestRequest(date_cfg, self.__trades, calc_measures, self.__delta_hedge_frequency,
-                                                None, self.__xasset_bt_service_config)
+                                                self.__transaction_cost_config, self.__xasset_bt_service_config)
         basic_bt_response = GsBacktestXassetApi.calculate_basic_backtest(basic_bt_request, decode_instruments=False)
         risks = tuple(
             BacktestRisk(name=k.value,

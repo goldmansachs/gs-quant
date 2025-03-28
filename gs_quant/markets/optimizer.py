@@ -1448,8 +1448,8 @@ class OptimizerStrategy:
             raise MqValueError(f'There was an error pricing your positions: {e}')
         if 'errorMessage' in price_results:
             if len(price_results.get('assetIdsMissingPrices', [])) > 0:
-                logging.info(f'Marquee is missing prices on {self.initial_position_set.date} for the following assets: '
-                             f'{price_results["assetIdsMissingPrices"]}. ')
+                _logger.warning(f'Marquee is missing prices on {self.initial_position_set.date} for '
+                                f'the following assets: {price_results["assetIdsMissingPrices"]}. ')
             raise MqValueError(f'There was an error pricing your positions: {price_results["errorMessage"]}')
         if self.initial_position_set.reference_notional is None:
             parameters['targetNotional'] = price_results.get('actualNotional')
@@ -1504,7 +1504,7 @@ class OptimizerStrategy:
         result = self.__result[result_key]
         return PositionSet(
             date=self.initial_position_set.date,
-            reference_notional=result['grossExposure'] if by_weight else None,
+            reference_notional=result['netExposure'] if by_weight else None,
             positions=[Position(identifier=asset.get('bbid', asset['name']),
                                 asset_id=asset['assetId'],
                                 quantity=asset['shares'] if not by_weight else None,
