@@ -849,7 +849,8 @@ class GenericEngine(BacktestBaseEngine):
                     raise RuntimeError('cannot hedge in a different currency')
                 scaling_factor = current_risk / hedge_risk
                 hedge.entry_payment.transaction_cost_entry.additional_scaling = scaling_factor
-                hedge.exit_payment.transaction_cost_entry.additional_scaling = scaling_factor
+                if hedge.exit_payment is not None:
+                    hedge.exit_payment.transaction_cost_entry.additional_scaling = scaling_factor
                 if isinstance(p.trade, Portfolio):
                     # Scale the portfolio by risk target
                     scaled_portfolio_position = copy.deepcopy(p.trade)
