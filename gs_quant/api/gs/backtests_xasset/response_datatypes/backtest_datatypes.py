@@ -117,6 +117,8 @@ class Trade:
     quantity_type: BacktestTradingQuantityType = BacktestTradingQuantityType.quantity
 
 
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class FixedCostModel:
     cost: float = 0.0
     type: str = 'fixed_cost_model'
@@ -130,20 +132,35 @@ class ScaledCostModel:
     type: str = 'scaled_cost_model'
 
 
+_type_to_basic_model_map = {'fixed_cost_model': FixedCostModel, 'scaled_cost_model': ScaledCostModel}
+
+
+def basic_tc_tuple_decoder(data: Optional[Tuple[dict, ...]]) -> Optional[Union[FixedCostModel, ScaledCostModel]]:
+    if data is None:
+        return None
+    return tuple(_type_to_basic_model_map[m['type']].from_dict(m) for m in data)
+
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AggregateCostModel:
-    models: Tuple[Union[FixedCostModel, ScaledCostModel], ...]
+    models: Tuple[Union[FixedCostModel, ScaledCostModel], ...] = field(metadata=config(decoder=basic_tc_tuple_decoder))
     aggregation_type: CostAggregationType
     type: str = 'aggregate_cost_model'
+
+
+def tcm_decoder(data: Optional[dict]) -> Optional[Union[FixedCostModel, ScaledCostModel, AggregateCostModel]]:
+    full_type_map = {**_type_to_basic_model_map, **{'aggregate_cost_model': AggregateCostModel}}
+    return full_type_map[data['type']].from_dict(data) if data is not None else None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class TradingCosts:
-    entry: Union[FixedCostModel, ScaledCostModel, AggregateCostModel]
-    exit: Optional[Union[FixedCostModel, ScaledCostModel, AggregateCostModel]] = None
-    type: str = 'trading_costs'
+    entry: Union[FixedCostModel, ScaledCostModel, AggregateCostModel] = \
+        field(default=FixedCostModel(0), metadata=config(decoder=tcm_decoder))
+    exit: Optional[Union[FixedCostModel, ScaledCostModel, AggregateCostModel]] = \
+        field(default=None, metadata=config(decoder=tcm_decoder))
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
