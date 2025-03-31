@@ -50,6 +50,7 @@ class SecMasterIdentifiers(Enum):
     TOKEN_ID = 'tokenId'
     COMPOSITE_FIGI = 'compositeFigi'
     BARRA_ID = 'barraId'
+    AXIOMA_ID = 'axiomaId'
 
 
 def __extend_enum(base_enum, new_values):

@@ -61,7 +61,6 @@ final_date_cache = {}
 
 
 def get_final_date(inst, create_date, duration, holiday_calendar=None, trigger_info=None):
-    global final_date_cache
     cache_key = (inst, create_date, duration, holiday_calendar)
     if cache_key in final_date_cache:
         return final_date_cache[cache_key]

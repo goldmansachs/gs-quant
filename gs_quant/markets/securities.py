@@ -243,6 +243,7 @@ class SecurityIdentifier(EntityIdentifier):
     ASSET_ID = "assetId"
     ANY = "identifiers"
     BARRA_ID = "barraId"
+    AXIOMA_ID = "axiomaId"
 
 
 class ReturnType(Enum):
