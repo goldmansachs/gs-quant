@@ -167,6 +167,9 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
         float.__init__(value)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
 
+    def __reduce__(self):
+        return self.__class__, (self.risk_key, self.raw_value, self.unit, self.error, self.request_id)
+
     @property
     @abstractmethod
     def raw_value(self):
@@ -199,7 +202,6 @@ class FloatWithInfo(ScalarWithInfo, float):
         return float(self)
 
     def __repr__(self):
-
         return self.error if self.error else float.__repr__(self)
 
     def __add__(self, other):

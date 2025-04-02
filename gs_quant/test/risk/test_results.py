@@ -19,16 +19,18 @@ from datetime import date
 import gs_quant.risk as risk
 import numpy as np
 import pytest
+
+from gs_quant.base import RiskKey
 from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg, CommodSwap
 from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMarket, MarketDataCoordinate
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import MultiScenario, ResolvedInstrumentValues
 from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel, PnlExplain
-from gs_quant.risk.core import aggregate_risk, SeriesWithInfo, FloatWithInfo
+from gs_quant.risk.core import aggregate_risk, SeriesWithInfo, FloatWithInfo, StringWithInfo
 from gs_quant.risk.results import MultipleScenarioFuture
 from gs_quant.risk.results import MultipleScenarioResult
 from gs_quant.risk.transform import ResultWithInfoAggregator
-from gs_quant.target.common import MarketDataPattern
+from gs_quant.target.common import MarketDataPattern, RiskRequestParameters
 from gs_quant.test.utils.mock_calc import MockCalc
 
 curvescen1 = CurveScenario(market_data_pattern=MarketDataPattern('IR', 'USD'), parallel_shift=5,
@@ -694,3 +696,20 @@ def test_aggregation_with_identical_trades(mocker):
         delta = portfolio.calc(risk.IRDelta)
         transformed_res = delta.transform(ResultWithInfoAggregator())
         np.testing.assert_almost_equal(transformed_res.aggregate(), delta.to_frame()['value'].sum())
+
+
+def test_scalar_with_info_on_instrument():
+    # Historically there was a problem with setting risk results that were a scalar with info on an instrument
+    # This was because of how copy.deepcopy would try and pickle/unpickle the class. This test checks that we can set
+    # properties and still to_dict and _to_json the class
+    risk_key = RiskKey("provider", "the_date", "mkt", RiskRequestParameters(), None, None)
+    fwi = FloatWithInfo(risk_key, 1.56, )
+    swi = StringWithInfo(risk_key, 'USD')
+
+    swap = IRSwap(floating_rate_option=swi, fixed_rate=fwi)
+    swap_dict = swap.to_dict()
+
+    assert swap_dict["floatingRateOption"] == "USD"
+    assert swap_dict["fixedRate"] == 1.56
+
+    assert swap.to_json() is not None

@@ -59,7 +59,8 @@ class StrategySystematic:
                  roll_date_mode: str = None,
                  expiry_date_mode: str = None,
                  cash_accrual: bool = True,
-                 transaction_cost_config: TransactionCostConfig = None):
+                 transaction_cost_config: TransactionCostConfig = None,
+                 use_xasset_backtesting_service: bool = False):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name
@@ -125,7 +126,9 @@ class StrategySystematic:
         self.__delta_hedge_frequency = '1b' if delta_hedge else None
         self.__transaction_cost_config = transaction_cost_config
         self.__xasset_bt_service_config = Configuration(roll_date_mode=RollDateMode(roll_date_mode) if
-                                                        roll_date_mode is not None else None)
+                                                        roll_date_mode is not None else None,
+                                                        market_model=EquityMarketModel(market_model) if
+                                                        market_model else None)
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         backtest_parameter_args = {
@@ -141,7 +144,7 @@ class StrategySystematic:
         all_ir = all(isinstance(i, self._supported_ir_instruments) for i in trade_instruments)
         if not (all_eq or all_fx or all_ir):
             raise MqValueError('Cannot run backtests for different asset classes.')
-        self.__use_xasset_backtesting_service = all_fx or all_ir
+        self.__use_xasset_backtesting_service = all_fx or all_ir or use_xasset_backtesting_service
 
     @staticmethod
     def check_underlier_fields(
@@ -181,7 +184,7 @@ class StrategySystematic:
                         trades = [{'instrument': i if i is not None else {},
                                    'price': t.portfolio_price}
                                   for i in t.portfolio] if t.portfolio is not None else []
-                        transactions.append({'type': t.direction.value, 'trades': trades})
+                        transactions.append({'type': t.direction.value, 'trades': trades, 'cost': t.cost})
                 portfolio.append({'date': d, 'positions': positions, 'transactions': transactions})
         return BacktestResult(risks=risks, portfolio=portfolio)
 
