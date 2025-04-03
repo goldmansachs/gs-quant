@@ -1,4 +1,4 @@
-# Contributing to gs-quant
+# Contributing to cachiman-quant
 
 This file contains information about reporting issues as well as contributing code. Make sure
 you read our [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md) before you start participating.
