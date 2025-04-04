@@ -460,7 +460,7 @@ class DataGrid:
                     else:
                         results[column.name].append(column_data)
                 else:
-                    results[column.name].append(np.NaN)
+                    results[column.name].append(np.nan)
 
         df = DataFrame.from_dict(results)
         row_groups = list(df['rowGroup'].unique())

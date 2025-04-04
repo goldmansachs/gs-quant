@@ -141,7 +141,7 @@ def price_values_test(res, f, with_dates=''):
     else:
         res_val_map = [n for r in res for n in r.values] if with_dates == 'dated' else list(res)
 
-    f = f.replace('N/A', np.NaN)[f['risk_measure'] == risk.Price].dropna(axis='columns')
+    f = f.replace('N/A', np.nan)[f['risk_measure'] == risk.Price].dropna(axis='columns')
     df_val_map = f['value'].values
     f.drop('value', axis=1, inplace=True)
 

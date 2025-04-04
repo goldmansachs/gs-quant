@@ -2272,7 +2272,7 @@ def test_get_macro_exposure(mocker):
                    "factorCategory": ["category1", "category2"],
                    "factorCategoryId": ["c1", "c2"]}
 
-    result = {("Asset Information", "Asset Name"): {"1": "asset1", "2": "asset2", "Total Factor Exposure": np.NAN},
+    result = {("Asset Information", "Asset Name"): {"1": "asset1", "2": "asset2", "Total Factor Exposure": np.nan},
               ("Asset Information", "Notional"): {"1": 1000, "2": 1000, "Total Factor Exposure": 2000},
               ("category2", "factor2"): {"1": 50.0, "2": 50.0, "Total Factor Exposure": 100.0},
               ("category1", "factor1"): {"1": 10.0, "2": 10.0, "Total Factor Exposure": 20.0}}

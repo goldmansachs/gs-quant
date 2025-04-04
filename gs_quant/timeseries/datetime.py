@@ -460,7 +460,7 @@ def day_count_fractions(
     end_dates = date_list[1:len(date_list)]
 
     dcfs = map(lambda a, b: day_count_fraction(a, b, convention, frequency), start_dates, end_dates)
-    return pd.Series(data=[np.NaN] + list(dcfs), index=date_list[0:len(date_list)])
+    return pd.Series(data=[np.nan] + list(dcfs), index=date_list[0:len(date_list)])
 
 
 @plot_function

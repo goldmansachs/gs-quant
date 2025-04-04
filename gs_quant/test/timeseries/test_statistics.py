@@ -397,7 +397,7 @@ def test_exponential_std():
             debias_fact = sum(weights) ** 2 / (sum(weights) ** 2 - sum(weights ** 2))
             var = debias_fact * sum(weights * (x - ema) ** 2) / sum(weights)
             std.iloc[i] = np.sqrt(var)
-        std[0] = np.NaN
+        std[0] = np.nan
         return std
 
     dates = [

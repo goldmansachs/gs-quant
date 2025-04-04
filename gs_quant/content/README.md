@@ -4,6 +4,7 @@ Content and research produced using gs_quant - featuring tactical case studies l
 backtesting strategies, attribution analytics and more.
 
 - 📄 [Contents.ipynb](Contents.ipynb)
+- 📄 [Index.ipynb](Index.ipynb)
 - 📄 [README.md](README.md)
 - 📁 **events**
   - 📁 00_gsquant_meets_markets

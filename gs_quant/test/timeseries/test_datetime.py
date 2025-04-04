@@ -349,13 +349,13 @@ def test_day_count_fractions():
     result = day_count_fractions(x, DayCountConvention.ACTUAL_360)
     result2 = day_count_fractions(x.index, DayCountConvention.ACTUAL_360)
     dcf = 1 / 360
-    expected = pd.Series([np.NaN, dcf, dcf, dcf, dcf, dcf], index=dates)
+    expected = pd.Series([np.nan, dcf, dcf, dcf, dcf, dcf], index=dates)
     assert_series_equal(result, expected, obj="ACT/360")
     assert_series_equal(result2, expected, obj="ACT/360")
 
     result = day_count_fractions(x, DayCountConvention.ACTUAL_365F)
     dcf = 1 / 365
-    expected = pd.Series([np.NaN, dcf, dcf, dcf, dcf, dcf], index=dates)
+    expected = pd.Series([np.nan, dcf, dcf, dcf, dcf, dcf], index=dates)
     assert_series_equal(result, expected, obj="ACT/365")
 
 
