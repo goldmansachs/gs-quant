@@ -91,6 +91,7 @@ class FlowVolBacktestMeasure(EnumBase, Enum):
     PNL_theta = 'PNL_theta'
     Total = 'Total'
     transaction_costs = 'transaction_costs'
+    PNL_transactions = 'PNL_transactions'
     PNL_unexplained = 'PNL_unexplained'
     PNL_vega = 'PNL_vega'
     PNL = 'PNL'

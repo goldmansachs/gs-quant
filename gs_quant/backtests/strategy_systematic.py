@@ -85,7 +85,7 @@ class StrategySystematic:
         if isinstance(underliers, self._supported_instruments):
             instrument = underliers
             notional_percentage = 100
-            instrument = self.check_underlier_fields(instrument)
+            instrument = self._check_eq_underlier_fields(instrument, notional_percentage / 100)
             trade_instruments.append(instrument)
             self.__underliers.append(BacktestStrategyUnderlier(
                 instrument=instrument,
@@ -109,7 +109,7 @@ class StrategySystematic:
                     instrument = instrument.clone()
                     instrument.notional_amount *= notional_percentage / 100
 
-                instrument = self.check_underlier_fields(instrument)
+                instrument = self._check_eq_underlier_fields(instrument, notional_percentage / 100)
                 trade_instruments.append(instrument)
                 self.__underliers.append(BacktestStrategyUnderlier(
                     instrument=instrument,
@@ -147,14 +147,17 @@ class StrategySystematic:
         self.__use_xasset_backtesting_service = all_fx or all_ir or use_xasset_backtesting_service
 
     @staticmethod
-    def check_underlier_fields(
-            underlier: Instrument
+    def _check_eq_underlier_fields(
+            instrument: Instrument,
+            size: float,
     ) -> Instrument:
-
-        if isinstance(underlier, EqOption):
-            underlier.number_of_options = None
-
-        return underlier
+        if instrument.asset_class == AssetClass.Equity:
+            if hasattr(instrument, 'number_of_options'):
+                instrument.number_of_options = (instrument.number_of_options
+                                                if instrument.number_of_options is not None else 1) * size
+            else:
+                instrument.quantity = (instrument.quantity if instrument.quantity is not None else 1) * size
+        return instrument
 
     def __run_service_based_backtest(self, start: datetime.date, end: datetime.date,
                                      measures: Iterable[FlowVolBacktestMeasure]) -> BacktestResult:
