@@ -128,7 +128,8 @@ class StrategySystematic:
         self.__xasset_bt_service_config = Configuration(roll_date_mode=RollDateMode(roll_date_mode) if
                                                         roll_date_mode is not None else None,
                                                         market_model=EquityMarketModel(market_model) if
-                                                        market_model else None)
+                                                        market_model else None,
+                                                        cash_accrual=cash_accrual)
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         backtest_parameter_args = {

@@ -149,17 +149,20 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
             scaling_based_tcs += inst_scaling_tc
         # solve such that fixed TCs, instrument prices and scaled transaction costs (under the same scaling factor)
         # add up to available_cash
-        scale_factor = max(available_cash - fixed_tcs, 0) / (unscaled_prices_by_day[cur_day].aggregate() +
-                                                             scaling_based_tcs)
+        first_scale_factor = max(available_cash - fixed_tcs, 0) / (unscaled_prices_by_day[cur_day].aggregate() +
+                                                                   scaling_based_tcs)
         # set additional scaling on TCE and solve again in case aggregation (min/max) has been affected by scaling
         fixed_tcs = 0
         scaling_based_tcs = 0
         for inst in portfolio:
-            unscaled_entry_tces_by_day[cur_day][inst].additional_scaling = scale_factor
+            unscaled_entry_tces_by_day[cur_day][inst].additional_scaling = first_scale_factor
             insed_fixed_tc, inst_scaling_tc = unscaled_entry_tces_by_day[cur_day][inst].get_cost_by_component()
             fixed_tcs += insed_fixed_tc
             scaling_based_tcs += inst_scaling_tc
-        return max(available_cash - fixed_tcs, 0) / (unscaled_prices_by_day[cur_day].aggregate() + scaling_based_tcs)
+        # this is 1 if aggregation is unaffected (e.g. switch from Scaled to Fixed), otherwise additional scaling needed
+        second_scale_factor = max(available_cash - fixed_tcs, 0) / (unscaled_prices_by_day[cur_day].aggregate() *
+                                                                    first_scale_factor + scaling_based_tcs)
+        return first_scale_factor * second_scale_factor
 
     def _nav_scale_orders(self, orders, price_measure, trigger_infos):
         sorted_order_days = sorted(make_list(orders.keys()))
@@ -232,7 +235,10 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
 
         # portfolio.scale() applies a deepcopy so interferes with inst dict lookup; apply at the end
         for day in sorted_order_days:
-            orders[day].scale(scaling_factors_by_day[day])
+            if scaling_factors_by_day[day] == 0:
+                del orders[day]
+            else:
+                orders[day].scale(scaling_factors_by_day[day])
 
     def _scale_order(self, orders, daily_risk, price_measure, trigger_infos):
         if self.action.scaling_type == ScalingActionType.size:
