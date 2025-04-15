@@ -75,6 +75,7 @@ class Transaction:
     cost: Optional[float] = None
     currency: Optional[Union[Currency, CurrencyName, str]] = None
     direction: Optional[TransactionDirection] = None
+    quantity: Optional[float] = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

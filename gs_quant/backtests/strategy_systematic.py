@@ -147,6 +147,9 @@ class StrategySystematic:
             raise MqValueError('Cannot run backtests for different asset classes.')
         self.__use_xasset_backtesting_service = all_fx or all_ir or use_xasset_backtesting_service
 
+        if all_eq and transaction_cost_config is not None:
+            raise MqValueError('Cannot run equity backtests with transaction costs.')
+
     @staticmethod
     def _check_eq_underlier_fields(
             instrument: Instrument,
@@ -163,10 +166,9 @@ class StrategySystematic:
     def __run_service_based_backtest(self, start: datetime.date, end: datetime.date,
                                      measures: Iterable[FlowVolBacktestMeasure]) -> BacktestResult:
         date_cfg = DateConfig(start, end)
-        calc_measures = tuple(m for m in measures if m != FlowVolBacktestMeasure.portfolio)
-        if not calc_measures:
-            calc_measures = (FlowVolBacktestMeasure.PNL,)
-        basic_bt_request = BasicBacktestRequest(date_cfg, self.__trades, calc_measures, self.__delta_hedge_frequency,
+        if not measures:
+            measures = (FlowVolBacktestMeasure.PNL,)
+        basic_bt_request = BasicBacktestRequest(date_cfg, self.__trades, measures, self.__delta_hedge_frequency,
                                                 self.__transaction_cost_config, self.__xasset_bt_service_config)
         basic_bt_response = GsBacktestXassetApi.calculate_basic_backtest(basic_bt_request, decode_instruments=False)
         risks = tuple(
@@ -175,21 +177,21 @@ class StrategySystematic:
             for k, v in basic_bt_response.measures.items()
         )
         portfolio = []
-        if FlowVolBacktestMeasure.portfolio in measures:
-            for d in sorted(set().union(basic_bt_response.portfolio.keys(), basic_bt_response.transactions.keys())):
-                if d in basic_bt_response.portfolio:
-                    positions = [{'instrument': i if i is not None else {}} for
-                                 i in basic_bt_response.portfolio[d]]
-                else:
-                    positions = []
-                transactions = []
-                if d in basic_bt_response.transactions:
-                    for t in basic_bt_response.transactions[d]:
-                        trades = [{'instrument': i if i is not None else {},
-                                   'price': t.portfolio_price}
-                                  for i in t.portfolio] if t.portfolio is not None else []
-                        transactions.append({'type': t.direction.value, 'trades': trades, 'cost': t.cost})
-                portfolio.append({'date': d, 'positions': positions, 'transactions': transactions})
+        for d in sorted(set().union(basic_bt_response.portfolio.keys(), basic_bt_response.transactions.keys())):
+            if d in basic_bt_response.portfolio:
+                positions = [{'instrument': i if i is not None else {}} for
+                             i in basic_bt_response.portfolio[d]]
+            else:
+                positions = []
+            transactions = []
+            if d in basic_bt_response.transactions:
+                for t in basic_bt_response.transactions[d]:
+                    trades = [{'instrument': i if i is not None else {},
+                               'price': t.portfolio_price,
+                               'quantity': t.quantity if t.quantity is not None else None}
+                              for i in t.portfolio] if t.portfolio is not None else [],
+                    transactions.append({'type': t.direction.value, 'trades': trades, 'cost': t.cost})
+            portfolio.append({'date': d, 'positions': positions, 'transactions': transactions})
         return BacktestResult(risks=risks, portfolio=portfolio)
 
     def backtest(
