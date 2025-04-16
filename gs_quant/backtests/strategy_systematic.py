@@ -189,7 +189,7 @@ class StrategySystematic:
                     trades = [{'instrument': i if i is not None else {},
                                'price': t.portfolio_price,
                                'quantity': t.quantity if t.quantity is not None else None}
-                              for i in t.portfolio] if t.portfolio is not None else [],
+                              for i in t.portfolio] if t.portfolio is not None else []
                     transactions.append({'type': t.direction.value, 'trades': trades, 'cost': t.cost})
             portfolio.append({'date': d, 'positions': positions, 'transactions': transactions})
         return BacktestResult(risks=risks, portfolio=portfolio)
