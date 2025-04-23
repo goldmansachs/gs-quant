@@ -689,7 +689,7 @@ class GenericEngine(BacktestBaseEngine):
 
         logger.info('Resolving initial portfolio')
         with self._trace('Resolve initial portfolio'):
-            self._resolve_initial_portfolio(strategy, backtest, strategy_start_date,
+            self._resolve_initial_portfolio(strategy.initial_portfolio, backtest, strategy_start_date,
                                             strategy_pricing_dates, holiday_calendar)
 
         logger.info('Building simple and semi-deterministic triggers and actions')
@@ -730,25 +730,38 @@ class GenericEngine(BacktestBaseEngine):
         logger.info(f'Finished Backtest:- {dt.datetime.now()}')
         return backtest
 
-    def _resolve_initial_portfolio(self, strategy, backtest, strategy_start_date, strategy_pricing_dates,
-                                   holiday_calendar):
-        if len(strategy.initial_portfolio):
-            for index in range(len(strategy.initial_portfolio)):
-                old_name = strategy.initial_portfolio[index].name
-                strategy.initial_portfolio[index].name = f'{old_name}_{strategy_start_date.strftime("%Y-%m-%d")}'
-                entry_payment = CashPayment(strategy.initial_portfolio[index],
-                                            effective_date=strategy_start_date, direction=-1)
-                backtest.cash_payments[strategy_start_date].append(entry_payment)
-                final_date = get_final_date(strategy.initial_portfolio[index], strategy_start_date, None,
-                                            holiday_calendar)
-                exit_payment = CashPayment(strategy.initial_portfolio[index],
-                                           effective_date=final_date)
-                backtest.cash_payments[final_date].append(exit_payment)
-            init_port = Portfolio(strategy.initial_portfolio)
-            with PricingContext(strategy_start_date):
-                init_port.resolve()
-            for d in strategy_pricing_dates:
-                backtest.portfolio_dict[d].append(init_port.instruments)
+    def _resolve_initial_portfolio(self, initial_portfolio, backtest, strategy_start_date, strategy_pricing_dates,
+                                   holiday_calendar, duration=None):
+        if isinstance(initial_portfolio, dict):
+            sorted_dates = sorted(list(initial_portfolio.keys()))
+            for i, d in enumerate(sorted_dates):
+                portfolio = make_list(initial_portfolio[d])
+                end_date = sorted_dates[i + 1] if i + 1 < len(sorted_dates) else strategy_pricing_dates[-1]
+                self._resolve_initial_portfolio(portfolio, backtest, d, strategy_pricing_dates, holiday_calendar,
+                                                end_date)
+        else:
+            if len(initial_portfolio):
+                renamed_port = []
+                for index in range(len(initial_portfolio)):
+                    old_name = initial_portfolio[index].name
+                    renamed_inst = initial_portfolio[index].clone(
+                        name=f'{old_name}_{strategy_start_date.strftime("%Y-%m-%d")}')
+                    renamed_port.append(renamed_inst)
+                    entry_payment = CashPayment(renamed_inst,
+                                                effective_date=strategy_start_date, direction=-1)
+                    backtest.cash_payments[strategy_start_date].append(entry_payment)
+                    final_date = get_final_date(renamed_inst, strategy_start_date, duration,
+                                                holiday_calendar)
+                    exit_payment = CashPayment(initial_portfolio[index],
+                                               effective_date=final_date)
+                    backtest.cash_payments[final_date].append(exit_payment)
+                init_port = Portfolio(renamed_port)
+                with PricingContext(strategy_start_date):
+                    init_port.resolve()
+                for d in strategy_pricing_dates:
+                    if duration is None or (d >= strategy_start_date and
+                                            (d < duration or duration == strategy_pricing_dates[-1])):
+                        backtest.portfolio_dict[d].append(init_port.instruments)
 
     def _build_simple_and_semi_triggers_and_actions(self, strategy, backtest, strategy_pricing_dates):
         for trigger in strategy.triggers:

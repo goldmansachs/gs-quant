@@ -39,9 +39,9 @@ class Strategy:
     """
     A strategy object on which one may run a backtest
     """
-    initial_portfolio: Optional[Tuple[Priceable, ...]] = field(default=None,
-                                                               metadata=config(decoder=decode_named_instrument,
-                                                                               encoder=encode_named_instrument))
+    initial_portfolio: Optional[Union[Tuple[Priceable, ...], dict]] = field(default=None, metadata=config(
+        decoder=decode_named_instrument,
+        encoder=encode_named_instrument))
     triggers: Union[Trigger, Iterable[Trigger]] = field(default=None,
                                                         metadata=config(decoder=dc_decode(*Trigger.sub_classes(),
                                                                                           allow_missing=True)))
@@ -49,7 +49,8 @@ class Strategy:
     risks = None
 
     def __post_init__(self):
-        self.initial_portfolio = make_list(self.initial_portfolio)
+        if not isinstance(self.initial_portfolio, dict):
+            self.initial_portfolio = make_list(self.initial_portfolio)
         self.triggers = make_list(self.triggers)
         self.risks = self.get_risks()
 

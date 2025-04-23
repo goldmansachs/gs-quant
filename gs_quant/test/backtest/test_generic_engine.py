@@ -706,3 +706,48 @@ def test_serialisation(mocker):
     strategy_json = json.dumps(strategy.to_dict(), cls=JSONEncoder)
     reconstituted_strategy = Strategy.from_json(strategy_json)
     assert reconstituted_strategy == strategy
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_initial_portfolio(mocker):
+    with MockCalc(mocker):
+        irswap = IRSwap(PayReceive.Pay, '10y', Currency.USD, notional_amount=10000, name='10y')
+        actions = AddTradeAction(irswap, '1b')
+
+        new_ir_swap = IRSwap(PayReceive.Pay, '2y', Currency.USD, notional_amount=10000, name='2y')
+        newer_ir_swap = IRSwap(PayReceive.Pay, '5y', Currency.USD, notional_amount=10000, name='5y')
+
+        initial_port = {date(2024, 5, 3): irswap,
+                        date(2024, 5, 24): [irswap, new_ir_swap],
+                        date(2024, 6, 14): [new_ir_swap, newer_ir_swap]}
+
+        trig_req = PeriodicTriggerRequirements(start_date=date(2024, 5, 3), end_date=date(2024, 7, 5), frequency='1b')
+        triggers = PeriodicTrigger(trig_req, actions)
+
+        strategy = Strategy(initial_port, triggers)
+
+        engine = GenericEngine()
+
+        pricing_dates = [date(2024, 5, 3),
+                         date(2024, 5, 10),
+                         date(2024, 5, 17),
+                         date(2024, 5, 24),
+                         date(2024, 5, 31),
+                         date(2024, 6, 7),
+                         date(2024, 6, 14),
+                         date(2024, 6, 21),
+                         date(2024, 6, 28),
+                         date(2024, 7, 5)]
+
+        backtest = BackTest(strategy, pricing_dates, [Price], Price)
+        engine._resolve_initial_portfolio(initial_port, backtest, date(2024, 5, 3), pricing_dates, None)
+
+        port_dict = backtest.portfolio_dict
+        assert len(port_dict[date(2024, 5, 3)]) == 1
+        assert len(port_dict[date(2024, 5, 24)]) == 2
+        assert len(port_dict[date(2024, 6, 14)]) == 2
+        assert len(port_dict[date(2024, 7, 5)]) == 2
+        assert port_dict[date(2024, 5, 24)][0].name == '10y_2024-05-24'
+        assert port_dict[date(2024, 5, 24)][1].name == '2y_2024-05-24'
+        assert port_dict[date(2024, 6, 14)][0].name == '2y_2024-06-14'
+        assert port_dict[date(2024, 6, 14)][1].name == '5y_2024-06-14'
