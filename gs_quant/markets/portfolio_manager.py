@@ -15,11 +15,17 @@ under the License.
 """
 import datetime as dt
 import logging
+import traceback
 from time import sleep
 from typing import List, Union, Dict
 
 import deprecation
+import numpy as np
+import pandas
 import pandas as pd
+
+from gs_quant.common import PositionType
+from gs_quant.target.risk_models import RiskModelDataAssetsRequest, RiskModelUniverseIdentifierRequest
 
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
@@ -30,9 +36,9 @@ from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.scenario import FactorScenario
 from gs_quant.markets.portfolio_manager_utils import build_exposure_df, build_portfolio_constituents_df, \
-    build_sensitivity_df
+    build_sensitivity_df, get_batched_dates
 from gs_quant.markets.report import PerformanceReport, ReportJobFuture
-from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType
+from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType, FactorRiskModel
 from gs_quant.target.common import Currency
 from gs_quant.target.portfolios import RiskAumSource, PortfolioTree
 
@@ -489,7 +495,6 @@ class PortfolioManager(PositionedEntity):
                            tags: Dict = None,
                            return_format: ReturnFormat = ReturnFormat.DATA_FRAME
                            ) -> Union[Dict, pd.DataFrame]:
-
         """
         Get portfolio and asset exposure to macro factors or macro factor categories
 
@@ -555,7 +560,6 @@ class PortfolioManager(PositionedEntity):
                                       risk_model: str = None,
                                       return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> \
             Union[Dict, Union[Dict, pd.DataFrame]]:
-
         """Given a list of factor scenarios (historical simulation and/or custom shocks), return the estimated pnl
          of the given positioned entity.
          :param scenarios: List of factor-based scenarios
@@ -603,3 +607,75 @@ class PortfolioManager(PositionedEntity):
          """
 
         return super().get_factor_scenario_analytics(scenarios, date, measures, risk_model, return_format)
+
+    def get_risk_model_predicted_beta(self, start_date: dt.date, end_date: dt.date, risk_model_id: str,
+                                      default_beta_value: int = 1, tags: Dict = None) -> pd.DataFrame:
+        """
+        Get the predicted beta of a portfolio as estimated by the provided risk model.
+        The beta is calculated using the factor risk model data. The function retrieves the factor risk report
+        associated with the portfolio and the risk model ID, and then calculates the predicted beta for each date
+        in the specified range.
+
+        :param start_date: Start date for the beta calculation
+        :param end_date: End date for the beta calculation
+        :param risk_model_id: Risk model ID to be used for the calculation
+        :param default_beta_value: Default beta value to be used if no data is available for a specific date
+        :param tags: If the portfolio is a fund of funds, pass in a dictionary corresponding to the tag values
+        to retrieve results for a sub-portfolio
+
+        :return: A DataFrame containing the predicted beta for each date in the specified range
+
+        **Examples**
+        >>> pm = PortfolioManager("PORTFOLIO ID")
+        >>> beta_df = pm.get_risk_model_predicted_beta(start_date=dt.date(2023, 1, 1),
+        ... end_date=dt.date(2023, 12, 31), risk_model_id="RISK_MODEL_ID")
+        >>> print(beta_df)
+        >>> # Output:
+
+        date        beta
+        2023-01-01  1.05
+        2023-01-02  1.10
+        2023-01-03  1.02
+        """
+        performance_report = self.get_performance_report(tags=tags)
+        risk_model = FactorRiskModel.get(risk_model_id)
+        risk_model_dates: List[dt.date] = risk_model.get_dates(start_date=start_date, end_date=end_date)
+        batched_dates = get_batched_dates(risk_model_dates, batch_size=10)
+        risk_model_predicted_beta_timeseries = pd.DataFrame()
+        asset_level_betas = pd.DataFrame()
+        portfolio_position_net_weights = pd.DataFrame()
+        for batch in batched_dates:
+            start_date, end_date = batch[0], batch[-1]
+            try:
+                date_wise_net_weight = performance_report.get_position_net_weights(start_date=start_date,
+                                                                                   end_date=end_date,
+                                                                                   asset_metadata_fields=["gsid"],
+                                                                                   include_all_business_days=True,
+                                                                                   position_type=PositionType.CLOSE)
+                date_wise_net_weight = date_wise_net_weight.dropna().pivot_table(index='positionDate', columns='gsid',
+                                                                                 values='netWeight', aggfunc='sum')
+                portfolio_position_gsids = [gsid for gsid in date_wise_net_weight.columns.tolist() if gsid is not None]
+                asset_level_betas_batch = (risk_model
+                                           .get_predicted_beta(start_date=start_date, end_date=end_date,
+                                                               assets=RiskModelDataAssetsRequest(
+                                                                   identifier=RiskModelUniverseIdentifierRequest.gsid,
+                                                                   universe=tuple(portfolio_position_gsids))))
+                if asset_level_betas_batch.isna().all().all():
+                    logging.warning(
+                        f"Risk model predicted beta not available for risk model {risk_model_id} for dates: {batch}")
+                    continue
+                else:
+                    asset_level_betas = pd.concat([asset_level_betas, asset_level_betas_batch], axis=0)
+                    portfolio_position_net_weights = pd.concat([portfolio_position_net_weights,
+                                                                date_wise_net_weight], axis=0)
+            except Exception as ex:
+                raise MqError(
+                    f"Risk model predicted beta cannot be calculated for risk model {risk_model_id} "
+                    f"from {start_date} to {end_date} because of exception: {ex}, traceback: {traceback.format_exc()}")
+        if asset_level_betas.empty:
+            return pd.DataFrame()
+        asset_level_betas.fillna(default_beta_value, inplace=True)
+        risk_model_predicted_beta_timeseries = asset_level_betas * portfolio_position_net_weights
+        risk_model_predicted_beta_timeseries = (risk_model_predicted_beta_timeseries.sum(axis=1).rename('beta').
+                                                replace({0: np.nan}).ffill())
+        return risk_model_predicted_beta_timeseries.reset_index().rename(columns={'index': 'date', 0: 'beta'})

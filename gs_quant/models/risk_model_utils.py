@@ -167,7 +167,8 @@ def get_optional_data_as_dataframe(results: List, optional_data_key: str) -> pd.
     return results
 
 
-def get_covariance_matrix_dataframe(results: dict, covariance_matrix_key: str = 'covarianceMatrix') -> pd.DataFrame:
+def get_covariance_matrix_dataframe(results: List[dict], covariance_matrix_key: str = 'covarianceMatrix') \
+        -> pd.DataFrame:
     cov_list = []
     date_list = []
     for row in results:

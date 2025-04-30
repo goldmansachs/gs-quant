@@ -28,6 +28,7 @@ from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi, FactorRiskTableMode
 from gs_quant.api.gs.thematics import Region, GsThematicApi, ThematicMeasure
+from gs_quant.common import PositionType
 from gs_quant.datetime import business_day_offset, prev_business_date
 from gs_quant.errors import MqValueError
 from gs_quant.markets.report_utils import _get_ppaa_batches
@@ -598,6 +599,30 @@ class PerformanceReport(Report):
         """
         return self.get_measure("grossExposure", start_date, end_date)
 
+    def get_position_net_weights(self, start_date: dt.date, end_date: dt.date,
+                                 asset_metadata_fields: List[str] = ["id", "name", "ticker"],
+                                 include_all_business_days: bool = True, position_type: PositionType = None) -> (
+            pd.DataFrame):
+        """
+        Get the net weight of each position in the portfolio for the given date range.
+        :param start_date: start date from which to retrieve the net weight data
+        :param end_date: end date until which to retrieve the net weight data
+        :param asset_metadata_fields: List of fields to include in the result. Default is ["id", "name", "ticker"].
+        :param include_all_business_days: If True, include all business days in the date range, even if there is no
+        position set uploaded on those days. If False, only include dates where there are uploaded positions.
+        :param position_type: The type of position to retrieve. If None, all positions are retrieved.
+        :return: A DataFrame with the dates as the index and the positions as the columns. The values in the DataFrame
+        are the net weights of the positions on the corresponding dates.
+
+        """
+        asset_metadata_fields.append("netWeight")
+        try:
+            return pd.DataFrame(self.get_positions_data(start=start_date, end=end_date, fields=asset_metadata_fields,
+                                                        include_all_business_days=include_all_business_days,
+                                                        position_type=position_type))
+        except Exception as e:
+            raise MqValueError(f"Error retrieving net weight data: {e}")
+
     def get_trading_pnl(self,
                         start_date: dt.date = None,
                         end_date: dt.date = None,
@@ -793,13 +818,15 @@ class PerformanceReport(Report):
                            start: dt.date = None,
                            end: dt.date = dt.date.today(),
                            fields: [str] = None,
-                           include_all_business_days: bool = False) -> List[Dict]:
+                           include_all_business_days: bool = False,
+                           position_type: PositionType = None) -> List[Dict]:
         return GsPortfolioApi.get_positions_data(self.position_source_id,
                                                  start,
                                                  end,
                                                  fields,
                                                  performance_report_id=self.id,
-                                                 include_all_business_days=include_all_business_days)
+                                                 include_all_business_days=include_all_business_days,
+                                                 position_type=position_type)
         raise NotImplementedError
 
     def get_portfolio_constituents(self,
@@ -1404,8 +1431,9 @@ class ThematicReport(Report):
                 PositionSourceType.Asset
 
         if position_source_type and not report_type:
-            report_type = ReportType.Portfolio_Thematic_Analytics if position_source_type is \
-                PositionSourceType.Portfolio else ReportType.Asset_Thematic_Analytics
+            report_type = ReportType.Portfolio_Thematic_Analytics if (position_source_type is PositionSourceType.
+                                                                      Portfolio) else (ReportType.
+                                                                                       Asset_Thematic_Analytics)
 
         super().__init__(report_id, name, position_source_id, position_source_type,
                          report_type, parameters, earliest_start_date, latest_end_date,

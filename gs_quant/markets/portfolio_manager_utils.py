@@ -66,7 +66,7 @@ def build_macro_portfolio_exposure_df(df_constituents_and_notional: pd.DataFrame
         portfolio_exposure_df = pd.concat([universe_sensitivities_df, sum_over_factors_df])
 
         # Group and Aggregate by Factor Category to get portfolio-level exposure to each macro Factor Category
-        sum_over_categories_df = sum_over_factors_df.transpose().groupby("Macro Factor Category").apply(np.sum).\
+        sum_over_categories_df = sum_over_factors_df.transpose().groupby("Macro Factor Category").apply(np.sum). \
             transpose()
         factor_and_category_zip = dict(zip(
             portfolio_exposure_df.columns.get_level_values(1), portfolio_exposure_df.columns.get_level_values(0)))
@@ -94,7 +94,7 @@ def build_macro_portfolio_exposure_df(df_constituents_and_notional: pd.DataFrame
             columns=[("Asset Information", "Asset Name"), ("Asset Information", "Notional")])
         portfolio_exposure_df = pd.concat([name_col, notional_col, portfolio_exposure_df], axis="columns")
     else:
-        sum_over_factors_df = universe_sensitivities_df.loc[:, universe_sensitivities_df.columns != 'Asset Name'].\
+        sum_over_factors_df = universe_sensitivities_df.loc[:, universe_sensitivities_df.columns != 'Asset Name']. \
             agg(np.sum, axis="index").to_frame().transpose()
         portfolio_exposure_df = pd.concat([universe_sensitivities_df, sum_over_factors_df])
 
@@ -123,8 +123,8 @@ def build_portfolio_constituents_df(performance_report: PerformanceReport, date:
     constituents_df = constituents_df[["assetId", "netExposure"]]
     constituents_df = (
         constituents_df.dropna()
-                       .set_index("assetId")
-                       .rename_axis("Asset Identifier")
+        .set_index("assetId")
+        .rename_axis("Asset Identifier")
     )
     assets_data = GsAssetApi.get_many_assets_data_scroll(fields=['name', 'gsid', 'id'],
                                                          as_of=dt.datetime(date.year, date.month, date.day),
@@ -132,16 +132,16 @@ def build_portfolio_constituents_df(performance_report: PerformanceReport, date:
                                                          id=constituents_df.index.tolist())
     assets_data_df = (
         pd.DataFrame.from_records(assets_data).set_index("id")
-                                              .fillna(value={"name": "Name not available"})
-                                              .rename_axis("Asset Identifier")
+        .fillna(value={"name": "Name not available"})
+        .rename_axis("Asset Identifier")
     )
 
     # Merge the constituents dataframe and asset data dataframe to get gsid, asset name, notional
     constituents_and_notional_df = (
         assets_data_df.merge(constituents_df, on='Asset Identifier').reset_index(drop=True)
-                                                                    .set_index("gsid")
-                                                                    .rename_axis("Asset Identifier")
-                                                                    .sort_index()
+        .set_index("gsid")
+        .rename_axis("Asset Identifier")
+        .sort_index()
     )
 
     return constituents_and_notional_df
@@ -149,7 +149,6 @@ def build_portfolio_constituents_df(performance_report: PerformanceReport, date:
 
 def build_sensitivity_df(universe: List, model: MacroRiskModel, date: dt.date,
                          factor_type: FactorType, by_name: bool) -> pd.DataFrame:
-
     universe_sensitivities_df = model.get_universe_sensitivity(start_date=date, end_date=date,
                                                                assets=DataAssetsRequest(
                                                                    UniverseIdentifierRequest.gsid, universe),
@@ -162,8 +161,8 @@ def build_sensitivity_df(universe: List, model: MacroRiskModel, date: dt.date,
 
     universe_sensitivities_df = (
         universe_sensitivities_df.reset_index(level=1, drop=True)
-                                 .rename_axis("Asset Identifier")
-                                 .sort_index()
+        .rename_axis("Asset Identifier")
+        .sort_index()
     )
 
     return universe_sensitivities_df
@@ -174,7 +173,6 @@ def build_exposure_df(notional_df: pd.DataFrame,
                       factor_categories: List,
                       factor_data: pd.DataFrame,
                       by_name: bool) -> pd.DataFrame:
-
     # Multiply sensitivity with notional
     columns = universe_sensitivities_df.columns.values.tolist()
     universe_sensitivities_df /= 100
@@ -200,13 +198,12 @@ def build_exposure_df(notional_df: pd.DataFrame,
         exposure_df = notional_df.join(universe_sensitivities_df).rename_axis("Factor Category", axis=1)
     else:
         factor_data = factor_data.set_index("name") if by_name else factor_data.set_index("identifier")
-        new_columns = \
-            [(factor_data.loc[f, 'factorCategory'], f) for f in universe_sensitivities_df.columns.values] \
-            if by_name else \
-            [(factor_data.loc[f, 'factorCategoryId'], f) for f in universe_sensitivities_df.columns.values]
+        new_columns = [(factor_data.loc[f, 'factorCategory'], f) for f in universe_sensitivities_df.columns.values] \
+            if by_name else [(factor_data.loc[f, 'factorCategoryId'], f) for f in
+                             universe_sensitivities_df.columns.values]
         universe_sensitivities_df = (
             universe_sensitivities_df.set_axis(pd.MultiIndex.from_tuples(new_columns), axis=1)
-                                     .rename_axis(("Factor Category", "Factor"), axis=1)
+            .rename_axis(("Factor Category", "Factor"), axis=1)
         )
         universe_sensitivities_df = pd.concat([universe_sensitivities_df,
                                                universe_sensitivities_df.agg("sum").to_frame().rename(
@@ -231,3 +228,15 @@ def build_exposure_df(notional_df: pd.DataFrame,
         exposure_df = notional_df.join(universe_sensitivities_df).rename_axis(("Factor Category", "Factor"), axis=1)
 
     return exposure_df
+
+
+def get_batched_dates(dates: List[dt.date], batch_size: int = 90) -> List[List[dt.date]]:
+    """
+        Split a list of dates into batches of a specified size.
+
+        :param dates: List of dates to be split into batches
+        :param batch_size: Size of each batch
+        :return: List of lists, where each sublist contains a batch of dates
+        """
+
+    return [dates[i:i + batch_size] for i in range(0, len(dates), batch_size)]

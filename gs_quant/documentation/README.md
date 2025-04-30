@@ -202,9 +202,6 @@ examples providing a searchable library of short specific snippets.
 - 📁 **05_factor_models**
   - 📄 [01_Factor_Models.ipynb](05_factor_models/01_Factor_Models.ipynb)
   - 📄 [02_Upload_Factor_Models.ipynb](05_factor_models/02_Upload_Factor_Models.ipynb)
-  - 📁 tutorials
-    - 📄 [Factor_Models.ipynb](05_factor_models/tutorials/Factor_Models.ipynb)
-    - 📄 [Upload_Factor_Models.ipynb](05_factor_models/tutorials/Upload_Factor_Models.ipynb)
 - 📁 **06_baskets**
   - 📁 examples
     - 📁 01_basket_composition_data
@@ -314,12 +311,11 @@ examples providing a searchable library of short specific snippets.
     - 📄 [02_Performance_Report.ipynb](10_one_delta/Reports/02_Performance_Report.ipynb)
     - 📄 [03_Thematic_Report.ipynb](10_one_delta/Reports/03_Thematic_Report.ipynb)
 - 📁 **11_macro_models**
-  - 📁 tutorials
-    - 📄 [01_Query Macro Models.ipynb](11_macro_models/tutorials/01_Query%20Macro%20Models.ipynb)
-    - 📄 [02_Upload Macro Models.ipynb](11_macro_models/tutorials/02_Upload%20Macro%20Models.ipynb)
+  - 📄 [01_Query_Macro_Models.ipynb](11_macro_models/01_Query_Macro_Models.ipynb)
+  - 📄 [02_Upload_Macro_Models.ipynb](11_macro_models/02_Upload_Macro_Models.ipynb)
 - 📁 **12_scenarios**
-  - 📄 [01_Custom Factor Shocks.ipynb](12_scenarios/01_Custom%20Factor%20Shocks.ipynb)
-  - 📄 [02_Historical Scenarios.ipynb](12_scenarios/02_Historical%20Scenarios.ipynb)
+  - 📄 [01_Custom_Factor_Shocks.ipynb](12_scenarios/01_Custom_Factor_Shocks.ipynb)
+  - 📄 [02_Historical_Scenarios.ipynb](12_scenarios/02_Historical_Scenarios.ipynb)
 - 📄 [Contents.ipynb](Contents.ipynb)
 - 📄 [Index.ipynb](Index.ipynb)
 - 📄 [README.md](README.md)
