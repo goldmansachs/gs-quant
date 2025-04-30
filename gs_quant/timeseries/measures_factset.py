@@ -15,7 +15,6 @@ under the License.
 """
 
 import datetime
-from dateutil.relativedelta import relativedelta
 from enum import Enum
 from typing import Union, Optional
 
@@ -1105,8 +1104,8 @@ LT_MEASURES = [EstimateItem.PRICE_TGT, EstimateItem.EPS_LTG]
 BASIS_TO_DATASET = {EstimateBasis.ANN: 'AF',
                     EstimateBasis.QTR: 'QF',
                     EstimateBasis.SEMI: 'SAF',
-                    EstimateBasis.NTM: 'AF',
-                    EstimateBasis.STM: 'AF'}
+                    EstimateBasis.NTM: 'NTM',
+                    EstimateBasis.STM: 'NTM'}
 
 BASIS_TO_FIELD = {
     EstimateBasis.ANN: 'Af',
@@ -1133,54 +1132,6 @@ RATING_TO_FIELD = {
     RatingType.NONE: 'feNoRec',
     RatingType.TOTAL: 'feTotal',
     RatingType.SCORE: 'feMark'}
-
-
-def _get_ntm(group, statistic):
-    date = group.name.date()
-    group = group.sort_values(by='feFpEnd')
-    try:
-        row1 = group[group['feFpEnd'] > date].iloc[0]
-        row2 = group[group['feFpEnd'] > row1['feFpEnd']].iloc[0]
-
-        diff_2_to_1 = (row2['feFpEnd'] - row1['feFpEnd']).days
-        diff_2_to_date_plus_1y = (row2['feFpEnd'] - (date + relativedelta(years=1))).days
-        diff_1_to_date_plus_1y = (date + relativedelta(years=1) - row1['feFpEnd']).days
-
-        weight_1 = diff_2_to_date_plus_1y / diff_2_to_1
-        weight_2 = diff_1_to_date_plus_1y / diff_2_to_1
-
-        twa = (row1[f'fe{statistic}Af'] * weight_1 + row2[f'fe{statistic}Af'] * weight_2)
-
-    except IndexError:
-        row1 = group[group['feFpEnd'] > date].iloc[0]
-        twa = row1[f'fe{statistic}Af']
-
-    return pd.Series({'date': row1['date'], 'Next Twelve Months': twa})
-
-
-def _get_stm(group, statistic):
-    date = group.name.date()
-    group = group.sort_values(by='feFpEnd')
-    try:
-        row1 = group[group['feFpEnd'] > date].iloc[0]
-        row2 = group[group['feFpEnd'] > row1['feFpEnd']].iloc[0]
-        row3 = group[group['feFpEnd'] > row2['feFpEnd']].iloc[0]
-
-        diff_3_to_2 = (row3['feFpEnd'] - row2['feFpEnd']).days
-        diff_3_to_date_plus_2y = (row3['feFpEnd'] - (date + relativedelta(years=2))).days
-        diff_2_to_date_plus_2y = (date + relativedelta(years=2) - row2['feFpEnd']).days
-
-        weight_2 = diff_3_to_date_plus_2y / diff_3_to_2
-        weight_3 = diff_2_to_date_plus_2y / diff_3_to_2
-
-        twa = (row2[f'fe{statistic}Af'] * weight_2 + row3[f'fe{statistic}Af'] * weight_3)
-
-    except IndexError:
-        row1 = group[group['feFpEnd'] > date].iloc[0]
-        row2 = group[group['feFpEnd'] > row1['feFpEnd']].iloc[0]
-        twa = row2[f'fe{statistic}Af']
-
-    return pd.Series({'date': row1['date'], 'Second Twelve Months': twa})
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))  # TO DO add query type
@@ -1213,7 +1164,10 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
     consensus = 'CONH' if statistic != EstimateStatistic.ACTUAL else 'ACT'
     basis_ds = 'LT' if metric in LT_MEASURES else BASIS_TO_DATASET[report_basis]
     basis_cl = 'Lt' if metric in LT_MEASURES else BASIS_TO_FIELD[report_basis]
-    ds_id = f'FE_{basic}_{consensus}_{basis_ds}_GLOBAL'
+    if report_basis in [EstimateBasis.NTM, EstimateBasis.STM]:
+        ds_id = f'FE_{basis_ds}'
+    else:
+        ds_id = f'FE_{basic}_{consensus}_{basis_ds}_GLOBAL'
     ds = Dataset(ds_id)
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     try:
@@ -1274,19 +1228,8 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
             columns={'date_range': 'date'})
         column = f'fe{column_prefix}{statistic.value}{basis_cl}'
     else:
-        if metric in LT_MEASURES:
-            raise MqValueError('NTM and STM are not supported for long term measures')
-        df.fillna({'consEndDate': end}, inplace=True)
-        df['date_range'] = df.apply(lambda row: pd.date_range(row['date'], row['consEndDate']), axis=1)
-        df = df.explode('date_range').drop(columns=['date', 'consEndDate']).rename(
-            columns={'date_range': 'date'})
-        df['feFpEnd'] = pd.to_datetime(df['feFpEnd'])
-        df['feFpEnd'] = df['feFpEnd'].dt.date
-        if report_basis == EstimateBasis.NTM:
-            df = df.groupby('date').apply(_get_ntm, statistic=statistic.value).reset_index(drop=True)
-        else:
-            df = df.groupby('date').apply(_get_stm, statistic=statistic.value).reset_index(drop=True)
-        column = report_basis.value
+        df['date'] = pd.to_datetime(df['date'])
+        column = f'fe{statistic.value}{basis_cl}'
 
     df = df[df['date'] >= pd.to_datetime(start)]
     df = df.sort_values(by='date', ascending=True).set_index('date')

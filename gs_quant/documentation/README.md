@@ -200,12 +200,10 @@ examples providing a searchable library of short specific snippets.
   - 📁 tutorials
     - 📄 [Backtesting.ipynb](04_backtesting/tutorials/Backtesting.ipynb)
 - 📁 **05_factor_models**
-  - 📁 examples
-    - 📄 [0000_get_factors_from_factor_risk_model.ipynb](05_factor_models/examples/0000_get_factors_from_factor_risk_model.ipynb)
-    - 📄 [0001_screen_assets_by_zscore.ipynb](05_factor_models/examples/0001_screen_assets_by_zscore.ipynb)
+  - 📄 [01_Factor_Models.ipynb](05_factor_models/01_Factor_Models.ipynb)
+  - 📄 [02_Upload_Factor_Models.ipynb](05_factor_models/02_Upload_Factor_Models.ipynb)
   - 📁 tutorials
     - 📄 [Factor_Models.ipynb](05_factor_models/tutorials/Factor_Models.ipynb)
-    - 📄 [Limited_Access_Factor_Models.ipynb](05_factor_models/tutorials/Limited_Access_Factor_Models.ipynb)
     - 📄 [Upload_Factor_Models.ipynb](05_factor_models/tutorials/Upload_Factor_Models.ipynb)
 - 📁 **06_baskets**
   - 📁 examples
@@ -297,43 +295,31 @@ examples providing a searchable library of short specific snippets.
   - 📄 [Security Master SDK.ipynb](09_security_master/Security%20Master%20SDK.ipynb)
   - 📄 [Security Master.ipynb](09_security_master/Security%20Master.ipynb)
 - 📁 **10_one_delta**
-  - 📁 demos
-    - 📄 [01_Create Portfolio.ipynb](10_one_delta/demos/01_Create%20Portfolio.ipynb)
-    - 📄 [02_Get Factor Attribution Data.ipynb](10_one_delta/demos/02_Get%20Factor%20Attribution%20Data.ipynb)
-    - 📄 [03_Get Factor Risk Data.ipynb](10_one_delta/demos/03_Get%20Factor%20Risk%20Data.ipynb)
-    - 📄 [04_Performance Report.ipynb](10_one_delta/demos/04_Performance%20Report.ipynb)
-    - 📄 [05_Get ESG Analytics.ipynb](10_one_delta/demos/05_Get%20ESG%20Analytics.ipynb)
-    - 📄 [06_Get Carbon Analytics.ipynb](10_one_delta/demos/06_Get%20Carbon%20Analytics.ipynb)
-    - 📄 [07_Continuous_Optimization.ipynb](10_one_delta/demos/07_Continuous_Optimization.ipynb)
-    - 📄 [08_Continuous_Optimization_Preloaded_Portfolio.ipynb](10_one_delta/demos/08_Continuous_Optimization_Preloaded_Portfolio.ipynb)
-  - 📁 scripts
-    - 📁 hedger
-      - 📄 [Optimizer.ipynb](10_one_delta/scripts/hedger/Optimizer.ipynb)
-      - 📄 [Performance Hedger.ipynb](10_one_delta/scripts/hedger/Performance%20Hedger.ipynb)
-    - 📁 portfolios
-      - 📄 [Create Backcasted Portfolio.ipynb](10_one_delta/scripts/portfolios/Create%20Backcasted%20Portfolio.ipynb)
-      - 📄 [Create New Portfolio.ipynb](10_one_delta/scripts/portfolios/Create%20New%20Portfolio.ipynb)
-      - 📄 [Get ESG Analytics.ipynb](10_one_delta/scripts/portfolios/Get%20ESG%20Analytics.ipynb)
-      - 📄 [Get Factor Attribution Data.ipynb](10_one_delta/scripts/portfolios/Get%20Factor%20Attribution%20Data.ipynb)
-      - 📄 [Get Factor Risk Data.ipynb](10_one_delta/scripts/portfolios/Get%20Factor%20Risk%20Data.ipynb)
-      - 📄 [Get Thematic Analytics.ipynb](10_one_delta/scripts/portfolios/Get%20Thematic%20Analytics.ipynb)
-      - 📄 [Manage a Fund of Funds.ipynb](10_one_delta/scripts/portfolios/Manage%20a%20Fund%20of%20Funds.ipynb)
-      - 📄 [Retrieve Portfolio Exposures.ipynb](10_one_delta/scripts/portfolios/Retrieve%20Portfolio%20Exposures.ipynb)
-      - 📄 [Update Historical Portfolio.ipynb](10_one_delta/scripts/portfolios/Update%20Historical%20Portfolio.ipynb)
-      - 📄 [carbon.ipynb](10_one_delta/scripts/portfolios/carbon.ipynb)
-    - 📁 reports
-      - 📄 [Factor Risk Report.ipynb](10_one_delta/scripts/reports/Factor%20Risk%20Report.ipynb)
-      - 📄 [Performance Report.ipynb](10_one_delta/scripts/reports/Performance%20Report.ipynb)
-      - 📄 [Thematic Report.ipynb](10_one_delta/scripts/reports/Thematic%20Report.ipynb)
+  - 📁 Hedger
+    - 📄 [01_Performance_Hedger.ipynb](10_one_delta/Hedger/01_Performance_Hedger.ipynb)
+    - 📄 [02_Factor_Hedger_(Axioma_Optimizer).ipynb](10_one_delta/Hedger/02_Factor_Hedger_(Axioma_Optimizer).ipynb)
+  - 📁 Portfolios
+    - 📄 [01_Create_Backcasted_Portfolio.ipynb](10_one_delta/Portfolios/01_Create_Backcasted_Portfolio.ipynb)
+    - 📄 [02_Create_New_Historical_Portfolio.ipynb](10_one_delta/Portfolios/02_Create_New_Historical_Portfolio.ipynb)
+    - 📄 [03_Update_Historical_Portfolio.ipynb](10_one_delta/Portfolios/03_Update_Historical_Portfolio.ipynb)
+    - 📄 [04_Get_Factor_Attribution_Data.ipynb](10_one_delta/Portfolios/04_Get_Factor_Attribution_Data.ipynb)
+    - 📄 [05_Manage_a_Fund_of_Funds.ipynb](10_one_delta/Portfolios/05_Manage_a_Fund_of_Funds.ipynb)
+    - 📄 [06_Get_Factor_Risk_Data.ipynb](10_one_delta/Portfolios/06_Get_Factor_Risk_Data.ipynb)
+    - 📄 [07_Get_Portfolio_Performance_Analytics.ipynb](10_one_delta/Portfolios/07_Get_Portfolio_Performance_Analytics.ipynb)
+    - 📄 [08_Get_ESG_Analytics.ipynb](10_one_delta/Portfolios/08_Get_ESG_Analytics.ipynb)
+    - 📄 [09_Get_Carbon_Analytics.ipynb](10_one_delta/Portfolios/09_Get_Carbon_Analytics.ipynb)
+    - 📄 [10_Get_Thematic_Analytics.ipynb](10_one_delta/Portfolios/10_Get_Thematic_Analytics.ipynb)
+  - 📁 Reports
+    - 📄 [01_Factor_Risk_Report.ipynb](10_one_delta/Reports/01_Factor_Risk_Report.ipynb)
+    - 📄 [02_Performance_Report.ipynb](10_one_delta/Reports/02_Performance_Report.ipynb)
+    - 📄 [03_Thematic_Report.ipynb](10_one_delta/Reports/03_Thematic_Report.ipynb)
 - 📁 **11_macro_models**
   - 📁 tutorials
     - 📄 [01_Query Macro Models.ipynb](11_macro_models/tutorials/01_Query%20Macro%20Models.ipynb)
     - 📄 [02_Upload Macro Models.ipynb](11_macro_models/tutorials/02_Upload%20Macro%20Models.ipynb)
 - 📁 **12_scenarios**
-  - 📁 examples
-    - 📄 [presidential_election_outcome_scenario.ipynb](12_scenarios/examples/presidential_election_outcome_scenario.ipynb)
-  - 📁 tutorials
-    - 📄 [create_and_run_factor_scenarios.ipynb](12_scenarios/tutorials/create_and_run_factor_scenarios.ipynb)
+  - 📄 [01_Custom Factor Shocks.ipynb](12_scenarios/01_Custom%20Factor%20Shocks.ipynb)
+  - 📄 [02_Historical Scenarios.ipynb](12_scenarios/02_Historical%20Scenarios.ipynb)
 - 📄 [Contents.ipynb](Contents.ipynb)
 - 📄 [Index.ipynb](Index.ipynb)
 - 📄 [README.md](README.md)

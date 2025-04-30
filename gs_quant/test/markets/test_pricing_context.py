@@ -272,7 +272,7 @@ def test_market_props():
         assert pc.market_data_location == PricingLocation.LDN
         assert pc.pricing_date == business_day_offset(today(PricingLocation.LDN), 0, roll='preceding')
 
-    # pricing_date and market.datee can be different
+    # pricing_date and market.date can be different
     pc = PricingContext(market=CloseMarket(date=datetime.date(2022, 4, 6), location='NYC'),
                         pricing_date=datetime.date(2022, 7, 4))
 
@@ -287,7 +287,8 @@ def test_market_props():
     assert pc.market.location == cm.location
 
     # market is not inherited
-    pc = PricingContext(market=CloseMarket(date=datetime.date(2022, 4, 6), location='NYC'))
+    pc = PricingContext(market=CloseMarket(date=datetime.date(2022, 4, 6), location='NYC'),
+                        pricing_date=dt.date(2022, 7, 4))
     with pc:
         # pc gets market_data_location from its market
         assert pc.market_data_location == PricingLocation.NYC
