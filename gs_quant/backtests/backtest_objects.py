@@ -405,6 +405,8 @@ class AggregateTransactionModel(TransactionModel):
     aggregate_type: TransactionAggType = field(default=TransactionAggType.SUM, metadata=field_metadata)
 
     def get_unit_cost(self, state, info, instrument) -> float:
+        if not self.transaction_models:
+            return 0
         if self.aggregate_type == TransactionAggType.SUM:
             return sum(model.get_unit_cost(state, info, instrument) for model in self.transaction_models)
         elif self.aggregate_type == TransactionAggType.MAX:
@@ -491,7 +493,7 @@ class TransactionCostEntry:
             if isinstance(m, ScaledTransactionModel):
                 cost = m.scaling_level * abs(cost * self._additional_scaling)
             final_costs.append(cost)
-        return self.cost_aggregation_func(final_costs)
+        return self.cost_aggregation_func(final_costs) if final_costs else 0
 
     def get_cost_by_component(self) -> Tuple[float, float]:
         fixed_costs = []
@@ -504,8 +506,8 @@ class TransactionCostEntry:
                 scaled_costs.append(cost)
             else:
                 fixed_costs.append(cost)
-        fixed_cost = self.cost_aggregation_func(fixed_costs)
-        scaled_cost = self.cost_aggregation_func(scaled_costs)
+        fixed_cost = self.cost_aggregation_func(fixed_costs) if fixed_costs else 0
+        scaled_cost = self.cost_aggregation_func(scaled_costs) if scaled_costs else 0
         if self.cost_aggregation_func is sum:
             return fixed_cost, scaled_cost
         else:

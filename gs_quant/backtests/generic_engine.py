@@ -149,8 +149,11 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
             scaling_based_tcs += inst_scaling_tc
         # solve such that fixed TCs, instrument prices and scaled transaction costs (under the same scaling factor)
         # add up to available_cash
-        first_scale_factor = max(available_cash - fixed_tcs, 0) / (unscaled_prices_by_day[cur_day].aggregate() +
-                                                                   scaling_based_tcs)
+        # do not floor to zero on the first iteration - first scale factor can be negative,
+        # e.g. if the aggregation operator is "min" and the fixed cost is the minimum but it exceeds the available cash,
+        # it would be too early to floor to zero, must solve again in case there still is an acceptable scaling level
+        first_scale_factor = (available_cash - fixed_tcs) / (unscaled_prices_by_day[cur_day].aggregate() +
+                                                             scaling_based_tcs)
         # set additional scaling on TCE and solve again in case aggregation (min/max) has been affected by scaling
         fixed_tcs = 0
         scaling_based_tcs = 0
