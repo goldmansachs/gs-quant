@@ -295,6 +295,7 @@ examples providing a searchable library of short specific snippets.
   - 📁 Hedger
     - 📄 [01_Performance_Hedger.ipynb](10_one_delta/Hedger/01_Performance_Hedger.ipynb)
     - 📄 [02_Factor_Hedger_(Axioma_Optimizer).ipynb](10_one_delta/Hedger/02_Factor_Hedger_(Axioma_Optimizer).ipynb)
+    - 📄 [03_Continuous_Optimization.ipynb](10_one_delta/Hedger/03_Continuous_Optimization.ipynb)
   - 📁 Portfolios
     - 📄 [01_Create_Backcasted_Portfolio.ipynb](10_one_delta/Portfolios/01_Create_Backcasted_Portfolio.ipynb)
     - 📄 [02_Create_New_Historical_Portfolio.ipynb](10_one_delta/Portfolios/02_Create_New_Historical_Portfolio.ipynb)
