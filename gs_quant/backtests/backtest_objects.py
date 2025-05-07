@@ -506,8 +506,13 @@ class TransactionCostEntry:
                 scaled_costs.append(cost)
             else:
                 fixed_costs.append(cost)
-        fixed_cost = self.cost_aggregation_func(fixed_costs) if fixed_costs else 0
-        scaled_cost = self.cost_aggregation_func(scaled_costs) if scaled_costs else 0
+        fixed_cost = self.cost_aggregation_func(fixed_costs) if fixed_costs else None
+        scaled_cost = self.cost_aggregation_func(scaled_costs) if scaled_costs else None
+        if scaled_cost is None:
+            return fixed_cost, 0
+        elif fixed_cost is None:
+            return 0, scaled_cost
+
         if self.cost_aggregation_func is sum:
             return fixed_cost, scaled_cost
         else:

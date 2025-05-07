@@ -26,11 +26,10 @@ from socket import gaierror
 from typing import Iterable, Optional, Union
 
 import msgpack
-from opentracing import Span, Format
+from opentracing import Span
 from websockets import ConnectionClosed
 
 from gs_quant.api.risk import RiskApi
-from gs_quant.context_base import nullcontext
 from gs_quant.risk import RiskRequest
 from gs_quant.target.risk import OptimizationRequest
 from gs_quant.tracing import Tracer
@@ -274,18 +273,8 @@ class GsRiskApi(RiskApi):
                 risk_session = cls.get_session()
                 api_version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
                 ws_url = f'/{api_version}/risk/calculate/results/subscribe'
-                trace = Tracer(f'wss:/{ws_url}') if span else nullcontext()
-                with trace as scope:
-                    tracing_headers = {}
-                    if scope and scope.span:
-                        Tracer.inject(Format.HTTP_HEADERS, tracing_headers)
-                    async with risk_session._connect_websocket(ws_url, tracing_headers, include_version=False) as ws:
-                        if scope and scope.span:
-                            if hasattr(ws, 'request_headers'):  # For websockets < 14
-                                scope.span.set_tag('wss.host', ws.request_headers.get('host'))
-                            else:
-                                scope.span.set_tag('wss.host', ws.request.headers.get('host'))
-                        error = await handle_websocket()
+                async with risk_session._connect_websocket(ws_url, include_version=False) as ws:
+                    error = await handle_websocket()
 
                 attempts = max_attempts
             except ConnectionClosed as cce:

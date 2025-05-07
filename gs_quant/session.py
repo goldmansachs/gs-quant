@@ -23,6 +23,7 @@ import ssl
 import sys
 from abc import abstractmethod
 from configparser import ConfigParser
+from contextlib import asynccontextmanager
 from enum import Enum, auto, unique
 from typing import Optional, Union, Iterable, Any
 
@@ -479,8 +480,25 @@ class GsSession(ContextBase):
                                          return_request_id=return_request_id)
         return ret
 
-    def _connect_websocket(self, path: str, headers: Optional[dict] = None, include_version=True,
-                           domain: Optional[str] = None, **kwargs: Any):
+    @asynccontextmanager
+    async def _connect_websocket(self, path: str, headers: Optional[dict] = None, include_version=True,
+                                 domain: Optional[str] = None, **kwargs: Any):
+        span = Tracer.get_instance().active_span
+        trace = Tracer(f'wss:/{path}') if span else nullcontext()
+        with trace as scope:
+            tracing_headers = {}
+            Tracer.inject(Format.HTTP_HEADERS, tracing_headers)
+            headers = {**headers, **tracing_headers} if headers else tracing_headers
+            async with self._connect_websocket_raw(path, headers, include_version, domain, **kwargs) as websocket:
+                if scope and scope.span:
+                    if hasattr(websocket, 'request_headers'):  # For websockets < 14
+                        scope.span.set_tag('wss.host', websocket.request_headers.get('host'))
+                    else:
+                        scope.span.set_tag('wss.host', websocket.request.headers.get('host'))
+                yield websocket
+
+    def _connect_websocket_raw(self, path: str, headers: Optional[dict] = None, include_version=True,
+                               domain: Optional[str] = None, **kwargs: Any):
         import websockets
         _WEBSOCKETS_VERSION = tuple(int(x) for x in websockets.__version__.split("."))
 

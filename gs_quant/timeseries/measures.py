@@ -807,7 +807,8 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
     :param asset: asset object loaded from security master
     :param tenor: relative date representation of expiration date e.g. 1m
             or absolute calendar strips e.g. 'Cal20', 'F20-G20'
-    :param strike_reference: reference for strike level
+    :param strike_reference: reference for strike level. Forward is used for ATMF. Default market convention
+            for Equity implied vols is forward
     :param relative_strike: strike relative to reference
     :param parallelize_queries: send parallel queries to the measures API
     chunked over an interval of a year based on the date context

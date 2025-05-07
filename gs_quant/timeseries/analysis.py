@@ -103,6 +103,8 @@ def repeat(x: pd.Series, n: int = 1) -> pd.Series:
     """
     if not 0 < n < 367:
         raise MqValueError('n must be between 0 and 367')
+    if x.empty:
+        return x
     index = pd.date_range(freq=f'{n}D', start=x.index[0], end=x.index[-1])
     return x.reindex(index, method='ffill')
 

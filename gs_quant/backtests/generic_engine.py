@@ -154,6 +154,8 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
         # it would be too early to floor to zero, must solve again in case there still is an acceptable scaling level
         first_scale_factor = (available_cash - fixed_tcs) / (unscaled_prices_by_day[cur_day].aggregate() +
                                                              scaling_based_tcs)
+        if first_scale_factor == 0:
+            return 0
         # set additional scaling on TCE and solve again in case aggregation (min/max) has been affected by scaling
         fixed_tcs = 0
         scaling_based_tcs = 0

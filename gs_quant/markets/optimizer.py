@@ -16,7 +16,7 @@ under the License.
 import logging
 from enum import Enum
 from functools import wraps
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Final
 
 from dateutil.relativedelta import relativedelta
 
@@ -74,6 +74,79 @@ class OptimizationConstraintUnit(Enum):
 
 class OptimizerObjective(Enum):
     MINIMIZE_FACTOR_RISK = 'Minimize Factor Risk'
+
+
+class OptimizerRiskType(Enum):
+    VARIANCE = 'Variance'
+
+
+class OptimizerObjectiveTerm:
+    DEFAULT_RISK_PARAMS: Final = {
+        'factor_weight': 1,
+        'specific_weight': 1,
+        'risk_type': OptimizerRiskType.VARIANCE,
+    }
+
+    def __init__(self, weight: float = 1, params: Dict[str, float] = DEFAULT_RISK_PARAMS):
+        self.__weight = weight
+        self.__params = {**self.DEFAULT_RISK_PARAMS, **params}
+
+    @property
+    def params(self) -> Dict:
+        return self.__params
+
+    @params.setter
+    def params(self, params: Dict[str, float]):
+        self.__params = {**self.DEFAULT_RISK_PARAMS, **params}
+
+    @property
+    def weight(self) -> float:
+        return self.__weight
+
+    @weight.setter
+    def weight(self, weight: float):
+        self.__weight = weight
+
+    def to_dict(self) -> Dict:
+        payload = {
+            'factorWeight': self.__params['factor_weight'],
+            'specificWeight': self.__params['specific_weight'],
+            'riskType': self.__params['risk_type'].value,
+            'weight': self.__weight,
+        }
+        return payload
+
+
+class OptimizerObjectiveParameters:
+
+    def __init__(
+        self,
+        objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK,
+        terms: List[OptimizerObjectiveTerm] = [OptimizerObjectiveTerm.DEFAULT_RISK_PARAMS]
+    ):
+        self.__objective = objective
+        self.__terms = terms
+
+    @property
+    def objective(self):
+        return self.__objective
+
+    @objective.setter
+    def objective(self, objective: OptimizerObjective):
+        self.__objective = objective
+
+    @property
+    def terms(self):
+        return self.__terms
+
+    @terms.setter
+    def terms(self, terms: List[OptimizerObjectiveTerm]):
+        self.__terms = terms
+
+    def to_dict(self):
+        if len(self.__terms) != 1:
+            raise MqValueError('Only single risk term is supported')
+        return {'parameters': self.__terms[0].to_dict()}
 
 
 class OptimizerType(Enum):
@@ -198,7 +271,6 @@ class AssetConstraint:
                                as_of_date: dt.date = dt.date.today(),
                                fail_on_unresolved_positions: bool = True,
                                **kwargs):
-
         """Create many asset constraints from a dataframe or a list of dictionaries
         :param asset_constraints: dataframe or list of dictionaries containing the asset constraints
         :param as_of_date: the date on which to resolve the assets
@@ -569,7 +641,6 @@ class IndustryConstraint:
     @classmethod
     def build_many_constraints(cls,
                                industry_constraints: Union[pd.DataFrame, List[Dict]]):
-
         """
         Create many industry constraints from a dataframe or a list of dictionaries
         :param industry_constraints: dataframe or list of dictionaries containing the industry constraints
@@ -1301,7 +1372,8 @@ class OptimizerStrategy:
                  constraints: OptimizerConstraints = None,
                  turnover: TurnoverConstraint = None,
                  settings: OptimizerSettings = None,
-                 objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK):
+                 objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK,
+                 objective_parameters: OptimizerObjectiveParameters = None):
         """
         A strategy that can be passed into the optimizer and run
 
@@ -1321,6 +1393,7 @@ class OptimizerStrategy:
         self.__settings = settings
         self.__objective = objective
         self.__result = None
+        self.__objective_parameters = objective_parameters
 
     @property
     def initial_position_set(self) -> PositionSet:
@@ -1378,6 +1451,14 @@ class OptimizerStrategy:
     def objective(self, value: OptimizerObjective):
         self.__objective = value
 
+    @property
+    def objective_parameters(self):
+        return self.__objective_parameters
+
+    @objective_parameters.setter
+    def objective_parameters(self):
+        return self.__objetive_parameters
+
     def to_dict(self, fail_on_unpriced_positions: bool = True):
         """Converts input to suitable json payload for optimizer. Does not modify initial_position_set"""
         if self.constraints is None:
@@ -1429,6 +1510,10 @@ class OptimizerStrategy:
         # Price initial_position_set if needed
         if self.initial_position_set.reference_notional is not None:
             parameters['targetNotional'] = self.initial_position_set.reference_notional
+
+        if self.__objective_parameters is not None:
+            parameters['hedgeObjectiveParameters'] = self.__objective_parameters.to_dict()
+
         payload = {
             'positions': positions_as_dict,
             'parameters': {
@@ -1456,7 +1541,6 @@ class OptimizerStrategy:
         else:
             parameters['hedgeTarget']['positions'] = [{'assetId': p['assetId'], 'quantity': p['quantity']}
                                                       for p in price_results.get('positions', [])]
-
         return {
             'objective': self.objective.value,
             'parameters': parameters

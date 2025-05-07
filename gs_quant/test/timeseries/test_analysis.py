@@ -204,3 +204,10 @@ def test_lag():
     expected = pd.Series([10, 12], index=pd.date_range('2022-02-28', periods=2, freq='D'))
     expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag RDate 2y")
+
+
+def test_repeat_empty_series():
+    # Test case for an empty series
+    empty_series = pd.Series(dtype=float)
+    result = repeat(empty_series)
+    assert result.empty, "The result should be an empty series when input is empty."

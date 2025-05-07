@@ -570,7 +570,8 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
     :param asset: asset object loaded from security master
     :param tenor: relative date representation of expiration date e.g. 1m
             or absolute calendar strips e.g. 'Cal20', 'F20-G20'
-    :param strike_reference: reference for strike level
+    :param strike_reference: reference for strike level. Forward is used for ATMF. Default market convention
+            for FX implied vols is delta neutral
     :param relative_strike: strike relative to reference
     :param location: location of the data snapshot Example - "HKG", "LDN", "NYC"
     :param legacy_implementation: Deprecated (supplied values are ignored)

@@ -72,6 +72,6 @@ def decode_basic_bt_transactions(results: dict, decode_instruments: bool = True)
 
     return {dt.date.fromisoformat(k): tuple(
             Transaction(decode_inst_tuple(t['portfolio']) if decode_instruments else t['portfolio'],
-                        t['portfolio_price'], t['cost'], to_ccy(t['currency']),
-                        TransactionDirection(t['direction']) if t['direction'] else None, t['quantity'])
+                        t.get('portfolio_price'), t.get('cost'), to_ccy(t['currency']) if t.get('currency') else None,
+                        TransactionDirection(t['direction']) if t.get('direction') else None, t.get('quantity'))
             for t in v) for k, v in results.items()}
