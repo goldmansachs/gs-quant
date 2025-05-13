@@ -298,16 +298,15 @@ def _batch_data_v2(model_id: str, data: dict, data_type: str, max_asset_size: in
         if data_type in ["issuerSpecificCovariance", "factorPortfolios"]:
             max_asset_size //= 2
         data_list, _ = _batch_input_data({data_type: data}, max_asset_size)
-        for i in range(len(data_list)):
-            final_upload = True if i == len(data_list) - 1 else False
-            try:
-                res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
+        for i, chunk in enumerate(data_list):
+            final_upload = (i == len(data_list) - 1)
+            res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
                                                                   model_data={data_type: data_list[i], 'date': date},
                                                                   partial_upload=True,
                                                                   final_upload=final_upload, **kwargs)
-                logging.info(res)
-            except (MqRequestError, Exception) as e:
-                raise e
+          
+            logging.info(res)
+            
 
 
 def batch_and_upload_coverage_data(date: dt.date, gsid_list: list, model_id: str, batch_size: int):
