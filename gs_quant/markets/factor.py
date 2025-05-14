@@ -23,9 +23,10 @@ import math
 from gs_quant.data.core import DataContext
 from gs_quant.datetime import date
 from gs_quant.target.common import Enum
-from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, RiskModelDataMeasure
+from gs_quant.target.risk_models import RiskModelUniverseIdentifierRequest
+from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, RiskModelDataMeasure, RiskModelDataAssetsRequest
 from gs_quant.models.risk_model_utils import get_covariance_matrix_dataframe, build_factor_volatility_dataframe, \
-    build_factor_data_map
+    build_factor_data_map, build_pfp_data_dataframe
 
 
 class ReturnFormat(Enum):
@@ -194,3 +195,32 @@ class Factor:
             return factor_returns_df.squeeze().to_dict()
 
         return factor_returns_df
+
+    def mimicking_portfolio(self,
+                            start_date: date = DataContext.current.start_date,
+                            end_date: date = DataContext.current.end_date,
+                            assets: RiskModelDataAssetsRequest = RiskModelDataAssetsRequest(
+                                identifier=RiskModelUniverseIdentifierRequest.bbid, universe=()),
+                            format: ReturnFormat = ReturnFormat.DATA_FRAME):
+        """ Retrieves a timeseries of factor mimicking portfolios for a date range."""
+
+        results = GsFactorRiskModelApi.get_risk_model_data(self.risk_model_id,
+                                                           start_date,
+                                                           end_date,
+                                                           assets=assets,
+                                                           measures=[RiskModelDataMeasure.Factor_Portfolios,
+                                                                     RiskModelDataMeasure.Factor_Id,
+                                                                     RiskModelDataMeasure.Factor_Name],
+                                                           factors=[self.name],
+                                                           limit_factors=False).get('results')
+
+        factor_portfolio_df = build_pfp_data_dataframe(results, True)
+
+        factor_portfolio_df = factor_portfolio_df.reset_index()
+        factor_portfolio_df = factor_portfolio_df.pivot(index="date",
+                                                        columns="identifier",
+                                                        values=self.name)
+
+        if format.value == ReturnFormat.JSON.value:
+            return factor_portfolio_df.to_dict(orient='index')
+        return factor_portfolio_df

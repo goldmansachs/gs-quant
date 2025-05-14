@@ -776,6 +776,7 @@ class MarqueeRiskModel(RiskModel):
                               end_date: dt.date = None,
                               assets: DataAssetsRequest = DataAssetsRequest(
                                   RiskModelUniverseIdentifierRequest.gsid, []),
+                              factors: List[Union[str, Factor]] = None,
                               get_factors_by_name: bool = False,
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get universe factor exposure data for existing risk model
@@ -783,6 +784,7 @@ class MarqueeRiskModel(RiskModel):
         :param start_date: Start date for data request
         :param end_date: End date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param factors: List of factors to limit the exposure by. If empty, the data for all factors is returned.
         :param get_factors_by_name: Return results keyed by factor name instead of ID
         :param format: Which format to return the results in
 
@@ -813,6 +815,7 @@ class MarqueeRiskModel(RiskModel):
             start_date=start_date,
             end_date=end_date,
             assets=assets,
+            factors=factors,
             measures=[Measure.Factor_Name, Measure.Factor_Id, Measure.Universe_Factor_Exposure, Measure.Asset_Universe],
             limit_factors=False
         ).get('results')
@@ -1062,6 +1065,7 @@ class MarqueeRiskModel(RiskModel):
                  end_date: dt.date = None,
                  assets: DataAssetsRequest = DataAssetsRequest(
                      RiskModelUniverseIdentifierRequest.gsid, []),
+                 factors: List[Union[str, Factor]] = None,
                  limit_factors: bool = True) -> Dict:
         """ Get data for multiple measures for existing risk model
 
@@ -1069,17 +1073,21 @@ class MarqueeRiskModel(RiskModel):
         :param start_date: start date for data request
         :param end_date: end date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param factors: Only include data for these factors. If empty, all factors will be included.
         :param limit_factors: limit factors included in factorData and covariance matrix to only include factors
                 which the input universe has non-zero exposure to
 
         :return: risk model data or MqRequestError if query is too large for the service
         """
+        if factors:
+            factors = [f.name if isinstance(f, Factor) else f for f in factors]
         try:
             return GsFactorRiskModelApi.get_risk_model_data(
                 model_id=self.id,
                 start_date=start_date,
                 end_date=end_date,
                 assets=assets,
+                factors=factors,
                 measures=measures,
                 limit_factors=limit_factors
             )
@@ -1925,6 +1933,7 @@ class FactorRiskModel(MarqueeRiskModel):
                                      end_date: dt.date = None,
                                      assets: DataAssetsRequest = DataAssetsRequest(
                                          RiskModelUniverseIdentifierRequest.gsid, []),
+                                     factors: List[Union[str, Factor]] = None,
                                      get_factors_by_name: bool = False,
                                      format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
         """ Get universe factor exposure data for existing risk model
@@ -1932,6 +1941,7 @@ class FactorRiskModel(MarqueeRiskModel):
         :param start_date: start date for data request
         :param end_date: end date for data request
         :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param factors: list of factors to return exposure for. If left None, will return all applicable factors
         :param get_factors_by_name: return results keyed by factor name instead of ID
         :param format: which format to return the results in
 
@@ -1959,6 +1969,7 @@ class FactorRiskModel(MarqueeRiskModel):
         :func:`get_asset_universe` :func:`get_specific_risk`
         """
         return super().get_universe_exposure(start_date, end_date, assets,
+                                             factors=factors,
                                              get_factors_by_name=get_factors_by_name, format=format)
 
     def _build_covariance_matrix_measure(self,
@@ -2323,14 +2334,18 @@ class FactorRiskModel(MarqueeRiskModel):
     def get_factor_portfolios(self,
                               start_date: dt.date,
                               end_date: dt.date = None,
+                              factors: List[str] = None,
                               assets: DataAssetsRequest = DataAssetsRequest(
                                   RiskModelUniverseIdentifierRequest.gsid, []),
+                              get_factors_by_name: bool = False,
                               format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
         """ Get factor portfolios data for existing risk model
 
         :param start_date: start date for data request
         :param end_date: end date for data request
-        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request
+        :param assets: DataAssetsRequest object with identifier and list of assets to retrieve for request:
+        :param factors: The factors to get factor portfolio data for. If empty, the data for all factors is returned
+        :param get_factors_by_name: whether to denote the results by factor name (True) or ID (False)
         :param format: which format to return the results in
 
         :return: factor portfolios data
@@ -2359,10 +2374,13 @@ class FactorRiskModel(MarqueeRiskModel):
             start_date=start_date,
             end_date=end_date,
             assets=assets,
-            measures=[Measure.Factor_Portfolios],
+            factors=factors,
+            measures=[Measure.Factor_Id, Measure.Factor_Name, Measure.Factor_Portfolios],
             limit_factors=False
         ).get('results')
-        pfp_data = results if format == ReturnFormat.JSON else build_pfp_data_dataframe(results)
+        pfp_data = build_pfp_data_dataframe(results,
+                                            return_df=format is ReturnFormat.DATA_FRAME,
+                                            get_factors_by_name=get_factors_by_name)
         return pfp_data
 
     def get_asset_contribution_to_risk(self,

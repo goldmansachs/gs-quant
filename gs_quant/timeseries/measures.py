@@ -2360,7 +2360,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
     if real_time:
         raise NotImplementedError('real-time var term not implemented')
 
-    if not (pricing_date is None or isinstance(pricing_date, str)):
+    if not (pricing_date is None or isinstance(pricing_date, str) or isinstance(pricing_date, datetime.date)):
         raise MqTypeError('pricing_date should be a relative date')
 
     check_forward_looking(pricing_date, source, 'var_term')

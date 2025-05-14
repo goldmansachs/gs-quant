@@ -140,20 +140,45 @@ def build_factor_data_map(results: List, identifier: str, risk_model_id: str, re
     return factor_data_df
 
 
-def build_pfp_data_dataframe(results: List) -> pd.DataFrame:
-    date_list = []
+def build_pfp_data_dataframe(results: List,
+                             return_df: bool = True,
+                             get_factors_by_name: bool = True) -> Union[pd.DataFrame, list]:
+
+    factor_data_df = pd.DataFrame(results)[["date", "factorData"]]
+    factor_data_df = factor_data_df.explode('factorData')
+    factor_data_df['factorId'] = factor_data_df['factorData'].apply(lambda x: x.get('factorId'))
+    factor_data_df['factorName'] = factor_data_df['factorData'].apply(lambda x: x.get('factorName'))
+    factor_data_df.drop(columns='factorData', inplace=True)
+    factor_data_df.set_index("date", inplace=True)
+
     pfp_list = []
+    identifier_col_name = "assetId" if not get_factors_by_name else 'identifier'
     for row in results:
+        factor_map_on_date = factor_data_df.loc[row.get('date'), ['factorId', 'factorName']]
+        if isinstance(factor_map_on_date, pd.Series):
+            factor_map_on_date = factor_map_on_date.to_frame().T
+
+        factor_map_on_date = factor_map_on_date.to_dict(orient='list')
+        factor_id_to_name_map = dict(zip(factor_map_on_date.get('factorId'), factor_map_on_date.get('factorName')))
         pfp_map = dict()
-        pfp_map['assetId'] = row.get('factorPortfolios').get('universe')
+        pfp_map[identifier_col_name] = row.get('factorPortfolios').get('universe')
         for factor in row.get('factorPortfolios').get('portfolio'):
             factor_id = factor.get('factorId')
-            pfp_map[f'factorId: {factor_id}'] = factor.get('weights')
-        weights_df = pd.DataFrame(pfp_map)
-        pfp_list.append(weights_df)
-        date_list.append(row.get('date'))
-    results = pd.concat(pfp_list, keys=date_list) if pfp_list else pd.DataFrame({})
-    return results
+            if get_factors_by_name:
+                pfp_map[factor_id_to_name_map.get(factor_id)] = factor.get('weights')
+            else:
+                pfp_map[f'factorId: {factor_id}'] = factor.get('weights')
+            pfp_map['date'] = row.get('date')
+        if not return_df:
+            pfp_list.append(pfp_map)
+        else:
+            weights_df = pd.DataFrame(pfp_map)
+            pfp_list.append(weights_df)
+    if not return_df:
+        return pfp_list
+
+    results = pd.concat(pfp_list) if pfp_list else pd.DataFrame({})
+    return results.set_index("date")
 
 
 def get_optional_data_as_dataframe(results: List, optional_data_key: str) -> pd.DataFrame:

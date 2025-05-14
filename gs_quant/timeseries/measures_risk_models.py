@@ -171,7 +171,8 @@ def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
                   RiskModelDataMeasure.Asset_Universe],
         start_date=DataContext.current.start_time,
         end_date=DataContext.current.end_time,
-        assets=RiskModelDataAssetsRequest(identifier=RiskModelUniverseIdentifierRequest.gsid, universe=[gsid])
+        assets=RiskModelDataAssetsRequest(identifier=RiskModelUniverseIdentifierRequest.gsid, universe=[gsid]),
+        factors=[factor]
     ).get('results', [])
 
     # Get the factor data from query results
