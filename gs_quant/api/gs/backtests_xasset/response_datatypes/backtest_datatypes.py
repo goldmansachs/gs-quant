@@ -13,8 +13,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import dataclasses
 import datetime as dt
+from abc import abstractmethod
 
 from dataclasses import dataclass, field
 from enum import Enum
@@ -26,6 +27,7 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import \
     decode_daily_portfolio
 from gs_quant.instrument import Instrument
+from gs_quant.interfaces.algebra import AlgebraicType
 from gs_quant.json_convertors import decode_optional_date, encode_date_tuple, decode_date_tuple
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
 from gs_quant.common import Currency, CurrencyName, PricingLocation
@@ -120,17 +122,60 @@ class Trade:
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class FixedCostModel:
-    cost: float = 0.0
-    type: str = 'fixed_cost_model'
+class Model(AlgebraicType):
+    pass
+
+    @property
+    @abstractmethod
+    def scaling_property(self):
+        ...
+
+    def set_scaling_property(self, value: float):
+        setattr(self, self.scaling_property, value)
+
+    def __add__(self, other):
+        if not isinstance(other, Model):
+            raise TypeError('Can only add to another cost model')
+        if type(self) is type(other):
+            scaling_prop_name = self.scaling_property
+            if other != dataclasses.replace(self, **{scaling_prop_name: getattr(other, scaling_prop_name)}):
+                raise ValueError('Cannot add costs with different attributes')
+            result = dataclasses.replace(self)
+            result.set_scaling_property(getattr(self, scaling_prop_name) + getattr(other, scaling_prop_name))
+            return result
+        return AggregateCostModel((self, other), CostAggregationType.Sum)
+
+    def __sub__(self, other):
+        raise NotImplementedError('Multiplication not implemented for cost models')
+
+    def __mul__(self, other):
+        raise NotImplementedError('Multiplication not implemented for cost models')
+
+    def __div__(self, other):
+        raise NotImplementedError('Division not implemented for cost models')
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class ScaledCostModel:
+class FixedCostModel(Model):
+    cost: float = 0.0
+    type: str = 'fixed_cost_model'
+
+    @property
+    def scaling_property(self):
+        return 'cost'
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class ScaledCostModel(Model):
     scaling_level: float = 0.0
     scaling_quantity_type: TransactionCostScalingType = TransactionCostScalingType.Quantity
     type: str = 'scaled_cost_model'
+
+    @property
+    def scaling_property(self):
+        return 'scaling_level'
 
 
 _type_to_basic_model_map = {'fixed_cost_model': FixedCostModel, 'scaled_cost_model': ScaledCostModel}
@@ -148,6 +193,18 @@ class AggregateCostModel:
     models: Tuple[Union[FixedCostModel, ScaledCostModel], ...] = field(metadata=config(decoder=basic_tc_tuple_decoder))
     aggregation_type: CostAggregationType
     type: str = 'aggregate_cost_model'
+
+    @property
+    def scaling_property(self):
+        return None
+
+    def set_scaling_property(self, value: float):
+        pass
+
+    def __add__(self, other):
+        if isinstance(other, AggregateCostModel) and self.aggregation_type is other.aggregation_type:
+            return AggregateCostModel(self.models + other.models, self.aggregation_type)
+        raise TypeError('Can only add with AggregateCostModels with the same aggregation type')
 
 
 def tcm_decoder(data: Optional[dict]) -> Optional[Union[FixedCostModel, ScaledCostModel, AggregateCostModel]]:

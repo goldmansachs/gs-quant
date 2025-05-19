@@ -36,7 +36,7 @@ class RiskResultWithData:
                 raise ValueError(f'Cannot aggregate risk results with different units: {self.unit}, {other.unit}')
         else:
             if not isinstance(other, type(self.result)):
-                raise ValueError(f'Incorrect type for other operand {type(other)}')
+                raise TypeError(f'Incorrect type for other operand {type(other)}')
 
     def __add__(self, other):
         self.check_can_aggregate(other)

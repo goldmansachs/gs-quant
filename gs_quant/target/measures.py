@@ -397,11 +397,17 @@ FXQuotedDeltaNoPremAdj.__doc__ = "FXQuotedDeltaNoPremAdj"
 FXQuotedVega = RiskMeasure(name="FXQuotedVega", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Quoted Vega"))
 FXQuotedVega.__doc__ = "FXQuotedVega"
 
-FXQuotedVegaBps = RiskMeasure(name="FXQuotedVegaBps", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Quoted Vega"))
+FXQuotedVegaBps = RiskMeasure(name="FXQuotedVegaBps", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Quoted Vega Bps"))
 FXQuotedVegaBps.__doc__ = "FXQuotedVegaBps"
 
 FXSpot = RiskMeasure(name="FXSpot", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Spot"))
 FXSpot.__doc__ = "FX spot reference"
+
+FXSpotVal = RiskMeasure(name="FXSpotVal", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FXSpotVal"))
+FXSpotVal.__doc__ = "FXSpot in trade cross convention"
+
+FXStrikePts = RiskMeasure(name="FXStrikePts", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("StrikePts"))
+FXStrikePts.__doc__ = "FXPoints in trade cross convention"
 
 FXVega = RiskMeasureWithFiniteDifferenceParameter(name="FXVega", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Vega"))
 FXVega.__doc__ = "Change in Dollar Price due to a 1 vol move in the implied volatility of ATM instruments used to build the volatility surface"

@@ -51,6 +51,7 @@ class SecMasterIdentifiers(Enum):
     COMPOSITE_FIGI = 'compositeFigi'
     BARRA_ID = 'barraId'
     AXIOMA_ID = 'axiomaId'
+    FIGI = 'figi'
 
 
 def __extend_enum(base_enum, new_values):
@@ -146,7 +147,7 @@ class GsSecurityMasterApi:
         return r
 
     @classmethod
-    def get_all_securities(cls, type_: SecMasterAssetType,
+    def get_all_securities(cls, type_: SecMasterAssetType = None,
                            effective_date: dt.date = None,
                            is_primary=None,
                            flatten=False, **query_params) -> Optional[dict]:
@@ -344,7 +345,7 @@ class GsSecurityMasterApi:
         return results
 
     @classmethod
-    def get_capital_structure(cls, id_value: str,
+    def get_capital_structure(cls, id_value: Union[str, list],
                               id_type: CapitalStructureIdentifiers,
                               type_: SecMasterAssetType = None, is_primary: bool = None,
                               effective_date: dt.date = None) -> dict:
@@ -395,7 +396,8 @@ class GsSecurityMasterApi:
         return aggregated_results, aggregated_total_results
 
     @classmethod
-    def _get_capital_structure(cls, id_value: str, id_type: Union[CapitalStructureIdentifiers, SecMasterIdentifiers],
+    def _get_capital_structure(cls, id_value: Union[str, list],
+                               id_type: Union[CapitalStructureIdentifiers, SecMasterIdentifiers],
                                type_, is_primary, effective_date, offset_key: Union[str, None]):
         params = {
             id_type.value: id_value

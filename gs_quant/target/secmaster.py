@@ -86,7 +86,8 @@ class SecMasterAssetType(EnumBase, Enum):
     Canadian_DR = 'Canadian DR'
     Singapore_DR = 'Singapore DR'
     To_Be_Announced = 'To Be Announced'
-    Basket = 'Basket'    
+    Basket = 'Basket'
+    Physical_index_future_ = 'Physical index future.'
 
 
 class SecMasterCorporateActionStatus(EnumBase, Enum):    

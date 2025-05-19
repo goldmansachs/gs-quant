@@ -36,7 +36,7 @@ def test_arithmetics():
     assert FloatWithData(result=2, unit='EUR') / FloatWithData(result=3, unit='EUR') == FloatWithData(result=2 / 3,
                                                                                                       unit='EUR')
     assert 3 + FloatWithData(result=2, unit='EUR') == FloatWithData(result=5, unit='EUR')
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         FloatWithData(result=2) + 'a'
     with pytest.raises(ValueError):
         FloatWithData(result=2, unit='EUR') + FloatWithData(result=3, unit='USD')

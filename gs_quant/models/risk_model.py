@@ -1101,7 +1101,7 @@ class MarqueeRiskModel(RiskModel):
 
     def upload_data(self,
                     data: Union[RiskModelData, Dict],
-                    max_asset_batch_size: int = 20000,
+                    max_asset_batch_size: int = 10000,
                     aws_upload: bool = True):
         """ Upload risk model data to existing risk model in Marquee
 
