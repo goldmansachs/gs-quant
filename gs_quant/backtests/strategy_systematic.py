@@ -106,7 +106,7 @@ class StrategySystematic:
                     raise MqValueError('The format of the backtest asset is incorrect.')
                 elif (isinstance(instrument, self._supported_fx_instruments) or
                       isinstance(instrument, self._supported_ir_instruments)):
-                    instrument = instrument.scale(notional_percentage / 100, in_place=False)
+                    instrument = instrument.scale(notional_percentage / 100, in_place=False, check_resolved=False)
 
                 instrument = self._check_eq_underlier_fields(instrument, notional_percentage / 100)
                 trade_instruments.append(instrument)

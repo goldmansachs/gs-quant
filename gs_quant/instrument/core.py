@@ -270,16 +270,16 @@ class Instrument(PriceableImpl, InstrumentBase):
     def flip(self, in_place: bool = True):
         return self.scale(-1, in_place)
 
-    def scale(self, scaling: float, in_place: bool = True):
+    def scale(self, scaling: float, in_place: bool = True, check_resolved=True):
         if scaling is None:
             return self
         if not hasattr(self, 'scale_in_place'):
             raise NotImplementedError(f'scale_in_place not implemented on {type(self).__name__}')
         if in_place:
-            self.scale_in_place(scaling)
+            self.scale_in_place(scaling, check_resolved=check_resolved)
             return
         new_inst = deepcopy(self)
-        new_inst.scale(scaling)
+        new_inst.scale(scaling, check_resolved=check_resolved)
         return new_inst
 
 
