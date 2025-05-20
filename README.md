@@ -21,7 +21,7 @@ pip install gs-quant
 
 ## Examples
 
-You can find examples, guides and tutorials in the respective folders as well as on [Goldman Sachs Developer](https://developer.gs.com/docs/gsquant/).
+You can find examples, guides and tutorials in the respective folders on [Goldman Sachs Developer](https://developer.gs.com/docs/gsquant/).
 
 ## Contributions
 
