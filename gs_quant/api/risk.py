@@ -23,7 +23,6 @@ from concurrent.futures import TimeoutError
 from threading import Thread
 from typing import Iterable, Optional, Union, Tuple, Dict, Any
 
-from opentracing import Span
 from tqdm import tqdm
 
 from gs_quant.api.api_session import ApiWithCustomSession
@@ -32,7 +31,7 @@ from gs_quant.risk import ErrorValue, RiskRequest
 from gs_quant.risk.result_handlers import result_handlers
 from gs_quant.risk.results import PricingFuture
 from gs_quant.session import GsSession
-from gs_quant.tracing import Tracer
+from gs_quant.tracing import Tracer, TracingSpan
 
 _logger = logging.getLogger(__name__)
 
@@ -90,7 +89,7 @@ class RiskApi(GenericRiskApi, metaclass=ABCMeta):
     @abstractmethod
     async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue,
                           timeout: Optional[int] = None,
-                          span: Optional[Span] = None) -> Optional[str]:
+                          span: Optional[TracingSpan] = None) -> Optional[str]:
         ...
 
     @classmethod
@@ -193,9 +192,7 @@ class RiskApi(GenericRiskApi, metaclass=ABCMeta):
                              session: GsSession,
                              loop: asyncio.AbstractEventLoop,
                              active_span):
-            if active_span:
-                Tracer.get_instance().scope_manager.activate(active_span, finish_on_close=False)
-            with session:
+            with Tracer.activate_span(active_span), session:
                 shutdown = False
                 while not shutdown:
                     shutdown, requests_chunk = cls.drain_queue(outstanding_requests)

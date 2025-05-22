@@ -36,15 +36,13 @@ import requests
 import requests.adapters
 import requests.cookies
 import urllib3
-from opentracing import Format, Scope
-from opentracing.tags import HTTP_URL, HTTP_METHOD, HTTP_STATUS_CODE
 
 from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase, nullcontext
 from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError, error_builder
 from gs_quant.json_encoder import JSONEncoder, encode_default
-from gs_quant.tracing import Tracer
+from gs_quant.tracing import Tracer, TracingScope, Tags
 
 logger = logging.getLogger(__name__)
 
@@ -256,7 +254,7 @@ class GsSession(ContextBase):
             timeout: Optional[int],
             use_body: bool,
             data_key: str,
-            tracing_scope: Optional[Scope]
+            tracing_scope: Optional[TracingScope]
     ) -> dict:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
@@ -268,15 +266,15 @@ class GsSession(ContextBase):
         if tracing_scope:
             tracing_scope.span.set_tag('path', path)
             tracing_scope.span.set_tag('timeout', timeout)
-            tracing_scope.span.set_tag(HTTP_URL, url)
-            tracing_scope.span.set_tag(HTTP_METHOD, method)
+            tracing_scope.span.set_tag(Tags.HTTP_URL, url)
+            tracing_scope.span.set_tag(Tags.HTTP_METHOD, method)
             tracing_scope.span.set_tag('span.kind', 'client')
 
         if method in ['GET', 'DELETE'] and not use_body:
             kwargs['params'] = payload
             if tracing_scope:
                 headers = self._session.headers.copy()
-                Tracer.inject(Format.HTTP_HEADERS, headers)
+                Tracer.inject(headers)
                 kwargs['headers'] = headers
         elif method in ['POST', 'PUT'] or (method in ['GET', 'DELETE'] and use_body):
             headers = self._session.headers.copy()
@@ -285,7 +283,7 @@ class GsSession(ContextBase):
                 headers.update(request_headers)
 
             if tracing_scope:
-                Tracer.inject(Format.HTTP_HEADERS, headers)
+                Tracer.inject(headers)
 
             if 'Content-Type' not in headers:
                 headers.update({'Content-Type': 'application/json; charset=utf-8'})
@@ -345,9 +343,9 @@ class GsSession(ContextBase):
             use_body: bool = False,
             domain: Optional[str] = None
     ) -> Union[Base, tuple, dict]:
-        span = Tracer.get_instance().active_span
+        span = Tracer.active_span()
         url = self._build_url(domain, path, include_version)
-        tracer = Tracer(url) if span else nullcontext()
+        tracer = Tracer(url) if span and span.is_recording() else nullcontext()
         with tracer as scope:
             kwargs = self._build_request_params(method, path, url, payload, request_headers, timeout, use_body, "data",
                                                 scope)
@@ -355,7 +353,7 @@ class GsSession(ContextBase):
             request_id = response.headers.get('x-dash-requestid')
             logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
             if scope:
-                scope.span.set_tag(HTTP_STATUS_CODE, response.status_code)
+                scope.span.set_tag(Tags.HTTP_STATUS_CODE, response.status_code)
                 if response.status_code > 399:
                     scope.span.set_tag('error', True)
                 scope.span.set_tag('dash.request.id', request_id)
@@ -385,16 +383,16 @@ class GsSession(ContextBase):
             domain: Optional[str] = None
     ) -> Union[Base, tuple, dict]:
         self._init_async()
-        span = Tracer.get_instance().active_span
+        span = Tracer.active_span()
         url = self._build_url(domain, path, include_version)
-        tracer = Tracer(f'http:/{path}') if span else nullcontext()
+        tracer = Tracer(f'http:/{path}') if span and span.is_recording() else nullcontext()
         with tracer as scope:
             kwargs = self._build_request_params(method, path, url, payload, request_headers, timeout, use_body,
                                                 "content", scope)
             response = await self._session_async.request(method, url, **kwargs)
             request_id = response.headers.get('x-dash-requestid')
             if scope:
-                scope.span.set_tag(HTTP_STATUS_CODE, response.status_code)
+                scope.span.set_tag(Tags.HTTP_STATUS_CODE, response.status_code)
                 scope.span.set_tag('dash.request.id', request_id)
 
         logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
@@ -483,11 +481,11 @@ class GsSession(ContextBase):
     @asynccontextmanager
     async def _connect_websocket(self, path: str, headers: Optional[dict] = None, include_version=True,
                                  domain: Optional[str] = None, **kwargs: Any):
-        span = Tracer.get_instance().active_span
-        trace = Tracer(f'wss:/{path}') if span else nullcontext()
+        span = Tracer.active_span()
+        trace = Tracer(f'wss:/{path}') if span and span.is_recording() else nullcontext()
         with trace as scope:
             tracing_headers = {}
-            Tracer.inject(Format.HTTP_HEADERS, tracing_headers)
+            Tracer.inject(tracing_headers)
             headers = {**headers, **tracing_headers} if headers else tracing_headers
             async with self._connect_websocket_raw(path, headers, include_version, domain, **kwargs) as websocket:
                 if scope and scope.span:

@@ -365,7 +365,7 @@ class PricingContext(ContextBaseWithDefault):
             # All attributes are immutable, so a shared dictionary is sufficient. __pending remains shared.
             attrs_for_request = {}
             self.__save_attrs_to(attrs_for_request)
-            span = Tracer.get_instance().active_span
+            span = Tracer.active_span()
             for provider, requests in requests_for_provider.items():
                 if request_pool:
                     completion_future = request_pool.submit(run_requests, requests, provider, True,

@@ -635,7 +635,7 @@ class GenericEngine(BacktestBaseEngine):
         """
 
         logger.info(f'Starting Backtest: Building Date Schedule - {dt.datetime.now()}')
-        self._tracing_enabled = Tracer.get_instance().active_span is not None
+        self._tracing_enabled = Tracer.active_span() is not None and Tracer.active_span().is_recording()
         self._pricing_context_params = {'show_progress': show_progress,
                                         'csa_term': csa_term,
                                         'visible_to_gs': visible_to_gs,
