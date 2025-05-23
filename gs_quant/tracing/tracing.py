@@ -210,7 +210,7 @@ class Tracer(ContextDecorator):
     def extract(carrier):
         instance = Tracer.get_instance()
         try:
-            return instance.extract(Format.HTTP_HEADERS, carrier)
+            return TracingContext(instance.extract(Format.HTTP_HEADERS, carrier))
         except (UnsupportedFormatException, SpanContextCorruptedException):
             pass
 

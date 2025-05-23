@@ -188,3 +188,21 @@ def test_span_activation():
                           '* * another-nested-child                               0.0 ms',
                           ])
     assert tracer_str == expected
+
+
+def test_inject_extract():
+    Tracer.reset()
+    with Tracer('A') as scope:
+        span_a = scope.span
+        scope.span.set_tag('user', 'bob')
+        fake_http_headers = {}
+        Tracer.inject(fake_http_headers)
+    spans = Tracer.get_spans()
+    assert len(spans) == 1
+    assert 'user' in spans[0].tags
+    assert spans[0].tags['user'] == 'bob'
+    assert len(fake_http_headers) > 0   # we're agnostic to the inject/extractor, so long as it's done something
+
+    ctx = Tracer.extract(fake_http_headers)
+    with Tracer.start_active_span('B', child_of=ctx) as scope:
+        assert scope.span.parent_id == span_a.span_id

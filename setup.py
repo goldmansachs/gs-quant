@@ -59,7 +59,6 @@ setuptools.setup(
         "certifi",
         "dataclasses_json",
         "deprecation",
-        "freezegun",
         "funcsigs",
         "inflection",
         "lmfit",
@@ -84,7 +83,7 @@ setuptools.setup(
         "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib", "seaborn", "treelib"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "pytest-order", "testfixtures", "nbconvert", "nbformat",
-                 "jupyter_client", "plotly"],
+                 "jupyter_client", "plotly", "freezegun"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
                     "pytest-mock", "pytest-order", "testfixtures"]
     },
