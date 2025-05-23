@@ -114,7 +114,8 @@ class PortfolioManager(PositionedEntity):
                                           position_source_type='Portfolio',
                                           position_source_id=self.id,
                                           report_type='Portfolio Performance Analytics',
-                                          tags=tags)
+                                          tags=tags,
+                                          scroll='1m')
 
         # If tags is set to None, it returns all PPA reports for the portfolio,
         # and returning reports[0] can return any one PPA, so specifically if tags is None it means we are

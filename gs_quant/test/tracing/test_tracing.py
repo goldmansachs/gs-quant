@@ -28,7 +28,7 @@ def make_zero_duration(spans):
     Helper function to set the duration of a span to zero
     """
     for span in spans:
-        span.unwrap().finish_time = span.start_time
+        span.unwrap().finish_time = span.unwrap().start_time
 
 
 def test_tracer_tags():

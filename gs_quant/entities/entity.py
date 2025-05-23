@@ -52,7 +52,6 @@ from gs_quant.target.data import DataQuery
 from gs_quant.target.reports import ReportStatus, ReportType
 from gs_quant.entities.entity_utils import _explode_data
 
-
 _logger = logging.getLogger(__name__)
 
 
@@ -502,7 +501,8 @@ class PositionedEntity(metaclass=ABCMeta):
                                               position_source_type=position_source_type,
                                               position_source_id=self.id,
                                               report_type=f'{position_source_type} Factor Risk',
-                                              tags=tags)
+                                              tags=tags,
+                                              scroll='1m')
             if fx_hedged:
                 reports = [report for report in reports if report.parameters.fx_hedged == fx_hedged]
             if len(reports) == 0:

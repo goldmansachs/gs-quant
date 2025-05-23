@@ -127,14 +127,14 @@ class TracingSpan:
         """
         Start time in ns
         """
-        return self._span.start_time
+        return int(self._span.start_time * 1e9)
 
     @property
     def end_time(self) -> Optional[int]:
         """
         End time in ns
         """
-        return int(self._span.finish_time * 1e6) if self._span.finish_time else None
+        return int(self._span.finish_time * 1e9) if self._span.finish_time else None
 
     @property
     def duration(self) -> float:

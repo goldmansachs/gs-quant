@@ -59,21 +59,34 @@ class GsReportApi:
     @classmethod
     def get_reports(cls, limit: int = 100, offset: int = None, position_source_type: str = None,
                     position_source_id: str = None, status: str = None, report_type: str = None,
-                    order_by: str = None, tags: Dict = None) -> Tuple[Report, ...]:
-        url = '/reports?limit={limit}'.format(limit=limit)
-        if offset is not None:
-            url += '&offset={offset}'.format(offset=offset)
-        if position_source_type is not None:
-            url += '&positionSourceType={pst}'.format(pst=position_source_type)
-        if position_source_id is not None:
-            url += '&positionSourceId={psi}'.format(psi=position_source_id)
-        if status is not None:
-            url += '&status={status}'.format(status=status)
-        if report_type is not None:
-            url += '&reportType={report_type}'.format(report_type=urllib.parse.quote(report_type))
-        if order_by is not None:
-            url += '&orderBy={order_by}'.format(order_by=order_by)
-        results = GsSession.current._get(url, cls=Report)['results']
+                    order_by: str = None, tags: Dict = None, scroll: str = None) -> Tuple[Report, ...]:
+        def build_url(scroll_id=None):
+            url = f'/reports?limit={limit}'
+            if scroll:
+                url += '&scroll={scroll}'.format(scroll=scroll)
+            if scroll_id:
+                url += f'&scrollId={scroll_id}'
+            if offset:
+                url += '&offset={offset}'.format(offset=offset)
+            if position_source_type:
+                url += f'&positionSourceType={position_source_type}'
+            if position_source_id:
+                url += f'&positionSourceId={position_source_id}'
+            if status:
+                url += f'&status={status}'
+            if report_type:
+                url += f'&reportType={urllib.parse.quote(report_type)}'
+            if order_by:
+                url += f'&orderBy={order_by}'
+            return url
+
+        response = GsSession.current._get(build_url(), cls=Report)
+        results = response.get('results', [])
+
+        while response.get('scrollId') and response.get('results'):
+            response = GsSession.current._get(build_url(scroll_id=response.get('scrollId')), cls=Report)
+            results += response.get('results', [])
+
         if tags is not None:
             tags_as_list = tuple(PositionTag(name=key, value=tags[key]) for key in tags)
             results = [r for r in results if r.parameters.tags == tags_as_list]
