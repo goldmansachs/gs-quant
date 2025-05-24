@@ -32,13 +32,13 @@ class DataFrequency(Enum):
 
     """
 
-    #: Data subscription for series updating daily
+    #: Data subscription for series updating daily.
     DAILY = 'daily'
 
-    #: Data subscription for real-time or intraday series
+    #: Data subscription for real-time or intraday series.
     REAL_TIME = 'realTime'
 
-    #: Data subscription for real-time or daily series
+    #: Data subscription for real-time or daily series.
     ANY = 'any'
 
 
@@ -66,9 +66,9 @@ class DataContext(ContextBaseWithDefault):
             return
 
         if not isinstance(interval, str):
-            raise MqTypeError('interval must be a str')
+            raise MqTypeError('Interval must be a str.')
         if not re.fullmatch('[1-9]\\d{0,2}[a-z]', interval):
-            raise MqValueError('interval must be a valid str e.g. 1m, 2h, 3d')
+            raise MqValueError('Interval must be a valid str e.g. 1m, 2h, 3d')
         self.__interval = interval
 
     @staticmethod
@@ -76,7 +76,7 @@ class DataContext(ContextBaseWithDefault):
         if o is None:
             return default
         elif isinstance(o, datetime.datetime):
-            # note that datetime objects are also instances of date
+            # Note that datetime objects are also instances of date.
             return o.date()
         elif isinstance(o, datetime.date):
             return o
@@ -85,7 +85,7 @@ class DataContext(ContextBaseWithDefault):
             ds = o[:loc] if loc != -1 else o
             return datetime.datetime.strptime(ds, '%Y-%m-%d').date()
         else:
-            raise ValueError(f'{o} is not a valid date')
+            raise ValueError(f'{o} is not a valid date.')
 
     @staticmethod
     def _get_datetime(o, default):
@@ -99,7 +99,7 @@ class DataContext(ContextBaseWithDefault):
             tmp = datetime.datetime.strptime(o, '%Y-%m-%dT%H:%M:%SZ')
             return tmp.replace(tzinfo=datetime.timezone.utc)
         else:
-            raise ValueError(f'{o} is not a valid date')
+            raise ValueError(f'{o} is not a valid date.')
 
     @property
     def start_date(self):
