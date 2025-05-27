@@ -262,10 +262,10 @@ class Tracer(ContextDecorator):
 
     @staticmethod
     def start_active_span(operation_name: str, child_of: Optional[TracingContext] = None,
-                          ignore_active_span: bool = False) -> TracingScope:
+                          ignore_active_span: bool = False, finish_on_close: bool = True) -> TracingScope:
         ctx = child_of._context if child_of else None
-        scope = Tracer.get_instance().start_active_span(operation_name, child_of=ctx)
-        return TracingScope(scope, scope.span)
+        scope = Tracer.get_instance().start_active_span(operation_name, child_of=ctx, finish_on_close=finish_on_close)
+        return TracingScope(scope, scope.span, finish_on_close=finish_on_close)
 
     @staticmethod
     def record_exception(e, span: TracingSpan = None, exc_tb=None):
