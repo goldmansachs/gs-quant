@@ -136,10 +136,12 @@ class Model(AlgebraicType):
     def __add__(self, other):
         if not isinstance(other, Model):
             raise TypeError('Can only add to another cost model')
-        if type(self) is type(other):
-            scaling_prop_name = self.scaling_property
-            if other != dataclasses.replace(self, **{scaling_prop_name: getattr(other, scaling_prop_name)}):
-                raise ValueError('Cannot add costs with different attributes')
+        if isinstance(other, AggregateCostModel):
+            return other + self
+        scaling_prop_name = self.scaling_property
+        can_add_scaling = type(self) is type(other) and \
+            other == dataclasses.replace(self, **{scaling_prop_name: getattr(other, scaling_prop_name)})
+        if can_add_scaling:
             result = dataclasses.replace(self)
             result.set_scaling_property(getattr(self, scaling_prop_name) + getattr(other, scaling_prop_name))
             return result
@@ -189,7 +191,7 @@ def basic_tc_tuple_decoder(data: Optional[Tuple[dict, ...]]) -> Optional[Union[F
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class AggregateCostModel:
+class AggregateCostModel(Model):
     models: Tuple[Union[FixedCostModel, ScaledCostModel], ...] = field(metadata=config(decoder=basic_tc_tuple_decoder))
     aggregation_type: CostAggregationType
     type: str = 'aggregate_cost_model'

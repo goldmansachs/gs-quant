@@ -39,11 +39,10 @@ def test_model_addition():
     assert f1 + s1 == AggregateCostModel((f1, s1), CostAggregationType.Sum)
     assert f2 + s2 == AggregateCostModel((f2, s2), CostAggregationType.Sum)
     assert (f1 + s1) + (f2 + s2) == AggregateCostModel((f1, s1, f2, s2), CostAggregationType.Sum)
+    assert s1 + s3 == AggregateCostModel((s1, s3), CostAggregationType.Sum)
     assert AggregateCostModel((f1, s1), CostAggregationType.Min) + \
            AggregateCostModel((f2, s2), CostAggregationType.Min) == \
            AggregateCostModel((f1, s1, f2, s2), CostAggregationType.Min)
-    with pytest.raises(ValueError):
-        s1 + s3
     with pytest.raises(TypeError):
         s1 + 1
     with pytest.raises(TypeError):
