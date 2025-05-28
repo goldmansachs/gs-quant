@@ -85,7 +85,6 @@ class StrategySystematic:
         if isinstance(underliers, self._supported_instruments):
             instrument = underliers
             notional_percentage = 100
-            instrument = self._check_eq_underlier_fields(instrument, notional_percentage / 100)
             trade_instruments.append(instrument)
             self.__underliers.append(BacktestStrategyUnderlier(
                 instrument=instrument,
@@ -104,11 +103,8 @@ class StrategySystematic:
 
                 if not isinstance(instrument, self._supported_instruments):
                     raise MqValueError('The format of the backtest asset is incorrect.')
-                elif (isinstance(instrument, self._supported_fx_instruments) or
-                      isinstance(instrument, self._supported_ir_instruments)):
+                else:
                     instrument = instrument.scale(notional_percentage / 100, in_place=False, check_resolved=False)
-
-                instrument = self._check_eq_underlier_fields(instrument, notional_percentage / 100)
                 trade_instruments.append(instrument)
                 self.__underliers.append(BacktestStrategyUnderlier(
                     instrument=instrument,
@@ -148,19 +144,6 @@ class StrategySystematic:
 
         if all_eq and transaction_cost_config is not None:
             raise MqValueError('Cannot run equity backtests with transaction costs.')
-
-    @staticmethod
-    def _check_eq_underlier_fields(
-            instrument: Instrument,
-            size: float,
-    ) -> Instrument:
-        if instrument.asset_class == AssetClass.Equity:
-            if hasattr(instrument, 'number_of_options'):
-                instrument.number_of_options = (instrument.number_of_options
-                                                if instrument.number_of_options is not None else 1) * size
-            else:
-                instrument.quantity = (instrument.quantity if instrument.quantity is not None else 1) * size
-        return instrument
 
     def __run_service_based_backtest(self, start: datetime.date, end: datetime.date,
                                      measures: Iterable[FlowVolBacktestMeasure]) -> BacktestResult:

@@ -83,9 +83,9 @@ def test_eq_vol_engine_result(mocker):
                       option_style=OptionStyle.European, name='option')
 
     long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy, number_of_options=1)
     short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell, number_of_options=1)
 
     hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
@@ -126,12 +126,12 @@ def test_engine_mapping_basic(mocker):
     end_date = dt.date(2019, 2, 20)
 
     option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                      option_style=OptionStyle.European, name='option')
+                      option_style=OptionStyle.European, number_of_options=1, name='option')
 
     long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy, number_of_options=1)
     short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell, number_of_options=1)
 
     hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
@@ -195,12 +195,12 @@ def test_engine_mapping_trade_quantity(mocker):
     end_date = dt.date(2019, 2, 20)
 
     option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                      option_style=OptionStyle.European, name='option')
+                      option_style=OptionStyle.European, number_of_options=1, name='option')
 
     long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy, number_of_options=1)
     short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell, number_of_options=1)
 
     hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
@@ -265,7 +265,7 @@ def test_engine_mapping_with_signals(mocker):
     end_date = dt.date(2019, 2, 27)
 
     option = EqOption('.STOXX50E', expirationDate='3m', strikePrice='ATM', optionType=OptionType.Call,
-                      optionStyle=OptionStyle.European, name='option')
+                      optionStyle=OptionStyle.European, name='option', number_of_options=1)
 
     entry_action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m', trade_quantity=12345,
                                                      trade_quantity_type=BacktestTradingQuantityType.notional,
@@ -345,12 +345,12 @@ def test_engine_mapping_trade_quantity_nav(mocker):
     end_date = dt.date(2019, 2, 20)
 
     option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                      option_style=OptionStyle.European, name='option')
+                      option_style=OptionStyle.European, number_of_options=1, name='option')
 
     long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy, number_of_options=1)
     short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell, number_of_options=1)
 
     hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
@@ -416,12 +416,12 @@ def test_engine_mapping_listed(mocker):
     end_date = dt.date(2019, 2, 20)
 
     option = EqOption('.STOXX50E', expiration_date='3m@listed', strike_price='ATM', option_type=OptionType.Call,
-                      option_style=OptionStyle.European, name='option')
+                      option_style=OptionStyle.European, number_of_options=1, name='option')
 
     long_call = EqOption('.STOXX50E', expiration_date='3m@listed', strike_price='ATM', option_type=OptionType.Call,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy, number_of_options=1)
     short_put = EqOption('.STOXX50E', expiration_date='3m@listed', strike_price='ATM', option_type=OptionType.Put,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell, number_of_options=1)
 
     hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
@@ -486,12 +486,12 @@ def test_engine_mapping_market_model(mocker):
     end_date = dt.date(2019, 2, 20)
 
     option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                      option_style=OptionStyle.European, name='option')
+                      option_style=OptionStyle.European, number_of_options=1, name='option')
 
     long_call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Buy)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Buy, number_of_options=1)
     short_put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
-                         option_style=OptionStyle.European, buy_sell=BuySell.Sell)
+                         option_style=OptionStyle.European, buy_sell=BuySell.Sell, number_of_options=1)
 
     hedge_portfolio = Portfolio(name='SynFwd', priceables=[long_call, short_put])
 
@@ -555,10 +555,10 @@ def test_engine_mapping_portfolio(mocker):
     end_date = dt.date(2019, 2, 20)
 
     call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
-                    option_style=OptionStyle.European, name='option_call')
+                    option_style=OptionStyle.European, number_of_options=1, name='option_call')
 
     put = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Put,
-                   option_style=OptionStyle.European, name='option_put')
+                   option_style=OptionStyle.European, number_of_options=1, name='option_put')
 
     portfolio = Portfolio(name='portfolio', priceables=[call, put])
 
