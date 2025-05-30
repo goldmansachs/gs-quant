@@ -122,3 +122,12 @@ class GsBacktestApi:
         return GsSession.current._put('/backtests/refData', backtest_ref_data,
                                       request_headers=request_headers,
                                       cls=backtest_ref_data)
+
+
+class GsBacktestApiAsync(GsBacktestApi):
+    @classmethod
+    async def calculate_position_risk(cls, backtestRiskRequest: BacktestRiskRequest) -> dict:
+        request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
+        response = await GsSession.current._post_async('/backtests/calculate-position-risk', backtestRiskRequest,
+                                                       request_headers=request_headers)
+        return response
