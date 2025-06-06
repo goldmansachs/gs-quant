@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import numpy as np
 from functools import partial
 
 from dateutil.relativedelta import relativedelta as rdelta
@@ -80,7 +80,10 @@ def backtest_basket(
             rebal_dates = [cal[0] + i * rdelta(months=1) for i in range(num_rebals + 1)]
 
         # Convert the hypothetical weekly/monthly rebalance dates to actual calendar days
-        rebal_dates = [min(cal[cal >= date]) for date in rebal_dates if date < max(cal)]
+        idxs = cal.searchsorted(rebal_dates)        # find insertion indices for all dates at once
+        idxs = idxs[idxs < len(cal)]               # filter out indices beyond last date
+        rebal_dates = cal[idxs]                     # map to actual calendar dates
+
 
     # Create Units dataframe
     units = pd.DataFrame(index=cal, columns=series.columns)
