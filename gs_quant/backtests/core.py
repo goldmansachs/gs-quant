@@ -16,9 +16,9 @@ under the License.
 
 from enum import Enum
 from typing import Tuple, NamedTuple, Union
-import datetime
+import datetime as dt
 from gs_quant.base import EnumBase
-from gs_quant.target.backtests import Backtest as __Backtest, BacktestResult, FlowVolBacktestMeasure
+from gs_quant.target.backtests import Backtest as __Backtest, BacktestResult
 from typing import Optional
 
 
@@ -42,8 +42,8 @@ class MarketModel(EnumBase, Enum):
 
 
 class TimeWindow(NamedTuple):
-    start: Union[datetime.time, datetime.datetime] = None
-    end: Union[datetime.time, datetime.datetime] = None
+    start: Union[dt.time, dt.datetime] = None
+    end: Union[dt.time, dt.datetime] = None
 
 
 class ValuationFixingType(EnumBase, Enum):

@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
+import datetime as dt
 from enum import IntEnum
 from unittest.mock import Mock
 
@@ -204,8 +204,8 @@ def test_apply_ramp_raises_on_edge_cases():
 
 
 def test_get_df_with_retries():
-    start = datetime.date(2020, 12, 1)
-    end = datetime.date(2020, 12, 2)
+    start = dt.date(2020, 12, 1)
+    end = dt.date(2020, 12, 2)
     counter = 0
 
     def fetch0():
@@ -219,7 +219,7 @@ def test_get_df_with_retries():
         return pd.DataFrame()
 
     def mock_apply(self, *_args, **_kwargs):
-        return self.base_date - datetime.timedelta(days=1)
+        return self.base_date - dt.timedelta(days=1)
 
     with Replace('gs_quant.timeseries.helper.RelativeDate.apply_rule', mock_apply):
         df = get_df_with_retries(fetch0, start, end, 'NYSE')
@@ -233,16 +233,16 @@ def test_get_df_with_retries():
 
 
 def test_forward_looking():
-    today = datetime.date.today()
+    today = dt.date.today()
     source = 'plottool'
-    with DataContext(today, today + datetime.timedelta(days=1)):
+    with DataContext(today, today + dt.timedelta(days=1)):
         assert check_forward_looking('1b', None) is None
         assert check_forward_looking(today, None) is None
         assert check_forward_looking(None, None) is None
         assert check_forward_looking('1b', source) is None
         assert check_forward_looking(today, source) is None
         assert check_forward_looking(None, source) is None
-    with DataContext(today - datetime.timedelta(days=1), today):
+    with DataContext(today - dt.timedelta(days=1), today):
         assert check_forward_looking('1b', None) is None
         assert check_forward_looking(today, None) is None
         assert check_forward_looking(None, None) is None
@@ -263,7 +263,7 @@ def test_get_dataset_data_with_retries():
     ]
 
     dataset = Dataset(Dataset.TR.TREOD)
-    data = get_dataset_data_with_retries(dataset, start=datetime.date(2000, 1, 2), end=datetime.date(2019, 1, 9),
+    data = get_dataset_data_with_retries(dataset, start=dt.date(2000, 1, 2), end=dt.date(2019, 1, 9),
                                          assetId='MA4B66MW5E27U8P32SB')
 
     assert_frame_equal(data, pd.DataFrame())
@@ -273,7 +273,7 @@ def test_get_dataset_data_with_retries():
     ]
 
     with pytest.raises(MqRequestError):
-        get_dataset_data_with_retries(dataset, start=datetime.date(2000, 1, 2), end=datetime.date(2019, 1, 9),
+        get_dataset_data_with_retries(dataset, start=dt.date(2000, 1, 2), end=dt.date(2019, 1, 9),
                                       assetId='MA4B66MW5E27U8P32SB')
 
     replace.restore()

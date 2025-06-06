@@ -31,15 +31,14 @@ from pydash import get
 
 from gs_quant.api.data import DataApi
 from gs_quant.base import Base
+from gs_quant.common import MarketDataVendor, PricingLocation, Format
 from gs_quant.data.core import DataContext, DataFrequency
 from gs_quant.data.log import log_debug, log_warning
 from gs_quant.errors import MqValueError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import MarketDataCoordinate
-from gs_quant.target.common import MarketDataVendor, PricingLocation, Format
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
-from gs_quant.target.data import DataQuery, DataQueryResponse, DataSetCatalogEntry
-from gs_quant.target.data import DataSetEntity, DataSetFieldEntity
+from gs_quant.target.data import DataQuery, DataQueryResponse, DataSetCatalogEntry, DataSetEntity, DataSetFieldEntity
 from .assets import GsIdType
 from ..api_cache import ApiRequestCache
 from ...target.assets import EntityQuery, FieldFilterMap
@@ -168,6 +167,9 @@ class QueryType(Enum):
     RETAIL_SELL_SHARES = 'impliedRetailSellShares'
     FWD_POINTS = 'Fwd Points'
     S3_AGGREGATE_DATA = 'value'
+    S3_LONG_INTEREST = 's3LongInterest'
+    S3_LONG_INTEREST_MV = 's3LongInterestMarketValue'
+    S3_LONG_INTEREST_PERCENT = 's3LongInterestPercentSharesOut'
 
 
 class GsDataApi(DataApi):
@@ -1286,7 +1288,7 @@ class GsDataApi(DataApi):
                 else cls.get_field_types(field_names=list(incoming_data_data_types.keys()))
 
             # fallback approach in case fields api doesn't return results
-            if dataset_types is {} and standard_fields:
+            if dataset_types == {} and standard_fields:
                 dataset_types = cls.get_types(dataset_id)
 
             df = pd.DataFrame(data, columns={**dataset_types, **incoming_data_data_types})

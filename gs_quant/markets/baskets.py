@@ -13,29 +13,41 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from copy import deepcopy
-from functools import wraps
+import datetime as dt
 import json
 import logging
-from pydash import has, set_
+from copy import deepcopy
+from enum import Enum
+from functools import wraps
+from typing import List, Optional, Union, Tuple
 
-from gs_quant.api.gs.assets import GsAsset
+import pandas as pd
+from pydash import has, get, set_
+
+from gs_quant.api.gs.assets import GsAsset, GsAssetApi
+from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.users import GsUsersApi
+from gs_quant.common import DateLimit, PositionType, EqBasketBacktestParameters, EqBasketHistoryMethodology, \
+    BloombergPublishParameters, CashReinvestmentTreatment, CashReinvestmentTreatmentType, EqBasketRebalanceCalendar, \
+    AssetClass
 from gs_quant.data.fields import DataMeasure
-from gs_quant.entities.entity import EntityType, PositionedEntity
 from gs_quant.entities.entitlements import Entitlements as BasketEntitlements
+from gs_quant.entities.entity import EntityType, PositionedEntity
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.json_encoder import JSONEncoder
-from gs_quant.markets.indices_utils import *
+from gs_quant.markets.indices_utils import BasketType, IndicesDatasets, ReturnType, WeightingStrategy, \
+    CorporateActionType
+from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.securities import Asset, AssetType as SecAssetType
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
-from gs_quant.target.indices import *
+from gs_quant.target.indices import CustomBasketsCreateInputs, CustomBasketsPricingParameters, PublishParameters, \
+    IndicesPositionInput, IndicesPositionSet, CustomBasketsBackcastInputs, CustomBasketsRebalanceAction, \
+    CustomBasketRiskParams, IndicesCurrency, CustomBasketsEditInputs, CustomBasketsResponse, \
+    CustomBasketsRebalanceInputs
 from gs_quant.target.reports import Report, ReportStatus
-from gs_quant.markets.position_set import PositionSet
-
 
 _logger = logging.getLogger(__name__)
 
@@ -76,7 +88,7 @@ class Basket(Asset, PositionedEntity):
                 raise MqValueError(f'Failed to initialize. Asset {gs_asset.id} is not a basket')
             self.__id = gs_asset.id
             self.__initial_entitlements = gs_asset.entitlements
-            asset_entity: Dict = json.loads(json.dumps(gs_asset.as_dict(), cls=JSONEncoder))
+            asset_entity: dict = json.loads(json.dumps(gs_asset.as_dict(), cls=JSONEncoder))
             Asset.__init__(self, gs_asset.id, gs_asset.asset_class, gs_asset.name,
                            exchange=gs_asset.exchange, currency=gs_asset.currency, entity=asset_entity)
             PositionedEntity.__init__(self, gs_asset.id, EntityType.ASSET)
@@ -136,7 +148,7 @@ class Basket(Asset, PositionedEntity):
         details = [{'name': k, 'value': get(self, k)} for k in props if has(self, k)]
         return pd.DataFrame(details)
 
-    def create(self) -> Dict:
+    def create(self) -> dict:
         """
         Create a new custom basket in Marquee
 
@@ -197,7 +209,7 @@ class Basket(Asset, PositionedEntity):
         return Basket(position_set=position_set, clone_parent_id=self.id, parent_basket=self.ticker)
 
     @_validate(ErrorMessage.UNINITIALIZED, ErrorMessage.NON_ADMIN)
-    def update(self) -> Dict:
+    def update(self) -> dict:
         """
         Update your custom basket
 
@@ -235,7 +247,7 @@ class Basket(Asset, PositionedEntity):
         return response.as_dict()
 
     @_validate(ErrorMessage.UNINITIALIZED, ErrorMessage.NON_ADMIN)
-    def upload_position_history(self, position_sets: List[PositionSet]) -> Dict:
+    def upload_position_history(self, position_sets: List[PositionSet]) -> dict:
         """
         Upload basket composition history
 
@@ -305,7 +317,7 @@ class Basket(Asset, PositionedEntity):
         return self.poll_report(report_id, timeout, step)
 
     @_validate(ErrorMessage.UNINITIALIZED)
-    def get_latest_rebalance_data(self) -> Dict:
+    def get_latest_rebalance_data(self) -> dict:
         """
         Retrieve the most recent rebalance data for a basket
 
@@ -383,7 +395,7 @@ class Basket(Asset, PositionedEntity):
         return get(last_approval, 'status')
 
     @_validate(ErrorMessage.NON_ADMIN)
-    def cancel_rebalance(self) -> Dict:
+    def cancel_rebalance(self) -> dict:
         """
         Cancel the most recent rebalance submission
 

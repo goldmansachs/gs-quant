@@ -15,14 +15,15 @@ under the License.
 """
 
 import logging
+from typing import List, Dict
+
 import pandas as pd
 from pydash import get
-from typing import List, Dict
 
 from gs_quant.api.gs.groups import GsGroupsApi
 from gs_quant.api.gs.users import GsUsersApi
+from gs_quant.common import Entitlements as TargetEntitlements
 from gs_quant.errors import MqValueError, MqRequestError
-from gs_quant.target.common import Entitlements as TargetEntitlements
 from gs_quant.target.groups import Group as TargetGroup
 
 _logger = logging.getLogger(__name__)

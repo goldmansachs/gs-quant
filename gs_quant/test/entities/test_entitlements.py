@@ -16,8 +16,8 @@ under the License.
 from testfixtures import Replacer
 from testfixtures.mock import Mock
 
+from gs_quant.common import Entitlements as TargetEntitlements
 from gs_quant.entities.entitlements import Group, Entitlements, User, EntitlementBlock
-from gs_quant.target.common import Entitlements as TargetEntitlements
 from gs_quant.target.groups import Group as TargetGroup
 from gs_quant.target.reports import User as TargetUser
 

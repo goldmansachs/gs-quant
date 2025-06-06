@@ -14,17 +14,17 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
+import datetime as dt
 from enum import Enum
 from typing import Union, Optional
 
 import pandas as pd
 from pandas import Series
 
+from gs_quant.common import AssetClass, AssetType
 from gs_quant.data import DataContext, Dataset
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset
-from gs_quant.target.common import AssetClass, AssetType
 from gs_quant.timeseries import RelativeDate
 from gs_quant.timeseries.helper import plot_measure
 from gs_quant.timeseries.measures import ExtendedSeries
@@ -1196,8 +1196,8 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
             df = df[df['fePerRel'] == period]
         else:
             if report_basis == EstimateBasis.ANN:
-                fiscal_period_start = datetime.datetime(period.y, 1, 1)
-                fiscal_period_end = datetime.datetime(period.y, 12, 31)
+                fiscal_period_start = dt.datetime(period.y, 1, 1)
+                fiscal_period_end = dt.datetime(period.y, 12, 31)
             elif report_basis == EstimateBasis.QTR:
                 if isinstance(period.p, int) and period.p not in [1, 2, 3, 4]:
                     raise MqValueError('Period number has to be one of 1,2,3 or 4 for quarterly basis')
@@ -1205,7 +1205,7 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
                     raise MqValueError(
                         'Please specify the period as an integer between 1 and 4 like FiscalPeriod(2022, 4) '
                         'for 2022Q4 estimate')
-                fiscal_period_start = datetime.datetime(period.y, (period.p - 1) * 3 + 1, 1)
+                fiscal_period_start = dt.datetime(period.y, (period.p - 1) * 3 + 1, 1)
                 fiscal_period_end = fiscal_period_start + pd.DateOffset(months=3) - pd.DateOffset(days=1)
                 fiscal_period_end = pd.to_datetime(fiscal_period_end)
             elif report_basis == EstimateBasis.SEMI:
@@ -1214,7 +1214,7 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
                 elif period.p is None:
                     raise MqValueError(
                         'Please specify the period as 1 or 2 like FiscalPeriod(2022, 2) for 2022H2 estimate')
-                fiscal_period_start = datetime.datetime(period.y, (period.p - 1) * 6 + 1, 1)
+                fiscal_period_start = dt.datetime(period.y, (period.p - 1) * 6 + 1, 1)
                 fiscal_period_end = fiscal_period_start + pd.DateOffset(months=6) - pd.DateOffset(days=1)
                 fiscal_period_end = pd.to_datetime(fiscal_period_end)
             df['feFpEnd'] = pd.to_datetime(df['feFpEnd'])

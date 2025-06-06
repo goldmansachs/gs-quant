@@ -14,7 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.datetime import *
+import datetime as dt
+from gs_quant.datetime import point_sort_order
 
 
 def test_point_sort_order():

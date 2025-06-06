@@ -274,9 +274,9 @@ def _upload_factor_data_if_present(model_id: str, data: dict, date: str, **kwarg
 def _batch_data_if_present(model_id: str, data, max_asset_size, date):
     if data.get('assetData'):
         asset_data_list, target_size = _batch_input_data({'assetData': data.get('assetData')}, max_asset_size)
-        for i in range(len(asset_data_list)):
+        for asset_data in asset_data_list:
             _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
-                                      model_data={'assetData': asset_data_list[i], 'date': date}, partial_upload=True,
+                                      model_data={'assetData': asset_data, 'date': date}, partial_upload=True,
                                       target_universe_size=target_size)
 
     if 'issuerSpecificCovariance' in data.keys() or 'factorPortfolios' in data.keys():
@@ -285,9 +285,9 @@ def _batch_data_if_present(model_id: str, data, max_asset_size, date):
                 optional_data = data.get(optional_key)
                 optional_data_list, target_size = _batch_input_data({optional_key: optional_data}, max_asset_size // 2)
                 logging.info(f'{optional_key} being uploaded for {date}...')
-                for i in range(len(optional_data_list)):
+                for optional_data in optional_data_list:
                     _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
-                                              model_data={optional_key: optional_data_list[i], 'date': date},
+                                              model_data={optional_key: optional_data, 'date': date},
                                               partial_upload=True, target_universe_size=target_size)
 
 
@@ -323,16 +323,13 @@ def _batch_data_v2(model_id: str, data: dict, data_type: str, max_asset_size: in
         if data_type in ["issuerSpecificCovariance", "factorPortfolios"]:
             max_asset_size //= 2
         data_list, _ = _batch_input_data({data_type: data}, max_asset_size)
-        for i in range(len(data_list)):
-            final_upload = True if i == len(data_list) - 1 else False
-            try:
-                res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
-                                                                  model_data={data_type: data_list[i], 'date': date},
-                                                                  partial_upload=True,
-                                                                  final_upload=final_upload, **kwargs)
-                logging.info(res)
-            except (MqRequestError, Exception) as e:
-                raise e
+        for i, data_chunk in enumerate(data_list):
+            final_upload = (i == len(data_list) - 1)
+            res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
+                                                              model_data={data_type: data_chunk, 'date': date},
+                                                              partial_upload=True,
+                                                              final_upload=final_upload, **kwargs)
+            logging.info(res)
 
 
 def batch_and_upload_coverage_data(date: dt.date, gsid_list: list, model_id: str, batch_size: int):

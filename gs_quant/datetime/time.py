@@ -18,7 +18,7 @@ import logging
 
 import numpy as np
 
-from gs_quant.errors import *
+from gs_quant.errors import MqValueError
 
 _logger = logging.getLogger(__name__)
 

@@ -14,16 +14,17 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from unittest import mock
-
 import datetime as dt
+from unittest import mock
 
 import testfixtures
 
-from gs_quant.api.gs.assets import AssetType
 from gs_quant.api.gs.indices import GsIndexApi
+from gs_quant.common import AssetType
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.indices import *
+from gs_quant.target.indices import IndicesCurrency, PublishParameters, CustomBasketsPricingParameters, \
+    CustomBasketsCreateInputs, CustomBasketsResponse, CustomBasketsEditInputs, CustomBasketsRebalanceInputs, \
+    CustomBasketsRebalanceAction
 
 # values used to build api payloads
 basket_id = 'MQID_BASKET'

@@ -28,11 +28,10 @@ from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi, FactorRiskTableMode
 from gs_quant.api.gs.thematics import Region, GsThematicApi, ThematicMeasure
-from gs_quant.common import PositionType
+from gs_quant.common import PositionType, ReportParameters, Currency, PositionTag
 from gs_quant.datetime import business_day_offset, prev_business_date
 from gs_quant.errors import MqValueError
 from gs_quant.markets.report_utils import _get_ppaa_batches
-from gs_quant.target.common import ReportParameters, Currency, PositionTag
 from gs_quant.target.coordinates import MDAPIDataBatchResponse
 from gs_quant.target.data import DataQuery, DataQueryResponse
 from gs_quant.target.reports import Report as TargetReport, ReportType, PositionSourceType, ReportStatus

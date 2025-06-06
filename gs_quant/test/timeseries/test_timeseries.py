@@ -13,12 +13,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
+import inspect
+import re
 import types
 
+import pandas as pd
 import pytest
 
-from gs_quant.timeseries import *
+from gs_quant.markets.securities import Asset
+from gs_quant.timeseries import Window
 
 dummy_series = pd.Series([191.63, 184.31, 184.09, 179.67, 178.83, 176.8, 176.7, 175.92, 172.77, 168.01,
                           171.5, 169.25, 168.41, 160.05, 156.35, 162.93, 165.41, 163.03, 167.05, 172.03,
@@ -137,7 +140,7 @@ def test_measures_on_entities(ts_map):
         params = inspect.signature(v).parameters.copy()
         param = params.popitem(last=False)
         assert param[1].name == f'{v.entity_type.value}_id'
-        assert param[1].annotation == str
+        assert param[1].annotation is str
         assert param[1].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
         _check_measure_args(params, True, v.__name__)
 

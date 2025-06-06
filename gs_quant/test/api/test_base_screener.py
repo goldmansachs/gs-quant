@@ -15,7 +15,7 @@ under the License.
 """
 
 from gs_quant.api.gs.base_screener import GsBaseScreenerApi
-from gs_quant.session import *
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.base_screener import Screener, ScreenerRow, ScreenerColumn, ScreenerParameters
 
 

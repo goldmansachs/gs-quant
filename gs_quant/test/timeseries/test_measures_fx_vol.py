@@ -27,11 +27,13 @@ import gs_quant.timeseries.measures_fx_vol as tm_fxo
 import gs_quant.timeseries.measures_xccy as tm
 from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame, QueryType
+from gs_quant.common import PricingLocation
 from gs_quant.errors import MqError, MqValueError
+from gs_quant.markets import PricingContext
+from gs_quant.markets.securities import Bond, Cross, Currency
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import PricingLocation
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries import Currency, Cross, Bond, CurrencyEnum, SecurityMaster
+from gs_quant.timeseries import Currency as CurrencyEnum, SecurityMaster
 from gs_quant.timeseries.measures_fx_vol import _currencypair_to_tdapi_fxo_asset, _currencypair_to_tdapi_fxfwd_asset
 from gs_quant.timeseries.measures_helper import VolReference
 
@@ -58,7 +60,7 @@ def test_currencypair_to_tdapi_fxo_asset(mocker):
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock())
 
-    with tm_rates.PricingContext(dt.date.today()):
+    with PricingContext(dt.date.today()):
         cur = [
             {
                 "currency_assetId": "MAK1FHKH5P5GJSHH",

@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
+import datetime as dt
 from math import sqrt
 
 import pandas as pd
@@ -143,7 +143,7 @@ def test_risk_model_measure():
         ]
     }
 
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2020, 1, 3)):
         actual = mrm.risk_model_measure(Stock(id_='id', name='Fake Asset'), 'model_id',
                                         mrm.ModelMeasureString.BID_AKS_SPREAD_30D)
         assert all(actual.values == [0.1, 0.2, 0.3])
@@ -216,7 +216,7 @@ def test_factor_zscore():
         ]
     }
 
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2020, 1, 3)):
         actual = mrm.factor_zscore(Stock(id_='id', name='Fake Asset'), 'model_id', 'Factor Name')
         assert all(actual.values == [1.01, 1.02, 1.03])
 
@@ -248,7 +248,7 @@ def test_factor_covariance():
     mock = replace('gs_quant.markets.factor.Factor.covariance', Mock())
     mock.return_value = mock_covariance_curve
 
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2020, 1, 3)):
         actual = mrm.factor_covariance(mock_risk_model(), 'Factor Name', 'Factor Name')
         assert all(actual.values == [1.01, 1.02, 1.03])
 
@@ -280,7 +280,7 @@ def test_factor_volatility():
     mock = replace('gs_quant.markets.factor.Factor.volatility', Mock())
     mock.return_value = mock_volatility_curve
 
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2020, 1, 3)):
         actual = mrm.factor_volatility(mock_risk_model(), 'Factor Name')
         assert all(actual.values == [sqrt(1.01) * 100, sqrt(1.02) * 100, sqrt(1.03) * 100])
 
@@ -312,7 +312,7 @@ def test_factor_correlation():
     mock = replace('gs_quant.markets.factor.Factor.correlation', Mock())
     mock.return_value = mock_correlation_curve
 
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2020, 1, 3)):
         actual = mrm.factor_correlation(mock_risk_model(), 'Factor Name', 'Factor Name')
         assert all(actual.values == [1, 1, 1])
     replace.restore()
@@ -341,7 +341,7 @@ def test_factor_performance():
     mock = replace('gs_quant.markets.factor.Factor.returns', Mock())
     mock.return_value = pd.DataFrame.from_dict(mock_covariance_curve, orient='index', columns=['return'])
 
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2020, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2020, 1, 3)):
         actual = mrm.factor_performance(mock_risk_model(), 'Factor Name')
         assert len(actual.values) == 3
     replace.restore()

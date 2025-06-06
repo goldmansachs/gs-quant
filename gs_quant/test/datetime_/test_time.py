@@ -13,8 +13,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import numpy as np
 
-from gs_quant.datetime import *
+from gs_quant.datetime import time_difference_as_string, SECS_IN_YEAR
 
 
 def test_time_difference_as_string():

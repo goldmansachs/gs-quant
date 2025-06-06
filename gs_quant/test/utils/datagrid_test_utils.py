@@ -17,8 +17,8 @@ under the License.
 import json
 import pathlib
 
+from gs_quant.common import Currency
 from gs_quant.markets.securities import Stock
-from gs_quant.target.common import Currency
 
 
 def _read_entity(entity):

@@ -40,12 +40,12 @@ from gs_quant.analytics.datagrid.serializers import row_from_dict
 from gs_quant.analytics.datagrid.utils import DataGridSort, SortOrder, SortType, DataGridFilter, FilterOperation, \
     FilterCondition, get_utc_now
 from gs_quant.analytics.processors import CoordinateProcessor, EntityProcessor
+from gs_quant.common import Entitlements as Entitlements_
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.entities.entity import Entity
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession, OAuth2Session
-from gs_quant.target.common import Entitlements as Entitlements_
 
 _logger = logging.getLogger(__name__)
 

@@ -21,15 +21,16 @@ import pandas as pd
 from typing import Dict, Optional, List, Tuple
 from pydash import get
 
-from gs_quant.api.gs.assets import Currency, GsAsset, GsAssetApi
-from gs_quant.common import DateLimit
+from gs_quant.api.gs.assets import GsAsset, GsAssetApi
+from gs_quant.api.gs.data import GsDataApi
+from gs_quant.common import AssetClass, Currency, DateLimit
 from gs_quant.data.fields import DataMeasure
 from gs_quant.entities.entity import EntityType, PositionedEntity
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import Instrument
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets.securities import Asset, AssetType
-from gs_quant.markets.indices_utils import *
+from gs_quant.markets.indices_utils import ReturnType, STSIndexType, IndicesDatasets, PriceType
 from gs_quant.target.data import DataQuery
 from gs_quant.entities.tree_entity import AssetTreeNode, TreeHelper
 

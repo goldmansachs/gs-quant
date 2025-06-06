@@ -16,11 +16,12 @@ under the License.
 import datetime as dt
 from datetime import date
 
-import gs_quant.risk as risk
 import numpy as np
 import pytest
 
+import gs_quant.risk as risk
 from gs_quant.base import RiskKey
+from gs_quant.common import MarketDataPattern, RiskRequestParameters
 from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg, CommodSwap
 from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMarket, MarketDataCoordinate
 from gs_quant.markets.portfolio import Portfolio
@@ -30,7 +31,6 @@ from gs_quant.risk.core import aggregate_risk, SeriesWithInfo, FloatWithInfo, St
 from gs_quant.risk.results import MultipleScenarioFuture
 from gs_quant.risk.results import MultipleScenarioResult
 from gs_quant.risk.transform import ResultWithInfoAggregator
-from gs_quant.target.common import MarketDataPattern, RiskRequestParameters
 from gs_quant.test.utils.mock_calc import MockCalc
 
 curvescen1 = CurveScenario(market_data_pattern=MarketDataPattern('IR', 'USD'), parallel_shift=5,

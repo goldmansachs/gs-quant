@@ -11,39 +11,51 @@
 # under the License.
 #
 # Plot Service will make use of appropriately decorated functions in this module.
+import calendar
+import datetime as dt
+import logging
 import re
 from collections import namedtuple
+from enum import Enum, auto
+from functools import partial
 from numbers import Real
+from typing import Union, Optional, Tuple, List
 
 import cachetools.func
 import inflection
 import numpy as np
+import pandas as pd
 from dateutil import tz
+from dateutil.relativedelta import relativedelta
 from pandas import DatetimeIndex, Series
 from pandas.tseries.holiday import AbstractHolidayCalendar, Holiday, USLaborDay, USMemorialDay, USThanksgivingDay, \
     sunday_to_monday
-from pydash import chunk, flatten
+from pydash import chunk, flatten, get
 
-from gs_quant.api.gs.data import MarketDataResponseFrame, QueryType
+from gs_quant.api.gs.assets import GsAssetApi, GsIdType
+from gs_quant.api.gs.data import MarketDataResponseFrame, QueryType, GsDataApi
 from gs_quant.api.gs.indices import GsIndexApi
-from gs_quant.data.core import DataContext
-from gs_quant.data.fields import Fields
+from gs_quant.api.utils import ThreadPoolManager
+from gs_quant.common import AssetClass, AssetType, PricingLocation
+from gs_quant.data import Dataset
+from gs_quant.data.core import DataContext, IntervalFrequency
+from gs_quant.data.fields import Fields, DataMeasure
 from gs_quant.data.log import log_debug, log_warning
 from gs_quant.datetime import DAYS_IN_YEAR
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.datetime.point import relative_date_add
-from gs_quant.markets.securities import *
-from gs_quant.markets.securities import Asset, AssetIdentifier, AssetType as SecAssetType, SecurityMaster
-from gs_quant.target.common import AssetClass, AssetType, PricingLocation
+from gs_quant.entities.entity import PositionedEntity
+from gs_quant.errors import MqValueError, MqTypeError
+from gs_quant.markets.securities import Asset, AssetIdentifier, AssetType as SecAssetType, SecurityMaster, Stock
 from gs_quant.timeseries import Basket, RelativeDate, Returns, Window, sqrt, volatility
 from gs_quant.timeseries.helper import (_month_to_tenor, _split_where_conditions, _tenor_to_month, _to_offset,
                                         check_forward_looking, get_dataset_data_with_retries, get_df_with_retries,
                                         log_return, plot_measure)
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
 
-GENERIC_DATE = Union[datetime.date, str]
+GENERIC_DATE = Union[dt.date, str]
 ASSET_SPEC = Union[Asset, str]
-TD_ONE = datetime.timedelta(days=1)
+TD_ONE = dt.timedelta(days=1)
 
 _logger = logging.getLogger(__name__)
 
@@ -436,7 +448,7 @@ def _get_custom_bd(exchange):
 
 @log_return(_logger, 'trying pricing dates')
 def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = None, buffer: int = 0):
-    if isinstance(pricing_date, datetime.date):
+    if isinstance(pricing_date, dt.date):
         return pricing_date, pricing_date
 
     today = pd.Timestamp.today().normalize()
@@ -450,7 +462,7 @@ def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = No
     if matcher:
         start = end = today - bd * int(matcher.group(1))
     else:
-        end = today - datetime.timedelta(days=relative_date_add(pricing_date, True))
+        end = today - dt.timedelta(days=relative_date_add(pricing_date, True))
         start = end - bd
     return start, end
 
@@ -1328,7 +1340,7 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         )
         log_debug(request_id, _logger, 'q %s', q)
         df = _market_data_timed(q, request_id)
-        if not real_time and DataContext.current.end_date >= datetime.date.today():
+        if not real_time and DataContext.current.end_date >= dt.date.today():
             df = append_last_for_measure(df, assets, QueryType.SPOT, None, source=source, request_id=request_id)
 
         grouped = df.groupby('assetId')
@@ -1677,10 +1689,10 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
     df = _market_data_timed(q, request_id)
     dataset_ids.extend(getattr(df, 'dataset_ids', ()))
 
-    now = datetime.date.today()
+    now = dt.date.today()
     if not real_time and DataContext.current.end_date >= now:
         where_list = _split_where_conditions(where)
-        delta = datetime.timedelta(days=1)
+        delta = dt.timedelta(days=1)
         with DataContext(now - delta, now + delta):
             net = {"queries": []}
             for wl in where_list:
@@ -1764,7 +1776,7 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
     return series
 
 
-def _get_skew_strikes(asset: Asset, strike_reference: SkewReference, distance: Real) -> Tuple[List, int]:
+def _get_skew_strikes(asset: Asset, strike_reference: SkewReference, distance: Real) -> Tuple[list, int]:
     """
     Calculates strike references necessary for calculating skew.
 
@@ -1893,7 +1905,7 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
     dataset_ids = set()
     where = {'strikeReference': strike_reference.value, 'relativeStrike': q_strikes}
 
-    if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= datetime.date.today()):  # intraday
+    if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= dt.date.today()):  # intraday
         data_requests = [
             partial(_get_latest_term_structure_data, asset_id, QueryType.IMPLIED_VOLATILITY, where=where,
                     groupby=['tenor', 'relativeStrike'], source=source, request_id=request_id),
@@ -1985,7 +1997,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
 
     df = df_expiry = pd.DataFrame()
     dataset_ids = set()
-    today = datetime.date.today()
+    today = dt.date.today()
     if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # use intraday data
         df = _get_latest_term_structure_data(asset_id, QueryType.IMPLIED_VOLATILITY, where, 'tenor', source, request_id)
         df_expiry = _get_latest_term_structure_data(asset_id, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION, where,
@@ -2312,8 +2324,8 @@ def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, 
 
 
 def _get_latest_term_structure_data(asset_id, query_type, where, groupby, source, request_id):
-    today = datetime.date.today()
-    query_end = today + datetime.timedelta(days=1)
+    today = dt.date.today()
+    query_end = today + dt.timedelta(days=1)
     with DataContext(today, query_end):
         q_l = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source, real_time=True,
                                                 measure='Last')
@@ -2325,7 +2337,7 @@ def _get_latest_term_structure_data(asset_id, query_type, where, groupby, source
         _logger.warning('no data for last of %s', query_type.value)
         return df_l
 
-    with DataContext(df_l.index[-1] - datetime.timedelta(hours=1), query_end):
+    with DataContext(df_l.index[-1] - dt.timedelta(hours=1), query_end):
         q_r = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source, real_time=True)
 
     log_debug(request_id, _logger, 'q_r %s', q_r)
@@ -2360,7 +2372,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
     if real_time:
         raise NotImplementedError('real-time var term not implemented')
 
-    if not (pricing_date is None or isinstance(pricing_date, str) or isinstance(pricing_date, datetime.date)):
+    if not (pricing_date is None or isinstance(pricing_date, str) or isinstance(pricing_date, dt.date)):
         raise MqTypeError('pricing_date should be a relative date')
 
     check_forward_looking(pricing_date, source, 'var_term')
@@ -2385,7 +2397,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
             df = pd.concat(sub_frames)
     else:
         asset_id = asset.get_marquee_id()
-        today = datetime.date.today()
+        today = dt.date.today()
         df = pd.DataFrame()
 
         if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # try intraday data
@@ -2426,10 +2438,10 @@ def _get_var_swap_df(asset: Asset, where, source, real_time):
     result = _market_data_timed(q)
     ids.extend(getattr(result, 'dataset_ids', tuple()))
 
-    now = datetime.date.today()
+    now = dt.date.today()
     if not real_time and DataContext.current.end_date >= now:
         where_list = _split_where_conditions(where)
-        delta = datetime.timedelta(days=1)
+        delta = dt.timedelta(days=1)
         with DataContext(now - delta, now + delta):
             net = {"queries": []}
             for wl in where_list:
@@ -2611,18 +2623,18 @@ def _string_to_date_interval(interval: str):
         YS = interval[-4:]
         year = int(YS)
 
-    start_year = datetime.date(year, 1, 1)
+    start_year = dt.date(year, 1, 1)
     if len(interval) == 1 + len(YS):
         if interval[0].upper() in _COMMOD_CONTRACT_MONTH_CODES:
             month_index = _COMMOD_CONTRACT_MONTH_CODES.index(interval[0].upper()) + 1
-            start_date = datetime.date(year, month_index, 1)
-            end_date = datetime.date(year, month_index, calendar.monthrange(year, month_index)[1])
+            start_date = dt.date(year, month_index, 1)
+            end_date = dt.date(year, month_index, calendar.monthrange(year, month_index)[1])
         else:
             return "Invalid month"
     elif (len(interval) == 2 + len(YS) and interval.isdigit()) or (
             interval.casefold().startswith("Cal".casefold()) and len(interval) == 3 + len(YS)):
-        start_date = datetime.date(year, 1, 1)
-        end_date = datetime.date(year, 12, 31)
+        start_date = dt.date(year, 1, 1)
+        end_date = dt.date(year, 12, 31)
     elif len(interval) == 2 + len(YS):
         if interval[0].isdigit():
             num = int(interval[0])
@@ -2649,8 +2661,8 @@ def _string_to_date_interval(interval: str):
                 month_index = {v: k for k, v in enumerate(calendar.month_abbr)}[left]
             else:
                 return "Invalid date code"
-            start_date = datetime.date(year, month_index, 1)
-            end_date = datetime.date(year, month_index, calendar.monthrange(year, month_index)[1])
+            start_date = dt.date(year, month_index, 1)
+            end_date = dt.date(year, month_index, calendar.monthrange(year, month_index)[1])
         else:
             return "Invalid date code"
     else:
@@ -2988,7 +3000,7 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
 
 def get_contract_range(start_contract_range, end_contract_range, timezone):
     if timezone:
-        df = pd.date_range(start_contract_range, end_contract_range + datetime.timedelta(days=1), None, 'H',
+        df = pd.date_range(start_contract_range, end_contract_range + dt.timedelta(days=1), None, 'H',
                            timezone, False, None, 'left').to_frame()
 
         df['hour'] = df.index.hour
@@ -3048,9 +3060,9 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     # in local time and then converted to UTC time
     # End time is constructed by combining end date with 23:59:59 timestamp
     # in local time and then converted to UTC time
-    start_time = datetime.datetime.combine(start_date, datetime.datetime.min.time(), tzinfo=from_zone) \
+    start_time = dt.datetime.combine(start_date, dt.datetime.min.time(), tzinfo=from_zone) \
         .astimezone(to_zone)
-    end_time = datetime.datetime.combine(end_date, datetime.datetime.max.time(), tzinfo=from_zone).astimezone(to_zone)
+    end_time = dt.datetime.combine(end_date, dt.datetime.max.time(), tzinfo=from_zone).astimezone(to_zone)
 
     where = dict(priceMethod=price_method.upper())
     with DataContext(start_time, end_time):
@@ -3087,7 +3099,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         if freq == 0:
             raise MqValueError('Duplicate data rows probable for this period')
         # checking missing data points
-        ref_hour_range = pd.date_range(str(start_date), str(end_date + datetime.timedelta(days=1)),
+        ref_hour_range = pd.date_range(str(start_date), str(end_date + dt.timedelta(days=1)),
                                        None, str(freq) + "S", timezone, False, None, 'left')
 
         missing_hours = ref_hour_range[~ref_hour_range.isin(df.index)]
@@ -4080,7 +4092,7 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
 
     # results for top n
     constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
-    head_start = DataContext.current.start_date - datetime.timedelta(days=relative_date_add(tenor, True) + 1)
+    head_start = DataContext.current.start_date - dt.timedelta(days=relative_date_add(tenor, True) + 1)
     with DataContext(head_start, DataContext.current.end_date):
         asset_ids = constituents.index.to_list() + [mqid]
         q = GsDataApi.build_market_data_query(
@@ -4092,7 +4104,7 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
         log_debug(request_id, _logger, 'q %s', q)
         df = _market_data_timed(q, request_id)
 
-    if not real_time and DataContext.current.end_date >= datetime.date.today():
+    if not real_time and DataContext.current.end_date >= dt.date.today():
         df = append_last_for_measure(df, asset_ids, QueryType.SPOT, None, source=source, request_id=request_id)
 
     match = df['assetId'] == mqid
@@ -4369,7 +4381,7 @@ def _get_marketdate_validation(market_date, start_date, end_date, timezone=None)
     if len(market_date) == 0:
         market_date = pd.Timestamp.today().date()
         while market_date.weekday() > 4:
-            market_date -= datetime.timedelta(days=1)
+            market_date -= dt.timedelta(days=1)
     else:
         try:
             market_date = dt.datetime.strptime(market_date, "%Y%m%d").date()
@@ -4734,8 +4746,8 @@ def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: 
 
 def get_last_for_measure(asset_ids: List[str], query_type, where, *, source: str = None,
                          request_id: Optional[str] = None, ignore_errors: bool = False):
-    now = datetime.date.today()
-    delta = datetime.timedelta(days=2)
+    now = dt.date.today()
+    delta = dt.timedelta(days=2)
     with DataContext(now - delta, now + delta):
         q_l = GsDataApi.build_market_data_query(asset_ids, query_type, where=where,
                                                 source=source, real_time=True, measure='Last')
@@ -4819,7 +4831,7 @@ def get_historical_and_last_for_measure(asset_ids: List[str],
                                   request_id=request_id, chunk_size=chunk_size, ignore_errors=ignore_errors,
                                   parallelize_queries=parallelize_queries)
 
-    if not real_time and DataContext.current.end_date >= datetime.date.today():
+    if not real_time and DataContext.current.end_date >= dt.date.today():
         where_list = _split_where_conditions(where)
         for w in where_list:
             tasks.append(partial(get_last_for_measure, asset_ids=asset_ids, query_type=query_type, where=w,
@@ -5035,3 +5047,85 @@ def s3_long_short_concentration(asset: Asset, s3Metric: S3Metrics = S3Metrics.LO
 
     # Extract the timeseries and format it for PTP
     return _extract_series_from_df(df, QueryType.S3_AGGREGATE_DATA)
+
+
+class S3EntityType(Enum):
+    PASSIVE = 'passive'
+    ACTIVE = 'active'
+    HEDGE_FUND_MANAGER = 'hedge fund manager'
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
+def s3_long_interest(asset: Asset,
+                     s3_entity_type: S3EntityType = S3EntityType.PASSIVE,
+                     *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    """
+    S3 partners long interest for single stocks, shows long interest for the given entity type.
+
+    :param asset: asset object loaded from security master
+    :param s3_entity_type: type of entity e.g. passive
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
+    :param request_id: service request id, if any
+    :return: S3 Partners long interest
+
+    """
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    ds_id = 'S3_PARTNERS_EQ_LONG_INTEREST'
+    ds = Dataset(ds_id)
+    df = ds.get_data(assetId=asset.get_marquee_id(),
+                     start=start, end=end, s3EntityType=s3_entity_type)
+
+    return _extract_series_from_df(df, QueryType.S3_LONG_INTEREST)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
+def s3_long_interest_market_value(asset: Asset,
+                                  s3_entity_type: S3EntityType = S3EntityType.PASSIVE,
+                                  *, source: str = None, real_time: bool = False,
+                                  request_id: Optional[str] = None) -> pd.Series:
+    """
+    S3 partners long interest market value for single stocks, shows long interest market value
+    for the given entity type.
+
+    :param asset: asset object loaded from security master
+    :param s3_entity_type: type of entity e.g. passive
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
+    :param request_id: service request id, if any
+    :return: S3 Partners long interest
+
+    """
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    ds_id = 'S3_PARTNERS_EQ_LONG_INTEREST'
+    ds = Dataset(ds_id)
+    df = ds.get_data(assetId=asset.get_marquee_id(),
+                     start=start, end=end, s3EntityType=s3_entity_type)
+
+    return _extract_series_from_df(df, QueryType.S3_LONG_INTEREST_MV)
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
+def s3_long_interest_percent_shares_out(asset: Asset,
+                                        s3_entity_type: S3EntityType = S3EntityType.PASSIVE,
+                                        *, source: str = None, real_time: bool = False,
+                                        request_id: Optional[str] = None) -> pd.Series:
+    """
+    S3 partners long interest percent of shares for single stocks, shows long interest percent of shares for the
+    given entity type.
+
+    :param asset: asset object loaded from security master
+    :param s3_entity_type: type of entity e.g. passive
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
+    :param request_id: service request id, if any
+    :return: S3 Partners long interest
+
+    """
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    ds_id = 'S3_PARTNERS_EQ_LONG_INTEREST'
+    ds = Dataset(ds_id)
+    df = ds.get_data(assetId=asset.get_marquee_id(),
+                     start=start, end=end, s3EntityType=s3_entity_type)
+
+    return _extract_series_from_df(df, QueryType.S3_LONG_INTEREST_PERCENT)

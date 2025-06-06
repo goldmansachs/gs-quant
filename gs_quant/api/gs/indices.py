@@ -15,7 +15,7 @@ under the License.
 """
 
 import datetime as dt
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import backoff
 
@@ -23,7 +23,13 @@ from gs_quant.api.gs.assets import IdList
 from gs_quant.common import PositionType
 from gs_quant.errors import MqTimeoutError, MqInternalServerError, MqRateLimitedError
 from gs_quant.session import GsSession
-from gs_quant.target.indices import *
+from gs_quant.target.indices import (CustomBasketsCreateInputs, CustomBasketsRebalanceInputs,
+                                     CustomBasketsRebalanceAction, CustomBasketsResponse, CustomBasketsEditInputs,
+                                     CustomBasketsBackcastInputs, CustomBasketsRiskScheduleInputs,
+                                     CustomBasketRiskParams, ISelectResponse, ISelectRequest, ISelectRebalance,
+                                     ISelectActionRequest, IndicesDynamicConstructInputs, IndicesRebalanceInputs,
+                                     IndicesEditInputs,
+                                     DynamicConstructionResponse, ApprovalCustomBasketResponse, IndicesBackcastInputs)
 
 # type aliases -- can add for edit/backcast/etc. if STS implements them in future
 CreateRequest = Union[CustomBasketsCreateInputs, IndicesDynamicConstructInputs]

@@ -17,8 +17,8 @@ import backoff
 
 from gs_quant.errors import MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.session import GsSession
-from gs_quant.target.price import *
-from gs_quant.target.positions_v2_pricing import *
+from gs_quant.target.positions_v2_pricing import PositionsPricingRequest
+from gs_quant.target.price import PositionSetPriceInput, PositionSetPriceResponse
 
 
 class GsPriceApi:

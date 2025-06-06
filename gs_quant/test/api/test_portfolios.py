@@ -19,8 +19,8 @@ import datetime as dt
 import dateutil.parser as dup
 
 from gs_quant.api.gs.portfolios import GsPortfolioApi, Portfolio, PositionSet
-from gs_quant.session import *
-from gs_quant.target.common import Position
+from gs_quant.common import Position
+from gs_quant.session import Environment, GsSession
 
 
 def test_get_many_portfolios(mocker):

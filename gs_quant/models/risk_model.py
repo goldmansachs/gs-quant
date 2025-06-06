@@ -21,7 +21,7 @@ import pandas as pd
 import numpy as np
 import logging
 import deprecation
-from gs_quant.target.common import Currency
+from gs_quant.common import Currency
 
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
 from gs_quant.base import EnumBase
@@ -29,7 +29,10 @@ from gs_quant.data import DataMeasure
 from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
-from gs_quant.models.risk_model_utils import *
+from gs_quant.models.risk_model_utils import build_pfp_data_dataframe, get_closest_date_index, upload_model_data, \
+    get_optional_data_as_dataframe, get_universe_size, get_covariance_matrix_dataframe, build_factor_data_map, \
+    build_asset_data_map, build_factor_id_to_name_map, only_factor_data_is_present, batch_and_upload_partial_data, \
+    build_factor_volatility_dataframe, batch_and_upload_coverage_data
 from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModelEventType, RiskModelData, \
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
     RiskModelCoverage as CoverageType, RiskModelUniverseIdentifier as UniverseIdentifier, Entitlements, \

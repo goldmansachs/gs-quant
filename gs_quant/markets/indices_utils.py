@@ -23,11 +23,12 @@ from pydash import get
 from time import sleep
 from typing import Dict, List, Optional, Union
 
-from gs_quant.api.gs.assets import AssetClass, GsAssetApi
+from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.monitors import GsMonitorsApi
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import EnumBase
+from gs_quant.common import AssetClass
 from gs_quant.datetime.date import prev_business_date
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery

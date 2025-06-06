@@ -13,15 +13,15 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import pytest
 from unittest import mock
 
-from gs_quant.markets.scenario import FactorScenario, FactorScenarioType, FactorShockParameters, FactorShock
-from gs_quant.session import *
-from gs_quant.target.risk import Scenario
-from gs_quant.target.common import Entitlements as TargetEntitlements
-from gs_quant.entities.entitlements import Entitlements, EntitlementBlock
+import pytest
 
+from gs_quant.common import Entitlements as TargetEntitlements
+from gs_quant.entities.entitlements import Entitlements, EntitlementBlock
+from gs_quant.markets.scenario import FactorScenario, FactorScenarioType, FactorShockParameters, FactorShock
+from gs_quant.session import GsSession, Environment
+from gs_quant.target.risk import Scenario
 
 default_entitlements = TargetEntitlements(
     edit=(),

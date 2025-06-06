@@ -23,14 +23,15 @@ from testfixtures import Replacer
 from testfixtures.mock import Mock
 
 import gs_quant.timeseries.measures_xccy as tm
-import gs_quant.timeseries.measures as tm_rates
 from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
+from gs_quant.common import PricingLocation, Currency as CurrEnum
 from gs_quant.errors import MqError, MqValueError
+from gs_quant.markets import PricingContext
+from gs_quant.markets.securities import Bond, Cross, Currency
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries import Currency, Cross, Bond, CurrencyEnum, SecurityMaster
+from gs_quant.timeseries import CurrencyEnum, SecurityMaster, CrossCurrencyRateOptionType
 from gs_quant.timeseries.measures_xccy import _currency_to_tdapi_crosscurrency_swap_rate_asset, \
     CROSSCURRENCY_RATES_DEFAULTS, TdapiCrossCurrencyRatesDefaultsProvider
 
@@ -58,7 +59,7 @@ def test_currency_to_tdapi_xccy_swap_rate_asset(mocker):
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures_xccy.Asset.get_identifier', Mock())
 
-    with tm_rates.PricingContext(dt.date.today()):
+    with PricingContext(dt.date.today()):
         cur = [
             {
                 "currency_assetId": "MAK1FHKH5P5GJSHH",
@@ -288,10 +289,10 @@ def test_crosscurrency_swap_rate(mocker):
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'GBP'
 
-    args['rateoption_type'] = tm.CrossCurrencyRateOptionType.TestRateOption
+    args['rateoption_type'] = CrossCurrencyRateOptionType.TestRateOption
     with pytest.raises(MqValueError):
         tm.crosscurrency_swap_rate(**args)
-    args['rateoption_type'] = tm.CrossCurrencyRateOptionType.LIBOR
+    args['rateoption_type'] = CrossCurrencyRateOptionType.LIBOR
 
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'GBP'

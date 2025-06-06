@@ -29,14 +29,13 @@ from pydash import get, has
 from requests.exceptions import HTTPError
 
 from gs_quant.api.api_cache import ApiRequestCache, InMemoryApiRequestCache
-from gs_quant.common import PositionType
+from gs_quant.common import Entitlements, PositionType
 from gs_quant.errors import MqValueError, MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
-from gs_quant.target.assets import Asset as __Asset, AssetClass, AssetType, AssetToInstrumentResponse, TemporalXRef, \
-    Position, EntityQuery, PositionSet, Currency, AssetParameters
+from gs_quant.target.assets import Asset as __Asset, AssetToInstrumentResponse, TemporalXRef, \
+    Position, EntityQuery, PositionSet
 from gs_quant.target.assets import FieldFilterMap
-from gs_quant.target.common import Entitlements
 from gs_quant.target.reports import Report
 from gs_quant.tracing import Tracer
 

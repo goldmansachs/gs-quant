@@ -13,24 +13,24 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 from typing import Dict
 from unittest import mock
 
-import datetime as dt
 import pytest
 
-from gs_quant.api.gs.assets import AssetClass, AssetType, GsAsset, GsAssetApi
+from gs_quant.api.gs.assets import GsAsset, GsAssetApi
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.users import GsUsersApi
+from gs_quant.common import AssetClass, AssetType, Entitlements as TargetEntitlements, \
+    PositionSet as TargetPositionSet, Position as TargetPosition, ReportParameters, XRef
 from gs_quant.entities.entitlements import User
 from gs_quant.errors import MqError
 from gs_quant.markets.baskets import Basket, ErrorMessage
 from gs_quant.markets.indices_utils import ReturnType
 from gs_quant.markets.position_set import Position, PositionSet
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import Entitlements as TargetEntitlements, \
-    PositionSet as TargetPositionSet, Position as TargetPosition, ReportParameters, XRef
 from gs_quant.target.indices import CustomBasketsResponse, CustomBasketRiskParams
 from gs_quant.target.reports import Report, User as TargetUser
 

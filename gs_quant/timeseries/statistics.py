@@ -15,16 +15,23 @@
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
 
-import datetime
+import datetime as dt
+from enum import Enum
+from typing import List, Union, Optional
 
-import numpy
+import numpy as np
+import pandas as pd
 import scipy.stats.mstats as stats
 import statsmodels.api as sm
 from scipy.stats import percentileofscore
 from statsmodels.regression.rolling import RollingOLS
 
-from .algebra import *
+from .algebra import ceil, floor
+from .datetime import interpolate
+from .helper import Window, normalize_window, rolling_offset, apply_ramp, plot_function, rolling_apply, Interpolate, \
+    plot_method
 from ..data import DataContext
+from ..errors import MqValueError, MqTypeError
 from ..models.epidemiology import SIR, SEIR, EpidemicModel
 
 """
@@ -720,7 +727,7 @@ def zscores(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Se
     if isinstance(w, int):
         w = normalize_window(x, w)
     elif isinstance(w, str):
-        if not (isinstance(x.index, pd.DatetimeIndex) or isinstance(x.index[0], datetime.date)):
+        if not (isinstance(x.index, pd.DatetimeIndex) or isinstance(x.index[0], dt.date)):
             raise MqValueError("When string is passed window index must be a DatetimeIndex or of type datetime.date")
         w = normalize_window(x, w)
     if not w.w:
@@ -840,14 +847,14 @@ def generate_series(length: int, direction: Direction = Direction.START_TODAY) -
 
     """
     levels = [100]
-    first = datetime.date.today()
+    first = dt.date.today()
     if direction == Direction.END_TODAY:
-        first -= datetime.timedelta(days=length - 1)
+        first -= dt.timedelta(days=length - 1)
     dates = [first]
 
     for i in range(length - 1):
-        levels.append(levels[i] * 1 + numpy.random.normal())
-        dates.append(datetime.date.fromordinal(dates[i].toordinal() + 1))
+        levels.append(levels[i] * 1 + np.random.normal())
+        dates.append(dt.date.fromordinal(dates[i].toordinal() + 1))
 
     return pd.Series(data=levels, index=dates, dtype=np.dtype(float))
 
@@ -947,7 +954,7 @@ def percentile(x: pd.Series, n: float, w: Union[Window, int, str] = None) -> Uni
     if x.size < 1:
         return x
     if w is None:
-        return numpy.percentile(x.values, n)
+        return np.percentile(x.values, n)
 
     n /= 100
     w = normalize_window(x, w)

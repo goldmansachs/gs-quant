@@ -114,7 +114,7 @@ class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'sc
 
     @property
     def ex_measure(self):
-        from gs_quant.target.common import RiskRequestParameters
+        from gs_quant.target.common import RiskRequestParameters  # noqa
         return RiskKey(self.provider, self.date, self.market,
                        RiskRequestParameters(self.params.csa_term, self.params.raw_results, False,
                                              self.params.market_behaviour),
@@ -122,7 +122,7 @@ class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'sc
 
     @property
     def ex_historical_diddle(self):
-        from gs_quant.target.common import RiskRequestParameters
+        from gs_quant.target.common import RiskRequestParameters  # noqa
         return RiskKey(self.provider, self.date, self.market,
                        RiskRequestParameters(self.params.csa_term, self.params.raw_results, False,
                                              self.params.market_behaviour),
@@ -263,7 +263,7 @@ class Base(ABC):
             is_generic_alias = isinstance(tp, typing._GenericAlias)
         if not is_generic_alias:
             # Do not convert Enums to strings
-            is_enum_to_str = isinstance(val, Enum) and tp == str
+            is_enum_to_str = isinstance(val, Enum) and tp is str
             return isinstance(tp, type) and (isinstance(val, tp) or is_enum_to_str)
         if getattr(tp, '_special', False):
             return False
@@ -273,7 +273,7 @@ class Base(ABC):
             args += (int,)
         if origin == Union:
             return any(cls.__is_type_match(arg, val) for arg in args)
-        if origin == tuple:
+        if origin is tuple:
             if not isinstance(val, tuple) or not args:
                 return False
             if len(args) == 1 or args[1] == Ellipsis:

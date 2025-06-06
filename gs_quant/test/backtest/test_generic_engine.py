@@ -13,23 +13,34 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+import json
 from datetime import date
 from unittest.mock import patch
 
-from gs_quant.target.measures import EqDelta, EqVega
+import numpy as np
+import pandas as pd
 
-from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction
+from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction, AddScaledTradeAction, \
+    ScalingActionType, ExitAllPositionsAction
 from gs_quant.backtests.backtest_objects import (ScaledTransactionModel, AggregateTransactionModel, TransactionAggType,
-                                                 ConstantTransactionModel)
-from gs_quant.backtests.data_sources import GenericDataSource
+                                                 ConstantTransactionModel, BackTest)
+from gs_quant.backtests.data_sources import GenericDataSource, MissingDataStrategy, GsDataSource
 from gs_quant.backtests.generic_engine import GenericEngine
 from gs_quant.backtests.strategy import Strategy
-from gs_quant.backtests.triggers import *
+from gs_quant.backtests.triggers import TriggerDirection, DateTrigger, DateTriggerRequirements, NotTrigger, \
+    RiskTriggerRequirements, \
+    StrategyRiskTrigger, PeriodicTriggerRequirements, PeriodicTrigger, MktTrigger, MktTriggerRequirements, \
+    IntradayPeriodicTrigger, IntradayTriggerRequirements, AggregateTrigger, AggregateTriggerRequirements, \
+    PortfolioTrigger, PortfolioTriggerRequirements, MeanReversionTrigger, MeanReversionTriggerRequirements, \
+    NotTriggerRequirements
 from gs_quant.common import Currency, PayReceive, OptionType, OptionStyle
 from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap, EqOption
+from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import Price, FXDelta, DollarPrice, IRDelta
+from gs_quant.target.measures import EqDelta, EqVega
 from gs_quant.test.utils.mock_calc import MockCalc
 
 

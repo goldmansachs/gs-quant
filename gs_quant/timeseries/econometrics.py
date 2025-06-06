@@ -14,13 +14,24 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
+import math
+from enum import IntEnum, Enum
+from typing import Union
 
-from gs_quant.api.gs.data import GsDataApi
+import numpy as np
+import pandas as pd
+
+from gs_quant.api.gs.data import GsDataApi, QueryType
+from gs_quant.common import Currency
 from gs_quant.markets.securities import Asset
-from gs_quant.target.common import Currency
 from .analysis import LagMode, lag
-from .statistics import *
-from ..errors import *
+from .datetime import align, interpolate
+from .helper import CurveType, Interpolate, Window, normalize_window, apply_ramp, plot_session_function, \
+    plot_function, Returns, SeriesType
+from .statistics import std, product, sum_
+from ..data import DataContext
+from ..datetime import DayCountConvention, day_count_fraction
+from ..errors import MqValueError, MqTypeError
 
 """
 Econometrics timeseries library is for standard economic and time series analytics operations, including returns,
@@ -441,7 +452,7 @@ def _get_annualization_factor(x):
         distances.append(d)
         prev_idx = idx
 
-    average_distance = numpy.average(distances)
+    average_distance = np.average(distances)
     if average_distance < 2.1:
         factor = AnnualizationFactor.DAILY
     elif 6 <= average_distance < 8:

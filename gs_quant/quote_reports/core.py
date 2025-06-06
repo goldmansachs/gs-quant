@@ -18,9 +18,8 @@ from typing import Dict, Any, Iterable, Union
 from dataclasses_json.cfg import _GlobalConfig
 
 from gs_quant.base import CustomComments
-from gs_quant.target.workflow_quote import HedgeTypes
 from gs_quant.workflow import VisualStructuringReport, BinaryImageComments, HyperLinkImageComments, \
-    CustomDeltaHedge, DeltaHedge
+    CustomDeltaHedge, DeltaHedge, HedgeTypes
 
 global_config = _GlobalConfig()
 

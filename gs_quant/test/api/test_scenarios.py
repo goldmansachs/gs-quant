@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 from gs_quant.api.gs.scenarios import GsFactorScenarioApi
-from gs_quant.session import *
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.risk import Scenario, FactorScenarioType
 from gs_quant.base import DictBase
 

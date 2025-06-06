@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
+from gs_quant.common import PositionSet
 from gs_quant.datetime import business_day_offset
 from gs_quant.instrument import IRSwap, IRSwaption, CurveScenario
 from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToTheFuturePricingContext, \
@@ -28,7 +29,6 @@ from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToThe
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk.results import PortfolioPath, PortfolioRiskResult
 from gs_quant.session import Environment, GsSession
-from gs_quant.target.common import PositionSet
 from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
 from gs_quant.test.utils.mock_calc import MockCalc
 

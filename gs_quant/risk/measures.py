@@ -16,8 +16,7 @@ under the License.
 from typing import Union
 
 from gs_quant.base import Market
-from gs_quant.common import AssetClass, AggregationLevel, RiskMeasure
-from gs_quant.target.common import RiskMeasureType, RiskMeasureUnit
+from gs_quant.common import AssetClass, AggregationLevel, RiskMeasure, RiskMeasureType, RiskMeasureUnit
 from gs_quant.target.measures import IRBasis, IRVega, IRDelta, IRXccyDelta, InflationDelta
 
 DEPRECATED_MEASURES = {}

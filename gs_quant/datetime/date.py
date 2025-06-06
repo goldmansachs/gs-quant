@@ -14,14 +14,16 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime as dt
-import numpy as np
 import calendar as cal
+import datetime as dt
 from enum import Enum, IntEnum
-from pytz import timezone
 from typing import Iterable, Optional, Tuple, Union
+
+import numpy as np
+from pytz import timezone
+
+from gs_quant.common import PricingLocation
 from gs_quant.datetime.gscalendar import GsCalendar
-from gs_quant.target.common import PricingLocation
 
 DateOrDates = Union[dt.date, Iterable[dt.date]]
 

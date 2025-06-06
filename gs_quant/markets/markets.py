@@ -14,16 +14,16 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-import pytz
 import re
 from typing import Mapping, Optional, Tuple, Union
 
+import pytz
+
 from gs_quant.base import Market, RiskKey
-from gs_quant.common import PricingLocation
-from gs_quant.datetime.date import prev_business_date
-from gs_quant.target.common import CloseMarket as _CloseMarket, LiveMarket as _LiveMarket, \
+from gs_quant.common import CloseMarket as _CloseMarket, LiveMarket as _LiveMarket, \
     OverlayMarket as _OverlayMarket, RelativeMarket as _RelativeMarket, TimestampedMarket as _TimestampedMarket, \
-    RefMarket as _RefMarket
+    RefMarket as _RefMarket, PricingLocation
+from gs_quant.datetime.date import prev_business_date
 from gs_quant.target.data import MarketDataCoordinate as __MarketDataCoordinate, \
     MarketDataCoordinateValue as __MarketDataCoordinateValue
 

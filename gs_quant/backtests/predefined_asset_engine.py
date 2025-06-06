@@ -13,26 +13,30 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+from collections import deque
+from functools import reduce
+from itertools import compress
+from typing import Union, Tuple
 
-from gs_quant.backtests.event import *
+from pandas import bdate_range, to_datetime
+from pandas.tseries.offsets import BDay
+from pytz import timezone
+from tqdm import tqdm
+
+from gs_quant.backtests import ValuationFixingType
 from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
 from gs_quant.backtests.actions import Action, AddTradeAction, AddTradeActionInfo
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_objects import PredefinedAssetBacktest
-from gs_quant.backtests.execution_engine import SimulatedExecutionEngine
 from gs_quant.backtests.core import ValuationMethod
+from gs_quant.backtests.data_handler import DataHandler
 from gs_quant.backtests.data_sources import DataManager
-from gs_quant.backtests.order import *
+from gs_quant.backtests.event import ValuationEvent, OrderEvent, MarketEvent
+from gs_quant.backtests.execution_engine import SimulatedExecutionEngine
+from gs_quant.backtests.order import OrderAtMarket
 from gs_quant.datetime import is_business_day, prev_business_date, business_day_offset
-from pandas import bdate_range, to_datetime
-from pandas.tseries.offsets import BDay
-from collections import deque
-from itertools import compress
-from pytz import timezone
-from functools import reduce
-import datetime as dt
-from typing import Union, Tuple
-from tqdm import tqdm
+
 
 # Action Implementations
 

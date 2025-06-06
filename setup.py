@@ -67,7 +67,7 @@ setuptools.setup(
         "nest-asyncio",
         "opentracing",
         "numpy<2.0.0",
-        "pandas>=1.4",
+        "pandas>=1.4,<2.3.0",  # <2.3.0 to avoid breaking patchelf dep, remove when possible
         "pydash<7.0.0",
         "python-dateutil>=2.7.0",
         "pytz==2024.1",
@@ -83,7 +83,7 @@ setuptools.setup(
         "turbo": ["quant-extensions"],
         "notebook": ["jupyter", "matplotlib", "seaborn", "treelib"],
         "test": ["pytest", "pytest-cov", "pytest-mock", "pytest-order", "testfixtures", "nbconvert", "nbformat",
-                 "jupyter_client", "plotly", "freezegun"],
+                 "jupyter_client", "plotly", "freezegun", "ruff"],
         "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
                     "pytest-mock", "pytest-order", "testfixtures"]
     },

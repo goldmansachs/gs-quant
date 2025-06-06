@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
+import datetime as dt
 
 import pandas as pd
 import pytest
@@ -54,18 +54,18 @@ def test_fci():
     mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
     mock.return_value = df
 
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
         actual = mc.fci('IN')
         assert actual.index.equals(idx)
         assert all(actual.values == data['fci'])
 
     mock = replace('gs_quant.timeseries.measures.Dataset.get_data', Mock())
     mock.return_value = df
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
         actual = mc.fci('IN', mc._FCI_MEASURE.REAL_FCI)
         assert actual.index.equals(idx)
         assert all(actual.values == data['realFCI'])
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
         actual = mc.fci('IN', mc._FCI_MEASURE.REAL_TWI_CONTRIBUTION)
         assert actual.index.equals(idx)
         assert all(actual.values == data['realTWIContribution'])

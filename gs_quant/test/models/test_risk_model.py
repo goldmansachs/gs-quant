@@ -13,20 +13,19 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import pytest
+import datetime as dt
 from unittest import mock
 
+import pytest
 from pandas._testing import assert_frame_equal
 
-from gs_quant.models.risk_model_utils import get_optional_data_as_dataframe, _map_measure_to_field_name
-from gs_quant.target.common import Currency
-
+from gs_quant.common import Currency
 from gs_quant.models.risk_model import FactorRiskModel, MacroRiskModel, ReturnFormat, Unit
-from gs_quant.session import *
+from gs_quant.models.risk_model_utils import get_optional_data_as_dataframe, _map_measure_to_field_name
+from gs_quant.session import GsSession, Environment
 from gs_quant.target.risk_models import RiskModel as Risk_Model, RiskModelCoverage, RiskModelTerm, \
     RiskModelUniverseIdentifier, RiskModelType, RiskModelDataAssetsRequest as DataAssetsRequest, \
     RiskModelDataMeasure as Measure, RiskModelUniverseIdentifierRequest as UniverseIdentifier
-import datetime as dt
 
 empty_entitlements = {
     "execute": [],

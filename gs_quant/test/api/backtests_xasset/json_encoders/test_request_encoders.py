@@ -15,8 +15,8 @@ under the License.
 """
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs_decoder, legs_encoder
-from gs_quant.target.common import AssetClass, AssetType
-from gs_quant.target.instrument import FXOption, EqOption
+from gs_quant.common import AssetClass, AssetType
+from gs_quant.instrument import FXOption, EqOption
 
 
 def test_legs_decoder():

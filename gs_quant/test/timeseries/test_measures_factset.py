@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
+import datetime as dt
 from unittest.mock import Mock
 
 import pandas as pd
@@ -37,18 +37,18 @@ _test_datasets = ('TEST_DATASET',)
 def mock_fe_estimate_af(_cls, bbid, start, end, feItem):
     d = {
         'date': [
-            datetime.date(2022, 1, 8),
-            datetime.date(2022, 1, 12),
-            datetime.date(2022, 1, 13)
+            dt.date(2022, 1, 8),
+            dt.date(2022, 1, 12),
+            dt.date(2022, 1, 13)
         ],
         'isin': ['US0378331005'] * 3,
         'feItem': ['EPS'] * 3,
         'fePerRel': [1.0] * 3,
-        'adjDate': [datetime.date(2020, 8, 31)] * 3,
+        'adjDate': [dt.date(2020, 8, 31)] * 3,
         'currency': ['USD'] * 3,
-        'consEndDate': [datetime.date(2022, 1, 11)] * 3,
+        'consEndDate': [dt.date(2022, 1, 11)] * 3,
         'feItemDesc': ['Earnings Per Share'] * 3,
-        'feFpEnd': [datetime.date(2022, 9, 30)] * 3,
+        'feFpEnd': [dt.date(2022, 9, 30)] * 3,
         'feDownAf': [10.0, 3.0, 3.0],
         'feHighAf': [6.353628] * 3,
         'feLowAf': [5.2] * 3,
@@ -70,18 +70,18 @@ def mock_fe_estimate_af(_cls, bbid, start, end, feItem):
 def mock_fe_estimate_qf(_cls, bbid, start, end, feItem):
     d = {
         'date': [
-            datetime.date(2022, 1, 8),
-            datetime.date(2022, 1, 12),
-            datetime.date(2022, 1, 13)
+            dt.date(2022, 1, 8),
+            dt.date(2022, 1, 12),
+            dt.date(2022, 1, 13)
         ],
         'isin': ['US0378331005'] * 3,
         'feItem': ['EPS'] * 3,
         'fePerRel': [1.0] * 3,
-        'adjDate': [datetime.date(2020, 8, 31)] * 3,
+        'adjDate': [dt.date(2020, 8, 31)] * 3,
         'currency': ['USD'] * 3,
-        'consEndDate': [datetime.date(2022, 1, 11)] * 3,
+        'consEndDate': [dt.date(2022, 1, 11)] * 3,
         'feItemDesc': ['Earnings Per Share'] * 3,
-        'feFpEnd': [datetime.date(2022, 9, 30)] * 3,
+        'feFpEnd': [dt.date(2022, 9, 30)] * 3,
         'feDownQf': [10.0, 3.0, 3.0],
         'feHighQf': [6.353628] * 3,
         'feLowQf': [5.2] * 3,
@@ -102,18 +102,18 @@ def mock_fe_estimate_qf(_cls, bbid, start, end, feItem):
 def mock_fe_estimate_saf(_cls, bbid, start, end, feItem):
     d = {
         'date': [
-            datetime.date(2022, 1, 8),
-            datetime.date(2022, 1, 12),
-            datetime.date(2022, 1, 13)
+            dt.date(2022, 1, 8),
+            dt.date(2022, 1, 12),
+            dt.date(2022, 1, 13)
         ],
         'isin': ['US0378331005'] * 3,
         'feItem': ['EPS'] * 3,
         'fePerRel': [1.0] * 3,
-        'adjDate': [datetime.date(2020, 8, 31)] * 3,
+        'adjDate': [dt.date(2020, 8, 31)] * 3,
         'currency': ['USD'] * 3,
-        'consEndDate': [datetime.date(2022, 1, 11)] * 3,
+        'consEndDate': [dt.date(2022, 1, 11)] * 3,
         'feItemDesc': ['Earnings Per Share'] * 3,
-        'feFpEnd': [datetime.date(2022, 9, 30)] * 3,
+        'feFpEnd': [dt.date(2022, 9, 30)] * 3,
         'feDownSaf': [10.0, 3.0, 3.0],
         'feHighSaf': [6.353628] * 3,
         'feLowSaf': [5.2] * 3,
@@ -134,9 +134,9 @@ def mock_fe_estimate_saf(_cls, bbid, start, end, feItem):
 def mock_fe_estimate_ntm(_cls, bbid, start, end, feItem):
     d = {
         'date': [
-            datetime.date(2022, 1, 8),
-            datetime.date(2022, 1, 9),
-            datetime.date(2022, 1, 10)
+            dt.date(2022, 1, 8),
+            dt.date(2022, 1, 9),
+            dt.date(2022, 1, 10)
         ],
         'isin': ['US0378331005'] * 3,
         'feItem': ['EPS'] * 3,
@@ -160,14 +160,14 @@ def mock_fe_estimate_ntm(_cls, bbid, start, end, feItem):
 def mock_fe_estimate_lt(_cls, bbid, start, end, feItem):
     d = {
         'date': [
-            datetime.date(2022, 1, 8),
-            datetime.date(2022, 1, 12),
-            datetime.date(2022, 1, 13)
+            dt.date(2022, 1, 8),
+            dt.date(2022, 1, 12),
+            dt.date(2022, 1, 13)
         ],
         'isin': ['US0378331005'] * 3,
         'feItem': ['PRICE_TGT'] * 3,
-        'adjDate': [datetime.date(2020, 8, 31)] * 3,
-        'consEndDate': [datetime.date(2022, 1, 11)] * 3,
+        'adjDate': [dt.date(2020, 8, 31)] * 3,
+        'consEndDate': [dt.date(2022, 1, 11)] * 3,
         'feDownLt': [10.0, 3.0, 3.0],
         'feHighLt': [6.353628] * 3,
         'feLowLt': [5.2] * 3,
@@ -188,17 +188,17 @@ def mock_fe_estimate_lt(_cls, bbid, start, end, feItem):
 def mock_fe_actual(_cls, bbid, start, end, feItem):
     d = {
         'date': [
-            datetime.date(2020, 1, 8),
-            datetime.date(2021, 1, 12),
-            datetime.date(2022, 1, 13)
+            dt.date(2020, 1, 8),
+            dt.date(2021, 1, 12),
+            dt.date(2022, 1, 13)
         ],
         'isin': ['US0378331005'] * 3,
         'feItem': ['EPS'] * 3,
-        'adjDate': [datetime.date(2020, 8, 31)] * 3,
+        'adjDate': [dt.date(2020, 8, 31)] * 3,
         'currency': ['USD'] * 3,
-        'feFpEnd': [datetime.date(2022, 9, 30),
-                    datetime.date(2021, 9, 30),
-                    datetime.date(2020, 9, 30)
+        'feFpEnd': [dt.date(2022, 9, 30),
+                    dt.date(2021, 9, 30),
+                    dt.date(2020, 9, 30)
                     ],
         'feValue': [15.0, 5.0, 6.0],
         'fsymId': ['MH33D6-R'] * 3,
@@ -273,10 +273,10 @@ def mock_factset_ratings(_cls, bbid, start, end):
         'date': [Timestamp('2024-12-31 00:00:00')] * 3,
         'isin': ['US0378331005'] * 3,
         'feItem': ['REC'] * 3,
-        'adjDate': [datetime.date(2024, 12, 31)] * 3,
-        'consEndDate': [datetime.date(2024, 12, 31)] * 3,
+        'adjDate': [dt.date(2024, 12, 31)] * 3,
+        'consEndDate': [dt.date(2024, 12, 31)] * 3,
         'feItemDesc': ['Recommendation'] * 3,
-        'feFpEnd': [datetime.date(2024, 12, 31)] * 3,
+        'feFpEnd': [dt.date(2024, 12, 31)] * 3,
         'feBuy': [21.0, 3.0, 3.0],
         'feHold': [14.0, 3.0, 3.0],
         'feNoRec': [1.0, 3.0, 3.0],
@@ -306,8 +306,8 @@ def test_factset_estimates():
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
-    with DataContext(start=datetime.date(2022, 1, 1),
-                     end=datetime.date(2025, 1, 31)):
+    with DataContext(start=dt.date(2022, 1, 1),
+                     end=dt.date(2025, 1, 31)):
         replace('gs_quant.data.Dataset.get_data', mock_fe_estimate_af)
 
         actual = tm.factset_estimates(mock_asset, metric=EstimateItem.EPS,
@@ -484,8 +484,8 @@ def test_factset_fundamentals():
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
-    with DataContext(start=datetime.date(2024, 9, 30),
-                     end=datetime.date(2024, 9, 30)):
+    with DataContext(start=dt.date(2024, 9, 30),
+                     end=dt.date(2024, 9, 30)):
         replace('gs_quant.data.Dataset.get_data', mock_factset_fundamentals_basic)
 
         actual = tm.factset_fundamentals(mock_asset, metric=FundamentalMetric.EPS_BASIC,
@@ -537,13 +537,13 @@ def test_factset_ratings():
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
-    with DataContext(start=datetime.date(2024, 9, 30),
-                     end=datetime.date(2024, 9, 30)):
+    with DataContext(start=dt.date(2024, 9, 30),
+                     end=dt.date(2024, 9, 30)):
         replace('gs_quant.data.Dataset.get_data', mock_factset_ratings)
 
         actual = tm.factset_ratings(mock_asset, rating_type=RatingType.BUY)
         assert_series_equal(pd.Series([21.0, 3.0, 3.0],
-                                      index=DatetimeIndex([datetime.date(2024, 12, 31)] * 3,
+                                      index=DatetimeIndex([dt.date(2024, 12, 31)] * 3,
                                                           dtype='datetime64[ns]', name='date', freq=None),
                                       name=RatingType.BUY.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_REC_GLOBAL'

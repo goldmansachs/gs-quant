@@ -13,14 +13,22 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import ClassVar, List, Optional, Iterable, Union
 
-from gs_quant.backtests.actions import *
+from dataclasses_json import dataclass_json, config
+
+from gs_quant.backtests.actions import AddTradeAction, AddTradeActionInfo, AddScaledTradeAction, \
+    AddScaledTradeActionInfo, HedgeAction, HedgeActionInfo, Action
 from gs_quant.backtests.backtest_objects import BackTest, PredefinedAssetBacktest
 from gs_quant.backtests.backtest_utils import make_list, CalcType
-from gs_quant.backtests.data_sources import *
-from gs_quant.base import field_metadata, exclude_none
+from gs_quant.backtests.data_sources import DataSource, GsDataSource
+from gs_quant.base import field_metadata, exclude_none, static_field
+from gs_quant.data import Dataset
 from gs_quant.datetime.relative_date import RelativeDateSchedule
-from gs_quant.json_convertors import decode_iso_date_or_datetime, decode_date_tuple
+from gs_quant.json_convertors import decode_iso_date_or_datetime, decode_date_tuple, dc_decode
 from gs_quant.json_convertors_common import encode_risk_measure, decode_risk_measure
 from gs_quant.risk import RiskMeasure
 from gs_quant.risk.transform import Transformer

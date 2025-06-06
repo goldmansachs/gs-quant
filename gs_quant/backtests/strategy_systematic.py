@@ -13,8 +13,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 import logging
-from typing import Iterable
+from typing import Iterable, Union, Tuple
 
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
@@ -23,9 +24,16 @@ from gs_quant.api.gs.backtests_xasset.request import BasicBacktestRequest
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, Configuration, \
     RollDateMode, TransactionCostConfig
 from gs_quant.backtests.core import Backtest, TradeInMethod
+from gs_quant.base import get_enum_value, Base
+from gs_quant.common import Currency
+from gs_quant.common import FieldValueMap, AssetClass
 from gs_quant.errors import MqValueError
-from gs_quant.target.backtests import *
 from gs_quant.instrument import EqOption, EqVarianceSwap, FXOption, FXBinary, Instrument, IRSwaption
+from gs_quant.target.backtests import BacktestResult, BacktestRisk, \
+    BacktestTradingQuantityType, DeltaHedgeParameters, \
+    BacktestSignalSeriesItem, \
+    BacktestStrategyUnderlier, BacktestStrategyUnderlierHedge, EquityMarketModel, BacktestTradingParameters, \
+    FlowVolBacktestMeasure
 
 _logger = logging.getLogger(__name__)
 
@@ -145,7 +153,7 @@ class StrategySystematic:
         if all_eq and transaction_cost_config is not None:
             raise MqValueError('Cannot run equity backtests with transaction costs.')
 
-    def __run_service_based_backtest(self, start: datetime.date, end: datetime.date,
+    def __run_service_based_backtest(self, start: dt.date, end: dt.date,
                                      measures: Iterable[FlowVolBacktestMeasure]) -> BacktestResult:
         date_cfg = DateConfig(start, end)
         if not measures:
@@ -178,8 +186,8 @@ class StrategySystematic:
 
     def backtest(
             self,
-            start: datetime.date = None,
-            end: datetime.date = datetime.date.today() - datetime.timedelta(days=1),
+            start: dt.date = None,
+            end: dt.date = dt.date.today() - dt.timedelta(days=1),
             is_async: bool = False,
             measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,),
             correlation_id: str = None

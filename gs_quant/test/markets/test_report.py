@@ -19,12 +19,13 @@ import datetime as dt
 import pytest
 
 from gs_quant.api.gs.data import GsDataApi
-from gs_quant.api.gs.thematics import GsThematicApi
 from gs_quant.api.gs.portfolios import Portfolio
+from gs_quant.api.gs.thematics import GsThematicApi
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport, flatten_results_into_df
-from gs_quant.session import *
-from gs_quant.target.reports import *
+from gs_quant.session import GsSession, Environment
+from gs_quant.common import ReportParameters
 from gs_quant.target.portfolios import RiskAumSource
+from gs_quant.target.reports import PositionSourceType, ReportType, ReportStatus, Report
 
 fake_pfr = FactorRiskReport(risk_model_id='AXUS4M',
                             fx_hedged=True,

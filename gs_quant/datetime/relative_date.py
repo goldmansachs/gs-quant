@@ -22,10 +22,10 @@ from typing import Union, Optional, List
 from pandas import Timestamp
 
 import gs_quant.datetime.rules as rules
+from gs_quant.common import Currency
 from gs_quant.errors import MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.markets.securities import ExchangeCode
-from gs_quant.target.common import Currency
 
 _logger = logging.getLogger(__name__)
 

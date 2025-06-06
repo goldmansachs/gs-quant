@@ -15,8 +15,7 @@ under the License.
 """
 
 from gs_quant.api.gs.backtests import GsBacktestApi, Backtest
-from gs_quant.session import *
-from gs_quant.target.common import *
+from gs_quant.session import Environment, GsSession
 
 
 def test_get_many_backtests(mocker):

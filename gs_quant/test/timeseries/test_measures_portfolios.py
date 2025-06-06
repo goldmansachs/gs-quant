@@ -15,9 +15,8 @@ under the License.
 """
 
 import copy
-import datetime
+import datetime as dt
 
-import pandas
 import pandas as pd
 import pytest
 from testfixtures import Replacer
@@ -26,12 +25,12 @@ from testfixtures.mock import Mock
 import gs_quant.timeseries.measures_portfolios as mp
 from gs_quant.api.gs.assets import GsTemporalXRef
 from gs_quant.api.gs.data import MarketDataResponseFrame
+from gs_quant.common import ReportParameters, XRef
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.markets.report import PerformanceReport, ThematicReport
 from gs_quant.markets.securities import Stock
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
-from gs_quant.target.common import ReportParameters, XRef
 from gs_quant.target.reports import Report, PositionSourceType, ReportType
 from gs_quant.target.risk_models import RiskModel, RiskModelCoverage, RiskModelTerm, RiskModelUniverseIdentifier
 
@@ -253,7 +252,7 @@ def test_portfolio_factor_exposure():
         'factorCategory': 'Factor Name'
     }]
 
-    with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+    with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mp.portfolio_factor_exposure('report_id', 'risk_model_id', 'Factor Name')
         assert all(actual.values == [-11.23, -11.24, -11.25])
 
@@ -298,7 +297,7 @@ def test_portfolio_factor_pnl():
         'factorCategory': 'Factor Name'
     }]
 
-    with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+    with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         # mock getting report factor data
         mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
         mock.return_value = factor_data
@@ -306,7 +305,7 @@ def test_portfolio_factor_pnl():
         actual = mp.portfolio_factor_pnl('report_id', 'risk_model_id', 'Factor Name')
         assert all(actual.values == [11.23, 11.24, 11.25])
 
-    with DataContext(datetime.date(2020, 11, 22), datetime.date(2020, 11, 25)):
+    with DataContext(dt.date(2020, 11, 22), dt.date(2020, 11, 25)):
         # mock getting report factor data with first day set to 0
         factor_data_copy = copy.copy(factor_data)
         factor_data_copy.insert(0, {
@@ -369,7 +368,7 @@ def test_portfolio_factor_proportion_of_risk():
         'factorCategory': 'Factor Name'
     }]
 
-    with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+    with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mp.portfolio_factor_proportion_of_risk('report_id', 'risk_model_id', 'Factor Name')
         assert all(actual.values == [1, 2, 3])
 
@@ -396,13 +395,13 @@ def test_portfolio_thematic_exposure():
     mock = Stock('MAA0NE9QX2ABETG6', 'Test Asset')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [
-        GsTemporalXRef(datetime.date(2019, 1, 1),
-                       datetime.date(2952, 12, 31),
+        GsTemporalXRef(dt.date(2019, 1, 1),
+                       dt.date(2952, 12, 31),
                        XRef(ticker='basket_ticker', ))
     ]
     replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
-    with DataContext(datetime.date(2020, 7, 12), datetime.date(2020, 7, 15)):
+    with DataContext(dt.date(2020, 7, 12), dt.date(2020, 7, 15)):
         actual = mp.portfolio_thematic_exposure('report_id', 'basket_ticker')
         assert all(actual.values == [2, 2, 2, 2])
 
@@ -427,10 +426,10 @@ def test_portfolio_pnl():
 
     # mock PerformanceReport.get_pnl()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
-    mock.return_value = pandas.DataFrame.from_dict(
+    mock.return_value = pd.DataFrame.from_dict(
         {'date': ['2022-07-01', '2022-07-02', '2022-07-03'], 'pnl': [200, 400, 600]})
 
-    with DataContext(datetime.date(2022, 7, 1), datetime.date(2022, 7, 3)):
+    with DataContext(dt.date(2022, 7, 1), dt.date(2022, 7, 3)):
         actual = mp.portfolio_pnl('RP1')
         assert all(actual.values == [200, 400, 600])
 
@@ -477,15 +476,15 @@ def test_aggregate_factor_support():
         'factorCategory': 'Factor Name'
     }]
 
-    with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+    with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mp.portfolio_factor_proportion_of_risk('portfolio_id', 'report_id', 'Factor')
         assert all(actual.values == [1, 2, 3])
 
-    with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+    with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mp.portfolio_daily_risk('portfolio_id', 'report_id', 'Factor')
         assert all(actual.values == [1, 2, 3])
 
-    with DataContext(datetime.date(2020, 11, 23), datetime.date(2020, 11, 25)):
+    with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mp.portfolio_annual_risk('portfolio_id', 'report_id', 'Factor')
         assert all(actual.values == [1, 2, 3])
 
@@ -518,7 +517,7 @@ def test_custom_aum():
     # mock GsPortfolioApi.get_reports()
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_custom_aum', Mock())
     mock.return_value = df
-    with DataContext(datetime.date(2020, 1, 1), datetime.date(2019, 1, 3)):
+    with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
         actual = mp.aum('MP1')
         assert actual.index.equals(idx)
         assert all(actual.values == data['aum'])

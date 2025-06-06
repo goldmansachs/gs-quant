@@ -15,7 +15,7 @@ under the License.
 """
 
 from gs_quant.api.gs.groups import GsGroupsApi
-from gs_quant.session import *
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.groups import Group as TargetGroup
 
 

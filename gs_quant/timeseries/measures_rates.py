@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
+import datetime as dt
 import logging
 import re
 from collections import OrderedDict
@@ -22,17 +22,16 @@ from enum import Enum
 from typing import Optional, Union, Dict, List
 
 import pandas as pd
-from gs_quant.instrument import IRSwap
-
 from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
+from gs_quant.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation, SwapClearingHouse
 from gs_quant.data import DataContext, Dataset
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.errors import MqValueError
+from gs_quant.instrument import IRSwap
 from gs_quant.markets.securities import AssetIdentifier, Asset
-from gs_quant.target.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation, SwapClearingHouse
 from gs_quant.timeseries import currency_to_default_ois_asset, convert_asset_for_rates_data_set, RatesConversionType
 from gs_quant.timeseries.helper import _to_offset, check_forward_looking, plot_measure, Entitlement
 from gs_quant.timeseries.measures import _market_data_timed, _range_from_pricing_date, \
@@ -71,7 +70,7 @@ CCY_TO_CB = {
     'GBP': 'mpc'
 }
 
-CENTRAL_BANK_WATCH_START_DATE = datetime.date(2016, 1, 1)
+CENTRAL_BANK_WATCH_START_DATE = dt.date(2016, 1, 1)
 
 
 class TdapiRatesDefaultsProvider:
@@ -458,7 +457,7 @@ def _get_tdapi_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
 
 
 def _check_forward_tenor(forward_tenor) -> GENERIC_DATE:
-    if isinstance(forward_tenor, datetime.date):
+    if isinstance(forward_tenor, dt.date):
         return forward_tenor
     elif forward_tenor in ['Spot', 'spot', 'SPOT']:
         return '0b'
@@ -708,13 +707,13 @@ def _get_swap_data_calc(asset: Asset, swap_tenor: str, benchmark_type: str = Non
     return q
 
 
-def _get_term_struct_date(tenor: Union[str, datetime.datetime], index: datetime.datetime,
-                          business_day) -> datetime.datetime:
-    if isinstance(tenor, (datetime.datetime, datetime.date)):
+def _get_term_struct_date(tenor: Union[str, dt.datetime], index: dt.datetime,
+                          business_day) -> dt.datetime:
+    if isinstance(tenor, (dt.datetime, dt.date)):
         return tenor
     try:
         year, month, day = tenor.split('-')
-        return datetime.datetime(int(year), int(month), int(day))
+        return dt.datetime(int(year), int(month), int(day))
     except ValueError:
         if tenor == '0b':
             return index + business_day - business_day
@@ -1996,7 +1995,7 @@ def policy_rate_term_structure(asset: Asset, event_type: EventType = EventType.M
                                  query_type=QueryType.POLICY_RATE_EXPECTATION)])
 def policy_rate_expectation(asset: Asset, event_type: EventType = EventType.MEETING,
                             rate_type: RateType = RateType.ABSOLUTE,
-                            meeting_date: Union[datetime.date, int, str] = 0,
+                            meeting_date: Union[dt.date, int, str] = 0,
                             *, source: str = None, real_time: bool = False) -> pd.Series:
     """'
     Evolution of OIS/policy rate expectations for a given meeting date or end of year date.
@@ -2017,7 +2016,7 @@ def policy_rate_expectation(asset: Asset, event_type: EventType = EventType.MEET
         raise MqValueError('invalid event_type specified, Meeting Forward, Spot or EOY Forward allowed')
     if not isinstance(rate_type, RateType):
         raise MqValueError('event_type must be either absolute or relative')
-    if not isinstance(meeting_date, (datetime.date, str, int)):
+    if not isinstance(meeting_date, (dt.date, str, int)):
         raise MqValueError('valuation_date must be of type datetime.date or string YYYY-MM-DD or integer')
 
     if real_time:
@@ -2066,11 +2065,11 @@ def parse_meeting_date(valuation_date: Optional[GENERIC_DATE] = None):
     if isinstance(valuation_date, str):
         if len(valuation_date.split('-')) == 3:
             year, month, day = valuation_date.split('-')
-            return datetime.date(int(year), int(month), int(day))
+            return dt.date(int(year), int(month), int(day))
         else:
             start, valuation_date = _range_from_pricing_date('USD', valuation_date)
             return valuation_date.date() if isinstance(valuation_date, pd.Timestamp) else valuation_date
-    elif isinstance(valuation_date, datetime.date) or valuation_date is None:
+    elif isinstance(valuation_date, dt.date) or valuation_date is None:
         start, valuation_date = _range_from_pricing_date(None, valuation_date)
         return valuation_date.date() if isinstance(valuation_date, pd.Timestamp) else valuation_date
     else:
@@ -2101,7 +2100,7 @@ def _check_cb_ccy_benchmark_rt(asset: Asset, benchmark_type: BenchmarkTypeCB) ->
 
 
 def _get_swap_from_meeting_date(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB,
-                                meeting_date: Union[datetime.date, int, str]) -> str:
+                                meeting_date: Union[dt.date, int, str]) -> str:
     if isinstance(meeting_date, int):
         if meeting_date == 0:
             forward_tenor = '0b'
@@ -2123,7 +2122,7 @@ def _get_swap_from_meeting_date(currency: CurrencyEnum, benchmark_type: Benchmar
 
 def policy_rate_expectation_rt(asset: Asset, event_type: EventType = EventType.MEETING,
                                rate_type: RateType = RateType.ABSOLUTE,
-                               meeting_date: Union[datetime.date, int, str] = 0,
+                               meeting_date: Union[dt.date, int, str] = 0,
                                benchmark_type: BenchmarkTypeCB = None):
     currency, benchmark_type = _check_cb_ccy_benchmark_rt(asset, benchmark_type)
     rate_mqid = _get_swap_from_meeting_date(currency, benchmark_type, meeting_date)

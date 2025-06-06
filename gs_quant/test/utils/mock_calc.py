@@ -13,13 +13,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
+import datetime as dt
 import inspect
 from pathlib import Path
 
 from gs_quant.api.gs.risk import GsRiskApi
+from gs_quant.common import CompositeScenario
 from gs_quant.datetime import business_day_offset
-from gs_quant.target.common import CompositeScenario
 from gs_quant.test.utils.mock_request import MockRequest
 
 
@@ -41,8 +41,8 @@ def get_risk_request_id(requests):
         identifier += '-'.join([pos.instrument.name for pos in request.positions])
         identifier += '-'.join([r.__repr__() for r in request.measures])
         date = request.pricing_and_market_data_as_of[0].pricing_date.strftime('%Y%b%d')
-        today_pre = business_day_offset(datetime.date.today(), 0, roll='preceding').strftime('%Y%b%d')
-        today_post = business_day_offset(datetime.date.today(), 0, roll='following').strftime('%Y%b%d')
+        today_pre = business_day_offset(dt.date.today(), 0, roll='preceding').strftime('%Y%b%d')
+        today_post = business_day_offset(dt.date.today(), 0, roll='following').strftime('%Y%b%d')
         identifier += 'today' if date in (today_post, today_pre) else date
         if request.scenario is not None:
             if isinstance(request.scenario.scenario, CompositeScenario):

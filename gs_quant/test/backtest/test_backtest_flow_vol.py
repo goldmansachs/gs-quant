@@ -22,9 +22,11 @@ from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.backtests.core import Backtest
 from gs_quant.backtests.core import TradeInMethod
 from gs_quant.backtests.strategy_systematic import StrategySystematic
+from gs_quant.base import Base
+from gs_quant.common import AssetClass, Currency
 from gs_quant.instrument import EqOption
-from gs_quant.session import *
-from gs_quant.target.backtests import *
+from gs_quant.session import Environment, GsSession
+from gs_quant.target.backtests import DeltaHedgeParameters, BacktestTradingQuantityType, BacktestRisk
 
 underlierList = [EqOption("MA4B66MW5E27U8P32SB", "3m", 3000, 'Call', 'European'),
                  EqOption("MA4B66MW5E27U8P32SB", "3m", 3000, 'Put', 'European')]
@@ -79,7 +81,7 @@ def test_eqstrategies_backtest(mocker):
     ]})
 
     risk_data = (delta, vega, gamma, theta)
-    mock_response = BacktestResult('BT1', performance=data, risks=risk_data, stats=None, backtest_version=1)
+    mock_response = backtests.BacktestResult('BT1', performance=data, risks=risk_data, stats=None, backtest_version=1)
 
     set_session()
 
@@ -89,22 +91,22 @@ def test_eqstrategies_backtest(mocker):
 
     assert result == mock_response
 
-    trading_parameters = BacktestTradingParameters(
+    trading_parameters = backtests.BacktestTradingParameters(
         quantity=1,
         quantity_type=BacktestTradingQuantityType.notional.value,
         trade_in_method=TradeInMethod.FixedRoll.value,
         roll_frequency='1m')
 
-    l1 = BacktestStrategyUnderlier(
+    l1 = backtests.BacktestStrategyUnderlier(
         instrument=underlierList[0],
         notional_percentage=100,
-        hedge=BacktestStrategyUnderlierHedge(risk_details=hedge),
+        hedge=backtests.BacktestStrategyUnderlierHedge(risk_details=hedge),
         market_model='SFK')
 
-    l2 = BacktestStrategyUnderlier(
+    l2 = backtests.BacktestStrategyUnderlier(
         instrument=underlierList[1],
         notional_percentage=100,
-        hedge=BacktestStrategyUnderlierHedge(risk_details=hedge),
+        hedge=backtests.BacktestStrategyUnderlierHedge(risk_details=hedge),
         market_model='SFK')
 
     underliers = [l1, l2]
@@ -121,7 +123,7 @@ def test_eqstrategies_backtest(mocker):
     backtest_parameters = backtest_parameters_class.from_dict(backtest_parameter_args)
 
     params_dict = backtest_parameters.as_dict()
-    params_dict["measures"] = [FlowVolBacktestMeasure.ALL_MEASURES]
+    params_dict["measures"] = [backtests.FlowVolBacktestMeasure.ALL_MEASURES]
     params = backtest_parameters_class.from_dict(params_dict)
 
     backtest = Backtest(name="Mock Test",

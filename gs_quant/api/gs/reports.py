@@ -18,12 +18,13 @@ import logging
 import urllib.parse
 from enum import Enum
 from typing import Tuple, List, Dict
+
 import backoff
 
 from gs_quant.base import EnumBase
+from gs_quant.common import Currency, PositionTag
 from gs_quant.errors import MqTimeoutError, MqInternalServerError, MqRateLimitedError
 from gs_quant.session import GsSession
-from gs_quant.target.common import Currency, PositionTag
 from gs_quant.target.reports import Report
 
 _logger = logging.getLogger(__name__)

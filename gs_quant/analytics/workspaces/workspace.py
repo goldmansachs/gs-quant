@@ -22,10 +22,10 @@ from pydash import get
 
 from gs_quant.analytics.workspaces.components import Component, TYPE_TO_COMPONENT, RelatedLink, DataGridComponent, \
     MonitorComponent, PlotComponent, DataScreenerComponent
+from gs_quant.common import Entitlements as Entitlements_
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.session import GsSession
-from gs_quant.target.common import Entitlements as Entitlements_
 
 _logger = logging.getLogger(__name__)
 

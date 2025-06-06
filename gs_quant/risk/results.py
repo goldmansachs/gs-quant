@@ -389,7 +389,7 @@ class MultipleRiskMeasureResult(dict):
                                                         has_dates='dates' in df.columns,
                                                         multi_scen='scenario' in df.columns)
         else:
-            values = 'value' if values == 'default' or values is ['value'] else values
+            values = 'value' if values == 'default' or values == ['value'] else values
             index = None if index == 'default' else index
             columns = None if columns == 'default' else columns
         return pivot_to_frame(df, values, index, columns, aggfunc)
@@ -461,7 +461,7 @@ class MultipleScenarioResult(dict):
             values, columns, index = get_default_pivots('MultipleScenarioResult', has_dates='dates' in df.columns,
                                                         multi_measures=False, multi_scen=True)
         else:
-            values = 'value' if values == 'default' or values is ['value'] else values
+            values = 'value' if values == 'default' or values == ['value'] else values
             index = None if index == 'default' else index
             columns = None if columns == 'default' else columns
         return pivot_to_frame(df, values, index, columns, aggfunc)
@@ -847,7 +847,7 @@ class PortfolioRiskResult(CompositeResultFuture):
                                                             multi_measures=multi_rm, simple_port=port_depth_one,
                                                             multi_scen=multi_scen, ori_cols=df_cols)
         else:  # user defined pivoting
-            values = 'value' if values == 'default' or values is ['value'] else values
+            values = 'value' if values == 'default' or values == ['value'] else values
 
         return pivot_to_frame(ori_df, values, index, columns, aggfunc)
 

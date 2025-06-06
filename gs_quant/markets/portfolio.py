@@ -24,19 +24,19 @@ from urllib.parse import quote
 import deprecation
 import numpy as np
 import pandas as pd
+from more_itertools import unique_everseen
+
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.base import InstrumentBase
-from gs_quant.common import RiskMeasure
+from gs_quant.common import RiskMeasure, RiskPosition
 from gs_quant.instrument import Instrument, AssetType
 from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext, PositionContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import ResolvedInstrumentValues
 from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, PortfolioPath, PricingFuture
-from gs_quant.target.common import RiskPosition
 from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
 from gs_quant.target.portfolios import Position, PositionSet, RiskRequest, PricingDateAndMarketDataAsOf
-from more_itertools import unique_everseen
 
 _logger = logging.getLogger(__name__)
 

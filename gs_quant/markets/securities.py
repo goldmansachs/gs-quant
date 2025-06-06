@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 import calendar
-import datetime
 import datetime as dt
 import json
 import logging
@@ -34,14 +33,13 @@ import pytz
 from dateutil.relativedelta import relativedelta
 from pydash import get
 
-from gs_quant.api.gs.assets import GsAsset, AssetParameters, AssetType as GsAssetType, Currency, GsIdType, GsAssetApi
+from gs_quant.api.gs.assets import GsAsset, GsIdType, GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import get_enum_value
-from gs_quant.common import DateLimit
+from gs_quant.common import AssetClass, AssetParameters, AssetType as GsAssetType, Currency, DateLimit
 from gs_quant.data import DataMeasure, DataFrequency, Dataset, AssetMeasure
-from gs_quant.data.coordinate import DataDimensions
-from gs_quant.data.coordinate import DateOrDatetime
+from gs_quant.data.coordinate import DataDimensions, DateOrDatetime
 from gs_quant.data.core import IntervalFrequency, DataAggregationOperator
 from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, PositionedEntity
 from gs_quant.errors import MqValueError, MqTypeError, MqRequestError
@@ -49,7 +47,6 @@ from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.session import GsSession
-from gs_quant.target.common import AssetClass
 from gs_quant.target.data import DataQuery
 
 _logger = logging.getLogger(__name__)
@@ -732,12 +729,12 @@ class SecMasterAsset(Asset):
         if self.__cached_identifiers is None:
             self.__load_identifiers()
 
-        if isinstance(start, datetime.datetime):
+        if isinstance(start, dt.datetime):
             start_date = start.date
         else:
             start_date = start
 
-        if isinstance(end, datetime.datetime):
+        if isinstance(end, dt.datetime):
             end_date = end.date
         else:
             end_date = end
@@ -790,14 +787,14 @@ class SecMasterAsset(Asset):
             for temporal_xref in results:
                 id_type = temporal_xref['type']
                 xref_dict = {
-                    "start_date": datetime.datetime.strptime(temporal_xref['startDate'], "%Y-%m-%d").date(),
+                    "start_date": dt.datetime.strptime(temporal_xref['startDate'], "%Y-%m-%d").date(),
                     "update_date": temporal_xref['updateTime'],
                     "value": temporal_xref['value']
                 }
                 if temporal_xref['endDate'] == "9999-99-99":
-                    xref_dict['end_date'] = datetime.datetime.max.date()
+                    xref_dict['end_date'] = dt.datetime.max.date()
                 else:
-                    xref_dict['end_date'] = datetime.datetime.strptime(temporal_xref['endDate'], "%Y-%m-%d").date()
+                    xref_dict['end_date'] = dt.datetime.strptime(temporal_xref['endDate'], "%Y-%m-%d").date()
                 xrefs[id_type].append(xref_dict)
             self.__cached_identifiers = xrefs
 
@@ -1775,7 +1772,7 @@ class SecurityMaster:
                                           id_type: SecurityIdentifier,
                                           as_of: Union[dt.date, dt.datetime] = None,
                                           fields: Optional[List[str]] = None) -> dict:
-        as_of = as_of or datetime.datetime(2100, 1, 1)
+        as_of = as_of or dt.datetime(2100, 1, 1)
         type_ = id_type.value
         params = {
             type_: id_value,
@@ -1839,8 +1836,8 @@ class SecurityMaster:
         return cls._get_security_master_asset_response(response)
 
     @classmethod
-    def get_identifiers(cls, id_values: List[str], id_type: SecurityIdentifier, as_of: datetime.datetime = None,
-                        start: datetime.datetime = None, end: datetime.datetime = None) -> dict:
+    def get_identifiers(cls, id_values: List[str], id_type: SecurityIdentifier, as_of: dt.datetime = None,
+                        start: dt.datetime = None, end: dt.datetime = None) -> dict:
         """
         Get identifiers for given assets.
 
@@ -1854,9 +1851,9 @@ class SecurityMaster:
         if cls._source != SecurityMasterSource.SECURITY_MASTER:
             raise NotImplementedError("method not available when using Asset Service")
 
-        as_of = as_of or datetime.datetime.now()
-        start = start or datetime.datetime(1970, 1, 1)
-        end = end or datetime.datetime(2100, 1, 1)
+        as_of = as_of or dt.datetime.now()
+        start = start or dt.datetime(1970, 1, 1)
+        end = end or dt.datetime(2100, 1, 1)
 
         type_ = id_type.value
         params = {
@@ -1881,7 +1878,7 @@ class SecurityMaster:
                 time_str = e['updateTime'].split('.')[0]
                 if time_str.endswith('Z'):
                     time_str = time_str[0:-1]
-                time = datetime.datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S')
+                time = dt.datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S')
                 if start <= time <= end:
                     piece.append(e)
             output[k] = piece
@@ -1898,7 +1895,7 @@ class SecurityMaster:
 
     @classmethod
     def get_all_identifiers_gen(cls, class_: AssetClass = None, types: Optional[List[AssetType]] = None,
-                                as_of: datetime.datetime = None, *, id_type: SecurityIdentifier = SecurityIdentifier.ID,
+                                as_of: dt.datetime = None, *, id_type: SecurityIdentifier = SecurityIdentifier.ID,
                                 use_offset_key=True, sleep=0.5) -> Generator[dict, None, None]:
         """
         Get identifiers for all matching assets. Returns a generator iterator so that the caller can load each page of
@@ -1915,7 +1912,7 @@ class SecurityMaster:
         if cls._source != SecurityMasterSource.SECURITY_MASTER:
             raise NotImplementedError("method not available when using Asset Service")
 
-        as_of = as_of or datetime.datetime.now()
+        as_of = as_of or dt.datetime.now()
         if types is not None:
             p = partial(cls.asset_type_to_str, class_)
             types = set(map(p, types))
@@ -1959,7 +1956,7 @@ class SecurityMaster:
 
     @classmethod
     def get_all_identifiers(cls, class_: AssetClass = None, types: Optional[List[AssetType]] = None,
-                            as_of: datetime.datetime = None, *, id_type: SecurityIdentifier = SecurityIdentifier.ID,
+                            as_of: dt.datetime = None, *, id_type: SecurityIdentifier = SecurityIdentifier.ID,
                             use_offset_key=True, sleep=0.5) -> Dict[str, dict]:
         """
         Get identifiers for all matching assets.
@@ -1987,10 +1984,10 @@ class SecurityMaster:
             input_type: SecurityIdentifier,
             ids: Iterable[str],
             output_types: Iterable[SecurityIdentifier] = frozenset([SecurityIdentifier.GSID]),
-            start_date: datetime.date = None,
-            end_date: datetime.date = None,
-            as_of_date: datetime.date = None
-    ) -> Dict[datetime.date, dict]:
+            start_date: dt.date = None,
+            end_date: dt.date = None,
+            as_of_date: dt.date = None
+    ) -> Dict[dt.date, dict]:
         """
         Map to other identifier types, from given IDs.
 
@@ -2009,7 +2006,7 @@ class SecurityMaster:
 
         Get Bloomberg ticker for 104563 as-of a past date:
         >>> result = SecurityMaster.map_identifiers(SecurityIdentifier.GSID, ["104563"], [SecurityIdentifier.BBG],
-        ...                                         as_of_date=datetime.date(2021, 4, 19))
+        ...                                         as_of_date=dt.date(2021, 4, 19))
         """
         if isinstance(ids, str):
             raise MqTypeError("expected an iterable of strings e.g. list of strings")
@@ -2027,12 +2024,12 @@ class SecurityMaster:
             if (start_date or end_date) is not None:
                 raise MqValueError('use as_of_date instead of start_date and/or end_date')
             if as_of_date is None:
-                as_of_date = datetime.date.today()
+                as_of_date = dt.date.today()
 
             input_type = get_asset_id_type(input_type)
             output_type = get_asset_id_type(output_types[0])
-            as_of = None if as_of_date is None else datetime.datetime.combine(as_of_date,
-                                                                              datetime.time(tzinfo=pytz.UTC))
+            as_of = None if as_of_date is None else dt.datetime.combine(as_of_date,
+                                                                        dt.time(tzinfo=pytz.UTC))
             result = GsAssetApi.map_identifiers(input_type, output_type, list(ids), as_of=as_of, multimap=True)
             if len(result) == 0:
                 return result
@@ -2063,10 +2060,10 @@ class SecurityMaster:
 
         output = dict()
         date_format = '%Y-%m-%d'
-        date_delta = datetime.timedelta(days=1)
+        date_delta = dt.timedelta(days=1)
         for row in results:
-            current = datetime.datetime.strptime(row['startDate'], date_format)
-            end = datetime.datetime.strptime(row['endDate'], date_format)
+            current = dt.datetime.strptime(row['startDate'], date_format)
+            end = dt.datetime.strptime(row['endDate'], date_format)
             while current <= end:
                 outer = output.setdefault(current, dict())
                 inner = outer.setdefault(row["input"], dict())

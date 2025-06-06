@@ -14,11 +14,21 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
+
+import numpy as np
+import pandas as pd
 import pytest
-from gs_quant.timeseries import *
-from gs_quant.timeseries.statistics import Direction
+import scipy.stats.mstats as stats
 from pandas.testing import assert_series_equal
 from scipy.integrate import odeint
+
+from gs_quant.data import DataContext
+from gs_quant.errors import MqTypeError, MqValueError, MqError
+from gs_quant.timeseries import normalize_window, Window, Returns, returns
+from gs_quant.timeseries.statistics import (Direction, generate_series, LinearRegression, RollingLinearRegression,
+                                            min_, max_, range_, mean, median, mode, sum_, product, std, exponential_std,
+                                            var, cov, zscores, winsorize, percentiles, percentile, SIRModel, SEIRModel)
 
 
 def _random_series(days=365, nans=10):
@@ -44,23 +54,23 @@ def test_generate_series():
     x = generate_series(100)
 
     assert (len(x) == 100)
-    assert (x.index[0] == datetime.date.today())
+    assert (x.index[0] == dt.date.today())
     assert (x.iloc[0] == 100)
 
     x = generate_series(100, Direction.END_TODAY)
     assert (len(x) == 100)
-    assert (x.index[-1] == datetime.date.today())
+    assert (x.index[-1] == dt.date.today())
     assert (x.iloc[0] == 100)
 
 
 def test_min():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -109,12 +119,12 @@ def test_min():
 
 def test_max():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -162,12 +172,12 @@ def test_max():
 
 def test_range():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -191,12 +201,12 @@ def test_range():
 
 def test_mean():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -233,12 +243,12 @@ def test_mean():
 
 def test_median():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -264,12 +274,12 @@ def test_median():
 
 def test_mode():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -300,12 +310,12 @@ def test_mode():
 
 def test_sum():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], index=dates)
@@ -334,12 +344,12 @@ def test_sum():
 
 def test_product():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], index=dates)
@@ -361,12 +371,12 @@ def test_product():
 
 def test_std():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -401,12 +411,12 @@ def test_exponential_std():
         return std
 
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -422,12 +432,12 @@ def test_exponential_std():
 
 def test_var():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -449,12 +459,12 @@ def test_var():
 
 def test_cov():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -484,12 +494,12 @@ def test_zscores():
     assert_series_equal(zscores(pd.Series([1]), Window(1, 0)), pd.Series([0.0]))
 
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -544,12 +554,12 @@ def test_winsorize():
 
 def test_percentiles():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
@@ -615,11 +625,11 @@ def test_percentile():
 
 
 def test_percentile_str():
-    today = datetime.datetime.now()
+    today = dt.datetime.now()
     days = pd.date_range(today, periods=12, freq='D')
     start = pd.Series([29, 56, 82, 13, 35, 53, 25, 23, 21, 12, 15, 9], index=days)
     actual = percentile(start, 2, '10d')
-    expected = pd.Series([12.18, 9.54], index=pd.date_range(today + datetime.timedelta(days=10), periods=2, freq='D'))
+    expected = pd.Series([12.18, 9.54], index=pd.date_range(today + dt.timedelta(days=10), periods=2, freq='D'))
     assert_series_equal(actual, expected)
 
     actual = percentile(start, 50, '1w')
@@ -646,7 +656,7 @@ def test_regression():
     expected = pd.Series([10.0, 14.0, 20.0, 28.0, 38.0, 50.0], index=pd.date_range('2019-1-1', periods=6))
     assert_series_equal(regression.fitted_values(), expected)
 
-    dates_predict = [date(2019, 2, 1), date(2019, 2, 2)]
+    dates_predict = [dt.date(2019, 2, 1), dt.date(2019, 2, 2)]
     predicted = regression.predict([pd.Series([2.0, 3.0], index=dates_predict),
                                     pd.Series([6.0, 7.0], index=dates_predict)])
     expected = pd.Series([30.0, 34.0], index=dates_predict)

@@ -27,14 +27,13 @@ from typing import Optional, Union, Type
 from tqdm import tqdm
 
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
-from gs_quant.common import PricingLocation, RiskMeasure
+from gs_quant.common import PricingLocation, RiskMeasure, PricingDateAndMarketDataAsOf
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset, today
 from gs_quant.risk import CompositeScenario, DataFrameWithInfo, ErrorValue, FloatWithInfo, MarketDataScenario, \
     StringWithInfo
 from gs_quant.risk.results import PricingFuture
 from gs_quant.session import GsSession
-from gs_quant.target.common import PricingDateAndMarketDataAsOf
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
 from gs_quant.tracing import Tracer
 from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket

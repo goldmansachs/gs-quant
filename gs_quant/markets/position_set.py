@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
 import datetime as dt
 import logging
 import math
@@ -26,12 +25,12 @@ from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.price import GsPriceApi
+from gs_quant.common import Position as CommonPosition, PositionPriceInput, PositionSet as CommonPositionSet, \
+    PositionTag as PositionTagTarget, Currency, PositionSetWeightingStrategy, MarketDataFrequency
 from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.markets.position_set_utils import _get_asset_temporal_xrefs, \
     _group_temporal_xrefs_into_discrete_time_ranges, _resolve_many_assets
 from gs_quant.models.risk_model_utils import _repeat_try_catch_request
-from gs_quant.target.common import Position as CommonPosition, PositionPriceInput, PositionSet as CommonPositionSet, \
-    PositionTag as PositionTagTarget, Currency, PositionSetWeightingStrategy, MarketDataFrequency
 from gs_quant.target.positions_v2_pricing import PositionsPricingParameters, PositionsRequest, PositionSetRequest, \
     PositionsPricingRequest
 from gs_quant.target.price import PriceParameters, PositionSetPriceInput, PositionPriceResponse
@@ -201,7 +200,7 @@ class PositionSet:
 
     def __init__(self,
                  positions: List[Position],
-                 date: datetime.date = datetime.date.today(),
+                 date: dt.date = dt.date.today(),
                  divisor: float = None,
                  reference_notional: float = None,
                  unresolved_positions: List[Position] = None,
@@ -244,11 +243,11 @@ class PositionSet:
         self.__positions = value
 
     @property
-    def date(self) -> datetime.date:
+    def date(self) -> dt.date:
         return self.__date
 
     @date.setter
-    def date(self, value: datetime.date):
+    def date(self, value: dt.date):
         self.__date = value
 
     @property
@@ -846,7 +845,7 @@ class PositionSet:
         return cls(converted_positions, position_set.position_date, position_set.divisor)
 
     @classmethod
-    def from_list(cls, positions: List[str], date: datetime.date = datetime.date.today()):
+    def from_list(cls, positions: List[str], date: dt.date = dt.date.today()):
         """
         Create equally-weighted PostionSet instance from a list of identifiers
 
@@ -873,7 +872,7 @@ class PositionSet:
 
     @classmethod
     def from_dicts(cls, positions: List[Dict],
-                   date: datetime.date = datetime.date.today(),
+                   date: dt.date = dt.date.today(),
                    reference_notional: float = None,
                    add_tags: bool = False):
         """
@@ -902,7 +901,7 @@ class PositionSet:
     @classmethod
     def from_frame(cls,
                    positions: pd.DataFrame,
-                   date: datetime.date = datetime.date.today(),
+                   date: dt.date = dt.date.today(),
                    reference_notional: float = None,
                    divisor: float = None,
                    add_tags: bool = False):
@@ -966,7 +965,7 @@ class PositionSet:
         return columns
 
     @staticmethod
-    def __resolve_identifiers(identifiers: List[str], date: datetime.date, **kwargs) -> List:
+    def __resolve_identifiers(identifiers: List[str], date: dt.date, **kwargs) -> List:
         unmapped_assets = []
         id_map = {}
         batch_size = 500

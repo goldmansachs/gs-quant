@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime
+import datetime as dt
 import pytest
 import time
 import numpy as np
@@ -41,7 +41,7 @@ class Timer:
 def test_rolling_date_offset(frequency, count, unit):
     length = 1000
     values = [np.random.random() if np.random.random() > 0.1 else np.nan for _ in range(length)]
-    s = pd.Series(values, index=pd.date_range(end=datetime.datetime.now(), freq=frequency, periods=length))
+    s = pd.Series(values, index=pd.date_range(end=dt.datetime.now(), freq=frequency, periods=length))
     offset = pd.DateOffset(**{unit: count})
 
     print(f'\nseries frequency: {frequency}, offset: {count}{unit}')

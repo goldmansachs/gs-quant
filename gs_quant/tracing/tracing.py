@@ -27,7 +27,7 @@ from opentracing.mocktracer import MockTracer
 from opentracing.mocktracer.span import LogData
 from opentracing.scope_managers.contextvars import ContextVarsScopeManager
 
-from gs_quant.errors import *
+from gs_quant.errors import MqWrappedError
 
 _logger = logging.getLogger(__name__)
 

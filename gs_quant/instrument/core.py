@@ -25,13 +25,12 @@ from dataclasses_json import global_config
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.base import get_enum_value, InstrumentBase, Priceable, Scenario
-from gs_quant.common import AssetClass, AssetType, XRef, RiskMeasure
+from gs_quant.common import AssetClass, AssetType, XRef, RiskMeasure, MultiScenario
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import FloatWithInfo, DataFrameWithInfo, SeriesWithInfo, ResolvedInstrumentValues, \
     DEPRECATED_MEASURES
 from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, PricingFuture, MultipleScenarioFuture
-from gs_quant.target.common import MultiScenario
 
 _logger = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ class Instrument(PriceableImpl, InstrumentBase):
     @classmethod
     def __asset_class_and_type_to_instrument(cls):
         if not cls.__instrument_mappings:
-            import gs_quant.target.instrument as instrument_
+            import gs_quant.target.instrument as instrument_  # noqa
             instrument_classes = [c for _, c in inspect.getmembers(instrument_, inspect.isclass) if
                                   issubclass(c, Instrument) and c is not Instrument]
 

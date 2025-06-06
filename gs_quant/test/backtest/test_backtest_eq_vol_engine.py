@@ -18,20 +18,24 @@ from unittest import mock
 
 import datetime as dt
 from gs_quant.api.gs.backtests import GsBacktestApi
+from gs_quant.backtests import TradeInMethod, Backtest
+from gs_quant.backtests.backtest_objects import ConstantTransactionModel
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.triggers import PeriodicTrigger, PeriodicTriggerRequirements, DateTriggerRequirements, \
     AggregateTrigger, AggregateTriggerRequirements, PortfolioTriggerRequirements, TriggerDirection
 from gs_quant.backtests.actions import EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction, \
     AddTradeAction, AddScaledTradeAction, ScalingActionType
-from gs_quant.backtests.equity_vol_engine import *
-from gs_quant.common import Currency, AssetClass
+from gs_quant.backtests.equity_vol_engine import EquityVolEngine
+from gs_quant.common import BuySell, Currency, AssetClass
+from gs_quant.instrument import EqOption
+from gs_quant.markets.portfolio import Portfolio
+from gs_quant.risk import EqDelta
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.backtests import BacktestResult as APIBacktestResult, Backtest, OptionStyle, OptionType, \
+from gs_quant.target.backtests import BacktestResult as APIBacktestResult, OptionStyle, OptionType, \
     BacktestTradingParameters, BacktestStrategyUnderlier, BacktestStrategyUnderlierHedge, \
-    VolatilityFlowBacktestParameters, BacktestTradingQuantityType, BacktestSignalSeriesItem
+    VolatilityFlowBacktestParameters, BacktestTradingQuantityType, BacktestSignalSeriesItem, FlowVolBacktestMeasure, \
+    DeltaHedgeParameters, EquityMarketModel
 import pandas as pd
-
-from gs_quant.target.common import BuySell
 
 
 def set_session():

@@ -14,20 +14,23 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 from collections import namedtuple
-from dataclasses import dataclass, field
+from dataclasses import field, dataclass
+from enum import Enum
+from typing import List, Optional, Iterable, Union, Callable
+from typing import TypeVar, ClassVar
 
-from dataclasses_json import dataclass_json, config
-from typing import TypeVar, Callable, ClassVar
+from dataclasses_json import config, dataclass_json
 
-from gs_quant.backtests.backtest_utils import *
 from gs_quant.backtests.backtest_objects import ConstantTransactionModel, TransactionModel
+from gs_quant.backtests.backtest_utils import make_list, CalcType, CustomDuration
 from gs_quant.base import Priceable, static_field
 from gs_quant.common import RiskMeasure
+from gs_quant.instrument import Instrument
 from gs_quant.json_convertors import decode_named_instrument, dc_decode, encode_named_instrument, decode_date_or_str
 from gs_quant.json_convertors_common import decode_risk_measure, encode_risk_measure
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.markets.securities import *
 from gs_quant.risk.transform import Transformer
 from gs_quant.target.backtests import BacktestTradingQuantityType
 

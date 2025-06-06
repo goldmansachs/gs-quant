@@ -18,8 +18,8 @@ from enum import Enum
 from typing import Dict, List
 from urllib.parse import urlencode
 
+from gs_quant.common import Currency
 from gs_quant.session import GsSession
-from gs_quant.target.common import Currency
 
 _logger = logging.getLogger(__name__)
 

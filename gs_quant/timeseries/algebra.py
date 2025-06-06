@@ -16,11 +16,19 @@
 # description. Type annotations should be provided for parameters.
 
 
+import datetime as dt
 import math
+from enum import Enum
 from functools import reduce
+from numbers import Real
+from typing import Union, Optional, List
 
-from .datetime import *
-from .helper import plot_function
+import numpy as np
+import pandas as pd
+
+from .datetime import align
+from .helper import plot_function, Interpolate
+from ..errors import MqValueError, MqTypeError
 
 """
 Algebra library contains basic numerical and algebraic operations, including addition, division, multiplication,
@@ -612,7 +620,7 @@ def filter_(x: pd.Series, operator: Optional[FilterOperator] = None, value: Opti
 
 @plot_function
 def filter_dates(x: pd.Series, operator: Optional[FilterOperator] = None,
-                 dates: Union[List[date], date] = None) -> pd.Series:
+                 dates: Union[List[dt.date], dt.date] = None) -> pd.Series:
     """
     Removes dates where comparison with the operator and dates combination results in true, defaults to removing
     missing values from the series

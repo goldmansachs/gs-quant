@@ -13,11 +13,16 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+import logging
+from typing import Tuple
 from urllib.parse import urlencode
 
-from gs_quant.session import GsSession
-from gs_quant.target.backtests import *
+from gs_quant.common import FieldValueMap
 from gs_quant.errors import MqValueError
+from gs_quant.session import GsSession
+from gs_quant.target.backtests import Backtest, BacktestResult, BacktestRisk, \
+    ComparisonBacktestResult, BacktestRiskRequest, BacktestRefData
 
 _logger = logging.getLogger(__name__)
 

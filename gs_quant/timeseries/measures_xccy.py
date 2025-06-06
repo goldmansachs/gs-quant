@@ -26,7 +26,7 @@ from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset, SecurityMaster
-from gs_quant.target.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation
+from gs_quant.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation
 from gs_quant.timeseries import ASSET_SPEC, plot_measure, MeasureDependency, GENERIC_DATE
 from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, ExtendedSeries
 from gs_quant.timeseries import measures_rates as tm_rates

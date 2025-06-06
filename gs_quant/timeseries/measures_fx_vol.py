@@ -23,9 +23,9 @@ from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
+from gs_quant.common import AssetClass, AssetType, PricingLocation
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset, SecurityMaster
-from gs_quant.target.common import AssetClass, AssetType, PricingLocation
 from gs_quant.timeseries import ASSET_SPEC, plot_measure, MeasureDependency
 from gs_quant.timeseries import ExtendedSeries, measures_rates as tm_rates
 from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _cross_stored_direction_helper, \

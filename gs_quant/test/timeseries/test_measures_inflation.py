@@ -24,15 +24,16 @@ from testfixtures import Replacer
 from testfixtures.mock import Mock
 
 import gs_quant.timeseries.measures_inflation as tm
-import gs_quant.timeseries.measures as tm_rates
 from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
+from gs_quant.common import PricingLocation, Currency as CurrEnum
 from gs_quant.data import DataContext
 from gs_quant.errors import MqError, MqValueError
+from gs_quant.markets import PricingContext
+from gs_quant.markets.securities import Currency
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import PricingLocation, Currency as CurrEnum
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries import Currency, CurrencyEnum, SecurityMaster
+from gs_quant.timeseries import CurrencyEnum, SecurityMaster
 from gs_quant.timeseries.measures_inflation import _currency_to_tdapi_inflation_swap_rate_asset, \
     INFLATION_RATES_DEFAULTS, TdapiInflationRatesDefaultsProvider
 from gs_quant.timeseries.measures_rates import _ClearingHouse
@@ -61,7 +62,7 @@ def test_currency_to_tdapi_inflation_swap_rate_asset(mocker):
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures_inflation.Asset.get_identifier', Mock())
 
-    with tm_rates.PricingContext(dt.date.today()):
+    with PricingContext(dt.date.today()):
         cur = [
             {
                 "currency_assetId": "MAK1FHKH5P5GJSHH",

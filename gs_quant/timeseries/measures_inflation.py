@@ -20,21 +20,18 @@ from enum import Enum
 from typing import Optional, Union
 
 import pandas as pd
-
-from gs_quant.data import DataContext
-from gs_quant.datetime import GsCalendar
 from pandas import Series
 
-from gs_quant.target.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
-
+from gs_quant.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation
+from gs_quant.data import DataContext
+from gs_quant.datetime import GsCalendar
 from gs_quant.errors import MqValueError
-from gs_quant.timeseries import ExtendedSeries, measures_rates as tm_rates, check_forward_looking
-from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _range_from_pricing_date, _get_custom_bd
-
 from gs_quant.markets.securities import AssetIdentifier, Asset
 from gs_quant.timeseries import ASSET_SPEC, plot_measure, MeasureDependency, GENERIC_DATE
+from gs_quant.timeseries import ExtendedSeries, measures_rates as tm_rates, check_forward_looking
+from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _range_from_pricing_date, _get_custom_bd
 from gs_quant.timeseries.measures_rates import _get_term_struct_date
 
 _logger = logging.getLogger(__name__)

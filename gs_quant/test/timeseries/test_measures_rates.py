@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
 import datetime as dt
 from typing import Union
 
@@ -28,12 +27,13 @@ import gs_quant.timeseries.measures as tm
 import gs_quant.timeseries.measures_rates as tm_rates
 from gs_quant.api.gs.assets import GsTemporalXRef, GsAssetApi
 from gs_quant.api.gs.data import MarketDataResponseFrame, QueryType
+from gs_quant.common import PricingLocation, XRef
 from gs_quant.data import Fields, Dataset
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError, MqError
+from gs_quant.markets import PricingContext
 from gs_quant.markets.securities import Cross, Currency
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.common import PricingLocation, XRef
 from gs_quant.test.timeseries.test_measures import _test_datasets, map_identifiers_default_mocker, \
     mock_empty_market_data_response
 from gs_quant.test.timeseries.utils import mock_request
@@ -204,7 +204,7 @@ def test_currency_to_tdapi_swaption_rate_asset_retuns_asset_id(mocker):
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
 
-    with tm.PricingContext(dt.date.today()):
+    with PricingContext(dt.date.today()):
         cur = [
             {
                 "currency_assetId": "MAK1FHKH5P5GJSHH",
@@ -584,7 +584,7 @@ def test_cross_to_fxfwd_xcswp_asset(mocker):
         'USDJPY': {"id": 'MAMZ9YG8AF3HQ18C', "crossID": "MAYJPCVVF2RWXCES"},
     }
 
-    with tm.PricingContext(dt.date.today()):
+    with PricingContext(dt.date.today()):
         for cross in correct_mapping:
             asset = Cross(correct_mapping[cross]["crossID"], cross)
             bbid_mock.return_value = cross
@@ -689,15 +689,15 @@ def mock_meeting_spot():
 
 
 def mock_meeting_absolute():
-    data_dict = MarketDataResponseFrame({'date': [datetime.date(2019, 12, 6), datetime.date(2019, 12, 6)],
+    data_dict = MarketDataResponseFrame({'date': [dt.date(2019, 12, 6), dt.date(2019, 12, 6)],
                                          'assetId': ['MARFAGXDQRWM07Y2', 'MARFAGXDQRWM07Y2'],
                                          'location': ['NYC', 'NYC'],
                                          'rateType': ['Meeting Forward', 'Meeting Forward'],
-                                         'startingDate': [datetime.date(2019, 10, 30), datetime.date(2020, 1, 29)],
-                                         'endingDate': [datetime.date(2019, 10, 30), datetime.date(2020, 1, 29)],
+                                         'startingDate': [dt.date(2019, 10, 30), dt.date(2020, 1, 29)],
+                                         'endingDate': [dt.date(2019, 10, 30), dt.date(2020, 1, 29)],
                                          'meetingNumber': [0, 2],
-                                         'valuationDate': [datetime.date(2019, 12, 6), datetime.date(2019, 12, 6)],
-                                         'meetingDate': [datetime.date(2019, 10, 24), datetime.date(2020, 1, 23)],
+                                         'valuationDate': [dt.date(2019, 12, 6), dt.date(2019, 12, 6)],
+                                         'meetingDate': [dt.date(2019, 10, 24), dt.date(2020, 1, 23)],
                                          'value': [-0.004522570525, -0.004550907771]
                                          })
     data_dict.dataset_ids = _test_datasets
@@ -705,15 +705,15 @@ def mock_meeting_absolute():
 
 
 def mock_ois_spot():
-    data_dict = MarketDataResponseFrame({'date': [datetime.date(2019, 12, 6)],
+    data_dict = MarketDataResponseFrame({'date': [dt.date(2019, 12, 6)],
                                          'assetId': ['MARFAGXDQRWM07Y2'],
                                          'location': ['NYC'],
                                          'rateType': ['Spot'],
-                                         'startingDate': [datetime.date(2019, 12, 6)],
-                                         'endingDate': [datetime.date(2019, 12, 7)],
+                                         'startingDate': [dt.date(2019, 12, 6)],
+                                         'endingDate': [dt.date(2019, 12, 7)],
                                          'meetingNumber': [-1],
-                                         'valuationDate': [datetime.date(2019, 12, 6)],
-                                         'meetingDate': [datetime.date(2019, 12, 6)],
+                                         'valuationDate': [dt.date(2019, 12, 6)],
+                                         'meetingDate': [dt.date(2019, 12, 6)],
                                          'value': [-0.00455]
                                          })
     data_dict.dataset_ids = _test_datasets

@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
 import datetime as dt
 from time import sleep
 from unittest.mock import patch, ANY
@@ -25,15 +24,13 @@ from gs_quant import risk
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.api.risk import RiskApi
 from gs_quant.base import RiskKey
-from gs_quant.common import PayReceive, Currency
+from gs_quant.common import PayReceive, Currency, PricingLocation
 from gs_quant.datetime import business_day_offset, today
 from gs_quant.errors import MqValueError
-from gs_quant.instrument import IRSwap
+from gs_quant.instrument import EqOption, IRSwap
 from gs_quant.markets import PricingContext, CloseMarket, OverlayMarket, MarketDataCoordinate
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import RollFwd
-from gs_quant.target.common import PricingLocation
-from gs_quant.target.instrument import EqOption
 from gs_quant.test.utils.mock_calc import MockCalc
 
 WEEKEND_DATE = dt.date(2022, 3, 19)
@@ -104,9 +101,9 @@ def test_pricing_context_metadata():
     assert len(PricingContext.path) == 0
     assert not PricingContext.has_prior
 
-    c1 = PricingContext(pricing_date=datetime.date(2022, 6, 15))
-    c2 = PricingContext(pricing_date=datetime.date(2022, 6, 16))
-    c3 = PricingContext(pricing_date=datetime.date(2022, 6, 17))
+    c1 = PricingContext(pricing_date=dt.date(2022, 6, 15))
+    c2 = PricingContext(pricing_date=dt.date(2022, 6, 16))
+    c3 = PricingContext(pricing_date=dt.date(2022, 6, 17))
 
     PricingContext.current = PricingContext()
     assert len(PricingContext.path) == 1
@@ -132,7 +129,7 @@ def test_pricing_context_metadata():
 
 
 def test_creation():
-    c1 = PricingContext(pricing_date=datetime.date(2022, 6, 15))
+    c1 = PricingContext(pricing_date=dt.date(2022, 6, 15))
 
     # All props except for the initialised one are defaulted. Context is not useable as-is
     assert c1.market == CloseMarket(c1.pricing_date, 'LDN')
@@ -143,18 +140,18 @@ def test_creation():
     assert c1.provider is None
     assert c1._dates_per_batch == 1
 
-    assert c1.pricing_date == datetime.date(2022, 6, 15)
+    assert c1.pricing_date == dt.date(2022, 6, 15)
 
 
 def test_inheritance():
-    c1 = PricingContext(pricing_date=datetime.date(2022, 6, 16), market_data_location='NYC', provider=TestProvider)
-    c2 = PricingContext(pricing_date=datetime.date(2022, 7, 1))
+    c1 = PricingContext(pricing_date=dt.date(2022, 6, 16), market_data_location='NYC', provider=TestProvider)
+    c2 = PricingContext(pricing_date=dt.date(2022, 7, 1))
     c3 = PricingContext(use_historical_diddles_only=True)
 
     with c1:
         with c2:
             # pricing date is set
-            assert c2.pricing_date == datetime.date(2022, 7, 1)
+            assert c2.pricing_date == dt.date(2022, 7, 1)
             # market data location is inherited from c1 (the active context)
             assert c2.market_data_location == c1.market_data_location
             # provider is inherited
@@ -242,7 +239,7 @@ def test_current_inheritance():
 
 
 def test_cleanup():
-    c1 = PricingContext(pricing_date=datetime.date(2022, 4, 6))
+    c1 = PricingContext(pricing_date=dt.date(2022, 4, 6))
     c2 = PricingContext(request_priority=5000)
     default_date = c2.pricing_date
 
@@ -263,8 +260,8 @@ def test_market_props():
     PricingContext.current = PricingContext()  # Reset
     # market_data_location cannot conflict with market.location
     with pytest.raises(ValueError):
-        PricingContext(market=CloseMarket(date=datetime.date(2022, 4, 6), location='NYC'),
-                       pricing_date=datetime.date(2022, 7, 4), market_data_location='TKO')
+        PricingContext(market=CloseMarket(date=dt.date(2022, 4, 6), location='NYC'),
+                       pricing_date=dt.date(2022, 7, 4), market_data_location='TKO')
 
     # Default pricing date and market location are today and LDN, respectively
     pc = PricingContext()
@@ -273,21 +270,21 @@ def test_market_props():
         assert pc.pricing_date == business_day_offset(today(PricingLocation.LDN), 0, roll='preceding')
 
     # pricing_date and market.date can be different
-    pc = PricingContext(market=CloseMarket(date=datetime.date(2022, 4, 6), location='NYC'),
-                        pricing_date=datetime.date(2022, 7, 4))
+    pc = PricingContext(market=CloseMarket(date=dt.date(2022, 4, 6), location='NYC'),
+                        pricing_date=dt.date(2022, 7, 4))
 
     with pc:
-        assert pc.pricing_date == datetime.date(2022, 7, 4)
-        assert pc.market.date == datetime.date(2022, 4, 6)
+        assert pc.pricing_date == dt.date(2022, 7, 4)
+        assert pc.market.date == dt.date(2022, 4, 6)
 
     # if market is not specified, it is inferred from pricing_date and market_data_location
-    pc = PricingContext(pricing_date=datetime.date(2022, 7, 4), market_data_location='TKO')
+    pc = PricingContext(pricing_date=dt.date(2022, 7, 4), market_data_location='TKO')
     cm = CloseMarket(date=pc.pricing_date, location=pc.market_data_location)
     assert pc.market.date == cm.date
     assert pc.market.location == cm.location
 
     # market is not inherited
-    pc = PricingContext(market=CloseMarket(date=datetime.date(2022, 4, 6), location='NYC'),
+    pc = PricingContext(market=CloseMarket(date=dt.date(2022, 4, 6), location='NYC'),
                         pricing_date=dt.date(2022, 7, 4))
     with pc:
         # pc gets market_data_location from its market
@@ -310,10 +307,10 @@ def test_pricing_does_not_affect_context(mocker):
     swap2 = IRSwap(PayReceive.Pay, '1y', name='EUR2y')
     port = Portfolio([swap1, swap2])
     with MockCalc(mocker):
-        cm = CloseMarket(date=datetime.date(2022, 7, 5), location='TKO')
-        pc = PricingContext(market_data_location='TKO', pricing_date=datetime.date(2022, 4, 6), market=cm)
+        cm = CloseMarket(date=dt.date(2022, 7, 5), location='TKO')
+        pc = PricingContext(market_data_location='TKO', pricing_date=dt.date(2022, 4, 6), market=cm)
         assert pc.market_data_location == PricingLocation.TKO
-        assert pc.pricing_date == datetime.date(2022, 4, 6)
+        assert pc.pricing_date == dt.date(2022, 4, 6)
         assert pc.market == cm
         assert pc.is_batch is False
 
@@ -326,12 +323,12 @@ def test_pricing_does_not_affect_context(mocker):
             port.price()
             port.calc(risk.IRDelta)
             assert pc.market_data_location == PricingLocation.TKO
-            assert pc.pricing_date == datetime.date(2022, 4, 6)
+            assert pc.pricing_date == dt.date(2022, 4, 6)
             assert pc.market == cm
             assert pc.is_batch is False
 
         assert pc.market_data_location == PricingLocation.TKO
-        assert pc.pricing_date == datetime.date(2022, 4, 6)
+        assert pc.pricing_date == dt.date(2022, 4, 6)
         assert pc.market == cm
         assert pc.is_batch is False
 
@@ -339,12 +336,12 @@ def test_pricing_does_not_affect_context(mocker):
 def test_different_nested_locations(mocker):
     s = IRSwap(name='location_test_swap')
     with MockCalc(mocker):
-        with PricingContext(market_data_location='TKO', pricing_date=datetime.date(2022, 7, 5)):
-            with PricingContext(market_data_location='NYC', pricing_date=datetime.date(2022, 7, 11)):
+        with PricingContext(market_data_location='TKO', pricing_date=dt.date(2022, 7, 5)):
+            with PricingContext(market_data_location='NYC', pricing_date=dt.date(2022, 7, 11)):
                 # Outer context should make no difference in pricing
                 nyc_price_nested = s.price()
 
-        with PricingContext(market_data_location='NYC', pricing_date=datetime.date(2022, 7, 11)):
+        with PricingContext(market_data_location='NYC', pricing_date=dt.date(2022, 7, 11)):
             nyc_price = s.price()
 
     assert nyc_price_nested.result() == nyc_price.result()

@@ -13,19 +13,22 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 import pandas as pd
+import numpy as np
 import pytest
 from pandas.testing import assert_series_equal
 
-from gs_quant.timeseries import *
+from gs_quant.errors import MqValueError
+from gs_quant.timeseries import first, last, last_value, count, Interpolate, compare, diff, lag, LagMode, repeat
 
 
 def test_first():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
     ]
 
     x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
@@ -37,10 +40,10 @@ def test_first():
 
 def test_last():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
     ]
 
     x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
@@ -71,10 +74,10 @@ def test_last_value():
 
 def test_count():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
     ]
 
     x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
@@ -86,16 +89,16 @@ def test_count():
 
 def test_compare():
     dates1 = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
     ]
 
     dates2 = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
     ]
 
     x = pd.Series([1.0, 2.0, 2.0, 4.0], index=dates1)
@@ -122,26 +125,26 @@ def test_compare():
     assert_series_equal(expected, result, obj="Compare series step")
 
     dates2 = [
-        date(2019, 1, 2),
-        date(2019, 1, 4),
-        date(2019, 1, 6),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 6),
     ]
 
-    dates1.append(date(2019, 1, 5))
+    dates1.append(dt.date(2019, 1, 5))
     xp = pd.Series([1, 2, 3, 4, 5], index=pd.to_datetime(dates1))
     yp = pd.Series([1, 4, 0], index=pd.to_datetime(dates2))
     result = compare(xp, yp, Interpolate.TIME)
-    dates1.append(date(2019, 1, 6))
+    dates1.append(dt.date(2019, 1, 6))
     expected = pd.Series([0.0, 1.0, 1.0, 0.0, 1.0, 0.0], index=pd.to_datetime(dates1))
     assert_series_equal(result, expected, obj="Compare series greater time")
 
 
 def test_diff():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
     ]
 
     x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)

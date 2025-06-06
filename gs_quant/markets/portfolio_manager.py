@@ -21,26 +21,23 @@ from typing import List, Union, Dict
 
 import deprecation
 import numpy as np
-import pandas
 import pandas as pd
-
-from gs_quant.common import PositionType
-from gs_quant.target.risk_models import RiskModelDataAssetsRequest, RiskModelUniverseIdentifierRequest
 
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
+from gs_quant.common import Currency, PositionType
 from gs_quant.entities.entitlements import Entitlements, EntitlementBlock, User
 from gs_quant.entities.entity import PositionedEntity, EntityType, ScenarioCalculationMeasure
 from gs_quant.errors import MqError
 from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
-from gs_quant.markets.scenario import FactorScenario
 from gs_quant.markets.portfolio_manager_utils import build_exposure_df, build_portfolio_constituents_df, \
     build_sensitivity_df, get_batched_dates
 from gs_quant.markets.report import PerformanceReport, ReportJobFuture
+from gs_quant.markets.scenario import FactorScenario
 from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType, FactorRiskModel
-from gs_quant.target.common import Currency
 from gs_quant.target.portfolios import RiskAumSource, PortfolioTree
+from gs_quant.target.risk_models import RiskModelDataAssetsRequest, RiskModelUniverseIdentifierRequest
 
 _logger = logging.getLogger(__name__)
 

@@ -15,13 +15,15 @@
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
 from datetime import date, time, timedelta
+from enum import Enum
 from numbers import Real
-from typing import Any
+from typing import Any, Union, List
 
+import numpy as np
+import pandas as pd
 from pandas.tseries.offsets import CustomBusinessDay
 
-from .helper import *
-from .helper import _create_enum
+from .helper import _create_enum, Interpolate, plot_function
 from ..datetime import GsCalendar
 from ..datetime.date import DayCountConvention, PaymentFrequency, day_count_fraction
 from ..datetime.date import date_range as _date_range

@@ -19,8 +19,8 @@ import pandas as pd
 from testfixtures import Replacer
 
 import gs_quant.timeseries.tca as tm
+from gs_quant.common import AssetClass
 from gs_quant.markets.index import Index
-from gs_quant.target.common import AssetClass
 
 
 def test_covariance():

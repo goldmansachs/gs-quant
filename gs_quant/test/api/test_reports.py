@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 
 from gs_quant.api.gs.reports import GsReportApi
-from gs_quant.session import *
+from gs_quant.session import GsSession, Environment
 from gs_quant.target.reports import Report, ReportJob, ReportParameters
 
 

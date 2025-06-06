@@ -13,24 +13,35 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+import math
+import os
 from unittest.mock import Mock
 
+import numpy as np
+import pandas as pd
 import pytest
 from pandas.testing import assert_series_equal
 from testfixtures import Replacer
 
-from gs_quant.timeseries import *
-from gs_quant.timeseries.econometrics import _get_ratio
+from gs_quant.common import Currency as CurrencyEnum
+from gs_quant.datetime import DayCountConvention
+from gs_quant.errors import MqValueError, MqTypeError, MqError
+from gs_quant.markets.securities import Cash
+from gs_quant.timeseries import returns, prices, index, change, annualize, volatility, correlation, beta, \
+    max_drawdown, Returns, Window, Direction, generate_series, SeriesType, Interpolate, CurveType
+from gs_quant.timeseries.econometrics import _get_ratio, excess_returns, RiskFreeRateCurrency, sharpe_ratio, \
+    excess_returns_
 
 
 def test_returns():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
     ]
 
     x = pd.Series(dtype=float)
@@ -76,12 +87,12 @@ def test_returns():
 
 def test_prices():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
     ]
 
     r = pd.Series(dtype=float)
@@ -119,12 +130,12 @@ def test_prices():
 
 def test_index():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
     ]
 
     x = pd.Series([200, 202, 201, 203, 202, 201], index=dates)
@@ -140,12 +151,12 @@ def test_index():
 
 def test_change():
     dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
     ]
 
     x = pd.Series([200, 202, 201, 203, 202, 201.5], index=dates)
@@ -157,9 +168,9 @@ def test_change():
 
 def test_annualize():
     daily_dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 1),
-        date(2019, 1, 1),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 1),
     ]
 
     daily_series = pd.Series([0.01, 0.02, -0.01], index=daily_dates)
@@ -168,12 +179,12 @@ def test_annualize():
         annualize(daily_series)
 
     daily_dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
     ]
 
     daily_series = pd.Series([0.01, 0.02, -0.01, 0.03, 0, -0.01], index=daily_dates)
@@ -182,12 +193,12 @@ def test_annualize():
     assert_series_equal(result, daily_series * math.sqrt(252), obj="Annualize daily")
 
     weekly_dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 8),
-        date(2019, 1, 15),
-        date(2019, 1, 22),
-        date(2019, 1, 29),
-        date(2019, 2, 6),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 8),
+        dt.date(2019, 1, 15),
+        dt.date(2019, 1, 22),
+        dt.date(2019, 1, 29),
+        dt.date(2019, 2, 6),
     ]
 
     weekly_series = pd.Series([0.01, 0.02, -0.01, 0.03, 0, -0.01], index=weekly_dates)
@@ -196,12 +207,12 @@ def test_annualize():
     assert_series_equal(result, weekly_series * math.sqrt(52), obj="Annualize weekly")
 
     semi_monthly_dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 15),
-        date(2019, 2, 1),
-        date(2019, 2, 15),
-        date(2019, 3, 1),
-        date(2019, 3, 15),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 15),
+        dt.date(2019, 2, 1),
+        dt.date(2019, 2, 15),
+        dt.date(2019, 3, 1),
+        dt.date(2019, 3, 15),
     ]
 
     semi_monthly_series = pd.Series([0.01, 0.02, -0.01, 0.03, 0, -0.01], index=semi_monthly_dates)
@@ -210,12 +221,12 @@ def test_annualize():
     assert_series_equal(result, semi_monthly_series * math.sqrt(26), obj="Annualize semi-monthly")
 
     monthly_dates = [
-        date(2019, 1, 1),
-        date(2019, 2, 1),
-        date(2019, 3, 1),
-        date(2019, 4, 1),
-        date(2019, 5, 1),
-        date(2019, 6, 1),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 2, 1),
+        dt.date(2019, 3, 1),
+        dt.date(2019, 4, 1),
+        dt.date(2019, 5, 1),
+        dt.date(2019, 6, 1),
     ]
 
     monthly_series = pd.Series([0.01, 0.02, -0.01, 0.03, 0, -0.01], index=monthly_dates)
@@ -224,12 +235,12 @@ def test_annualize():
     assert_series_equal(result, monthly_series * math.sqrt(12), obj="Annualize monthly")
 
     quarterly_dates = [
-        date(2019, 1, 1),
-        date(2019, 3, 1),
-        date(2019, 6, 1),
-        date(2019, 9, 1),
-        date(2020, 1, 1),
-        date(2020, 3, 1),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 3, 1),
+        dt.date(2019, 6, 1),
+        dt.date(2019, 9, 1),
+        dt.date(2020, 1, 1),
+        dt.date(2020, 3, 1),
     ]
 
     quarterly_series = pd.Series([0.01, 0.02, -0.01, 0.03, 0, -0.01], index=quarterly_dates)
@@ -238,12 +249,12 @@ def test_annualize():
     assert_series_equal(result, quarterly_series * math.sqrt(4), obj="Annualize quarterly")
 
     annual_dates = [
-        date(2019, 1, 1),
-        date(2020, 1, 1),
-        date(2021, 1, 1),
-        date(2022, 1, 1),
-        date(2023, 1, 1),
-        date(2024, 1, 1),
+        dt.date(2019, 1, 1),
+        dt.date(2020, 1, 1),
+        dt.date(2021, 1, 1),
+        dt.date(2022, 1, 1),
+        dt.date(2023, 1, 1),
+        dt.date(2024, 1, 1),
     ]
 
     annual_series = pd.Series([0.01, 0.02, -0.01, 0.03, 0, -0.01], index=annual_dates)
@@ -252,12 +263,12 @@ def test_annualize():
     assert_series_equal(result, annual_series, obj="Annualize annually")
 
     invalid_dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 3),
-        date(2019, 1, 6),
-        date(2019, 1, 9),
-        date(2019, 1, 12),
-        date(2019, 1, 13),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 6),
+        dt.date(2019, 1, 9),
+        dt.date(2019, 1, 12),
+        dt.date(2019, 1, 13),
     ]
 
     invalid_series = pd.Series([0.01, 0.02, -0.01, 0.03, 0, -0.01], index=invalid_dates)
@@ -271,12 +282,12 @@ def test_volatility():
     assert_series_equal(x, volatility(x))
 
     daily_dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 5),
-        date(2019, 1, 6),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
     ]
 
     x = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=daily_dates)
@@ -302,12 +313,12 @@ def test_correlation():
     assert_series_equal(pd.Series(dtype=float), correlation(x, x, 1))
 
     daily_dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=daily_dates)
@@ -393,12 +404,12 @@ def test_beta():
     assert_series_equal(pd.Series(dtype=float), beta(x, x, 1))
 
     daily_dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
 
     x = pd.Series([100.0, 101, 103.02, 100.9596, 100.9596, 102.978792], index=daily_dates)
@@ -442,12 +453,12 @@ def test_beta():
 
 def test_max_drawdown():
     daily_dates = [
-        date(2019, 1, 1),
-        date(2019, 1, 2),
-        date(2019, 1, 3),
-        date(2019, 1, 4),
-        date(2019, 1, 7),
-        date(2019, 1, 8),
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
     ]
     daily_dates = pd.to_datetime(daily_dates)
 
@@ -495,7 +506,7 @@ def test_excess_returns():
     actual = excess_returns(df['SPX'], 0.0175)
     file = os.path.join(os.path.dirname(__file__), '..', 'resources', 'Sharpe_SPX_0175.csv')
     expected = pd.read_csv(file).loc[:, 'ER']
-    numpy.testing.assert_array_almost_equal(actual.values, expected.values)
+    np.testing.assert_array_almost_equal(actual.values, expected.values)
 
     market_data.return_value = pd.DataFrame()
     with pytest.raises(MqError):
@@ -517,24 +528,24 @@ def test_sharpe_ratio():
     er = replace('gs_quant.timeseries.econometrics.excess_returns', Mock())
     er.return_value = er_df['ER']
     actual = _get_ratio(price_df['SPX'], 0.0175, 0, day_count_convention=DayCountConvention.ACTUAL_360)
-    numpy.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
+    np.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
     actual = sharpe_ratio(price_df['SPX'], RiskFreeRateCurrency.USD)
-    numpy.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
+    np.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
     actual = sharpe_ratio(price_df['SPX'][:], RiskFreeRateCurrency.USD, '1m')
     expected = pd.Series([np.nan, np.nan, np.nan, 8.266434, 6.731811],
-                         index=pd.date_range(datetime.date(2019, 2, 4), periods=5))
-    numpy.testing.assert_almost_equal(actual[:5].values, expected.values, decimal=5)
+                         index=pd.date_range(dt.date(2019, 2, 4), periods=5))
+    np.testing.assert_almost_equal(actual[:5].values, expected.values, decimal=5)
     with pytest.raises(MqValueError):
         actual = sharpe_ratio(price_df['SPX'][:], RiskFreeRateCurrency.USD, 22, method=Interpolate.INTERSECT)
 
     replace.restore()
 
     actual = _get_ratio(price_df['SPX'], 0.0175, 10, day_count_convention=DayCountConvention.ACTUAL_360)
-    numpy.testing.assert_almost_equal(actual.values, er_df['SR10'].values[10:], decimal=5)
+    np.testing.assert_almost_equal(actual.values, er_df['SR10'].values[10:], decimal=5)
 
     actual = _get_ratio(er_df['ER'], 0.0175, 0, day_count_convention=DayCountConvention.ACTUAL_360,
                         curve_type=CurveType.EXCESS_RETURNS)
-    numpy.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
+    np.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
 
 
 if __name__ == "__main__":

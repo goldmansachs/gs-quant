@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
+import datetime as dt
 
 import pytest
 
@@ -28,7 +28,7 @@ def test_build_market_data_query():
     source = None
     real_time = False
     measure = "Curve"
-    with DataContext(start=datetime.date(2013, 1, 1), end=datetime.date(2020, 2, 1)):
+    with DataContext(start=dt.date(2013, 1, 1), end=dt.date(2020, 2, 1)):
         queries = GsDataApi.build_market_data_query(asset_ids, query_type, where, source, real_time, measure,
                                                     parallelize_queries=True)
         payload = {'entityIds': ['MA4B66MW5E27U8P3295'],
@@ -38,19 +38,19 @@ def test_build_market_data_query():
                    'frequency': 'End Of Day',
                    'measures': ['Curve']}
 
-        dates = [{'startDate': datetime.date(2013, 1, 1), 'endDate': datetime.date(2014, 1, 1)},
-                 {'startDate': datetime.date(2014, 1, 1), 'endDate': datetime.date(2015, 1, 1)},
-                 {'startDate': datetime.date(2015, 1, 1), 'endDate': datetime.date(2016, 1, 1)},
-                 {'startDate': datetime.date(2016, 1, 1), 'endDate': datetime.date(2016, 12, 31)},
-                 {'startDate': datetime.date(2016, 12, 31), 'endDate': datetime.date(2017, 12, 31)},
-                 {'startDate': datetime.date(2017, 12, 31), 'endDate': datetime.date(2018, 12, 31)},
-                 {'startDate': datetime.date(2018, 12, 31), 'endDate': datetime.date(2019, 12, 31)},
-                 {'startDate': datetime.date(2019, 12, 31), 'endDate': datetime.date(2020, 2, 1)}]
+        dates = [{'startDate': dt.date(2013, 1, 1), 'endDate': dt.date(2014, 1, 1)},
+                 {'startDate': dt.date(2014, 1, 1), 'endDate': dt.date(2015, 1, 1)},
+                 {'startDate': dt.date(2015, 1, 1), 'endDate': dt.date(2016, 1, 1)},
+                 {'startDate': dt.date(2016, 1, 1), 'endDate': dt.date(2016, 12, 31)},
+                 {'startDate': dt.date(2016, 12, 31), 'endDate': dt.date(2017, 12, 31)},
+                 {'startDate': dt.date(2017, 12, 31), 'endDate': dt.date(2018, 12, 31)},
+                 {'startDate': dt.date(2018, 12, 31), 'endDate': dt.date(2019, 12, 31)},
+                 {'startDate': dt.date(2019, 12, 31), 'endDate': dt.date(2020, 2, 1)}]
 
         expected = [{'queries': [{**payload, **date_range}]} for date_range in dates]
         assert expected == queries
 
-    with DataContext(start=datetime.date(2013, 1, 1), end=datetime.date(2025, 1, 1)):
+    with DataContext(start=dt.date(2013, 1, 1), end=dt.date(2025, 1, 1)):
         queries = GsDataApi.build_market_data_query(asset_ids, query_type, where, source, real_time, measure)
         payload = {'entityIds': ['MA4B66MW5E27U8P3295'],
                    'queryType': 'Implied Volatility',
@@ -58,8 +58,8 @@ def test_build_market_data_query():
                    'source': 'any',
                    'frequency': 'End Of Day',
                    'measures': ['Curve'],
-                   'startDate': datetime.date(2013, 1, 1),
-                   'endDate': datetime.date(2025, 1, 1)}
+                   'startDate': dt.date(2013, 1, 1),
+                   'endDate': dt.date(2025, 1, 1)}
 
         expected = {'queries': [payload]}
         assert expected == queries

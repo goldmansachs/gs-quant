@@ -22,12 +22,13 @@ from gs_quant.analytics.core.processor import BaseProcessor, DataCoordinateOrPro
     DateOrDatetimeOrRDate
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.analytics.processors.special_processors import MeasureProcessor
+from gs_quant.common import Currency
+from gs_quant.data import DataFrequency
 from gs_quant.data.coordinate import DataCoordinate
 from gs_quant.data.query import DataQuery
 from gs_quant.entities.entity import Entity
 from gs_quant.markets.securities import Stock, Cross
-from gs_quant.target.common import Currency
-from gs_quant.timeseries import correlation, Window, SeriesType, DataMeasure, DataFrequency, DataContext, \
+from gs_quant.timeseries import correlation, Window, SeriesType, DataMeasure, DataContext, \
     fx_implied_correlation
 from gs_quant.timeseries import excess_returns_pure
 from gs_quant.timeseries.econometrics import get_ratio_pure, SharpeAssets, change, returns

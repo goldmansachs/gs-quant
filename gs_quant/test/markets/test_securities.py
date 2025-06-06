@@ -14,13 +14,20 @@ specific language governing permissions and limitations
 under the License.
 """
 import copy
-import datetime
+import datetime as dt
+import json
+from enum import Enum
 
 import pytest
 
 from gs_quant.base import EnumBase
-from gs_quant.markets.securities import *
-from gs_quant.session import *
+from gs_quant.api.gs.assets import GsAsset, GsAssetApi
+from gs_quant.errors import MqTypeError, MqValueError, MqRequestError
+from gs_quant.markets import PricingContext
+from gs_quant.markets.securities import SecurityMaster, AssetIdentifier, AssetType, ExchangeCode, \
+    SecurityMasterSource, SecurityIdentifier, Asset, SecMasterAsset
+from gs_quant.common import AssetClass, AssetType as GsAssetType
+from gs_quant.session import GsSession, Environment
 
 
 def test_get_asset(mocker):
@@ -1744,7 +1751,7 @@ def test_get_asset_get_data_series_with_range_over_many_asset_id_should_throw_mq
     with SecMasterContext():
         asset = SecurityMaster.get_asset(id_value=4007, id_type=SecurityIdentifier.GSID)
     with pytest.raises(MqValueError):
-        asset.get_hloc_prices(start=datetime.date(2007, 1, 1), end=datetime.date(2022, 1, 1))
+        asset.get_hloc_prices(start=dt.date(2007, 1, 1), end=dt.date(2022, 1, 1))
 
 
 def test_map_identifiers_asset_service(mocker):
@@ -1768,10 +1775,10 @@ def test_map_identifiers_asset_service(mocker):
         actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
                                                 ['GS UN', 'AAPL UN'],
                                                 [SecurityIdentifier.RIC],
-                                                as_of_date=datetime.date(2021, 10, 11))
+                                                as_of_date=dt.date(2021, 10, 11))
     assert actual == expected
 
-    date_string = datetime.date.today().strftime('%Y-%m-%d')
+    date_string = dt.date.today().strftime('%Y-%m-%d')
     expected2 = {date_string: expected["2021-10-11"]}
     with AssetContext():
         actual2 = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
@@ -1784,7 +1791,7 @@ def test_map_identifiers_asset_service(mocker):
         actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
                                                 ['invalid id'],
                                                 [SecurityIdentifier.RIC],
-                                                as_of_date=datetime.date(2021, 10, 11))
+                                                as_of_date=dt.date(2021, 10, 11))
     assert actual == {}
 
 
@@ -1795,7 +1802,7 @@ def test_map_identifiers_asset_service_exceptions():
             SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
                                            ['GS UN', 'AAPL UN'],
                                            [SecurityIdentifier.RIC, SecurityIdentifier.GSID],
-                                           as_of_date=datetime.date(2021, 10, 11))
+                                           as_of_date=dt.date(2021, 10, 11))
 
     with pytest.raises(MqValueError):
         # start date
@@ -1803,7 +1810,7 @@ def test_map_identifiers_asset_service_exceptions():
             SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
                                            ['GS UN', 'AAPL UN'],
                                            [SecurityIdentifier.RIC],
-                                           start_date=datetime.date(2021, 10, 11))
+                                           start_date=dt.date(2021, 10, 11))
 
     with pytest.raises(MqValueError):
         # end date
@@ -1811,7 +1818,7 @@ def test_map_identifiers_asset_service_exceptions():
             SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
                                            ['GS UN', 'AAPL UN'],
                                            [SecurityIdentifier.RIC],
-                                           end_date=datetime.date(2021, 10, 11))
+                                           end_date=dt.date(2021, 10, 11))
 
     with pytest.raises(MqValueError):
         # unsupported output type

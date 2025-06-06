@@ -13,20 +13,19 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from enum import auto
+import math
+from enum import auto, Enum
 from typing import Dict, Union
 
 import numpy as np
 import pandas as pd
-import math
 
+from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, RiskModelDataMeasure, RiskModelDataAssetsRequest
 from gs_quant.data.core import DataContext
 from gs_quant.datetime import date
-from gs_quant.target.common import Enum
-from gs_quant.target.risk_models import RiskModelUniverseIdentifierRequest
-from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, RiskModelDataMeasure, RiskModelDataAssetsRequest
 from gs_quant.models.risk_model_utils import get_covariance_matrix_dataframe, build_factor_volatility_dataframe, \
     build_factor_data_map, build_pfp_data_dataframe
+from gs_quant.target.risk_models import RiskModelUniverseIdentifierRequest
 
 
 class ReturnFormat(Enum):

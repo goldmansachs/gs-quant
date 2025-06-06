@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
+import datetime as dt
 import re
 from enum import Enum
 
@@ -22,7 +22,7 @@ from gs_quant.errors import MqTypeError, MqValueError
 
 
 def _now():
-    return datetime.datetime.now(datetime.timezone.utc)
+    return dt.datetime.now(dt.timezone.utc)
 
 
 class DataFrequency(Enum):
@@ -75,15 +75,15 @@ class DataContext(ContextBaseWithDefault):
     def _get_date(o, default):
         if o is None:
             return default
-        elif isinstance(o, datetime.datetime):
+        elif isinstance(o, dt.datetime):
             # note that datetime objects are also instances of date
             return o.date()
-        elif isinstance(o, datetime.date):
+        elif isinstance(o, dt.date):
             return o
         elif isinstance(o, str):
             loc = o.find('T')
             ds = o[:loc] if loc != -1 else o
-            return datetime.datetime.strptime(ds, '%Y-%m-%d').date()
+            return dt.datetime.strptime(ds, '%Y-%m-%d').date()
         else:
             raise ValueError(f'{o} is not a valid date')
 
@@ -91,27 +91,27 @@ class DataContext(ContextBaseWithDefault):
     def _get_datetime(o, default):
         if o is None:
             return default
-        elif isinstance(o, datetime.datetime):
+        elif isinstance(o, dt.datetime):
             return o
-        elif isinstance(o, datetime.date):
-            return datetime.datetime.combine(o, datetime.time(tzinfo=datetime.timezone.utc))
+        elif isinstance(o, dt.date):
+            return dt.datetime.combine(o, dt.time(tzinfo=dt.timezone.utc))
         elif isinstance(o, str):
-            tmp = datetime.datetime.strptime(o, '%Y-%m-%dT%H:%M:%SZ')
-            return tmp.replace(tzinfo=datetime.timezone.utc)
+            tmp = dt.datetime.strptime(o, '%Y-%m-%dT%H:%M:%SZ')
+            return tmp.replace(tzinfo=dt.timezone.utc)
         else:
             raise ValueError(f'{o} is not a valid date')
 
     @property
     def start_date(self):
-        return self._get_date(self.__start, datetime.date.today() - datetime.timedelta(days=30))
+        return self._get_date(self.__start, dt.date.today() - dt.timedelta(days=30))
 
     @property
     def end_date(self):
-        return self._get_date(self.__end, datetime.date.today())
+        return self._get_date(self.__end, dt.date.today())
 
     @property
     def start_time(self):
-        return self._get_datetime(self.__start, _now() - datetime.timedelta(days=1))
+        return self._get_datetime(self.__start, _now() - dt.timedelta(days=1))
 
     @property
     def end_time(self):
@@ -123,7 +123,7 @@ class DataContext(ContextBaseWithDefault):
 
 
 if __name__ == '__main__':
-    with DataContext(datetime.date(2019, 1, 1), datetime.datetime(2019, 2, 1, tzinfo=datetime.timezone.utc)) as dc:
+    with DataContext(dt.date(2019, 1, 1), dt.datetime(2019, 2, 1, tzinfo=dt.timezone.utc)) as dc:
         print(f'{dc.start_date}, {dc.end_date}')
         print(f'{dc.start_time}, {dc.end_time}')
     with DataContext(None, '2019-01-01T00:00:00Z') as dc2:

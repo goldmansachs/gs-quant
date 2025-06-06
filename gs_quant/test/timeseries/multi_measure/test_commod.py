@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-import datetime
+import datetime as dt
 import pandas as pd
 import pytest
 from gs_quant.timeseries import USE_DISPLAY_NAME
@@ -45,7 +45,7 @@ def test_forward_price():
                 "H21",
             ]
         }
-        df = MarketDataResponseFrame(data=d, index=pd.to_datetime([datetime.date(2019, 1, 2)] * 3))
+        df = MarketDataResponseFrame(data=d, index=pd.to_datetime([dt.date(2019, 1, 2)] * 3))
         df.dataset_ids = _test_datasets
         return df
 
@@ -53,9 +53,9 @@ def test_forward_price():
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_natgas_forward_price)
     mock = CommodityNaturalGasHub('MA001', 'AGT')
 
-    with DataContext(datetime.date(2019, 1, 2), datetime.date(2019, 1, 2)):
+    with DataContext(dt.date(2019, 1, 2), dt.date(2019, 1, 2)):
         actual = pd.Series(tm.forward_price(mock, price_method='GDD', contract_range='F21'))
-        expected = pd.Series([2.880], index=[datetime.date(2019, 1, 2)], name='price')
+        expected = pd.Series([2.880], index=[dt.date(2019, 1, 2)], name='price')
         assert_series_equal(expected, actual)
 
     with pytest.raises(MqError):

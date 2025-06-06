@@ -14,10 +14,17 @@
 # Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.
 # Such functions should be fully documented: docstrings should describe parameters and the return value, and provide
 # a 1-line description. Type annotations should be provided for parameters.
+from enum import Enum
+from typing import Union
+
+import pandas as pd
 import statsmodels.tsa.seasonal
 
 from gs_quant.timeseries import diff, annualize, returns
-from .statistics import *
+from .algebra import subtract
+from .helper import Window, plot_function, normalize_window, apply_ramp
+from .statistics import mean, std, exponential_std
+from ..errors import MqValueError
 
 """
 Technicals library is for technical analysis functions on timeseries, including moving averages,

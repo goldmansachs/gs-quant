@@ -14,9 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.backtests.data_handler import DataHandler
-from gs_quant.backtests.event import *
 import datetime as dt
+
+from gs_quant.backtests.data_handler import DataHandler
+from gs_quant.backtests.event import OrderEvent, FillEvent
+from gs_quant.backtests.order import OrderBase
 
 
 class ExecutionEngine(object):

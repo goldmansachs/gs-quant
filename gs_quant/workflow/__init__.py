@@ -14,5 +14,5 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.target.workflow_quote import  *
-from .workflow import *
+from gs_quant.target.workflow_quote import *  # noqa
+from .workflow import *  # noqa

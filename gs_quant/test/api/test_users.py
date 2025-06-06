@@ -18,7 +18,7 @@ from unittest import mock
 import pytest
 
 from gs_quant.api.gs.users import GsUsersApi
-from gs_quant.session import *
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.reports import User
 
 

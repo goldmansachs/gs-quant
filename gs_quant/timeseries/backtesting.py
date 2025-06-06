@@ -13,20 +13,31 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import logging
+from typing import Optional, Union
 
-from functools import partial
+import numpy as np
+import pandas as pd
+import datetime as dt
+from functools import partial, reduce
+from numbers import Real
 
 from dateutil.relativedelta import relativedelta as rdelta
 from pydash import chunk
 
 from gs_quant.timeseries.econometrics import volatility, correlation
-from gs_quant.timeseries.helper import _create_enum, _tenor_to_month, _month_to_tenor
+
 from gs_quant.timeseries.measures_helper import VolReference, preprocess_implied_vol_strikes_eq
 from gs_quant import timeseries as ts
-from .statistics import *
+from .algebra import sqrt
+from .helper import _create_enum, _tenor_to_month, _month_to_tenor, requires_session, Returns, plot_function, \
+    plot_method, Window
 from ..api.gs.assets import GsAssetApi
-from ..api.gs.data import GsDataApi, MarketDataResponseFrame
+from ..api.gs.data import GsDataApi, MarketDataResponseFrame, QueryType
+from ..api.utils import ThreadPoolManager
+from ..data import DataContext
 from ..data.log import log_debug
+from ..errors import MqTypeError, MqValueError
 
 _logger = logging.getLogger(__name__)
 
@@ -319,7 +330,7 @@ class Basket:
         actual_weights = self.get_actual_weights(request_id)
 
         # Add in today's data
-        today = datetime.date.today()
+        today = dt.date.today()
         if not real_time and DataContext.current.end_date >= today and \
                 (vol_data.empty or today not in vol_data.index.date):
             vol_data = ts.append_last_for_measure(vol_data, self.get_marquee_ids(), QueryType.IMPLIED_VOLATILITY, where,

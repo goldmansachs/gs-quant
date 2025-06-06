@@ -13,22 +13,23 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from gs_quant.backtests import FlowVolBacktestMeasure
-from gs_quant.backtests import triggers as t
+import copy
+import re
+import warnings
+from functools import reduce
+
+import pandas as pd
+
 from gs_quant.backtests import actions as a
-from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
+from gs_quant.backtests import triggers as t
 from gs_quant.backtests.backtest_objects import ConstantTransactionModel
+from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
+from gs_quant.common import OptionType, BuySell
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import EqDelta, EqSpot, EqGamma, EqVega
-from gs_quant.target.backtests import BacktestSignalSeriesItem, BacktestTradingQuantityType, EquityMarketModel
-import pandas as pd
-import re
-import copy
-from functools import reduce
-import warnings
-
-from gs_quant.target.common import OptionType, BuySell
+from gs_quant.target.backtests import BacktestSignalSeriesItem, BacktestTradingQuantityType, EquityMarketModel, \
+    FlowVolBacktestMeasure
 
 
 def get_backtest_trading_quantity_type(scaling_type, risk):
