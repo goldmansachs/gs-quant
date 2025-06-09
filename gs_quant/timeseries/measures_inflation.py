@@ -350,7 +350,7 @@ def inflation_swap_term(asset: Asset, index_type: str = None,
         biz_day = _get_custom_bd(calendar)
         df['expirationDate'] = df['terminationTenor'].apply(_get_term_struct_date, args=(latest, biz_day))
         df = df.set_index('expirationDate')
-        df.sort_index(inplace=True)
+        df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swapRate'])
         series.dataset_ids = getattr(df, 'dataset_ids', ())

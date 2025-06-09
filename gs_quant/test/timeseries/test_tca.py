@@ -39,3 +39,4 @@ def test_covariance():
     mock_request.return_value = mock_data
 
     tm.covariance(mock_spx_1, mock_spx_2, '19:30:00', '20:00:00')
+    replace.restore()

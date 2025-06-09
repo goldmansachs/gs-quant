@@ -381,7 +381,7 @@ def test_get_data_bulk(mocker):
     }
 
     df = pd.DataFrame(test_df)
-    df.set_index('date', inplace=True)
+    df = df.set_index('date')
 
     coverage = pd.DataFrame({'clusterRegion': ['Asia Pacific']})
     symbol_dimension = ('clusterRegion',)

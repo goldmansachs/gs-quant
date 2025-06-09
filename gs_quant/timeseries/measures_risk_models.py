@@ -283,6 +283,6 @@ def __format_plot_measure_results(time_series: Dict, query_type: QueryType, mult
     time_series_list = [{'date': k, col_name: v * multiplier} for k, v in time_series.items()]
     df = pd.DataFrame(time_series_list)
     if not df.empty:
-        df.set_index('date', inplace=True)
+        df = df.set_index('date')
         df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, query_type, handle_missing_column)

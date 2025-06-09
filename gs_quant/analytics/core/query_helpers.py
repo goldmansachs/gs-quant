@@ -105,7 +105,7 @@ def fetch_query(query_info: Dict):
     df = DataFrame(response.get('data', {}))
     if df.empty:
         return df
-    df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
+    df = df.set_index('date' if 'date' in df.columns else 'time')
     df.index = to_datetime(df.index).tz_localize(None)
     return df
 

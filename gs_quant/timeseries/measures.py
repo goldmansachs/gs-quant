@@ -70,6 +70,14 @@ class ExtendedSeries(Series):
     def _constructor(self):
         return ExtendedSeries
 
+    def __finalize__(self, other, method=None, **kwargs):
+        # Call the parent class's __finalize__ method
+        super().__finalize__(other, method)
+        # Copy custom attributes from the other DataFrame
+        if isinstance(other, ExtendedSeries) and hasattr(other, 'dataset_ids'):
+            self.dataset_ids = getattr(other, 'dataset_ids', None)
+        return self
+
 
 # TODO: get NERC Calendar from SecDB
 class NercCalendar(AbstractHolidayCalendar):
@@ -1028,7 +1036,7 @@ def _calculate_implied_correlation(index_mqid, vol_df, constituents_weights, req
             log_debug(request_id, _logger, 'removed %d duplicates for %s', before - after, name)
         g = group.reindex(full_index)
         g['assetId'] = name
-        g['impliedVolatility'].interpolate(inplace=True)
+        g['impliedVolatility'] = g['impliedVolatility'].interpolate()
         all_groups.append(g)
     df = pd.concat(all_groups)
 
@@ -1380,16 +1388,16 @@ def _get_index_constituent_weights(asset: Asset, top_n_of_index: Optional[int] =
         raise MqValueError('Unable to get constituents of {} between {} and {}'.format(mqid, start, end))
 
     constituents = pd.DataFrame(positions_data)[['underlyingAssetId', 'netWeight', 'positionDate']]
-    constituents.set_index('positionDate', inplace=True)
+    constituents = constituents.set_index('positionDate')
     latest = constituents.index.max()
     _logger.info('selected composition date %s', latest)
     constituents = constituents.loc[latest]
-    constituents.sort_values(by=['netWeight'], ascending=False, inplace=True)
+    constituents = constituents.sort_values(by=['netWeight'], ascending=False)
     constituents = constituents[:top_n_of_index] if top_n_of_index is not None else constituents
     total_weight = constituents['netWeight'].sum()
     constituents['netWeight'] = constituents['netWeight'] / total_weight
 
-    constituents.set_index('underlyingAssetId', inplace=True)
+    constituents = constituents.set_index('underlyingAssetId')
     return constituents
 
 
@@ -1750,7 +1758,7 @@ def _process_forward_vol_term(asset: Asset, vol_series: pd.Series, vol_col: str,
         ext_series = ExtendedSeries(vol_df['fwdVol'], name=series_name)[DataContext.current.start_date:
                                                                         DataContext.current.end_date]
         ext_series.dataset_ids = getattr(vol_series, 'dataset_ids', ())
-        ext_series.sort_index(inplace=True)
+        ext_series = ext_series.sort_index()
         return ext_series
 
 
@@ -1955,7 +1963,7 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
         series = pd.concat([series, series_expiry])
 
     series.name = "impliedVolatility"
-    series.sort_index(inplace=True)
+    series = series.sort_index()
     series = ExtendedSeries(series.loc[DataContext.current.start_date: DataContext.current.end_date])
     series.dataset_ids = tuple(dataset_ids)
     return series
@@ -2049,7 +2057,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
         series = pd.concat([series, extra])
 
     series.name = "impliedVolatility"
-    series.sort_index(inplace=True)
+    series = series.sort_index()
     series = series.loc[DataContext.current.start_date: DataContext.current.end_date]
     series = ExtendedSeries(series)
     series.attrs = dict(latest=latest)
@@ -2155,7 +2163,7 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
         df = df.loc[latest]
         df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
         df = df.set_index('expirationDate')
-        df.sort_index(inplace=True)
+        df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[forward_col_name])
     series.dataset_ids = dataset_ids
@@ -2217,7 +2225,7 @@ def fx_fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
         df = df.loc[latest]
         df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
         df = df.set_index('expirationDate')
-        df.sort_index(inplace=True)
+        df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         if get_spot:
             spot = spot_df.loc[latest]['spot']
@@ -2275,7 +2283,7 @@ def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
         df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
 
         df = df.set_index('expirationDate')
-        df.sort_index(inplace=True)
+        df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         spot = spot_df.loc[latest]['spot']
 
@@ -2421,7 +2429,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
         cbd = _get_custom_bd(asset.exchange)
         df.loc[:, Fields.EXPIRATION_DATE.value] = df.index + df[Fields.TENOR.value].map(_to_offset) + cbd - cbd
         df = df.set_index(Fields.EXPIRATION_DATE.value)
-        df.sort_index(inplace=True)
+        df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
         series.attrs = dict(latest=latest)
@@ -2692,7 +2700,7 @@ def _merge_curves_by_weighted_average(forwards_data, weights, keys, measure_colu
 
     # Filtering dates that have missing buckets or contracts.
     # Dates with any null values due to unmatched rows in the right table with raw data will be removed as a result.
-    null_dates = set(result_df[result_df[measure_column].isnull()]['dates'])
+    null_dates = set(result_df[result_df[measure_column].isna()]['dates'])
     result_df = result_df[~result_df['dates'].isin(null_dates)]
 
     result_df = result_df.groupby('dates').agg({'weight': 'sum', 'weighted_price': 'sum'})
@@ -3000,7 +3008,7 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
 
 def get_contract_range(start_contract_range, end_contract_range, timezone):
     if timezone:
-        df = pd.date_range(start_contract_range, end_contract_range + dt.timedelta(days=1), None, 'H',
+        df = pd.date_range(start_contract_range, end_contract_range + dt.timedelta(days=1), None, 'h',
                            timezone, False, None, 'left').to_frame()
 
         df['hour'] = df.index.hour
@@ -4251,7 +4259,7 @@ def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source
     df = _market_data_timed(q, request_id)
     series = _extract_series_from_df(df, query_type)
     if query_type == QueryType.RATING:
-        series.replace(['Buy', 'Sell', 'Neutral'], [1, -1, 0], inplace=True)
+        series = series.replace(['Buy', 'Sell', 'Neutral'], [1, -1, 0])
     return series
 
 
@@ -4649,9 +4657,9 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
         start, end = DataContext.current.start_date, DataContext.current.end_date
         ds = Dataset(Dataset.GS.FXFORWARDPOINTS_PREMIUM)
         mq_df = ds.get_data(asset_id=asset_id, start=start, end=end, tenor=tenor)
-        mq_df.reset_index(inplace=True)
+        mq_df = mq_df.reset_index()
         mq_df['ann_factor'] = mq_df.apply(lambda x: 360 / (x.settlementDate - x.date).days, axis=1)
-        mq_df.set_index('date', inplace=True)
+        mq_df = mq_df.set_index('date')
 
     if annualized == FXSpotCarry.ANNUALIZED:
         mq_df['carry'] = -1 * mq_df['ann_factor'] * mq_df['forwardPoint'] / mq_df['spot']
@@ -5047,85 +5055,3 @@ def s3_long_short_concentration(asset: Asset, s3Metric: S3Metrics = S3Metrics.LO
 
     # Extract the timeseries and format it for PTP
     return _extract_series_from_df(df, QueryType.S3_AGGREGATE_DATA)
-
-
-class S3EntityType(Enum):
-    PASSIVE = 'passive'
-    ACTIVE = 'active'
-    HEDGE_FUND_MANAGER = 'hedge fund manager'
-
-
-@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
-def s3_long_interest(asset: Asset,
-                     s3_entity_type: S3EntityType = S3EntityType.PASSIVE,
-                     *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
-    """
-    S3 partners long interest for single stocks, shows long interest for the given entity type.
-
-    :param asset: asset object loaded from security master
-    :param s3_entity_type: type of entity e.g. passive
-    :param source: name of function caller: default source = None
-    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
-    :param request_id: service request id, if any
-    :return: S3 Partners long interest
-
-    """
-    start, end = DataContext.current.start_date, DataContext.current.end_date
-    ds_id = 'S3_PARTNERS_EQ_LONG_INTEREST'
-    ds = Dataset(ds_id)
-    df = ds.get_data(assetId=asset.get_marquee_id(),
-                     start=start, end=end, s3EntityType=s3_entity_type)
-
-    return _extract_series_from_df(df, QueryType.S3_LONG_INTEREST)
-
-
-@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
-def s3_long_interest_market_value(asset: Asset,
-                                  s3_entity_type: S3EntityType = S3EntityType.PASSIVE,
-                                  *, source: str = None, real_time: bool = False,
-                                  request_id: Optional[str] = None) -> pd.Series:
-    """
-    S3 partners long interest market value for single stocks, shows long interest market value
-    for the given entity type.
-
-    :param asset: asset object loaded from security master
-    :param s3_entity_type: type of entity e.g. passive
-    :param source: name of function caller: default source = None
-    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
-    :param request_id: service request id, if any
-    :return: S3 Partners long interest
-
-    """
-    start, end = DataContext.current.start_date, DataContext.current.end_date
-    ds_id = 'S3_PARTNERS_EQ_LONG_INTEREST'
-    ds = Dataset(ds_id)
-    df = ds.get_data(assetId=asset.get_marquee_id(),
-                     start=start, end=end, s3EntityType=s3_entity_type)
-
-    return _extract_series_from_df(df, QueryType.S3_LONG_INTEREST_MV)
-
-
-@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
-def s3_long_interest_percent_shares_out(asset: Asset,
-                                        s3_entity_type: S3EntityType = S3EntityType.PASSIVE,
-                                        *, source: str = None, real_time: bool = False,
-                                        request_id: Optional[str] = None) -> pd.Series:
-    """
-    S3 partners long interest percent of shares for single stocks, shows long interest percent of shares for the
-    given entity type.
-
-    :param asset: asset object loaded from security master
-    :param s3_entity_type: type of entity e.g. passive
-    :param source: name of function caller: default source = None
-    :param real_time: whether to retrieve intraday data instead of EOD, real time is currently not supported
-    :param request_id: service request id, if any
-    :return: S3 Partners long interest
-
-    """
-    start, end = DataContext.current.start_date, DataContext.current.end_date
-    ds_id = 'S3_PARTNERS_EQ_LONG_INTEREST'
-    ds = Dataset(ds_id)
-    df = ds.get_data(assetId=asset.get_marquee_id(),
-                     start=start, end=end, s3EntityType=s3_entity_type)
-
-    return _extract_series_from_df(df, QueryType.S3_LONG_INTEREST_PERCENT)

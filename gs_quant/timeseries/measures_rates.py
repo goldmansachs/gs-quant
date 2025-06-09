@@ -1176,8 +1176,8 @@ def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: s
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
-        df.set_index('strikeRelative', inplace=True)
-        df.sort_index(inplace=True)
+        df = df.set_index('strikeRelative')
+        df = df.sort_index()
         series = ExtendedSeries(df['swaptionVol'].values, index=df.index.values)
     series.dataset_ids = dataset_ids
     return series
@@ -1247,7 +1247,7 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
         business_day = _get_custom_bd(asset.exchange)
         df = df.assign(expirationDate=df.index + df[tenor_to_plot].map(_to_offset) + business_day - business_day)
         df = df.set_index('expirationDate')
-        df.sort_index(inplace=True)
+        df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swaptionVol'])
     series.dataset_ids = dataset_ids
@@ -1666,7 +1666,7 @@ def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_
                 df = df[~df[col_to_plot].isin(['imm1', 'imm2', 'imm3', 'imm4'])]
             df['expirationDate'] = df[col_to_plot].apply(_get_term_struct_date, args=(latest, biz_day))
             df = df.set_index('expirationDate')
-            df.sort_index(inplace=True)
+            df = df.sort_index()
             df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
             series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
@@ -1751,8 +1751,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
             if col_to_plot == 'effectiveTenor':  # for forward term structure imm date assets
                 df = df[~df[col_to_plot].isin(['imm1', 'imm2', 'imm3', 'imm4'])]
             df['expirationDate'] = df[col_to_plot].apply(_get_term_struct_date, args=(latest, biz_day))
-            df = df.set_index('expirationDate')
-            df.sort_index(inplace=True)
+            df = df.set_index('expirationDate').sort_index()
             df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
             series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['basisSwapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
@@ -2209,7 +2208,7 @@ def policy_rate_term_structure_rt(asset: Asset, event_type: EventType = EventTyp
         joined_df.loc[:, 'expirationDate'] = joined_df[col_to_plot].apply(_get_term_struct_date,
                                                                           args=(latest, biz_day))
         joined_df = joined_df.set_index('expirationDate')
-        joined_df.sort_index(inplace=True)
+        joined_df = joined_df.sort_index()
         joined_df = joined_df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if joined_df.empty else ExtendedSeries(joined_df['rate'])
     series.dataset_ids = getattr(joined_df, 'dataset_ids', ())

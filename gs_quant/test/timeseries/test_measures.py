@@ -730,14 +730,14 @@ def mock_commod(_cls, _q, ignore_errors=False):
                   17.824999, 20.307603, 24.311249, 25.160103, 25.245728, 25.736873, 28.425206, 28.779789, 30.519996,
                   34.896348, 33.966973, 33.95489, 33.686348, 34.840307, 32.674163, 30.261665, 30, 30, 30]
     }
-    df = MarketDataResponseFrame(data=d, index=pd.date_range('2019-05-01', periods=31, freq='H', tz=timezone('UTC')))
+    df = MarketDataResponseFrame(data=d, index=pd.date_range('2019-05-01', periods=31, freq='h', tz=timezone('UTC')))
     df.dataset_ids = _test_datasets
     return df
 
 
 def mock_commod_dup(_cls, _q, ignore_errors=False):
     d = {'price': [35.929686, 35]}
-    idx = pd.date_range('2019-05-01', periods=1, freq='H', tz=timezone('UTC'))
+    idx = pd.date_range('2019-05-01', periods=1, freq='h', tz=timezone('UTC'))
     df = MarketDataResponseFrame(data=d, index=idx.repeat(2))
     df.dataset_ids = _test_datasets
     return df
@@ -1642,7 +1642,7 @@ def test_impl_corr_n(mocker):
     i_vol = pd.read_csv(os.path.join(resources, 'SPX_50_icorr_in.csv'))
     i_vol.index = pd.to_datetime(i_vol['date'])
     weights = pd.read_csv(os.path.join(resources, 'SPX_50_weights.csv'))
-    weights.set_index('underlyingAssetId', inplace=True)
+    weights = weights.set_index('underlyingAssetId')
 
     replace = Replacer()
     market_data = replace('gs_quant.timeseries.econometrics.GsDataApi.get_market_data', Mock())
@@ -1780,8 +1780,7 @@ def test_real_corr_missing():
     df = MarketDataResponseFrame(data=d, index=pd.date_range('2020-08-01', periods=3, freq='D'))
 
     resources = os.path.join(os.path.dirname(__file__), '..', 'resources')
-    weights = pd.read_csv(os.path.join(resources, 'SPX_50_weights.csv'))
-    weights.set_index('underlyingAssetId', inplace=True)
+    weights = pd.read_csv(os.path.join(resources, 'SPX_50_weights.csv')).set_index('underlyingAssetId')
 
     replace = Replacer()
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', lambda *args, **kwargs: df)
@@ -1819,8 +1818,7 @@ def test_real_corr_n():
     resources = os.path.join(os.path.dirname(__file__), '..', 'resources')
     r_vol = pd.read_csv(os.path.join(resources, 'SPX_50_rcorr_in.csv'))
     r_vol.index = pd.to_datetime(r_vol['date'])
-    weights = pd.read_csv(os.path.join(resources, 'SPX_50_weights.csv'))
-    weights.set_index('underlyingAssetId', inplace=True)
+    weights = pd.read_csv(os.path.join(resources, 'SPX_50_weights.csv')).set_index('underlyingAssetId')
 
     replace = Replacer()
     market_data = replace('gs_quant.timeseries.econometrics.GsDataApi.get_market_data', Mock())
@@ -5690,87 +5688,6 @@ def test_s3_long_short_concentration():
         actual = tm.s3_long_short_concentration(mock_asset, tm.S3Metrics.LONG_CROWDING)
 
     assert_series_equal(ExtendedSeries(pd.Series([0.337286, 0.337629, 0.338065]), name='value'), actual)
-
-    replace.restore()
-
-
-def test_s3_long_interest():
-    replace = Replacer()
-
-    # Mock Returns
-    mock_asset = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
-    mock_asset.return_value = "2046251"
-
-    mock_dataset = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
-    mock_dataset.return_value = pd.DataFrame({
-        'date': ['2025-05-12', '2025-05-19', '2025-05-26'],
-        'sedol': ['2046251', '2046251', '2046251'],
-        's3EntityType': ['passive', 'passive', 'passive'],
-        's3LongInterestMarketValue': [1000, 950, 1050],
-        's3LongInterest': [10, 9, 11],
-        's3LongInterestPercentSharesOut': [0.512, 0.513, 0.511],
-        'updateTime': ['2025-05-12 11:23:41+00:00', '2025-05-19 11:23:41+00:00', '2025-05-26 11:23:41+00:00']
-    })
-
-    # Calling Tested Function with DataContext (since only available in PTP)
-    with DataContext(dt.date(2025, 2, 10), dt.date(2025, 2, 17)):
-        actual = tm.s3_long_interest(mock_asset, tm.S3EntityType.PASSIVE)
-
-    assert_series_equal(ExtendedSeries(pd.Series([10, 9, 11]), name='s3LongInterest'), actual)
-
-    replace.restore()
-
-
-def test_s3_long_interest_market_value():
-    replace = Replacer()
-
-    # Mock Returns
-    mock_asset = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
-    mock_asset.return_value = "2046251"
-
-    mock_dataset = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
-    mock_dataset.return_value = pd.DataFrame({
-        'date': ['2025-05-12', '2025-05-19', '2025-05-26'],
-        'sedol': ['2046251', '2046251', '2046251'],
-        's3EntityType': ['passive', 'passive', 'passive'],
-        's3LongInterestMarketValue': [1000, 950, 1050],
-        's3LongInterest': [10, 9, 11],
-        's3LongInterestPercentSharesOut': [0.512, 0.513, 0.511],
-        'updateTime': ['2025-05-12 11:23:41+00:00', '2025-05-19 11:23:41+00:00', '2025-05-26 11:23:41+00:00']
-    })
-
-    # Calling Tested Function with DataContext (since only available in PTP)
-    with DataContext(dt.date(2025, 2, 10), dt.date(2025, 2, 17)):
-        actual = tm.s3_long_interest_market_value(mock_asset, tm.S3EntityType.PASSIVE)
-
-    assert_series_equal(ExtendedSeries(pd.Series([1000, 950, 1050]), name='s3LongInterestMarketValue'), actual)
-
-    replace.restore()
-
-
-def test_s3_long_interest_percent_shares_out():
-    replace = Replacer()
-
-    # Mock Returns
-    mock_asset = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
-    mock_asset.return_value = "2046251"
-
-    mock_dataset = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
-    mock_dataset.return_value = pd.DataFrame({
-        'date': ['2025-05-12', '2025-05-19', '2025-05-26'],
-        'sedol': ['2046251', '2046251', '2046251'],
-        's3EntityType': ['passive', 'passive', 'passive'],
-        's3LongInterestMarketValue': [1000, 950, 1050],
-        's3LongInterest': [10, 9, 11],
-        's3LongInterestPercentSharesOut': [0.512, 0.513, 0.511],
-        'updateTime': ['2025-05-12 11:23:41+00:00', '2025-05-19 11:23:41+00:00', '2025-05-26 11:23:41+00:00']
-    })
-
-    # Calling Tested Function with DataContext (since only available in PTP)
-    with DataContext(dt.date(2025, 2, 10), dt.date(2025, 2, 17)):
-        actual = tm.s3_long_interest_percent_shares_out(mock_asset, tm.S3EntityType.PASSIVE)
-
-    assert_series_equal(ExtendedSeries(pd.Series([0.512, 0.513, 0.511]), name='s3LongInterestPercentSharesOut'), actual)
 
     replace.restore()
 

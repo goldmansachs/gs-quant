@@ -1178,7 +1178,7 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
     if df.empty:
         raise MqValueError(f'No data found for {metric.value} for {asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)}')
 
-    df.reset_index(inplace=True)
+    df = df.reset_index()
     if statistic == EstimateStatistic.ACTUAL:
         if report_basis in [EstimateBasis.NTM, EstimateBasis.STM]:
             raise MqValueError('NTM and STM are not supported for actual values')
@@ -1186,7 +1186,7 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
             raise MqValueError(f'No actual data for {metric.value}')
         else:
             df = df[['feFpEnd', 'feValue']]
-            df.rename(columns={'feFpEnd': 'date'}, inplace=True)
+            df = df.rename(columns={'feFpEnd': 'date'})
             df['date'] = pd.to_datetime(df['date'])
             column = 'feValue'
     elif report_basis not in [EstimateBasis.NTM, EstimateBasis.STM]:
@@ -1222,7 +1222,7 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
             if df.empty:
                 raise MqValueError('No Data returned for selected fiscal period')
 
-        df.fillna({'consEndDate': end}, inplace=True)
+        df = df.fillna({'consEndDate': end})
         df['date_range'] = df.apply(lambda row: pd.date_range(row['date'], row['consEndDate']), axis=1)
         df = df.explode('date_range').drop(columns=['date', 'consEndDate']).rename(
             columns={'date_range': 'date'})
@@ -1272,13 +1272,13 @@ def factset_fundamentals(asset: Asset,
     df = ds.get_data(bbid=asset.get_identifier(AssetIdentifier.BLOOMBERG_ID), start=start_new, end=end)
     if df.empty:
         raise MqValueError(f'No data found for {metric.value} for {asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)}')
-    df.reset_index(inplace=True)
+    df = df.reset_index()
     column = 'ff' + metric.name.replace('_', ' ').title().replace(' ', '')
     df = df[['date', column]]
     date_range = pd.date_range(start=start_new, end=end, freq='D')
     date_df = pd.DataFrame({'date': date_range})
     df = pd.merge(date_df, df, on='date', how='left')
-    df[column] = df[column].fillna(method='ffill')
+    df[column] = df[column].ffill()
     df = df[df['date'] >= pd.to_datetime(start)]
     df = df.sort_values(by='date', ascending=True).set_index('date')
     series = ExtendedSeries(df[column], name=metric.value)
@@ -1308,13 +1308,11 @@ def factset_ratings(asset: Asset,
     ds_id = 'FE_BASIC_CONH_REC_GLOBAL'
     ds = Dataset(ds_id)
     df = ds.get_data(bbid=asset.get_identifier(AssetIdentifier.BLOOMBERG_ID), start=start_new, end=end)
-    df.reset_index(inplace=True)
-    df.fillna({'consEndDate': end}, inplace=True)
+    df = df.reset_index().fillna({'consEndDate': end})
     df['date_range'] = df.apply(lambda row: pd.date_range(row['date'], row['consEndDate']), axis=1)
     df = df.explode('date_range').drop(columns=['date', 'consEndDate']).rename(
         columns={'date_range': 'date'})
-    df = df[df['date'] >= pd.to_datetime(start)]
-    df = df.sort_values(by='date', ascending=True).set_index('date')
+    df = df[df['date'] >= pd.to_datetime(start)].sort_values(by='date', ascending=True).set_index('date')
     series = ExtendedSeries(df[RATING_TO_FIELD[rating_type]], name=rating_type.value)
     series.dataset_ids = ds.id
 

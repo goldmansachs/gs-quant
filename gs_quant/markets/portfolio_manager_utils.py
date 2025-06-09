@@ -80,9 +80,9 @@ def build_macro_portfolio_exposure_df(df_constituents_and_notional: pd.DataFrame
                          index=portfolio_exposure_df.columns.tolist(),
                          columns=["Portfolio Exposure Per Macro Factor Category"]).transpose()])
         portfolio_exposure_df = portfolio_exposure_df.rename(index={0: "Portfolio Exposure Per Macro Factor"})
-        portfolio_exposure_df.loc["Portfolio Exposure Per Macro Factor", ("Asset Information", "Asset Name")] = np.NAN
+        portfolio_exposure_df.loc["Portfolio Exposure Per Macro Factor", ("Asset Information", "Asset Name")] = np.nan
         portfolio_exposure_df.loc[
-            "Portfolio Exposure Per Macro Factor Category", ("Asset Information", "Asset Name")] = np.NAN
+            "Portfolio Exposure Per Macro Factor Category", ("Asset Information", "Asset Name")] = np.nan
 
         # Sort macro Factor Categories by total exposure
         portfolio_exposure_df = portfolio_exposure_df.sort_values(
@@ -99,7 +99,7 @@ def build_macro_portfolio_exposure_df(df_constituents_and_notional: pd.DataFrame
         portfolio_exposure_df = pd.concat([universe_sensitivities_df, sum_over_factors_df])
 
         portfolio_exposure_df = portfolio_exposure_df.rename(index={0: "Portfolio Exposure Per Macro Factor"})
-        portfolio_exposure_df.loc["Portfolio Exposure Per Macro Factor", "Asset Name"] = np.NAN
+        portfolio_exposure_df.loc["Portfolio Exposure Per Macro Factor", "Asset Name"] = np.nan
         portfolio_exposure_df = portfolio_exposure_df.sort_values(
             by=["Portfolio Exposure Per Macro Factor"], axis='columns', ascending=False)
 

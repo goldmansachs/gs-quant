@@ -852,8 +852,9 @@ def generate_series(length: int, direction: Direction = Direction.START_TODAY) -
         first -= dt.timedelta(days=length - 1)
     dates = [first]
 
+    rng = np.random.default_rng()
     for i in range(length - 1):
-        levels.append(levels[i] * 1 + np.random.normal())
+        levels.append(levels[i] * 1 + rng.standard_normal())
         dates.append(dt.date.fromordinal(dates[i].toordinal() + 1))
 
     return pd.Series(data=levels, index=dates, dtype=np.dtype(float))
@@ -918,7 +919,8 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
     elif not y.empty:
         min_periods = 0 if isinstance(w.r, pd.DateOffset) else w.r
         rolling_window = x[:y.index[-1]].rolling(w.w, min_periods)
-        percentile_on_x_index = rolling_window.apply(lambda a: percentileofscore(a, y[a.index[-1]:][0], kind="mean"))
+        percentile_on_x_index = rolling_window.apply(lambda a: percentileofscore(a, y[a.index[-1]:].iloc[0],
+                                                                                 kind="mean"))
         joined_index = pd.concat([x, y], axis=1).index
         res = percentile_on_x_index.reindex(joined_index, method="ffill")[y.index]
     return apply_ramp(res, w)

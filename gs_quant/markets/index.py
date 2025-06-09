@@ -262,7 +262,7 @@ class Index(Asset, PositionedEntity):
         if self.__is_sts_index():
             if price_type == [PriceType.INDICATIVE_CLOSE_PRICE]:
                 indicative_level = self.__query_indicative_levels_dataset(start=start, end=end)
-                indicative_level.drop(['updateTime', 'assetId'], axis=1, inplace=True)
+                indicative_level = indicative_level.drop(['updateTime', 'assetId'], axis=1)
                 indicative_level = indicative_level.astype({'date': 'datetime64[ns]'})
                 prices['date'] = indicative_level['date']
                 prices['indicativeClosePrice'] = indicative_level['indicativeClosePrice']
@@ -271,8 +271,8 @@ class Index(Asset, PositionedEntity):
             official_level = super().get_close_prices(start=start, end=end).to_frame('closePrice')
             indicative_level = self.__query_indicative_levels_dataset(start=start, end=end)
 
-            official_level.reset_index(inplace=True)
-            indicative_level.drop(['updateTime', 'assetId'], axis=1, inplace=True)
+            official_level = official_level.reset_index()
+            indicative_level = indicative_level.drop(['updateTime', 'assetId'], axis=1)
             indicative_levels = indicative_level.astype({'date': official_level.dtypes['date']})
             merged = pd.merge(official_level, indicative_levels, on='date', how='outer')
             return merged

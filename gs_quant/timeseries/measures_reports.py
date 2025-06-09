@@ -256,7 +256,7 @@ def thematic_exposure(report_id: str, basket_ticker: str, *, source: str = None,
                                                end_date=DataContext.current.end_date,
                                                basket_ids=[asset.get_marquee_id()])
     if not df.empty:
-        df.set_index('date', inplace=True)
+        df = df.set_index('date')
         df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, QueryType.THEMATIC_EXPOSURE)
 
@@ -280,7 +280,7 @@ def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
                                             end_date=DataContext.current.end_date,
                                             basket_ids=[asset.get_marquee_id()])
     if not df.empty:
-        df.set_index('date', inplace=True)
+        df = df.set_index('date')
         df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, QueryType.THEMATIC_BETA)
 
@@ -306,7 +306,7 @@ def aum(report_id: str, *, source: str = None,
     # Create and return timeseries
     df = pd.DataFrame(aum_dict)
     if not df.empty:
-        df.set_index('date', inplace=True)
+        df = df.set_index('date')
         df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, QueryType.AUM)
 
@@ -332,7 +332,7 @@ def pnl(report_id: str, unit: str = 'Notional', *, source: str = None,
     if unit == Unit.PERCENT.value:
         return get_pnl_percent(performance_report, pnl_df, 'pnl', start_date, end_date)
     else:
-        pnl_df.set_index('date', inplace=True)
+        pnl_df = pnl_df.set_index('date')
         return pd.Series(pnl_df['pnl'], name="pnl")
 
 
@@ -472,7 +472,7 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
     # Create and return timeseries
     df = pd.DataFrame(factor_exposures)
     if not df.empty:
-        df.set_index('date', inplace=True)
+        df = df.set_index('date')
         df.index = pd.to_datetime(df.index)
     return _extract_series_from_df(df, query_type)
 
@@ -485,7 +485,7 @@ def _return_metrics(one_leg: pd.DataFrame, dates: list, name: str):
     one_leg['cumulativePnl'] = one_leg['pnl'].cumsum(axis=0)
 
     one_leg['normalizedExposure'] = (one_leg['exposure'] - one_leg['cumulativePnl'])
-    one_leg['cumulativePnl'].iloc[0] = 0
+    one_leg.iloc[0, one_leg.columns.get_loc('cumulativePnl')] = 0
     one_leg[f'{name}Metrics'] = one_leg['cumulativePnl'] / one_leg['normalizedExposure'] + 1
 
     one_leg[f'{name}Metrics'] = 1 / one_leg[f'{name}Metrics'] if one_leg['exposure'].iloc[-1] < 0 else one_leg[

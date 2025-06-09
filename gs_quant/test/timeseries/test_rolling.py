@@ -36,11 +36,12 @@ class Timer:
 
 @pytest.mark.parametrize(
     "frequency,count,unit",
-    [('D', 22, 'days'), ('D', 4, 'weeks'), ('D', 3, 'months'), ('D', 1, 'years'), ('S', 12, 'hours')]
+    [('D', 22, 'days'), ('D', 4, 'weeks'), ('D', 3, 'months'), ('D', 1, 'years'), ('s', 12, 'hours')]
 )
 def test_rolling_date_offset(frequency, count, unit):
     length = 1000
-    values = [np.random.random() if np.random.random() > 0.1 else np.nan for _ in range(length)]
+    rng = np.random.default_rng()
+    values = [rng.random() if rng.random() > 0.1 else np.nan for _ in range(length)]
     s = pd.Series(values, index=pd.date_range(end=dt.datetime.now(), freq=frequency, periods=length))
     offset = pd.DateOffset(**{unit: count})
 

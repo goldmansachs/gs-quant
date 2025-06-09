@@ -33,8 +33,9 @@ from gs_quant.timeseries.statistics import (Direction, generate_series, LinearRe
 
 def _random_series(days=365, nans=10):
     assert nans < days
-    values = np.random.random(days)
-    nan_indexes = np.floor(np.random.random(nans) * len(values)).astype(np.int_)
+    rng = np.random.default_rng()
+    values = rng.random(days)
+    nan_indexes = np.floor(rng.random(nans) * len(values)).astype(np.int_)
     for i in nan_indexes:
         values[i] = np.nan
 
@@ -407,7 +408,7 @@ def test_exponential_std():
             debias_fact = sum(weights) ** 2 / (sum(weights) ** 2 - sum(weights ** 2))
             var = debias_fact * sum(weights * (x - ema) ** 2) / sum(weights)
             std.iloc[i] = np.sqrt(var)
-        std[0] = np.nan
+        std.iloc[0] = np.nan
         return std
 
     dates = [

@@ -260,14 +260,14 @@ def test_trend():
     long_x = pd.Series(range(len(long_dates)), index=long_dates)
     res = trend(long_x)  # Should not be all NaN, make sure it's correct length
     assert len(res) == len(long_x)
-    assert np.isclose(res[int(len(res) / 2)], long_x[int(len(res) / 2)], 0.1)
-    assert res.notnull().any()
+    assert np.isclose(res.iloc[int(len(res) / 2)], long_x.iloc[int(len(res) / 2)], 0.1)
+    assert res.notna().any()
     with pytest.raises(ValueError):
         trend(long_x, SeasonalModel.MULTIPLICATIVE)  # Should not be all NaN, make sure it's correct length
     res = trend(long_x + 1, SeasonalModel.MULTIPLICATIVE)  # Should not be all NaN, make sure it's correct length
     assert len(res) == len(long_x)
     assert np.isclose((res.iloc[int(len(res) / 2)] - 1), long_x.iloc[int(len(res) / 2)], 0.1)
-    assert res.notnull().any()
+    assert res.notna().any()
     with pytest.raises(MqValueError):
         x = pd.Series(range(10))
         trend(x)
@@ -275,7 +275,7 @@ def test_trend():
 
 def test_seasonality_adjusted():
     # Test that correctly runs with different frequencies
-    for pfreq in ['B', 'D', 'W', 'M', 'Q', 'Y']:
+    for pfreq in ['B', 'D', 'W', 'ME', 'QE', 'YE']:
         for freq in [Frequency.YEAR, Frequency.QUARTER, Frequency.MONTH, Frequency.WEEK]:
             dates = pd.date_range('2019-01-01', '2021-01-05', freq=pfreq)
             series = pd.Series(range(len(dates)), index=dates) + 1

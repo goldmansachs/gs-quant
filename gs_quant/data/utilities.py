@@ -297,7 +297,7 @@ class Utilities:
 
         if symbol_dimension == "assetId":
             cov = dataset.get_coverage(fields=[identifier])
-            coverage = cov[cov[identifier].notnull()][identifier].tolist()
+            coverage = cov[cov[identifier].notna()][identifier].tolist()
         elif symbol_dimension == "gsid":
             coverage = dataset.get_coverage()[symbol_dimension].tolist()
             coverage = list(Utilities.map_identifiers(symbol_dimension, identifier, coverage).values())

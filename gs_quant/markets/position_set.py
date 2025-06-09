@@ -929,7 +929,7 @@ class PositionSet:
         """
         positions.columns = cls.__normalize_position_columns(positions)
         tag_columns = cls.__get_tag_columns(positions) if add_tags else []
-        positions = positions[~positions['identifier'].isnull()]
+        positions = positions[~positions['identifier'].isna()]
         equalize = not ('quantity' in positions.columns.str.lower() or 'weight' in positions.columns.str.lower())
         equal_weight = 1 / len(positions)
 
@@ -1070,7 +1070,7 @@ class PositionSet:
             position_sets[field] = [pos.get(field) for pos in position_sets['positions']]
 
         columns_to_drop = ["position_sets", "positions"]
-        position_sets.drop(columns=columns_to_drop, inplace=True)
+        position_sets = position_sets.drop(columns=columns_to_drop)
         return position_sets
 
     @staticmethod
@@ -1202,9 +1202,9 @@ class PositionSet:
             if not isinstance(position_set.date, dt.date):
                 position_set.date = pd.Timestamp(position_set.date).to_pydatetime().date()
             positions_on_holding_date_df = position_sets_grouped_by_date.get_group(position_set.date)
-            position_set.positions = positions_on_holding_date_df.loc[~positions_on_holding_date_df['assetId'].isnull(),
+            position_set.positions = positions_on_holding_date_df.loc[~positions_on_holding_date_df['assetId'].isna(),
                                                                       'positions'].tolist()
-            unresolved_positions = positions_on_holding_date_df.loc[positions_on_holding_date_df['assetId'].isnull(),
+            unresolved_positions = positions_on_holding_date_df.loc[positions_on_holding_date_df['assetId'].isna(),
                                                                     'positions'].tolist()
             if unresolved_positions:
                 position_set.__unresolved_positions = unresolved_positions

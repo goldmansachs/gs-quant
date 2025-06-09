@@ -148,8 +148,7 @@ def build_pfp_data_dataframe(results: List,
     factor_data_df = factor_data_df.explode('factorData')
     factor_data_df['factorId'] = factor_data_df['factorData'].apply(lambda x: x.get('factorId'))
     factor_data_df['factorName'] = factor_data_df['factorData'].apply(lambda x: x.get('factorName'))
-    factor_data_df.drop(columns='factorData', inplace=True)
-    factor_data_df.set_index("date", inplace=True)
+    factor_data_df = factor_data_df.drop(columns='factorData').set_index("date")
 
     pfp_list = []
     identifier_col_name = "assetId" if not get_factors_by_name else 'identifier'
@@ -217,7 +216,7 @@ def build_factor_volatility_dataframe(results: List, group_by_name: bool, factor
     df = pd.DataFrame(data, index=dates)
     if group_by_name:
         factor_id_to_name_map = build_factor_id_to_name_map(results)
-        df.rename(columns=factor_id_to_name_map, inplace=True)
+        df = df.rename(columns=factor_id_to_name_map)
     if factors:
         missing_factors = set(factors) - set(df.columns.tolist())
         if missing_factors:

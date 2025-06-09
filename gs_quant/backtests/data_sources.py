@@ -141,7 +141,7 @@ class GenericDataSource(DataSource):
         else:
             if isinstance(self.data_set.index, pd.DatetimeIndex):
                 self.data_set.at[pd.to_datetime(state)] = np.nan
-                self.data_set.sort_index(inplace=True)
+                self.data_set = self.data_set.sort_index()
             else:
                 self.data_set.at[state] = np.nan
             self.data_set.sort_index()

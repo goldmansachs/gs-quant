@@ -246,7 +246,7 @@ def relative_strength_index(x: pd.Series, w: Union[Window, int, str] = 14) -> pd
             rsi.iloc[index] = 100
         else:
             relative_strength = moving_avg_gains.iloc[index] / moving_avg_losses.iloc[index]
-            rsi[index] = 100 - (100 / (1 + relative_strength))
+            rsi.iloc[index] = 100 - (100 / (1 + relative_strength))
 
     return rsi
 
@@ -461,7 +461,7 @@ def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEAR):
         else:
             raise MqValueError(f'Frequency {freq.value} not compatible with series with frequency {pfreq}.')
     elif period == 12:  # monthly frequency
-        x = x.asfreq('M', method='ffill')
+        x = x.asfreq('ME', method='ffill')
         if freq == Frequency.YEAR:
             return x, period
         elif freq == Frequency.QUARTER:

@@ -341,13 +341,13 @@ class AssetConstraint:
                                             on='identifier',
                                             how='left')
 
-            if fail_on_unresolved_positions and asset_constraints_df['id'].isnull().any():
-                missing_ids = asset_constraints_df[asset_constraints_df['id'].isnull()]['identifier'].values.tolist()
+            if fail_on_unresolved_positions and asset_constraints_df['id'].isna().any():
+                missing_ids = asset_constraints_df[asset_constraints_df['id'].isna()]['identifier'].values.tolist()
                 raise MqValueError(
                     f"The following identifiers could not be resolved on {as_of_date.strftime('%Y-%m-%d')}: "
                     f"{', '.join(missing_ids)}")
             else:
-                asset_constraints_df = asset_constraints_df[asset_constraints_df['id'].notnull()]
+                asset_constraints_df = asset_constraints_df[asset_constraints_df['id'].notna()]
 
             asset_constraints_df = asset_constraints_df.rename(
                 columns={'id': 'assetId'})[['assetId', 'minimum', 'maximum', 'unit']]

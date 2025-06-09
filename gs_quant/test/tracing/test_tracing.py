@@ -28,7 +28,7 @@ def make_zero_duration(spans):
     Helper function to set the duration of a span to zero
     """
     for span in spans:
-        span.unwrap().finish_time = span.unwrap().start_time
+        span.unwrap()._end_time = span.start_time
 
 
 def test_tracer_tags():
@@ -56,7 +56,7 @@ def test_tracer_events():
     assert "my_event" in e1.attributes
     assert abs(e1.timestamp_sec - dt.datetime.now().timestamp()) < 2  # to make sure we're used right scale factor
     assert e2.name == "Woo hoo!"
-    assert e2.attributes == {} or e2.attributes == {'event': 'Woo hoo!'}
+    assert e2.attributes == {}
 
 
 def test_tracer_print():
@@ -140,12 +140,19 @@ def test_active_span():
     Tracer.reset()
     inactive = Tracer.active_span()
     # We get a noop/non-recording span
-    assert inactive is None
+    assert inactive is not None
+    assert inactive.span_id is not None
+    assert inactive.trace_id is not None
+    assert inactive.is_recording() is False
+    inactive.set_tag("dummy", "tag")  # should be a no-op, but not throw
+    inactive.add_event("Dummy event")  # should be a no-op, but not throw
 
     with Tracer.activate_span(inactive) as scope:
         # This shouldn't have done anything material, since it's a non-recording span
-        assert scope is not None
-        assert scope.span is None
+        assert scope.span is not None
+        assert scope.span.span_id is not None
+        assert scope.span.trace_id is not None
+        assert scope.span.is_recording() is False
 
     with Tracer('Outer') as scope:
         scoped_span = scope.span
@@ -205,4 +212,7 @@ def test_inject_extract():
 
     ctx = Tracer.extract(fake_http_headers)
     with Tracer.start_active_span('B', child_of=ctx) as scope:
+        assert scope.span.parent_id == span_a.span_id
+
+    with Tracer('C', parent_span=ctx) as scope:
         assert scope.span.parent_id == span_a.span_id

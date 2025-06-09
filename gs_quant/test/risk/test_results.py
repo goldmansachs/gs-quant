@@ -143,7 +143,7 @@ def price_values_test(res, f, with_dates=''):
 
     f = f.replace('N/A', np.nan)[f['risk_measure'] == risk.Price].dropna(axis='columns')
     df_val_map = f['value'].values
-    f.drop('value', axis=1, inplace=True)
+    f = f.drop('value', axis=1)
 
     assert all(res_val_map == df_val_map)  # check if price values are correctly tabulated
     assert (port_depth == f.columns.size)  # check if index setting is correct

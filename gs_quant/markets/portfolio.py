@@ -455,7 +455,7 @@ class Portfolio(PriceableImpl):
     def to_csv(self, csv_file: str, mappings: Optional[dict] = None, ignored_cols: Optional[list] = None):
         port_df = self.to_frame(mappings or {})
         port_df = port_df[np.setdiff1d(port_df.columns, ignored_cols or [])]
-        port_df.reset_index(drop=True, inplace=True)
+        port_df = port_df.reset_index(drop=True)
 
         port_df.to_csv(csv_file)
 

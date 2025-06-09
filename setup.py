@@ -59,15 +59,15 @@ setuptools.setup(
         "certifi",
         "dataclasses_json",
         "deprecation",
-        "funcsigs",
         "inflection",
         "lmfit",
         "more_itertools",
         "msgpack",
         "nest-asyncio",
-        "opentracing",
-        "numpy<2.0.0",
-        "pandas>=1.4,<2.3.0",  # <2.3.0 to avoid breaking patchelf dep, remove when possible
+        "numpy>1.17.0",
+        "opentelemetry-api",
+        "opentelemetry-sdk",
+        "pandas>=1.4",
         "pydash<7.0.0",
         "python-dateutil>=2.7.0",
         "pytz==2024.1",
@@ -76,7 +76,7 @@ setuptools.setup(
         "scipy>=1.2.0",
         "statsmodels>=0.13.0",
         "tqdm",
-        "websockets"
+        "websockets",
     ],
     extras_require={
         "internal": ["gs_quant_internal>=1.5.416"],
@@ -94,6 +94,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Operating System :: OS Independent",
         "License :: OSI Approved :: Apache Software License"
     ],

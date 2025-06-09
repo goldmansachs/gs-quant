@@ -927,7 +927,7 @@ class PerformanceReport(Report):
         if return_format == ReturnFormat.DATA_FRAME:
             rows = results.get('results')
             rows_data_frame = pd.DataFrame(rows)
-            rows_data_frame.rename(columns=lambda c: titleize(c), inplace=True)
+            rows_data_frame = rows_data_frame.rename(columns=lambda c: titleize(c))
             return rows_data_frame
         return results
 
@@ -1697,15 +1697,15 @@ def generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_k
                            is_start_date_first_data_point: bool):
     # Returns are defined as Pnl today divided by AUM yesterday.
     if is_start_date_first_data_point:
-        pnl_df[pnl_col_key].iloc[[0]] = 0
-        if 'totalPnl' in list(pnl_df.columns.values):
-            pnl_df['totalPnl'].iloc[[0]] = 0
+        pnl_df.loc[0, pnl_col_key] = 0
+        if 'totalPnl' in pnl_df.columns:
+            pnl_df.loc[0, 'totalPnl'] = 0
     df = pd.merge(pnl_df, aum_df, how='outer', on='date')
-    df.set_index('date', inplace=True)
-    df.sort_index(inplace=True)
-    df.loc[:, [aum_col_key]] = df.loc[:, [aum_col_key]].ffill()
+    df = df.set_index('date')
+    df = df.sort_index()
+    df[aum_col_key] = df[aum_col_key].ffill()
     df['return'] = df[pnl_col_key].div(df[aum_col_key].shift(1))
-    if 'totalPnl' in list(df.columns.values):
+    if 'totalPnl' in df.columns:
         df['totalPnl'] = df['totalPnl'].div(df[aum_col_key].shift(1))
         df = df.fillna(0)
         df['return'] = __smooth_percent_returns(df['return'].to_numpy(), df['totalPnl'].to_numpy()).tolist()

@@ -125,15 +125,13 @@ def align(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpol
         return x.align(y, 'outer', fill_value=0)
     if method == Interpolate.TIME:
         new_x, new_y = x.align(y, 'outer')
-        new_x.interpolate('time', limit_area='inside', inplace=True)
-        new_y.interpolate('time', limit_area='inside', inplace=True)
+        new_x = new_x.interpolate('time', limit_area='inside')
+        new_y = new_y.interpolate('time', limit_area='inside')
         return [new_x, new_y]
     if method == Interpolate.STEP:
         new_x, new_y = x.align(y, 'outer')
-        new_x.ffill(inplace=True)
-        new_y.ffill(inplace=True)
-        new_x.bfill(inplace=True)
-        new_y.bfill(inplace=True)
+        new_x = new_x.ffill().bfill()
+        new_y = new_y.ffill().bfill()
         return [new_x, new_y]
     else:
         raise MqValueError('Unknown intersection type: ' + method)

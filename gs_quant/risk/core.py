@@ -339,7 +339,7 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
         df = self.copy()
         if isinstance(self.index.values[0], dt.date):
             df.index.name = 'dates'
-            df.reset_index(inplace=True)
+            df = df.reset_index()
         return pd.DataFrame(df)
 
     @staticmethod

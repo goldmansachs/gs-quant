@@ -167,9 +167,6 @@ class QueryType(Enum):
     RETAIL_SELL_SHARES = 'impliedRetailSellShares'
     FWD_POINTS = 'Fwd Points'
     S3_AGGREGATE_DATA = 'value'
-    S3_LONG_INTEREST = 's3LongInterest'
-    S3_LONG_INTEREST_MV = 's3LongInterestMarketValue'
-    S3_LONG_INTEREST_PERCENT = 's3LongInterestPercentSharesOut'
 
 
 class GsDataApi(DataApi):
@@ -1001,7 +998,7 @@ class GsDataApi(DataApi):
                     raise MqValueError(msg)
             if 'response' in container:
                 df = MarketDataResponseFrame(container['response']['data'])
-                df.set_index('date' if 'date' in df.columns else 'time', inplace=True)
+                df = df.set_index('date' if 'date' in df.columns else 'time')
                 df.index = pd.to_datetime(df.index)
                 parts.append(df)
 
@@ -1400,3 +1397,11 @@ class MarketDataResponseFrame(pd.DataFrame):
     @property
     def _constructor(self):
         return MarketDataResponseFrame
+
+    def __finalize__(self, other, method=None, **kwargs):
+        # Call the parent class's __finalize__ method
+        super().__finalize__(other, method, **kwargs)
+        # Copy custom attributes from the other DataFrame
+        if isinstance(other, MarketDataResponseFrame) and hasattr(other, 'dataset_ids'):
+            self.dataset_ids = getattr(other, 'dataset_ids', None)
+        return self

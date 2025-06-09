@@ -672,7 +672,7 @@ class PortfolioManager(PositionedEntity):
                     f"from {start_date} to {end_date} because of exception: {ex}, traceback: {traceback.format_exc()}")
         if asset_level_betas.empty:
             return pd.DataFrame()
-        asset_level_betas.fillna(default_beta_value, inplace=True)
+        asset_level_betas = asset_level_betas.fillna(default_beta_value)
         risk_model_predicted_beta_timeseries = asset_level_betas * portfolio_position_net_weights
         risk_model_predicted_beta_timeseries = (risk_model_predicted_beta_timeseries.sum(axis=1).rename('beta').
                                                 replace({0: np.nan}).ffill())

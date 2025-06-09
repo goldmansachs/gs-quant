@@ -252,7 +252,7 @@ class Basket:
 
         if self._returns is None or self._actual_weights is None:
             spot_df = self.get_spot_data(request_id=request_id)
-            spot_df.dropna(inplace=True)
+            spot_df = spot_df.dropna()
             spot_series = [spot_df[asset_id] for asset_id in spot_df]
             results = backtest_basket(spot_series, self.weights, rebal_freq=self.rebal_freq)
 
@@ -335,7 +335,7 @@ class Basket:
                 (vol_data.empty or today not in vol_data.index.date):
             vol_data = ts.append_last_for_measure(vol_data, self.get_marquee_ids(), QueryType.IMPLIED_VOLATILITY, where,
                                                   source=source, request_id=request_id)
-            vol_data.index.rename('date', inplace=True)
+            vol_data.index = vol_data.index.rename('date')
 
         # Below transformations will throw errors if vol_data is empty
         if vol_data.empty:

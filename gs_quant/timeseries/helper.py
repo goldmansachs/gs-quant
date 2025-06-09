@@ -379,8 +379,8 @@ def rolling_offset(s: pd.Series,
     """
     # frequencies that can be passed to Series.rolling
     fixed = {
-        'hour': 'H',
-        'hours': 'H',
+        'hour': 'h',
+        'hours': 'h',
         'day': 'D',
         'days': 'D'
     }
