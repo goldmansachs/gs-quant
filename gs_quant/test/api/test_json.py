@@ -29,13 +29,13 @@ def test_datetime_serialisation():
     dates = [
         dt.datetime(2021, 8, 10, 10, 39, 19),
         dt.datetime(2021, 8, 10, 10, 39, 19, 59876),
-        # dt.datetime(2021, 8, 10, 10, 39, 19, tzinfo=pytz.timezone('EST')),
+        dt.datetime(2021, 8, 10, 10, 39, 19, tzinfo=pytz.timezone('EST')),
         dt.datetime(2021, 8, 10, 10, 39, 19, tzinfo=pytz.timezone('UTC')),
     ]
     expected = [
         '"2021-08-10T10:39:19.000Z"',
         '"2021-08-10T10:39:19.059Z"',
-        # '"2021-08-10T10:39:19.000-05:00"',
+        '"2021-08-10T10:39:19.000-05:00"',
         '"2021-08-10T10:39:19.000+00:00"',
     ]
     for d, e in zip(dates, expected):
