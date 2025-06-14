@@ -70,7 +70,7 @@ setuptools.setup(
         "pandas>=1.4",
         "pydash<7.0.0",
         "python-dateutil>=2.7.0",
-        "pytz==2024.1",
+        "pytz>=2024.1",
         "requests",
         "httpx>=0.23.3",
         "scipy>=1.2.0",
