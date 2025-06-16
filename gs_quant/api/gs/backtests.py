@@ -15,12 +15,12 @@ under the License.
 """
 import datetime as dt
 import logging
-from typing import Tuple
+from typing import Tuple, Optional
 from urllib.parse import urlencode
 
 from gs_quant.common import FieldValueMap
 from gs_quant.errors import MqValueError
-from gs_quant.session import GsSession
+from gs_quant.session import GsSession, DEFAULT_TIMEOUT
 from gs_quant.target.backtests import Backtest, BacktestResult, BacktestRisk, \
     ComparisonBacktestResult, BacktestRiskRequest, BacktestRefData
 
@@ -84,7 +84,8 @@ class GsBacktestApi:
         return GsSession.current._post('/backtests/{id}/schedule'.format(id=backtest_id))
 
     @classmethod
-    def run_backtest(cls, backtest: Backtest, correlation_id: str = None) -> BacktestResult:
+    def run_backtest(cls, backtest: Backtest, correlation_id: str = None,
+                     timeout: Optional[int] = DEFAULT_TIMEOUT) -> BacktestResult:
         """
         :param backtest: definition of a backtest which should be run on Marquee API
         :param correlation_id: used for logging purposes; helps in tracking all the requests which ultimately serve
@@ -95,7 +96,8 @@ class GsBacktestApi:
         if correlation_id is not None:
             request_headers["X-CorrelationId"] = correlation_id
 
-        response = GsSession.current._post('/backtests/calculate', backtest, request_headers=request_headers)
+        response = GsSession.current._post('/backtests/calculate', backtest, request_headers=request_headers,
+                                           timeout=timeout)
         return cls.backtest_result_from_response(response)
 
     @classmethod
@@ -112,10 +114,11 @@ class GsBacktestApi:
         return BacktestResult(portfolio=portfolio, risks=risks)
 
     @classmethod
-    def calculate_position_risk(cls, backtestRiskRequest: BacktestRiskRequest) -> dict:
+    def calculate_position_risk(cls, backtestRiskRequest: BacktestRiskRequest,
+                                timeout: Optional[int] = DEFAULT_TIMEOUT) -> dict:
         request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
         return GsSession.current._post('/backtests/calculate-position-risk', backtestRiskRequest,
-                                       request_headers=request_headers)
+                                       request_headers=request_headers, timeout=timeout)
 
     @classmethod
     def get_ref_data(cls) -> BacktestRefData:

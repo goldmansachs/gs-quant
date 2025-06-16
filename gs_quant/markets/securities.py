@@ -1507,7 +1507,7 @@ class SecurityMaster:
                 as_of = current.pricing_date
         if isinstance(as_of, dt.date):
             as_of = dt.datetime.combine(as_of, dt.time(0, 0), pytz.utc)
-        query = {id_type.value.lower(): id_value}
+        query = {"id" if id_type == AssetIdentifier.MARQUEE_ID else id_type.value.lower(): id_value}
         if exchange_code is not None:
             query['exchange'] = exchange_code.value
         if asset_type is not None:
