@@ -214,3 +214,9 @@ def test_repeat_empty_series():
     empty_series = pd.Series(dtype=float)
     result = repeat(empty_series)
     assert result.empty, "The result should be an empty series when input is empty."
+
+
+def test_lag_empty_series():
+    empty_series = pd.Series(dtype=float)
+    result = lag(empty_series)
+    assert result.empty, "The result should be an empty series when input is empty."

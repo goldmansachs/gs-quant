@@ -79,13 +79,41 @@ setuptools.setup(
         "websockets",
     ],
     extras_require={
-        "internal": ["gs_quant_internal>=1.5.416"],
-        "turbo": ["quant-extensions"],
-        "notebook": ["jupyter", "matplotlib", "seaborn", "treelib"],
-        "test": ["pytest", "pytest-cov", "pytest-mock", "pytest-order", "testfixtures", "nbconvert", "nbformat",
-                 "jupyter_client", "plotly", "freezegun", "ruff"],
-        "develop": ["wheel", "sphinx", "sphinx_rtd_theme", "sphinx_autodoc_typehints", "pytest", "pytest-cov",
-                    "pytest-mock", "pytest-order", "testfixtures"]
+        "internal": [
+            "gs_quant_internal>=1.7.0"
+        ],
+        "turbo": [
+            "quant-extensions"
+        ],
+        "notebook": [
+            "jupyter",
+            "matplotlib",
+            "seaborn",
+            "treelib"
+        ],
+        "test": [
+            "pytest",
+            "pytest-cov",
+            "pytest-mock",
+            "pytest-order",
+            "testfixtures",
+            "nbconvert",
+            "nbformat",
+            "plotly",
+            "freezegun",
+            "ruff"
+        ],
+        "develop": [
+            "wheel",
+            "sphinx",
+            "sphinx_rtd_theme",
+            "sphinx_autodoc_typehints",
+            "pytest",
+            "pytest-cov",
+            "pytest-mock",
+            "pytest-order",
+            "testfixtures"
+        ]
     },
     classifiers=[
         "Programming Language :: Python :: 3",

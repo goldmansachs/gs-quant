@@ -117,6 +117,7 @@ class GsSession(ContextBase):
         self._session = None
         self._session_async = None
         self.domain = domain
+        self._orig_domain = domain
         if environment in tuple(x.name for x in Environment):
             self.environment = Environment[environment]
         elif isinstance(domain, Environment):
@@ -201,7 +202,7 @@ class GsSession(ContextBase):
             self._session.headers.update({'X-Application': self.application})
             self._session.headers.update({'X-Version': self.application_version})
             self._authenticate()
-            if self.domain == Domain.APP:
+            if self._orig_domain == Domain.APP:
                 self.post_to_activity_service()
 
     def close(self):
@@ -663,6 +664,7 @@ class OAuth2Session(GsSession):
         self.client_id = client_id
         self.client_secret = client_secret
         self.scopes = scopes
+        self._orig_domain = domain
 
         if environment == Environment.DEV.name or (url != env_config['AppDomain'] and not domain == Domain.MDS_US_EAST):
             import urllib3
@@ -711,7 +713,7 @@ class PassThroughSession(GsSession):
 
         super().__init__(domain, environment, api_version=api_version,
                          application=application, verify=verify, http_adapter=http_adapter)
-
+        self._orig_domain = domain
         self.token = token
 
     def _authenticate(self):
@@ -774,6 +776,7 @@ try:
             GsSession.__init__(self, selected_domain, environment_or_domain, api_version=api_version,
                                application=application, verify=verify, http_adapter=http_adapter,
                                application_version=application_version)
+            self._orig_domain = domain
 
 
 except ModuleNotFoundError:

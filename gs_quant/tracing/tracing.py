@@ -208,8 +208,12 @@ class TracingSpan:
         return tuple(TracingEvent(event) for event in self._span.events)
 
     def set_tag(self, key: Union[Enum, str], value: Union[bool, str, bytes, int, float, dt.date]) -> 'TracingSpan':
+        if value is None:
+            return self
         if isinstance(value, dt.date):
             value = value.isoformat()
+        elif isinstance(value, Enum):
+            value = value.value
         if isinstance(key, Enum):
             key = key.value
         self._span.set_attribute(key, value)

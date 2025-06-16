@@ -19,7 +19,6 @@ from unittest.mock import Mock
 
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
 from testfixtures import Replace, Replacer
 
 import gs_quant.timeseries as ts
@@ -257,24 +256,14 @@ def test_get_dataset_data_with_retries():
     GsSession.current = MagicMock(return_calue=NullContextManager())
     mock = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
     mock.side_effect = [
-        MqRequestError(400, message='Number of rows returned by your query is more than maximum allowed'),
-        pd.DataFrame(),
-        pd.DataFrame()
-    ]
-
-    dataset = Dataset(Dataset.TR.TREOD)
-    data = get_dataset_data_with_retries(dataset, start=dt.date(2000, 1, 2), end=dt.date(2019, 1, 9),
-                                         assetId='MA4B66MW5E27U8P32SB')
-
-    assert_frame_equal(data, pd.DataFrame())
-
-    mock.side_effect = [
+        MqRequestError(400, message='Some other error'),
+        MqRequestError(400, message='Some other error'),
         MqRequestError(400, message='Some other error')
     ]
-
+    dataset = Dataset(Dataset.TR.TREOD)
     with pytest.raises(MqRequestError):
         get_dataset_data_with_retries(dataset, start=dt.date(2000, 1, 2), end=dt.date(2019, 1, 9),
-                                      assetId='MA4B66MW5E27U8P32SB')
+                                      assetId='MA4B66MW5E27U8P32SB', max_retries=0)
 
     replace.restore()
 
@@ -308,3 +297,22 @@ def test_split_where_conditions():
 
 if __name__ == "__main__":
     pytest.main(args=["test_helper.py"])
+
+
+def test_get_dataset_data_with_retries_recursive_split():
+    dataset = Mock()
+    dataset.get_data = Mock(side_effect=[
+        MqRequestError(400, message="Some error occurred"),
+        pd.DataFrame({"data": [1, 2]}),
+        pd.DataFrame({"data": [3, 4]})
+    ])
+
+    start = dt.date(2023, 1, 1)
+    end = dt.date(2023, 1, 10)
+
+    result = get_dataset_data_with_retries(dataset, start=start, end=end, max_retries=2)
+
+    # Verify the recursive splitting logic
+    assert not result.empty
+    assert len(result) == 4
+    dataset.get_data.assert_called()

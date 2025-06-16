@@ -324,7 +324,7 @@ def get_dataset_data_with_retries(dataset: Dataset,
     try:
         data = dataset.get_data(start=start, end=end, **kwargs)
     except MqRequestError as e:
-        if 'Number of rows returned by your query is more than maximum allowed' in e.message and count < max_retries:
+        if count < max_retries:
             mid = start + (end - start) / 2
             count += 1
             first_half = partial(get_dataset_data_with_retries, dataset, start=start, end=mid, count=count, **kwargs)

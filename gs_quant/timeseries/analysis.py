@@ -379,6 +379,8 @@ def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.
     obs = getattr(obs, 'w', obs)
     # Determine how we want to handle observations prior to start date
     if mode == LagMode.EXTEND:
+        if x.empty:
+            return x
         if x.index.resolution != 'day':
             raise MqValueError(f'unable to extend index with resolution {x.index.resolution}')
         kwargs = {'periods': abs(obs) + 1, 'freq': 'D'}
