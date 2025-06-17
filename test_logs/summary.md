@@ -1,3 +1,3 @@
-# 测试总结
+# Test Summary
 
-498 passed, 3 skipped, 483 warnings, 331 errors in N/As
+499 passed, 3 skipped, 479 warnings, 331 errors in 11.38s

@@ -1,6 +1,6 @@
-# 警告 (Warnings)
+# Warnings
 
-共计 483 条
+Total: 479
 
 ---
 
@@ -133,7 +133,6 @@
 - gs_quant/test/timeseries/test_econometrics.py::test_beta - Degrees of freedom <= 0 for slice
 - gs_quant/test/timeseries/test_econometrics.py::test_beta - divide by zero encountered in divide
 - gs_quant/test/timeseries/test_econometrics.py::test_beta - invalid value encountered in multiply
-- gs_quant/test/timeseries/test_econometrics.py::test_beta - invalid value encountered in divide
 - gs_quant/test/timeseries/test_econometrics.py::test_beta - Degrees of freedom <= 0 for slice
 - gs_quant/test/timeseries/test_econometrics.py::test_beta - invalid value encountered in scalar divide
 - gs_quant/test/timeseries/test_econometrics.py::test_beta - Degrees of freedom <= 0 for slice
@@ -403,7 +402,7 @@ Try using .loc[row_indexer,col_indexer] = value instead
 
 See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 - gs_quant/test/timeseries/test_measures.py::test_var_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
-- gs_quant/test/timeseries/test_measures.py::test_get_latest_term_structure_data - Replacer deleted without being restored, originals left: {'gs_quant.timeseries.measures.GsDataApi.get_market_data': <Resolved: <classmethod(<function GsDataApi.get_market_data at 0x0000018604D90540>)>>}
+- gs_quant/test/timeseries/test_measures.py::test_get_latest_term_structure_data - Replacer deleted without being restored, originals left: {'gs_quant.timeseries.measures.GsDataApi.get_market_data': <Resolved: <classmethod(<function GsDataApi.get_market_data at 0x0000021BB86EA700>)>>}
 - gs_quant/test/timeseries/test_measures.py::test_vol_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
 - gs_quant/test/timeseries/test_measures.py::test_vol_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
 - gs_quant/test/timeseries/test_measures.py::test_vol_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
@@ -480,7 +479,7 @@ See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stab
 - gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
 - gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
 - gs_quant/test/timeseries/test_measures.py::test_rating - Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
-- gs_quant/test/timeseries/test_measures.py::test_us_gas_forward_curve - Replacer deleted without being restored, originals left: {'gs_quant.data.dataset.Dataset.get_data_last': <Resolved: <function Dataset.get_data_last at 0x000001860487F6A0>>, 'gs_quant.timeseries.measures.GsDataApi.get_market_data': <Resolved: <classmethod(<Mock id='1675715007728'>)>>, 'pandas.Timestamp.today': <Resolved: <classmethod(<cyfunction Timestamp.today at 0x000001867FF141C0>)>>}
+- gs_quant/test/timeseries/test_measures.py::test_us_gas_forward_curve - Replacer deleted without being restored, originals left: {'gs_quant.data.dataset.Dataset.get_data_last': <Resolved: <function Dataset.get_data_last at 0x0000021BB6FE7240>>, 'gs_quant.timeseries.measures.GsDataApi.get_market_data': <Resolved: <classmethod(<Mock id='2318659096400'>)>>, 'pandas.Timestamp.today': <Resolved: <classmethod(<cyfunction Timestamp.today at 0x0000021BB4770040>)>>}
 - gs_quant/test/timeseries/test_measures.py::test_retail_interest_agg - The provided callable <built-in function sum> is currently using DataFrameGroupBy.sum. In a future version of pandas, the provided callable will be used directly. To keep current behavior pass the string "sum" instead.
 - gs_quant/test/timeseries/test_measures_portfolios.py::test_custom_aum - Passing a DataFrame to DataFrame.from_records is deprecated. Use set_index and/or drop to modify the DataFrame instead.
 - gs_quant/test/timeseries/test_measures_rates.py::test_swaption_swaption_vol_term2_returns_data - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
@@ -491,9 +490,6 @@ See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stab
 - gs_quant/test/timeseries/test_measures_reports.py::test_factor_pnl_percent - invalid value encountered in divide
 - gs_quant/test/timeseries/test_measures_reports.py::test_factor_pnl_percent - invalid value encountered in divide
 - gs_quant/test/timeseries/test_measures_reports.py::test_factor_pnl_percent - invalid value encountered in divide
-- gs_quant/test/timeseries/test_rolling.py::test_rolling_date_offset[D-4-weeks] - Mean of empty slice
-- gs_quant/test/timeseries/test_rolling.py::test_rolling_date_offset[D-4-weeks] - Mean of empty slice
-- gs_quant/test/timeseries/test_rolling.py::test_rolling_date_offset[D-4-weeks] - Mean of empty slice
 - gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
 - gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
 - gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)

@@ -1,9 +1,10 @@
-# 通过测试 (Passed)
+# Passed Tests
 
-共计 498 条
+Total: 499
 
 ---
 
+- gs_quant/api/gs/backtests_xasset/json_encoders/response_datatypes/test_backtest_datatypes_encoders.py::test_transaction_cost_config_encoding
 - gs_quant/test/analytics/test_datagrid.py::test_simple_datagrid
 - gs_quant/test/analytics/test_sorting_and_filtering.py::TestSortingAndFiltering::test_post_processing_base_case
 - gs_quant/test/analytics/test_sorting_and_filtering.py::TestSortingAndFiltering::test_sorting

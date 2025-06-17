@@ -1,6 +1,6 @@
-# 错误 (Errors)
+# Errors
 
-共计 331 条
+Total: 331
 
 ---
 

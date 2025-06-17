@@ -1,6 +1,6 @@
-# 失败 (Failures)
+# Failures
 
-共计 0 条
+Total: 0
 
 ---
 

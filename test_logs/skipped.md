@@ -1,6 +1,6 @@
-# 跳过测试 (Skipped)
+# Skipped Tests
 
-共计 3 条
+Total: 3
 
 ---
 
