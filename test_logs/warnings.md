@@ -1,0 +1,521 @@
+# 警告 (Warnings)
+
+共计 483 条
+
+---
+
+-  - cannot collect test class 'TestEnum' because it has a __init__ constructor (from: gs_quant/test/test_base.py)
+-  - Unknown pytest.mark.second_to_last - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+-  - Unknown pytest.mark.order - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+- gs_quant/test/api/test_risk.py::test_create_pretrade_execution_optimization - datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_eq_vol_engine_result - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_engine_mapping_basic - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_engine_mapping_trade_quantity - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_engine_mapping_with_signals - ExitPositionAction will be deprecated soon, use ExitTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_engine_mapping_with_signals - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_engine_mapping_trade_quantity_nav - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_engine_mapping_listed - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_engine_mapping_market_model - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_engine_mapping_portfolio - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_supports_strategy - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_eq_vol_engine.py::test_engine_mapping_basic_leg_size - EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.
+- gs_quant/test/backtest/test_backtest_predefined.py::test_backtest_predefined_timezone_aware - 'H' is deprecated and will be removed in a future version, please use 'h' instead.
+- gs_quant/test/backtest/test_backtest_predefined.py::test_backtest_predefined_timezone_aware - 'H' is deprecated and will be removed in a future version, please use 'h' instead.
+- gs_quant/test/backtest/test_backtest_predefined.py::test_backtest_predefined_timezone_aware - divide by zero encountered in scalar divide
+- gs_quant/test/entities/test_entitlements.py::test_to_target - 'NoneType' object value of non-optional type country detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_to_target - 'NoneType' object value of non-optional type city detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_to_target - 'NoneType' object value of non-optional type region detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_to_dict - 'NoneType' object value of non-optional type country detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_to_dict - 'NoneType' object value of non-optional type city detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_to_dict - 'NoneType' object value of non-optional type region detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_from_target - 'NoneType' object value of non-optional type country detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_from_target - 'NoneType' object value of non-optional type city detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_from_target - 'NoneType' object value of non-optional type region detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_from_dict - 'NoneType' object value of non-optional type country detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_from_dict - 'NoneType' object value of non-optional type city detected when decoding User.
+- gs_quant/test/entities/test_entitlements.py::test_from_dict - 'NoneType' object value of non-optional type region detected when decoding User.
+- gs_quant/test/entities/test_user.py::test_get - 'NoneType' object value of non-optional type country detected when decoding User.
+- gs_quant/test/entities/test_user.py::test_get - 'NoneType' object value of non-optional type city detected when decoding User.
+- gs_quant/test/entities/test_user.py::test_get - 'NoneType' object value of non-optional type region detected when decoding User.
+- gs_quant/test/entities/test_user.py::test_get_many - 'NoneType' object value of non-optional type country detected when decoding User.
+- gs_quant/test/entities/test_user.py::test_get_many - 'NoneType' object value of non-optional type city detected when decoding User.
+- gs_quant/test/entities/test_user.py::test_get_many - 'NoneType' object value of non-optional type region detected when decoding User.
+- gs_quant/test/models/test_epidemiology.py::test_SIR - Using UFloat objects with std_dev==0 may give unexpected results.
+- gs_quant/test/models/test_epidemiology.py::test_SEIR - Using UFloat objects with std_dev==0 may give unexpected results.
+- gs_quant/test/timeseries/test_algebra.py::test_floordiv - divide by zero encountered in floor_divide
+- gs_quant/test/timeseries/test_algebra.py::test_smooth_spikes - Setting an item of incompatible dtype is deprecated and will raise an error in a future version of pandas. Value '1.5' has dtype incompatible with int64, please explicitly cast to a compatible dtype first.
+- gs_quant/test/timeseries/test_analysis.py::test_last - Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+- gs_quant/test/timeseries/test_analysis.py::test_lag - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_implied_vol - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol_wts - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol_intraday - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol_intraday - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_vol_intraday - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_corr - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_corr - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_corr - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_corr - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_corr - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_average_realized_corr - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_without_weights - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_avg_fwd_vol - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_backtesting.py::test_basket_avg_fwd_vol - Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_datetime.py::test_value - Calling float on a single element Series is deprecated and will raise a TypeError in the future. Use float(ser.iloc[0]) instead
+- gs_quant/test/timeseries/test_datetime.py::test_value - Calling float on a single element Series is deprecated and will raise a TypeError in the future. Use float(ser.iloc[0]) instead
+- gs_quant/test/timeseries/test_datetime.py::test_date_range - The behavior of 'isin' with dtype=datetime64[ns] and castable values (e.g. strings) is deprecated. In a future version, these will not be considered matching by isin. Explicitly cast to the appropriate dtype before calling isin instead.
+- gs_quant/test/timeseries/test_datetime.py::test_prepend - The behavior of array concatenation with empty entries is deprecated. In a future version, this will no longer exclude empty items when determining the result dtype. To retain the old behavior, exclude the empty entries before the concat operation.
+- gs_quant/test/timeseries/test_datetime.py::test_prepend - The behavior of array concatenation with empty entries is deprecated. In a future version, this will no longer exclude empty items when determining the result dtype. To retain the old behavior, exclude the empty entries before the concat operation.
+- gs_quant/test/timeseries/test_datetime.py::test_prepend - The behavior of array concatenation with empty entries is deprecated. In a future version, this will no longer exclude empty items when determining the result dtype. To retain the old behavior, exclude the empty entries before the concat operation.
+- gs_quant/test/timeseries/test_datetime.py::test_bucketize - 'M' is deprecated and will be removed in a future version, please use 'ME' instead.
+- gs_quant/test/timeseries/test_econometrics.py::test_change - Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+- gs_quant/test/timeseries/test_econometrics.py::test_volatility - Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+- gs_quant/test/timeseries/test_econometrics.py::test_volatility - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_volatility - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_econometrics.py::test_volatility - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_volatility - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_econometrics.py::test_correlation - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - invalid value encountered in divide
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_econometrics.py::test_beta - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_econometrics.py::test_excess_returns - Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+- gs_quant/test/timeseries/test_econometrics.py::test_sharpe_ratio - Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+- gs_quant/test/timeseries/test_econometrics.py::test_sharpe_ratio - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_econometrics.py::test_sharpe_ratio - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_merge_dataframes - Pandas doesn't allow columns to be created via a new attribute name - see https://pandas.pydata.org/pandas-docs/stable/indexing.html#attribute-access
+- gs_quant/test/timeseries/test_measures.py::test_merge_dataframes - Pandas doesn't allow columns to be created via a new attribute name - see https://pandas.pydata.org/pandas-docs/stable/indexing.html#attribute-access
+- gs_quant/test/timeseries/test_measures.py::test_realized_corr_basket - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_realized_corr_basket - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_realized_corr_basket - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_realized_corr_basket - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_realized_corr_basket - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_realized_corr_basket - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Pandas doesn't allow columns to be created via a new attribute name - see https://pandas.pydata.org/pandas-docs/stable/indexing.html#attribute-access
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_real_corr_n - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_measures.py::test_avg_realized_vol - invalid value encountered in scalar divide
+- gs_quant/test/timeseries/test_measures.py::test_swap_term_structure - 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+- gs_quant/test/timeseries/test_measures.py::test_basis_swap_term_structure - 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+- gs_quant/test/timeseries/test_measures.py::test_var_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_var_term - 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+- gs_quant/test/timeseries/test_measures.py::test_var_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_var_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_var_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_var_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_var_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_var_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_var_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_var_term - 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+- gs_quant/test/timeseries/test_measures.py::test_var_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_get_latest_term_structure_data - Replacer deleted without being restored, originals left: {'gs_quant.timeseries.measures.GsDataApi.get_market_data': <Resolved: <classmethod(<function GsDataApi.get_market_data at 0x0000018604D90540>)>>}
+- gs_quant/test/timeseries/test_measures.py::test_vol_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_skew_term - Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+- gs_quant/test/timeseries/test_measures.py::test_skew_term - Series.__getitem__ treating keys as positions is deprecated. In a future version, integer keys will always be treated as labels (consistent with DataFrame behavior). To access a value by position, use `ser.iloc[pos]`
+- gs_quant/test/timeseries/test_measures.py::test_vol_term_fx - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term_fx - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term_fx - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term_fx - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term_fx - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_vol_term_fx - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+- gs_quant/test/timeseries/test_measures.py::test_fwd_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_carry_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_carry_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_carry_term - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures.py::test_carry_term - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'M' is deprecated and will be removed in a future version, please use 'ME' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - 'S' is deprecated and will be removed in a future version, please use 's' instead.
+- gs_quant/test/timeseries/test_measures.py::test_bucketize_price - Converting to PeriodArray/Index representation will drop timezone information.
+- gs_quant/test/timeseries/test_measures.py::test_rating - Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+- gs_quant/test/timeseries/test_measures.py::test_us_gas_forward_curve - Replacer deleted without being restored, originals left: {'gs_quant.data.dataset.Dataset.get_data_last': <Resolved: <function Dataset.get_data_last at 0x000001860487F6A0>>, 'gs_quant.timeseries.measures.GsDataApi.get_market_data': <Resolved: <classmethod(<Mock id='1675715007728'>)>>, 'pandas.Timestamp.today': <Resolved: <classmethod(<cyfunction Timestamp.today at 0x000001867FF141C0>)>>}
+- gs_quant/test/timeseries/test_measures.py::test_retail_interest_agg - The provided callable <built-in function sum> is currently using DataFrameGroupBy.sum. In a future version of pandas, the provided callable will be used directly. To keep current behavior pass the string "sum" instead.
+- gs_quant/test/timeseries/test_measures_portfolios.py::test_custom_aum - Passing a DataFrame to DataFrame.from_records is deprecated. Use set_index and/or drop to modify the DataFrame instead.
+- gs_quant/test/timeseries/test_measures_rates.py::test_swaption_swaption_vol_term2_returns_data - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures_rates.py::test_swaption_swaption_vol_term2_returns_data - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures_rates.py::test_swaption_swaption_vol_term2_returns_data - Adding/subtracting object-dtype array to DatetimeArray not vectorized.
+- gs_quant/test/timeseries/test_measures_rates.py::test_swaption_swaption_vol_term2_returns_data - Dtype inference on a pandas object (Series, Index, ExtensionArray) is deprecated. The Index constructor will keep the original dtype in the future. Call `infer_objects` on the result to get the old behavior.
+- gs_quant/test/timeseries/test_measures_reports.py::test_factor_pnl_percent - invalid value encountered in divide
+- gs_quant/test/timeseries/test_measures_reports.py::test_factor_pnl_percent - invalid value encountered in divide
+- gs_quant/test/timeseries/test_measures_reports.py::test_factor_pnl_percent - invalid value encountered in divide
+- gs_quant/test/timeseries/test_measures_reports.py::test_factor_pnl_percent - invalid value encountered in divide
+- gs_quant/test/timeseries/test_rolling.py::test_rolling_date_offset[D-4-weeks] - Mean of empty slice
+- gs_quant/test/timeseries/test_rolling.py::test_rolling_date_offset[D-4-weeks] - Mean of empty slice
+- gs_quant/test/timeseries/test_rolling.py::test_rolling_date_offset[D-4-weeks] - Mean of empty slice
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_mode - Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+- gs_quant/test/timeseries/test_statistics.py::test_var - Degrees of freedom <= 0 for slice.
+- gs_quant/test/timeseries/test_statistics.py::test_var - Degrees of freedom <= 0 for slice.
+- gs_quant/test/timeseries/test_statistics.py::test_cov - Degrees of freedom <= 0 for slice
+- gs_quant/test/timeseries/test_statistics.py::test_cov - divide by zero encountered in divide
+- gs_quant/test/timeseries/test_statistics.py::test_cov - invalid value encountered in multiply
+- gs_quant/test/timeseries/test_statistics.py::test_sir_model - Using UFloat objects with std_dev==0 may give unexpected results.
+- gs_quant/test/timeseries/test_statistics.py::test_seir_model - Using UFloat objects with std_dev==0 may give unexpected results.
