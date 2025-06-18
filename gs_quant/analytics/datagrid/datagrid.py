@@ -24,7 +24,7 @@ from numbers import Number
 from typing import List, Dict, Optional, Tuple, Union, Set
 
 import numpy as np
-from pandas import DataFrame, Series, concat
+import pandas as pd
 
 from gs_quant.analytics.common import DATAGRID_HELP_MSG
 from gs_quant.analytics.common.helpers import resolve_entities, get_entity_rdate_key, get_entity_rdate_key_from_rdate, \
@@ -402,7 +402,7 @@ class DataGrid:
                             query_info.data = queried_df[measure if isinstance(measure, str) else measure.value]
                     else:
                         for query_info in query_infos:
-                            query_info.data = Series(dtype=float)
+                            query_info.data = pd.Series(dtype=float)
 
         for query_info in self._data_queries:
             if isinstance(query_info, MeasureQueryInfo):
@@ -444,7 +444,7 @@ class DataGrid:
                 parameters.setdefault(dimension, set())
                 parameters[dimension].add(value)
 
-    def _post_process(self) -> DataFrame:
+    def _post_process(self) -> pd.DataFrame:
         columns = self.columns
         results = defaultdict(list)
         for row in self.results:
@@ -462,14 +462,14 @@ class DataGrid:
                 else:
                     results[column.name].append(np.nan)
 
-        df = DataFrame.from_dict(results)
+        df = pd.DataFrame.from_dict(results)
         row_groups = list(df['rowGroup'].unique())
         sub_dfs = []
         for row_group in row_groups:
             sub_df = self.__handle_filters(df[df['rowGroup'] == row_group])
             sub_df = self.__handle_sorts(sub_df)
             sub_dfs.append(sub_df)
-        df = concat(sub_dfs)
+        df = pd.concat(sub_dfs)
         df.set_index(['rowGroup', df.index]).rename_axis(index=['', ''])
         return df
 
@@ -487,7 +487,7 @@ class DataGrid:
                 df = df.sort_values(by=sort.columnName, ascending=ascending, na_position='last')
         return df
 
-    def __handle_filters(self, df) -> DataFrame:
+    def __handle_filters(self, df) -> pd.DataFrame:
         """
         Handles filtering the dataframe
         :param df: incoming dataframe to be filtered
@@ -555,14 +555,14 @@ class DataGrid:
 
         return running_df
 
-    def to_frame(self) -> DataFrame:
+    def to_frame(self) -> pd.DataFrame:
         """
         Returns the results of the DataGrid data fetching and applied processors.
-        :return: DataFrame of results
+        :return: pd.DataFrame of results
         """
         if not self.is_initialized:
             _logger.info("Grid has not been initialized. Ensure to run DataGrid.initialize()")
-            return DataFrame()
+            return pd.DataFrame()
 
         return self._post_process()
 

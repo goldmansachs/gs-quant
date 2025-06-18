@@ -17,7 +17,6 @@ under the License.
 from typing import Optional, Union
 
 import pandas as pd
-from pandas import Series
 
 from gs_quant.analytics.core.processor import BaseProcessor, DataCoordinateOrProcessor, DateOrDatetimeOrRDate
 from gs_quant.analytics.core.processor_result import ProcessorResult
@@ -521,8 +520,10 @@ class CompoundGrowthRate(BaseProcessor):
         if isinstance(a_data, ProcessorResult):
             if a_data.success:
                 data_series = a_data.data
-                self.value = ProcessorResult(True,
-                                             Series([(data_series.iloc[-1] / data_series.iloc[0]) ** (1 / self.n) - 1]))
+                self.value = ProcessorResult(
+                    True,
+                    pd.Series([(data_series.iloc[-1] / data_series.iloc[0]) ** (1 / self.n) - 1])
+                )
             else:
                 self.value = ProcessorResult(False, "CompoundGrowthRate does not have 'a' series values yet")
         else:

@@ -13,13 +13,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 
 import logging
 from copy import copy
-from datetime import date, datetime
 from typing import Union, Optional, List
 
-from pandas import Timestamp
+import pandas as pd
 
 import gs_quant.datetime.rules as rules
 from gs_quant.common import Currency
@@ -58,7 +58,7 @@ class RelativeDate:
 
     def __init__(self,
                  rule: str,
-                 base_date: Optional[date] = None):
+                 base_date: Optional[dt.date] = None):
         self.rule = rule
         self.base_date_passed_in = False
         if base_date:
@@ -68,15 +68,16 @@ class RelativeDate:
             pricing_date = PricingContext.current.pricing_date
             self.base_date = pricing_date
         else:
-            self.base_date = date.today()
-        self.base_date = self.base_date.date() if isinstance(self.base_date, (datetime, Timestamp)) else self.base_date
+            self.base_date = dt.date.today()
+        self.base_date = self.base_date.date() if isinstance(
+            self.base_date, (dt.datetime, pd.Timestamp)) else self.base_date
 
     def apply_rule(self,
                    currencies: List[Union[Currency, str]] = None,
                    exchanges: List[Union[ExchangeCode, str]] = None,
-                   holiday_calendar: List[date] = None,
+                   holiday_calendar: List[dt.date] = None,
                    week_mask: str = '1111100',
-                   **kwargs) -> date:
+                   **kwargs) -> dt.date:
         """
         Applies business date logic on the rule using the given holiday calendars for rules that use business
         day logic. week_mask is based off
@@ -125,12 +126,12 @@ class RelativeDate:
 
     def __handle_rule(self,
                       rule: str,
-                      result: date,
+                      result: dt.date,
                       week_mask: str,
                       currencies: List[Union[Currency, str]] = None,
                       exchanges: List[Union[ExchangeCode, str]] = None,
-                      holiday_calendar: List[date] = None,
-                      **kwargs) -> date:
+                      holiday_calendar: List[dt.date] = None,
+                      **kwargs) -> dt.date:
         roll = None
         if rule.startswith('-'):
             index = 1
@@ -202,8 +203,8 @@ class RelativeDateSchedule:
 
     def __init__(self,
                  rule: str,
-                 base_date: Optional[date] = None,
-                 end_date: Optional[date] = None):
+                 base_date: Optional[dt.date] = None,
+                 end_date: Optional[dt.date] = None):
         self.rule = rule
         self.base_date_passed_in = False
         if base_date:
@@ -211,17 +212,18 @@ class RelativeDateSchedule:
             self.base_date_passed_in = True
         elif PricingContext.current.is_entered:
             pricing_date = PricingContext.current.pricing_date
-            self.base_date = pricing_date.date() if isinstance(pricing_date, (datetime, Timestamp)) else pricing_date
+            self.base_date = pricing_date.date() if isinstance(pricing_date,
+                                                               (dt.datetime, pd.Timestamp)) else pricing_date
         else:
-            self.base_date = date.today()
+            self.base_date = dt.date.today()
         self.end_date = end_date
 
     def apply_rule(self,
                    currencies: List[Union[Currency, str]] = None,
                    exchanges: List[Union[ExchangeCode, str]] = None,
-                   holiday_calendar: List[date] = None,
+                   holiday_calendar: List[dt.date] = None,
                    week_mask: str = '1111100',
-                   **kwargs) -> List[date]:
+                   **kwargs) -> List[dt.date]:
         """
         Applies business date logic on the rule using the given holiday calendars for rules that use business
         day logic. week_mask is based off

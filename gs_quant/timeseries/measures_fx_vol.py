@@ -19,7 +19,6 @@ from numbers import Real
 from typing import Union, Optional
 
 import pandas as pd
-from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
@@ -523,7 +522,7 @@ def _get_fxo_data(asset: Asset, expiry_tenor: str, strike: str, option_type: str
 def implied_volatility_new(asset: Asset, expiry_tenor: str, strike: str, option_type: str = None,
                            expiration_location: str = None,
                            location: PricingLocation = None, premium_payment_date: str = None, *,
-                           source: str = None, real_time: bool = False) -> Series:
+                           source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day FX vanilla implied volatilities across major crosses.
 
@@ -563,7 +562,7 @@ New Implementation
 def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolReference = None,
                              relative_strike: Real = None, location: Optional[PricingLocation] = None,
                              legacy_implementation: bool = False, *,
-                             source: str = None, real_time: bool = False) -> Series:
+                             source: str = None, real_time: bool = False) -> pd.Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -627,7 +626,7 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
                                  query_type=QueryType.FWD_POINTS)],
               display_name="forward_point")
 def fwd_points(asset: Asset, settlement_date: str,
-               location: str = None, *, source: str = None, real_time: bool = False) -> Series:
+               location: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS End-of-day FX forward points for G3, G10, and EM crosses.
 
@@ -654,7 +653,7 @@ def fwd_points(asset: Asset, settlement_date: str,
                                  query_type=QueryType.STRIKE_VOL)])
 def vol_swap_strike(asset: Asset, expiry_tenor: str, strike_type: str = None,
                     location: PricingLocation = None, *,
-                    source: str = None, real_time: bool = False) -> Series:
+                    source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day FX Vol Swaps volatilities across major crosses.
 

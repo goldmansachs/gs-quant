@@ -15,7 +15,7 @@ under the License.
 """
 from typing import Mapping, Optional
 
-from pandas import DataFrame
+import pandas as pd
 
 from gs_quant.target.risk import MarketDataPattern, MarketDataShock, \
     MarketDataPatternAndShock, MarketDataShockBasedScenario as __MarketDataShockBasedScenario, \
@@ -31,14 +31,14 @@ class MarketDataShockBasedScenario(__MarketDataShockBasedScenario):
 class MarketDataVolShockScenario(__MarketDataVolShockScenario):
 
     @classmethod
-    def from_dataframe(cls, asset_ric: str, df: DataFrame, ref_spot: float = None, name=None):
+    def from_dataframe(cls, asset_ric: str, df: pd.DataFrame, ref_spot: float = None, name=None):
         """
         Create a MarketDataVolShockScenario using an input DataFrame containing expiry dates, strikes and vol levels
         :param asset_ric: the RIC of the asset
         :param df: input data frame.  Expects a DataFrame indexed by date/time and containing columns expirationDate,
         absoluteStrike and impliedVolatility.
         :param ref_spot: the current reference spot level
-        :name: name
+        :param name: name
         :return: MarketDataVolShockScenario
         """
         last_datetime = max(list(df.index))

@@ -17,8 +17,7 @@ under the License.
 import datetime as dt
 import numpy as np
 import pandas as pd
-from numpy import int64
-from pandas._testing import assert_series_equal, assert_frame_equal
+from pandas._testing import assert_series_equal, assert_frame_equal  # noqa
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import \
     encode_series_result, encode_dataframe_result, decode_series_result, decode_dataframe_result
@@ -50,4 +49,5 @@ def test_decode_dataframe_result():
            'values': ((1, 2, 3), (4, 5, 6), (7, 8, 9))}
     df = decode_dataframe_result(enc)
     assert_frame_equal(df, pd.DataFrame(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), columns=['a', 'b', 'c'],
-                       index=[dt.date(2024, 6, 12), dt.date(2024, 6, 13), dt.date(2024, 6, 14)], dtype=int64))
+                                        index=[dt.date(2024, 6, 12), dt.date(2024, 6, 13), dt.date(2024, 6, 14)],
+                                        dtype=np.int64))

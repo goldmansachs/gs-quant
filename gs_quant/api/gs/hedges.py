@@ -15,7 +15,6 @@ under the License.
 """
 import datetime as dt
 import logging
-from datetime import datetime
 from typing import Tuple, List, Dict
 
 from gs_quant.session import GsSession
@@ -83,8 +82,8 @@ class GsHedgeApi:
 
     @classmethod
     def construct_performance_hedge_query(cls, hedge_target: str, universe: Tuple[str, ...], notional: float,
-                                          observation_start_date: datetime.date, observation_end_date: datetime.date,
-                                          backtest_start_date: datetime.date, backtest_end_date: datetime.date,
+                                          observation_start_date: dt.date, observation_end_date: dt.date,
+                                          backtest_start_date: dt.date, backtest_end_date: dt.date,
                                           use_machine_learning: bool = False, lasso_weight: float = None,
                                           ridge_weight: float = None,
                                           max_return_deviation: float = 5, max_adv_percentage: float = 15,

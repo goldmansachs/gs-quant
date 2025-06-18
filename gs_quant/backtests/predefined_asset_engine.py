@@ -19,9 +19,8 @@ from functools import reduce
 from itertools import compress
 from typing import Union, Tuple
 
-from pandas import bdate_range, to_datetime
-from pandas.tseries.offsets import BDay
-from pytz import timezone
+import pandas as pd
+from pandas.tseries.offsets import BDay  # noqa
 from tqdm import tqdm
 
 from gs_quant.backtests import ValuationFixingType
@@ -110,7 +109,7 @@ class PredefinedAssetEngine(BacktestBaseEngine):
     def __init__(self,
                  data_mgr: DataManager = DataManager(),
                  calendars: Union[str, Tuple[str, ...]] = None,
-                 tz: timezone = timezone('UTC'),
+                 tz: dt.timezone = dt.timezone.utc,
                  valuation_method: ValuationMethod = ValuationMethod(ValuationFixingType.PRICE),
                  action_impl_map=None):
         if action_impl_map is None:
@@ -129,7 +128,7 @@ class PredefinedAssetEngine(BacktestBaseEngine):
             return dt.time(23)
 
     def _timer(self, strategy, start, end, frequency, states=None):
-        dates = list(map(lambda x: x.date(), to_datetime(bdate_range(start=start, end=end, freq=frequency)))) \
+        dates = list(map(lambda x: x.date(), pd.to_datetime(pd.bdate_range(start=start, end=end, freq=frequency)))) \
             if states is None else states
 
         all_times = []
@@ -155,7 +154,7 @@ class PredefinedAssetEngine(BacktestBaseEngine):
                 all_times.append(d)
                 for t in times:
                     if d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None:
-                        all_times.append(d.tzinfo.localize(dt.datetime.combine(d.date(), t)))
+                        all_times.append(dt.datetime.combine(d.date(), t, d.tzinfo))
             else:
                 for t in times:
                     all_times.append(dt.datetime.combine(d, t))

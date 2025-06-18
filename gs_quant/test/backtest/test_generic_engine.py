@@ -15,7 +15,6 @@ under the License.
 """
 import datetime as dt
 import json
-from datetime import date
 from unittest.mock import patch
 
 import numpy as np
@@ -52,8 +51,8 @@ def mock_pricing_context(self):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_generic_engine_simple(mocker):
     with MockCalc(mocker):
-        start_date = date(2021, 12, 1)
-        # end_date = date(2021, 12, 3)
+        start_date = dt.date(2021, 12, 1)
+        # end_date = dt.date(2021, 12, 3)
 
         # Define trade
         call = FXOption(buy_sell='Buy', option_type='Call', pair='USDJPY', strike_price='ATMF',
@@ -73,7 +72,8 @@ def test_generic_engine_simple(mocker):
 
         # run backtest daily
         engine = GenericEngine()
-        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 1), date(2021, 12, 2), date(2021, 12, 3)],
+        backtest = engine.run_backtest(strategy,
+                                       states=[dt.date(2021, 12, 1), dt.date(2021, 12, 2), dt.date(2021, 12, 3)],
                                        show_progress=True)
         summary = backtest.result_summary
         assert len(summary) == 3
@@ -84,8 +84,8 @@ def test_generic_engine_simple(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_hedge_action_risk_trigger(mocker):
     with MockCalc(mocker):
-        start_date = date(2021, 12, 1)
-        # end_date = date(2021, 12, 3)
+        start_date = dt.date(2021, 12, 1)
+        # end_date = dt.date(2021, 12, 3)
 
         # Define trade
         call = FXOption(buy_sell='Buy', option_type='Call', pair='USDJPY', strike_price='ATMF',
@@ -109,7 +109,8 @@ def test_hedge_action_risk_trigger(mocker):
         # run backtest daily
         engine = GenericEngine()
         # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
-        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 1), date(2021, 12, 2), date(2021, 12, 3)],
+        backtest = engine.run_backtest(strategy,
+                                       states=[dt.date(2021, 12, 1), dt.date(2021, 12, 2), dt.date(2021, 12, 3)],
                                        show_progress=True)
         summary = backtest.result_summary
         assert len(summary) == 3
@@ -125,7 +126,7 @@ def test_hedge_without_risk(mocker):
         call = FXOption(buy_sell='Buy', option_type='Call', pair='USDJPY', strike_price='ATMF',
                         notional_amount=1e5, expiration_date='2y', name='2y_call')
 
-        trig_req = PeriodicTriggerRequirements(start_date=date(2021, 12, 1), end_date=date(2021, 12, 3),
+        trig_req = PeriodicTriggerRequirements(start_date=dt.date(2021, 12, 1), end_date=dt.date(2021, 12, 3),
                                                frequency='1b')
 
         action = AddTradeAction(call, '1b', name='AddAction1')
@@ -133,7 +134,7 @@ def test_hedge_without_risk(mocker):
         hedge_risk = FXDelta(aggregation_level='Type')
         fwd_hedge = FXForward(pair='USDJPY', settlement_date='2y', notional_amount=1e5, name='2y_forward')
 
-        hedge_trig_req = PeriodicTriggerRequirements(start_date=date(2021, 11, 1), end_date=date(2022, 1, 1),
+        hedge_trig_req = PeriodicTriggerRequirements(start_date=dt.date(2021, 11, 1), end_date=dt.date(2022, 1, 1),
                                                      frequency='1b')
         action_hedge = HedgeAction(hedge_risk, fwd_hedge, '2b', name='HedgeAction1')
 
@@ -144,7 +145,8 @@ def test_hedge_without_risk(mocker):
         # run backtest daily
         engine = GenericEngine()
         # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
-        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 1), date(2021, 12, 2), date(2021, 12, 3)],
+        backtest = engine.run_backtest(strategy,
+                                       states=[dt.date(2021, 12, 1), dt.date(2021, 12, 2), dt.date(2021, 12, 3)],
                                        show_progress=True)
         summary = backtest.result_summary
         assert len(summary) == 3
@@ -153,22 +155,22 @@ def test_hedge_without_risk(mocker):
         assert Price in summary.columns
 
 
-s = pd.Series({date(2021, 10, 1): 0.984274,
-               date(2021, 10, 4): 1.000706,
-               date(2021, 10, 5): 1.044055,
-               date(2021, 10, 6): 1.095361,
-               date(2021, 10, 7): 1.129336,
-               date(2021, 10, 8): 1.182954,
-               date(2021, 10, 12): 1.200108,
-               date(2021, 10, 13): 1.220607,
-               date(2021, 10, 14): 1.172837,
-               date(2021, 10, 15): 1.163660,
-               date(2021, 10, 18): 1.061084,
-               date(2021, 10, 19): 1.025012,
-               date(2021, 10, 20): 1.018035,
-               date(2021, 10, 21): 1.080751,
-               date(2021, 10, 22): 1.069340,
-               date(2021, 10, 25): 1.033413})
+s = pd.Series({dt.date(2021, 10, 1): 0.984274,
+               dt.date(2021, 10, 4): 1.000706,
+               dt.date(2021, 10, 5): 1.044055,
+               dt.date(2021, 10, 6): 1.095361,
+               dt.date(2021, 10, 7): 1.129336,
+               dt.date(2021, 10, 8): 1.182954,
+               dt.date(2021, 10, 12): 1.200108,
+               dt.date(2021, 10, 13): 1.220607,
+               dt.date(2021, 10, 14): 1.172837,
+               dt.date(2021, 10, 15): 1.163660,
+               dt.date(2021, 10, 18): 1.061084,
+               dt.date(2021, 10, 19): 1.025012,
+               dt.date(2021, 10, 20): 1.018035,
+               dt.date(2021, 10, 21): 1.080751,
+               dt.date(2021, 10, 22): 1.069340,
+               dt.date(2021, 10, 25): 1.033413})
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -182,8 +184,6 @@ def test_mkt_trigger_data_sources(mocker):
 
         engine = GenericEngine()
 
-        # backtest = engine.run_backtest(strategy, start=date(2021, 10, 1), end=date(2021, 10, 25), frequency='1b',
-        #                                show_progress=True)
         backtest = engine.run_backtest(strategy, states=list(s.index), show_progress=True)
 
         summary = backtest.result_summary
@@ -197,8 +197,8 @@ def test_mkt_trigger_data_sources(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_exit_action_noarg(mocker):
     with MockCalc(mocker):
-        start_date = date(2021, 12, 6)
-        end_date = date(2021, 12, 10)
+        start_date = dt.date(2021, 12, 6)
+        end_date = dt.date(2021, 12, 10)
 
         # Define trade
         irswap = IRSwap(PayReceive.Receive, '10y', Currency.USD, notional_amount=1e5, name='swap')
@@ -214,23 +214,24 @@ def test_exit_action_noarg(mocker):
         # run backtest daily
         engine = GenericEngine()
         # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
-        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 6), date(2021, 12, 7), date(2021, 12, 8),
-                                                         date(2021, 12, 9), date(2021, 12, 10)], end=end_date,
+        backtest = engine.run_backtest(strategy,
+                                       states=[dt.date(2021, 12, 6), dt.date(2021, 12, 7), dt.date(2021, 12, 8),
+                                               dt.date(2021, 12, 9), dt.date(2021, 12, 10)], end=end_date,
                                        show_progress=True)
 
         trade_ledger = backtest.trade_ledger().to_dict('index')
 
-        assert trade_ledger['Action1_swap_2021-12-06']['Open'] == date(2021, 12, 6)
-        assert trade_ledger['Action1_swap_2021-12-06']['Close'] == date(2021, 12, 6)
-        assert trade_ledger['Action1_swap_2021-12-07']['Open'] == date(2021, 12, 7)
-        assert trade_ledger['Action1_swap_2021-12-07']['Close'] == date(2021, 12, 8)
+        assert trade_ledger['Action1_swap_2021-12-06']['Open'] == dt.date(2021, 12, 6)
+        assert trade_ledger['Action1_swap_2021-12-06']['Close'] == dt.date(2021, 12, 6)
+        assert trade_ledger['Action1_swap_2021-12-07']['Open'] == dt.date(2021, 12, 7)
+        assert trade_ledger['Action1_swap_2021-12-07']['Close'] == dt.date(2021, 12, 8)
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_exit_action_emptyresults(mocker):
     with MockCalc(mocker):
-        start_date = date(2021, 12, 6)
-        end_date = date(2021, 12, 10)
+        start_date = dt.date(2021, 12, 6)
+        end_date = dt.date(2021, 12, 10)
 
         # Define trade
         irswap = IRSwap(PayReceive.Receive, '10y', Currency.USD, notional_amount=1e5, name='swap')
@@ -246,25 +247,26 @@ def test_exit_action_emptyresults(mocker):
         # run backtest daily
         engine = GenericEngine()
         # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
-        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 6), date(2021, 12, 7), date(2021, 12, 8),
-                                                         date(2021, 12, 9), date(2021, 12, 10)], end=end_date,
+        backtest = engine.run_backtest(strategy,
+                                       states=[dt.date(2021, 12, 6), dt.date(2021, 12, 7), dt.date(2021, 12, 8),
+                                               dt.date(2021, 12, 9), dt.date(2021, 12, 10)], end=end_date,
                                        show_progress=True)
 
         trade_ledger = backtest.trade_ledger().to_dict('index')
 
-        assert trade_ledger['Action1_swap_2021-12-06']['Open'] == date(2021, 12, 6)
-        assert trade_ledger['Action1_swap_2021-12-06']['Close'] == date(2021, 12, 6)
-        assert trade_ledger['Action1_swap_2021-12-08']['Open'] == date(2021, 12, 8)
-        assert trade_ledger['Action1_swap_2021-12-08']['Close'] == date(2021, 12, 8)
-        assert trade_ledger['Action1_swap_2021-12-10']['Open'] == date(2021, 12, 10)
-        assert trade_ledger['Action1_swap_2021-12-10']['Close'] == date(2021, 12, 10)
+        assert trade_ledger['Action1_swap_2021-12-06']['Open'] == dt.date(2021, 12, 6)
+        assert trade_ledger['Action1_swap_2021-12-06']['Close'] == dt.date(2021, 12, 6)
+        assert trade_ledger['Action1_swap_2021-12-08']['Open'] == dt.date(2021, 12, 8)
+        assert trade_ledger['Action1_swap_2021-12-08']['Close'] == dt.date(2021, 12, 8)
+        assert trade_ledger['Action1_swap_2021-12-10']['Open'] == dt.date(2021, 12, 10)
+        assert trade_ledger['Action1_swap_2021-12-10']['Close'] == dt.date(2021, 12, 10)
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_exit_action_bytradename(mocker):
     with MockCalc(mocker):
-        start_date = date(2021, 12, 6)
-        end_date = date(2021, 12, 10)
+        start_date = dt.date(2021, 12, 6)
+        end_date = dt.date(2021, 12, 10)
 
         # Define trade
         irswap1 = IRSwap(PayReceive.Receive, '10y', Currency.USD, notional_amount=1e5, name='swap1')
@@ -281,16 +283,17 @@ def test_exit_action_bytradename(mocker):
         # run backtest daily
         engine = GenericEngine()
         # backtest = engine.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
-        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 6), date(2021, 12, 7), date(2021, 12, 8),
-                                                         date(2021, 12, 9), date(2021, 12, 10)], end=end_date,
+        backtest = engine.run_backtest(strategy,
+                                       states=[dt.date(2021, 12, 6), dt.date(2021, 12, 7), dt.date(2021, 12, 8),
+                                               dt.date(2021, 12, 9), dt.date(2021, 12, 10)], end=end_date,
                                        show_progress=True)
 
         trade_ledger = backtest.trade_ledger().to_dict('index')
 
-        assert trade_ledger['Action1_swap1_2021-12-06']['Open'] == date(2021, 12, 6)
-        assert trade_ledger['Action1_swap1_2021-12-06']['Close'] == date(2021, 12, 6)
-        assert trade_ledger['Action1_swap1_2021-12-07']['Open'] == date(2021, 12, 7)
-        assert trade_ledger['Action1_swap1_2021-12-07']['Close'] == date(2021, 12, 8)
+        assert trade_ledger['Action1_swap1_2021-12-06']['Open'] == dt.date(2021, 12, 6)
+        assert trade_ledger['Action1_swap1_2021-12-06']['Close'] == dt.date(2021, 12, 6)
+        assert trade_ledger['Action1_swap1_2021-12-07']['Open'] == dt.date(2021, 12, 7)
+        assert trade_ledger['Action1_swap1_2021-12-07']['Close'] == dt.date(2021, 12, 8)
         assert trade_ledger['Action1_swap2_2021-12-06']['Status'] == 'open'
         assert trade_ledger['Action1_swap2_2021-12-07']['Status'] == 'open'
         assert trade_ledger['Action1_swap2_2021-12-10']['Status'] == 'open'
@@ -299,8 +302,8 @@ def test_exit_action_bytradename(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_add_scaled_action(mocker):
     with MockCalc(mocker):
-        start_date = date(2021, 12, 6)
-        end_date = date(2021, 12, 10)
+        start_date = dt.date(2021, 12, 6)
+        end_date = dt.date(2021, 12, 10)
 
         scale_factor = 7
 
@@ -357,8 +360,8 @@ def test_add_scaled_action(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_scaled_transaction_cost(mocker):
     with MockCalc(mocker):
-        start_date = date(2024, 5, 6)
-        end_date = date(2024, 5, 10)
+        start_date = dt.date(2024, 5, 6)
+        end_date = dt.date(2024, 5, 10)
 
         # notional based transaction cost.  charge 1/10000th of the notional
         transaction_cost = ScaledTransactionModel('notional_amount', 0.0001)
@@ -388,8 +391,8 @@ def test_scaled_transaction_cost(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_agg_transaction_cost(mocker):
     with MockCalc(mocker):
-        start_date = date(2024, 5, 6)
-        end_date = date(2024, 5, 10)
+        start_date = dt.date(2024, 5, 6)
+        end_date = dt.date(2024, 5, 10)
 
         # aggregation based transaction cost.  charge 1/10000th of the notional + 1 for evey transaction
         models = tuple([ScaledTransactionModel('notional_amount', 0.0001), ConstantTransactionModel(1)])
@@ -536,8 +539,8 @@ def test_exit_transaction_costs(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_add_scaled_action_nav(mocker):
     with MockCalc(mocker):
-        start_date = date(2021, 12, 6)
-        end_date = date(2021, 12, 10)
+        start_date = dt.date(2021, 12, 6)
+        end_date = dt.date(2021, 12, 10)
 
         initial_cash = 100
 
@@ -582,8 +585,8 @@ def test_add_scaled_action_nav(mocker):
 
 def nav_scaled_action_transaction_cost_test_for_agg_type(mocker, agg_type):
     with MockCalc(mocker):
-        start_date = date(2021, 12, 6)
-        end_date = date(2021, 12, 10)
+        start_date = dt.date(2021, 12, 6)
+        end_date = dt.date(2021, 12, 10)
 
         initial_cash = 100
 
@@ -648,7 +651,7 @@ def test_add_scaled_action_nav_with_transaction_costs(mocker):
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_generic_engine_custom_price_measure(mocker):
     with MockCalc(mocker):
-        trig_date = date(2021, 12, 1)
+        trig_date = dt.date(2021, 12, 1)
         call = EqOption('.STOXX50E', expiration_date='1y', strike_price='ATM', option_type=OptionType.Call,
                         option_style=OptionStyle.European, name='call')
         freq = '1m'
@@ -659,7 +662,8 @@ def test_generic_engine_custom_price_measure(mocker):
         strategy = Strategy(None, triggers)
 
         engine = GenericEngine(price_measure=DollarPrice)
-        backtest = engine.run_backtest(strategy, states=[date(2021, 12, 1), date(2021, 12, 2), date(2021, 12, 3)],
+        backtest = engine.run_backtest(strategy,
+                                       states=[dt.date(2021, 12, 1), dt.date(2021, 12, 2), dt.date(2021, 12, 3)],
                                        show_progress=True)
         summary = backtest.result_summary
         assert len(summary) == 3
@@ -691,12 +695,12 @@ def test_serialisation(mocker):
                                             name='QuantityScaledAction1')
 
     # Triggers to check (randomly assign actions to triggers to cover all above actions)
-    date_trigger = DateTrigger(DateTriggerRequirements(dates=(date(2021, 12, 1),)), add_trade_action_1)
+    date_trigger = DateTrigger(DateTriggerRequirements(dates=(dt.date(2021, 12, 1),)), add_trade_action_1)
     periodic_trigger = PeriodicTrigger(PeriodicTriggerRequirements(d1, d2, "3m", (d3,)), add_trade_action_2)
     triggers = (
         date_trigger,
         periodic_trigger,
-        DateTrigger(DateTriggerRequirements(dates=(date(2021, 12, 1),)), [add_trade_action_3, hedge_action]),
+        DateTrigger(DateTriggerRequirements(dates=(dt.date(2021, 12, 1),)), [add_trade_action_3, hedge_action]),
         PeriodicTrigger(PeriodicTriggerRequirements(d1, d2, "3m", (d3,))),
         IntradayPeriodicTrigger(IntradayTriggerRequirements(dt1.time(), dt2.time(), 5.0)),
         MktTrigger(MktTriggerRequirements(generic_data_source, 1.1, TriggerDirection.BELOW), exit_trade_action),
@@ -728,37 +732,38 @@ def test_initial_portfolio(mocker):
         new_ir_swap = IRSwap(PayReceive.Pay, '2y', Currency.USD, notional_amount=10000, name='2y')
         newer_ir_swap = IRSwap(PayReceive.Pay, '5y', Currency.USD, notional_amount=10000, name='5y')
 
-        initial_port = {date(2024, 5, 3): irswap,
-                        date(2024, 5, 24): [irswap, new_ir_swap],
-                        date(2024, 6, 14): [new_ir_swap, newer_ir_swap]}
+        initial_port = {dt.date(2024, 5, 3): irswap,
+                        dt.date(2024, 5, 24): [irswap, new_ir_swap],
+                        dt.date(2024, 6, 14): [new_ir_swap, newer_ir_swap]}
 
-        trig_req = PeriodicTriggerRequirements(start_date=date(2024, 5, 3), end_date=date(2024, 7, 5), frequency='1b')
+        trig_req = PeriodicTriggerRequirements(start_date=dt.date(2024, 5, 3), end_date=dt.date(2024, 7, 5),
+                                               frequency='1b')
         triggers = PeriodicTrigger(trig_req, actions)
 
         strategy = Strategy(initial_port, triggers)
 
         engine = GenericEngine()
 
-        pricing_dates = [date(2024, 5, 3),
-                         date(2024, 5, 10),
-                         date(2024, 5, 17),
-                         date(2024, 5, 24),
-                         date(2024, 5, 31),
-                         date(2024, 6, 7),
-                         date(2024, 6, 14),
-                         date(2024, 6, 21),
-                         date(2024, 6, 28),
-                         date(2024, 7, 5)]
+        pricing_dates = [dt.date(2024, 5, 3),
+                         dt.date(2024, 5, 10),
+                         dt.date(2024, 5, 17),
+                         dt.date(2024, 5, 24),
+                         dt.date(2024, 5, 31),
+                         dt.date(2024, 6, 7),
+                         dt.date(2024, 6, 14),
+                         dt.date(2024, 6, 21),
+                         dt.date(2024, 6, 28),
+                         dt.date(2024, 7, 5)]
 
         backtest = BackTest(strategy, pricing_dates, [Price], Price)
-        engine._resolve_initial_portfolio(initial_port, backtest, date(2024, 5, 3), pricing_dates, None)
+        engine._resolve_initial_portfolio(initial_port, backtest, dt.date(2024, 5, 3), pricing_dates, None)
 
         port_dict = backtest.portfolio_dict
-        assert len(port_dict[date(2024, 5, 3)]) == 1
-        assert len(port_dict[date(2024, 5, 24)]) == 2
-        assert len(port_dict[date(2024, 6, 14)]) == 2
-        assert len(port_dict[date(2024, 7, 5)]) == 2
-        assert port_dict[date(2024, 5, 24)][0].name == '10y_2024-05-24'
-        assert port_dict[date(2024, 5, 24)][1].name == '2y_2024-05-24'
-        assert port_dict[date(2024, 6, 14)][0].name == '2y_2024-06-14'
-        assert port_dict[date(2024, 6, 14)][1].name == '5y_2024-06-14'
+        assert len(port_dict[dt.date(2024, 5, 3)]) == 1
+        assert len(port_dict[dt.date(2024, 5, 24)]) == 2
+        assert len(port_dict[dt.date(2024, 6, 14)]) == 2
+        assert len(port_dict[dt.date(2024, 7, 5)]) == 2
+        assert port_dict[dt.date(2024, 5, 24)][0].name == '10y_2024-05-24'
+        assert port_dict[dt.date(2024, 5, 24)][1].name == '2y_2024-05-24'
+        assert port_dict[dt.date(2024, 6, 14)][0].name == '2y_2024-06-14'
+        assert port_dict[dt.date(2024, 6, 14)][1].name == '5y_2024-06-14'

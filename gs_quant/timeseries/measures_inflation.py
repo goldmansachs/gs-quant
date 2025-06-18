@@ -20,7 +20,6 @@ from enum import Enum
 from typing import Optional, Union
 
 import pandas as pd
-from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
@@ -273,7 +272,7 @@ def _get_inflation_swap_data(asset: Asset, swap_tenor: str, index_type: str = No
 def inflation_swap_rate(asset: Asset, swap_tenor: str, index_type: str = None,
                         forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: tm_rates._ClearingHouse = None,
                         location: PricingLocation = None, *,
-                        source: str = None, real_time: bool = False) -> Series:
+                        source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day Zero Coupon Inflation Swap curves across major currencies.
 
@@ -304,7 +303,7 @@ def inflation_swap_rate(asset: Asset, swap_tenor: str, index_type: str = None,
 def inflation_swap_term(asset: Asset, index_type: str = None,
                         forward_tenor: Optional[GENERIC_DATE] = None, pricing_date: Optional[GENERIC_DATE] = None,
                         clearing_house: tm_rates._ClearingHouse = None, location: PricingLocation = None, *,
-                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Forward term structure of GS end-of-day inflation swaps.
 

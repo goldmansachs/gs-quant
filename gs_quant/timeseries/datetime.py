@@ -14,14 +14,13 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
-from datetime import date, time, timedelta
+import datetime as dt
 from enum import Enum
 from numbers import Real
 from typing import Any, Union, List
 
 import numpy as np
 import pandas as pd
-from pandas.tseries.offsets import CustomBusinessDay
 
 from .helper import _create_enum, Interpolate, plot_function
 from ..datetime import GsCalendar
@@ -138,7 +137,7 @@ def align(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpol
 
 
 @plot_function
-def interpolate(x: pd.Series, dates: Union[List[date], List[time], pd.Series] = None,
+def interpolate(x: pd.Series, dates: Union[List[dt.date], List[dt.time], pd.Series] = None,
                 method: Interpolate = Interpolate.INTERSECT) -> pd.Series:
     """
     Interpolate over specified dates or times
@@ -205,7 +204,7 @@ def interpolate(x: pd.Series, dates: Union[List[date], List[time], pd.Series] = 
 
 
 @plot_function
-def value(x: pd.Series, date: Union[date, time], method: Interpolate = Interpolate.STEP) -> pd.Series:
+def value(x: pd.Series, date: Union[dt.date, dt.time], method: Interpolate = Interpolate.STEP) -> pd.Series:
     """
     Value at specified date or time
 
@@ -409,7 +408,7 @@ def weekday(x: pd.Series) -> pd.Series:
 
 @plot_function
 def day_count_fractions(
-        dates: Union[List[date], pd.Series],
+        dates: Union[List[dt.date], pd.Series],
         convention: DayCountConvention = DayCountConvention.ACTUAL_360,
         frequency: PaymentFrequency = PaymentFrequency.MONTHLY
 ) -> pd.Series:
@@ -464,7 +463,7 @@ def day_count_fractions(
 
 
 @plot_function
-def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date, int],
+def date_range(x: pd.Series, start_date: Union[dt.date, int], end_date: Union[dt.date, int],
                weekdays_only: bool = False) -> pd.Series:
     """
     Create a time series from a (sub-)range of dates in an existing time series.
@@ -490,7 +489,7 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
 
     create time series with the absolute date:
 
-    >>> date_range(series, Date(2021,1,1), Date(2021,12,30))
+    >>> date_range(series, dt.date(2021,1,1), dt.date(2021,12,30))
 
     **See also**
 
@@ -499,7 +498,7 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
     """
     if not isinstance(weekdays_only, bool):
         raise MqTypeError('expected a boolean value for "weekdays_only"')
-    if not (isinstance(x.index, pd.DatetimeIndex) or all(map(lambda a: isinstance(a, date), x.index.values))):
+    if not (isinstance(x.index, pd.DatetimeIndex) or all(map(lambda a: isinstance(a, dt.date), x.index.values))):
         raise MqValueError('input is not a time series')
 
     if isinstance(start_date, int):
@@ -517,7 +516,7 @@ def date_range(x: pd.Series, start_date: Union[date, int], end_date: Union[date,
         week_mask = None
         wd = start_date.weekday()
         if wd > 4:
-            start_date += timedelta(days=7 - wd)
+            start_date += dt.timedelta(days=7 - wd)
     else:
         week_mask = tuple([True] * 7)
 
@@ -670,7 +669,7 @@ def bucketize(series: pd.Series, aggregate_function: AggregateFunction, period: 
 
 
 @plot_function
-def day_count(first: date, second: date) -> int:
+def day_count(first: dt.date, second: dt.date) -> int:
     """
     Counts the number of business days between two dates. Monday through Friday are considered to be business days.
 
@@ -678,7 +677,7 @@ def day_count(first: date, second: date) -> int:
     :param second: second date
     :return: number of business days between first and second
     """
-    if not (isinstance(first, date) and isinstance(second, date)):
+    if not (isinstance(first, dt.date) and isinstance(second, dt.date)):
         raise MqValueError('inputs must be dates')
     return np.busday_count(first, second)
 
@@ -700,7 +699,7 @@ def align_calendar(series: pd.Series, calendar: str) -> pd.Series:
     >>> align_calendar(x, 'NYC')
     """
     gs_calendar = GsCalendar.get(calendar)
-    cbd = CustomBusinessDay(calendar=gs_calendar.business_day_calendar())
+    cbd = pd.tseries.offsets.CustomBusinessDay(calendar=gs_calendar.business_day_calendar())
     filtered_series = series[
         series.index.isin(pd.date_range(start=series.first_valid_index(), end=series.last_valid_index(), freq=cbd))]
     return filtered_series

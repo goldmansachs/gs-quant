@@ -18,7 +18,6 @@ from unittest.mock import Mock
 
 import pandas as pd
 import pytest
-from pandas import DatetimeIndex, Timestamp
 from pandas.testing import assert_series_equal
 from testfixtures import Replacer
 
@@ -225,9 +224,9 @@ def mock_factset_fundamentals_empty(_cls, bbid, start, end):
 
 def mock_factset_fundamentals_basic(_cls, bbid, start, end):
     d = {
-        'date': [Timestamp('2024-09-30 00:00:00')],
+        'date': [pd.Timestamp('2024-09-30 00:00:00')],
         'isin': ['US0378331005'],
-        'adjDate': [Timestamp('2020-08-31 00:00:00')],
+        'adjDate': [pd.Timestamp('2020-08-31 00:00:00')],
         'currency': ['USD'],
         'ffEpsBasic': [6.109],
         'fsymId': ['MH33D6-R'],
@@ -240,9 +239,9 @@ def mock_factset_fundamentals_basic(_cls, bbid, start, end):
 
 def mock_factset_fundamentals_basic_derived(_cls, bbid, start, end):
     d = {
-        'date': [Timestamp('2024-09-30 00:00:00')],
+        'date': [pd.Timestamp('2024-09-30 00:00:00')],
         'isin': ['US0378331005'],
-        'adjDate': [Timestamp('2020-08-31 00:00:00')],
+        'adjDate': [pd.Timestamp('2020-08-31 00:00:00')],
         'currency': ['USD'],
         'ffEbitdaOper': [6.109],
         'fsymId': ['MH33D6-R'],
@@ -255,9 +254,9 @@ def mock_factset_fundamentals_basic_derived(_cls, bbid, start, end):
 
 def mock_factset_fundamentals_basic_restated(_cls, bbid, start, end):
     d = {
-        'date': [Timestamp('2024-09-30 00:00:00')],
+        'date': [pd.Timestamp('2024-09-30 00:00:00')],
         'isin': ['US0378331005'],
-        'adjDate': [Timestamp('2020-08-31 00:00:00')],
+        'adjDate': [pd.Timestamp('2020-08-31 00:00:00')],
         'currency': ['USD'],
         'ffEpsBasic': [6.109],
         'fsymId': ['MH33D6-R'],
@@ -270,7 +269,7 @@ def mock_factset_fundamentals_basic_restated(_cls, bbid, start, end):
 
 def mock_factset_ratings(_cls, bbid, start, end):
     d = {
-        'date': [Timestamp('2024-12-31 00:00:00')] * 3,
+        'date': [pd.Timestamp('2024-12-31 00:00:00')] * 3,
         'isin': ['US0378331005'] * 3,
         'feItem': ['REC'] * 3,
         'adjDate': [dt.date(2024, 12, 31)] * 3,
@@ -316,8 +315,8 @@ def test_factset_estimates():
                                       period=FiscalPeriod(2022),
                                       )
         assert_series_equal(pd.Series([5.745] * 4,
-                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_AF_GLOBAL'
 
@@ -329,8 +328,8 @@ def test_factset_estimates():
                                       period=FiscalPeriod(2022, 3),
                                       )
         assert_series_equal(pd.Series([5.745] * 4,
-                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_QF_GLOBAL'
 
@@ -356,8 +355,8 @@ def test_factset_estimates():
                                       period=FiscalPeriod(2022, 2),
                                       )
         assert_series_equal(pd.Series([5.745] * 4,
-                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_SAF_GLOBAL'
 
@@ -368,8 +367,8 @@ def test_factset_estimates():
                                       report_basis=EstimateBasis.NTM
                                       )
         assert_series_equal(pd.Series([5.745] * 3,
-                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10'],
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_NTM'
 
@@ -378,8 +377,8 @@ def test_factset_estimates():
                                       report_basis=EstimateBasis.STM
                                       )
         assert_series_equal(pd.Series([5.745] * 3,
-                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10'],
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_NTM'
 
@@ -389,8 +388,8 @@ def test_factset_estimates():
                                       statistic=EstimateStatistic.MEDIAN
                                       )
         assert_series_equal(pd.Series([5.745] * 4,
-                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_LT_GLOBAL'
 
@@ -401,8 +400,8 @@ def test_factset_estimates():
                                       report_basis=EstimateBasis.ANN
                                       )
         assert_series_equal(pd.Series([15.0],
-                                      index=DatetimeIndex(['2022-09-30'], dtype='datetime64[ns]', name='date',
-                                                          freq=None),
+                                      index=pd.DatetimeIndex(['2022-09-30'], dtype='datetime64[ns]', name='date',
+                                                             freq=None),
                                       name=EstimateStatistic.ACTUAL.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_ACT_AF_GLOBAL'
 
@@ -434,8 +433,9 @@ def test_factset_estimates():
                                       period=1,
                                       )
         assert_series_equal(pd.Series([5.745] * 4,
-                                      index=DatetimeIndex(['2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex([
+                                          '2022-01-08', '2022-01-09', '2022-01-10', '2022-01-11'
+                                      ], dtype='datetime64[ns]', name='date', freq=None),
                                       name=EstimateStatistic.MEDIAN.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_AF_GLOBAL'
 
@@ -493,8 +493,8 @@ def test_factset_fundamentals():
                                          report_format=FundamentalFormat.NON_RESTATED
                                          )
         assert_series_equal(pd.Series([6.109],
-                                      index=DatetimeIndex(['2024-09-30'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex(['2024-09-30'],
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=FundamentalMetric.EPS_BASIC.value), pd.Series(actual))
         assert actual.dataset_ids == 'FF_BASIC_AF_GLOBAL'
 
@@ -505,8 +505,8 @@ def test_factset_fundamentals():
                                          report_format=FundamentalFormat.NON_RESTATED
                                          )
         assert_series_equal(pd.Series([6.109],
-                                      index=DatetimeIndex(['2024-09-30'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex(['2024-09-30'],
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=FundamentalMetric.EBITDA_OPER.value), pd.Series(actual))
         assert actual.dataset_ids == 'FF_BASIC_DER_AF_GLOBAL'
 
@@ -517,8 +517,8 @@ def test_factset_fundamentals():
                                          report_format=FundamentalFormat.RESTATED
                                          )
         assert_series_equal(pd.Series([6.109],
-                                      index=DatetimeIndex(['2024-09-30'],
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex(['2024-09-30'],
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=FundamentalMetric.EPS_BASIC.value), pd.Series(actual))
         assert actual.dataset_ids == 'FF_BASIC_R_AF_GLOBAL'
 
@@ -543,8 +543,8 @@ def test_factset_ratings():
 
         actual = tm.factset_ratings(mock_asset, rating_type=RatingType.BUY)
         assert_series_equal(pd.Series([21.0, 3.0, 3.0],
-                                      index=DatetimeIndex([dt.date(2024, 12, 31)] * 3,
-                                                          dtype='datetime64[ns]', name='date', freq=None),
+                                      index=pd.DatetimeIndex([dt.date(2024, 12, 31)] * 3,
+                                                             dtype='datetime64[ns]', name='date', freq=None),
                                       name=RatingType.BUY.value), pd.Series(actual))
         assert actual.dataset_ids == 'FE_BASIC_CONH_REC_GLOBAL'
 

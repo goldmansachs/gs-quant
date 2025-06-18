@@ -20,7 +20,6 @@ import datetime as dt
 from enum import Enum
 import numpy as np
 import pandas as pd
-import pytz
 from typing import Union, Iterable, ClassVar, List
 
 from gs_quant.backtests.core import ValuationFixingType
@@ -133,7 +132,7 @@ class GenericDataSource(DataSource):
             return [self.get_data(i) for i in state]
 
         if self._tz_aware and (state.tzinfo is None or state.tzinfo.utcoffset(state) is None):
-            state = pytz.utc.localize(state)
+            state = state.replace(tzinfo=dt.timezone.utc)
         if pd.Timestamp(state) in self.data_set:
             return self.data_set[pd.Timestamp(state)]
         elif state in self.data_set or self.missing_data_strategy == MissingDataStrategy.fail:

@@ -13,13 +13,14 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
+
 import asyncio
 import logging
 from collections import defaultdict
-from datetime import date, datetime
 from typing import Dict, Tuple, Union
 
-from pandas import DataFrame, to_datetime
+import pandas as pd
 
 from gs_quant.analytics.core.processor import MeasureQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
@@ -56,14 +57,14 @@ def aggregate_queries(query_infos):
         })
         query_map = dataset_mappings[query_key]
         if not query_map['range']:
-            if isinstance(query.start, date):
+            if isinstance(query.start, dt.date):
                 query_map['range']['startDate'] = query.start
-            elif isinstance(query.start, datetime):
+            elif isinstance(query.start, dt.datetime):
                 query_map['range']['startTime'] = query.start
 
-            if isinstance(query.end, date):
+            if isinstance(query.end, dt.date):
                 query_map['range']['endDate'] = query.end
-            elif isinstance(query.end, datetime):
+            elif isinstance(query.end, dt.datetime):
                 query_map['range']['endTime'] = query.end
 
         queries = query_map['queries']
@@ -100,13 +101,13 @@ def fetch_query(query_info: Dict):
             response = GsSession.current._post(f'/data/{query_info["datasetId"]}/query', payload=query)
     except Exception as e:
         _logger.error(f'Error fetching query due to {e}')
-        return DataFrame()
+        return pd.DataFrame()
 
-    df = DataFrame(response.get('data', {}))
+    df = pd.DataFrame(response.get('data', {}))
     if df.empty:
         return df
     df = df.set_index('date' if 'date' in df.columns else 'time')
-    df.index = to_datetime(df.index).tz_localize(None)
+    df.index = pd.to_datetime(df.index).tz_localize(None)
     return df
 
 
@@ -123,7 +124,7 @@ def build_query_string(dimensions):
     return output
 
 
-def valid_dimensions(query_dimensions: Tuple[str, Union[str, float, bool]], df: DataFrame) -> bool:
+def valid_dimensions(query_dimensions: Tuple[str, Union[str, float, bool]], df: pd.DataFrame) -> bool:
     columns = df.columns
     for query_dimension in query_dimensions:
         dimension = query_dimension[0]

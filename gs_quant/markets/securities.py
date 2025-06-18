@@ -29,7 +29,6 @@ from typing import Tuple, Generator, Iterable, Optional, Dict, List, Union
 import backoff
 import cachetools
 import pandas as pd
-import pytz
 from dateutil.relativedelta import relativedelta
 from pydash import get
 
@@ -1506,7 +1505,7 @@ class SecurityMaster:
             else:
                 as_of = current.pricing_date
         if isinstance(as_of, dt.date):
-            as_of = dt.datetime.combine(as_of, dt.time(0, 0), pytz.utc)
+            as_of = dt.datetime.combine(as_of, dt.time(0, 0), dt.timezone.utc)
         query = {"id" if id_type == AssetIdentifier.MARQUEE_ID else id_type.value.lower(): id_value}
         if exchange_code is not None:
             query['exchange'] = exchange_code.value
@@ -2029,7 +2028,7 @@ class SecurityMaster:
             input_type = get_asset_id_type(input_type)
             output_type = get_asset_id_type(output_types[0])
             as_of = None if as_of_date is None else dt.datetime.combine(as_of_date,
-                                                                        dt.time(tzinfo=pytz.UTC))
+                                                                        dt.time(tzinfo=dt.timezone.utc))
             result = GsAssetApi.map_identifiers(input_type, output_type, list(ids), as_of=as_of, multimap=True)
             if len(result) == 0:
                 return result

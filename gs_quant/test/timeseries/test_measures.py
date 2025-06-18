@@ -24,11 +24,9 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 import pytest
-import pytz
 from numpy.testing import assert_equal
 from pandas.testing import assert_series_equal
 from pandas.tseries.offsets import CustomBusinessDay
-from pytz import timezone
 from testfixtures import Replacer
 from testfixtures.mock import Mock, MagicMock
 
@@ -730,14 +728,14 @@ def mock_commod(_cls, _q, ignore_errors=False):
                   17.824999, 20.307603, 24.311249, 25.160103, 25.245728, 25.736873, 28.425206, 28.779789, 30.519996,
                   34.896348, 33.966973, 33.95489, 33.686348, 34.840307, 32.674163, 30.261665, 30, 30, 30]
     }
-    df = MarketDataResponseFrame(data=d, index=pd.date_range('2019-05-01', periods=31, freq='h', tz=timezone('UTC')))
+    df = MarketDataResponseFrame(data=d, index=pd.date_range('2019-05-01', periods=31, freq='h', tz=dt.timezone.utc))
     df.dataset_ids = _test_datasets
     return df
 
 
 def mock_commod_dup(_cls, _q, ignore_errors=False):
     d = {'price': [35.929686, 35]}
-    idx = pd.date_range('2019-05-01', periods=1, freq='h', tz=timezone('UTC'))
+    idx = pd.date_range('2019-05-01', periods=1, freq='h', tz=dt.timezone.utc)
     df = MarketDataResponseFrame(data=d, index=idx.repeat(2))
     df.dataset_ids = _test_datasets
     return df
@@ -1182,11 +1180,11 @@ def mock_eq_vol(_cls, asset_ids=None, query_type=None, where=None, source=None, 
         'impliedVolatility': [5, 1, 2],
     }
     if DataContext.current.end_date >= dt.date.today():
-        end = dt.datetime.now(pytz.UTC).date()
+        end = dt.datetime.now(dt.timezone.utc).date()
         periods = 4
         d['impliedVolatility'].append(3)
     else:
-        end = dt.datetime.now(pytz.UTC).date() - dt.timedelta(days=1)
+        end = dt.datetime.now(dt.timezone.utc).date() - dt.timedelta(days=1)
         periods = 3
     df = MarketDataResponseFrame(data=d, index=pd.date_range(end=end, periods=periods, freq='D'))
     df.dataset_ids = _test_datasets
@@ -1428,7 +1426,7 @@ def test_implied_vol():
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
     replace('gs_quant.timeseries.measures.get_historical_and_last_for_measure', mock_eq_vol)
-    idx = pd.date_range(end=dt.datetime.now(pytz.UTC).date(), periods=4, freq='D')
+    idx = pd.date_range(end=dt.datetime.now(dt.timezone.utc).date(), periods=4, freq='D')
     idx.freq = None
 
     actual = tm.implied_volatility(mock_spx, '1m', tm.VolReference.DELTA_CALL, 25)
@@ -1462,7 +1460,8 @@ def test_merge_dataframes():
 def test_get_last_for_measure():
     replace = Replacer()
     mock_market = replace('gs_quant.timeseries.measures._market_data_timed', Mock())
-    mock_market.return_value = pd.DataFrame([1], index=pd.date_range('2020-01-01', periods=1, freq='D', tz=pytz.UTC))
+    mock_market.return_value = pd.DataFrame([1], index=pd.date_range('2020-01-01', periods=1, freq='D',
+                                                                     tz=dt.timezone.utc))
 
     a = tm.get_last_for_measure(['blah'], QueryType.IMPLIED_VOLATILITY, {})
     assert len(a) == 1

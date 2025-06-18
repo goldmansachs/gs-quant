@@ -16,16 +16,21 @@ under the License.
 
 import calendar as cal
 import datetime as dt
+import zoneinfo
 from enum import Enum, IntEnum
 from typing import Iterable, Optional, Tuple, Union
 
 import numpy as np
-from pytz import timezone
 
 from gs_quant.common import PricingLocation
 from gs_quant.datetime.gscalendar import GsCalendar
 
 DateOrDates = Union[dt.date, Iterable[dt.date]]
+
+location_to_tz_mapping = {PricingLocation.NYC: zoneinfo.ZoneInfo("America/New_York"),
+                          PricingLocation.LDN: zoneinfo.ZoneInfo("Europe/London"),
+                          PricingLocation.HKG: zoneinfo.ZoneInfo("Asia/Hong_Kong"),
+                          PricingLocation.TKO: zoneinfo.ZoneInfo("Asia/Tokyo")}
 
 
 class PaymentFrequency(IntEnum):
@@ -72,7 +77,7 @@ class DayCountConvention(Enum):
     ONE_ONE = "ONE_ONE"
 
 
-def is_business_day(dates: DateOrDates, calendars: Union[str, Tuple[str, ...]] = (), week_mask: Optional[str] = None)\
+def is_business_day(dates: DateOrDates, calendars: Union[str, Tuple[str, ...]] = (), week_mask: Optional[str] = None) \
         -> Union[bool, Tuple[bool, ...]]:
     """
     Determine whether each date in dates is a business day
@@ -211,18 +216,12 @@ def today(location: Optional[PricingLocation] = None) -> dt.date:
     if not location:
         return dt.date.today()
 
-    if location == PricingLocation.LDN:
-        tz = 'Europe/London'
-    elif location == PricingLocation.NYC:
-        tz = 'America/New_York'
-    elif location == PricingLocation.HKG:
-        tz = 'Asia/Hong_Kong'
-    elif location == PricingLocation.TKO:
-        tz = 'Asia/Tokyo'
-    else:
+    tz = location_to_tz_mapping.get(location, None)
+
+    if tz is None:
         raise ValueError(f'Unrecognized timezone {location}')
 
-    return dt.datetime.now(timezone(tz)).date()
+    return dt.datetime.now(tz).date()
 
 
 def has_feb_29(start: dt.date, end: dt.date):
@@ -254,8 +253,8 @@ def has_feb_29(start: dt.date, end: dt.date):
 
 
 def day_count_fraction(
-        start: dt.date,         # First payment date
-        end: dt.date,           # Second payment date
+        start: dt.date,  # First payment date
+        end: dt.date,  # Second payment date
         convention: DayCountConvention = DayCountConvention.ACTUAL_360,
         frequency: PaymentFrequency = PaymentFrequency.MONTHLY
 ):

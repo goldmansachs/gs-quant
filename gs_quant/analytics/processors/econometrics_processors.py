@@ -16,7 +16,7 @@ under the License.
 
 from typing import Optional, Union
 
-from pandas import Series
+import pandas as pd
 
 from gs_quant.analytics.core.processor import BaseProcessor, DataCoordinateOrProcessor, DataQueryInfo, \
     DateOrDatetimeOrRDate
@@ -283,7 +283,7 @@ class ReturnsProcessor(BaseProcessor):
                 data = a_data.data
                 if self.observations is None:
                     if len(data) > 1:
-                        self.value = ProcessorResult(True, Series([(data.iloc[-1] - data.iloc[0]) / data.iloc[0]]))
+                        self.value = ProcessorResult(True, pd.Series([(data.iloc[-1] - data.iloc[0]) / data.iloc[0]]))
                     else:
                         self.value = ProcessorResult(True, 'Series has is less than 2.')
                 else:

@@ -20,7 +20,6 @@ from enum import Enum
 from typing import Optional, Union, Dict
 
 import pandas as pd
-from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
@@ -448,7 +447,7 @@ def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str 
                             forward_tenor: Optional[GENERIC_DATE] = None,
                             clearing_house: tm_rates._ClearingHouse = None,
                             location: PricingLocation = None, *,
-                            source: str = None, real_time: bool = False) -> Series:
+                            source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day Zero Coupon CrossCurrency Swap curves across major currencies.
 

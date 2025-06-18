@@ -19,7 +19,6 @@ import datetime as dt
 import logging
 from abc import ABCMeta
 from collections import defaultdict, namedtuple
-from datetime import date
 from functools import reduce
 from itertools import zip_longest
 from typing import Union, Iterable, Optional, Dict, Collection
@@ -62,7 +61,7 @@ class OrderBasedActionImpl(ActionHandler, metaclass=ABCMeta):
         self._order_valuations = [ResolvedInstrumentValues]
         super().__init__(action)
 
-    def get_base_orders_for_states(self, states: Collection[date], **kwargs):
+    def get_base_orders_for_states(self, states: Collection[dt.date], **kwargs):
         orders = {}
         dated_priceables = getattr(self.action, 'dated_priceables', {})
         with PricingContext():
@@ -81,7 +80,7 @@ class AddTradeActionImpl(OrderBasedActionImpl):
         super().__init__(action)
 
     def _raise_order(self,
-                     state: Union[date, Iterable[date]],
+                     state: Union[dt.date, Iterable[dt.date]],
                      trigger_info: Optional[Union[AddTradeActionInfo, Iterable[AddTradeActionInfo]]] = None):
         state_list = make_list(state)
         if trigger_info is None or isinstance(trigger_info, AddTradeActionInfo):
@@ -99,7 +98,7 @@ class AddTradeActionImpl(OrderBasedActionImpl):
         return final_orders
 
     def apply_action(self,
-                     state: Union[date, Iterable[date]],
+                     state: Union[dt.date, Iterable[dt.date]],
                      backtest: BackTest,
                      trigger_info: Optional[Union[AddTradeActionInfo, Iterable[AddTradeActionInfo]]] = None):
 
@@ -259,7 +258,7 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
             raise RuntimeError(f'Scaling Type {self.action.scaling_type} not supported by engine')
 
     def _raise_order(self,
-                     state_list: Collection[date],
+                     state_list: Collection[dt.date],
                      price_measure: RiskMeasure,
                      trigger_infos: Dict[dt.date, Optional[Union[AddScaledTradeActionInfo,
                                                                  Iterable[AddScaledTradeActionInfo]]]]):
@@ -285,7 +284,7 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
         return final_orders
 
     def apply_action(self,
-                     state: Union[date, Iterable[date]],
+                     state: Union[dt.date, Iterable[dt.date]],
                      backtest: BackTest,
                      trigger_info: Optional[Union[AddScaledTradeActionInfo,
                                                   Iterable[AddScaledTradeActionInfo]]] = None):
@@ -330,13 +329,13 @@ class HedgeActionImpl(OrderBasedActionImpl):
     def __init__(self, action: HedgeAction):
         super().__init__(action)
 
-    def get_base_orders_for_states(self, states: Collection[date], **kwargs):
+    def get_base_orders_for_states(self, states: Collection[dt.date], **kwargs):
         with HistoricalPricingContext(dates=states, csa_term=self.action.csa_term):
             f = Portfolio(self.action.priceable).resolve(in_place=False)
         return f.result()
 
     def apply_action(self,
-                     state: Union[date, Iterable[date]],
+                     state: Union[dt.date, Iterable[dt.date]],
                      backtest: BackTest,
                      trigger_info: Optional[Union[HedgeActionInfo, Iterable[HedgeActionInfo]]] = None):
         state_list = make_list(state)
@@ -396,7 +395,7 @@ class ExitTradeActionImpl(ActionHandler):
         super().__init__(action)
 
     def apply_action(self,
-                     state: Union[date, Iterable[date]],
+                     state: Union[dt.date, Iterable[dt.date]],
                      backtest: BackTest,
                      trigger_info: Optional[Union[ExitTradeActionInfo, Iterable[ExitTradeActionInfo]]] = None):
 
@@ -482,7 +481,7 @@ class RebalanceActionImpl(ActionHandler):
         super().__init__(action)
 
     def apply_action(self,
-                     state: Union[date, Iterable[date]],
+                     state: Union[dt.date, Iterable[dt.date]],
                      backtest: BackTest,
                      trigger_info: Optional[Union[RebalanceActionInfo, Iterable[RebalanceActionInfo]]] = None):
 

@@ -16,8 +16,7 @@ under the License.
 
 import datetime as dt
 import json
-
-import pytz
+import zoneinfo
 
 from gs_quant.json_convertors import decode_iso_date_or_datetime
 from gs_quant.json_encoder import JSONEncoder
@@ -29,13 +28,13 @@ def test_datetime_serialisation():
     dates = [
         dt.datetime(2021, 8, 10, 10, 39, 19),
         dt.datetime(2021, 8, 10, 10, 39, 19, 59876),
-        dt.datetime(2021, 8, 10, 10, 39, 19, tzinfo=pytz.timezone('EST')),
-        dt.datetime(2021, 8, 10, 10, 39, 19, tzinfo=pytz.timezone('UTC')),
+        dt.datetime(2021, 8, 10, 10, 39, 19, tzinfo=zoneinfo.ZoneInfo("America/New_York")),
+        dt.datetime(2021, 8, 10, 10, 39, 19, tzinfo=zoneinfo.ZoneInfo('UTC')),
     ]
     expected = [
         '"2021-08-10T10:39:19.000Z"',
         '"2021-08-10T10:39:19.059Z"',
-        '"2021-08-10T10:39:19.000-05:00"',
+        '"2021-08-10T10:39:19.000-04:00"',
         '"2021-08-10T10:39:19.000+00:00"',
     ]
     for d, e in zip(dates, expected):

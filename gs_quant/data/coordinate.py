@@ -13,10 +13,10 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 import json
 import uuid
 from abc import ABCMeta
-from datetime import date, datetime
 from enum import Enum
 from typing import Union, Dict, Tuple, Optional, List
 
@@ -27,7 +27,7 @@ from .dataset import Dataset
 from .fields import DataMeasure, DataDimension
 
 DataDimensions = Dict[Union[DataDimension, str], Union[str, float]]
-DateOrDatetime = Union[date, datetime]
+DateOrDatetime = Union[dt.date, dt.datetime]
 
 
 class BaseDataCoordinate(metaclass=ABCMeta):
@@ -163,7 +163,7 @@ class DataCoordinate(BaseDataCoordinate):
     def get_series(self,
                    start: Optional[DateOrDatetime] = None,
                    end: Optional[DateOrDatetime] = None,
-                   dates: List[date] = None,
+                   dates: List[dt.date] = None,
                    operator: DataAggregationOperator = None) -> Union[pd.Series, None]:
         """Get timeseries of coordinate"""
 

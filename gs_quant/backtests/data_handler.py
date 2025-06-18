@@ -17,7 +17,6 @@ under the License.
 import datetime as dt
 from typing import Union
 from gs_quant.backtests.data_sources import DataManager
-from pytz import timezone, utc
 
 
 class Clock(object):
@@ -35,7 +34,7 @@ class Clock(object):
         self._time = time
 
     def reset(self):
-        self._time = dt.datetime(1900, 1, 1).replace(tzinfo=utc)
+        self._time = dt.datetime(1900, 1, 1).replace(tzinfo=dt.timezone.utc)
 
     def time_check(self, state: Union[dt.date, dt.datetime]):
         if isinstance(state, dt.datetime):
@@ -51,7 +50,7 @@ class Clock(object):
 
 
 class DataHandler(object):
-    def __init__(self, data_mgr: DataManager, tz: timezone):
+    def __init__(self, data_mgr: DataManager, tz: dt.timezone):
         self._data_mgr = data_mgr
         self._clock = Clock()
         self._tz = tz
@@ -65,7 +64,7 @@ class DataHandler(object):
     def _utc_time(self, state: Union[dt.date, dt.datetime]):
         # only switch to utc time if the datetime you've been sent is timezone naive
         if isinstance(state, dt.datetime) and (state.tzinfo is None or state.tzinfo.utcoffset(state) is None):
-            return self._tz.localize(state).astimezone(utc).replace(tzinfo=None)
+            return state.replace(tzinfo=self._tz).astimezone(dt.timezone.utc).replace(tzinfo=None)
         else:
             return state
 

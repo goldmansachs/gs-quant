@@ -14,18 +14,18 @@ specific language governing permissions and limitations
 under the License.
 """
 import asyncio
+import datetime as dt
 import functools
 import logging
 import uuid
 from abc import ABCMeta, abstractmethod
 from concurrent.futures.process import ProcessPoolExecutor
 from dataclasses import dataclass
-from datetime import date, datetime
 from enum import Enum, EnumMeta
 from typing import List, Optional, Union, Dict, get_type_hints, Set, Tuple
 
 import numpy as np
-from pandas import Series
+import pandas as pd
 from pydash import decapitalize, get
 
 from gs_quant.analytics.common import TYPE, PROCESSOR, PARAMETERS, DATA_COORDINATE, \
@@ -56,7 +56,7 @@ class DataQueryInfo:
     processor: 'BaseProcessor'
     query: DataQuery
     entity: Entity
-    data: Series = None
+    data: pd.Series = None
 
 
 @dataclass
@@ -89,12 +89,12 @@ class BaseProcessor(metaclass=ABCMeta):
     def post_process(self):
         if self.last_value:
             if isinstance(self.value, ProcessorResult) and self.value.success \
-                    and isinstance(self.value.data, Series) and not self.value.data.empty:
+                    and isinstance(self.value.data, pd.Series) and not self.value.data.empty:
                 self.value.data = self.value.data.iloc[-1:]
 
     def __handle_date_range(self,
                             result,
-                            rdate_entity_map: Dict[str, date]):
+                            rdate_entity_map: Dict[str, dt.date]):
         """
         Applies a date/datetime mask on the result using the start/end parameters on a processor
         :param result:
@@ -134,7 +134,7 @@ class BaseProcessor(metaclass=ABCMeta):
     async def update(self,
                      attribute: str,
                      result: ProcessorResult,
-                     rdate_entity_map: Dict[str, date],
+                     rdate_entity_map: Dict[str, dt.date],
                      pool: ProcessPoolExecutor = None,
                      query_info: Union[DataQueryInfo, MeasureQueryInfo] = None):
         """ Handle the update of a single coordinate and recalculate the value
@@ -151,7 +151,7 @@ class BaseProcessor(metaclass=ABCMeta):
                 try:
                     if pool:
                         if self.measure_processor:
-                            value = await asyncio.get_running_loop()\
+                            value = await asyncio.get_running_loop() \
                                 .run_in_executor(pool, functools.partial(self.process, query_info.entity))
                         else:
                             value = await asyncio.get_running_loop().run_in_executor(pool, self.process)
@@ -240,7 +240,7 @@ class BaseProcessor(metaclass=ABCMeta):
     async def calculate(self,
                         attribute: str,
                         result: ProcessorResult,
-                        rdate_entity_map: Dict[str, date],
+                        rdate_entity_map: Dict[str, dt.date],
                         pool: ProcessPoolExecutor = None,
                         query_info: Union[DataQueryInfo, MeasureQueryInfo] = None):
         """ Sets the result on the processor and recursively calls parent to set and calculate value
@@ -264,7 +264,7 @@ class BaseProcessor(metaclass=ABCMeta):
                         self.parent.update(value)
                 else:
                     self.data_cell.value = value  # Put the error on the data cell
-                    self.data_cell.updated_time = f'{datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z'
+                    self.data_cell.updated_time = f'{dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z'
 
     def as_dict(self) -> Dict:
         """
@@ -321,8 +321,8 @@ class BaseProcessor(metaclass=ABCMeta):
                             ENTITY_TYPE: attribute.entity_type().value
                         })
                         continue
-                    elif isinstance(attribute, (date, datetime)):
-                        if isinstance(attribute, date):
+                    elif isinstance(attribute, (dt.date, dt.datetime)):
+                        if isinstance(attribute, dt.date):
                             value = str(attribute)
                         else:
                             value = f"{attribute.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}Z"
@@ -375,14 +375,15 @@ class BaseProcessor(metaclass=ABCMeta):
             elif parameter_type in (DATE, DATETIME, RELATIVE_DATE):
                 # Handle date/datetime parameters
                 if parameter_type == DATE:
-                    arguments[parameter] = datetime.strptime(parameters_dict.get(VALUE), '%Y-%m-%d').date()
+                    arguments[parameter] = dt.datetime.strptime(parameters_dict.get(VALUE), '%Y-%m-%d').date()
                 elif parameter_type == RELATIVE_DATE:
                     val = parameters_dict.get(VALUE)
                     base_date = val.get('baseDate')
-                    base_date = datetime.strptime(base_date, '%Y-%m-%d').date() if base_date else None
+                    base_date = dt.datetime.strptime(base_date, '%Y-%m-%d').date() if base_date else None
                     arguments[parameter] = RelativeDate(rule=val['rule'], base_date=base_date)
                 else:
-                    arguments[parameter] = datetime.strptime(parameters_dict.get(VALUE)[0:-1], '%Y-%m-%dT%H:%M:%S.%f')
+                    arguments[parameter] = dt.datetime.strptime(parameters_dict.get(VALUE)[0:-1],
+                                                                '%Y-%m-%dT%H:%M:%S.%f')
             else:
                 # Handle all other object which should be mapped in the PARSABLE_OBJECT_MAP
                 if parameter_type in PARSABLE_OBJECT_MAP:

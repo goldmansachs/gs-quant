@@ -22,13 +22,12 @@ from gs_quant.common import PricingLocation
 
 
 def test_has_feb_29():
-
     assert not has_feb_29(dt.date(2019, 1, 1), dt.date(2019, 12, 31))
     assert has_feb_29(dt.date(2020, 1, 1), dt.date(2020, 12, 31))
     assert has_feb_29(dt.date(2020, 2, 28), dt.date(2020, 3, 31))
-    assert not has_feb_29(dt.date(2020, 2, 29), dt.date(2020, 3, 31))   # first date is exclusive
+    assert not has_feb_29(dt.date(2020, 2, 29), dt.date(2020, 3, 31))  # first date is exclusive
     assert not has_feb_29(dt.date(2020, 1, 1), dt.date(2020, 2, 28))
-    assert has_feb_29(dt.date(2020, 1, 1), dt.date(2020, 2, 29))        # last date is inclusive
+    assert has_feb_29(dt.date(2020, 1, 1), dt.date(2020, 2, 29))  # last date is inclusive
     assert has_feb_29(dt.date(2008, 1, 1), dt.date(2020, 12, 31))
 
 
@@ -40,7 +39,6 @@ def test_today_with_location():
 
 
 def test_day_count_fraction():
-
     # 2017 is not a leap year
     start = dt.date(2017, 1, 1)
     end = dt.date(2017, 12, 31)
@@ -63,4 +61,4 @@ def test_day_count_fraction():
 
     # Feb 29 is within range, so should use 366
     assert day_count_fraction(start, end, DayCountConvention.ACTUAL_365L, PaymentFrequency.ANNUALLY) == \
-        approx(2.087431693989)
+           approx(2.087431693989)

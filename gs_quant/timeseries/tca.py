@@ -16,7 +16,7 @@ under the License.
 
 from typing import Optional
 
-from pandas import Series
+import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
 from gs_quant.common import AssetClass
@@ -34,7 +34,7 @@ def covariance(asset: Asset,
                *,
                source: str = None,
                real_time: bool = False,
-               request_id: Optional[str] = None) -> Series:
+               request_id: Optional[str] = None) -> pd.Series:
     """
     Provides an estimates of the covariances between stocks in the three major equity markets - US, EMEA and Japan -
     using an advanced machine learning technique.

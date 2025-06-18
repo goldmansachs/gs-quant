@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import zoneinfo
 
 import gs_quant.backtests.predefined_asset_engine
 import datetime as dt
@@ -30,7 +31,6 @@ from gs_quant.instrument import IRBondFuture
 from gs_quant.backtests.order import OrderMarketOnClose, OrderTWAP, TimeWindow
 from unittest import mock
 import gs_quant.datetime
-from pytz import timezone
 
 
 class ExampleTestTrigger(OrdersGeneratorTrigger):
@@ -116,7 +116,7 @@ def test_backtest_predefined_timezone_aware():
     # instantiate a new strategy
     strategy = Strategy(None, triggers=simple_date_trigger)
 
-    engine = PredefinedAssetEngine(data_mgr=data_manager, tz=timezone(tz))
+    engine = PredefinedAssetEngine(data_mgr=data_manager, tz=zoneinfo.ZoneInfo(tz))
     backtest = engine.run_backtest(strategy=strategy, start=states[0], end=states[-1], states=states)
     assert len(backtest.trade_ledger()) == 364
 
@@ -174,7 +174,7 @@ def test_backtest_predefined():
     data_mgr.add_data_source(pd.Series(data_twap), DataFrequency.REAL_TIME, underlying, ValuationFixingType.PRICE)
     trigger = FuturesExample()
     strategy = Strategy(initial_portfolio=None, triggers=[trigger])
-    engine = PredefinedAssetEngine(data_mgr=data_mgr, tz=timezone('Europe/London'))
+    engine = PredefinedAssetEngine(data_mgr=data_mgr, tz=zoneinfo.ZoneInfo('Europe/London'))
     backtest = engine.run_backtest(strategy, start=start, end=end)
     perf = backtest.performance
     holdings = backtest.historical_holdings

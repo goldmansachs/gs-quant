@@ -22,7 +22,6 @@ from enum import Enum
 from typing import Optional, Union, Dict, List
 
 import pandas as pd
-from pandas import Series
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
@@ -726,7 +725,7 @@ def _get_term_struct_date(tenor: Union[str, dt.datetime], index: dt.datetime,
 def swap_annuity(asset: Asset, swap_tenor: str, benchmark_type: str = None, floating_rate_tenor: str = None,
                  forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
                  location: PricingLocation = None, *,
-                 source: str = None, real_time: bool = False) -> Series:
+                 source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day Fixed-Floating interest rate swap(IRS) annuity values in years for paying leg across major currencies.
 
@@ -761,7 +760,7 @@ def swaption_premium(asset: Asset, expiration_tenor: str = None, termination_ten
                      floating_rate_tenor: str = None,
                      clearing_house: str = None, location: PricingLocation = None, *,
                      source: str = None,
-                     real_time: bool = False) -> Series:
+                     real_time: bool = False) -> pd.Series:
     """
     GS end-of-day premium for swaption.
 
@@ -793,7 +792,7 @@ def swaption_annuity(asset: Asset, expiration_tenor: str = None, termination_ten
                      floating_rate_tenor: str = None,
                      clearing_house: str = None, location: PricingLocation = None, *,
                      source: str = None,
-                     real_time: bool = False) -> Series:
+                     real_time: bool = False) -> pd.Series:
     """
     GS end-of-day annuity for swaption.
 
@@ -825,7 +824,7 @@ def midcurve_premium(asset: Asset, expiration_tenor: str, forward_tenor: str, te
                      floating_rate_tenor: str = None,
                      clearing_house: str = None, location: PricingLocation = None, *,
                      source: str = None,
-                     real_time: bool = False) -> Series:
+                     real_time: bool = False) -> pd.Series:
     """
     GS end-of-day premium for midcurve
 
@@ -858,7 +857,7 @@ def midcurve_annuity(asset: Asset, expiration_tenor: str, forward_tenor: str, te
                      floating_rate_tenor: str = None,
                      clearing_house: str = None, location: PricingLocation = None,
                      *, source: str = None,
-                     real_time: bool = False) -> Series:
+                     real_time: bool = False) -> pd.Series:
     """
     GS end-of-day annuity for midcurve.
 
@@ -891,7 +890,7 @@ def swaption_atm_fwd_rate(asset: Asset, expiration_tenor: str = None, terminatio
                           floating_rate_tenor: str = None,
                           clearing_house: str = None, location: PricingLocation = None,
                           *, source: str = None,
-                          real_time: bool = False) -> Series:
+                          real_time: bool = False) -> pd.Series:
     """
     GS end-of-day atm forward rate for swaption vol matrices.
 
@@ -922,7 +921,7 @@ def swaption_vol(asset: Asset, expiration_tenor: str = None, termination_tenor: 
                  relative_strike: float = None, benchmark_type: str = None,
                  floating_rate_tenor: str = None,
                  clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
-                 real_time: bool = False) -> Series:
+                 real_time: bool = False) -> pd.Series:
     """
     GS end-of-day implied normal volatility for swaption vol matrices.
 
@@ -952,7 +951,7 @@ def midcurve_vol(asset: Asset, expiration_tenor: str, forward_tenor: str, termin
                  relative_strike: float = None, benchmark_type: str = None,
                  floating_rate_tenor: str = None,
                  clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
-                 real_time: bool = False) -> Series:
+                 real_time: bool = False) -> pd.Series:
     """
     GS end-of-day implied normal volatility for swaption vol matrices.
 
@@ -983,7 +982,7 @@ def midcurve_atm_fwd_rate(asset: Asset, expiration_tenor: str, forward_tenor: st
                           benchmark_type: str = None,
                           floating_rate_tenor: str = None,
                           clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
-                          real_time: bool = False) -> Series:
+                          real_time: bool = False) -> pd.Series:
     """
     GS end-of-day atm forward rate for swaption vol matrices.
 
@@ -1016,7 +1015,7 @@ def _get_swaption_measure(asset: Asset, benchmark_type: str = None, floating_rat
                           start: str = DataContext.current.start_date, end: str = DataContext.current.end_date,
                           source: str = None, real_time: bool = False, allow_many: bool = False,
                           query_type: QueryType = QueryType.SWAPTION_PREMIUM,
-                          location: PricingLocation = None) -> Series:
+                          location: PricingLocation = None) -> pd.Series:
     if real_time:
         raise NotImplementedError(f'realtime {query_type.value} not implemented')
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
@@ -1134,7 +1133,7 @@ def swaption_vol_smile(asset: Asset, expiration_tenor: str, termination_tenor: s
                        pricing_date: Optional[GENERIC_DATE] = None, benchmark_type: str = None,
                        floating_rate_tenor: str = None,
                        clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
-                       real_time: bool = False) -> Series:
+                       real_time: bool = False) -> pd.Series:
     """
     GS end-of-day implied normal volatility for swaption vol matrices.
 
@@ -1190,7 +1189,7 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
                       pricing_date: Optional[GENERIC_DATE] = None, benchmark_type: str = None,
                       floating_rate_tenor: str = None,
                       clearing_house: str = None, location: PricingLocation = None, *, source: str = None,
-                      real_time: bool = False) -> Series:
+                      real_time: bool = False) -> pd.Series:
     """
     Term structure of GS end-of-day implied normal volatility for swaption vol matrices.
 
@@ -1261,7 +1260,7 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
 def swap_rate(asset: Asset, swap_tenor: str, benchmark_type: str = None, floating_rate_tenor: str = None,
               forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
               location: PricingLocation = None, *,
-              source: str = None, real_time: bool = False) -> Series:
+              source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
 
@@ -1294,7 +1293,7 @@ def swap_rate(asset: Asset, swap_tenor: str, benchmark_type: str = None, floatin
 def swap_rate_calc(asset: Asset, swap_tenor: str, benchmark_type: str = None, floating_rate_tenor: str = None,
                    forward_tenor: Optional[GENERIC_DATE] = None, csa: str = None,
                    location: PricingLocation = None, *,
-                   source: str = None, real_time: bool = False) -> Series:
+                   source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS intra-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
     This API runs on-the-fly calculations
@@ -1327,7 +1326,7 @@ def swap_rate_calc(asset: Asset, swap_tenor: str, benchmark_type: str = None, fl
                                  query_type=QueryType.SPOT)])
 def forward_rate(asset: Asset, forward_start_tenor: str = None, forward_term: str = None,
                  csa: str = None,
-                 close_location: str = None, *, source: str = None, real_time: bool = False) -> Series:
+                 close_location: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS Forward Rate across major currencies.
     This API computes forward rates off stored forward/discount curves
@@ -1365,7 +1364,7 @@ def forward_rate(asset: Asset, forward_start_tenor: str = None, forward_term: st
               [MeasureDependency(id_provider=_currency_to_tdapi_swap_rate_asset_for_intraday,
                                  query_type=QueryType.SPOT)], entitlements=[Entitlement.INTERNAL])
 def discount_factor(asset: Asset, tenor: str = None, csa: str = None, close_location: str = None,
-                    *, source: str = None, real_time: bool = False) -> Series:
+                    *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS Discount Factor across major currencies.
     This API computes discount factor off stored forward/discount curves
@@ -1401,7 +1400,7 @@ def discount_factor(asset: Asset, tenor: str = None, csa: str = None, close_loca
                                  query_type=QueryType.SPOT)])
 def instantaneous_forward_rate(asset: Asset, tenor: str = None, csa: str = None,
                                close_location: str = None,
-                               *, source: str = None, real_time: bool = False) -> Series:
+                               *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS Floating Rate Benchmark annualised instantaneous forward rates across major currencies.
     This API computes IFR off stored forward/discount curves
@@ -1437,7 +1436,7 @@ def instantaneous_forward_rate(asset: Asset, tenor: str = None, csa: str = None,
                                  query_type=QueryType.SPOT)])
 def index_forward_rate(asset: Asset, forward_start_tenor: str = None, benchmark_type: str = None,
                        fixing_tenor: str = None, close_location: str = None, *,
-                       source: str = None, real_time: bool = False) -> Series:
+                       source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS annualised forward rates across floating rate benchmark
     This API computes index forward rate off stored index forward curves
@@ -1527,7 +1526,7 @@ def basis_swap_spread(asset: Asset, swap_tenor: str = '1y',
                       reference_benchmark_type: str = None, reference_tenor: str = None,
                       forward_tenor: Optional[GENERIC_DATE] = None, clearing_house: _ClearingHouse = None,
                       location: PricingLocation = None, *,
-                      source: str = None, real_time: bool = False, ) -> Series:
+                      source: str = None, real_time: bool = False, ) -> pd.Series:
     """
     GS end-of-day Floating-Floating interest rate swap (IRS) curves across major currencies.
 
@@ -1582,7 +1581,7 @@ def swap_term_structure(asset: Asset, benchmark_type: str = None, floating_rate_
                         tenor_type: _SwapTenorType = None, tenor: Optional[GENERIC_DATE] = None,
                         clearing_house: _ClearingHouse = None, location: PricingLocation = None,
                         pricing_date: Optional[GENERIC_DATE] = None,
-                        *, source: str = None, real_time: bool = False) -> Series:
+                        *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day Fixed-Floating interest rate swap (IRS) term structure across major currencies.
 
@@ -1684,7 +1683,7 @@ def basis_swap_term_structure(asset: Asset, spread_benchmark_type: str = None, s
                               clearing_house: _ClearingHouse = None,
                               location: PricingLocation = None,
                               pricing_date: Optional[GENERIC_DATE] = None,
-                              *, source: str = None, real_time: bool = False, ) -> Series:
+                              *, source: str = None, real_time: bool = False, ) -> pd.Series:
     """
     GS end-of-day Floating-Floating interest rate swap (IRS) term structure across major currencies.
 
@@ -1790,7 +1789,7 @@ def _get_fxfwd_xccy_swp_rates_data(asset: Asset, tenor: str, real_time: bool = F
 
 @plot_measure((AssetClass.FX,), (AssetType.Forward, AssetType.Cross),
               [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset, query_type=QueryType.OIS_XCCY)])
-def ois_xccy(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
+def ois_xccy(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day OIS Xccy spreads curves across G10 cross currencies.
 
@@ -1811,7 +1810,7 @@ def ois_xccy(asset: Asset, tenor: str = None, *, source: str = None, real_time: 
 @plot_measure((AssetClass.FX,), (AssetType.Forward, AssetType.Cross),
               [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset,
                                  query_type=QueryType.OIS_XCCY_EX_SPIKE)])
-def ois_xccy_ex_spike(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
+def ois_xccy_ex_spike(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day OIS Xccy spreads curves excluding spikes across G10 cross currencies.
 
@@ -1831,7 +1830,7 @@ def ois_xccy_ex_spike(asset: Asset, tenor: str = None, *, source: str = None, re
 
 @plot_measure((AssetClass.FX,), (AssetType.Forward, AssetType.Cross),
               [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset, query_type=QueryType.NON_USD_OIS)])
-def non_usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
+def non_usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day non domestic USD ois rate curve for G10 cross currencies.
 
@@ -1851,7 +1850,7 @@ def non_usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_tim
 
 @plot_measure((AssetClass.FX,), (AssetType.Forward, AssetType.Cross),
               [MeasureDependency(id_provider=_cross_to_fxfwd_xcswp_asset, query_type=QueryType.USD_OIS)])
-def usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> Series:
+def usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     GS end-of-day USD domestic ois rates curves across G10 cross currencies.
 

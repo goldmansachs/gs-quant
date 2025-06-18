@@ -13,7 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-from datetime import date
+import datetime as dt
 
 import pytest
 from gs_quant.session import GsSession, Environment
@@ -27,9 +27,9 @@ from gs_quant.test.utils.datagrid_test_utils import get_test_entity
 
 def test_simple_datagrid():
     name = 'Testing'
-    SPX = get_test_entity('MA4B66MW5E27U8P32SB')
+    spx = get_test_entity('MA4B66MW5E27U8P32SB')
     rows = [
-        DataRow(SPX),
+        DataRow(spx),
     ]
     columns = [
         DataColumn(name="Name", processor=EntityProcessor(field="short_name"))
@@ -69,12 +69,12 @@ def test_rdate_datagrid(mocker):
         DataColumn(name="1d Chg (RT)",
                    processor=ChangeProcessor(AppendProcessor(close, last_trade_price,
                                                              start=RelativeDate("-1d",
-                                                                                base_date=date(2021, 1, 22)))))
+                                                                                base_date=dt.date(2021, 1, 22)))))
     ]
 
     datagrid = DataGrid(name=name, rows=rows, columns=columns)
     start_date = datagrid.columns[0].processor.children['a'].start
-    assert start_date.base_date == RelativeDate('-1d', base_date=date(2021, 1, 22)).base_date
+    assert start_date.base_date == RelativeDate('-1d', base_date=dt.date(2021, 1, 22)).base_date
     assert start_date.rule == RelativeDate('-1d').rule
 
     datagrid.initialize()

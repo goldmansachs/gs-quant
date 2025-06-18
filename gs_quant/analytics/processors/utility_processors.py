@@ -17,7 +17,6 @@ under the License.
 from typing import Optional
 
 import pandas as pd
-from pandas import Series
 
 from gs_quant.analytics.core.processor import BaseProcessor, DataCoordinateOrProcessor, DateOrDatetimeOrRDate
 from gs_quant.analytics.core.processor_result import ProcessorResult
@@ -49,7 +48,7 @@ class LastProcessor(BaseProcessor):
         """ Calculate the result and store it as the processor value """
         a_data = self.children_data.get('a')
         if isinstance(a_data, ProcessorResult):
-            if a_data.success and isinstance(a_data.data, Series):
+            if a_data.success and isinstance(a_data.data, pd.Series):
                 self.value = ProcessorResult(True, pd.Series(a_data.data[-1:]))
 
         return self.value
@@ -84,7 +83,7 @@ class MinProcessor(BaseProcessor):
         """ Calculate the result and store it as the processor value """
         a = self.children_data.get('a')
         if isinstance(a, ProcessorResult):
-            if a.success and isinstance(a.data, Series):
+            if a.success and isinstance(a.data, pd.Series):
                 self.value = ProcessorResult(True, pd.Series(min(a.data)))
             else:
                 self.value = ProcessorResult(False, "Processor does not data series yet")
@@ -123,7 +122,7 @@ class MaxProcessor(BaseProcessor):
         """ Calculate the result and store it as the processor value """
         a = self.children_data.get('a')
         if isinstance(a, ProcessorResult):
-            if a.success and isinstance(a.data, Series):
+            if a.success and isinstance(a.data, pd.Series):
                 self.value = ProcessorResult(True, pd.Series(max(a.data)))
             else:
                 self.value = ProcessorResult(False, "Processor does not have data series yet")
@@ -444,7 +443,7 @@ class NthLastProcessor(BaseProcessor):
         """ Calculate the result and store it as the processor value """
         a_data = self.children_data.get('a')
         if isinstance(a_data, ProcessorResult):
-            if a_data.success and isinstance(a_data.data, Series):
+            if a_data.success and isinstance(a_data.data, pd.Series):
                 index = -1 * self.n
                 self.value = ProcessorResult(True, pd.Series(a_data.data[index]))
             else:

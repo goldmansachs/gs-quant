@@ -13,12 +13,12 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 import logging
-from datetime import date
 from enum import Enum, unique
 from typing import Union, Tuple
 
-from pandas import DataFrame
+import pandas as pd
 from pydash import set_, get
 
 from gs_quant.api.gs.screens import GsScreenApi
@@ -365,7 +365,7 @@ class Screen:
             self.__filters = filters
 
         self.__id = screen_id
-        self.__name = name if name is not None else f"Screen {date.today().strftime('%d-%b-%Y')}"
+        self.__name = name if name is not None else f"Screen {dt.date.today().strftime('%d-%b-%Y')}"
 
     @property
     def id(self) -> str:
@@ -397,7 +397,7 @@ class Screen:
         filters = self.__to_target_filters()
         payload = AssetScreenerRequest(filters=filters)
         assets = GsScreenApi.calculate(payload)
-        dataframe = DataFrame(assets)
+        dataframe = pd.DataFrame(assets)
         if format_ == 'json':
             return dataframe['results'].to_json(indent=4)
         if format_ == 'csv':

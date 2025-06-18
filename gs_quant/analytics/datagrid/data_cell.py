@@ -18,7 +18,7 @@ import copy
 import uuid
 from typing import List, Optional, Dict, Set, Tuple, Union
 
-from pandas import Series
+import pandas as pd
 
 from gs_quant.analytics.common import DATA_CELL_NOT_CALCULATED
 from gs_quant.analytics.core import BaseProcessor
@@ -82,7 +82,7 @@ class DataCell:
 
     def update(self, result: ProcessorResult) -> None:
         """ Sets the value of the cell"""
-        if isinstance(result.data, Series):
+        if isinstance(result.data, pd.Series):
             if result.data.empty:
                 self.value = ProcessorResult(False, 'Empty series as a result of processing.')
             else:

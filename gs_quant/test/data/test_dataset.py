@@ -19,7 +19,6 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 import pytest
-from numpy import int64, float64, datetime64
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data import Dataset
@@ -298,11 +297,11 @@ def test_get_coverage(mocker):
 def test_construct_dataframe_with_types(mocker):
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
     df = GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), [test_data[0]])
-    assert np.issubdtype(df.index.dtype, datetime64)
-    assert df['adjustedAskPrice'].dtype == int64
-    assert df['adjustedBidPrice'].dtype == float64
+    assert np.issubdtype(df.index.dtype, np.datetime64)
+    assert df['adjustedAskPrice'].dtype == np.int64
+    assert df['adjustedBidPrice'].dtype == np.float64
     assert df['assetId'].dtype == object  # https://pbpython.com/pandas_dtypes.html python str == dtype object
-    assert np.issubdtype(df['updateTime'].dtype, datetime64)
+    assert np.issubdtype(df['updateTime'].dtype, np.datetime64)
 
 
 def test_construct_dataframe_var_schema(mocker):

@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-from datetime import date
 
 import numpy as np
 import pytest
@@ -37,17 +36,18 @@ curvescen1 = CurveScenario(market_data_pattern=MarketDataPattern('IR', 'USD'), p
                            name='parallel shift5bp')
 curvescen2 = CurveScenario(market_data_pattern=MarketDataPattern('IR', 'USD'), curve_shift=1, tenor_start=5,
                            tenor_end=30, name='curve shift1bp')
-rollfwd = RollFwd(date=date(2020, 11, 3), name='roll fwd scenario')
+rollfwd = RollFwd(date=dt.date(2020, 11, 3), name='roll fwd scenario')
 multiscenario = MultiScenario(scenarios=tuple((curvescen1, curvescen2)), name='multiscenario')
 
 
 def get_attributes(p, risks, ctx='PricingCtx1', resolve=False, no_frame=False):
-    contexts = {'Multiple': HistoricalPricingContext(date(2020, 1, 14), date(2020, 1, 15), market_data_location='LDN'),
-                'PricingCtx1': PricingContext(date(2020, 1, 14), market_data_location='LDN'),
-                'Multiple2': HistoricalPricingContext(date(2020, 1, 16), date(2020, 1, 17), market_data_location='LDN'),
-                'PricingCtx2': PricingContext(date(2020, 1, 16), market_data_location='NYC'),
-                'PricingCtx3': PricingContext(date(2020, 1, 16), market_data_location='LDN'),
-                'RollFwd': rollfwd, 'CurveScen1': curvescen1, 'CurveScen2': curvescen2, 'MultiScen': multiscenario}
+    contexts = {
+        'Multiple': HistoricalPricingContext(dt.date(2020, 1, 14), dt.date(2020, 1, 15), market_data_location='LDN'),
+        'PricingCtx1': PricingContext(dt.date(2020, 1, 14), market_data_location='LDN'),
+        'Multiple2': HistoricalPricingContext(dt.date(2020, 1, 16), dt.date(2020, 1, 17), market_data_location='LDN'),
+        'PricingCtx2': PricingContext(dt.date(2020, 1, 16), market_data_location='NYC'),
+        'PricingCtx3': PricingContext(dt.date(2020, 1, 16), market_data_location='LDN'),
+        'RollFwd': rollfwd, 'CurveScen1': curvescen1, 'CurveScen2': curvescen2, 'MultiScen': multiscenario}
     if resolve:
         p.resolve()
     if contexts.get(ctx):
@@ -180,7 +180,7 @@ def test_multi_scenario(mocker):
 
 def test_historical_multi_scenario(mocker):
     with MockCalc(mocker):
-        with HistoricalPricingContext(date(2020, 1, 14), date(2020, 1, 15), market_data_location='LDN'):
+        with HistoricalPricingContext(dt.date(2020, 1, 14), dt.date(2020, 1, 15), market_data_location='LDN'):
             with multiscenario:
                 res = Portfolio(swap_3).price()
                 res_multi_rm = Portfolio(swap_3).calc((risk.Price, risk.IRFwdRate))
@@ -189,9 +189,9 @@ def test_historical_multi_scenario(mocker):
     default_pivot_table_test(res_multi_rm, with_dates='dated')
 
     # test slicing
-    date_res = res[date(2020, 1, 14)]
+    date_res = res[dt.date(2020, 1, 14)]
     assert all([isinstance(r, FloatWithInfo) for r in date_res.futures[0].result().values()])
-    date_res_2 = res_multi_rm[swap_3][risk.Price][date(2020, 1, 14)]
+    date_res_2 = res_multi_rm[swap_3][risk.Price][dt.date(2020, 1, 14)]
     assert all([isinstance(r, FloatWithInfo) for r in date_res_2.values()])
 
     scen_slice_res = res[curvescen2]
@@ -274,27 +274,27 @@ def test_dated_risk_values(mocker):
     assert sub_res1 == res1
 
     # slice one date
-    slice_date_res2 = res2[date(2020, 1, 14)]
+    slice_date_res2 = res2[dt.date(2020, 1, 14)]
     assert all(slice_date_res2.to_frame(None, None, None) == frame4)
     slice_date_res3 = slice_date_res2[risk.Price]
     assert all(slice_date_res3.to_frame(None, None, None) == frame3)
 
     # slice dates
-    slice_date_res2 = res2[[date(2020, 1, 14), date(2020, 1, 15)]]
+    slice_date_res2 = res2[[dt.date(2020, 1, 14), dt.date(2020, 1, 15)]]
     assert all(slice_date_res2.to_frame(None, None, None) == frame2)
 
     # test aggregate
     agg_res5 = res5.aggregate().to_frame(None, None, None)
 
     def filter_lambda(x):
-        return (x['risk_measure'] == risk.DollarPrice) & (x['dates'] == date(2020, 1, 14))
+        return (x['risk_measure'] == risk.DollarPrice) & (x['dates'] == dt.date(2020, 1, 14))
 
     manual_agg_r5 = frame5.loc[frame5.apply(filter_lambda, axis=1)]['value'].values.sum()
     filter_agg_res5 = agg_res5.loc[agg_res5.apply(filter_lambda, axis=1)]['value'].values[0]
     assert filter_agg_res5 == manual_agg_r5
 
-    sub_res6 = res6.aggregate().to_frame().loc[date(2020, 1, 14)].values[0]
-    manual_agg_r6 = frame6.loc[frame6['dates'] == date(2020, 1, 14)]['value'].values.sum()
+    sub_res6 = res6.aggregate().to_frame().loc[dt.date(2020, 1, 14)].values[0]
+    manual_agg_r6 = frame6.loc[frame6['dates'] == dt.date(2020, 1, 14)]['value'].values.sum()
     assert sub_res6 == manual_agg_r6
 
 
@@ -337,10 +337,10 @@ def test_bucketed_risks(mocker):
     assert all(sub_res2.to_frame() == res1.to_frame())
 
     # slice one date
-    sub_res4 = res4[date(2020, 1, 14)]
+    sub_res4 = res4[dt.date(2020, 1, 14)]
     assert all(sub_res4[gbp_port].to_frame(None, None, None) == frame3)
     # slice dates
-    sub_res4b = res4[[date(2020, 1, 14), date(2020, 1, 15)]]
+    sub_res4b = res4[[dt.date(2020, 1, 14), dt.date(2020, 1, 15)]]
     assert all(sub_res4b.to_frame(None, None, None) == frame4)
 
     # test aggregate
@@ -349,15 +349,15 @@ def test_bucketed_risks(mocker):
     np.testing.assert_almost_equal(agg_r1.loc[agg_r1['mkt_point'] == '5Y']['value'].values[0], manual_agg_f1, 8)
 
     def filter_lambda(x):
-        return (x['dates'] == date(2020, 1, 14)) & (x['mkt_asset'] == 'JPY OIS/JPY-3M')
+        return (x['dates'] == dt.date(2020, 1, 14)) & (x['mkt_asset'] == 'JPY OIS/JPY-3M')
 
     agg_r6 = res6.aggregate().to_frame()
     filter_agg_r6 = agg_r6.loc[agg_r6.apply(filter_lambda, axis=1)]['value'].values[0]
     manual_agg_f6 = frame6.loc[frame6.apply(filter_lambda, axis=1)]['value'].values.sum()
     np.testing.assert_almost_equal(filter_agg_r6, manual_agg_f6, 8)
 
-    assert isinstance(res7[date(2020, 1, 14)].result().futures[0].result(), DataFrameWithInfo)
-    assert res7[date(2020, 1, 14)].to_frame()["mkt_type"].iloc[0] == "CMD NRG"
+    assert isinstance(res7[dt.date(2020, 1, 14)].result().futures[0].result(), DataFrameWithInfo)
+    assert res7[dt.date(2020, 1, 14)].to_frame()["mkt_type"].iloc[0] == "CMD NRG"
 
 
 def test_cashflows_risk(mocker):

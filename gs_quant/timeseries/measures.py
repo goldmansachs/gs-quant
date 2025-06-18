@@ -27,7 +27,6 @@ import numpy as np
 import pandas as pd
 from dateutil import tz
 from dateutil.relativedelta import relativedelta
-from pandas import DatetimeIndex, Series
 from pandas.tseries.holiday import AbstractHolidayCalendar, Holiday, USLaborDay, USMemorialDay, USThanksgivingDay, \
     sunday_to_monday
 from pydash import chunk, flatten, get
@@ -62,8 +61,8 @@ _logger = logging.getLogger(__name__)
 MeasureDependency: namedtuple = namedtuple("MeasureDependency", ["id_provider", "query_type"])
 
 
-class ExtendedSeries(Series):
-    _internal_names = Series._internal_names + ['dataset_ids']
+class ExtendedSeries(pd.Series):
+    _internal_names = pd.Series._internal_names + ['dataset_ids']
     _internal_names_set = set(_internal_names)
 
     @property
@@ -493,7 +492,7 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
 
 def _fundamentals_md_query(mqid: str, period: str, period_direction: FundamentalMetricPeriodDirection,
                            metric: str, source: str = None, real_time: bool = False,
-                           request_id: Optional[str] = None) -> Series:
+                           request_id: Optional[str] = None) -> pd.Series:
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
@@ -508,12 +507,12 @@ def _fundamentals_md_query(mqid: str, period: str, period_direction: Fundamental
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
-    id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
-    asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
+@plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [
+    MeasureDependency(id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)
+], asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real,
          normalization_mode: NormalizationMode = None, *,
-         source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+         source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Difference in implied volatility of equidistant out-of-the-money put and call options.
 
@@ -593,7 +592,7 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
 @plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE])
 def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_reference: CdsVolReference,
                            relative_strike: Real, *, source: str = None, real_time: bool = False,
-                           request_id: Optional[str] = None) -> Series:
+                           request_id: Optional[str] = None) -> pd.Series:
     """
     Volatility of a cds index implied by observations of market prices.
 
@@ -638,7 +637,7 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
               display_name='option_premium')
 def option_premium_credit(asset: Asset, expiry: str, strike_reference: CdsVolReference,
                           relative_strike: Real, *, source: str = None, real_time: bool = False,
-                          request_id: Optional[str] = None) -> Series:
+                          request_id: Optional[str] = None) -> pd.Series:
     """
     Option premium of a cds index for a given expiry and delta strike.
 
@@ -684,7 +683,7 @@ def option_premium_credit(asset: Asset, expiry: str, strike_reference: CdsVolRef
               display_name='absolute_strike')
 def absolute_strike_credit(asset: Asset, expiry: str, strike_reference: CdsVolReference,
                            relative_strike: Real, *, source: str = None, real_time: bool = False,
-                           request_id: Optional[str] = None) -> Series:
+                           request_id: Optional[str] = None) -> pd.Series:
     """
     Absolute strike of a cds index for a given expiry and delta strike.
 
@@ -730,7 +729,7 @@ def absolute_strike_credit(asset: Asset, expiry: str, strike_reference: CdsVolRe
               display_name='implied_volatility')
 def implied_volatility_credit(asset: Asset, expiry: str, strike_reference: CdsVolReference,
                               relative_strike: Real, *, source: str = None, real_time: bool = False,
-                              request_id: Optional[str] = None) -> Series:
+                              request_id: Optional[str] = None) -> pd.Series:
     """
     Volatility of a cds index implied by observations of market prices.
 
@@ -775,7 +774,7 @@ def implied_volatility_credit(asset: Asset, expiry: str, strike_reference: CdsVo
 @plot_measure((AssetClass.Credit,), (AssetType.Default_Swap,), [QueryType.CDS_SPREAD_100],
               display_name='spread')
 def cds_spread(asset: Asset, spread: int, *, source: str = None, real_time: bool = False,
-               request_id: Optional[str] = None) -> Series:
+               request_id: Optional[str] = None) -> pd.Series:
     """
     CDS Spread levels.
 
@@ -820,7 +819,7 @@ def cds_spread(asset: Asset, spread: int, *, source: str = None, real_time: bool
               asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference = None,
                        relative_strike: Real = None, parallelize_queries: bool = True, *, source: str = None,
-                       real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                       real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -875,7 +874,7 @@ def _tenor_month_to_year(tenor: str):
 @plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.IMPLIED_VOLATILITY],
               display_name='implied_volatility')
 def implied_volatility_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
-                          real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                          real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -956,7 +955,7 @@ def _check_top_n(top_n):
 def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
                         top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None,
                         *, source: str = None, real_time: bool = False,
-                        request_id: Optional[str] = None) -> Series:
+                        request_id: Optional[str] = None) -> pd.Series:
     """
     Correlation of an asset implied by observations of market prices.
 
@@ -1064,7 +1063,7 @@ def _calculate_implied_correlation(index_mqid, vol_df, constituents_weights, req
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
 def implied_correlation_with_basket(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
                                     basket: Basket, *, source: str = None, real_time: bool = False,
-                                    request_id: Optional[str] = None) -> Series:
+                                    request_id: Optional[str] = None) -> pd.Series:
     """
     Implied correlation between index and stock basket.
 
@@ -1116,7 +1115,7 @@ def implied_correlation_with_basket(asset: Asset, tenor: str, strike_reference: 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
 def realized_correlation_with_basket(asset: Asset, tenor: str, basket: Basket, *, source: str = None,
-                                     real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                                     real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Realized correlation between index and stock basket.
 
@@ -1159,7 +1158,8 @@ def realized_correlation_with_basket(asset: Asset, tenor: str, basket: Basket, *
 def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
                                top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None,
                                weight_threshold: Optional[Real] = None, *,
-                               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                               source: str = None, real_time: bool = False,
+                               request_id: Optional[str] = None) -> pd.Series:
     """
     Historical weighted average implied volatility of the top constituents of an equity index. If top_n_of_index and
     composition_date are not provided, the average is of all constituents based on the weights at each evaluation date.
@@ -1265,7 +1265,8 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.AVERAGE_IMPLIED_VARIANCE])
 def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real, *,
-                             source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                             source: str = None, real_time: bool = False,
+                             request_id: Optional[str] = None) -> pd.Series:
     """
     Historical weighted average implied variance for the underlying assets of an equity index.
 
@@ -1307,7 +1308,7 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
 def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns = Returns.LOGARITHMIC,
                                 top_n_of_index: int = None, composition_date: Optional[GENERIC_DATE] = None,
                                 *, source: str = None, real_time: bool = False,
-                                request_id: Optional[str] = None) -> Series:
+                                request_id: Optional[str] = None) -> pd.Series:
     """
     Historical weighted average realized volatility for the underlying assets of an equity index. If top_n_of_index and
     composition_date are not provided, the average is of all constituents based on the weights at each evaluation date
@@ -1404,7 +1405,7 @@ def _get_index_constituent_weights(asset: Asset, top_n_of_index: Optional[int] =
 @plot_measure((AssetClass.Cash,), (AssetType.Currency,),
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.CAP_FLOOR_VOL)])
 def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *, source: str = None,
-                  real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     GS end-of-day implied normal volatility for cap and floor vol matrices.
 
@@ -1440,7 +1441,7 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
                                  query_type=QueryType.CAP_FLOOR_ATM_FWD_RATE)])
 def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     GS end-of-day at-the-money forward rate for cap and floor matrices.
 
@@ -1471,7 +1472,7 @@ def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str =
               [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
                                  query_type=QueryType.SPREAD_OPTION_VOL)])
 def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, short_tenor: str, relative_strike: float,
-                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     GS end-of-day implied normal volatility for spread option vol matrices.
 
@@ -1512,7 +1513,7 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
                                  query_type=QueryType.SPREAD_OPTION_ATM_FWD_RATE)])
 def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: str, short_tenor: str,
                                *, source: str = None, real_time: bool = False,
-                               request_id: Optional[str] = None) -> Series:
+                               request_id: Optional[str] = None) -> pd.Series:
     """
     GS end-of-day At-the-money forward rate for spread option vol matrices.
 
@@ -1545,7 +1546,7 @@ def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: 
               [MeasureDependency(id_provider=currency_to_inflation_benchmark_rate,
                                  query_type=QueryType.INFLATION_SWAP_RATE)])
 def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     GS end-of-day zero coupon inflation swap break-even rate.
 
@@ -1579,7 +1580,7 @@ def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str 
 @plot_measure((AssetClass.FX,), (AssetType.Cross,),
               [MeasureDependency(id_provider=cross_to_basis, query_type=QueryType.BASIS)])
 def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time: bool = False,
-          request_id: Optional[str] = None) -> Series:
+          request_id: Optional[str] = None) -> pd.Series:
     """
     GS end-of-day cross-currency basis swap spread.
 
@@ -1615,7 +1616,7 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
 def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHorizon.THREE_MONTH,
                 relative_period: Optional[FxForecastHorizon] = None,
                 *,
-                source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     FX forecasts made by Global Investment Research (GIR) macro analysts.
 
@@ -1868,9 +1869,9 @@ def _skew_fetcher(asset_id, query_type, where, source, real_time, request_id=Non
         raise m
 
 
-@plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [MeasureDependency(
-    id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
-    asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
+@plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [
+    MeasureDependency(id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)
+], asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
 def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
               pricing_date: Optional[GENERIC_DATE] = None, normalization_mode: NormalizationMode = None,
               *, source: str = None, real_time: bool = False,
@@ -1949,8 +1950,8 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
     else:
         df = df.loc[p_date]
         df.index = pd.DatetimeIndex(df.index) if not isinstance(df.index, pd.DatetimeIndex) else df.index
-        df.index = DatetimeIndex([RelativeDate(df['tenor'][i], df.index.date[i]).apply_rule(exchange=asset.exchange)
-                                  for i in range(len(df))])
+        df.index = pd.DatetimeIndex([RelativeDate(df['tenor'][i], df.index.date[i]).apply_rule(exchange=asset.exchange)
+                                     for i in range(len(df))])
         series = _skew(df, 'relativeStrike', 'impliedVolatility', q_strikes, normalization_mode)
 
     # Add additional data from expiry DF
@@ -2068,7 +2069,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
 @plot_measure((AssetClass.Equity,), None, [QueryType.IMPLIED_VOLATILITY])
 def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
               pricing_date: Optional[GENERIC_DATE] = None,
-              *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+              *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Volatility smile of an asset implied by observations of market prices.
 
@@ -2477,7 +2478,7 @@ def _get_var_swap_df(asset: Asset, where, source, real_time):
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod,), None, [QueryType.VAR_SWAP])
 def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
-             *, source: str = None, real_time: bool = False) -> Series:
+             *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     Strike such that the price of an uncapped variance swap on the underlying index is zero at inception. If
     forward start date is provided, then the result is a forward starting variance swap.
@@ -3083,7 +3084,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
 
         df = _query_prices(asset, where)
         if df.empty:
-            # For cases where uppercase priceMethod dont fetch data, try user input as is
+            # For cases where uppercase priceMethod don't fetch data, try user input as is
             where['priceMethod'] = price_method
             df = _query_prices(asset, where)
 
@@ -3131,7 +3132,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Dividend Yield of the single stock or the asset-weighted average of dividend yields of a composite's underliers.
 
@@ -3176,7 +3177,7 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
                AssetType.ETF, AssetType.Index),
               [QueryType.FUNDAMENTAL_METRIC])
 def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
-                       source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                       source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Earnings Per Share (EPS) of the single stock or the asset-weighted average EPS  of a composite's underliers.
 
@@ -3219,7 +3220,7 @@ def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalM
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def earnings_per_share_positive(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
                                 source: str = None, real_time: bool = False,
-                                request_id: Optional[str] = None) -> Series:
+                                request_id: Optional[str] = None) -> pd.Series:
     """
     Earnings Per Share Positive of the single stock or the asset-weighted average EPSP of a composite's underliers.
 
@@ -3263,7 +3264,7 @@ def earnings_per_share_positive(asset: Asset, period: str, period_direction: Fun
 def net_debt_to_ebitda(asset: Asset,
                        period: str,
                        period_direction: FundamentalMetricPeriodDirection,
-                       *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                       *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Net Debt to EBITDA of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3305,7 +3306,7 @@ def net_debt_to_ebitda(asset: Asset,
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                  *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                  *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Price to Book of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3347,7 +3348,7 @@ def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetric
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                  *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                  *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Price to Cash of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3389,7 +3390,7 @@ def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetric
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Price to Earnings of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3434,7 +3435,7 @@ def price_to_earnings_positive(asset: Asset,
                                period: str,
                                period_direction: FundamentalMetricPeriodDirection,
                                *, source: str = None, real_time: bool = False,
-                               request_id: Optional[str] = None) -> Series:
+                               request_id: Optional[str] = None) -> pd.Series:
     """
     Price to Earnings Positive of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3477,7 +3478,7 @@ def price_to_earnings_positive(asset: Asset,
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_earnings_positive_exclusive(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                          *, source: str = None, real_time: bool = False,
-                                         request_id: Optional[str] = None) -> Series:
+                                         request_id: Optional[str] = None) -> pd.Series:
     """
     Price to Earnings Positive of the single stock or the asset-weighted average value of a composite's underliers
     excluding negative EPS stocks.
@@ -3509,7 +3510,7 @@ def price_to_earnings_positive_exclusive(asset: Asset, period: str, period_direc
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Price to Sales of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3551,7 +3552,7 @@ def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetri
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                     *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                     *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Return on Equity of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3593,7 +3594,7 @@ def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMet
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
 def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                    *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                    *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Sales per Share of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3638,7 +3639,7 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
               [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                         *, source: str = None, real_time: bool = False,
-                                        request_id: Optional[str] = None) -> Series:
+                                        request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Dividend Yield of the asset-weighted average of dividend yields of a composite's underliers.
 
@@ -3677,7 +3678,7 @@ def current_constituents_dividend_yield(asset: Asset, period: str, period_direct
 def current_constituents_earnings_per_share(asset: Asset, period: str,
                                             period_direction: FundamentalMetricPeriodDirection, *,
                                             source: str = None, real_time: bool = False,
-                                            request_id: Optional[str] = None) -> Series:
+                                            request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Earnings Per Share (EPS) of the asset-weighted average EPS of a composite's underliers.
 
@@ -3715,7 +3716,7 @@ def current_constituents_earnings_per_share(asset: Asset, period: str,
 def current_constituents_earnings_per_share_positive(asset: Asset, period: str,
                                                      period_direction: FundamentalMetricPeriodDirection, *,
                                                      source: str = None, real_time: bool = False,
-                                                     request_id: Optional[str] = None) -> Series:
+                                                     request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Earnings Per Share Positive of the asset-weighted average EPSP of a composite's underliers.
 
@@ -3754,7 +3755,7 @@ def current_constituents_earnings_per_share_positive(asset: Asset, period: str,
 def current_constituents_net_debt_to_ebitda(asset: Asset, period: str,
                                             period_direction: FundamentalMetricPeriodDirection,
                                             *, source: str = None, real_time: bool = False,
-                                            request_id: Optional[str] = None) -> Series:
+                                            request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Net Debt to EBITDA of the asset-weighted average value of a composite's underliers.
 
@@ -3792,7 +3793,7 @@ def current_constituents_net_debt_to_ebitda(asset: Asset, period: str,
               [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_price_to_book(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                        *, source: str = None, real_time: bool = False,
-                                       request_id: Optional[str] = None) -> Series:
+                                       request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Price to Book of the asset-weighted average value of a composite's underliers.
 
@@ -3830,7 +3831,7 @@ def current_constituents_price_to_book(asset: Asset, period: str, period_directi
               [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                        *, source: str = None, real_time: bool = False,
-                                       request_id: Optional[str] = None) -> Series:
+                                       request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Price to Cash of the asset-weighted average value of a composite's underliers.
 
@@ -3869,7 +3870,7 @@ def current_constituents_price_to_cash(asset: Asset, period: str, period_directi
 def current_constituents_price_to_earnings(asset: Asset, period: str,
                                            period_direction: FundamentalMetricPeriodDirection,
                                            *, source: str = None, real_time: bool = False,
-                                           request_id: Optional[str] = None) -> Series:
+                                           request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Price to Earnings of the asset-weighted average value of a composite's underliers.
 
@@ -3908,7 +3909,7 @@ def current_constituents_price_to_earnings(asset: Asset, period: str,
 def current_constituents_price_to_earnings_positive(asset: Asset, period: str,
                                                     period_direction: FundamentalMetricPeriodDirection,
                                                     *, source: str = None, real_time: bool = False,
-                                                    request_id: Optional[str] = None) -> Series:
+                                                    request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Price to Earnings Positive of the asset-weighted average value of a composite's underliers.
 
@@ -3946,7 +3947,7 @@ def current_constituents_price_to_earnings_positive(asset: Asset, period: str,
               [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                         *, source: str = None, real_time: bool = False,
-                                        request_id: Optional[str] = None) -> Series:
+                                        request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Price to Sales of the asset-weighted average value of a composite's underliers.
 
@@ -3984,7 +3985,7 @@ def current_constituents_price_to_sales(asset: Asset, period: str, period_direct
               [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_return_on_equity(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                           *, source: str = None, real_time: bool = False,
-                                          request_id: Optional[str] = None) -> Series:
+                                          request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Return on Equity of the asset-weighted average value of a composite's underliers.
 
@@ -4022,7 +4023,7 @@ def current_constituents_return_on_equity(asset: Asset, period: str, period_dire
               [QueryType.FUNDAMENTAL_METRIC])
 def current_constituents_sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
                                          *, source: str = None, real_time: bool = False,
-                                         request_id: Optional[str] = None) -> Series:
+                                         request_id: Optional[str] = None) -> pd.Series:
     """
     Current Constituents Sales per Share of the asset-weighted average value of a composite's underliers.
 
@@ -4059,7 +4060,7 @@ def current_constituents_sales_per_share(asset: Asset, period: str, period_direc
                                      AssetType.Research_Basket), [QueryType.REALIZED_CORRELATION])
 def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int] = None,
                          composition_date: Optional[GENERIC_DATE] = None, *, source: str = None,
-                         real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                         real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Realized correlation of an asset.
 
@@ -4152,7 +4153,7 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
               asset_type_excluded=(AssetType.CommodityEUNaturalGasHub, AssetType.CommodityNaturalGasHub,))
 def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 0),
                         returns_type: Returns = Returns.LOGARITHMIC, pricing_location: Optional[PricingLocation] = None,
-                        *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                        *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Realized volatility for an asset.
 
@@ -4200,7 +4201,7 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.ES_SCORE])
 def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE, *,
-                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Environmental, Social, and Governance (ESG) scores and percentiles for a broad set of companies across the globe,
     including, but not limited to, companies covered by Global Investment Research (GIR) analysts.
@@ -4227,7 +4228,7 @@ def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONM
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.RATING])
 def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source: str = None, real_time: bool = False,
-           request_id: Optional[str] = None) -> Series:
+           request_id: Optional[str] = None) -> pd.Series:
     """
     Analyst Rating, which may take on the following values
     {'Sell': -1, 'Neutral': 0, 'Buy': 1}
@@ -4266,7 +4267,7 @@ def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source
 @plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
     id_provider=cross_to_usd_based_cross, query_type=QueryType.FAIR_VALUE)])
 def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = EquilibriumExchangeRateMetric.GSDEER, *,
-               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     GSDEER and GSFEER quarterly estimates for currency fair values made by Global Investment Research (GIR)
     macro analysts.
@@ -4297,7 +4298,7 @@ def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = Equilibrium
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,),
               [QueryType.GROWTH_SCORE])
 def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMetric.GROWTH_SCORE,
-                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     This dataset consists of Goldman Sachs Investment Profile ("IP") percentiles for US and Canadian securities
     covered by Goldman Sachs GIR analysts. Beginning in mid-2017, IP was renamed GS Factor Profile;
@@ -4342,7 +4343,7 @@ def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMe
 @plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
 def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
                        forecastType: _CommodityForecastType = _CommodityForecastType.SPOT_RETURN, *,
-                       source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                       source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Short and long-term commodities forecast.
     :param asset: asset object loaded from security master
@@ -4628,7 +4629,7 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_me
 
 @plot_measure((AssetClass.FX,), None, [QueryType.FORWARD_POINT])
 def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.DAILY, *,
-               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> Series:
+               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Calculates carry using forward term structure i.e forwardpoints/spot with option to return it in annualized terms.
 
@@ -4672,7 +4673,7 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
 
 @plot_measure((AssetClass.FX,), None, [QueryType.IMPLIED_VOLATILITY])
 def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> Series:
+                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     FX implied correlation. Uses most recent date available if pricing_date is not provided.
 
@@ -4969,7 +4970,7 @@ def thematic_model_beta(asset: Asset, basket_identifier: str, *, source: str = N
 def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.RETAIL_PCT_SHARES,
                         data_source: UnderlyingSourceCategory = UnderlyingSourceCategory.ALL,
                         sector: GICSSector = GICSSector.ALL, *,
-                        source: str = None, real_time: bool = False) -> Series:
+                        source: str = None, real_time: bool = False) -> pd.Series:
     """
     Aggregates retail interest for specified Equity asset with underliers.
     :param sector: Any valid GICSSector like Information Technology, Energy etc. or All
