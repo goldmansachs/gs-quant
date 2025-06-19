@@ -23,7 +23,7 @@ import backoff
 from gs_quant.errors import MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.session import GsSession
 from gs_quant.target.risk_models import RiskModel, RiskModelCalendar, Factor, RiskModelData, \
-    RiskModelDataAssetsRequest, RiskModelDataMeasure, RiskModelEventType, RiskModelTerm
+    RiskModelDataAssetsRequest, RiskModelDataMeasure, RiskModelEventType, RiskModelTerm, IntradayFactorDataSource
 
 _logger = logging.getLogger(__name__)
 
@@ -176,6 +176,37 @@ class GsFactorRiskModelApi(GsRiskModelApi):
             url += '&name={names}'.format(names='&name='.join(names))
         if factor_categories:
             url += '&factorCategory={factor_categories}'\
+                .format(factor_categories='&factorCategory='.join(factor_categories))
+        return GsSession.current._get(url)['results']
+
+    @classmethod
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
+                          (MqTimeoutError, MqInternalServerError),
+                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90),
+                          MqRateLimitedError,
+                          max_tries=5)
+    def get_risk_model_factor_data_intraday(cls,
+                                            model_id: str,
+                                            start_time: dt.datetime = None,
+                                            end_time: dt.datetime = None,
+                                            factor_ids: List[str] = None,
+                                            factor_categories: List[str] = None,
+                                            factors: List[str] = None,
+                                            data_source: Union[IntradayFactorDataSource, str] = None) -> List[Dict]:
+        url = f'/risk/models/{model_id}/factors/data/intraday?'
+        if start_time is not None:
+            url += f'&startTime={start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}'
+        if end_time is not None:
+            url += f'&endTime={end_time.strftime("%Y-%m-%dT%H:%M:%SZ")}'
+        if factor_ids is not None:
+            url += '&factorId={ids}'.format(ids='&factorId='.join(factor_ids))
+        if data_source:
+            url += f'&dataSource={data_source if isinstance(data_source, str) else data_source.value}'
+        if factors:
+            url += '&factor={names}'.format(names='&factor='.join(factors))
+        if factor_categories:
+            url += '&factorCategory={factor_categories}' \
                 .format(factor_categories='&factorCategory='.join(factor_categories))
         return GsSession.current._get(url)['results']
 

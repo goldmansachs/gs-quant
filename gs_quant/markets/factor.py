@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import datetime as dt
 import math
 from enum import auto, Enum
 from typing import Dict, Union
@@ -22,10 +23,10 @@ import pandas as pd
 
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, RiskModelDataMeasure, RiskModelDataAssetsRequest
 from gs_quant.data.core import DataContext
-from gs_quant.datetime import date
+from gs_quant.datetime import date, time
 from gs_quant.models.risk_model_utils import get_covariance_matrix_dataframe, build_factor_volatility_dataframe, \
     build_factor_data_map, build_pfp_data_dataframe
-from gs_quant.target.risk_models import RiskModelUniverseIdentifierRequest
+from gs_quant.target.risk_models import RiskModelUniverseIdentifierRequest, IntradayFactorDataSource
 
 
 class ReturnFormat(Enum):
@@ -189,6 +190,40 @@ class Factor:
         factor_returns_formatted = build_factor_data_map(factor_returns_raw, 'factorName', self.risk_model_id,
                                                          RiskModelDataMeasure.Factor_Return, None)
         factor_returns_df = factor_returns_formatted.rename(columns={self.name: 'return'}).rename_axis(None, axis=1)
+
+        if format == ReturnFormat.JSON:
+            return factor_returns_df.squeeze().to_dict()
+
+        return factor_returns_df
+
+    def intraday_returns(self,
+                         start_time: time = DataContext.current.start_time,
+                         end_time: time = DataContext.current.end_time,
+                         data_source: Union[IntradayFactorDataSource, str] = IntradayFactorDataSource.GS_FMP,
+                         format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+        """ Retrieve a Dataframe or Dictionary of timestamp->factor return values for a time range """
+
+        max_interval = dt.timedelta(hours=23, minutes=59, seconds=59)
+        current_start = start_time
+        all_data = []
+
+        while current_start < end_time:
+            current_end = min(current_start + max_interval, end_time)
+            factor_returns_batch = GsFactorRiskModelApi.get_risk_model_factor_data_intraday(self.risk_model_id,
+                                                                                            current_start,
+                                                                                            current_end,
+                                                                                            data_source=data_source,
+                                                                                            factors=[self.name])
+            all_data.extend(factor_returns_batch)
+            current_start = current_end + dt.timedelta(seconds=1)  # Move to the next interval
+
+        factor_returns_df = pd.DataFrame(all_data)
+        try:
+            factor_returns_df.set_index(['time'], inplace=True)
+        except KeyError:
+            factor_returns_df = pd.DataFrame()
+
+        factor_returns_df.drop(columns=["factorCategory", "factor", "factorId"], errors='ignore', inplace=True)
 
         if format == ReturnFormat.JSON:
             return factor_returns_df.squeeze().to_dict()

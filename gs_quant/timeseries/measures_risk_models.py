@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import pandas as pd
 from pydash import decapitalize
@@ -27,7 +27,7 @@ from gs_quant.markets.factor import ReturnFormat
 from gs_quant.markets.securities import Asset, AssetIdentifier
 from gs_quant.models.risk_model import FactorRiskModel, MarqueeRiskModel
 from gs_quant.target.risk_models import RiskModelDataMeasure, RiskModelDataAssetsRequest, \
-    RiskModelUniverseIdentifierRequest
+    RiskModelUniverseIdentifierRequest, IntradayFactorDataSource
 from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
 from gs_quant.timeseries.measures import _extract_series_from_df
 
@@ -272,6 +272,28 @@ def factor_performance(risk_model_id: str, factor_name: str, *, source: str = No
     model = FactorRiskModel.get(risk_model_id)
     factor = model.get_factor(factor_name)
     factor_returns_df = factor.returns(DataContext.current.start_date, DataContext.current.end_date)
+    factor_returns_series = factor_returns_df.squeeze() / 100
+    return prices(factor_returns_series, 100)
+
+
+@plot_measure_entity(EntityType.RISK_MODEL, [QueryType.FACTOR_RETURN])
+def factor_performance_intraday(risk_model_id: str, factor_name: str, *,
+                                data_source: Union[IntradayFactorDataSource, str] = None,
+                                request_id: Optional[str] = None) -> pd.Series:
+    """
+    Factor returns as a price time-series for a factor in a risk model
+
+    :param risk_model_id: risk model entity
+    :param factor_name: factor name
+    :param data_source: requested data source
+    :param request_id: server request id
+    :return: Time-series of factor returns as a price series across different timestamps
+    """
+
+    model = FactorRiskModel.get(risk_model_id)
+    factor = model.get_factor(factor_name)
+    factor_returns_df = factor.intraday_returns(DataContext.current.start_time, DataContext.current.end_time,
+                                                data_source)
     factor_returns_series = factor_returns_df.squeeze() / 100
     return prices(factor_returns_series, 100)
 

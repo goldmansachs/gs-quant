@@ -37,7 +37,7 @@ from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModel
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
     RiskModelCoverage as CoverageType, RiskModelUniverseIdentifier as UniverseIdentifier, Entitlements, \
     RiskModelTerm as Term, RiskModelUniverseIdentifierRequest, Factor as RiskModelFactor, RiskModelType, \
-    RiskModelDataMeasure, RiskModelDataAssetsRequest
+    RiskModelDataMeasure, RiskModelDataAssetsRequest, IntradayFactorDataSource
 
 
 class ReturnFormat(Enum):
@@ -532,6 +532,88 @@ class MarqueeRiskModel(RiskModel):
         :param factor_id: factor id associated with risk model's factor
         """
         GsFactorRiskModelApi.delete_risk_model_factor(self.id, factor_id)
+
+    def get_intraday_factor_data(self,
+                                 start_time: dt.datetime = dt.datetime.now() - dt.timedelta(hours=3),
+                                 end_time: dt.datetime = dt.datetime.now(),
+                                 factors: List[str] = None,
+                                 factor_ids: List[str] = None,
+                                 data_source: Union[IntradayFactorDataSource, str] = None,
+                                 category_filter: List[str] = None,
+                                 format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[List[Dict], pd.DataFrame]:
+        """ Get intraday factor data for existing risk model
+
+        :param start_time: Start time for data request
+        :param end_time: End time for data request
+        :param factors: Filter the results based on factor name.
+        :param factor_ids: List of factor ids associated with risk model
+        :param data_source: Data source to use for the request.
+        :param category_filter: Filter the results to those having one of the specified categories. \
+            Default is to return all results
+        :param format: Which format to return the results in
+        :return: Risk model intraday factor data
+
+        **Usage**
+
+        **Examples**
+
+        This will get the factor data for the past 3 hours.
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_intraday_factor_data()
+
+        This will get the factor data within the range start_time and end_time
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_intraday_factor_data(start_time=dt.datetime(), end_date=dt.date("2023-02-03"))
+
+        This will return factor data for factors with the specified identifiers
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_intraday_factor_data(factorIds=["1", "2", "3"])
+
+        This will filter factor data based on factor names
+
+        >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_intraday_factor_data(factors=["Factor name a", "Factor name b", "Factor name c"])
+
+        This will return factor data for factors in the specified factor categories
+
+         >>> from gs_quant.models.risk_model import FactorRiskModel
+        >>> import datetime as dt
+        >>>
+        >>> model = FactorRiskModel.get("MODEL_ID")
+        >>> factor_data = model.get_intraday_factor_data(category_filter=["Factor category 1", "Factor category 2"])
+
+        **See also**
+
+        :func:`get_many_factors :func:`get_factor_returns_by_name`
+        """
+        factor_categories = category_filter if category_filter else []
+        intraday_factor_data = (GsFactorRiskModelApi.
+                                get_risk_model_factor_data_intraday(self.id,
+                                                                    start_time=start_time,
+                                                                    end_time=end_time,
+                                                                    factor_ids=factor_ids,
+                                                                    factors=factors,
+                                                                    data_source=data_source,
+                                                                    factor_categories=factor_categories))
+
+        if format == ReturnFormat.DATA_FRAME:
+            intraday_factor_data = pd.DataFrame(intraday_factor_data)
+        return intraday_factor_data
 
     def get_factor_data(self,
                         start_date: dt.date = None,

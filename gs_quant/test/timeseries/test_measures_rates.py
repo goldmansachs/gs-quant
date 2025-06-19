@@ -1166,9 +1166,10 @@ def test_policy_rate_term_structure_rt(mocker):
 
         with pytest.raises(MqError):
             tm_rates.policy_rate_term_structure_rt(mock_eur, tm_rates.EventType.SPOT, tm_rates.RateType.ABSOLUTE)
-        with pytest.raises(MqError):
-            tm_rates.policy_rate_term_structure_rt(mock_eur, tm_rates.EventType.MEETING, tm_rates.RateType.RELATIVE)
 
+        assert tm_rates.policy_rate_term_structure_rt(
+            mock_eur, tm_rates.EventType.MEETING, tm_rates.RateType.RELATIVE
+        ).empty
     replace.restore()
 
 

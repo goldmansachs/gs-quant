@@ -2176,7 +2176,7 @@ def policy_rate_term_structure_rt(asset: Asset, event_type: EventType = EventTyp
         mqids = get_cb_meeting_swaps(currency, benchmark_type=benchmark_type)
         cbw_df = get_cb_swap_data(currency, rate_mqids=mqids)
         if cbw_df.empty:
-            raise MqValueError('no data returned for specified arguments')
+            return ExtendedSeries(dtype=float)
     else:
         raise MqValueError("Real Time End of Year pricing is not supported")
 

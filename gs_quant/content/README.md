@@ -31,6 +31,7 @@ backtesting strategies, attribution analytics and more.
   - 📄 [12-Structuring for Uncertaintly.ipynb](made_with_gs_quant/12-Structuring%20for%20Uncertaintly.ipynb)
   - 📄 [13-Cyclicals.ipynb](made_with_gs_quant/13-Cyclicals.ipynb)
   - 📄 [14-Curve Inversions.ipynb](made_with_gs_quant/14-Curve%20Inversions.ipynb)
+  - 📄 [15-Hypothetical Lifetime Risk Calculator.ipynb](made_with_gs_quant/15-Hypothetical%20Lifetime%20Risk%20Calculator.ipynb)
   - 📄 [2-Levels and Tails.ipynb](made_with_gs_quant/2-Levels%20and%20Tails.ipynb)
   - 📄 [3-Systematic Selling.ipynb](made_with_gs_quant/3-Systematic%20Selling.ipynb)
   - 📄 [4-Delta Hedging.ipynb](made_with_gs_quant/4-Delta%20Hedging.ipynb)

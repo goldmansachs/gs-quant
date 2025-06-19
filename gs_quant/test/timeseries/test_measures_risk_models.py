@@ -71,6 +71,27 @@ mock_risk_model_data = {
     ]
 }
 
+mock_risk_model_factor_data_intraday = {
+    'totalResults': 2,
+    'missingDates': [],
+    'results': [
+        {
+            'time': '2020-01-01T10:10:10Z',
+            'factor': 'Factor Name',
+            'factorCategory': 'Style',
+            "factorId": "factor_id",
+            "factorReturn": 1.022
+        },
+        {
+            'time': '2020-01-01T10:10:20Z',
+            'factor': 'Factor Name 1',
+            'factorCategory': 'Style',
+            "factorId": "factor_id_1",
+            "factorReturn": 1.033
+        }
+    ]
+}
+
 mock_risk_model_factor_data = [{
     'identifier': 'factor_id',
     'type': 'Factor',
@@ -344,6 +365,28 @@ def test_factor_performance():
     with DataContext(dt.date(2020, 1, 1), dt.date(2020, 1, 3)):
         actual = mrm.factor_performance(mock_risk_model(), 'Factor Name')
         assert len(actual.values) == 3
+    replace.restore()
+
+
+def test_factor_performance_intraday():
+    replace = Replacer()
+
+    # mock getting risk model factor entity
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
+    mock.return_value = mock_risk_model_factor_data
+
+    # mock getting risk model entity()
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
+    mock.return_value = mock_risk_model_obj
+
+    # mock getting factor returns
+    mock = replace('gs_quant.markets.factor.Factor.intraday_returns', Mock())
+    mock.return_value = (pd.DataFrame(mock_risk_model_factor_data_intraday.get('results')).set_index('time')
+                         .drop(columns=["factorCategory", "factor", "factorId"], errors='ignore'))
+
+    with DataContext(dt.datetime(2025, 1, 1, 0, 0, 0), dt.datetime(2025, 1, 1, 23, 59, 59)):
+        actual = mrm.factor_performance_intraday(mock_risk_model(), 'Factor Name')
+        assert len(actual.values) == 2
     replace.restore()
 
 

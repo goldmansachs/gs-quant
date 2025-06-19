@@ -461,7 +461,7 @@ class CountryConstraint:
             raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
         country_constraints_as_records = country_constraints.to_dict(orient='records')
 
-        return [cls(country_name=row.get('industry'),
+        return [cls(country_name=row.get('country'),
                     minimum=row.get('minimum'),
                     maximum=row.get('maximum'),
                     unit=OptimizationConstraintUnit(row.get('unit'))) for row in country_constraints_as_records]
