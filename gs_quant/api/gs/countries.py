@@ -27,8 +27,18 @@ class GsCountryApi:
         return GsSession.current._get('/countries?limit={limit}'.format(limit=limit), cls=Country)['results']
 
     @classmethod
+    async def get_many_countries_async(cls, limit: int = 100) -> Tuple[Country, ...]:
+        response = await GsSession.current._get_async('/countries', payload={"limit": limit}, cls=Country)
+        return response.get("results")
+
+    @classmethod
     def get_country(cls, country_id: str) -> Country:
         return GsSession.current._get('/countries/{id}'.format(id=country_id), cls=Country)
+
+    @classmethod
+    async def get_country_async(cls, country_id: str) -> Country:
+        response = await GsSession.current._get_async(f'/countries/{country_id}', cls=Country)
+        return response
 
     @classmethod
     def create_country(cls, country: Country) -> Country:

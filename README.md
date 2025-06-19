@@ -10,7 +10,7 @@ Please refer to [Goldman Sachs Developer](https://developer.gs.com/docs/gsquant/
 
 ## Requirements
 
-* Python 3.8 or greater
+* Python 3.9 or greater
 * Access to PIP package manager
 
 ## Installation
@@ -23,9 +23,6 @@ pip install gs-quant
 
 You can find examples, guides and tutorials in the respective folders on [Goldman Sachs Developer](https://developer.gs.com/docs/gsquant/).
 
-## Contributions
-
-Contributions are encouraged! Please see [CONTRIBUTING](CONTRIBUTING.md) for more details.
 
 ## Help
 
