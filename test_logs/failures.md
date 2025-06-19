@@ -1,0 +1,6 @@
+# Failures
+
+Total: 0
+
+---
+
