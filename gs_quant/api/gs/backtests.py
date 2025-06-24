@@ -134,8 +134,26 @@ class GsBacktestApi:
 
 class GsBacktestApiAsync(GsBacktestApi):
     @classmethod
-    async def calculate_position_risk(cls, backtestRiskRequest: BacktestRiskRequest) -> dict:
+    async def calculate_position_risk(cls, backtestRiskRequest: BacktestRiskRequest,
+                                      timeout: Optional[int] = DEFAULT_TIMEOUT) -> dict:
         request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
         response = await GsSession.current._post_async('/backtests/calculate-position-risk', backtestRiskRequest,
-                                                       request_headers=request_headers)
+                                                       request_headers=request_headers, timeout=timeout)
         return response
+
+    @classmethod
+    async def run_backtest(cls, backtest: Backtest, correlation_id: str = None,
+                           timeout: Optional[int] = DEFAULT_TIMEOUT) -> BacktestResult:
+        """
+        :param backtest: definition of a backtest which should be run on Marquee API
+        :param correlation_id: used for logging purposes; helps in tracking all the requests which ultimately serve
+               the same purpose (e.g. calculating a backtest)
+        :return: result of running the backtest
+        """
+        request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
+        if correlation_id is not None:
+            request_headers["X-CorrelationId"] = correlation_id
+
+        response = await GsSession.current._post_async('/backtests/calculate', backtest,
+                                                       request_headers=request_headers, timeout=timeout)
+        return cls.backtest_result_from_response(response)
