@@ -69,7 +69,7 @@ class RiskMeasure(__RiskMeasure):
             if not isinstance(other.parameters, type(self.parameters)):
                 return self.parameters.parameter_type < other.parameters.parameter_type
             else:
-                return self.parameters < other.parameters
+                return repr(self.parameters) < repr(other.parameters)
         elif other.parameters is not None:
             return True
         return False

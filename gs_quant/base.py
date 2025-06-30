@@ -535,7 +535,17 @@ class Scenario(Base, ContextBase, ABC, metaclass=__ScenarioMeta):
 
 @dataclass
 class RiskMeasureParameter(Base, ABC):
-    pass
+    def __repr__(self):
+        params = self.as_dict()
+        params.pop("parameter_type", None)
+        sorted_keys = sorted(params.keys(), key=lambda x: x.lower())
+        params = ", ".join(
+            [
+                f"{k}:{params[k].value if isinstance(params[k], EnumBase) else params[k]}"
+                for k in sorted_keys
+            ]
+        )
+        return f"{self.parameter_type}({params})"
 
 
 @dataclass
