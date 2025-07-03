@@ -14,17 +14,17 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-import pandas as pd
 import re
+from dataclasses import MISSING, fields
 from typing import Optional, Union, Iterable, Dict, Tuple, Any
 
+import pandas as pd
 from dataclasses_json import config
-from dataclasses import MISSING, fields
 from dateutil.parser import isoparse
-
 
 __valid_date_formats = ('%Y-%m-%d',  # '2020-07-28'
                         '%d%b%y',  # '28Jul20'
+                        '%d%b%Y',  # '28Jul2020'
                         '%d-%b-%y',  # '28-Jul-20'
                         '%d/%m/%Y')  # '28/07/2020
 
@@ -41,7 +41,9 @@ def decode_optional_date(value: Optional[str]) -> Optional[dt.date]:
     if value is None or isinstance(value, dt.date):
         return value
     elif isinstance(value, str):
-        return dt.datetime.strptime(value, '%Y-%m-%d').date()
+        decoded_date_str = __try_decode_valid_date_formats(value)
+        if decoded_date_str is not None:
+            return decoded_date_str
 
     raise ValueError(f'Cannot convert {value} to date')
 
@@ -114,6 +116,15 @@ def decode_datetime_tuple(blob: Tuple[str, ...]):
     return tuple(optional_from_isodatetime(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
+def __try_decode_valid_date_formats(value: str) -> Optional[dt.date]:
+    for fmt in __valid_date_formats:
+        try:
+            return dt.datetime.strptime(value, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
 def decode_date_or_str(value: Union[dt.date, float, str]) -> Optional[Union[dt.date, str]]:
     if value is None or isinstance(value, dt.date):
         return value
@@ -124,14 +135,10 @@ def decode_date_or_str(value: Union[dt.date, float, str]) -> Optional[Union[dt.d
         return (dt.datetime(1899, 12, 31) + dt.timedelta(days=value)).date()
     elif isinstance(value, str):
         # Try the supported string date formats
-        for fmt in __valid_date_formats:
-            try:
-                return dt.datetime.strptime(value, fmt).date()
-            except ValueError:
-                pass
+        decoded_date_str = __try_decode_valid_date_formats(value)
 
         # Assume it's a tenor
-        return value
+        return value if decoded_date_str is None else decoded_date_str
 
     raise TypeError(f'Cannot convert {value} to date')
 

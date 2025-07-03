@@ -470,7 +470,7 @@ class DataGrid:
             sub_df = self.__handle_sorts(sub_df)
             sub_dfs.append(sub_df)
         df = pd.concat(sub_dfs)
-        df.set_index(['rowGroup', df.index]).rename_axis(index=['', ''])
+        df = df.set_index(['rowGroup', df.index]).rename_axis(index=['', ''])
         return df
 
     def __handle_sorts(self, df):
