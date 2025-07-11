@@ -259,6 +259,10 @@ class Base(ABC):
         if sys.version_info >= (3, 9):
             from types import GenericAlias
             is_generic_alias = isinstance(tp, (typing._GenericAlias, GenericAlias))
+            if sys.version_info >= (3, 10) and not is_generic_alias:
+                from types import UnionType
+                if isinstance(tp, UnionType):
+                    return any(cls.__is_type_match(arg, val) for arg in tp.__args__)
         else:
             is_generic_alias = isinstance(tp, typing._GenericAlias)
         if not is_generic_alias:

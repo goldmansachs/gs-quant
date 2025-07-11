@@ -144,18 +144,7 @@ class RiskModelUniverseIdentifierRequest(EnumBase, Enum):
     ric = 'ric'
     ticker = 'ticker'
     primeId = 'primeId'
-    isin = 'isin'    
-
-
-class IntradayFactorDataSource(Enum):
-    """Data source for intraday factor data"""
-    GS_FMP = "GS_FMP"
-    GS_REGRESSION = "GS_Regression"
-    BARRA = "BARRA"
-    AXIOMA = "AXIOMA"
-    WOLFE = "WOLFE"
-    QI = "QI"
-
+    isin = 'isin'
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)

@@ -20,6 +20,7 @@ import pandas as pd
 from pydash import decapitalize
 
 from gs_quant.api.gs.data import QueryType
+from gs_quant.api.gs.risk_models import IntradayFactorDataSource
 from gs_quant.common import AssetClass, AssetType
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
@@ -27,7 +28,7 @@ from gs_quant.markets.factor import ReturnFormat
 from gs_quant.markets.securities import Asset, AssetIdentifier
 from gs_quant.models.risk_model import FactorRiskModel, MarqueeRiskModel
 from gs_quant.target.risk_models import RiskModelDataMeasure, RiskModelDataAssetsRequest, \
-    RiskModelUniverseIdentifierRequest, IntradayFactorDataSource
+    RiskModelUniverseIdentifierRequest
 from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
 from gs_quant.timeseries.measures import _extract_series_from_df
 
@@ -276,16 +277,18 @@ def factor_performance(risk_model_id: str, factor_name: str, *, source: str = No
     return prices(factor_returns_series, 100)
 
 
-@plot_measure_entity(EntityType.RISK_MODEL, [QueryType.FACTOR_RETURN])
-def factor_performance_intraday(risk_model_id: str, factor_name: str, *,
-                                data_source: Union[IntradayFactorDataSource, str] = None,
-                                request_id: Optional[str] = None) -> pd.Series:
+@plot_measure_entity(EntityType.RISK_MODEL, [])
+def factor_performance_intraday(risk_model_id: str, factor_name: str,
+                                data_source: Union[IntradayFactorDataSource, str] = None, *, source: str = None,
+                                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Factor returns as a price time-series for a factor in a risk model
 
     :param risk_model_id: risk model entity
     :param factor_name: factor name
     :param data_source: requested data source
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
     :return: Time-series of factor returns as a price series across different timestamps
     """

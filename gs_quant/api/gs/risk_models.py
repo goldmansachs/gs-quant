@@ -16,6 +16,7 @@ under the License.
 
 import datetime as dt
 import logging
+from enum import Enum
 from typing import Tuple, Dict, List, Union
 
 import backoff
@@ -23,9 +24,19 @@ import backoff
 from gs_quant.errors import MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.session import GsSession
 from gs_quant.target.risk_models import RiskModel, RiskModelCalendar, Factor, RiskModelData, \
-    RiskModelDataAssetsRequest, RiskModelDataMeasure, RiskModelEventType, RiskModelTerm, IntradayFactorDataSource
+    RiskModelDataAssetsRequest, RiskModelDataMeasure, RiskModelEventType, RiskModelTerm
 
 _logger = logging.getLogger(__name__)
+
+
+class IntradayFactorDataSource(Enum):
+    """Data source for intraday factor data"""
+    GS_FMP = "GS_FMP"
+    GS_REGRESSION = "GS_Regression"
+    BARRA = "BARRA"
+    AXIOMA = "AXIOMA"
+    WOLFE = "WOLFE"
+    QI = "QI"
 
 
 class GsRiskModelApi:
@@ -175,7 +186,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         if names:
             url += '&name={names}'.format(names='&name='.join(names))
         if factor_categories:
-            url += '&factorCategory={factor_categories}'\
+            url += '&factorCategory={factor_categories}' \
                 .format(factor_categories='&factorCategory='.join(factor_categories))
         return GsSession.current._get(url)['results']
 

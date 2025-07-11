@@ -23,7 +23,7 @@ import logging
 import deprecation
 from gs_quant.common import Currency
 
-from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
+from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi, IntradayFactorDataSource
 from gs_quant.base import EnumBase
 from gs_quant.data import DataMeasure
 from gs_quant.errors import MqValueError, MqRequestError
@@ -37,7 +37,7 @@ from gs_quant.target.risk_models import RiskModel as RiskModelBuilder, RiskModel
     RiskModelCalendar, RiskModelDataAssetsRequest as DataAssetsRequest, RiskModelDataMeasure as Measure, \
     RiskModelCoverage as CoverageType, RiskModelUniverseIdentifier as UniverseIdentifier, Entitlements, \
     RiskModelTerm as Term, RiskModelUniverseIdentifierRequest, Factor as RiskModelFactor, RiskModelType, \
-    RiskModelDataMeasure, RiskModelDataAssetsRequest, IntradayFactorDataSource
+    RiskModelDataMeasure, RiskModelDataAssetsRequest
 
 
 class ReturnFormat(Enum):

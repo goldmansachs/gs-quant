@@ -167,6 +167,26 @@ class QueryType(Enum):
     RETAIL_SELL_SHARES = 'impliedRetailSellShares'
     FWD_POINTS = 'Fwd Points'
     S3_AGGREGATE_DATA = 'value'
+    HIT_RATE = 'Hit Rate'
+    MAX_DRAWDOWN = "Max Drawdown"
+    STANDARD_DEVIATION = "Standard Deviation"
+    DOWNSIDE_RISK = "Downside Risk"
+    KURTOSIS = 'Kurtosis'
+    SKEWNESS = 'Skewness'
+    REALIZED_VAR = 'Realized VaR'
+    TRACKING_ERROR = 'Tracking Error'
+    TRACKING_ERROR_BEAR = 'Tracking Error Bear'
+    TRACKING_ERROR_BULL = 'Tracking Error Bull'
+    SHARPE_RATIO = 'Sharpe Ratio'
+    CALMAR_RATIO = 'Calmar Ratio'
+    SORTINO_RATIO = 'Sortino Ratio'
+    INFORMATION_RATIO = 'Information Ratio'
+    MODIGLIANI_RATIO = 'Modigliani Ratio'
+    TREYNOR_RATIO = 'Treynor Ratio'
+    ALPHA = 'Alpha'
+    BETA = 'Beta'
+    R_SQUARED = 'R Squared'
+    CAPTURE_RATIO = 'Capture Ratio'
 
 
 class GsDataApi(DataApi):

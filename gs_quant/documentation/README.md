@@ -150,6 +150,10 @@ examples providing a searchable library of short specific snippets.
         - 📄 [010700_discount_curve_overlay.ipynb](02_pricing_and_risk/01_scenarios_and_contexts/examples/07_curve_overlay/010700_discount_curve_overlay.ipynb)
       - 📁 08_multi_scenario
         - 📄 [010801_multi_scenario_shock.ipynb](02_pricing_and_risk/01_scenarios_and_contexts/examples/08_multi_scenario/010801_multi_scenario_shock.ipynb)
+      - 📁 09_measure_scenario
+        - 📄 [010901_fx_override_example.ipynb](02_pricing_and_risk/01_scenarios_and_contexts/examples/09_measure_scenario/010901_fx_override_example.ipynb)
+        - 📄 [010902_rates_override_example.ipynb](02_pricing_and_risk/01_scenarios_and_contexts/examples/09_measure_scenario/010902_rates_override_example.ipynb)
+        - 📄 [010903_eq_override_example.ipynb](02_pricing_and_risk/01_scenarios_and_contexts/examples/09_measure_scenario/010903_eq_override_example.ipynb)
     - 📁 tutorials
       - 📄 [Pricing_Context.ipynb](02_pricing_and_risk/01_scenarios_and_contexts/tutorials/Pricing_Context.ipynb)
       - 📄 [Scenarios.ipynb](02_pricing_and_risk/01_scenarios_and_contexts/tutorials/Scenarios.ipynb)

@@ -6879,6 +6879,16 @@ class EntityQuery(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class MeasureScenario(Scenario):
+    risk_measure: RiskMeasure = field(default=None, metadata=field_metadata)
+    value: float = field(default=None, metadata=field_metadata)
+    scenario_type: Optional[str] = field(init=False, default='MeasureScenario', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class PCOSecurityBreakdown(Base):
     breakdown_currency_type: Optional[PCOCurrencyType] = field(default=None, metadata=field_metadata)
     last_security_breakdown_update_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)

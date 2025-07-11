@@ -17,6 +17,7 @@ import datetime as dt
 import logging
 import math
 import pydash
+import random
 from time import sleep
 from typing import List, Union
 
@@ -249,7 +250,7 @@ def batch_and_upload_partial_data_use_target_universe_size(model_id: str, data: 
     asset data size, returns a list of messages from resulting post calls"""
     date = data.get('date')
     _upload_factor_data_if_present(model_id, data, date)
-    sleep(2)
+    sleep(random.uniform(3, 7))
     _batch_data_if_present(model_id, data, max_asset_size, date)
 
 
@@ -277,6 +278,7 @@ def _batch_data_if_present(model_id: str, data, max_asset_size, date):
             _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
                                       model_data={'assetData': asset_data, 'date': date}, partial_upload=True,
                                       target_universe_size=target_size)
+            sleep(random.uniform(3, 7))
 
     if 'issuerSpecificCovariance' in data.keys() or 'factorPortfolios' in data.keys():
         for optional_key in ['issuerSpecificCovariance', 'factorPortfolios']:
@@ -288,6 +290,7 @@ def _batch_data_if_present(model_id: str, data, max_asset_size, date):
                     _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
                                               model_data={optional_key: optional_data, 'date': date},
                                               partial_upload=True, target_universe_size=target_size)
+                    sleep(random.uniform(3, 7))
 
 
 def only_factor_data_is_present(model_type: Type, data: dict) -> bool:
@@ -305,16 +308,16 @@ def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int
     asset data size, returns a list of messages from resulting post calls"""
     date = data.get('date')
     _upload_factor_data_if_present(model_id, data, date, **kwargs)
-    sleep(2)
+    sleep(random.uniform(3, 7))
     if data.get('currencyRatesData'):
         _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
                                   model_data={"currencyRatesData": data.get('currencyRatesData'), 'date': date},
-                                  partial_upload=True, **kwargs)
-        sleep(2)
+                                  partial_upload=True, finalUpload=True, **kwargs)
+        sleep(random.uniform(3, 7))
     for risk_model_data_type in ["assetData", "issuerSpecificCovariance", "factorPortfolios"]:
         _repeat_try_catch_request(_batch_data_v2, model_id=model_id, data=data.get(risk_model_data_type),
                                   data_type=risk_model_data_type, max_asset_size=max_asset_size, date=date, **kwargs)
-        sleep(2)
+        sleep(random.uniform(3, 7))
 
 
 def _batch_data_v2(model_id: str, data: dict, data_type: str, max_asset_size: int, date: Union[str, dt.date], **kwargs):
@@ -436,7 +439,7 @@ def _repeat_try_catch_request(input_function, number_retries: int = 5,
                               return_result: bool = False,
                               verbose: bool = True,
                               **kwargs):
-    t = 2.0
+    t = 3.0
     errors = []
     for i in range(number_retries):
         try:

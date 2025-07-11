@@ -336,6 +336,7 @@ class GsPortfolioApi(ApiWithCustomSession):
                 if count == 0:
                     sleep(2)
                     count = 10
+                    cls.get_session()._post(f'/reports/{report_id}/schedule', payload)
                 else:
                     cls.get_session()._post(f'/reports/{report_id}/schedule', payload)
                     count -= 1

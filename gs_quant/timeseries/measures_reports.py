@@ -14,25 +14,29 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
+import re
 from enum import Enum
 from typing import Optional, Union, List
 
 import pandas as pd
 import numpy as np
 import math
+import scipy.stats as stats
 from pandas.tseries.offsets import BDay
 from pydash import decapitalize
 
 from gs_quant.api.gs.data import QueryType, GsDataApi, DataQuery
+from gs_quant.data import DataMeasure
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
 from gs_quant.markets.portfolio_manager import PortfolioManager
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport, ReturnFormat, \
     format_aum_for_return_calculation, get_pnl_percent, get_factor_pnl_percent_for_single_factor
+from gs_quant.markets.securities import Bond
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.target.reports import PositionSourceType
-from gs_quant.timeseries import plot_measure_entity
+from gs_quant.timeseries import plot_measure_entity, beta, correlation, max_drawdown
 from gs_quant.timeseries.algebra import geometrically_aggregate
 from gs_quant.timeseries.measures import _extract_series_from_df, SecurityMaster, AssetIdentifier
 
@@ -376,6 +380,1045 @@ def historical_simulation_estimated_factor_attribution(report_id: str, factor_na
     return factor_attributed_pnl.squeeze()
 
 
+@plot_measure_entity(EntityType.REPORT)
+def hit_rate(report_id: str, *, source: str = None,
+             real_time: bool = False,
+             request_id: Optional[str] = None) -> pd.Series:
+    """
+    The hit rate of a portfolio is a percentage of positions that have generated positive returns over a given period.
+
+    :param report_id: id of performance report
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of the hit rate
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    performance_report = PerformanceReport.get(report_id)
+    portfolio_constituents = performance_report.get_portfolio_constituents(fields=['date', 'pnl'],
+                                                                           start_date=start_date,
+                                                                           end_date=end_date).set_index('date')
+
+    portfolio_constituents = portfolio_constituents[portfolio_constituents['entryType'] == 'Holding']
+    hit_rate_series = (portfolio_constituents.groupby('date')['pnl'].apply(lambda x: (x > 0).sum() / len(x)))
+    return hit_rate_series
+
+
+@plot_measure_entity(EntityType.REPORT)
+def portfolio_max_drawdown(report_id: str, rolling_window: Union[int, str], *,
+                           source: str = None,
+                           real_time: bool = False,
+                           request_id: Optional[str] = None) -> pd.Series:
+    """
+    The largest drop from peak to trough in a sub-period over the stated timeframe
+
+    :param report_id: id of performance report
+    :param rolling_window: size of rolling window
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio estimated pnl
+    """
+    aum_series = aum(report_id)
+    rolling_window = _parse_window(rolling_window)
+    max_drawdown_series = aum_series.rolling(window=rolling_window).apply(_max_drawdown, raw=False)
+
+    return max_drawdown_series
+
+
+@plot_measure_entity(EntityType.REPORT)
+def drawdown_length(report_id: str, rolling_window: Union[int, str], *,
+                    source: str = None,
+                    real_time: bool = False,
+                    request_id: Optional[str] = None) -> pd.Series:
+    """
+    The length in days between the peak and the trough of the maximum drawdown
+
+    :param report_id: id of performance report
+    :param rolling_window: size of rolling window
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of the drawdown length
+    """
+    aum_series = aum(report_id)
+    rolling_window = _parse_window(rolling_window)
+    drawdown_length_series = aum_series.rolling(window=rolling_window).apply(_drawdown_length, raw=False)
+
+    return drawdown_length_series
+
+
+@plot_measure_entity(EntityType.REPORT)
+def max_recovery_period(report_id: str, rolling_window: Union[int, str], *,
+                        source: str = None,
+                        real_time: bool = False,
+                        request_id: Optional[str] = None) -> pd.Series:
+    """
+    The maximum number of days used to reach a previously broken price level over the stated timeframe.
+
+    :param report_id: id of performance report
+    :param rolling_window: size of rolling window
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of max recovery period
+    """
+    aum_series = aum(report_id)
+    rolling_window = _parse_window(rolling_window)
+    recovery_period_series = aum_series.rolling(window=rolling_window).apply(_max_recovery_period, raw=False)
+
+    return recovery_period_series
+
+
+def _max_recovery_period(series):
+    peak = series[0]
+    recovery_periods = []
+    current_drawdown = 0
+    in_drawdown = False
+
+    for val in series[1:]:
+        if val < peak:
+            in_drawdown = True
+            current_drawdown += 1
+        else:
+            if in_drawdown:
+                recovery_periods.append(current_drawdown)
+                in_drawdown = False
+            peak = val
+            current_drawdown = 0
+    return max(recovery_periods) if recovery_periods else 0
+
+
+def _drawdown_length(series):
+    peak = series.expanding().max()
+    drawdown_flag = series < peak
+    length = 0
+    for i in range(len(drawdown_flag) - 1, -1, -1):
+        if drawdown_flag.iloc[i]:
+            length += 1
+        else:
+            break
+    return length
+
+
+@plot_measure_entity(EntityType.REPORT)
+def standard_deviation(report_id: str, rolling_window: Union[int, str], *, source: str = None,
+                       real_time: bool = False,
+                       request_id: Optional[str] = None) -> pd.Series:
+    """
+    Volatility of the total return over the stated time frame.
+
+    :param report_id: id of performance report
+    :param rolling_window: length of window
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of standard deviation
+    """
+    portfolio_pnl = pnl(report_id)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+
+    rolling_window = _parse_window(rolling_window)
+    rolling_std = portfolio_pnl.rolling(window=rolling_window).std()
+
+    return rolling_std
+
+
+@plot_measure_entity(EntityType.REPORT)
+def downside_risk(report_id: str, rolling_window: Union[int, str], *, source: str = None,
+                  real_time: bool = False,
+                  request_id: Optional[str] = None) -> pd.Series:
+    """
+    Volatility of the periodic returns that are lower than the mean return over the stated time frame.
+    Standard deviation is calculated using all returns, downside risk is calculated using only the returns
+    that are below the mean.
+
+    :param report_id: id of performance report
+    :param rolling_window: length of window
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of downside_risk
+    """
+    portfolio_pnl = pnl(report_id)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    rolling_window = _parse_window(rolling_window)
+    downside_risk_series = portfolio_pnl.rolling(window=rolling_window).apply(_rolling_downside_risk, raw=False)
+
+    return downside_risk_series
+
+
+@plot_measure_entity(EntityType.REPORT)
+def semi_variance(report_id: str, rolling_window: Union[int, str], *, source: str = None,
+                  real_time: bool = False,
+                  request_id: Optional[str] = None) -> pd.Series:
+    """
+    Volatility of the periodic returns that are lower than the mean return over the stated time frame.
+    Standard deviation is calculated using all returns, semi variance is calculated using only the returns
+    that are below 0.
+
+    :param report_id: id of performance report
+    :param rolling_window: length of window
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of downside_risk
+    """
+    portfolio_pnl = pnl(report_id)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    rolling_window = _parse_window(rolling_window)
+    semi_variance_series = portfolio_pnl.rolling(window=rolling_window).apply(_rolling_semi_variance, raw=False)
+
+    return semi_variance_series
+
+
+@plot_measure_entity(EntityType.REPORT)
+def kurtosis(report_id: str, rolling_window: Union[int, str], *, source: str = None,
+             real_time: bool = False,
+             request_id: Optional[str] = None) -> pd.Series:
+    """
+    Kurtosis measure the peakedness or flatness of the return distribution over the state time frame.
+    In a flat distribution the average value is more likely to occur.
+
+
+    :param report_id: id of performance report
+    :param rolling_window: length of window
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of kurtosis
+    """
+    portfolio_pnl = pnl(report_id)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    rolling_window = _parse_window(rolling_window)
+    rolling_kurtosis = portfolio_pnl.rolling(window=rolling_window).apply(
+        lambda x: stats.kurtosis(x, fisher=True, bias=False),
+        raw=False
+    )
+
+    return rolling_kurtosis
+
+
+@plot_measure_entity(EntityType.REPORT)
+def skewness(report_id: str, rolling_window: Union[int, str], *, source: str = None,
+             real_time: bool = False,
+             request_id: Optional[str] = None) -> pd.Series:
+    """
+    Skewness measures the degree of symmetry of the return distribution over the stated time frame.
+    If the left tail is more pronounced than the right tail, it is said the return have negative skewness.
+
+    :param report_id: id of performance report
+    :param rolling_window: length of window
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of skewness
+    """
+    portfolio_pnl = pnl(report_id)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    rolling_window = _parse_window(rolling_window)
+    rolling_skewness = portfolio_pnl.rolling(window=rolling_window).apply(
+        lambda x: stats.skew(x, bias=False),
+        raw=False
+    )
+
+    return rolling_skewness
+
+
+@plot_measure_entity(EntityType.REPORT)
+def realized_var(report_id: str, rolling_window: Union[int, str],
+                 confidence_interval: float = .95, *, source: str = None,
+                 real_time: bool = False,
+                 request_id: Optional[str] = None) -> pd.Series:
+    """
+    The maximum expected loss of the portfolios, calculated using
+    the natural distribution of returns over a stated time frame and is based on a confidence level.
+
+    :param report_id: id of performance report
+    :param rolling_window: length of window
+    :param confidence_interval: confidence interval for variance
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of realized var
+    """
+    portfolio_pnl = pnl(report_id)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    rolling_window = _parse_window(rolling_window)
+    realized_variance = portfolio_pnl.rolling(window=rolling_window).quantile(1 - confidence_interval)
+    realized_variance = realized_variance * -1
+
+    return realized_variance
+
+
+@plot_measure_entity(EntityType.REPORT)
+def tracking_error(report_id: str, benchmark_id: str, rolling_window: Union[int, str],
+                   *, source: str = None,
+                   real_time: bool = False,
+                   request_id: Optional[str] = None) -> pd.Series:
+    """
+    The standard deviation of the excess return relative to the benchmark over the state time frame.
+
+    Tracking Error = sqrt( sum((ExcessRi - ExcessRmean)^2) / (N-1) )
+
+    Where:
+
+    ExcessRi = excess return in period i
+
+    ExcessRmean = mean excess return during bull markets
+
+    N = number of periods
+
+    :param report_id: id of performance report
+    :param rolling_window: length of window
+    :param benchmark_id: id of benchmark
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of tracking error
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    rolling_window = _parse_window(rolling_window)
+    benchmark_returns = _get_benchmark_return(benchmark_id, start_date, end_date)
+    portfolio_returns = pnl(report_id, Unit.PERCENT.value)
+    portfolio_returns.index = pd.to_datetime(portfolio_returns.index)
+    active_return = (portfolio_returns - benchmark_returns)
+    rolling_error = active_return.rolling(window=rolling_window).std()
+    return rolling_error
+
+
+@plot_measure_entity(EntityType.REPORT)
+def tracking_error_bear(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
+                        source: str = None,
+                        real_time: bool = False,
+                        request_id: Optional[str] = None) -> pd.Series:
+    """
+    The standard deviation of the excess return relative to the benchmark over the state time frame,
+    only counting the periods when benchmark returns were negative.
+
+    Bear Tracking Error = sqrt( sum((ExcessRi - ExcessRmeanBear)^2) / (N-1) ) for all when Benchmark Return < 0
+
+    Where:
+
+    ExcessRi = excess return in period i
+
+    ExcessRmeanBear = mean excess return during bull markets
+
+    N = number of periods
+
+    :param report_id: id of performance report
+    :param rolling_window: length of window
+    :param benchmark_id: id of benchmark
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of tracking error
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    rolling_window = _parse_window(rolling_window)
+    benchmark_returns = _get_benchmark_return(benchmark_id, start_date, end_date)
+    portfolio_returns = pnl(report_id, Unit.PERCENT.value)
+    portfolio_returns.index = pd.to_datetime(portfolio_returns.index)
+    is_bear = benchmark_returns <= 0
+    active_return = portfolio_returns - benchmark_returns
+    rolling_error_bear = active_return.rolling(window=rolling_window).apply(
+        lambda x: np.std(x, ddof=1) if is_bear.loc[x.index[-1]]
+        else np.nan,
+        raw=False
+    )
+    return rolling_error_bear
+
+
+@plot_measure_entity(EntityType.REPORT)
+def tracking_error_bull(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
+                        source: str = None,
+                        real_time: bool = False,
+                        request_id: Optional[str] = None) -> pd.Series:
+    """
+    The standard deviation of the excess return relative to the benchmark over the state time frame,
+    only counting the periods when benchmark returns were positive.
+
+    Bull Tracking Error = sqrt( sum((ExcessRi - ExcessRmeanBull)^2) / (N-1) ) for all when Benchmark Return > 0
+
+    Where:
+
+    ExcessRi = excess return in period i
+
+    ExcessRmeanBull = mean excess return during bull markets
+
+    N = number of periods
+
+    :param report_id: id of performance report
+    :param rolling_window: length of window
+    :param benchmark_id: id of benchmark
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of tracking error
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    rolling_window = _parse_window(rolling_window)
+    benchmark_returns = _get_benchmark_return(benchmark_id, start_date, end_date)
+    portfolio_returns = pnl(report_id, Unit.PERCENT.value)
+    portfolio_returns.index = pd.to_datetime(portfolio_returns.index)
+    is_bull = benchmark_returns > 0
+    active_return = portfolio_returns - benchmark_returns
+    rolling_error_bull = active_return.rolling(window=rolling_window).apply(
+        lambda x: np.std(x, ddof=1) if is_bull.loc[x.index[-1]]
+        else np.nan,
+        raw=False
+    )
+    return rolling_error_bull
+
+
+@plot_measure_entity(EntityType.REPORT)
+def portfolio_sharpe_ratio(report_id: str, risk_free_id: str, *, source: str = None,
+                           real_time: bool = False,
+                           request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-adjusted measure that calculates the excess return over the risk free rate per unit of volatility
+
+    Sharpe Ratio = (Rp - Rf) / σp
+
+    Where:
+
+    Rp = Portfolio Return
+
+    Rf = Risk-Free Rate
+
+    σp = Standard Deviation of Portfolio Return.
+
+    :param report_id: id of performance report
+    :param risk_free_id: id of risk-free asset
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of sharpe ratio
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
+    portfolio_sharpe_ratio_series = (portfolio_pnl - risk_free_rate) / portfolio_pnl.std()
+    return portfolio_sharpe_ratio_series
+
+
+@plot_measure_entity(EntityType.REPORT)
+def calmar_ratio(report_id: str, rolling_window: Union[int, str], *, source: str = None,
+                 real_time: bool = False,
+                 request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-adjusted performance metric that divides an investment strategy’s
+    annualized rate of return by its maximum drawdown, focusing specifically
+    on the strategy’s return per unit of downside risk.
+
+    Calmar Ratio = Annualized Return / Max Drawdown
+
+    :param report_id: id of performance report
+    :param rolling_window: size of window to use
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of the calmar ratio
+    """
+    rolling_window = _parse_window(rolling_window)
+    cumulative_return = pnl(report_id, Unit.PERCENT.value) / 100
+    cumulative_return.index = pd.to_datetime(cumulative_return.index)
+    aum_series = aum(report_id)
+    max_drawdown_series = max_drawdown(aum_series, rolling_window)
+    calmar = cumulative_return / max_drawdown_series
+
+    return calmar
+
+
+@plot_measure_entity(EntityType.REPORT)
+def sortino_ratio(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
+                  source: str = None,
+                  real_time: bool = False,
+                  request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-adjusted measure that calculates the excess return over the benchmark per unit of semi-variance
+
+    Sortino Ratio = (Rp - Rb) / Downside Deviation
+
+    Where:
+
+    Rp = Portfolio Return
+
+    Rb = Benchmark Return
+
+    Downside Deviation = Standard Deviation of negative asset returns.
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset, can be security or risk free
+    :param rolling_window: size of window to use
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio estimated pnl
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    rolling_window = _parse_window(rolling_window)
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+
+    security = SecurityMaster.get_asset(benchmark_id, AssetIdentifier.MARQUEE_ID)
+
+    if isinstance(security, Bond):
+        spot_data_coordinate = security.get_data_coordinate('yield')
+        benchmark_pnl = spot_data_coordinate.get_series(start=start_date, end=end_date) * 100
+    else:
+        benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+
+    excess = portfolio_pnl - benchmark_pnl
+    _compute_sortino(excess)
+    sortino = excess.rolling(window=rolling_window).apply(lambda x: _compute_sortino(x), raw=False)
+    return sortino
+
+
+@plot_measure_entity(EntityType.REPORT)
+def jensen_alpha(report_id: str, benchmark_id: str, risk_free_id: str, *, source: str = None,
+                 real_time: bool = False,
+                 request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-Adjusted measure that calculates the actual return of the portfolio
+    over and above the return predicted by the CAPM, given the portfolios beta
+    and benchmark returns.
+
+    Jensen's Alpha = Rp - [Rf + Beta * (Rb - Rf)]
+
+    Where:
+
+    Rp = Portfolio Return
+
+    Rf = Risk-Free Rate
+
+    Beta = Portfolio Beta
+
+    Rb = Benchmark Return
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param risk_free_id: id of risk-free asset
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of jensen alpha
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+
+    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+
+    risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
+
+    portfolio_beta_series = beta(portfolio_pnl, benchmark_pnl, prices=False)
+    jensen = (portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate)))
+    return jensen
+
+
+@plot_measure_entity(EntityType.REPORT)
+def jensen_alpha_bear(report_id: str, benchmark_id: str, risk_free_id: str, *, source: str = None,
+                      real_time: bool = False,
+                      request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-Adjusted measure that calculates the actual return of the portfolio
+    over and above the return predicted by the CAPM, given the portfolios beta
+    and benchmark returns. calculated based only on the periods when the benchmark return was negative
+
+    Jensen's Alpha = Rp - [Rf + Beta * (Rb - Rf)]
+
+    Where:
+
+    Rp = Portfolio Return
+
+    Rf = Risk-Free Rate
+
+    Beta = Portfolio Beta
+
+    Rb = Benchmark Return
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param risk_free_id: id of risk-free asset
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of jensen alpha
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+    risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
+    portfolio_beta_series = beta(portfolio_pnl, benchmark_pnl, prices=False)
+
+    benchmark_pnl = benchmark_pnl[benchmark_pnl < 0]
+
+    jensen = (portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate)))
+    return jensen
+
+
+@plot_measure_entity(EntityType.REPORT)
+def jensen_alpha_bull(report_id: str, benchmark_id: str, risk_free_id: str, *, source: str = None,
+                      real_time: bool = False,
+                      request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-Adjusted measure that calculates the actual return of the portfolio
+    over and above the return predicted by the CAPM, given the portfolios beta
+    and benchmark returns. calculated based only on the periods when the benchmark return was positive
+
+    Jensen's Alpha = Rp - [Rf + Beta * (Rb - Rf)]
+
+    Where:
+
+    Rp = Portfolio Return
+
+    Rf = Risk-Free Rate
+
+    Beta = Portfolio Beta
+
+    Rb = Benchmark Return
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param risk_free_id: id of risk-free asset
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of jensen alpha
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+    risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
+
+    portfolio_beta_series = beta(portfolio_pnl, benchmark_pnl, prices=False)
+    benchmark_pnl = benchmark_pnl[benchmark_pnl > 0]
+    jensen = (portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate)))
+    return jensen
+
+
+@plot_measure_entity(EntityType.REPORT)
+def information_ratio(report_id: str, benchmark_id: str, *, source: str = None,
+                      real_time: bool = False,
+                      request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-adjusted measure that calculates the excess return over the benchmark,
+    per unit of tracking error volatility. It measures the consistency with
+    which the portfolio is beating the benchmark.
+
+    Information Ratio = (Rp - Rb) / Tracking Error
+
+    Where:
+
+    Rp = Portfolio Return
+
+    Rb = Benchmark Return
+
+    Tracking Error = Standard Deviation of the difference between the portfolio and benchmark returns.
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of the information ratio
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+
+    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+
+    portfolio_excess = portfolio_pnl - benchmark_pnl
+    portfolio_std = np.std(portfolio_excess)
+    information = portfolio_excess / portfolio_std
+
+    return information
+
+
+@plot_measure_entity(EntityType.REPORT)
+def information_ratio_bear(report_id: str, benchmark_id: str, *, source: str = None,
+                           real_time: bool = False,
+                           request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-adjusted measure that calculates the excess return over the benchmark,
+    per unit of tracking error volatility, counting only the periods when the benchmark return was negative
+
+
+    Information Ratio = (Rp - Rb) / Tracking Error
+
+    Where:
+
+    Rp = Portfolio Return
+
+    Rb = Benchmark Return
+
+    Tracking Error = Standard Deviation of the difference between the portfolio and benchmark returns.
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of the information ratio
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+
+    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+    benchmark_pnl = benchmark_pnl[benchmark_pnl < 0]
+    portfolio_excess = portfolio_pnl - benchmark_pnl
+    portfolio_std = np.std(portfolio_excess)
+    information = portfolio_excess / portfolio_std
+
+    return information
+
+
+@plot_measure_entity(EntityType.REPORT)
+def information_ratio_bull(report_id: str, benchmark_id: str, *, source: str = None,
+                           real_time: bool = False,
+                           request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-adjusted measure that calculates the excess return over the benchmark,
+    per unit of tracking error volatility, counting only the periods when the benchmark return was positive.
+
+    Information Ratio = (Rp - Rb) / Tracking Error
+
+    Where:
+
+    Rp = Portfolio Return
+
+    Rb = Benchmark Return
+
+    Tracking Error = Standard Deviation of the difference between the portfolio and benchmark returns.
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio estimated pnl
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+
+    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+    benchmark_pnl = benchmark_pnl[benchmark_pnl > 0]
+    portfolio_excess = portfolio_pnl - benchmark_pnl
+    portfolio_std = np.std(portfolio_excess)
+    information = portfolio_excess / portfolio_std
+
+    return information
+
+
+@plot_measure_entity(EntityType.REPORT)
+def modigliani_ratio(report_id: str, benchmark_id: str, risk_free_id: str,
+                     rolling_window: Union[int, str], *,
+                     source: str = None,
+                     real_time: bool = False,
+                     request_id: Optional[str] = None) -> pd.Series:
+    """
+    Modigliani RAP measures how much the portfolio would have returns if it had had
+    the same risk as the benchmark. It is a linear transformation of the Sharpe Ratio,
+    but the results are expressed in terms of performance.
+
+    M2 = (Sharpe Ratio * σb) + Rf
+
+    Where:
+
+    Sharpe Ratio = Portfolio Sharpe Ratio
+
+    σb = Standard Deviation of the Benchmark Return
+
+    Rf = Risk Free Rate.
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param risk_free_id: id of risk free asset
+    :param rolling_window: size of window to use
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of the modigliani ratio
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    rolling_window = _parse_window(rolling_window)
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+
+    benchmark_return = _get_benchmark_return(benchmark_id, start_date, end_date)
+    risk_free_rates = _get_risk_free_rate(risk_free_id, start_date, end_date)
+    portfolio_return = portfolio_pnl
+
+    portfolio_excess = portfolio_return - risk_free_rates
+
+    avg_portfolio = portfolio_excess.rolling(window=rolling_window).mean()
+    std_portfolio = portfolio_excess.rolling(window=rolling_window).std()
+
+    benchmark_excess = benchmark_return - risk_free_rates
+
+    std_benchmark = benchmark_excess.rolling(window=rolling_window).std()
+
+    avg_risk_free = risk_free_rates.rolling(window=rolling_window).mean()
+
+    modigliani = (avg_portfolio * (std_benchmark / std_portfolio)) + avg_risk_free
+
+    return modigliani
+
+
+@plot_measure_entity(EntityType.REPORT)
+def treynor_measure(report_id: str, risk_free_id: str, *, source: str = None,
+                    real_time: bool = False,
+                    request_id: Optional[str] = None) -> pd.Series:
+    """
+    Risk-adjusted measure that calculates the excess return over the risk free rate
+    per unit of beta relative to the benchmark. This is useful for assessing the excess
+    return from each unit of systematic risk.
+
+    Treynor Ratio = (Rp - Rf) / Beta
+
+    Where:
+
+    Rp = Portfolio Return
+
+    Rf = Risk-Free Rate
+
+    Beta = Portfolio Beta
+
+    :param report_id: id of performance report
+    :param risk_free_id: id of risk-free asset
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio estimated pnl
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
+
+    beta_series = beta(portfolio_pnl, risk_free_rate, prices=False)
+
+    treynor_series = (portfolio_pnl - risk_free_rate) / beta_series
+    return treynor_series
+
+
+@plot_measure_entity(EntityType.REPORT)
+def alpha(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
+          source: str = None,
+          real_time: bool = False,
+          request_id: Optional[str] = None) -> pd.Series:
+    """
+    This is the intercept from a regression analysis, where the portfolio's returns are regressed
+    against the benchmark's returns. It represents the portion of the portfolio's return that is
+    not explained by the benchmark's performance.
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param rolling_window: size of window to use
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of the beta
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    rolling_window = _parse_window(rolling_window)
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+
+    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+
+    intercepts = {}
+    benchmark_pnl = benchmark_pnl.reindex(portfolio_pnl.index)
+
+    for i in range(rolling_window, len(portfolio_pnl) + 1):
+        portfolio_window = portfolio_pnl.iloc[i - rolling_window:i]
+        benchmark_window = benchmark_pnl.iloc[i - rolling_window:i]
+
+        slope, intercept, *_ = stats.linregress(portfolio_window, benchmark_window)
+        intercepts[portfolio_pnl.index[i - 1]] = intercept
+
+    alpha_series = pd.Series(intercepts)
+
+    return alpha_series
+
+
+@plot_measure_entity(EntityType.REPORT)
+def portfolio_beta(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
+                   source: str = None,
+                   real_time: bool = False,
+                   request_id: Optional[str] = None) -> pd.Series:
+    """
+    Beta defined as the slope of the regression between report pnl and benchmark pnl
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param rolling_window: size of window to use
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of the beta
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    rolling_window = _parse_window(rolling_window)
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+
+    return beta(portfolio_pnl, benchmark_pnl, rolling_window, prices=False)
+
+
+@plot_measure_entity(EntityType.REPORT)
+def portfolio_correlation(report_id: str, benchmark_id: str, rolling_window: Union[int, str],
+                          *,
+                          source: str = None,
+                          real_time: bool = False,
+                          request_id: Optional[str] = None) -> pd.Series:
+    """
+    Correlation coefficient between the portfolio and the benchmark returns over the stated time frame
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param rolling_window: size of window to use
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: time series of the correlation coefficient
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    rolling_window = _parse_window(rolling_window)
+    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+
+    return correlation(portfolio_pnl, benchmark_pnl, rolling_window)
+
+
+@plot_measure_entity(EntityType.REPORT)
+def capture_ratio(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
+                  source: str = None,
+                  real_time: bool = False,
+                  request_id: Optional[str] = None) -> pd.Series:
+    """
+    A measure of how well portfolio is doing relative to the benchmark,
+    defined as the ratio of the portfolio return to the benchmark return calculated
+    on a daily basis and averaged over the stated time period.
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark asset
+    :param rolling_window: size of window to use
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio capture ratio
+    """
+    start_date = DataContext.current.start_time.date()
+    end_date = DataContext.current.end_time.date()
+    rolling_window = _parse_window(rolling_window)
+    benchmark_return = _get_benchmark_return(benchmark_id, start_date, end_date)
+    portfolio_return = pnl(report_id, Unit.PERCENT.value)
+    portfolio_return.index = pd.to_datetime(portfolio_return.index)
+
+    avg_portfolio = portfolio_return.rolling(window=rolling_window).mean()
+    avg_benchmark = benchmark_return.rolling(window=rolling_window).mean()
+
+    capture_ratio_series = (avg_portfolio / avg_benchmark)
+    return capture_ratio_series
+
+
+@plot_measure_entity(EntityType.REPORT)
+def r_squared(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
+              source: str = None,
+              real_time: bool = False,
+              request_id: Optional[str] = None) -> pd.Series:
+    """
+    A measure of how well the portfolio's performance correlates with the performance of the benchmark,
+    and thus a measure of what portion of its performance may be explained by the performance of the benchmark.
+
+    :param report_id: id of performance report
+    :param benchmark_id: id of benchmark
+    :param rolling_window: size of rolling window
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :param request_id: server request id
+    :return: portfolio r squared
+    """
+    rolling_window = _parse_window(rolling_window)
+    r_values = portfolio_correlation(report_id, benchmark_id, rolling_window)
+    r_values_squared = r_values ** 2
+    return r_values_squared
+
+
+def _get_benchmark_return(benchmark_id, start_date, end_date):
+    security = SecurityMaster.get_asset(benchmark_id,
+                                        AssetIdentifier.MARQUEE_ID)
+    spot_data_coordinate = security.get_data_coordinate(DataMeasure.SPOT_PRICE)
+    benchmark_pricing = spot_data_coordinate.get_series(start=start_date, end=end_date)
+    benchmark_pricing = benchmark_pricing.sort_index()
+
+    start_price = benchmark_pricing.iloc[0]
+
+    benchmark_returns = (benchmark_pricing / start_price) - 1
+    return benchmark_returns * 100
+
+
+def _max_drawdown(series):
+    running_max = series.cummax()
+    drawdown = (series - running_max) / running_max
+    max_drawdown_ts = drawdown.cummin()
+    return max_drawdown_ts[-1]
+
+
+def _compute_sortino(series):
+    downside = series[series < 0]
+    downside_std = downside.std()
+    mean_excess = series.mean()
+    return mean_excess / downside_std if downside_std != 0 else np.nan
+
+
+def _rolling_downside_risk(series):
+    negative_devs = series[series < series.mean()] - series.mean()
+    semi_variance = (negative_devs ** 2).mean()
+    return np.sqrt(semi_variance)
+
+
+def _rolling_semi_variance(series):
+    negative_devs = series[series < 0] - series.mean()
+    semi_variance = (negative_devs ** 2).mean()
+    return np.sqrt(semi_variance)
+
+
+def _get_risk_free_rate(risk_free_id, start_date, end_date):
+    risk_free = SecurityMaster.get_asset(risk_free_id,
+                                         AssetIdentifier.MARQUEE_ID)
+    risk_free_pricing_data = risk_free.get_data_coordinate('yield')
+    risk_free_rate = risk_free_pricing_data.get_series(start=start_date, end=end_date) * 100
+    return risk_free_rate.drop_duplicates()
+
+
 def _replay_historical_factor_moves_on_latest_positions(report_id: str, factors: List[str]) -> \
         Union[pd.Series, pd.DataFrame]:
     start_date = DataContext.current.start_time.date()
@@ -419,6 +1462,23 @@ def _replay_historical_factor_moves_on_latest_positions(report_id: str, factors:
                                          columns=return_data_aggregated.columns)
 
     return factor_attributed_pnl
+
+
+def _parse_window(window: Union[int, str]):
+    if isinstance(window, int):
+        return window
+    match = re.fullmatch(r'(\d+)([dwmy])', window.strip().lower())
+    if match is None:
+        raise MqValueError('Invalid window format, please end with one of: ["d", "w", "m", "y"]')
+    value, unit = match.groups()
+    value = int(value)
+    unit_multipliers = {
+        'd': 1,
+        'w': 5,
+        'm': 22,
+        'y': 252
+    }
+    return value * unit_multipliers[unit]
 
 
 def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, unit: Unit = Unit.NOTIONAL) -> pd.Series:
