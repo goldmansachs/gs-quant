@@ -67,6 +67,7 @@ class StrategySystematic:
                  roll_date_mode: str = None,
                  expiry_date_mode: str = None,
                  cash_accrual: bool = True,
+                 combine_roll_signal_entries: bool = False,
                  transaction_cost_config: TransactionCostConfig = None,
                  use_xasset_backtesting_service: bool = False):
         self.__cost_netting = cost_netting
@@ -132,7 +133,8 @@ class StrategySystematic:
                                                         roll_date_mode is not None else None,
                                                         market_model=EquityMarketModel(market_model) if
                                                         market_model else None,
-                                                        cash_accrual=cash_accrual)
+                                                        cash_accrual=cash_accrual,
+                                                        combine_roll_signal_entries=combine_roll_signal_entries)
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         backtest_parameter_args = {

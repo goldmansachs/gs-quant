@@ -1396,6 +1396,31 @@ class IRCap(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class IRCapFloor(Instrument):
+    cap_floor: Optional[CapOrFloor] = field(default=None, metadata=field_metadata)
+    termination_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    notional_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    notional_amount: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    effective_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    floating_rate_option: Optional[str] = field(default=None, metadata=field_metadata)
+    floating_rate_designated_maturity: Optional[str] = field(default=None, metadata=field_metadata)
+    floating_rate_frequency: Optional[str] = field(default=None, metadata=field_metadata)
+    floating_rate_day_count_fraction: Optional[DayCountFraction] = field(default=None, metadata=field_metadata)
+    floating_rate_business_day_convention: Optional[BusinessDayConvention] = field(default=None, metadata=field_metadata)
+    strike: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    premium: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    premium_payment_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    fee: Optional[float] = field(default=None, metadata=field_metadata)
+    fee_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    fee_payment_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Rates, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.CapOrFloor, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class IRFloor(Instrument):
     termination_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
     notional_currency: Optional[Currency] = field(default=None, metadata=field_metadata)

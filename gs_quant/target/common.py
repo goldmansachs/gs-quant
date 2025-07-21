@@ -121,6 +121,7 @@ class AssetType(EnumBase, Enum):
     BondOption = 'BondOption'
     Calendar_Spread = 'Calendar Spread'
     Cap = 'Cap'
+    CapOrFloor = 'CapOrFloor'
     Cash = 'Cash'
     Certificate = 'Certificate'
     CD = 'CD'
@@ -326,6 +327,12 @@ class CDOptionType(EnumBase, Enum):
     Receiver = 'Receiver'
     Digital_Call = 'Digital Call'
     Digital_Put = 'Digital Put'    
+
+
+class CapOrFloor(EnumBase, Enum):    
+    
+    Cap = 'Cap'
+    Floor = 'Floor'    
 
 
 class CashReinvestmentTreatmentType(EnumBase, Enum):    

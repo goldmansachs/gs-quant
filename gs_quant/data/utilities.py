@@ -14,15 +14,17 @@ specific language governing permissions and limitations
 under the License.
 """
 import os
-import datetime as dt
+from dataclasses import dataclass
+from enum import Enum
 from itertools import groupby
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 from gs_quant.target.assets import FieldFilterMap, EntityQuery
-from typing import List, Tuple, Union
 from gs_quant.session import GsSession
 import math
 import pandas as pd
+import datetime as dt
+from typing import Dict, List, Any, Union, Tuple
 
 
 class Utilities:
@@ -305,3 +307,189 @@ class Utilities:
             coverage = dataset.get_coverage()[symbol_dimension].tolist()
 
         return coverage
+
+
+class SecmasterXrefFormatter:
+    class EventType(Enum):
+        START = "start"
+        END = "end"
+
+    @dataclass
+    class Event:
+        date: str
+        event_type: 'SecmasterXrefFormatter.EventType'
+        record: Dict[str, Any]
+
+        def __post_init__(self):
+            # For end events, we want them to be processed after start events on the same date
+            # This ensures proper handling of adjacent periods
+            self.priority = 1 if self.event_type == SecmasterXrefFormatter.EventType.END else 0
+
+    INFINITY_DATE = "9999-12-31"
+    INFINITY_MARKER = "9999-99-99"
+
+    @staticmethod
+    def convert(data: Dict[str, Any]) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
+        results = {}
+        for entity_key, records in data.items():
+            xrefs = SecmasterXrefFormatter._convert_entity_records(records)
+            results[entity_key] = {"xrefs": xrefs}
+        return results
+
+    @staticmethod
+    def _convert_entity_records(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Converts records using sweep-line algorithm for optimal time complexity.
+        """
+        if not records:
+            return []
+
+        # Filter and normalize records
+        normalized_records = []
+        for record in records:
+            normalized_record = record.copy()
+            if normalized_record['endDate'] == SecmasterXrefFormatter.INFINITY_MARKER:
+                normalized_record['endDate'] = SecmasterXrefFormatter.INFINITY_DATE
+            normalized_records.append(normalized_record)
+
+        if not normalized_records:
+            return []
+
+        # Create events for sweep-line algorithm
+        events = SecmasterXrefFormatter._create_events(normalized_records)
+
+        # Sort events by date, then by priority (end events after start events on same date)
+        events.sort(key=lambda e: (SecmasterXrefFormatter._date_sort_key(e.date), e.priority))
+
+        # Process events with sweep-line
+        return SecmasterXrefFormatter._process_events(events)
+
+    @staticmethod
+    def _create_events(records: List[Dict[str, Any]]) -> List[Event]:
+        """
+        Creates start and end events for each record.
+        """
+        events = []
+
+        for record in records:
+            # Create start event
+            events.append(SecmasterXrefFormatter.Event(
+                date=record['startDate'],
+                event_type=SecmasterXrefFormatter.EventType.START,
+                record=record
+            ))
+
+            # Create end event (day after the actual end date)
+            if record['endDate'] != SecmasterXrefFormatter.INFINITY_DATE:
+                next_day = SecmasterXrefFormatter._add_one_day(record['endDate'])
+                if next_day:
+                    events.append(SecmasterXrefFormatter.Event(
+                        date=next_day,
+                        event_type=SecmasterXrefFormatter.EventType.END,
+                        record=record
+                    ))
+
+        return events
+
+    @staticmethod
+    def _process_events(events: List[Event]) -> List[Dict[str, Any]]:
+        """
+        Processes events using sweep-line algorithm to generate time periods.
+        """
+        periods = []
+        active_identifiers = {}  # type -> record mapping
+        current_period_start = None
+
+        i = 0
+        while i < len(events):
+            current_date = events[i].date
+            current_date_events = []
+
+            # Collect all events for the current date
+            while i < len(events) and events[i].date == current_date:
+                current_date_events.append(events[i])
+                i += 1
+
+            # Close current period if we have active identifiers
+            if active_identifiers and current_period_start is not None:
+                period_end = SecmasterXrefFormatter._subtract_one_day(current_date)
+                periods.append({
+                    "startDate": current_period_start,
+                    "endDate": period_end,
+                    "identifiers": {record['type']: record['value']
+                                    for record in active_identifiers.values()}
+                })
+
+            # Process all events for this date
+            # First process END events, then START events
+            end_events = [e for e in current_date_events if e.event_type == SecmasterXrefFormatter.EventType.END]
+            start_events = [e for e in current_date_events if e.event_type == SecmasterXrefFormatter.EventType.START]
+
+            # Remove ending identifiers
+            for event in end_events:
+                identifier_type = event.record['type']
+                if identifier_type in active_identifiers:
+                    del active_identifiers[identifier_type]
+
+            # Add starting identifiers
+            for event in start_events:
+                identifier_type = event.record['type']
+                active_identifiers[identifier_type] = event.record
+
+            # Start new period if we have active identifiers
+            if active_identifiers:
+                current_period_start = current_date
+
+        # Handle final period extending to infinity or latest end date
+        if active_identifiers and current_period_start is not None:
+            # Check if any active identifier has infinity end date
+            has_infinity = any(
+                record['endDate'] == SecmasterXrefFormatter.INFINITY_DATE
+                for record in active_identifiers.values()
+            )
+
+            if has_infinity:
+                period_end = SecmasterXrefFormatter.INFINITY_DATE
+            else:
+                # Find latest end date among active identifiers
+                latest_end = max(record['endDate'] for record in active_identifiers.values())
+                period_end = latest_end
+
+            periods.append({
+                "startDate": current_period_start,
+                "endDate": period_end,
+                "identifiers": {record['type']: record['value']
+                                for record in active_identifiers.values()}
+            })
+
+        return periods
+
+    @staticmethod
+    def _date_sort_key(date_str: str) -> dt.datetime:
+        if date_str == SecmasterXrefFormatter.INFINITY_DATE:
+            return dt.datetime(9999, 12, 31)
+        return dt.datetime.strptime(date_str, '%Y-%m-%d')
+
+    @staticmethod
+    def _add_one_day(date_str: str) -> str:
+        try:
+            if date_str == SecmasterXrefFormatter.INFINITY_DATE:
+                return None
+            date_obj = dt.datetime.strptime(date_str, '%Y-%m-%d')
+            if date_obj.year == 9999 and date_obj.month == 12 and date_obj.day == 31:
+                return None
+
+            next_day = date_obj + dt.timedelta(days=1)
+            return next_day.strftime('%Y-%m-%d')
+
+        except (ValueError, OverflowError):
+            return None
+
+    @staticmethod
+    def _subtract_one_day(date_str: str) -> str:
+        try:
+            date_obj = dt.datetime.strptime(date_str, '%Y-%m-%d')
+            prev_day = date_obj - dt.timedelta(days=1)
+            return prev_day.strftime('%Y-%m-%d')
+        except (ValueError, OverflowError):
+            return date_str

@@ -23,6 +23,7 @@ from typing import Union, Iterable, Dict, Optional
 
 import tqdm
 
+from gs_quant.data.utilities import SecmasterXrefFormatter
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.session import GsSession
 from gs_quant.target.secmaster import SecMasterAssetType
@@ -218,6 +219,124 @@ class GsSecurityMasterApi:
             raise ValueError(f"Invalid id_value {secmaster_id}. Secmaster id starts with 'GS'")
         r = GsSession.current._get(f'/markets/securities/{secmaster_id}/identifiers')
         return r['results']
+
+    @classmethod
+    def get_many_identifiers(cls, ids: Iterable[str], limit=100, xref_format=False) -> dict:
+        """
+          Get identifiers for a list of secmaster ids. It runs in batches till all data is fetched.
+
+          This method retrieves identifier information for multiple securities.
+          The data can be returned in either standard format or transformed using the SecmasterXrefFormatter
+          for time-based cross-reference analysis.
+
+          Args:
+              ids (Iterable[str]): An iterable collection of secmaster identifiers to query.
+                                  Examples: ['GSPD111E123', 'GSPD222F456', 'GSPD333G789']
+
+              limit (int, optional): Maximum number of identifier records to return per secmaster id.
+                                    Defaults to 100. Used to control response size and prevent
+                                    memory issues with large datasets.
+
+              xref_format (bool, optional): Flag to control output format. Defaults to False.
+                                          - False: Returns raw identifier data in standard format
+                                          - True: Returns data transformed by SecmasterXrefFormatter,
+                                                 where identifiers are grouped by overlapping date
+                                                 ranges
+
+          Returns:
+              dict: A dictionary containing identifier information for the requested secmaster ids.
+
+                    Standard format (xref_format=False):
+                    {
+                        'secmaster_id_1': [
+                            {
+                                'type': 'ISIN',
+                                'value': 'US1234567890',
+                                'startDate': '2020-01-01',
+                                'endDate': '2023-12-31'
+                            },
+                            ...
+                        ],
+                        'secmaster_id_2': [...],
+                        ...
+                    }
+
+                    Xref format (xref_format=True):
+                    {
+                        'secmaster_id_1': {
+                            'xrefs': [
+                                {
+                                    'startDate': '2020-01-01',
+                                    'endDate': '2023-12-31',
+                                    'identifiers': [
+                                        {'type': 'ISIN', 'value': 'US1234567890'},
+                                        {'type': 'CUSIP', 'value': '123456789'},
+                                        ...
+                                    ]
+                                },
+                                ...
+                            ]
+                        },
+                        'secmaster_id_2': {...},
+                        ...
+                    }
+
+          Raises:
+              ValueError: If ids parameter is empty or contains invalid secmaster identifiers
+              ConnectionError: If unable to connect to secmaster database
+              TimeoutError: If database query exceeds timeout limits
+
+          Note:
+              - The method processes requests in batches to handle large datasets efficiently
+              - Infinity dates ('9999-99-99') are normalized to '9999-12-31' in xref format
+
+
+          Example:
+              >>> # Standard format
+              >>> result = GsSecurityMasterApi.get_many_identifiers(['GSPD111E123'], limit=50, xref_format=False)
+              >>> print(result['GSPD111E123'][0]['type'])  # 'ISIN'
+
+              >>> # Xref format for time-based analysis
+              >>> xref_result = GsSecurityMasterApi.get_many_identifiers(['GSPD111E123'], xref_format=True)
+              >>> print(xref_result['GSPD111E123']['xrefs'][0]['startDate'])  # '2020-01-01'
+          """
+        if not isinstance(ids, Iterable):
+            raise ValueError(f"secmaster_id must be an iterable, got {type(ids)}")
+        if len(ids) == 0:
+            raise ValueError("secmaster_id cannot be an empty iterable")
+        ids = list(ids)
+
+        for id_value in ids:
+            if not id_value.startswith("GS"):
+                raise ValueError(f"Invalid id_value {id_value}. Secmaster id starts with 'GS'")
+
+        consolidated_results = {}
+        current_offset_key = None
+
+        while True:
+            payload = {'id': ids}
+
+            if current_offset_key is not None:
+                payload['offsetKey'] = current_offset_key
+            if limit is not None:
+                payload['limit'] = limit
+
+            payload = json.loads(json.dumps(payload, cls=JSONEncoder))
+            response = GsSession.current._get('/markets/securities/identifiers', payload=payload)
+
+            if 'results' in response:
+                for entity_id, data in response['results'].items():
+                    if entity_id not in consolidated_results:
+                        consolidated_results[entity_id] = []
+                    consolidated_results[entity_id].extend(data)
+
+            current_offset_key = response.get('offsetKey')
+            if current_offset_key is None:
+                break
+
+        if xref_format:
+            return SecmasterXrefFormatter.convert(consolidated_results)
+        return consolidated_results
 
     @classmethod
     def map(cls, input_type: SecMasterIdentifiers,

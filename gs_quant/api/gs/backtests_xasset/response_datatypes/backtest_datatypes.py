@@ -237,3 +237,4 @@ class Configuration:
     market_model: Optional[EquityMarketModel] = None
     cash_accrual: bool = False
     roll_date_mode: Optional[RollDateMode] = None
+    combine_roll_signal_entries: bool = False

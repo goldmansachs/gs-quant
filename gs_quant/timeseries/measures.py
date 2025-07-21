@@ -4177,7 +4177,7 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
         )
         log_debug(request_id, _logger, 'q %s', q)
         df = get_historical_and_last_for_measure([asset.get_marquee_id()], QueryType.SPOT, {}, source=source,
-                                                 real_time=real_time)
+                                                 real_time=real_time, request_id=request_id)
     else:
         location = pricing_location if pricing_location else PricingLocation.NYC
         where = dict(pricingLocation=location.value)
@@ -4190,7 +4190,7 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
         )
         log_debug(request_id, _logger, 'q %s', q)
         df = get_historical_and_last_for_measure([asset.get_marquee_id()], QueryType.SPOT, where, source=source,
-                                                 real_time=real_time)
+                                                 real_time=real_time, request_id=request_id)
 
     spot = df['spot']
     spot = spot[~spot.index.duplicated(keep='first')]
