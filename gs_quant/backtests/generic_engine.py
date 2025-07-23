@@ -823,8 +823,22 @@ class GenericEngine(BacktestBaseEngine):
                         port = p.trade if isinstance(p.trade, Portfolio) else Portfolio([p.trade])
                         p.results = port.calc(tuple(risks))
 
+    def __ensure_risk_results(self, d, backtest: BackTest, risks):
+        port = []
+        for t in backtest.portfolio_dict[d]:
+            if not backtest.results[d] or t.name not in backtest.results[d].portfolio:
+                port.append(t)
+
+        if len(port):
+            with PricingContext(pricing_date=d):
+                results = Portfolio(port).calc(tuple(risks))
+
+            backtest.add_results(d, results)
+
     def _process_triggers_and_actions_for_date(self, d, strategy, backtest: BackTest, risks):
         logger.debug(f'{d}: Processing triggers and actions')
+        self.__ensure_risk_results(d, backtest, risks)
+
         # path dependent
         for trigger in strategy.triggers:
             if trigger.calc_type == CalcType.path_dependent:
@@ -837,16 +851,7 @@ class GenericEngine(BacktestBaseEngine):
                         if trigger.has_triggered(d, backtest):
                             self.get_action_handler(action).apply_action(d, backtest)
         # test to see if new trades have been added and calc
-        port = []
-        for t in backtest.portfolio_dict[d]:
-            if not backtest.results[d] or t.name not in backtest.results[d].portfolio:
-                port.append(t)
-
-        if len(port):
-            with PricingContext(pricing_date=d):
-                results = Portfolio(port).calc(tuple(risks))
-
-            backtest.add_results(d, results)
+        self.__ensure_risk_results(d, backtest, risks)
 
         for hedge in backtest.hedges[d]:
             sp = hedge.scaling_portfolio
