@@ -434,10 +434,11 @@ class ExitTradeActionImpl(ActionHandler):
                         trades_to_remove.append(pos_fut[index])
                     del pos_fut[index]
                 for index in sorted(result_indexes_to_remove, reverse=True):
+                    del res_fut[index]
                     del res_futures[index]
                 backtest.portfolio_dict[port_date] = Portfolio(tuple(pos_fut))
                 if result_indexes_to_remove:
-                    backtest.results[port_date] = PortfolioRiskResult(backtest.portfolio_dict[port_date],
+                    backtest.results[port_date] = PortfolioRiskResult(Portfolio(res_fut),
                                                                       backtest.results[port_date].risk_measures,
                                                                       res_futures)
 

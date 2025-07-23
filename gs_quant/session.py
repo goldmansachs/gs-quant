@@ -399,6 +399,7 @@ class GsSession(ContextBase):
         logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
         if response.status_code == 401:
             # Expired token or other authorization issue
+            logger.debug(f"request: {request_id}, status: {response.status_code}, message: {response.text}, URL: {url}")
             if not try_auth:
                 raise MqRequestError(response.status_code, response.text, context=f'{request_id}: {method} {url}')
             self._authenticate_all_sessions()
