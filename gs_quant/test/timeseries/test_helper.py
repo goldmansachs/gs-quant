@@ -15,6 +15,8 @@ under the License.
 """
 import datetime as dt
 from enum import IntEnum
+from unittest import mock
+from unittest.mock import MagicMock
 from unittest.mock import Mock
 
 import pandas as pd
@@ -22,14 +24,14 @@ import pytest
 from testfixtures import Replace, Replacer
 
 import gs_quant.timeseries as ts
-from gs_quant.data import DataContext, Dataset
+from gs_quant.data import DataContext
+from gs_quant.data import Dataset
 from gs_quant.errors import MqError, MqRequestError
-from unittest.mock import MagicMock
 from gs_quant.session import GsSession
 from gs_quant.test.api.test_thread_manager import NullContextManager
 from gs_quant.timeseries.helper import _create_int_enum, _tenor_to_month, _month_to_tenor, plot_function, \
     plot_measure, plot_method, normalize_window, Window, apply_ramp, check_forward_looking, get_df_with_retries, \
-    get_dataset_data_with_retries, _split_where_conditions
+    get_dataset_data_with_retries, _split_where_conditions, get_dataset_with_many_assets
 
 # TODO test the instance of IntEnum when we have any.
 
@@ -63,6 +65,35 @@ def test_tenor_to_month():
 def test_month_to_tenor():
     assert _month_to_tenor(36) == '3y'
     assert _month_to_tenor(18) == '18m'
+
+
+def test_get_dataset_with_many_assets():
+    # Mock the Dataset object
+    mock_dataset = Mock(spec=Dataset)
+
+    def foo(**kwargs) -> pd.DataFrame:
+        return pd.DataFrame({"assetId": list(kwargs["assetId"]), "column2": [0] * len(kwargs["assetId"])})
+
+    mock_dataset.get_data = foo
+
+    # Test parameters
+    assets = [f'Asset{i}' for i in range(150)]
+    start = dt.date(2023, 1, 1)
+    end = dt.date(2023, 1, 31)
+
+    # Call the function and inspect the result
+    with (
+        mock.patch("gs_quant.api.utils.DataContext", MagicMock(spec=DataContext)) as mock_data_context,
+        mock.patch("gs_quant.api.utils.GsSession", MagicMock(spec=GsSession)) as mock_gs_session
+    ):
+        mock_data_context.current = mock_data_context
+        mock_gs_session.current = mock_gs_session
+
+        result = get_dataset_with_many_assets(ds=mock_dataset, assets=assets, start=start, end=end, batch_limit=100)
+
+    # Assertions
+    assert len(result) == 150
+    assert result['assetId'].tolist() == assets
 
 
 @plot_function

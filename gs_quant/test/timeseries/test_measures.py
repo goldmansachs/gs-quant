@@ -5594,23 +5594,6 @@ def test_thematic_model_beta_single_stock():
 
 def test_retail_interest_agg():
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX', entity={'type': 'Index', 'underlying_asset_ids': []})
-
-    with pytest.raises(NotImplementedError):
-        tm.retail_interest_agg(..., data_source=tm.UnderlyingSourceCategory.ALL,
-                               sector=tm.GICSSector.ALL, real_time=True)
-    with pytest.raises(MqError):
-        tm.retail_interest_agg(mock_spx)
-
-    mock_spx.entity['underlying_asset_ids'] = ['MA4B66MW5E27U9VBB6A', 'MA4B66MW5E27U9VBB86', 'MA4B66MW5E27U9VBB8U']
-
-    replace = Replacer()
-    positions_df = replace('gs_quant.timeseries.measures.PositionedEntity.get_positions_data', Mock())
-    positions_df.return_value = {
-        'id': ['MA4B66MW5E27UALNBLL', 'MA4B66MW5E27UALNBLL'],
-        'assetClassificationsGicsSector': ['Energy', 'Health Care'],
-        'positionDate': ['2012-12-20', '2012-12-20']
-    }
-
     retail_df = pd.DataFrame(
         data={
             'shares': [10.0, 10.0],
@@ -5635,8 +5618,27 @@ def test_retail_interest_agg():
             'assetId': ['MA4B66MW5E27UALNBLL'],
         },
         index=[pd.Timestamp('2021-12-20')])
-    mock_retail = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+
+    replace = Replacer()
+
+    mock_retail = replace('gs_quant.timeseries.measures.get_dataset_with_many_assets', Mock())
     mock_retail.return_value = retail_df
+
+    with pytest.raises(NotImplementedError):
+        tm.retail_interest_agg(..., data_source=tm.UnderlyingSourceCategory.ALL,
+                               sector=tm.GICSSector.ALL, real_time=True)
+    with pytest.raises(MqError):
+        tm.retail_interest_agg(mock_spx)
+
+    mock_spx.entity['underlying_asset_ids'] = ['MA4B66MW5E27U9VBB6A', 'MA4B66MW5E27U9VBB86', 'MA4B66MW5E27U9VBB8U']
+
+    positions_df = replace('gs_quant.timeseries.measures.PositionedEntity.get_positions_data', Mock())
+    positions_df.return_value = {
+        'id': ['MA4B66MW5E27UALNBLL', 'MA4B66MW5E27UALNBLL'],
+        'assetClassificationsGicsSector': ['Energy', 'Health Care'],
+        'positionDate': ['2012-12-20', '2012-12-20']
+    }
+
     expected_df = pd.DataFrame(
         data={'shares': [20.0], 'impliedRetailPctShares': [40.0], 'impliedRetailPctNotional': [60.0]},
         index=[pd.Timestamp('2021-12-20')])

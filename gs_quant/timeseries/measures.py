@@ -48,7 +48,7 @@ from gs_quant.errors import MqValueError, MqTypeError
 from gs_quant.markets.securities import Asset, AssetIdentifier, AssetType as SecAssetType, SecurityMaster, Stock
 from gs_quant.timeseries import Basket, RelativeDate, Returns, Window, sqrt, volatility
 from gs_quant.timeseries.helper import (_month_to_tenor, _split_where_conditions, _tenor_to_month, _to_offset,
-                                        check_forward_looking, get_dataset_data_with_retries, get_df_with_retries,
+                                        check_forward_looking, get_dataset_with_many_assets, get_df_with_retries,
                                         log_return, plot_measure)
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
 
@@ -4998,9 +4998,9 @@ def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.R
         underliers = list(data[data['assetClassificationsGicsSector'] == sector.value]['id'].drop_duplicates().values)
 
     ds = Dataset(Dataset.GS.RETAIL_FLOW_DAILY_V2_PREMIUM.value)
+    retail_data = get_dataset_with_many_assets(ds, assets=underliers, start=start, end=end,
+                                               underlyingSourceCategory=data_source)
 
-    retail_data = get_dataset_data_with_retries(ds, start=start, end=end, underlyingSourceCategory=data_source,
-                                                assetId=underliers)
     if retail_data.empty:
         return ExtendedSeries(dtype=float)
 
