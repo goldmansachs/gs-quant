@@ -278,11 +278,11 @@ def factor_performance(risk_model_id: str, factor_name: str, *, source: str = No
 
 
 @plot_measure_entity(EntityType.RISK_MODEL, [])
-def factor_performance_intraday(risk_model_id: str, factor_name: str,
-                                data_source: Union[IntradayFactorDataSource, str] = None, *, source: str = None,
-                                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_returns_intraday(risk_model_id: str, factor_name: str,
+                            data_source: Union[IntradayFactorDataSource, str] = None, *, source: str = None,
+                            real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
-    Factor returns as a price time-series for a factor in a risk model
+    Factor returns as a time-series for a factor in a risk model
 
     :param risk_model_id: risk model entity
     :param factor_name: factor name
@@ -290,15 +290,14 @@ def factor_performance_intraday(risk_model_id: str, factor_name: str,
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
-    :return: Time-series of factor returns as a price series across different timestamps
+    :return: Time-series of factor returns as a series across different timestamps
     """
 
     model = FactorRiskModel.get(risk_model_id)
     factor = model.get_factor(factor_name)
     factor_returns_df = factor.intraday_returns(DataContext.current.start_time, DataContext.current.end_time,
                                                 data_source)
-    factor_returns_series = factor_returns_df.squeeze() / 100
-    return prices(factor_returns_series, 100)
+    return factor_returns_df.squeeze()
 
 
 def __format_plot_measure_results(time_series: Dict, query_type: QueryType, multiplier=1, handle_missing_column=False):

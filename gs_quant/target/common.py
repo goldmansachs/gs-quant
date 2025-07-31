@@ -6040,6 +6040,7 @@ class PositionsRequest(Base):
     asset_id: str = field(default=None, metadata=field_metadata)
     weight: Optional[float] = field(default=None, metadata=field_metadata)
     quantity: Optional[float] = field(default=None, metadata=field_metadata)
+    notional: Optional[float] = field(default=None, metadata=field_metadata)
     tags: Optional[Tuple[PositionTag, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 

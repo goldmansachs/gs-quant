@@ -368,7 +368,7 @@ def test_factor_performance():
     replace.restore()
 
 
-def test_factor_performance_intraday():
+def test_factor_returns_intraday():
     replace = Replacer()
 
     # mock getting risk model factor entity
@@ -385,7 +385,7 @@ def test_factor_performance_intraday():
                          .drop(columns=["factorCategory", "factor", "factorId"], errors='ignore'))
 
     with DataContext(dt.datetime(2025, 1, 1, 0, 0, 0), dt.datetime(2025, 1, 1, 23, 59, 59)):
-        actual = mrm.factor_performance_intraday(mock_risk_model(), 'Factor Name')
+        actual = mrm.factor_returns_intraday(mock_risk_model(), 'Factor Name')
         assert len(actual.values) == 2
     replace.restore()
 

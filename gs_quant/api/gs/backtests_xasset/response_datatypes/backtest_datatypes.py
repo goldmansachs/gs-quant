@@ -161,11 +161,16 @@ class Model(AlgebraicType):
 @dataclass(unsafe_hash=True, repr=False)
 class FixedCostModel(Model):
     cost: float = 0.0
-    type: str = 'fixed_cost_model'
+    type: str = 'FixedCostModel'
 
     @property
     def scaling_property(self):
         return 'cost'
+
+    def __eq__(self, other):
+        if not isinstance(other, FixedCostModel):
+            return False
+        return (self.cost,) == (other.cost,)
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -173,14 +178,24 @@ class FixedCostModel(Model):
 class ScaledCostModel(Model):
     scaling_level: float = 0.0
     scaling_quantity_type: TransactionCostScalingType = TransactionCostScalingType.Quantity
-    type: str = 'scaled_cost_model'
+    type: str = 'ScaledCostModel'
 
     @property
     def scaling_property(self):
         return 'scaling_level'
 
+    def __eq__(self, other):
+        if not isinstance(other, ScaledCostModel):
+            return False
+        return (self.scaling_level, self.scaling_quantity_type) == (other.scaling_level, other.scaling_quantity_type)
 
-_type_to_basic_model_map = {'fixed_cost_model': FixedCostModel, 'scaled_cost_model': ScaledCostModel}
+
+_type_to_basic_model_map = {
+    'fixed_cost_model': FixedCostModel,
+    'scaled_cost_model': ScaledCostModel,
+    'FixedCostModel': FixedCostModel,
+    'ScaledCostModel': ScaledCostModel
+}
 
 
 def basic_tc_tuple_decoder(data: Optional[Tuple[dict, ...]]) -> Optional[Union[FixedCostModel, ScaledCostModel]]:
@@ -194,7 +209,7 @@ def basic_tc_tuple_decoder(data: Optional[Tuple[dict, ...]]) -> Optional[Union[F
 class AggregateCostModel(Model):
     models: Tuple[Union[FixedCostModel, ScaledCostModel], ...] = field(metadata=config(decoder=basic_tc_tuple_decoder))
     aggregation_type: CostAggregationType
-    type: str = 'aggregate_cost_model'
+    type: str = 'AggregateCostModel'
 
     @property
     def scaling_property(self):
@@ -208,9 +223,15 @@ class AggregateCostModel(Model):
             return AggregateCostModel(self.models + other.models, self.aggregation_type)
         raise TypeError('Can only add with AggregateCostModels with the same aggregation type')
 
+    def __eq__(self, other):
+        if not isinstance(other, AggregateCostModel):
+            return False
+        return (self.models, self.aggregation_type) == (other.models, other.aggregation_type)
+
 
 def tcm_decoder(data: Optional[dict]) -> Optional[Union[FixedCostModel, ScaledCostModel, AggregateCostModel]]:
-    full_type_map = {**_type_to_basic_model_map, **{'aggregate_cost_model': AggregateCostModel}}
+    full_type_map = {**_type_to_basic_model_map,
+                     **{'aggregate_cost_model': AggregateCostModel, 'AggregateCostModel': AggregateCostModel}}
     return full_type_map[data['type']].from_dict(data) if data is not None else None
 
 

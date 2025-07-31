@@ -466,8 +466,14 @@ IRGammaParallelLocalCcy.__doc__ = "Interest Rate Parallel Gamma (Local Ccy)"
 IRSpotRate = RiskMeasure(name="IRSpotRate", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Spot Rate"), unit=RiskMeasureUnit("Percent"))
 IRSpotRate.__doc__ = "Interest rate at-the-money spot rate (in percent)"
 
+IRVanna = RiskMeasure(name="IRVanna", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Vanna"))
+IRVanna.__doc__ = "Interest Rate Vanna (USD)"
+
 IRVega = RiskMeasureWithFiniteDifferenceParameter(name="IRVega", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Vega"))
 IRVega.__doc__ = "Change in Dollar Price (USD present value) due to individual 1bp moves in the implied volatility (IRAnnualImpliedVol) of instruments used to build the volatility surface"
+
+IRVolga = RiskMeasure(name="IRVolga", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Volga"))
+IRVolga.__doc__ = "Interest Rate Volga (USD)"
 
 IRXccyDelta = RiskMeasureWithFiniteDifferenceParameter(name="IRXccyDelta", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("XccyDelta"))
 IRXccyDelta.__doc__ = "Change in Price due to 1bp move in cross currency rates."

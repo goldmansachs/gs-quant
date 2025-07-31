@@ -214,24 +214,28 @@ def test_position_price_many(mocker,
                                                           name="GS",
                                                           weight=0.42671,
                                                           quantity=1,
+                                                          notional=1000,
                                                           tags=[PositionTag(name="tag1", value="tagvalue1")]),
                                                  Position(identifier='AAPL UW',
                                                           asset_id="MA4B66MW5E27U9VBB94",
                                                           name="Apple",
                                                           weight=0.51099,
                                                           quantity=1,
+                                                          notional=1000,
                                                           tags=[PositionTag(name="tag2", value="tagvalue2")])],
                           dt.date(2024, 5, 1): [Position(identifier='GS UN',
                                                          asset_id="MA4B66MW5E27UAHKG34",
                                                          name="GS",
                                                          weight=0.42671,
                                                          quantity=1,
+                                                         notional=1000,
                                                          tags=[PositionTag(name="tag1", value="tagvalue1")]),
                                                 Position(identifier='AAPL UW',
                                                          asset_id="MA4B66MW5E27U9VBB94",
                                                          name="Apple",
                                                          weight=0.51099,
                                                          quantity=1,
+                                                         notional=1000,
                                                          tags=[PositionTag(name="tag2", value="tagvalue2")])]}
 
     [pos_set.positions.sort(key=lambda position: position.asset_id) for pos_set in new_position_set_list]
@@ -249,7 +253,7 @@ def test_position_price_many(mocker,
 
     # Invalid weighting strategies
     with pytest.raises(MqValueError,
-                       match="Can only specify a weighting strategy of weight or quantity"):
+                       match="Can only specify a weighting strategy of weight, notional, or quantity"):
         PositionSet.price_many(position_sets_with_tags_and_notional,
                                weighting_strategy=PositionSetWeightingStrategy.Market_Capitalization)
 
@@ -269,6 +273,7 @@ def test_position_price_many(mocker,
             assert position.asset_id == "MA4B66MW5E27UAHKG34"
             assert position.weight == 0.5
             assert not position.quantity
+            assert not position.notional
             assert len(position.tags) == 1
             tag = position.tags[0]
             assert tag.name == "tag1"
@@ -278,6 +283,7 @@ def test_position_price_many(mocker,
             assert position.asset_id == "MA4B66MW5E27U9VBB94"
             assert position.weight == 0.5
             assert not position.quantity
+            assert not position.notional
             assert len(position.tags) == 1
             tag = position.tags[0]
             assert tag.name == "tag2"
@@ -293,6 +299,7 @@ def test_position_price_many(mocker,
             assert position.asset_id == "MA4B66MW5E27UAHKG34"
             assert position.weight == 0.42671
             assert position.quantity == 1
+            assert position.notional == 1000
             assert len(position.tags) == 1
             tag = position.tags[0]
             assert tag.name == "tag1"
@@ -302,6 +309,7 @@ def test_position_price_many(mocker,
             assert position.asset_id == "MA4B66MW5E27U9VBB94"
             assert position.weight == 0.51099
             assert position.quantity == 1
+            assert position.notional == 1000
             assert len(position.tags) == 1
             tag = position.tags[0]
             assert tag.name == "tag2"
@@ -324,12 +332,14 @@ def test_position_price_many(mocker,
                 assert position.asset_id == "MA4B66MW5E27UAHKG34"
                 assert position.weight == 0.42671
                 assert position.quantity == 1
+                assert position.notional == 1000
                 assert not position.tags
 
             else:
                 assert position.asset_id == "MA4B66MW5E27U9VBB94"
                 assert position.weight == 0.51099
                 assert position.quantity == 1
+                assert position.notional == 1000
                 assert not position.tags
 
     # Positions with different tags and common underlying asset ID
@@ -412,6 +422,7 @@ def test_position_price_many(mocker,
                     assert position.name == "GS"
                     assert position.weight in [0.38, -0.68]
                     assert position.quantity in [1, -1.5]
+                    assert position.notional in [-1000, 1000]
 
                     if position.weight == 0.38:
                         assert position.tags[0] == PositionTag(name="tag1", value="tagvalue1")
@@ -421,6 +432,7 @@ def test_position_price_many(mocker,
                     assert position.asset_id == "MA4B66MW5E27U9VBB94"
                     assert position.name == "Apple"
                     assert position.weight == 0.41
+                    assert position.notional == 1000
                     assert not position.tags
 
         else:
@@ -430,6 +442,7 @@ def test_position_price_many(mocker,
                     assert position.name == "GS"
                     assert position.weight in [0.42671, -0.72]
                     assert position.quantity in [1, -1.5]
+                    assert position.notional in [-1000, 1000]
 
                     if position.weight == 0.42671:
                         assert position.tags[0] == PositionTag(name="tag1", value="tagvalue1")
@@ -439,6 +452,7 @@ def test_position_price_many(mocker,
                     assert position.asset_id == "MA4B66MW5E27U9VBB94"
                     assert position.name == "Apple"
                     assert position.weight == 0.51099
+                    assert position.notional == 1000
                     assert position.tags[0] == PositionTag(name="tag3", value="tagvalue3")
 
     # There are empty positions in some position sets
@@ -485,6 +499,7 @@ def test_position_price_many(mocker,
                     assert position.name == "GS"
                     assert position.weight in [0.42671, -0.72]
                     assert position.quantity in [1, -1.5]
+                    assert position.notional in [-1000, 1000]
 
                     if position.weight == 0.42671:
                         assert position.tags[0] == PositionTag(name="tag1", value="tagvalue1")
@@ -494,6 +509,7 @@ def test_position_price_many(mocker,
                     assert position.asset_id == "MA4B66MW5E27U9VBB94"
                     assert position.name == "Apple"
                     assert position.weight == 0.51099
+                    assert position.notional == 1000
                     assert position.tags[0] == PositionTag(name="tag3", value="tagvalue3")
 
     # No positions have tags
@@ -512,10 +528,113 @@ def test_position_price_many(mocker,
                 assert position.name == "GS"
                 assert position.weight == 0.42671
                 assert position.quantity == 1
+                assert position.notional == 1000
                 assert not position.tags
             else:
                 assert position.asset_id == "MA4B66MW5E27U9VBB94"
                 assert position.name == "Apple"
                 assert position.weight == 0.51099
                 assert position.quantity == 1
+                assert position.notional == 1000
                 assert not position.tags
+
+    # Positions with notional quantities
+    positions_with_notional_quantities = [
+        PositionSet(date=dt.date(2024, 4, 30),
+                    positions=[Position(identifier='GS UN',
+                                        asset_id="MA4B66MW5E27UAHKG34",
+                                        name="GS",
+                                        notional=15000,
+                                        tags=[PositionTag(name="tag1", value="tagvalue1")]),
+                               Position(identifier='AAPL UW',
+                                        asset_id="MA4B66MW5E27U9VBB94",
+                                        name="Apple",
+                                        notional=20000,
+                                        tags=[PositionTag(name="tag2", value="tagvalue2")])
+                               ]
+                    ),
+        PositionSet(date=dt.date(2024, 5, 1),
+                    positions=[Position(identifier='GS UN',
+                                        asset_id="MA4B66MW5E27UAHKG34",
+                                        name="GS",
+                                        notional=10000,
+                                        tags=[PositionTag(name="tag1", value="tagvalue1")]),
+                               Position(identifier='AAPL UW',
+                                        asset_id="MA4B66MW5E27U9VBB94",
+                                        name="Apple",
+                                        notional=25000,
+                                        tags=[PositionTag(name="tag2", value="tagvalue2")])
+                               ]
+                    )
+    ]
+
+    expected_position_notionals_result = [
+        {
+            "date": "2024-04-30",
+            "positions": [
+                {
+                    "assetId": "MA4B66MW5E27UAHKG34",
+                    "notional": 15000.0,
+                    "closePrice": 1000,
+                    "fxClosePrice": 1,
+                    "quantity": 1,
+                    "referenceWeight": 0.7826,
+                    "weight": 0.7826
+                },
+                {
+                    "assetId": "MA4B66MW5E27U9VBB94",
+                    "notional": 20000.0,
+                    "closePrice": 1000,
+                    "fxClosePrice": 1,
+                    "quantity": 1,
+                    "referenceWeight": 0.26753,
+                    "weight": 0.26753
+                }
+            ],
+            "targetNotional": 35000.0
+        },
+        {
+            "date": "2024-05-01",
+            "positions": [
+                {
+                    "assetId": "MA4B66MW5E27UAHKG34",
+                    "notional": 10000.0,
+                    "closePrice": 1000,
+                    "fxClosePrice": 1,
+                    "quantity": 1,
+                    "referenceWeight": 0.745637,
+                    "weight": 0.745637
+                },
+                {
+                    "assetId": "MA4B66MW5E27U9VBB94",
+                    "notional": 25000.0,
+                    "closePrice": 1000,
+                    "fxClosePrice": 1,
+                    "quantity": 1,
+                    "referenceWeight": 0.276364,
+                    "weight": 0.276364
+                }
+            ],
+            "targetNotional": 35000.0
+        }
+    ]
+
+    mocker.patch.object(GsPriceApi, "price_many_positions",
+                        return_value=expected_position_notionals_result)
+    PositionSet.price_many(positions_with_notional_quantities)
+    for position_set in positions_with_notional_quantities:
+        priced_positions = position_set.positions
+        for position in priced_positions:
+            if position.identifier == "GS UN":
+                assert position.asset_id == "MA4B66MW5E27UAHKG34"
+                assert position.weight in [0.7826, 0.745637]
+                assert position.quantity == 1
+                assert round(position.notional, 2) in [10000.0, 15000.0]
+                assert position.tags[0] == PositionTag(name="tag1", value="tagvalue1")
+
+            else:
+                assert position.asset_id == "MA4B66MW5E27U9VBB94"
+                assert position.weight in [0.26753, 0.276364]
+                assert position.quantity == 1
+                assert round(position.notional, 2) in [20000.0, 25000.0]
+                assert position.tags[0] == PositionTag(name="tag2", value="tagvalue2")

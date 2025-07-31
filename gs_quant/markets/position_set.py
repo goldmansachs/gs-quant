@@ -51,12 +51,14 @@ class Position:
                  identifier: str,
                  weight: float = None,
                  quantity: float = None,
+                 notional: float = None,
                  name: str = None,
                  asset_id: str = None,
                  tags: Optional[List[Union[PositionTag, Dict]]] = None):
         self.__identifier = identifier
         self.__weight = weight
         self.__quantity = quantity
+        self.__notional = notional
         self.__name = name
         self.__asset_id = asset_id
         if tags is not None:
@@ -68,10 +70,14 @@ class Position:
     def __eq__(self, other) -> bool:
         if not isinstance(other, Position):
             return False
-        for prop in ['asset_id', 'weight', 'quantity', 'tags']:
+        for prop in ['asset_id', 'weight', 'notional', 'quantity', 'tags']:
+            # Calculations from V2 sometimes add insignificant decimals places
             slf = get(self, prop)
             oth = get(other, prop)
-            if not (slf is None and oth is None) and not slf == oth:
+            if prop in ['weight', 'notional', 'quantity']:
+                if not (slf is None or oth is None) and not round(slf, 5) == round(oth, 5):
+                    return False
+            elif not (slf is None and oth is None) and not slf == oth:
                 return False
         return True
 
@@ -101,6 +107,14 @@ class Position:
     @quantity.setter
     def quantity(self, value: float):
         self.__quantity = value
+
+    @property
+    def notional(self) -> float:
+        return self.__notional
+
+    @notional.setter
+    def notional(self, value: float):
+        self.__notional = value
 
     @property
     def name(self) -> str:
@@ -155,7 +169,8 @@ class Position:
 
     def as_dict(self, tags_as_keys: bool = False) -> Dict:
         position_dict = dict(identifier=self.identifier, weight=self.weight,
-                             quantity=self.quantity, name=self.name, asset_id=self.asset_id, restricted=self.restricted)
+                             quantity=self.quantity, notional=self.notional,
+                             name=self.name, asset_id=self.asset_id, restricted=self.restricted)
         if self.tags and tags_as_keys:
             position_dict.update(self.tags_as_dict())
         else:
@@ -169,11 +184,12 @@ class Position:
             raise MqValueError('Position cannot have both id and asset_id')
         if 'id' in fields:
             position_dict['asset_id'] = position_dict.pop('id')
-        position_fields = ['identifier', 'weight', 'quantity', 'name', 'asset_id']
+        position_fields = ['identifier', 'weight', 'quantity', 'notional', 'name', 'asset_id']
         tag_dict = {k: v for k, v in position_dict.items() if k not in position_fields}
         return cls(
             identifier=position_dict['identifier'],
             weight=position_dict.get('weight'),
+            notional=position_dict.get('notional'),
             quantity=position_dict.get('quantity'),
             name=position_dict.get('name'),
             asset_id=position_dict.get('asset_id'),
@@ -188,7 +204,7 @@ class Position:
         if common:
             tags_as_target = self.tags if self.tags else None
             return CommonPosition(self.asset_id, quantity=self.quantity, tags=tags_as_target)
-        return PositionPriceInput(self.asset_id, quantity=self.quantity, weight=self.weight)
+        return PositionPriceInput(self.asset_id, quantity=self.quantity, weight=self.weight, notional=self.notional)
 
 
 class PositionSet:
@@ -209,6 +225,8 @@ class PositionSet:
             for p in positions:
                 if p.weight is None:
                     raise MqValueError('Position set with reference notionals must have weights for every position.')
+                if p.notional is not None:
+                    raise MqValueError('Position sets with reference notionals cannot have positions with notional.')
                 if p.quantity is not None:
                     raise MqValueError('Position sets with reference notionals cannot have positions with quantities.')
         self.__positions = positions
@@ -570,6 +588,7 @@ class PositionSet:
         for p in self.positions:
             p.weight = weight
             p.quantity = None
+            p.notional = None
             equally_weighted_positions.append(p)
         self.positions = equally_weighted_positions
 
@@ -689,6 +708,7 @@ class PositionSet:
         for p in self.positions:
             p.weight = p.weight - (p.weight / total_weight) * weight_to_distribute
             p.quantity = None
+            p.notional = None
             new_weights.append(p)
         self.positions = new_weights
 
@@ -718,22 +738,34 @@ class PositionSet:
 
         Fetch position weights from quantities:
 
+        >>> import datetime as dt
         >>> from gs_quant.markets.position_set import Position, PositionSet, PositionSetWeightingStrategy
         >>>
         >>> my_positions = [Position(identifier='AAPL UW', quantity=100), Position(identifier='MSFT UW', quantity=100)]
-        >>> position_set = PositionSet(positions=my_positions)
+        >>> position_set = PositionSet(positions=my_positions, date= dt.date(2023, 3, 16))
         >>> position_set.resolve()
         >>> position_set.price(weighting_strategy=PositionSetWeightingStrategy.Quantity)
 
         Fetch position quantities from weights:
 
         >>> import datetime as dt
-        >>> from gs_quant.markets.position_set import Position, PositionSet
+        >>> from gs_quant.markets.position_set import Position, PositionSet, PositionSetWeightingStrategy
         >>>
         >>> my_positions = [Position(identifier='AAPL UW', weight=0.5), Position(identifier='MSFT UW', weight=0.5)]
         >>> position_set = PositionSet(positions=my_positions, date= dt.date(2023, 3, 16), reference_notional=10000000)
         >>> position_set.resolve()
         >>> position_set.price(weighting_strategy=PositionSetWeightingStrategy.Weight)
+
+        Fetch position weights from exposures:
+
+        >>> import datetime as dt
+        >>> from gs_quant.markets.position_set import Position, PositionSet, PositionSetWeightingStrategy
+        >>>
+        >>> my_positions = [Position(identifier='AAPL UW', notional=10000),
+        >>>                 Position(identifier='MSFT UW', notional=10000)]
+        >>> position_set = PositionSet(positions=my_positions, date= dt.date(2023, 3, 16))
+        >>> position_set.resolve()
+        >>> position_set.price(weighting_strategy=PositionSetWeightingStrategy.Notional)
 
         **See also**
 
@@ -743,6 +775,10 @@ class PositionSet:
                                                                    self.reference_notional,
                                                                    weighting_strategy)
         positions = self.__convert_positions_for_pricing(self.positions, weighting_strategy)
+
+        should_allow_fractional_shares = True if weighting_strategy == PositionSetWeightingStrategy.Notional \
+            else False
+
         price_parameters = PriceParameters(currency=currency,
                                            divisor=self.divisor,
                                            frequency=MarketDataFrequency.End_Of_Day,
@@ -751,7 +787,8 @@ class PositionSet:
                                            pricing_date=self.date,
                                            price_regardless_of_assets_missing_prices=True,
                                            weighting_strategy=weighting_strategy,
-                                           use_unadjusted_close_price=use_unadjusted_close_price)
+                                           use_unadjusted_close_price=use_unadjusted_close_price,
+                                           fractional_shares=should_allow_fractional_shares)
 
         if 'dataset' in kwargs:
             price_parameters.asset_data_set_id = kwargs['dataset']
@@ -768,6 +805,7 @@ class PositionSet:
                 pos: PositionPriceResponse = position_result_map.get(asset_key)
                 p.quantity = pos.quantity
                 w = pos.weight
+                p.notional = pos.notional
                 if handle_long_short:
                     # In case of long/short positions, we need to convert the returned gross weight to reference weight
                     w = math.copysign(w, pos.notional)
@@ -930,7 +968,9 @@ class PositionSet:
         positions.columns = cls.__normalize_position_columns(positions)
         tag_columns = cls.__get_tag_columns(positions) if add_tags else []
         positions = positions[~positions['identifier'].isna()]
-        equalize = not ('quantity' in positions.columns.str.lower() or 'weight' in positions.columns.str.lower())
+        equalize = not ('quantity' in positions.columns.str.lower() or
+                        'weight' in positions.columns.str.lower() or
+                        'notional' in positions.columns.str.lower())
         equal_weight = 1 / len(positions)
 
         positions_list = []
@@ -942,6 +982,7 @@ class PositionSet:
                     name=row.get('name'),
                     weight=equal_weight if equalize else row.get('weight'),
                     quantity=None if equalize else row.get('quantity'),
+                    notional=None if equalize else row.get('notional'),
                     tags=list(PositionTag(tag, get(row, tag)) for tag in tag_columns) if len(tag_columns) else None
                 )
             )
@@ -951,7 +992,7 @@ class PositionSet:
     @staticmethod
     def __get_tag_columns(positions: pd.DataFrame) -> List[str]:
         return [c for c in positions.columns if c.lower() not in
-                ['identifier', 'id', 'quantity', 'weight', 'date', 'restricted']]
+                ['identifier', 'id', 'quantity', 'notional', 'weight', 'date', 'restricted']]
 
     @staticmethod
     def __normalize_position_columns(positions: pd.DataFrame) -> List[str]:
@@ -960,7 +1001,8 @@ class PositionSet:
             positions = positions.rename(columns={'asset_id': 'id'})
         for c in positions.columns:
             columns.append(
-                c.lower() if c.lower() in ['identifier', 'id', 'quantity', 'weight', 'date', 'restricted'] else c
+                c.lower() if c.lower() in
+                ['identifier', 'id', 'quantity', 'notional', 'weight', 'date', 'restricted'] else c
             )
         return columns
 
@@ -1009,18 +1051,26 @@ class PositionSet:
                                          ) -> PositionSetWeightingStrategy:
         missing_weights = [p.identifier for p in positions if p.weight is None]
         missing_quantities = [p.identifier for p in positions if p.quantity is None]
+        missing_exposures = [p.identifier for p in positions if p.notional is None]
         if weighting_strategy is None:
-            if len(missing_weights) and len(missing_quantities):
+            if len(missing_weights) and len(missing_quantities) and len(missing_exposures):
                 raise MqValueError(f'Unable to determine weighting strategy due to missing weights for \
-                {missing_weights} and missing quantities for {missing_quantities}')
+                {missing_weights}, missing quantities for {missing_quantities}, and missing exposures \
+                for {missing_exposures}')
             if not len(missing_weights) and (reference_notional is not None or len(missing_quantities)):
                 weighting_strategy = PositionSetWeightingStrategy.Weight
+            elif not len(missing_exposures):
+                weighting_strategy = PositionSetWeightingStrategy.Notional
             else:
                 weighting_strategy = PositionSetWeightingStrategy.Quantity
+        use_quantity = weighting_strategy == PositionSetWeightingStrategy.Quantity
         use_weight = weighting_strategy == PositionSetWeightingStrategy.Weight
-        if (use_weight and len(missing_weights)) or (not use_weight and len(missing_quantities)):
+        use_exposure = weighting_strategy == PositionSetWeightingStrategy.Notional
+        if ((use_weight and len(missing_weights)) or
+                (use_quantity and len(missing_quantities)) or
+                (use_exposure and len(missing_exposures))):
             raise MqValueError(f'You must input a {weighting_strategy.value} for the following positions: \
-            {missing_weights if use_weight else missing_quantities}')
+            {missing_weights if use_weight else (missing_exposures if use_exposure else missing_quantities)}')
         if use_weight and reference_notional is None:
             raise MqValueError('You must specify a reference notional in order to price by weight.')
         return weighting_strategy
@@ -1029,14 +1079,17 @@ class PositionSet:
     def __convert_positions_for_pricing(positions: List[Position],
                                         weighting_strategy: PositionSetWeightingStrategy) -> List[PositionPriceInput]:
         position_inputs, missing_ids = [], []
+        use_quantity = weighting_strategy == PositionSetWeightingStrategy.Quantity
         use_weight = weighting_strategy == PositionSetWeightingStrategy.Weight
+        use_exposure = weighting_strategy == PositionSetWeightingStrategy.Notional
         for p in positions:
             if p.asset_id is None:
                 missing_ids.append(p.identifier)
             else:
                 position_inputs.append(PositionPriceInput(asset_id=p.asset_id,
                                                           weight=p.weight if use_weight else None,
-                                                          quantity=None if use_weight else p.quantity,
+                                                          notional=p.notional if use_exposure else None,
+                                                          quantity=p.quantity if use_quantity else None,
                                                           tags=p.tags))
         if len(missing_ids):
             raise MqValueError(f'Positions: {missing_ids} are missing asset ids. Resolve your position \
@@ -1066,7 +1119,7 @@ class PositionSet:
         position_sets = position_sets.explode('positions')
         position_sets['positions'] = [pos.as_dict() for pos in position_sets['positions']]
 
-        for field in ['name', 'asset_id', 'identifier', 'weight', 'restricted', 'quantity', 'tags']:
+        for field in ['name', 'asset_id', 'identifier', 'weight', 'notional', 'restricted', 'quantity', 'tags']:
             position_sets[field] = [pos.get(field) for pos in position_sets['positions']]
 
         columns_to_drop = ["position_sets", "positions"]
@@ -1079,6 +1132,7 @@ class PositionSet:
                                      identifiers: pd.Series = None,
                                      asset_ids: pd.Series = None,
                                      weights: pd.Series = None,
+                                     notionals: pd.Series = None,
                                      quantities: pd.Series = None,
                                      restricted: pd.Series = None,
                                      hard_to_borrow: pd.Series = None,
@@ -1087,6 +1141,7 @@ class PositionSet:
                             name=names,
                             identifier=identifiers,
                             weight=weights if weights else None,
+                            notional=notionals if notionals else None,
                             quantity=quantities if quantities else None,
                             tags=tags)
 
@@ -1149,6 +1204,8 @@ class PositionSet:
         position_sets_attributes = position_sets_df.columns.tolist()
         if "quantity" in position_sets_attributes and "weight" in position_sets_attributes:
             raise MqValueError("Cannot have both weight and quantity in position sets")
+        if "quantity" in position_sets_attributes and "notional" in position_sets_attributes:
+            raise MqValueError("Cannot have both weight and notional in position sets")
 
         asset_temporal_xrefs_df, asset_identifier_type = \
             _get_asset_temporal_xrefs(position_sets_df)
@@ -1186,12 +1243,15 @@ class PositionSet:
             if 'weight' in position_sets_df.columns.tolist() else None
         quantities_df = position_sets_df['quantity'] \
             if 'quantity' in position_sets_df.columns.tolist() else None
+        notionals_df = position_sets_df['notional'] \
+            if 'notional' in position_sets_df.columns.tolist() else None
         tags_df = position_sets_df['tags'] if 'tags' in position_sets_df.columns.tolist() else None
 
         all_positions = cls.__build_positions_from_frame(names=position_sets_df['name'],
                                                          identifiers=position_sets_df['identifier'],
                                                          asset_ids=position_sets_df['assetId'],
                                                          weights=weights_df,
+                                                         notionals=notionals_df,
                                                          quantities=quantities_df,
                                                          restricted=position_sets_df['restricted'],
                                                          tags=tags_df)
@@ -1230,7 +1290,8 @@ class PositionSet:
             :param carryover_positions_for_missing_dates: Broadcast previous positions onto dates with missing
             positions. Defaults to False
             :param should_reweight: Ensures total weight across positions on a holding date equals 1. Defaults to False
-            :param allow_fractional_shares: Whether to allow fractional shares. Defaults to False
+            :param allow_fractional_shares: Whether to allow fractional shares. Defaults to False if the weighting
+            strategy is Quantity or Weight. Set to True if the weighting strategy is Notional.
             :param allow_partial_pricing: whether to price a subset of positions in case of errors
             :param batch_size: Size of position sets to send to the pricing API per request. Defaults to 30
             :param kwargs: Additional parameters to pass to the GS pricing API
@@ -1276,27 +1337,36 @@ class PositionSet:
 
         if "quantity" in position_sets_column_attributes and "weight" in position_sets_column_attributes:
             raise MqValueError("Cannot have both weight and quantity in position sets")
+        if "notional" in position_sets_column_attributes and "weight" in position_sets_column_attributes:
+            raise MqValueError("Cannot have both weight and notional in position sets")
 
         if not weighting_strategy:
-            weighting_strategy = PositionSetWeightingStrategy.Weight \
-                if "weight" in position_sets_column_attributes \
-                   and "reference_notional" in position_sets_column_attributes \
-                else PositionSetWeightingStrategy.Quantity
+            if "weight" in position_sets_column_attributes and "reference_notional" in position_sets_column_attributes:
+                weighting_strategy = PositionSetWeightingStrategy.Weight
+            elif "notional" in position_sets_column_attributes:
+                weighting_strategy = PositionSetWeightingStrategy.Notional
+            else:
+                weighting_strategy = PositionSetWeightingStrategy.Quantity
 
-        if weighting_strategy not in [PositionSetWeightingStrategy.Quantity, PositionSetWeightingStrategy.Weight]:
-            raise MqValueError("Can only specify a weighting strategy of weight or quantity")
+        if weighting_strategy not in [PositionSetWeightingStrategy.Quantity,
+                                      PositionSetWeightingStrategy.Weight,
+                                      PositionSetWeightingStrategy.Notional]:
+            raise MqValueError("Can only specify a weighting strategy of weight, notional, or quantity")
 
         if weighting_strategy == PositionSetWeightingStrategy.Quantity and \
                 "quantity" not in position_sets_column_attributes:
             raise MqValueError("Unable to price positions without position weights and daily reference notional "
                                "or position quantities")
 
+        should_allow_fractional_shares = True if weighting_strategy == PositionSetWeightingStrategy.Notional \
+            else allow_fractional_shares
+
         position_pricing_parameters = PositionsPricingParameters(
             currency=currency.value,
             weighting_strategy=weighting_strategy.value,
             carryover_positions_for_missing_dates=carryover_positions_for_missing_dates,
             should_reweight=should_reweight,
-            allow_fractional_shares=allow_fractional_shares
+            allow_fractional_shares=should_allow_fractional_shares
         )
 
         if kwargs:
@@ -1306,23 +1376,30 @@ class PositionSet:
             positions_with_missing_weights = position_sets_to_price_df[position_sets_to_price_df['weight'].isna()]
             if not positions_with_missing_weights.empty:
                 _logger.warning("Some positions do not have weights. These will be filtered out")
-        else:
+        elif weighting_strategy == PositionSetWeightingStrategy.Notional:
+            positions_with_missing_exposures = position_sets_to_price_df[position_sets_to_price_df['notional'].isna()]
+            if not positions_with_missing_exposures.empty:
+                _logger.warning("Some positions do not have exposures. These will be filtered out")
+        elif weighting_strategy == PositionSetWeightingStrategy.Quantity:
             positions_with_missing_quantities = position_sets_to_price_df[position_sets_to_price_df['quantity'].isna()]
             if not positions_with_missing_quantities.empty:
                 _logger.warning("Some positions do not have quantities. These will be filtered out")
 
         if "weight" not in position_sets_column_attributes:
             position_sets_to_price_df['weight'] = None
-        elif "quantity" not in position_sets_column_attributes:
-            position_sets_to_price_df["quantity"] = None
+        if "notional" not in position_sets_column_attributes:
+            position_sets_to_price_df['notional'] = None
+        if "quantity" not in position_sets_column_attributes:
+            position_sets_to_price_df['quantity'] = None
 
         position_sets_to_price_df['positions'] = \
             np.vectorize(
-                lambda asset_id, weight, quantity:
-                PositionsRequest(asset_id=asset_id, weight=weight, quantity=quantity))(
+                lambda asset_id, weight, quantity, notional:
+                PositionsRequest(asset_id=asset_id, weight=weight, quantity=quantity, notional=notional))(
                 position_sets_to_price_df['asset_id'],
                 position_sets_to_price_df['weight'],
-                position_sets_to_price_df['quantity'])
+                position_sets_to_price_df['quantity'],
+                position_sets_to_price_df['notional'])
 
         # build positionSets requests
         position_sets_grouped_by_date = position_sets_to_price_df.groupby("date")
@@ -1376,34 +1453,56 @@ class PositionSet:
             priced_position_set = date_to_priced_position_sets.get(input_position_set.date)
             position_date = dt.datetime.strptime(priced_position_set.get('date'), '%Y-%m-%d').date()
             priced_positions_df = pd.DataFrame(priced_position_set.get('positions'))
-            column_from_initial_position_sets_to_merge_by = "weight" \
-                if weighting_strategy == PositionSetWeightingStrategy.Weight else "quantity"
-            column_from_priced_positions_results_to_merge_by = "referenceWeight" \
-                if column_from_initial_position_sets_to_merge_by == "weight" else "quantity"
+            if weighting_strategy == PositionSetWeightingStrategy.Weight:
+                column_from_initial_position_sets_to_merge_by = "weight"
+                column_from_priced_positions_results_to_merge_by = "referenceWeight"
+            elif weighting_strategy == PositionSetWeightingStrategy.Notional:
+                column_from_initial_position_sets_to_merge_by = "notional"
+                column_from_priced_positions_results_to_merge_by = "notional"
+            else:
+                column_from_initial_position_sets_to_merge_by = "quantity"
+                column_from_priced_positions_results_to_merge_by = "quantity"
+
             priced_positions_df = priced_positions_df\
                 .drop_duplicates(subset=['assetId', column_from_priced_positions_results_to_merge_by])
 
+            df_to_merge_left = position_sets_to_price_df.loc[position_sets_to_price_df['date'] ==
+                                                             position_date, :].copy()
+            df_to_merge_right = priced_positions_df.copy()
+
+            # Rounding column quantities to avoid minute discrepancies in price/bulk calculations.
+            df_to_merge_left[column_from_initial_position_sets_to_merge_by] = \
+                df_to_merge_left[column_from_initial_position_sets_to_merge_by].round(5)
+
+            df_to_merge_right[column_from_priced_positions_results_to_merge_by] = \
+                df_to_merge_right[column_from_priced_positions_results_to_merge_by].round(5)
+
             priced_positions_df = pd.merge(
-                position_sets_to_price_df.loc[position_sets_to_price_df['date'] == position_date, :],
-                priced_positions_df,
+                df_to_merge_left,
+                df_to_merge_right,
                 how="left",
                 left_on=['asset_id', column_from_initial_position_sets_to_merge_by],
                 right_on=['assetId', column_from_priced_positions_results_to_merge_by],
                 suffixes=("original", None)
             )
 
-            unpriced_positions_df = priced_positions_df[priced_positions_df['weight'].isna()] \
-                if weighting_strategy == PositionSetWeightingStrategy.Weight else \
-                priced_positions_df[priced_positions_df['quantity'].isna()]
-            priced_positions_df = priced_positions_df[~priced_positions_df['weight'].isna()] \
-                if weighting_strategy == PositionSetWeightingStrategy.Weight else \
-                priced_positions_df[~priced_positions_df["quantity"].isna()]
+            if weighting_strategy == PositionSetWeightingStrategy.Weight:
+                unpriced_positions_df = priced_positions_df[priced_positions_df['weight'].isna()]
+                priced_positions_df = priced_positions_df[~priced_positions_df['weight'].isna()]
+            elif weighting_strategy == PositionSetWeightingStrategy.Notional:
+                unpriced_positions_df = priced_positions_df[priced_positions_df['notional'].isna()]
+                priced_positions_df = priced_positions_df[~priced_positions_df['notional'].isna()]
+            else:
+                unpriced_positions_df = priced_positions_df[priced_positions_df['quantity'].isna()]
+                priced_positions_df = priced_positions_df[~priced_positions_df["quantity"].isna()]
+
             positions = []
             for record in priced_positions_df.to_dict('records'):
                 curr_position = Position(asset_id=record.get('assetId'),
                                          identifier=record.get('identifier'),
                                          name=record.get('name'),
                                          weight=record.get('weight'),
+                                         notional=record.get('notional'),
                                          quantity=record.get('quantity'),
                                          tags=record.get('tags'))
                 curr_position._restricted = record.get('restricted')

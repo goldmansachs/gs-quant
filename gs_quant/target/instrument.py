@@ -871,6 +871,24 @@ class FXCorrelationSwap(Instrument):
     type_: Optional[AssetType] = field(init=False, default=AssetType.CorrelationSwap, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
+    def scale_in_place(self, scaling: Optional[float] = None, check_resolved: bool = True):
+        if scaling is None or scaling == 1:
+            return
+        if self.unresolved is None:
+            if check_resolved:
+                raise RuntimeError('Can only scale resolved instruments')
+            if self.notional_amount is None or self.buy_sell is None:
+                raise RuntimeError('Can only scale unresolved instruments with the buysell and primary size fields set')
+            if any(a is not None and not isinstance(a, (int, float)) for a in [self.notional_amount]):
+                raise RuntimeError('All specified size fields must be numeric')
+        self.notional_amount *= abs(scaling)
+
+        if scaling < 0:
+            flip_dict = {BuySell.Buy: BuySell.Sell, BuySell.Sell: BuySell.Buy}
+            self.buy_sell = flip_dict[self.buy_sell]
+
+        return
+
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -1095,6 +1113,24 @@ class FXOneTouch(Instrument):
     type_: Optional[AssetType] = field(init=False, default=AssetType.OneTouch, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
+    def scale_in_place(self, scaling: Optional[float] = None, check_resolved: bool = True):
+        if scaling is None or scaling == 1:
+            return
+        if self.unresolved is None:
+            if check_resolved:
+                raise RuntimeError('Can only scale resolved instruments')
+            if self.notional_amount is None or self.buy_sell is None:
+                raise RuntimeError('Can only scale unresolved instruments with the buysell and primary size fields set')
+            if any(a is not None and not isinstance(a, (int, float)) for a in [self.notional_amount]):
+                raise RuntimeError('All specified size fields must be numeric')
+        self.notional_amount *= abs(scaling)
+
+        if scaling < 0:
+            flip_dict = {BuySell.Buy: BuySell.Sell, BuySell.Sell: BuySell.Buy}
+            self.buy_sell = flip_dict[self.buy_sell]
+
+        return
+
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -1247,6 +1283,24 @@ class FXVarianceSwap(Instrument):
     type_: Optional[AssetType] = field(init=False, default=AssetType.VarianceSwap, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
+    def scale_in_place(self, scaling: Optional[float] = None, check_resolved: bool = True):
+        if scaling is None or scaling == 1:
+            return
+        if self.unresolved is None:
+            if check_resolved:
+                raise RuntimeError('Can only scale resolved instruments')
+            if self.notional_amount is None or self.buy_sell is None:
+                raise RuntimeError('Can only scale unresolved instruments with the buysell and primary size fields set')
+            if any(a is not None and not isinstance(a, (int, float)) for a in [self.notional_amount]):
+                raise RuntimeError('All specified size fields must be numeric')
+        self.notional_amount *= abs(scaling)
+
+        if scaling < 0:
+            flip_dict = {BuySell.Buy: BuySell.Sell, BuySell.Sell: BuySell.Buy}
+            self.buy_sell = flip_dict[self.buy_sell]
+
+        return
+
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -1297,6 +1351,24 @@ class FXVolatilitySwap(Instrument):
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.FX, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.VolatilitySwap, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
+
+    def scale_in_place(self, scaling: Optional[float] = None, check_resolved: bool = True):
+        if scaling is None or scaling == 1:
+            return
+        if self.unresolved is None:
+            if check_resolved:
+                raise RuntimeError('Can only scale resolved instruments')
+            if self.notional_amount is None or self.buy_sell is None:
+                raise RuntimeError('Can only scale unresolved instruments with the buysell and primary size fields set')
+            if any(a is not None and not isinstance(a, (int, float)) for a in [self.notional_amount]):
+                raise RuntimeError('All specified size fields must be numeric')
+        self.notional_amount *= abs(scaling)
+
+        if scaling < 0:
+            flip_dict = {BuySell.Buy: BuySell.Sell, BuySell.Sell: BuySell.Buy}
+            self.buy_sell = flip_dict[self.buy_sell]
+
+        return
 
 
 @handle_camel_case_args

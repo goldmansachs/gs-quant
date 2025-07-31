@@ -48,3 +48,26 @@ def test_transaction_cost_config_encoding():
                                                         aggregation_type=CostAggregationType.Sum)),
                                        TradingCosts(FixedCostModel(10)))
     assert tc == TransactionCostConfig.from_dict(json.loads(tc.to_json()))
+
+    tc = TransactionCostConfig.from_dict({"tradeCostModel": {"entry": {"scalingLevel": 5.0,
+                                                                       "scalingQuantityType": "Quantity",
+                                                                       "type": "ScaledCostModel"},
+                                                             "exit": {"models": [{"scalingLevel": 7.0,
+                                                                                  "scalingQuantityType": "Notional",
+                                                                                  "type": "ScaledCostModel"},
+                                                                                 {"cost": 9.0,
+                                                                                  "type": "FixedCostModel"}],
+                                                                      "aggregationType": "Sum",
+                                                                      "type": "AggregateCostModel"
+                                                                      }
+                                                             },
+                                          "hedgeCostModel": {"entry": {"cost": 10, "type": "FixedCostModel"}}
+                                          })
+    assert tc == TransactionCostConfig(TradingCosts(ScaledCostModel(5.0, TransactionCostScalingType.Quantity),
+                                                    AggregateCostModel(models=(
+                                                        ScaledCostModel(7.0, TransactionCostScalingType.Notional),
+                                                        FixedCostModel(9.0)
+                                                    ),
+                                                        aggregation_type=CostAggregationType.Sum)),
+                                       TradingCosts(FixedCostModel(10)))
+    assert tc == TransactionCostConfig.from_dict(json.loads(tc.to_json()))
