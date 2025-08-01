@@ -14,13 +14,15 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from ._version import get_versions
+from ._version import get_versions, get_environment_summary
 
 name = "gs_quant"
 __version__ = get_versions()['version']
+__summary__ = get_environment_summary()
 del get_versions
 
 version = __version__
+summary = __summary__
 
 # Set up PyXll, if available
 try:

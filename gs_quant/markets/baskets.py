@@ -56,6 +56,7 @@ class ErrorMessage(Enum):
     NON_ADMIN = 'You are not permitted to perform this action on this basket. Please make sure \
         the basket owner has entitled your application properly if you believe this is a mistake'
     NON_INTERNAL = 'You are not permitted to access this basket setting.'
+    RESTRICTED_ATTRIBUTE = 'You are not permitted to access this basket setting'
     UNINITIALIZED = 'Basket class object must be initialized using one of an existing basket\'s \
         identifiers to perform this action'
     UNMODIFIABLE = 'This property can not be modified since the basket has already been created'
@@ -926,6 +927,37 @@ class Basket(Asset, PositionedEntity):
     def weighting_strategy(self, value: WeightingStrategy):
         self.__weighting_strategy = value
 
+    @property
+    def pricing_date(self) -> Optional[dt.date]:
+        """ Pricing date for a rebalance, default to prior day """
+        return self.__pricing_date
+
+    @pricing_date.setter
+    @_validate(ErrorMessage.NON_ADMIN, ErrorMessage.RESTRICTED_ATTRIBUTE)
+    def pricing_date(self, value: dt.date):
+        self.__pricing_date = value
+
+    @property
+    def action_date(self) -> Optional[dt.date]:
+        """ Basket action date (user's current date based on timezone) """
+        return self.__action_date
+
+    @action_date.setter
+    @_validate(ErrorMessage.NON_ADMIN, ErrorMessage.RESTRICTED_ATTRIBUTE)
+    def action_date(self, value: dt.date):
+        self.__action_date = value
+
+    @property
+    def allow_system_approval(self) -> Optional[bool]:
+        """ To allow system to verify whether the basket is in position or not and approve rebalance without
+        manual intervention when the basket is not in position. Default is false.  """
+        return self.__allow_system_approval
+
+    @allow_system_approval.setter
+    @_validate(ErrorMessage.NON_ADMIN, ErrorMessage.RESTRICTED_ATTRIBUTE)
+    def allow_system_approval(self, value: bool):
+        self.__allow_system_approval = value
+
     def __edit_and_rebalance(self, edit_inputs: CustomBasketsEditInputs,
                              rebal_inputs: CustomBasketsRebalanceInputs) -> CustomBasketsResponse:
         """ If updates require edit and rebalance, rebal will not be scheduled until/if edit report succeeds """
@@ -1101,6 +1133,8 @@ class Basket(Asset, PositionedEntity):
         user_tokens = get(GsUsersApi.get_current_user_info(), 'tokens', [])
         if 'internal' not in user_tokens:
             errors.append(ErrorMessage.NON_INTERNAL)
+        if 'internal' not in user_tokens and 'group:EqBasketRestrictedAttributes' not in user_tokens:
+            errors.append(ErrorMessage.RESTRICTED_ATTRIBUTE)
         if not has(self, 'id'):
             errors.append(ErrorMessage.UNINITIALIZED)
         else:

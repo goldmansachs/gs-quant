@@ -12,6 +12,7 @@
 """Git implementation of _version.py."""
 
 import errno
+from importlib.metadata import version, PackageNotFoundError
 import os
 import re
 import subprocess
@@ -656,3 +657,20 @@ def get_versions():
     return {"version": "0+unknown", "full-revisionid": None,
             "dirty": None,
             "error": "unable to compute version", "date": None}
+
+
+def get_environment_summary():
+    """
+    Returns a summary of the Python version and the versions of specific libraries.
+    """
+    libraries = ['gs_quant', 'gs_quant_internal', 'numpy', 'pandas']
+    summary = {
+        'Python Version': sys.version,
+    }
+    for lib in libraries:
+        try:
+            lib_version = version(lib)
+        except PackageNotFoundError:
+            lib_version = 'Not Installed'
+        summary[lib] = lib_version
+    return summary

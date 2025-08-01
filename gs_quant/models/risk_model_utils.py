@@ -312,7 +312,7 @@ def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int
     if data.get('currencyRatesData'):
         _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
                                   model_data={"currencyRatesData": data.get('currencyRatesData'), 'date': date},
-                                  partial_upload=True, finalUpload=True, **kwargs)
+                                  partial_upload=True, final_upload=True, **kwargs)
         sleep(random.uniform(3, 7))
     for risk_model_data_type in ["assetData", "issuerSpecificCovariance", "factorPortfolios"]:
         _repeat_try_catch_request(_batch_data_v2, model_id=model_id, data=data.get(risk_model_data_type),
