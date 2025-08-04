@@ -13,11 +13,32 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+import sys
+from importlib.metadata import version as get_lib_version, PackageNotFoundError
 
-from ._version import get_versions, get_environment_summary
+from ._version import get_versions
 
 name = "gs_quant"
 __version__ = get_versions()['version']
+
+
+def get_environment_summary():
+    """
+    Returns a summary of the Python version and the versions of specific libraries.
+    """
+    libraries = ['gs_quant', 'gs_quant_internal', 'numpy', 'pandas']
+    summary = {
+        'Python Version': sys.version,
+    }
+    for lib in libraries:
+        try:
+            lib_version = get_lib_version(lib)
+        except PackageNotFoundError:
+            lib_version = 'Not Installed'
+        summary[lib] = lib_version
+    return summary
+
+
 __summary__ = get_environment_summary()
 del get_versions
 
@@ -27,6 +48,7 @@ summary = __summary__
 # Set up PyXll, if available
 try:
     from .xl_interface.instrument_generation import install_hook
+
     install_hook()
 except ModuleNotFoundError:
     pass
@@ -34,9 +56,11 @@ except ModuleNotFoundError:
 # Jupyter needs nest_asyncio to avoid event loop issues
 try:
     from IPython import get_ipython
+
     ipython = get_ipython()
     if ipython and 'IPKernelApp' in get_ipython().config:
         import nest_asyncio
+
         nest_asyncio.apply()
 except ImportError:
     pass
