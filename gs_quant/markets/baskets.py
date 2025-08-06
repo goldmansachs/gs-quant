@@ -1030,13 +1030,14 @@ class Basket(Asset, PositionedEntity):
         positions_updated = self.__initial_positions != positions
 
         for prop in CustomBasketsEditInputs.properties():
-            if get(self.__initial_state, prop) != get(self, prop):
+            if prop not in ['action_date'] and get(self.__initial_state, prop) != get(self, prop):
                 eligible_for_edit = True
             set_(edit_inputs, prop, get(self, prop))
         for prop in CustomBasketsRebalanceInputs.properties():
+            if (prop not in ['position_set', 'allow_system_approval', 'action_date'] and
+                    get(self.__initial_state, prop) != get(self, prop)):
+                eligible_for_rebal = True
             if prop != 'position_set':
-                if get(self.__initial_state, prop) != get(self, prop):
-                    eligible_for_rebal = True
                 set_(rebal_inputs, prop, get(self, prop))
         for prop in CustomBasketsPricingParameters.properties():
             if get(self.__initial_state, prop) != get(self, prop):
