@@ -28,7 +28,8 @@ from gs_quant.base import get_enum_value, Base
 from gs_quant.common import Currency
 from gs_quant.common import FieldValueMap, AssetClass
 from gs_quant.errors import MqValueError
-from gs_quant.instrument import EqOption, EqVarianceSwap, FXOption, FXBinary, Instrument, IRSwaption
+from gs_quant.instrument import EqOption, EqVarianceSwap, FXOption, FXBinary, FXCorrelationSwap, FXOneTouch, \
+    FXVarianceSwap, FXVolatilitySwap, Instrument, IRSwaption
 from gs_quant.target.backtests import BacktestResult, BacktestRisk, \
     BacktestTradingQuantityType, DeltaHedgeParameters, \
     BacktestSignalSeriesItem, \
@@ -45,7 +46,7 @@ ISO_FORMAT = r"^([0-9]{4})-([0-9]{2})-([0-9]{2})$"
 class StrategySystematic:
     """Equity back testing systematic strategy"""
     _supported_eq_instruments = (EqOption, EqVarianceSwap)
-    _supported_fx_instruments = (FXOption, FXBinary)
+    _supported_fx_instruments = (FXOption, FXBinary, FXCorrelationSwap, FXOneTouch, FXVarianceSwap, FXVolatilitySwap)
     _supported_ir_instruments = (IRSwaption,)
     _supported_instruments = _supported_eq_instruments + _supported_fx_instruments + _supported_ir_instruments
 
