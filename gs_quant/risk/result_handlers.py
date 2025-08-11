@@ -279,7 +279,7 @@ def __is_single_row_2nd_order_risk(risk_key: RiskKey):
     return risk_key is not None and isinstance(risk_key.risk_measure,
                                                RiskMeasure) and \
         risk_key.risk_measure.asset_class == AssetClass.Rates and \
-        risk_key.risk_measure.measur_type in (RiskMeasureType.ParallelGamma, RiskMeasureType.ParallelGammaLocalCcy)
+        risk_key.risk_measure.measure_type in (RiskMeasureType.ParallelGamma, RiskMeasureType.ParallelGammaLocalCcy)
 
 
 def mdapi_second_order_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,

@@ -182,14 +182,19 @@ class GsSession(ContextBase):
 
     async def _on_aenter(self):
         self.__close_on_exit = self._session is None
-        if not self._has_async_session():
+        self.__close_on_exit_async = not self._has_async_session()
+        if self.__close_on_exit:
             self.init()
+        if self.__close_on_exit_async:
             self._init_async()
 
     async def _on_aexit(self, exc_type, exc_val, exc_tb):
+        if self.__close_on_exit_async:
+            if self._has_async_session():
+                await self._session_async.aclose()
+            self._session_async = None
         if self.__close_on_exit:
             self._session = None
-            self._session_async = None
 
     def init(self):
         if not self._session:

@@ -19,6 +19,7 @@ from typing import Union, Tuple, Optional
 
 import gs_quant.base as base
 from gs_quant.base import handle_camel_case_args, Base, EnumBase
+from gs_quant.instrument.core import Security
 
 
 class TestEnum(EnumBase, Enum):
@@ -83,3 +84,25 @@ def test_setter_coercion():
     obj.attr_6 = 'Enum_1'
     assert isinstance(obj.attr_6, TestEnum)
     assert TestEnum in base._is_supported_generic_cache
+
+
+def test_security_from_dict():
+    # Input dictionary
+    input_dict = {
+        '$type': 'LegDefinition',
+        'bbid': 'TYU5 Comdty',
+        'calculationTime': 13379,
+        'properties': {
+            'buysell': 'Buy',
+            'identifier': 'TYU5 Comdty',
+            'identifiertype': 'BloombergID',
+            'quantity': 1.0
+        },
+        'queueingTime': 157
+    }
+
+    # Construct Security object
+    security = Security.from_dict(input_dict)
+
+    # Assertions
+    assert security.bbid == 'TYU5 Comdty'
