@@ -78,6 +78,7 @@ examples providing a searchable library of short specific snippets.
         - 📄 [20_fix_float_legs_price.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/01_rates/20_fix_float_legs_price.ipynb)
         - 📄 [21_asset_swap_definition.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/01_rates/21_asset_swap_definition.ipynb)
         - 📄 [22_cap_floor.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/01_rates/22_cap_floor.ipynb)
+        - 📄 [23_solve_vanna_&_volga.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/01_rates/23_solve_vanna_&_volga.ipynb)
       - 📁 02_fx
         - 📄 [01_fx_fwd_trade_construction.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/01_fx_fwd_trade_construction.ipynb)
         - 📄 [02_fx_option_trade_construction.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/02_fx_option_trade_construction.ipynb)

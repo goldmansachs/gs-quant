@@ -349,7 +349,7 @@ def get_dataset_with_many_assets(
 
 ) -> pd.DataFrame:
     tasks = [partial(ds.get_data, assetId=assets[i:i + batch_limit], start=start, end=end,
-                     return_type=None, limit=batch_limit, **kwargs) for i in range(0, len(assets), batch_limit)]
+                     return_type=None, **kwargs) for i in range(0, len(assets), batch_limit)]
     results = ThreadPoolManager.run_async(tasks)
     return pd.concat(results)
 
