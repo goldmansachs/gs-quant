@@ -193,12 +193,13 @@ def portfolio_pnl(portfolio_id: str, unit: str = 'Notional', *, source: str = No
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.HIT_RATE])
-def portfolio_hit_rate(portfolio_id: str, *, source: str = None,
+def portfolio_hit_rate(portfolio_id: str, rolling_window: Union[int, str], *, source: str = None,
                        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Create a time series of the hit rate of a portfolio over a given rolling period
 
     :param portfolio_id: id of portfolio
+    :param rolling_window: size of window to use
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
@@ -206,7 +207,7 @@ def portfolio_hit_rate(portfolio_id: str, *, source: str = None,
     """
     pm = PortfolioManager(portfolio_id)
     performance_report = pm.get_performance_report()
-    return ReportMeasures.hit_rate(performance_report.id)
+    return ReportMeasures.hit_rate(performance_report.id, rolling_window)
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.MAX_DRAWDOWN])
@@ -477,7 +478,7 @@ def portfolio_tracking_error_bull(portfolio_id: str, benchmark_id: str, rolling_
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.SHARPE_RATIO])
-def portfolio_sharpe_ratio(portfolio_id: str, risk_free_id: str, *,
+def portfolio_sharpe_ratio(portfolio_id: str, risk_free_id: str, rolling_window: Union[int, str], *,
                            source: str = None,
                            real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
@@ -495,6 +496,7 @@ def portfolio_sharpe_ratio(portfolio_id: str, risk_free_id: str, *,
 
     :param portfolio_id: id of portfolio
     :param risk_free_id: id of risk-free asset
+    :param rolling_window: size of the rolling window to look back on
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
@@ -503,7 +505,7 @@ def portfolio_sharpe_ratio(portfolio_id: str, risk_free_id: str, *,
     pm = PortfolioManager(portfolio_id)
 
     performance_report = pm.get_performance_report()
-    return ReportMeasures.portfolio_sharpe_ratio(performance_report.id, risk_free_id)
+    return ReportMeasures.portfolio_sharpe_ratio(performance_report.id, risk_free_id, rolling_window)
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.CALMAR_RATIO])
@@ -693,7 +695,7 @@ def portfolio_modigliani_ratio(portfolio_id: str, benchmark_id: str, risk_free_i
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.TREYNOR_RATIO])
-def portfolio_treynor_measure(portfolio_id: str, risk_free_id: str, *,
+def portfolio_treynor_measure(portfolio_id: str, risk_free_id: str, benchmark_id: str, *,
                               source: str = None,
                               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
@@ -713,6 +715,7 @@ def portfolio_treynor_measure(portfolio_id: str, risk_free_id: str, *,
 
     :param portfolio_id: id of portfolio
     :param risk_free_id: id of risk-free asset
+    :param benchmark_id: id of benchmark asset
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
@@ -721,7 +724,7 @@ def portfolio_treynor_measure(portfolio_id: str, risk_free_id: str, *,
     pm = PortfolioManager(portfolio_id)
 
     performance_report = pm.get_performance_report()
-    return ReportMeasures.treynor_measure(performance_report.id, risk_free_id)
+    return ReportMeasures.treynor_measure(performance_report.id, risk_free_id, benchmark_id)
 
 
 def portfolio_jensen_alpha(portfolio_id: str, benchmark_id: str, risk_free_id: str, *,

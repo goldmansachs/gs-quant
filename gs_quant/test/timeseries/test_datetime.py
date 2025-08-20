@@ -512,5 +512,11 @@ def test_align_calendar(mocker_data, mocker_cov):
     assert aligned_series.size == 21
 
 
+def test_bucketize_empty_series():
+    empty_series = pd.Series(dtype=float)
+    result = bucketize(empty_series, AggregateFunction.MAX, AggregatePeriod.MONTH)
+    assert result.empty, "The result should be an empty series when the input series is empty."
+
+
 if __name__ == "__main__":
     pytest.main(args=["test_datetime.py"])

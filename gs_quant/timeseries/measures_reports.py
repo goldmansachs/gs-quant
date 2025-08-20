@@ -381,13 +381,14 @@ def historical_simulation_estimated_factor_attribution(report_id: str, factor_na
 
 
 @plot_measure_entity(EntityType.REPORT)
-def hit_rate(report_id: str, *, source: str = None,
+def hit_rate(report_id: str, rolling_window: Union[int, str], *, source: str = None,
              real_time: bool = False,
              request_id: Optional[str] = None) -> pd.Series:
     """
     The hit rate of a portfolio is a percentage of positions that have generated positive returns over a given period.
 
     :param report_id: id of performance report
+    :param rolling_window: size of rolling window
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
@@ -396,13 +397,20 @@ def hit_rate(report_id: str, *, source: str = None,
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     performance_report = PerformanceReport.get(report_id)
+    window = _parse_window(rolling_window)
     portfolio_constituents = performance_report.get_portfolio_constituents(fields=['date', 'pnl'],
                                                                            start_date=start_date,
                                                                            end_date=end_date).set_index('date')
 
     portfolio_constituents = portfolio_constituents[portfolio_constituents['entryType'] == 'Holding']
-    hit_rate_series = (portfolio_constituents.groupby('date')['pnl'].apply(lambda x: (x > 0).sum() / len(x)))
-    return hit_rate_series
+    portfolio_constituents = portfolio_constituents.sort_values('date')
+    pivot_constituents = portfolio_constituents.pivot_table(index='date', columns='assetId', values='pnl')
+
+    rolling_compound = (pivot_constituents).rolling(window=window).sum()
+    positive_count = (rolling_compound > 0).sum(axis=1)
+    valid_assets = rolling_compound.count(axis=1)
+
+    return positive_count / valid_assets
 
 
 @plot_measure_entity(EntityType.REPORT)
@@ -491,15 +499,25 @@ def _max_recovery_period(series):
 
 
 def _drawdown_length(series):
-    peak = series.expanding().max()
-    drawdown_flag = series < peak
-    length = 0
-    for i in range(len(drawdown_flag) - 1, -1, -1):
-        if drawdown_flag.iloc[i]:
-            length += 1
+    peak = series[0]
+    drawdown_start = None
+    max_drawdown_length = 0
+    current_length = 0
+
+    for value in series:
+        if value >= peak:
+            # Reset when a new peak is found
+            peak = value
+            drawdown_start = None
+            current_length = 0
         else:
-            break
-    return length
+            # Track the drawdown length
+            if drawdown_start is None:
+                drawdown_start = value
+            current_length += 1
+            max_drawdown_length = max(max_drawdown_length, current_length)
+
+    return max_drawdown_length
 
 
 @plot_measure_entity(EntityType.REPORT)
@@ -516,8 +534,7 @@ def standard_deviation(report_id: str, rolling_window: Union[int, str], *, sourc
     :param request_id: server request id
     :return: time series of standard deviation
     """
-    portfolio_pnl = pnl(report_id)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
 
     rolling_window = _parse_window(rolling_window)
     rolling_std = portfolio_pnl.rolling(window=rolling_window).std()
@@ -541,8 +558,7 @@ def downside_risk(report_id: str, rolling_window: Union[int, str], *, source: st
     :param request_id: server request id
     :return: time series of downside_risk
     """
-    portfolio_pnl = pnl(report_id)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
     rolling_window = _parse_window(rolling_window)
     downside_risk_series = portfolio_pnl.rolling(window=rolling_window).apply(_rolling_downside_risk, raw=False)
 
@@ -565,8 +581,7 @@ def semi_variance(report_id: str, rolling_window: Union[int, str], *, source: st
     :param request_id: server request id
     :return: time series of downside_risk
     """
-    portfolio_pnl = pnl(report_id)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
     rolling_window = _parse_window(rolling_window)
     semi_variance_series = portfolio_pnl.rolling(window=rolling_window).apply(_rolling_semi_variance, raw=False)
 
@@ -589,8 +604,7 @@ def kurtosis(report_id: str, rolling_window: Union[int, str], *, source: str = N
     :param request_id: server request id
     :return: time series of kurtosis
     """
-    portfolio_pnl = pnl(report_id)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
     rolling_window = _parse_window(rolling_window)
     rolling_kurtosis = portfolio_pnl.rolling(window=rolling_window).apply(
         lambda x: stats.kurtosis(x, fisher=True, bias=False),
@@ -615,8 +629,7 @@ def skewness(report_id: str, rolling_window: Union[int, str], *, source: str = N
     :param request_id: server request id
     :return: time series of skewness
     """
-    portfolio_pnl = pnl(report_id)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
     rolling_window = _parse_window(rolling_window)
     rolling_skewness = portfolio_pnl.rolling(window=rolling_window).apply(
         lambda x: stats.skew(x, bias=False),
@@ -643,8 +656,7 @@ def realized_var(report_id: str, rolling_window: Union[int, str],
     :param request_id: server request id
     :return: time series of realized var
     """
-    portfolio_pnl = pnl(report_id)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
     rolling_window = _parse_window(rolling_window)
     realized_variance = portfolio_pnl.rolling(window=rolling_window).quantile(1 - confidence_interval)
     realized_variance = realized_variance * -1
@@ -681,9 +693,8 @@ def tracking_error(report_id: str, benchmark_id: str, rolling_window: Union[int,
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     rolling_window = _parse_window(rolling_window)
-    benchmark_returns = _get_benchmark_return(benchmark_id, start_date, end_date)
-    portfolio_returns = pnl(report_id, Unit.PERCENT.value)
-    portfolio_returns.index = pd.to_datetime(portfolio_returns.index)
+    benchmark_returns = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
+    portfolio_returns = _get_daily_pnl(report_id)
     active_return = (portfolio_returns - benchmark_returns)
     rolling_error = active_return.rolling(window=rolling_window).std()
     return rolling_error
@@ -720,8 +731,7 @@ def tracking_error_bear(report_id: str, benchmark_id: str, rolling_window: Union
     end_date = DataContext.current.end_time.date()
     rolling_window = _parse_window(rolling_window)
     benchmark_returns = _get_benchmark_return(benchmark_id, start_date, end_date)
-    portfolio_returns = pnl(report_id, Unit.PERCENT.value)
-    portfolio_returns.index = pd.to_datetime(portfolio_returns.index)
+    portfolio_returns = _get_daily_pnl(report_id)
     is_bear = benchmark_returns <= 0
     active_return = portfolio_returns - benchmark_returns
     rolling_error_bear = active_return.rolling(window=rolling_window).apply(
@@ -763,10 +773,9 @@ def tracking_error_bull(report_id: str, benchmark_id: str, rolling_window: Union
     end_date = DataContext.current.end_time.date()
     rolling_window = _parse_window(rolling_window)
     benchmark_returns = _get_benchmark_return(benchmark_id, start_date, end_date)
-    portfolio_returns = pnl(report_id, Unit.PERCENT.value)
-    portfolio_returns.index = pd.to_datetime(portfolio_returns.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
     is_bull = benchmark_returns > 0
-    active_return = portfolio_returns - benchmark_returns
+    active_return = portfolio_pnl - benchmark_returns
     rolling_error_bull = active_return.rolling(window=rolling_window).apply(
         lambda x: np.std(x, ddof=1) if is_bull.loc[x.index[-1]]
         else np.nan,
@@ -776,7 +785,7 @@ def tracking_error_bull(report_id: str, benchmark_id: str, rolling_window: Union
 
 
 @plot_measure_entity(EntityType.REPORT)
-def portfolio_sharpe_ratio(report_id: str, risk_free_id: str, *, source: str = None,
+def portfolio_sharpe_ratio(report_id: str, risk_free_id: str, rolling_window: Union[int, str], *, source: str = None,
                            real_time: bool = False,
                            request_id: Optional[str] = None) -> pd.Series:
     """
@@ -794,6 +803,7 @@ def portfolio_sharpe_ratio(report_id: str, risk_free_id: str, *, source: str = N
 
     :param report_id: id of performance report
     :param risk_free_id: id of risk-free asset
+    :param rolling_window: length of window
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
@@ -801,10 +811,15 @@ def portfolio_sharpe_ratio(report_id: str, risk_free_id: str, *, source: str = N
     """
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
-    risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
-    portfolio_sharpe_ratio_series = (portfolio_pnl - risk_free_rate) / portfolio_pnl.std()
+    window = _parse_window(rolling_window)
+    portfolio_pnl = _get_daily_pnl(report_id)
+    risk_free_rate_daily = (1 + _get_risk_free_rate(risk_free_id, start_date, end_date)) ** (1 / 252) - 1
+
+    daily_excess = (portfolio_pnl - risk_free_rate_daily).dropna()
+    rolling_mean = daily_excess.rolling(window).mean()
+    rolling_std = daily_excess.rolling(window).std()
+
+    portfolio_sharpe_ratio_series = (rolling_mean / rolling_std) * np.sqrt(252)
     return portfolio_sharpe_ratio_series
 
 
@@ -827,11 +842,12 @@ def calmar_ratio(report_id: str, rolling_window: Union[int, str], *, source: str
     :return: time series of the calmar ratio
     """
     rolling_window = _parse_window(rolling_window)
-    cumulative_return = pnl(report_id, Unit.PERCENT.value) / 100
+    portfolio_pnl = _get_daily_pnl(report_id)
+    cumulative_return = (1 + portfolio_pnl) ** np.sqrt(252) - 1
     cumulative_return.index = pd.to_datetime(cumulative_return.index)
     aum_series = aum(report_id)
     max_drawdown_series = max_drawdown(aum_series, rolling_window)
-    calmar = cumulative_return / max_drawdown_series
+    calmar = cumulative_return / max_drawdown_series.abs()
 
     return calmar
 
@@ -865,19 +881,16 @@ def sortino_ratio(report_id: str, benchmark_id: str, rolling_window: Union[int, 
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     rolling_window = _parse_window(rolling_window)
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
 
     security = SecurityMaster.get_asset(benchmark_id, AssetIdentifier.MARQUEE_ID)
 
     if isinstance(security, Bond):
-        spot_data_coordinate = security.get_data_coordinate('yield')
-        benchmark_pnl = spot_data_coordinate.get_series(start=start_date, end=end_date) * 100
+        benchmark_pnl = (1 + _get_risk_free_rate(benchmark_id, start_date, end_date)) ** (1 / 252) - 1
     else:
-        benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+        benchmark_pnl = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
 
-    excess = portfolio_pnl - benchmark_pnl
-    _compute_sortino(excess)
+    excess = (portfolio_pnl - benchmark_pnl).dropna()
     sortino = excess.rolling(window=rolling_window).apply(lambda x: _compute_sortino(x), raw=False)
     return sortino
 
@@ -913,12 +926,10 @@ def jensen_alpha(report_id: str, benchmark_id: str, risk_free_id: str, *, source
     """
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
+    benchmark_pnl = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
 
-    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
-
-    risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
+    risk_free_rate = (1 + _get_risk_free_rate(risk_free_id, start_date, end_date)) ** (1 / 252) - 1
 
     portfolio_beta_series = beta(portfolio_pnl, benchmark_pnl, prices=False)
     jensen = (portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate)))
@@ -956,10 +967,9 @@ def jensen_alpha_bear(report_id: str, benchmark_id: str, risk_free_id: str, *, s
     """
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
-    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
-    risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
+    portfolio_pnl = _get_daily_pnl(report_id)
+    benchmark_pnl = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
+    risk_free_rate = (1 + _get_risk_free_rate(risk_free_id, start_date, end_date)) ** (1 / 252) - 1
     portfolio_beta_series = beta(portfolio_pnl, benchmark_pnl, prices=False)
 
     benchmark_pnl = benchmark_pnl[benchmark_pnl < 0]
@@ -999,10 +1009,9 @@ def jensen_alpha_bull(report_id: str, benchmark_id: str, risk_free_id: str, *, s
     """
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
-    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
-    risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
+    portfolio_pnl = _get_daily_pnl(report_id)
+    benchmark_pnl = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
+    risk_free_rate = (1 + _get_risk_free_rate(risk_free_id, start_date, end_date)) ** (1 / 252) - 1
 
     portfolio_beta_series = beta(portfolio_pnl, benchmark_pnl, prices=False)
     benchmark_pnl = benchmark_pnl[benchmark_pnl > 0]
@@ -1038,10 +1047,8 @@ def information_ratio(report_id: str, benchmark_id: str, *, source: str = None,
     """
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
-
-    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+    portfolio_pnl = _get_daily_pnl(report_id)
+    benchmark_pnl = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
 
     portfolio_excess = portfolio_pnl - benchmark_pnl
     portfolio_std = np.std(portfolio_excess)
@@ -1078,10 +1085,8 @@ def information_ratio_bear(report_id: str, benchmark_id: str, *, source: str = N
     """
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
-
-    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+    portfolio_pnl = _get_daily_pnl(report_id)
+    benchmark_pnl = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
     benchmark_pnl = benchmark_pnl[benchmark_pnl < 0]
     portfolio_excess = portfolio_pnl - benchmark_pnl
     portfolio_std = np.std(portfolio_excess)
@@ -1117,10 +1122,8 @@ def information_ratio_bull(report_id: str, benchmark_id: str, *, source: str = N
     """
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
-
-    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
+    portfolio_pnl = _get_daily_pnl(report_id)
+    benchmark_pnl = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
     benchmark_pnl = benchmark_pnl[benchmark_pnl > 0]
     portfolio_excess = portfolio_pnl - benchmark_pnl
     portfolio_std = np.std(portfolio_excess)
@@ -1162,31 +1165,23 @@ def modigliani_ratio(report_id: str, benchmark_id: str, risk_free_id: str,
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     rolling_window = _parse_window(rolling_window)
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
 
-    benchmark_return = _get_benchmark_return(benchmark_id, start_date, end_date)
-    risk_free_rates = _get_risk_free_rate(risk_free_id, start_date, end_date)
-    portfolio_return = portfolio_pnl
+    benchmark_return = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
+    risk_free_rates = (1 + _get_risk_free_rate(risk_free_id, start_date, end_date)) ** (1 / 252) - 1
 
-    portfolio_excess = portfolio_return - risk_free_rates
-
-    avg_portfolio = portfolio_excess.rolling(window=rolling_window).mean()
-    std_portfolio = portfolio_excess.rolling(window=rolling_window).std()
+    sharpe_series = portfolio_sharpe_ratio(report_id, risk_free_id, rolling_window)
 
     benchmark_excess = benchmark_return - risk_free_rates
 
-    std_benchmark = benchmark_excess.rolling(window=rolling_window).std()
+    std_benchmark = benchmark_excess.dropna().rolling(window=rolling_window).std()
 
-    avg_risk_free = risk_free_rates.rolling(window=rolling_window).mean()
-
-    modigliani = (avg_portfolio * (std_benchmark / std_portfolio)) + avg_risk_free
+    modigliani = (sharpe_series * std_benchmark) + risk_free_rates
 
     return modigliani
 
 
 @plot_measure_entity(EntityType.REPORT)
-def treynor_measure(report_id: str, risk_free_id: str, *, source: str = None,
+def treynor_measure(report_id: str, risk_free_id: str, benchmark_id: str, *, source: str = None,
                     real_time: bool = False,
                     request_id: Optional[str] = None) -> pd.Series:
     """
@@ -1206,6 +1201,7 @@ def treynor_measure(report_id: str, risk_free_id: str, *, source: str = None,
 
     :param report_id: id of performance report
     :param risk_free_id: id of risk-free asset
+    :param benchmark_id: id of benchmark asset
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: server request id
@@ -1213,13 +1209,18 @@ def treynor_measure(report_id: str, risk_free_id: str, *, source: str = None,
     """
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_return = _get_daily_pnl(report_id)
+    security = SecurityMaster.get_asset(benchmark_id,
+                                        AssetIdentifier.MARQUEE_ID)
+    spot_data_coordinate = security.get_data_coordinate(DataMeasure.SPOT_PRICE)
+    benchmark_pricing = spot_data_coordinate.get_series(start=start_date, end=end_date)
+    benchmark_pricing = benchmark_pricing.sort_index()
+    portfolio_return = (1 + portfolio_return) ** np.sqrt(252) - 1
     risk_free_rate = _get_risk_free_rate(risk_free_id, start_date, end_date)
 
-    beta_series = beta(portfolio_pnl, risk_free_rate, prices=False)
+    beta_series = beta(aum(report_id), benchmark_pricing)
 
-    treynor_series = (portfolio_pnl - risk_free_rate) / beta_series
+    treynor_series = (portfolio_return - risk_free_rate) / beta_series
     return treynor_series
 
 
@@ -1244,8 +1245,7 @@ def alpha(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     rolling_window = _parse_window(rolling_window)
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_pnl = _get_daily_pnl(report_id)
 
     benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
 
@@ -1283,11 +1283,10 @@ def portfolio_beta(report_id: str, benchmark_id: str, rolling_window: Union[int,
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     rolling_window = _parse_window(rolling_window)
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
-    portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
+    portfolio_return = _get_daily_pnl(report_id)
     benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
 
-    return beta(portfolio_pnl, benchmark_pnl, rolling_window, prices=False)
+    return beta(portfolio_return, benchmark_pnl, rolling_window, prices=False)
 
 
 @plot_measure_entity(EntityType.REPORT)
@@ -1310,11 +1309,16 @@ def portfolio_correlation(report_id: str, benchmark_id: str, rolling_window: Uni
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     rolling_window = _parse_window(rolling_window)
-    portfolio_pnl = pnl(report_id, Unit.PERCENT.value)
+    portfolio_pnl = aum(report_id)
     portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
-    benchmark_pnl = _get_benchmark_return(benchmark_id, start_date, end_date)
 
-    return correlation(portfolio_pnl, benchmark_pnl, rolling_window)
+    security = SecurityMaster.get_asset(benchmark_id,
+                                        AssetIdentifier.MARQUEE_ID)
+    spot_data_coordinate = security.get_data_coordinate(DataMeasure.SPOT_PRICE)
+    benchmark_pricing = spot_data_coordinate.get_series(start=start_date, end=end_date)
+    benchmark_pricing = benchmark_pricing.sort_index()
+
+    return correlation(portfolio_pnl, benchmark_pricing, rolling_window)
 
 
 @plot_measure_entity(EntityType.REPORT)
@@ -1338,9 +1342,8 @@ def capture_ratio(report_id: str, benchmark_id: str, rolling_window: Union[int, 
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     rolling_window = _parse_window(rolling_window)
-    benchmark_return = _get_benchmark_return(benchmark_id, start_date, end_date)
-    portfolio_return = pnl(report_id, Unit.PERCENT.value)
-    portfolio_return.index = pd.to_datetime(portfolio_return.index)
+    benchmark_return = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
+    portfolio_return = _get_daily_pnl(report_id)
 
     avg_portfolio = portfolio_return.rolling(window=rolling_window).mean()
     avg_benchmark = benchmark_return.rolling(window=rolling_window).mean()
@@ -1385,6 +1388,15 @@ def _get_benchmark_return(benchmark_id, start_date, end_date):
     return benchmark_returns * 100
 
 
+def _get_benchmark_daily_return(benchmark_id, start_date, end_date):
+    security = SecurityMaster.get_asset(benchmark_id,
+                                        AssetIdentifier.MARQUEE_ID)
+    spot_data_coordinate = security.get_data_coordinate(DataMeasure.SPOT_PRICE)
+    benchmark_pricing = spot_data_coordinate.get_series(start=start_date, end=end_date)
+    benchmark_pricing = benchmark_pricing.sort_index()
+    return benchmark_pricing.pct_change()
+
+
 def _max_drawdown(series):
     running_max = series.cummax()
     drawdown = (series - running_max) / running_max
@@ -1394,28 +1406,36 @@ def _max_drawdown(series):
 
 def _compute_sortino(series):
     downside = series[series < 0]
-    downside_std = downside.std()
-    mean_excess = series.mean()
+    downside_std = np.sqrt((downside ** 2).mean()) * np.sqrt(252)
+    mean_excess = series.mean() * 252
     return mean_excess / downside_std if downside_std != 0 else np.nan
 
 
 def _rolling_downside_risk(series):
     negative_devs = series[series < series.mean()] - series.mean()
-    semi_variance = (negative_devs ** 2).mean()
-    return np.sqrt(semi_variance)
+    semi_variance_series = (negative_devs ** 2).mean()
+    return np.sqrt(semi_variance_series)
 
 
 def _rolling_semi_variance(series):
     negative_devs = series[series < 0] - series.mean()
-    semi_variance = (negative_devs ** 2).mean()
-    return np.sqrt(semi_variance)
+    semi_variance_series = (negative_devs ** 2).mean()
+    return np.sqrt(semi_variance_series)
+
+
+def _get_daily_pnl(report_id: str) -> pd.Series:
+    portfolio_return = pnl(report_id)
+    portfolio_return.index = pd.to_datetime(portfolio_return.index)
+    portfolio_return = portfolio_return / aum(report_id).shift(1)
+
+    return portfolio_return
 
 
 def _get_risk_free_rate(risk_free_id, start_date, end_date):
     risk_free = SecurityMaster.get_asset(risk_free_id,
                                          AssetIdentifier.MARQUEE_ID)
     risk_free_pricing_data = risk_free.get_data_coordinate('yield')
-    risk_free_rate = risk_free_pricing_data.get_series(start=start_date, end=end_date) * 100
+    risk_free_rate = risk_free_pricing_data.get_series(start=start_date, end=end_date)
     return risk_free_rate.drop_duplicates()
 
 

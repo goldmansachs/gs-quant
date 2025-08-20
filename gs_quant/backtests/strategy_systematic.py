@@ -153,9 +153,6 @@ class StrategySystematic:
             raise MqValueError('Cannot run backtests for different asset classes.')
         self.__use_xasset_backtesting_service = all_fx or all_ir or use_xasset_backtesting_service
 
-        if all_eq and transaction_cost_config is not None:
-            raise MqValueError('Cannot run equity backtests with transaction costs.')
-
     def __run_service_based_backtest(self, start: dt.date, end: dt.date,
                                      measures: Iterable[FlowVolBacktestMeasure]) -> BacktestResult:
         date_cfg = DateConfig(start, end)
