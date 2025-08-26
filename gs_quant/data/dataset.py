@@ -23,13 +23,21 @@ from urllib.parse import quote
 import inflection
 import numpy as np
 import pandas as pd
+from pydash import camel_case, snake_case
 
 from gs_quant.api.data import DataApi
+from gs_quant.api.gs.users import GsUsersApi
 from gs_quant.data.fields import Fields
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
 from functools import partial
 from gs_quant.data.utilities import Utilities
+from gs_quant.target.data import (DataSetEntity, DataSetParameters, DataSetDimensions,
+                                  FieldColumnPair, DataSetFieldEntity, DBConfig, DataSetType)
+
+
+class InvalidInputException(Exception):
+    pass
 
 
 class Dataset:
@@ -663,3 +671,182 @@ class PTPDataset(Dataset):
         if open_in_browser:
             webbrowser.open(expression)
         return expression
+
+
+class MarqueeDataIngestionLibrary:
+    """
+    A class to create a native snowflake datasets and upload data from dataframe.
+
+
+    **Example Usage:**
+    >>> from gs_quant.data import MarqueeDataIngestionLibrary
+    >>> import pandas as pd
+    >>> data = pd.DataFrame({
+    >>>     "date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+    >>>     "symbol": ["AAPL", "GOOG", "MSFT"],
+    >>>     "price": [150.0, 2800.0, 310.0],
+    >>>     "volume": [1000, 2000, 1500]
+    >>> })
+    >>> ingestion_lib = MarqueeDataIngestionLibrary()
+    >>> dataset = ingestion_lib.create_dataset(data, "DATASET_NAME", "SYMBOL_DIMENSION", "date",
+    >>>                                        dimensions=["volume", "measure2", "measure3"])
+    """
+
+    def __init__(self, provider: Optional[DataApi] = None):
+        """
+        :param provider: The data provider
+        """
+        self.__provider = provider
+        self.user = GsUsersApi.get_current_user_info()
+        self.managers = GsUsersApi.get_current_app_managers()
+
+    @property
+    def provider(self):
+        from gs_quant.api.gs.data import GsDataApi
+        return self.__provider or GsDataApi
+
+    def _create_parameters(self,
+                           time_dimension: str,
+                           symbol_dimension: str) -> DataSetParameters:
+        """
+        Create the parameters for the dataset.
+
+        :return: A DataSetParameters object.
+        """
+        parameters = DataSetParameters()
+        parameters.frequency = 'Daily'
+        parameters.snowflake_config = DBConfig()
+        parameters.snowflake_config.db = "EXTERNAL"
+        parameters.snowflake_config.date_time_column = self.to_upper_underscore(time_dimension)
+        parameters.snowflake_config.id_column = self.to_upper_underscore(symbol_dimension)
+        return parameters
+
+    def _check_and_create_field(self, fieldMap: Dict[str, str], dataframe: pd.DataFrame) -> None:
+
+        fields_to_create = []
+        for column, field_name in fieldMap.items():
+            if not (self.provider.get_dataset_fields(names=field_name)):
+                data_type = pd.api.types.infer_dtype(dataframe[column])
+                api_data_type = 'number' if data_type in ['floating', 'integer'] else data_type
+                fields_to_create.append(DataSetFieldEntity(name=field_name, type_=api_data_type,
+                                                           description=f'field {field_name} created from GSQuant'))
+
+        if fields_to_create:
+            return self.provider.create_dataset_fields(fields_to_create)
+
+    def _create_dimensions(
+            self,
+            data: pd.DataFrame,
+            symbol_dimension: str,
+            time_dimension: str,
+            dimensions: Optional[List[str]],
+            measures: List[str]
+    ) -> DataSetDimensions:
+        """
+        Create the dimensions for the dataset.
+
+        :param data: DataFrame containing the data to be ingested.
+        :param symbol_dimension: List of columns that represent the symbol dimension.
+        :param time_dimension: Column that represents the time dimension.
+        :param dimensions: Optional List of non-symbol dimensions.
+        :return: A DataSetDimensions object.
+        """
+
+        if len(measures) > 25:
+            raise ValueError("The number of measures exceeds the allowed limit of 25.")
+
+        dataset_dimensions = DataSetDimensions()
+        dataset_dimensions.time_field = time_dimension
+        dataset_dimensions.symbol_dimensions = [symbol_dimension]
+
+        drgName = self.user.get("drgName")
+        if drgName is None:
+            raise InvalidInputException("drgName is required but was not found.")
+        INVALID_DRG_NAME_CHARS = r"Pvt Ltd.*|Private Ltd.*|Limited.*|Ltd.*|Inc.*|LP$|LLP$|[^a-zA-Z0-9]"
+        drgName = re.sub(INVALID_DRG_NAME_CHARS, "", drgName)
+
+        fieldMap = {field: self.to_camel_case(f"{field}Org{drgName}") for field in
+                    (dimensions + measures) if field != 'updateTime'}
+
+        self._check_and_create_field(fieldMap, data)
+
+        dataset_dimensions.non_symbol_dimensions = tuple(
+            FieldColumnPair(field_=fieldMap.get(dim),
+                            column=self.to_upper_underscore(dim)) for dim in (dimensions or [])
+        )
+        dataset_dimensions.measures = tuple(
+            FieldColumnPair(field_=fieldMap.get(mea),
+                            column=self.to_upper_underscore(mea),
+                            resolvable=True) for mea in measures
+        )
+        return dataset_dimensions
+
+    def to_upper_underscore(self, name: str) -> str:
+        return snake_case(name).upper()
+
+    def to_camel_case(self, name: str) -> str:
+        return camel_case(name)
+
+    def create_dataset(
+        self,
+        data: pd.DataFrame,
+        dataset_id: str,
+        symbol_dimension: str,
+        time_dimension: str,
+        dimensions: Optional[List[str]] = []
+    ) -> DataSetEntity:
+        """
+        Create a dataset using the provided data and metadata.
+
+        :param data: DataFrame containing the data to be ingested.
+        :param dataset_id: The identifier for the dataset.
+        :param symbol_dimension: Column that represents the symbol dimension.
+        :param time_dimension: Column that represents the time dimension.
+        :param dimensions: Optional List of non-symbol dimensions.
+        :return: A DataSetEntity object representing the dataset specification.
+        """
+
+        if self.user.get("internal"):
+            raise InvalidInputException("This functionality is not supported for internal user.")
+
+        if data.empty or not dataset_id or not symbol_dimension or not time_dimension:
+            print(
+                "Error: 'data', 'dataset_id', 'symbol_dimension', and 'time_dimension' are all required.")
+            raise InvalidInputException("One or more required parameters are empty or null.")
+
+        if (not pd.api.types.is_datetime64_any_dtype(pd.to_datetime(data[time_dimension])) or
+                not all(pd.to_datetime(data[time_dimension]).dt.time == dt.time(0, 0))):
+            raise InvalidInputException(f"Snowflake doesn't support intraday data. The time_dimension "
+                                        f"'{time_dimension}' must be a date, not a timestamp.")
+
+        dataset_definition = DataSetEntity()
+        dataset_definition.id_ = dataset_id
+        dataset_definition.name = dataset_id.replace('_', ' ').title()
+        dataset_definition.description = "Dataset created from GSQuant"
+
+        all_columns = set(data.columns)
+        specified_columns = set([symbol_dimension] + [time_dimension] + (dimensions or []))
+        measures = list(all_columns - specified_columns)
+
+        VALID_TIME_DIMENSION = {  # we do not support intraday data for snowflake datasets
+            "date"
+        }
+        VALID_SYMBOL_DIMENSION = {
+            "isin",
+            "bbid",
+            "ric",
+            "sedol",
+            "cusip",
+            "ticker"
+        }
+
+        custom_symbol_dimension = "customId" if symbol_dimension not in VALID_SYMBOL_DIMENSION else symbol_dimension
+        custom_time_dimensions = "date" if time_dimension not in VALID_TIME_DIMENSION else time_dimension
+
+        dataset_definition.parameters = self._create_parameters(time_dimension, symbol_dimension)
+        dataset_definition.dimensions = self._create_dimensions(data, custom_symbol_dimension,
+                                                                custom_time_dimensions, dimensions, measures)
+        dataset_definition.type_ = DataSetType.NativeSnowflake
+
+        result = self.provider.create(dataset_definition)
+        return result

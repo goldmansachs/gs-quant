@@ -169,7 +169,7 @@ class StrategySystematic:
         portfolio = []
         for d in sorted(set().union(basic_bt_response.portfolio.keys(), basic_bt_response.transactions.keys())):
             if d in basic_bt_response.portfolio:
-                positions = [{'instrument': i if i is not None else {}} for
+                positions = [{'instrument': i if i is not None else {}, 'quantity': self.__position_quantity(i)} for
                              i in basic_bt_response.portfolio[d]]
             else:
                 positions = []
@@ -183,6 +183,13 @@ class StrategySystematic:
                     transactions.append({'type': t.direction.value, 'trades': trades, 'cost': t.cost})
             portfolio.append({'date': d, 'positions': positions, 'transactions': transactions})
         return BacktestResult(risks=risks, portfolio=portfolio)
+
+    def __position_quantity(self, instrument: dict) -> float:
+        if instrument['assetClass'] == AssetClass.Equity.value:
+            direction = 1 if instrument['buySell'] == 'Buy' else -1
+            quantity = instrument['numberOfOptions'] if instrument['type'] == 'Option' else instrument['quantity']
+            return direction * quantity
+        return None
 
     def backtest(
             self,

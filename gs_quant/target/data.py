@@ -29,7 +29,8 @@ class DataSetType(EnumBase, Enum):
 
     PlotTool_Pro = 'PlotTool Pro'
     Alloy = 'Alloy'
-    Snowflake = 'Snowflake'    
+    Snowflake = 'Snowflake'
+    NativeSnowflake = 'NativeSnowflake'
 
 
 class DelayExclusionType(EnumBase, Enum):    
@@ -310,6 +311,14 @@ class AlloyConfig(Base):
     coverage_service: Optional[AlloyService] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class DBConfig(Base):
+    db: Optional[str] = field(default=None, metadata=field_metadata)
+    drg_id: Optional[str] = field(default=None, metadata=field_metadata)
+    id_column: Optional[str] = field(default=None, metadata=config(field_name='IdColumn', exclude=exclude_none))
+    date_time_column: Optional[str] = field(default=None, metadata=field_metadata)
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -547,6 +556,7 @@ class DataSetParameters(Base):
     apply_market_data_entitlements: Optional[bool] = field(default=None, metadata=field_metadata)
     upload_data_policy: Optional[str] = field(default=None, metadata=field_metadata)
     logical_db: Optional[str] = field(default=None, metadata=field_metadata)
+    sla: Optional[str] = field(default=None, metadata=field_metadata)
     symbol_strategy: Optional[str] = field(default=None, metadata=field_metadata)
     underlying_data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
     immutable: Optional[bool] = field(default=None, metadata=field_metadata)
@@ -559,8 +569,9 @@ class DataSetParameters(Base):
     cr_limit_read: Optional[int] = field(default=None, metadata=field_metadata)
     cr_limit_write: Optional[int] = field(default=None, metadata=field_metadata)
     alloy_config: Optional[AlloyConfig] = field(default=None, metadata=field_metadata)
+    snowflake_config: Optional[DBConfig] = field(default=None, metadata=field_metadata)
     external_distribution: Optional[bool] = field(default=None, metadata=field_metadata)
-    snowflake_db: Optional[str] = field(init=False, default='TIMESERIES', metadata=field_metadata)
+    snowflake_db: Optional[str] = field(init=False, default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
