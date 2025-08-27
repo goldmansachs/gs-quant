@@ -208,7 +208,7 @@ def test_inject_extract():
     assert len(spans) == 1
     assert 'user' in spans[0].tags
     assert spans[0].tags['user'] == 'bob'
-    assert len(fake_http_headers) > 0   # we're agnostic to the inject/extractor, so long as it's done something
+    assert len(fake_http_headers) > 0  # we're agnostic to the inject/extractor, so long as it's done something
 
     ctx = Tracer.extract(fake_http_headers)
     with Tracer.start_active_span('B', child_of=ctx) as scope:
@@ -216,3 +216,11 @@ def test_inject_extract():
 
     with Tracer('C', parent_span=ctx) as scope:
         assert scope.span.parent_id == span_a.span_id
+
+
+def test_ignore_active_span():
+    with Tracer('A') as scope_a:
+        with Tracer.start_active_span('B', ignore_active_span=True) as scope_b:
+            assert scope_b.span.parent_id is None
+        with Tracer.start_active_span('C') as scope_c:
+            assert scope_c.span.parent_id == scope_a.span.span_id

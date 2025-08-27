@@ -22,6 +22,7 @@ from typing import Tuple, Optional, Sequence, Mapping, Union
 
 import pandas as pd
 from opentelemetry import trace, context
+from opentelemetry.context import Context
 from opentelemetry.propagate import extract, inject, set_global_textmap
 from opentelemetry.propagators.textmap import TextMapPropagator
 from opentelemetry.sdk.trace import TracerProvider, SynchronousMultiSpanProcessor, ReadableSpan, Span, Event
@@ -480,7 +481,7 @@ class Tracer(ContextDecorator):
     @staticmethod
     def start_active_span(operation_name: str, child_of: Optional[TracingContext] = None,
                           ignore_active_span: bool = False, finish_on_close: bool = True) -> TracingScope:
-        ctx = child_of._context if child_of else None
+        ctx = Context() if ignore_active_span else child_of._context if child_of else None
         span = Tracer.get_instance().start_span(operation_name, context=ctx)
         # Set as the implicit current context
         # Creates a Context object with parent set as current span
