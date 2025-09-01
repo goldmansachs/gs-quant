@@ -130,6 +130,9 @@ class BacktestSignalSeriesItem(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+BacktestStrategySignal = Dict[str, float]
+
+
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
@@ -363,21 +366,6 @@ class BacktestStrategyUnderlierHedge(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class BacktestTradingParameters(Base):
-    quantity_type: Optional[BacktestTradingQuantityType] = field(default=None, metadata=field_metadata)
-    quantity: Optional[float] = field(default=None, metadata=field_metadata)
-    trade_in_method: Optional[str] = field(default=None, metadata=field_metadata)
-    roll_frequency: Optional[str] = field(default=None, metadata=field_metadata)
-    roll_date_mode: Optional[str] = field(default=None, metadata=field_metadata)
-    scaling_method: Optional[str] = field(default=None, metadata=field_metadata)
-    trade_in_signals: Optional[Tuple[BacktestSignalSeriesItem, ...]] = field(default=None, metadata=field_metadata)
-    trade_out_signals: Optional[Tuple[BacktestSignalSeriesItem, ...]] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class BasketBacktestParameters(Base):
     underliers: Tuple[Union[float, str], ...] = field(default=None, metadata=field_metadata)
     rebalance_parameters: Optional[BacktestRebalanceParameters] = field(default=None, metadata=field_metadata)
@@ -504,6 +492,21 @@ class BacktestStrategyTransactionCostModelAggregate(Base):
 class BacktestStrategyTransactionCost(Base):
     entry: Optional[Union[BacktestStrategyTransactionCostModelAggregate, BacktestStrategyTransactionCostModelFixed, BacktestStrategyTransactionCostModelScaled]] = field(default=None, metadata=field_metadata)
     exit_: Optional[Union[BacktestStrategyTransactionCostModelAggregate, BacktestStrategyTransactionCostModelFixed, BacktestStrategyTransactionCostModelScaled]] = field(default=None, metadata=config(field_name='exit', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class BacktestTradingParameters(Base):
+    quantity_type: Optional[BacktestTradingQuantityType] = field(default=None, metadata=field_metadata)
+    quantity: Optional[Union[BacktestStrategySignal, float]] = field(default=None, metadata=field_metadata)
+    trade_in_method: Optional[str] = field(default=None, metadata=field_metadata)
+    roll_frequency: Optional[str] = field(default=None, metadata=field_metadata)
+    roll_date_mode: Optional[str] = field(default=None, metadata=field_metadata)
+    scaling_method: Optional[str] = field(default=None, metadata=field_metadata)
+    trade_in_signals: Optional[Tuple[BacktestSignalSeriesItem, ...]] = field(default=None, metadata=field_metadata)
+    trade_out_signals: Optional[Tuple[BacktestSignalSeriesItem, ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
