@@ -103,6 +103,12 @@ def decode_dict_date_key(value):
     return {dt.date.fromisoformat(d): v for d, v in value.items()} if value is not None else None
 
 
+def decode_dict_date_key_or_float(value):
+    if value is not None:
+        return decode_dict_date_key(value) if isinstance(value, dict) else decode_float_or_str(value)
+    return None
+
+
 def decode_dict_dict_date_key(value):
     return {k: {dt.date.fromisoformat(d): v for d, v in val.items()} if val is not None else None
             for k, val in value.items()} if value is not None else None

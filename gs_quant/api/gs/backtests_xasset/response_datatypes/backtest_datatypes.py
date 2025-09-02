@@ -28,7 +28,8 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_d
     decode_daily_portfolio
 from gs_quant.instrument import Instrument
 from gs_quant.interfaces.algebra import AlgebraicType
-from gs_quant.json_convertors import decode_optional_date, encode_date_tuple, decode_date_tuple
+from gs_quant.json_convertors import decode_optional_date, encode_date_tuple, decode_date_tuple, \
+    decode_dict_date_key_or_float
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
 from gs_quant.common import Currency, CurrencyName, PricingLocation
 
@@ -116,7 +117,9 @@ class Trade:
     holding_period: str = None
     exit_dates: Optional[Tuple[dt.date, ...]] = field(default=None, metadata=config(encoder=encode_date_tuple,
                                                                                     decoder=decode_date_tuple))
-    quantity: Optional[float] = None
+    quantity: Optional[Union[float, dict[dt.date, float]]] = field(default=None,
+                                                                   metadata=config(
+                                                                       decoder=decode_dict_date_key_or_float))
     quantity_type: BacktestTradingQuantityType = BacktestTradingQuantityType.quantity
 
 

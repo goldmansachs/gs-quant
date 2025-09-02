@@ -767,3 +767,42 @@ def test_initial_portfolio(mocker):
         assert port_dict[dt.date(2024, 5, 24)][1].name == '2y_2024-05-24'
         assert port_dict[dt.date(2024, 6, 14)][0].name == '2y_2024-06-14'
         assert port_dict[dt.date(2024, 6, 14)][1].name == '5y_2024-06-14'
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_add_scaled_trade_action_with_quantity_signal(mocker):
+    with MockCalc(mocker):
+        start_date = dt.date(2021, 12, 6)
+        end_date = dt.date(2021, 12, 10)
+
+        # Define instruments for strategy
+        call = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                        option_style=OptionStyle.European, name='call')
+
+        trade_action_scaled = AddScaledTradeAction(priceables=call, trade_duration='1b',
+                                                   scaling_level={start_date: 13, end_date: 21},
+                                                   scaling_type=ScalingActionType.size,
+                                                   name='AddScaledTradeAction1')
+
+        trade_trigger_scaled = PeriodicTrigger(
+            trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1b'),
+            actions=trade_action_scaled)
+
+        strategy = Strategy(None, trade_trigger_scaled)
+
+        GE = GenericEngine()
+        backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+        portfolio_by_date = {d: p for d, p in backtest.portfolio_dict.items() if isinstance(d, dt.date)}
+        assert all(len(p) == 1 for p in portfolio_by_date.values())
+        quantity_by_date = {d: p.all_instruments[0].number_of_options for d, p in portfolio_by_date.items()}
+
+        expected_quantity_by_date = {
+            dt.date(2021, 12, 6): 13,
+            dt.date(2021, 12, 7): 13,
+            dt.date(2021, 12, 8): 13,
+            dt.date(2021, 12, 9): 13,
+            dt.date(2021, 12, 10): 21
+        }
+
+        assert quantity_by_date == expected_quantity_by_date

@@ -31,9 +31,10 @@ from gs_quant.backtests.actions import (Action, AddTradeAction, HedgeAction, Add
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_objects import BackTest, ScalingPortfolio, CashPayment, Hedge, PnlDefinition, \
     TransactionCostEntry
-from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date, map_ccy_name_to_ccy
+from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date, map_ccy_name_to_ccy, \
+    interpolate_signal
 from gs_quant.backtests.strategy import Strategy
-from gs_quant.common import AssetClass, Currency, ParameterisedRiskMeasure, RiskMeasure
+from gs_quant.common import Currency, ParameterisedRiskMeasure, RiskMeasure
 from gs_quant.context_base import nullcontext
 from gs_quant.datetime.relative_date import RelativeDateSchedule
 from gs_quant.instrument import Instrument
@@ -136,6 +137,8 @@ class AddTradeActionImpl(OrderBasedActionImpl):
 class AddScaledTradeActionImpl(OrderBasedActionImpl):
     def __init__(self, action: AddScaledTradeAction):
         super().__init__(action)
+        self._scaling_level_signal = interpolate_signal(self.action.scaling_level) \
+            if isinstance(self.action.scaling_level, dict) else None
 
     @staticmethod
     def __portfolio_scaling_for_available_cash(portfolio, available_cash, cur_day, unscaled_prices_by_day,
@@ -244,15 +247,23 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
             else:
                 orders[day].scale(scaling_factors_by_day[day])
 
+    def _scaling_level_for_date(self, d: dt.date) -> float:
+        if self._scaling_level_signal is not None:
+            if d in self._scaling_level_signal:
+                return self._scaling_level_signal[d]
+            return 0
+        else:
+            return self.action.scaling_level
+
     def _scale_order(self, orders, daily_risk, price_measure, trigger_infos):
         if self.action.scaling_type == ScalingActionType.size:
-            for _, portfolio in orders.items():
-                portfolio.scale(self.action.scaling_level)
+            for day, portfolio in orders.items():
+                portfolio.scale(self._scaling_level_for_date(day))
         elif self.action.scaling_type == ScalingActionType.NAV:
             self._nav_scale_orders(orders, price_measure, trigger_infos)
         elif self.action.scaling_type == ScalingActionType.risk_measure:
             for day, portfolio in orders.items():
-                scaling_factor = self.action.scaling_level / daily_risk[day]
+                scaling_factor = self._scaling_level_for_date(day) / daily_risk[day]
                 portfolio.scale(scaling_factor)
         else:
             raise RuntimeError(f'Scaling Type {self.action.scaling_type} not supported by engine')
@@ -549,11 +560,6 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
         }
 
     def get_action_handler(self, action: Action) -> ActionHandler:
-        def is_eq_underlier(leg):
-            if hasattr(leg, 'asset_class'):
-                return isinstance(leg.asset_class, AssetClass) and leg.asset_class == AssetClass.Equity
-            return leg.__class__.__name__.lower().startswith('eq')
-
         if type(action) in self.action_impl_map:
             return self.action_impl_map[type(action)](action)
         raise RuntimeError(f'Action {type(action)} not supported by engine')

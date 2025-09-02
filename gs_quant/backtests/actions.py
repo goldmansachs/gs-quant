@@ -28,7 +28,8 @@ from gs_quant.backtests.backtest_utils import make_list, CalcType, CustomDuratio
 from gs_quant.base import Priceable, static_field
 from gs_quant.common import RiskMeasure
 from gs_quant.instrument import Instrument
-from gs_quant.json_convertors import decode_named_instrument, dc_decode, encode_named_instrument, decode_date_or_str
+from gs_quant.json_convertors import decode_named_instrument, dc_decode, encode_named_instrument, decode_date_or_str, \
+    decode_dict_date_key_or_float
 from gs_quant.json_convertors_common import decode_risk_measure, encode_risk_measure
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk.transform import Transformer
@@ -197,7 +198,9 @@ class AddScaledTradeAction(Action):
     name: str = None
     scaling_type: ScalingActionType = ScalingActionType.size
     scaling_risk: RiskMeasure = None
-    scaling_level: Union[float, int] = 1
+    scaling_level: Union[float, dict[dt.date, Union[float, int]]] = field(default=1,
+                                                                          metadata=config(
+                                                                              decoder=decode_dict_date_key_or_float))
     transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
                                                metadata=config(decoder=dc_decode(ConstantTransactionModel)))
     transaction_cost_exit: Optional[TransactionModel] = field(default=None,
@@ -241,7 +244,9 @@ class EnterPositionQuantityScaledAction(Action):
     trade_duration: Duration = field(default=None,  # de/encoder doesn't handle timedelta
                                      metadata=config(decoder=decode_date_or_str))
     name: str = None
-    trade_quantity: float = 1
+    trade_quantity: Union[float, dict[dt.date, Union[float, int]]] = field(default=1,
+                                                                           metadata=config(
+                                                                               decoder=decode_dict_date_key_or_float))
     trade_quantity_type: BacktestTradingQuantityType = BacktestTradingQuantityType.quantity
     class_type: str = static_field('enter_position_quantity_scaled_action')
 

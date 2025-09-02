@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+import pandas as pd
 from enum import Enum
 
 from dataclasses import dataclass
@@ -25,6 +26,7 @@ from typing import Callable, Tuple, Union
 from gs_quant.common import CurrencyName
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.instrument import Instrument
+from gs_quant.timeseries import interpolate, Interpolate
 
 
 class CalcType(Enum):
@@ -112,3 +114,11 @@ def map_ccy_name_to_ccy(currency_name: Union[str, CurrencyName]):
            'Yuan Renminbi (Onshore)': 'CHY'}
 
     return map.get(currency_name.value if isinstance(currency_name, CurrencyName) else currency_name)
+
+
+def interpolate_signal(signal: dict[dt.date, float], method=Interpolate.STEP) -> pd.Series:
+    min_date = min(signal.keys())
+    max_date = max(signal.keys())
+    all_dates = [min_date + dt.timedelta(days=day) for day in range((max_date - min_date).days + 1)]
+    signal_curve = interpolate(pd.Series(signal).sort_index(), all_dates, method=method)
+    return signal_curve
