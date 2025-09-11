@@ -159,6 +159,7 @@ examples providing a searchable library of short specific snippets.
     - 📁 tutorials
       - 📄 [Pricing_Context.ipynb](02_pricing_and_risk/01_scenarios_and_contexts/tutorials/Pricing_Context.ipynb)
       - 📄 [Scenarios.ipynb](02_pricing_and_risk/01_scenarios_and_contexts/tutorials/Scenarios.ipynb)
+  - 📄 [External Demo v1.ipynb](02_pricing_and_risk/External%20Demo%20v1.ipynb)
 - 📁 **03_portfolios**
   - 📁 examples
     - 📄 [030000_create_portfolio.ipynb](03_portfolios/examples/030000_create_portfolio.ipynb)
@@ -205,6 +206,7 @@ examples providing a searchable library of short specific snippets.
       - 📄 [040313_chained_actions.ipynb](04_backtesting/examples/03_GenericEngine/040313_chained_actions.ipynb)
   - 📁 tutorials
     - 📄 [Backtesting.ipynb](04_backtesting/tutorials/Backtesting.ipynb)
+    - 📄 [Basic backtest walkthrough.ipynb](04_backtesting/tutorials/Basic%20backtest%20walkthrough.ipynb)
 - 📁 **05_factor_models**
   - 📄 [01_Factor_Models.ipynb](05_factor_models/01_Factor_Models.ipynb)
   - 📄 [02_Upload_Factor_Models.ipynb](05_factor_models/02_Upload_Factor_Models.ipynb)

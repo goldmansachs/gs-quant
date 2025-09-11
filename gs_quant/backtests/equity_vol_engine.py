@@ -20,10 +20,15 @@ from functools import reduce
 
 import pandas as pd
 
+from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import TransactionCostConfig, \
+    TradingCosts, FixedCostModel, ScaledCostModel, TransactionCostScalingType, AggregateCostModel, CostAggregationType
 from gs_quant.backtests import actions as a
 from gs_quant.backtests import triggers as t
-from gs_quant.backtests.backtest_objects import ConstantTransactionModel
+from gs_quant.backtests.backtest_objects import TransactionModel, ConstantTransactionModel, ScaledTransactionModel, \
+    AggregateTransactionModel
+
 from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
+from gs_quant.base import get_enum_value
 from gs_quant.common import OptionType, BuySell
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.markets.portfolio import Portfolio
@@ -94,7 +99,7 @@ class BacktestResult:
             for transaction in item['transactions']:
                 trades = list(map(lambda x: dict(
                     {'date': item['date'], 'quantity': x['quantity'], 'transactionType': transaction['type'],
-                     'price': x['price']},
+                     'price': x['price'], 'cost': transaction.get('cost') if len(transaction['trades']) == 1 else None},
                     **x['instrument']), transaction['trades']))
                 data = data + trades
 
@@ -183,8 +188,6 @@ class EquityVolEngine(object):
                     if isinstance(action, a.AddScaledTradeAction):
                         if action.scaling_level is None or action.scaling_type is None:
                             check_results.append('Error: AddScaledTradeAction scaling_level or scaling_type is None')
-                    if hasattr(action, 'transaction_cost') and action.transaction_cost != ConstantTransactionModel(0):
-                        check_results.append('Error: Transaction costs not supported')
                     expiry_date_modes = map(lambda x: ExpirationDateParser(x.expirationDate).get_mode(),
                                             action.priceables)
                     expiry_date_modes = list(set(expiry_date_modes))
@@ -247,7 +250,8 @@ class EquityVolEngine(object):
         trade_in_signals = None
         trade_out_signals = None
         hedge = None
-        index_initial_value = 0
+
+        transaction_cost = TransactionCostConfig(None)
         for trigger in strategy.triggers:
             if isinstance(trigger, t.AggregateTrigger):
                 child_triggers = trigger.trigger_requirements.triggers
@@ -274,33 +278,40 @@ class EquityVolEngine(object):
                 roll_frequency = action.trade_duration
                 trade_quantity = action.trade_quantity
                 trade_quantity_type = action.trade_quantity_type
-                if trade_quantity_type is BacktestTradingQuantityType.NAV:
-                    index_initial_value = trade_quantity
                 expiry_date_mode = ExpirationDateParser(action.priceables[0].expiration_date).get_mode()
+                transaction_cost.trade_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
+                                                                 cls.__map_tc_model(action.transaction_cost_exit))
             elif isinstance(action, a.AddTradeAction):
                 underlier_list = cls.__get_underlier_list(action.priceables)
                 roll_frequency = action.trade_duration
                 trade_quantity = 1
                 trade_quantity_type = BacktestTradingQuantityType.quantity
                 expiry_date_mode = ExpirationDateParser(action.priceables[0].expiration_date).get_mode()
+                transaction_cost.trade_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
+                                                                 cls.__map_tc_model(action.transaction_cost_exit))
             elif isinstance(action, a.AddScaledTradeAction):
                 underlier_list = cls.__get_underlier_list(action.priceables)
                 roll_frequency = action.trade_duration
                 trade_quantity = action.scaling_level
                 trade_quantity_type = get_backtest_trading_quantity_type(action.scaling_type, action.scaling_risk)
-                if trade_quantity_type is BacktestTradingQuantityType.NAV:
-                    index_initial_value = trade_quantity
                 expiry_date_mode = ExpirationDateParser(action.priceables[0].expiration_date).get_mode()
+                transaction_cost.trade_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
+                                                                 cls.__map_tc_model(action.transaction_cost_exit))
             elif isinstance(action, a.HedgeAction):
                 if trigger.trigger_requirements.frequency == '1b':
                     frequency = 'Daily'
                 else:
                     raise RuntimeError('unrecognised hedge frequency')
                 hedge = DeltaHedgeParameters(frequency=frequency)
+                transaction_cost.hedge_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
+                                                                 cls.__map_tc_model(action.transaction_cost_exit))
+
+        transaction_cost_config = transaction_cost \
+            if (transaction_cost.trade_cost_model or transaction_cost.hedge_cost_model) else None
 
         strategy = StrategySystematic(name="Flow Vol Backtest",
                                       underliers=underlier_list,
-                                      index_initial_value=index_initial_value,
+                                      index_initial_value=0,
                                       delta_hedge=hedge,
                                       quantity=trade_quantity,
                                       quantity_type=trade_quantity_type,
@@ -310,7 +321,10 @@ class EquityVolEngine(object):
                                       trade_out_signals=trade_out_signals,
                                       market_model=market_model,
                                       expiry_date_mode=expiry_date_mode,
-                                      cash_accrual=cash_accrual
+                                      roll_date_mode=expiry_date_mode,
+                                      cash_accrual=cash_accrual,
+                                      transaction_cost_config=transaction_cost_config,
+                                      use_xasset_backtesting_service=True
                                       )
 
         result = strategy.backtest(start, end)
@@ -323,6 +337,23 @@ class EquityVolEngine(object):
             edp = ExpirationDateParser(pricable.expiration_date)
             pricable.expiration_date = edp.get_date()
         return pricables_copy
+
+    @classmethod
+    def __map_tc_model(cls, model: TransactionModel):
+        if isinstance(model, ConstantTransactionModel):
+            return FixedCostModel(cost=model.cost)
+        elif isinstance(model, ScaledTransactionModel):
+            if model.scaling_type == EqVega:
+                scaling_quantity_type = TransactionCostScalingType.Vega
+            else:
+                scaling_quantity_type = get_enum_value(TransactionCostScalingType, model.scaling_type)
+                if not isinstance(scaling_quantity_type, TransactionCostScalingType):
+                    raise RuntimeError(f'unsupported scaled transaction quantity type "{model.scaling_type}"')
+            return ScaledCostModel(scaling_quantity_type=scaling_quantity_type, scaling_level=model.scaling_level)
+        elif isinstance(model, AggregateTransactionModel):
+            return AggregateCostModel(models=[cls.__map_tc_model(m) for m in model.transaction_models],
+                                      aggregation_type=CostAggregationType(model.aggregate_type.value))
+        return None
 
 
 class ExpirationDateParser(object):

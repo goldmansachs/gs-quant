@@ -237,6 +237,8 @@ class EnterPositionQuantityScaledAction(Action):
         :param trade_quantity: the amount, in units of trade_quantity_type to be traded
         :param trade_quantity_type: the quantity type used to scale trade. eg. quantity for units, notional for
                                     underlier notional
+        :param transaction_cost: optional a cash amount paid for each transaction
+        :param transaction_cost_exit: optionally specify a different model for exits; defaults to entry cost if None
     """
     priceables: Union[Priceable, Iterable[Priceable]] = field(default=None,
                                                               metadata=config(decoder=decode_named_instrument,
@@ -248,6 +250,11 @@ class EnterPositionQuantityScaledAction(Action):
                                                                            metadata=config(
                                                                                decoder=decode_dict_date_key_or_float))
     trade_quantity_type: BacktestTradingQuantityType = BacktestTradingQuantityType.quantity
+    transaction_cost: TransactionModel = field(default_factory=default_transaction_cost,
+                                               metadata=config(decoder=dc_decode(ConstantTransactionModel)))
+    transaction_cost_exit: Optional[TransactionModel] = field(default=None,
+                                                              metadata=config(
+                                                                  decoder=dc_decode(ConstantTransactionModel)))
     class_type: str = static_field('enter_position_quantity_scaled_action')
 
     def __post_init__(self):
@@ -261,6 +268,8 @@ class EnterPositionQuantityScaledAction(Action):
             else:
                 named_priceables.append(p.clone(name=f'{self.name}_{p.name}'))
         self.priceables = named_priceables
+        if self.transaction_cost_exit is None:
+            self.transaction_cost_exit = self.transaction_cost
 
 
 @dataclass_json

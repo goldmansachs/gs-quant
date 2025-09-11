@@ -17,8 +17,11 @@ under the License.
 from unittest import mock
 
 import datetime as dt
-from gs_quant.api.gs.backtests import GsBacktestApi
-from gs_quant.backtests import TradeInMethod, Backtest
+from gs_quant.api.gs.backtests_xasset.apis import GsBacktestXassetApi
+from gs_quant.api.gs.backtests_xasset.request import BasicBacktestRequest
+from gs_quant.api.gs.backtests_xasset.response import BasicBacktestResponse
+from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, \
+    TransactionCostConfig, TradingCosts, FixedCostModel, Configuration, RollDateMode
 from gs_quant.backtests.backtest_objects import ConstantTransactionModel
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.triggers import PeriodicTrigger, PeriodicTriggerRequirements, DateTriggerRequirements, \
@@ -26,15 +29,13 @@ from gs_quant.backtests.triggers import PeriodicTrigger, PeriodicTriggerRequirem
 from gs_quant.backtests.actions import EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction, \
     AddTradeAction, AddScaledTradeAction, ScalingActionType
 from gs_quant.backtests.equity_vol_engine import EquityVolEngine
-from gs_quant.common import BuySell, Currency, AssetClass
+from gs_quant.common import BuySell
 from gs_quant.instrument import EqOption
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import EqDelta
 from gs_quant.session import GsSession, Environment
-from gs_quant.target.backtests import BacktestResult as APIBacktestResult, OptionStyle, OptionType, \
-    BacktestTradingParameters, BacktestStrategyUnderlier, BacktestStrategyUnderlierHedge, \
-    VolatilityFlowBacktestParameters, BacktestTradingQuantityType, BacktestSignalSeriesItem, FlowVolBacktestMeasure, \
-    DeltaHedgeParameters, EquityMarketModel
+from gs_quant.target.backtests import OptionStyle, OptionType, BacktestTradingQuantityType, \
+    FlowVolBacktestMeasure, EquityMarketModel
 import pandas as pd
 
 
@@ -44,39 +45,72 @@ def set_session():
     GsSession.use(Environment.QA, 'client_id', 'secret')
 
 
-def api_mock_data() -> APIBacktestResult:
+def api_mock_data() -> BasicBacktestResponse:
     pnl_response = {
-        'RiskData': {
-            'PNL': [
-                {'date': '2019-02-18', 'value': 0},
-                {'date': '2019-02-19', 'value': -0.000000000058},
-                {'date': '2019-02-20', 'value': 0.000000000262}
+        'measures': {
+            'PNL': {
+                '2019-02-18': {'result': 0, 'type': 'float'},
+                '2019-02-19': {'result': -0.18, 'type': 'float'},
+                '2019-02-20': {'result': -0.27, 'type': 'float'}
+            }
+        },
+        'portfolio': {
+            "2019-02-18": [
+                {
+                    "expirationDate": "2019-05-20", "optionType": "Call", "strikePrice": 3244.79,
+                    "assetClass": "Equity", "underlier": ".STOXX50E", "currency": "EUR", "type": "Option",
+                    "settlementType": "Cash", "optionStyle": "European", "buySell": "Buy", "numberOfOptions": 1
+                },
+                {
+                    "assetClass": "Equity", "expirationDate": "2019-05-20", "strikePrice": 3244.79,
+                    "underlier": ".STOXX50E", "type": "Synthetic Forward", "currency": "EUR", "buySell": "Sell",
+                    "quantity": 0.38264157605861704
+                }
             ]
-        }
+        },
+        'transactions': {
+            "2019-02-18": [
+                {
+                    "portfolio": [
+                        {
+                            "expirationDate": "2019-05-20", "optionType": "Call", "strikePrice": 3244.79,
+                            "assetClass": "Equity", "underlier": ".STOXX50E", "currency": "EUR", "type": "Option",
+                            "settlementType": "Cash", "optionStyle": "European", "buySell": "Buy", "numberOfOptions": 1
+                        }
+                    ],
+                    "portfolio_price": 51.49543980712991,
+                    "cost": 0,
+                    "currency": None,
+                    "direction": "Entry",
+                    "quantity": 1
+                },
+                {
+                    "portfolio": [
+                        {
+                            "assetClass": "Equity", "expirationDate": "2019-05-20", "strikePrice": 3244.79,
+                            "underlier": ".STOXX50E", "type": "Synthetic Forward", "currency": "EUR",
+                            "buySell": "Sell", "quantity": 0.38264157605861704
+                        }
+                    ],
+                    "portfolio_price": -67.01178502458444,
+                    "cost": 0,
+                    "currency": None,
+                    "direction": "Entry",
+                    "quantity": -0.38264157605861704
+                }
+            ]
+        },
+        'additional_results': None
     }
 
-    return GsBacktestApi.backtest_result_from_response(pnl_response)
+    return BasicBacktestResponse.from_dict_custom(pnl_response, decode_instruments=False)
 
 
-def api_mock_data_portfolio() -> APIBacktestResult:
-    pnl_response = {
-        'RiskData': {
-            'PNL': [
-                {'date': '2019-02-18', 'value': 0},
-                {'date': '2019-02-19', 'value': -0.45793},
-                {'date': '2019-02-20', 'value': -0.36584}
-            ]
-        }
-    }
-
-    return GsBacktestApi.backtest_result_from_response(pnl_response)
-
-
-def mock_api_response(mocker, mock_result: APIBacktestResult):
+def mock_api_response(mocker, mock_result: BasicBacktestResponse):
     mocker.return_value = mock_result
 
 
-@mock.patch.object(GsBacktestApi, 'run_backtest')
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
 def test_eq_vol_engine_result(mocker):
     # 1. setup strategy
 
@@ -113,8 +147,7 @@ def test_eq_vol_engine_result(mocker):
 
     # 4. assert response
 
-    pnl = FlowVolBacktestMeasure.PNL.value
-    data = next((r.timeseries for r in api_mock_data().risks if r.name == pnl), ())
+    data = [{'date': d, 'value': v.result} for d, v in api_mock_data().measures[FlowVolBacktestMeasure.PNL].items()]
     df = pd.DataFrame.from_records(data)
     df.date = pd.to_datetime(df.date)
     expected_pnl = df.set_index('date').value
@@ -122,7 +155,7 @@ def test_eq_vol_engine_result(mocker):
     assert expected_pnl.equals(backtest_result.get_measure_series(FlowVolBacktestMeasure.PNL))
 
 
-@mock.patch.object(GsBacktestApi, 'run_backtest')
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
 def test_engine_mapping_basic(mocker):
     # 1. setup strategy
 
@@ -150,7 +183,19 @@ def test_engine_mapping_basic(mocker):
 
     # 2. setup mock api response
 
-    mock_api_response(mocker, api_mock_data())
+    response = BasicBacktestResponse.from_dict_custom({
+        'measures': {
+            'PNL': {
+                '2019-02-18': {'result': 0, 'type': 'float'},
+                '2019-02-19': {'result': -0.18, 'type': 'float'},
+                '2019-02-20': {'result': -0.27, 'type': 'float'}
+            }
+        },
+        'portfolio': {},
+        'transactions': {}
+    })
+
+    mock_api_response(mocker, response)
 
     # 3. when run backtest
 
@@ -159,39 +204,35 @@ def test_engine_mapping_basic(mocker):
 
     # 4. assert API call
 
-    option.number_of_options = 1
-    backtest_parameter_args = {
-        'trading_parameters': BacktestTradingParameters(
-            quantity=1,
-            quantity_type=BacktestTradingQuantityType.quantity.value,
-            trade_in_method=TradeInMethod.FixedRoll.value,
-            roll_frequency='1m'),
-        'underliers': [BacktestStrategyUnderlier(
-            instrument=option,
-            notional_percentage=100,
-            hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
-            market_model='SFK',
-            expiry_date_mode='otc')
-        ],
-        'index_initial_value': 0.0,
-        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
-    }
-    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+    backtest = BasicBacktestRequest(
+        dates=DateConfig(start_date=start_date, end_date=end_date),
+        trades=(Trade(legs=tuple(action.priceables),
+                      buy_frequency='1m',
+                      holding_period='1m',
+                      buy_dates=None,
+                      exit_dates=None,
+                      quantity=1,
+                      quantity_type=BacktestTradingQuantityType.quantity
+                      ),
+                ),
+        measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
+        delta_hedge_frequency='1b',
+        transaction_costs=TransactionCostConfig(
+            trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
+            hedge_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
+        ),
+        configuration=Configuration(
+            market_model=EquityMarketModel.SFK,
+            cash_accrual=True,
+            combine_roll_signal_entries=False,
+            roll_date_mode=RollDateMode.OTC
+        )
+    )
 
-    backtest = Backtest(name="Flow Vol Backtest",
-                        mq_symbol="Flow Vol Backtest",
-                        parameters=backtest_parameters,
-                        start_date=start_date,
-                        end_date=end_date,
-                        type='Volatility Flow',
-                        asset_class=AssetClass.Equity,
-                        currency=Currency.USD,
-                        cost_netting=False)
-
-    mocker.assert_called_with(backtest, None)
+    mocker.assert_called_with(backtest, decode_instruments=False)
 
 
-@mock.patch.object(GsBacktestApi, 'run_backtest')
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
 def test_engine_mapping_trade_quantity(mocker):
     # 1. setup strategy
 
@@ -229,39 +270,35 @@ def test_engine_mapping_trade_quantity(mocker):
 
     # 4. assert API call
 
-    option.number_of_options = 1
-    backtest_parameter_args = {
-        'trading_parameters': BacktestTradingParameters(
-            quantity=12345,
-            quantity_type=BacktestTradingQuantityType.notional.value,
-            trade_in_method=TradeInMethod.FixedRoll.value,
-            roll_frequency='1m'),
-        'underliers': [BacktestStrategyUnderlier(
-            instrument=option,
-            notional_percentage=100,
-            hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
-            market_model='SFK',
-            expiry_date_mode='otc')
-        ],
-        'index_initial_value': 0.0,
-        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
-    }
-    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+    backtest = BasicBacktestRequest(
+        dates=DateConfig(start_date=start_date, end_date=end_date),
+        trades=(Trade(legs=tuple(action.priceables),
+                      buy_frequency='1m',
+                      holding_period='1m',
+                      buy_dates=None,
+                      exit_dates=None,
+                      quantity=12345,
+                      quantity_type=BacktestTradingQuantityType.notional
+                      ),
+                ),
+        measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
+        delta_hedge_frequency='1b',
+        transaction_costs=TransactionCostConfig(
+            trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
+            hedge_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
+        ),
+        configuration=Configuration(
+            market_model=EquityMarketModel.SFK,
+            cash_accrual=True,
+            combine_roll_signal_entries=False,
+            roll_date_mode=RollDateMode.OTC
+        )
+    )
 
-    backtest = Backtest(name="Flow Vol Backtest",
-                        mq_symbol="Flow Vol Backtest",
-                        parameters=backtest_parameters,
-                        start_date=start_date,
-                        end_date=end_date,
-                        type='Volatility Flow',
-                        asset_class=AssetClass.Equity,
-                        currency=Currency.USD,
-                        cost_netting=False)
-
-    mocker.assert_called_with(backtest, None)
+    mocker.assert_called_with(backtest, decode_instruments=False)
 
 
-@mock.patch.object(GsBacktestApi, 'run_backtest')
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
 def test_engine_mapping_with_signals(mocker):
     # 1. setup strategy
 
@@ -302,46 +339,34 @@ def test_engine_mapping_with_signals(mocker):
 
     # 4. assert API call
 
-    option.number_of_options = 1
-    backtest_parameter_args = {
-        'trading_parameters': BacktestTradingParameters(
-            quantity=12345,
-            quantity_type=BacktestTradingQuantityType.notional.value,
-            trade_in_method=TradeInMethod.FixedRoll.value,
-            roll_frequency='1m',
-            trade_in_signals=list(map(lambda x: BacktestSignalSeriesItem(x[0], int(x[1])),
-                                      zip(entry_signal_series.index, entry_signal_series.values))),
-            trade_out_signals=list(map(lambda x: BacktestSignalSeriesItem(x[0], int(x[1])),
-                                       zip(exit_signal_series.index, exit_signal_series.values)))
+    backtest = BasicBacktestRequest(
+        dates=DateConfig(start_date=start_date, end_date=end_date),
+        trades=(Trade(legs=tuple(entry_action.priceables),
+                      buy_frequency='1m',
+                      holding_period='1m',
+                      buy_dates=tuple(entry_dates),
+                      exit_dates=tuple(exit_dates),
+                      quantity=12345,
+                      quantity_type=BacktestTradingQuantityType.notional
+                      ),
+                ),
+        measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
+        delta_hedge_frequency=None,
+        transaction_costs=TransactionCostConfig(
+            trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
         ),
-        'underliers': [
-            BacktestStrategyUnderlier(
-                instrument=option,
-                notional_percentage=100,
-                hedge=BacktestStrategyUnderlierHedge(),
-                market_model='SFK',
-                expiry_date_mode='otc'
-            )
-        ],
-        'index_initial_value': 0.0,
-        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
-    }
-    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+        configuration=Configuration(
+            market_model=EquityMarketModel.SFK,
+            cash_accrual=True,
+            combine_roll_signal_entries=False,
+            roll_date_mode=RollDateMode.OTC
+        )
+    )
 
-    backtest = Backtest(name="Flow Vol Backtest",
-                        mq_symbol="Flow Vol Backtest",
-                        parameters=backtest_parameters,
-                        start_date=start_date,
-                        end_date=end_date,
-                        type='Volatility Flow',
-                        asset_class=AssetClass.Equity,
-                        currency=Currency.USD,
-                        cost_netting=False)
-
-    mocker.assert_called_with(backtest, None)
+    mocker.assert_called_with(backtest, decode_instruments=False)
 
 
-@mock.patch.object(GsBacktestApi, 'run_backtest')
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
 def test_engine_mapping_trade_quantity_nav(mocker):
     # 1. setup strategy
 
@@ -380,39 +405,35 @@ def test_engine_mapping_trade_quantity_nav(mocker):
 
     # 4. assert API call
 
-    option.number_of_options = 1
-    backtest_parameter_args = {
-        'trading_parameters': BacktestTradingParameters(
-            quantity=12345,
-            quantity_type=BacktestTradingQuantityType.NAV.value,
-            trade_in_method=TradeInMethod.FixedRoll.value,
-            roll_frequency='1m'),
-        'underliers': [BacktestStrategyUnderlier(
-            instrument=option,
-            notional_percentage=100,
-            hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
-            market_model='SFK',
-            expiry_date_mode='otc')
-        ],
-        'index_initial_value': 12345,
-        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
-    }
-    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+    backtest = BasicBacktestRequest(
+        dates=DateConfig(start_date=start_date, end_date=end_date),
+        trades=(Trade(legs=tuple(action.priceables),
+                      buy_frequency='1m',
+                      holding_period='1m',
+                      buy_dates=None,
+                      exit_dates=None,
+                      quantity=12345,
+                      quantity_type=BacktestTradingQuantityType.NAV
+                      ),
+                ),
+        measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
+        delta_hedge_frequency='1b',
+        transaction_costs=TransactionCostConfig(
+            trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
+            hedge_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
+        ),
+        configuration=Configuration(
+            market_model=EquityMarketModel.SFK,
+            cash_accrual=True,
+            combine_roll_signal_entries=False,
+            roll_date_mode=RollDateMode.OTC
+        )
+    )
 
-    backtest = Backtest(name="Flow Vol Backtest",
-                        mq_symbol="Flow Vol Backtest",
-                        parameters=backtest_parameters,
-                        start_date=start_date,
-                        end_date=end_date,
-                        type='Volatility Flow',
-                        asset_class=AssetClass.Equity,
-                        currency=Currency.USD,
-                        cost_netting=False)
-
-    mocker.assert_called_with(backtest, None)
+    mocker.assert_called_with(backtest, decode_instruments=False)
 
 
-@mock.patch.object(GsBacktestApi, 'run_backtest')
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
 def test_engine_mapping_listed(mocker):
     # 1. setup strategy
 
@@ -449,40 +470,36 @@ def test_engine_mapping_listed(mocker):
 
     # 4. assert API call
 
-    option.expiration_date = '3m'
-    option.number_of_options = 1
-    backtest_parameter_args = {
-        'trading_parameters': BacktestTradingParameters(
-            quantity=1,
-            quantity_type=BacktestTradingQuantityType.quantity.value,
-            trade_in_method=TradeInMethod.FixedRoll.value,
-            roll_frequency='1m'),
-        'underliers': [BacktestStrategyUnderlier(
-            instrument=option,
-            notional_percentage=100,
-            hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
-            market_model='SFK',
-            expiry_date_mode='listed')
-        ],
-        'index_initial_value': 0.0,
-        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
-    }
-    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+    action.priceables[0].expiration_date = action.priceables[0].expiration_date.replace('@listed', '')
+    backtest = BasicBacktestRequest(
+        dates=DateConfig(start_date=start_date, end_date=end_date),
+        trades=(Trade(legs=tuple(action.priceables),
+                      buy_frequency='1m',
+                      holding_period='1m',
+                      buy_dates=None,
+                      exit_dates=None,
+                      quantity=1,
+                      quantity_type=BacktestTradingQuantityType.quantity
+                      ),
+                ),
+        measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
+        delta_hedge_frequency='1b',
+        transaction_costs=TransactionCostConfig(
+            trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
+            hedge_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
+        ),
+        configuration=Configuration(
+            market_model=EquityMarketModel.SFK,
+            cash_accrual=True,
+            combine_roll_signal_entries=False,
+            roll_date_mode=RollDateMode.Listed
+        )
+    )
 
-    backtest = Backtest(name="Flow Vol Backtest",
-                        mq_symbol="Flow Vol Backtest",
-                        parameters=backtest_parameters,
-                        start_date=start_date,
-                        end_date=end_date,
-                        type='Volatility Flow',
-                        asset_class=AssetClass.Equity,
-                        currency=Currency.USD,
-                        cost_netting=False)
-
-    mocker.assert_called_with(backtest, None)
+    mocker.assert_called_with(backtest, decode_instruments=False)
 
 
-@mock.patch.object(GsBacktestApi, 'run_backtest')
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
 def test_engine_mapping_market_model(mocker):
     # 1. setup strategy
 
@@ -519,39 +536,35 @@ def test_engine_mapping_market_model(mocker):
 
     # 4. assert response
 
-    option.number_of_options = 1
-    backtest_parameter_args = {
-        'trading_parameters': BacktestTradingParameters(
-            quantity=1,
-            quantity_type=BacktestTradingQuantityType.quantity.value,
-            trade_in_method=TradeInMethod.FixedRoll.value,
-            roll_frequency='1m'),
-        'underliers': [BacktestStrategyUnderlier(
-            instrument=option,
-            notional_percentage=100,
-            hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
+    backtest = BasicBacktestRequest(
+        dates=DateConfig(start_date=start_date, end_date=end_date),
+        trades=(Trade(legs=tuple(action.priceables),
+                      buy_frequency='1m',
+                      holding_period='1m',
+                      buy_dates=None,
+                      exit_dates=None,
+                      quantity=1,
+                      quantity_type=BacktestTradingQuantityType.quantity
+                      ),
+                ),
+        measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
+        delta_hedge_frequency='1b',
+        transaction_costs=TransactionCostConfig(
+            trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
+            hedge_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
+        ),
+        configuration=Configuration(
             market_model=EquityMarketModel.SVR,
-            expiry_date_mode='otc')
-        ],
-        'index_initial_value': 0.0,
-        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
-    }
-    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+            cash_accrual=True,
+            combine_roll_signal_entries=False,
+            roll_date_mode=RollDateMode.OTC
+        )
+    )
 
-    backtest = Backtest(name="Flow Vol Backtest",
-                        mq_symbol="Flow Vol Backtest",
-                        parameters=backtest_parameters,
-                        start_date=start_date,
-                        end_date=end_date,
-                        type='Volatility Flow',
-                        asset_class=AssetClass.Equity,
-                        currency=Currency.USD,
-                        cost_netting=False)
-
-    mocker.assert_called_with(backtest, None)
+    mocker.assert_called_with(backtest, decode_instruments=False)
 
 
-@mock.patch.object(GsBacktestApi, 'run_backtest')
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
 def test_engine_mapping_portfolio(mocker):
     # 1. setup strategy
 
@@ -584,7 +597,7 @@ def test_engine_mapping_portfolio(mocker):
 
     # 2. setup mock api response
 
-    mock_api_response(mocker, api_mock_data_portfolio())
+    mock_api_response(mocker, api_mock_data())
 
     # 3. when run backtest
 
@@ -593,43 +606,32 @@ def test_engine_mapping_portfolio(mocker):
 
     # 4. assert response
 
-    call.number_of_options = 1
-    put.number_of_options = 1
-    backtest_parameter_args = {
-        'trading_parameters': BacktestTradingParameters(
-            quantity=1,
-            quantity_type=BacktestTradingQuantityType.quantity.value,
-            trade_in_method=TradeInMethod.FixedRoll.value,
-            roll_frequency='1m'),
-        'underliers': [BacktestStrategyUnderlier(
-            instrument=call,
-            notional_percentage=100,
-            hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
+    backtest = BasicBacktestRequest(
+        dates=DateConfig(start_date=start_date, end_date=end_date),
+        trades=(Trade(legs=tuple(action.priceables),
+                      buy_frequency='1m',
+                      holding_period='1m',
+                      buy_dates=None,
+                      exit_dates=None,
+                      quantity=1,
+                      quantity_type=BacktestTradingQuantityType.quantity
+                      ),
+                ),
+        measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
+        delta_hedge_frequency='1b',
+        transaction_costs=TransactionCostConfig(
+            trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
+            hedge_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
+        ),
+        configuration=Configuration(
             market_model=EquityMarketModel.SFK,
-            expiry_date_mode='otc'),
-            BacktestStrategyUnderlier(
-                instrument=put,
-                notional_percentage=100,
-                hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
-                market_model=EquityMarketModel.SFK,
-                expiry_date_mode='otc')
-        ],
-        'index_initial_value': 0.0,
-        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
-    }
-    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+            cash_accrual=True,
+            combine_roll_signal_entries=False,
+            roll_date_mode=RollDateMode.OTC
+        )
+    )
 
-    backtest = Backtest(name="Flow Vol Backtest",
-                        mq_symbol="Flow Vol Backtest",
-                        parameters=backtest_parameters,
-                        start_date=start_date,
-                        end_date=end_date,
-                        type='Volatility Flow',
-                        asset_class=AssetClass.Equity,
-                        currency=Currency.USD,
-                        cost_netting=False)
-
-    mocker.assert_called_with(backtest, None)
+    mocker.assert_called_with(backtest, decode_instruments=False)
 
 
 def test_supports_strategy():
@@ -822,7 +824,7 @@ def test_supports_strategy():
         trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m'),
         actions=add_trade_action_tc)
     strategy = Strategy(initial_portfolio=None, triggers=[trigger])
-    assert not EquityVolEngine.supports_strategy(strategy)
+    assert EquityVolEngine.supports_strategy(strategy)
 
     # 17. Valid - transaction_costs supported if 0
 
@@ -859,7 +861,7 @@ def test_supports_strategy():
     assert not EquityVolEngine.supports_strategy(strategy)
 
 
-@mock.patch.object(GsBacktestApi, 'run_backtest')
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
 def test_engine_mapping_basic_leg_size(mocker):
     # 1. setup strategy
 
@@ -896,32 +898,29 @@ def test_engine_mapping_basic_leg_size(mocker):
 
     # 4. assert API call
 
-    backtest_parameter_args = {
-        'trading_parameters': BacktestTradingParameters(
-            quantity=1,
-            quantity_type=BacktestTradingQuantityType.quantity.value,
-            trade_in_method=TradeInMethod.FixedRoll.value,
-            roll_frequency='1m'),
-        'underliers': [BacktestStrategyUnderlier(
-            instrument=option,
-            notional_percentage=100,
-            hedge=BacktestStrategyUnderlierHedge(risk_details=DeltaHedgeParameters(frequency='Daily')),
-            market_model='SFK',
-            expiry_date_mode='otc')
-        ],
-        'index_initial_value': 0.0,
-        "measures": [FlowVolBacktestMeasure.ALL_MEASURES]
-    }
-    backtest_parameters = VolatilityFlowBacktestParameters.from_dict(backtest_parameter_args)
+    backtest = BasicBacktestRequest(
+        dates=DateConfig(start_date=start_date, end_date=end_date),
+        trades=(Trade(legs=tuple(action.priceables),
+                      buy_frequency='1m',
+                      holding_period='1m',
+                      buy_dates=None,
+                      exit_dates=None,
+                      quantity=1,
+                      quantity_type=BacktestTradingQuantityType.quantity
+                      ),
+                ),
+        measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
+        delta_hedge_frequency='1b',
+        transaction_costs=TransactionCostConfig(
+            trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
+            hedge_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
+        ),
+        configuration=Configuration(
+            market_model=EquityMarketModel.SFK,
+            cash_accrual=True,
+            combine_roll_signal_entries=False,
+            roll_date_mode=RollDateMode.OTC
+        )
+    )
 
-    backtest = Backtest(name="Flow Vol Backtest",
-                        mq_symbol="Flow Vol Backtest",
-                        parameters=backtest_parameters,
-                        start_date=start_date,
-                        end_date=end_date,
-                        type='Volatility Flow',
-                        asset_class=AssetClass.Equity,
-                        currency=Currency.USD,
-                        cost_netting=False)
-
-    mocker.assert_called_with(backtest, None)
+    mocker.assert_called_with(backtest, decode_instruments=False)

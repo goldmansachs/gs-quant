@@ -765,8 +765,8 @@ class MarqueeDataIngestionLibrary:
         INVALID_DRG_NAME_CHARS = r"Pvt Ltd.*|Private Ltd.*|Limited.*|Ltd.*|Inc.*|LP$|LLP$|[^a-zA-Z0-9]"
         drgName = re.sub(INVALID_DRG_NAME_CHARS, "", drgName)
 
-        fieldMap = {field: self.to_camel_case(f"{field}Org{drgName}") for field in
-                    (dimensions + measures) if field != 'updateTime'}
+        fieldMap = {field: self.to_camel_case(field if field == 'updateTime' else f"{field}Org{drgName}")
+                    for field in (dimensions + measures)}
 
         self._check_and_create_field(fieldMap, data)
 
@@ -777,7 +777,7 @@ class MarqueeDataIngestionLibrary:
         dataset_dimensions.measures = tuple(
             FieldColumnPair(field_=fieldMap.get(mea),
                             column=self.to_upper_underscore(mea),
-                            resolvable=True) for mea in measures
+                            resolvable=True if mea != 'updateTime' else None) for mea in measures
         )
         return dataset_dimensions
 
@@ -798,11 +798,19 @@ class MarqueeDataIngestionLibrary:
         """
         Create a dataset using the provided data and metadata.
 
-        :param data: DataFrame containing the data to be ingested.
-        :param dataset_id: The identifier for the dataset.
-        :param symbol_dimension: Column that represents the symbol dimension.
-        :param time_dimension: Column that represents the time dimension.
-        :param dimensions: Optional List of non-symbol dimensions.
+        This method creates a dataset in the Marquee platform using the provided DataFrame and metadata.
+        The dataset is defined by its unique identifier, symbol dimension, time dimension, and optional
+        non-symbol dimensions. The data is validated to ensure compatibility with the platform's requirements.
+
+        :param data: DataFrame containing the data to be ingested. The DataFrame must include the symbol
+                 and time dimensions, along with any additional dimensions or measures.
+        :param dataset_id: The unique identifier for the dataset. This identifier is used to reference
+                       the dataset in the platform.
+        :param symbol_dimension: Column name in the DataFrame that represents the symbol dimension.
+                     Valid symbol dimensions are: {"isin", "bbid", "ric", "sedol", "cusip", "ticker"}.
+        :param time_dimension: Column name in the DataFrame that represents the time dimension. This
+                           must be a date column, as intraday timestamps are not supported.
+        :param dimensions: Optional list of column names in the DataFrame that represent non-symbol dimensions.
         :return: A DataSetEntity object representing the dataset specification.
         """
 
@@ -850,3 +858,40 @@ class MarqueeDataIngestionLibrary:
 
         result = self.provider.create(dataset_definition)
         return result
+
+    def write_data(self, df: pd.DataFrame, dataset_id: str) -> None:
+        """
+        Write data from a DataFrame to the specified dataset.
+
+        :param df: DataFrame containing the data to be written.
+        :param dataset_id: The identifier of the dataset to write data to.
+        """
+        if df.empty:
+            raise ValueError("The DataFrame is empty. No data to write.")
+
+        if not dataset_id:
+            raise ValueError("Dataset ID is required.")
+
+        # Upload data to the dataset
+        dataset = self.provider.get_definition(dataset_id)
+        allFields = (dataset.dimensions.non_symbol_dimensions +
+                     dataset.dimensions.measures +
+                     (FieldColumnPair(field_=dataset.dimensions.time_field,
+                                      column=dataset.parameters.snowflake_config.date_time_column),
+                      FieldColumnPair(field_=dataset.dimensions.symbol_dimensions[0],
+                                      column=dataset.parameters.snowflake_config.id_column)))
+
+        if len(df.columns) != len(allFields):
+            raise ValueError(f"Mismatch in columns: DataFrame has {len(df.columns)} columns, "
+                             f"but dataset expects {len(allFields)} columns.")
+
+        renamed_df = df.copy().rename(columns={
+            column: field.field_
+            for column in df.columns
+            for field in allFields
+            if self.to_upper_underscore(column) == field.column
+        })
+
+        data = renamed_df.to_dict('records')
+
+        return self.provider.upload_data(dataset_id, data)
