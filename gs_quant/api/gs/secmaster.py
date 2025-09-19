@@ -645,3 +645,190 @@ class GsSecurityMasterApi:
         """
         r = GsSession.current._get(f'/markets/exchanges/{gs_exchange_id}/identifiers')
         return r['results']
+
+    @classmethod
+    def _prepare_string_or_list_param(cls, value: Union[str, list], param_name: str):
+        if isinstance(value, str):
+            return [value]  # Wrap single string in a list
+        elif isinstance(value, list) and all(isinstance(item, str) for item in value):
+            return value  # Use the list directly
+        else:
+            raise ValueError(f"{param_name} must be a string or a list of strings")
+
+    @classmethod
+    def _prepare_underlyers_params(cls, params, id_value, offset_key=None, type_=None, effective_date=None,
+                                   country_code=None, currency=None, include_inactive=None):
+        if id_value is not None:
+            params["id"] = cls._prepare_string_or_list_param(id_value, "id_value")
+        else:
+            raise ValueError("id_value must be defined")
+
+        if type_ is not None:
+            if isinstance(type_, list):
+                if all(isinstance(t, SecMasterAssetType) for t in type_):
+                    params["type"] = [t.value for t in type_]
+                else:
+                    raise ValueError("All elements in the type_ list must be instances of SecMasterAssetType")
+            elif isinstance(type_, SecMasterAssetType):
+                params["type"] = type_.value
+            else:
+                raise ValueError("type_ must be either a SecMasterAssetType or a list of SecMasterAssetType")
+
+        if country_code is not None:
+            params["countryCode"] = cls._prepare_string_or_list_param(country_code, "country_code")
+        if currency is not None:
+            params["currency"] = cls._prepare_string_or_list_param(currency, "currency")
+        if offset_key is not None:
+            params["offsetKey"] = offset_key
+        if effective_date is not None:
+            params["effectiveDate"] = effective_date
+        if include_inactive is not None:
+            params["includeInactive"] = include_inactive
+
+    @classmethod
+    def _get_securities_by_underlyers(cls,
+                                      id_value: Union[str, list],
+                                      type_: Union[SecMasterAssetType, list] = None,
+                                      effective_date: dt.date = None,
+                                      limit: int = 100,
+                                      country_code: Union[str, list] = None,
+                                      currency: Union[str, list] = None,
+                                      include_inactive: bool = False,
+                                      offset_key: str = None) \
+            -> Optional[dict]:
+        params = {
+            "limit": limit
+        }
+
+        cls._prepare_underlyers_params(
+            params=params,
+            id_value=id_value,
+            offset_key=offset_key,
+            type_=type_,
+            effective_date=effective_date,
+            country_code=country_code,
+            currency=currency,
+            include_inactive=include_inactive
+        )
+
+        payload = json.loads(json.dumps(params, cls=JSONEncoder))
+
+        r = GsSession.current._get('/markets/securities/underlyers', payload=payload)
+        if r['totalResults'] == 0:
+            return None
+        return r
+
+    @classmethod
+    def get_securities_by_underlyers(cls,
+                                     id_value: Union[str, list],
+                                     type_: Union[SecMasterAssetType, list] = None,
+                                     effective_date: dt.date = None,
+                                     limit: int = None,
+                                     offset_key: str = None,
+                                     country_code: Union[str, list] = None,
+                                     currency: Union[str, list] = None,
+                                     include_inactive: bool = False,
+                                     scroll_all_pages: bool = False) \
+            -> Optional[dict]:
+        """
+        Retrieve reference data for listed derivatives based on their underlyers.
+
+        This method retrieves securities linked to specific underlyers, with optional filters for asset type, effective
+        date, country code and currency. The results can be paginated, and the method supports fetching either
+        a single page or all pages of results.
+
+        Args:
+            id_value (Union[str, list]): Identifier(s) of the underlyers. Can be a single string or a list of strings.
+                                          Example: 'GSPD100E0' or ['GSPD100E0'].
+            type_ (Union[SecMasterAssetType, list], optional): Asset type(s) to filter the results. Can be a single
+                                                               `SecMasterAssetType` or a list of `SecMasterAssetType`.
+                                                               Defaults to None.
+            effective_date (dt.date, optional): Effective date for the query. Defaults to None.
+            limit (int, optional): Maximum number of results to return per page. Defaults to None.
+            offset_key (str, optional): String indicating where the page ends, used for pagination. Defaults to None.
+            country_code (Union[str, list], optional): Country code(s) to filter the results. Can be a single string
+                                                       or a list of strings. Defaults to None.
+            currency (Union[str, list], optional): Currency code(s) to filter the results. Can be a single string
+                                                   or a list of strings. Defaults to None.
+            include_inactive (bool, optional): Whether to include inactive listed derivatives in the results.
+                                               Defaults to False.
+            scroll_all_pages (bool, optional): Whether to fetch all pages of results. If True, retrieves all pages.
+                                               Defaults to False.
+
+        Returns:
+            Optional[dict]: A dictionary containing the results for the requested page(s), or None if no results are
+                            found.
+                            Example:
+                            {
+                                "totalResults": 10,
+                                "offsetKey": "ABCD=",
+                                "results": [...],
+                                "asOfTime": "2025-01-11T11:22:33.740Z",
+                                "requestId": "abc123"
+                            }
+
+        Raises:
+            ValueError: If `id_value` is not provided or is invalid.
+            ValueError: If `type_` is not a valid `SecMasterAssetType` or a list of valid `SecMasterAssetType`.
+            ValueError: If `country_code` or `currency` is not a string or a list of strings.
+            ValueError: If `effective_date` is not in the format 'YYYY-MM-DD' when provided as a string.
+            TypeError: If `effective_date` is not of type `datetime.date` or `str`.
+
+        Note:
+            - This method fetches a single page of results by default. To fetch all pages, set `scroll_all_pages=True`.
+            - The `effective_date` parameter is used to query securities as of a specific date.
+            - The `offset_key` parameter is used for pagination to fetch subsequent pages of results.
+
+        Example:
+            >>> result = GsSecurityMasterApi.get_securities_by_underlyers(
+            ...     id_value="GSPD100E0",
+            ...     type_=SecMasterAssetType.Equity_Option,
+            ...     effective_date="2023-10-01",
+            ...     country_code="US",
+            ...     currency="USD",
+            ...     include_inactive=False,
+            ...     scroll_all_pages=True
+            ... )
+            >>> print(result["results"])
+        """
+
+        supported_types = [SecMasterAssetType.Equity_Option, SecMasterAssetType.Future,
+                           SecMasterAssetType.Future_Option]
+        if type_ is not None:
+            if isinstance(type_, SecMasterAssetType):
+                if type_ not in supported_types:
+                    raise ValueError(f"Unsupported type {type_}. Supported types are {supported_types}")
+            elif isinstance(type_, list):
+                for t in type_:
+                    if t not in supported_types:
+                        raise ValueError(f"Unsupported type {t}. Supported types are {supported_types}")
+
+        if scroll_all_pages:
+            if limit is None:
+                limit = 500
+            fn = partial(cls._get_securities_by_underlyers,
+                         id_value=id_value,
+                         type_=type_,
+                         effective_date=effective_date,
+                         limit=limit,
+                         country_code=country_code,
+                         currency=currency,
+                         include_inactive=include_inactive)
+            results = cls.__fetch_all(fn, offset_key, extract_results=False)
+            as_of_time = max(result['asOfTime'] for result in results)
+            res = [item for result in results for item in result["results"]]
+            request_id = results[0]["requestId"] if results else None
+            total_results = len(res)
+            return {"totalResults": total_results, "results": res, "asOfTime": as_of_time, "requestId": request_id}
+
+        else:
+            return cls._get_securities_by_underlyers(
+                id_value=id_value,
+                type_=type_,
+                effective_date=effective_date,
+                limit=limit,
+                offset_key=offset_key,
+                country_code=country_code,
+                currency=currency,
+                include_inactive=include_inactive
+            )
