@@ -765,7 +765,7 @@ class MarqueeDataIngestionLibrary:
         INVALID_DRG_NAME_CHARS = r"Pvt Ltd.*|Private Ltd.*|Limited.*|Ltd.*|Inc.*|LP$|LLP$|[^a-zA-Z0-9]"
         drgName = re.sub(INVALID_DRG_NAME_CHARS, "", drgName)
 
-        fieldMap = {field: self.to_camel_case(field if field == 'updateTime' else f"{field}Org{drgName}")
+        fieldMap = {field: self.to_camel_case((field if field == 'updateTime' else f"{field}Org{drgName}")[:64])
                     for field in (dimensions + measures)}
 
         self._check_and_create_field(fieldMap, data)
@@ -848,7 +848,8 @@ class MarqueeDataIngestionLibrary:
             "ticker"
         }
 
-        custom_symbol_dimension = "customId" if symbol_dimension not in VALID_SYMBOL_DIMENSION else symbol_dimension
+        custom_symbol_dimension = "customId" if (symbol_dimension.lower()
+                                                 not in VALID_SYMBOL_DIMENSION) else symbol_dimension.lower()
         custom_time_dimensions = "date" if time_dimension not in VALID_TIME_DIMENSION else time_dimension
 
         dataset_definition.parameters = self._create_parameters(time_dimension, symbol_dimension)

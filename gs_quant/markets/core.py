@@ -364,13 +364,34 @@ class PricingContext(ContextBaseWithDefault):
             # All attributes are immutable, so a shared dictionary is sufficient. __pending remains shared.
             attrs_for_request = {}
             self.__save_attrs_to(attrs_for_request)
+            all_futures_count = len(requests_for_provider)
             span = Tracer.active_span()
+            if self.__is_async and span and span.is_recording():
+                # if we are in async mode we can't be certain that the `span` here will still be recording by the time
+                # the request_pool threads execute. So we create a sub-span to track the dispatch activity.
+                # We only finish that span when all futures are complete
+                # e.g. would have been a problem if you did
+                # with Tracer('blah'), PricingContext(is_async=True):
+                #     something.calc(risk.SomeRisk)
+                sub_scope = Tracer.start_active_span('async-request-dispatch')
+                span = sub_scope.span
+
+            def handle_fut_res(f):
+                nonlocal all_futures_count
+                all_futures_count -= 1
+                if all_futures_count == 0:
+                    Tracer.activate_span(span, finish_on_close=True).close()
+
             for provider, requests in requests_for_provider.items():
                 if request_pool:
                     completion_future = request_pool.submit(run_requests, requests, provider, True,
                                                             attrs_for_request, span)
-                    if not self.__is_async:
+                    if self.__is_async:
+                        completion_future.add_done_callback(handle_fut_res)
+                    else:
+                        # We append to this list when not async as these are the ones we wait on before returning
                         completion_futures.append(completion_future)
+
                 else:
                     run_requests(requests, provider, False, attrs_for_request, span)
 
