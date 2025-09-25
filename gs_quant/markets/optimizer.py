@@ -72,6 +72,12 @@ class OptimizationConstraintUnit(Enum):
     PERCENT = 'Percent'
 
 
+class HedgeTarget(Enum):
+    HEDGED_TARGET = "hedgeTarget"
+    HEDGE = "hedge"
+    TARGET = "target"
+
+
 class OptimizerObjective(Enum):
     MINIMIZE_FACTOR_RISK = 'Minimize Factor Risk'
 
@@ -1611,3 +1617,99 @@ class OptimizerStrategy:
         :param by_weight: whether to return position set with weights instead of quantities
         """
         return self.__construct_position_set_from_hedge_result('hedgedTarget', by_weight)
+
+    def get_cumulative_pnl_performance(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
+        """
+        Get the cumulative PnL performance results of the optimization
+
+        :param target: the target to get performance for (hedgedTarget, hedge, or target)
+        :return: a pandas dataframe with performance results
+        """
+        if self.__result is None:
+            raise MqValueError('Please run the optimization before calling this method')
+        if self.__result.get(target.value) is None:
+            raise MqValueError(f'The optimization result does not contain {target.value} data')
+        cumulative_pnl = self.__result.get(target.value).get('cumulativePnl')
+        return pd.DataFrame(cumulative_pnl)
+
+    def get_transaction_and_liquidity_constituents_performance(
+            self,
+            target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
+        """
+        Get the constituents performance results of the optimization
+
+        :param target: the target to get performance for (hedgedTarget, hedge, or target)
+        :return: a pandas dataframe with performance results
+        """
+        if self.__result is None:
+            raise MqValueError('Please run the optimization before calling this method')
+        if self.__result.get(target.value) is None:
+            raise MqValueError(f'The optimization result does not contain {target.value} data')
+        constituents = self.__result.get(target.value).get('constituents')
+        filtered_constituents = []
+        keys_to_keep = {"name", "assetId", "bbid", "notional", "shares",
+                        "price", "weight", "currency", "transactionCost",
+                        "marginalCost", "advPercentage", "borrowCost"}
+        for constituent in constituents:
+            filtered_constituent = {key: value for key, value in constituent.items() if key in keys_to_keep}
+            filtered_constituents.append(filtered_constituent)
+        return pd.DataFrame(filtered_constituents)
+
+    def get_performance_summary(self) -> Dict:
+        """
+        Get the performance summary results of the optimization.
+
+        return a pandas dataframe with the above structure
+        """
+        if self.__result is None:
+            raise MqValueError('Please run the optimization before calling this method')
+        if self.__result.get('hedgedTarget') is None:
+            raise MqValueError('The optimization result does not contain hedgedTarget data')
+        if self.__result.get('target') is None:
+            raise MqValueError('The optimization result does not contain target data')
+
+        target = self.__result.get('target')
+        hedged_target = self.__result.get('hedgedTarget')
+
+        performance_summary = pd.DataFrame({
+            "hedgedTarget": {
+                "risk": {
+                    "annualizedVolatility": hedged_target.get("volatility"),
+                    "specificRisk": hedged_target.get("specificExposure"),
+                    "factorRisk": hedged_target.get("systematicExposure"),
+                    "factorRiskDelta": hedged_target.get("systematicExposure") - target.get("systematicExposure")
+                },
+                "performance": {
+                    "pnl": hedged_target.get("totalPnl"),
+                    "pnlDelta": hedged_target.get("totalPnl") - target.get("totalPnl")
+                },
+                "estimatedTransactionCost": {
+                    "marketImpact": hedged_target.get("transactionCost"),
+                    "borrowCost": hedged_target.get("borrowCostBps") - target.get("borrowCostBps")
+                },
+                "comparisonWithInitialPortfolio": {
+                    "overlapWithCore": hedged_target.get("exposureOverlapWithTarget")
+                }
+            },
+            "target": {
+                "risk": {
+                    "annualizedVolatility": target.get("volatility"),
+                    "specificRisk": target.get("specificExposure"),
+                    "factorRisk": target.get("systematicExposure"),
+                    "factorRiskDelta": None
+                },
+                "performance": {
+                    "pnl": target.get("totalPnl"),
+                    "pnlDelta": None
+                },
+                "estimatedTransactionCost": {
+                    "marketImpact": target.get("transactionCost"),
+                    "borrowCost": None
+                },
+                "comparisonWithInitialPortfolio": {
+                    "overlapWithCore": None
+                }
+            }
+        })
+
+        return performance_summary

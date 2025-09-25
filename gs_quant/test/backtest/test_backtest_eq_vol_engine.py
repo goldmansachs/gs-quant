@@ -37,6 +37,7 @@ from gs_quant.session import GsSession, Environment
 from gs_quant.target.backtests import OptionStyle, OptionType, BacktestTradingQuantityType, \
     FlowVolBacktestMeasure, EquityMarketModel
 import pandas as pd
+from gs_quant.common import TradeAs
 
 
 def set_session():
@@ -224,8 +225,7 @@ def test_engine_mapping_basic(mocker):
         configuration=Configuration(
             market_model=EquityMarketModel.SFK,
             cash_accrual=True,
-            combine_roll_signal_entries=False,
-            roll_date_mode=RollDateMode.OTC
+            combine_roll_signal_entries=False
         )
     )
 
@@ -290,8 +290,7 @@ def test_engine_mapping_trade_quantity(mocker):
         configuration=Configuration(
             market_model=EquityMarketModel.SFK,
             cash_accrual=True,
-            combine_roll_signal_entries=False,
-            roll_date_mode=RollDateMode.OTC
+            combine_roll_signal_entries=False
         )
     )
 
@@ -358,8 +357,7 @@ def test_engine_mapping_with_signals(mocker):
         configuration=Configuration(
             market_model=EquityMarketModel.SFK,
             cash_accrual=True,
-            combine_roll_signal_entries=False,
-            roll_date_mode=RollDateMode.OTC
+            combine_roll_signal_entries=False
         )
     )
 
@@ -425,8 +423,7 @@ def test_engine_mapping_trade_quantity_nav(mocker):
         configuration=Configuration(
             market_model=EquityMarketModel.SFK,
             cash_accrual=True,
-            combine_roll_signal_entries=False,
-            roll_date_mode=RollDateMode.OTC
+            combine_roll_signal_entries=False
         )
     )
 
@@ -434,7 +431,7 @@ def test_engine_mapping_trade_quantity_nav(mocker):
 
 
 @mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
-def test_engine_mapping_listed(mocker):
+def test_engine_mapping_listed_expiry_date(mocker):
     # 1. setup strategy
 
     start_date = dt.date(2019, 2, 18)
@@ -471,6 +468,7 @@ def test_engine_mapping_listed(mocker):
     # 4. assert API call
 
     action.priceables[0].expiration_date = action.priceables[0].expiration_date.replace('@listed', '')
+    action.priceables[0].trade_as = TradeAs.Listed
     backtest = BasicBacktestRequest(
         dates=DateConfig(start_date=start_date, end_date=end_date),
         trades=(Trade(legs=tuple(action.priceables),
@@ -487,6 +485,59 @@ def test_engine_mapping_listed(mocker):
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
             hedge_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
+        ),
+        configuration=Configuration(
+            market_model=EquityMarketModel.SFK,
+            cash_accrual=True,
+            combine_roll_signal_entries=False
+        )
+    )
+
+    mocker.assert_called_with(backtest, decode_instruments=False)
+
+
+@mock.patch.object(GsBacktestXassetApi, 'calculate_basic_backtest')
+def test_engine_mapping_listed_roll_date(mocker):
+    # 1. setup strategy
+
+    start_date = dt.date(2019, 2, 18)
+    end_date = dt.date(2019, 2, 20)
+
+    option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM', option_type=OptionType.Call,
+                      option_style=OptionStyle.European, number_of_options=1, name='option')
+
+    action = EnterPositionQuantityScaledAction(priceables=option, trade_duration='1m@listed', name='action')
+    trigger = PeriodicTrigger(
+        trigger_requirements=PeriodicTriggerRequirements(start_date=start_date, end_date=end_date,
+                                                         frequency='1m@listed'),
+        actions=action)
+    strategy = Strategy(initial_portfolio=None, triggers=[trigger,])
+
+    # 2. setup mock api response
+
+    mock_api_response(mocker, api_mock_data())
+
+    # 3. when run backtest
+
+    set_session()
+    EquityVolEngine.run_backtest(strategy, start_date, end_date)
+
+    # 4. assert API call
+
+    backtest = BasicBacktestRequest(
+        dates=DateConfig(start_date=start_date, end_date=end_date),
+        trades=(Trade(legs=tuple(action.priceables),
+                      buy_frequency='1m',
+                      holding_period='1m',
+                      buy_dates=None,
+                      exit_dates=None,
+                      quantity=1,
+                      quantity_type=BacktestTradingQuantityType.quantity
+                      ),
+                ),
+        measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
+        transaction_costs=TransactionCostConfig(
+            trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
         ),
         configuration=Configuration(
             market_model=EquityMarketModel.SFK,
@@ -556,8 +607,7 @@ def test_engine_mapping_market_model(mocker):
         configuration=Configuration(
             market_model=EquityMarketModel.SVR,
             cash_accrual=True,
-            combine_roll_signal_entries=False,
-            roll_date_mode=RollDateMode.OTC
+            combine_roll_signal_entries=False
         )
     )
 
@@ -626,8 +676,7 @@ def test_engine_mapping_portfolio(mocker):
         configuration=Configuration(
             market_model=EquityMarketModel.SFK,
             cash_accrual=True,
-            combine_roll_signal_entries=False,
-            roll_date_mode=RollDateMode.OTC
+            combine_roll_signal_entries=False
         )
     )
 
@@ -918,8 +967,7 @@ def test_engine_mapping_basic_leg_size(mocker):
         configuration=Configuration(
             market_model=EquityMarketModel.SFK,
             cash_accrual=True,
-            combine_roll_signal_entries=False,
-            roll_date_mode=RollDateMode.OTC
+            combine_roll_signal_entries=False
         )
     )
 
