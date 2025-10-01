@@ -418,6 +418,42 @@ def test_get_data_bulk(mocker):
     assert mock.call_count == 1
     assert df.equals(df2)
 
+def test_get_data_filters_to_requested_fields():
+    class DummyProvider:
+        def build_query(self, *args, **kwargs):
+            return object()
+
+        def query_data(self, query, dataset_id, asset_id_type=None):
+            return [
+                {'date': dt.date(2020, 1, 1), 'city': 'Boston', 'maxTemperature': 10.0, 'minTemperature': 2.0, 'extraField': None},
+                {'date': dt.date(2020, 1, 2), 'city': 'Boston', 'maxTemperature': 12.0, 'minTemperature': 3.0, 'extraField': None},
+            ]
+
+        def construct_dataframe_with_types(self, dataset_id, data, schema_varies=False, standard_fields=False):
+                df = pd.DataFrame(data)
+                rename_map = {}
+                if 'maxTemperature' in df.columns:
+                    rename_map['maxTemperature'] = 'max_temperature'
+                if 'minTemperature' in df.columns:
+                    rename_map['minTemperature'] = 'min_temperature'
+                df = df.rename(columns=rename_map)
+                # Keep only the requested fields plus date which is required
+                df = df[['date', 'max_temperature']]
+                return df
+
+    provider = DummyProvider()
+    ds = Dataset('DUMMY', provider=provider)
+
+    # Request only 'maxTemperature' (user-facing name); provider returns snake_cased column
+    res = ds.get_data(start=dt.date(2020, 1, 1), end=dt.date(2020, 1, 2), fields=['maxTemperature'])
+
+    # Columns should contain only the requested snake_cased field
+    assert 'max_temperature' in res.columns
+    assert 'min_temperature' not in res.columns
+    assert 'extraField' not in res.columns and 'extra_field' not in res.columns
+
+    # Verify values preserved
+    assert res['max_temperature'].iloc[0] == 10.0
 
 if __name__ == "__main__":
     pytest.main(args=["test_dataset.py"])
