@@ -16,10 +16,10 @@ under the License.
 
 import dataclasses
 
-from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import RiskResultsByDate
+from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import RiskResultsByDate, RiskResultsError
 
 
 def test_request_types():
-    cls = (RiskResultsByDate,)
+    cls = (RiskResultsByDate, RiskResultsError)
     for c in cls:
         assert dataclasses.is_dataclass(c)

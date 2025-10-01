@@ -26,7 +26,7 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_d
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_encoders import decode_leg_refs, \
     decode_risk_measure_refs, decode_result_tuple, decode_basic_bt_measure_dict, decode_basic_bt_transactions
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction, AdditionalResults
-from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import RiskResultsByDate
+from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import RiskResults
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
 from gs_quant.instrument import Instrument
 from gs_quant.priceable import PriceableImpl
@@ -39,7 +39,7 @@ from gs_quant.target.backtests import FlowVolBacktestMeasure
 class RiskResponse:
     legRefs: Dict[str, PriceableImpl] = field(default=None, metadata=config(decoder=decode_leg_refs))
     riskMeasureRefs: Dict[str, RiskMeasure] = field(default=None, metadata=config(decoder=decode_risk_measure_refs))
-    results: Tuple[RiskResultsByDate, ...] = field(default=None, metadata=config(decoder=decode_result_tuple))
+    results: Tuple[RiskResults, ...] = field(default=None, metadata=config(decoder=decode_result_tuple))
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

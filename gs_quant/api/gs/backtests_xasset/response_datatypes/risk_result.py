@@ -18,7 +18,7 @@ import datetime as dt
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict
+from typing import Dict, Optional
 
 from dataclasses_json import dataclass_json, LetterCase
 
@@ -32,6 +32,18 @@ class RefType(Enum):
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class RiskResultsByDate:
+class RiskResults:
     refs: Dict[RefType, str]
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class RiskResultsByDate(RiskResults):
     result: Dict[dt.date, RiskResultWithData]
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class RiskResultsError(RiskResults):
+    error: Optional[str] = None
+    trace_id: Optional[str] = None
