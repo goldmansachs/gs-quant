@@ -29,7 +29,7 @@ cloud_etch_upload:
   - "$CLOUD_ETCH_UPLOAD"
   
 test:py39:
-  image: "registry.aws.site.gs.com:443/dsml/python/python-raw-image/python3.9-rhel7:current"
+  image: "registry.aws.site.gs.com:443/dsml/python/python-raw-image/python3.9-rhel8:current"
   stage: test 
   tags: [ linux, default, kubernetes ]
   before_script:
