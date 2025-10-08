@@ -218,6 +218,7 @@ class AssetIdentifier(EntityIdentifier):
     TICKER = "TICKER"  #: Exchange ticker (GS)
     PLOT_ID = "PLOT_ID"  #: ID for Marquee PlotTool
     GSID = "GSID"
+    NAME = 'NAME'  #: Name of the asset ('US Treasury 20y GOVN')
 
 
 class SecurityIdentifier(EntityIdentifier):
