@@ -776,8 +776,11 @@ class PositionSet:
                                                                    weighting_strategy)
         positions = self.__convert_positions_for_pricing(self.positions, weighting_strategy)
 
-        should_allow_fractional_shares = True if weighting_strategy == PositionSetWeightingStrategy.Notional \
-            else False
+        if 'fractional_shares' not in kwargs:
+            should_allow_fractional_shares = True if weighting_strategy == PositionSetWeightingStrategy.Notional \
+                else False
+        else:
+            should_allow_fractional_shares = kwargs.pop('fractional_shares')
 
         price_parameters = PriceParameters(currency=currency,
                                            divisor=self.divisor,
@@ -1001,8 +1004,8 @@ class PositionSet:
             positions = positions.rename(columns={'asset_id': 'id'})
         for c in positions.columns:
             columns.append(
-                c.lower() if c.lower() in
-                ['identifier', 'id', 'quantity', 'notional', 'weight', 'date', 'restricted'] else c
+                c.lower() if c.lower() in ['identifier', 'id', 'quantity', 'notional', 'weight', 'date', 'restricted']
+                else c
             )
         return columns
 
@@ -1229,9 +1232,9 @@ class PositionSet:
                                             (position_sets_df["date"] <= position_sets_df["endDate"])]
         position_sets_df = (
             position_sets_df.drop(columns=[asset_identifier_type, "asOfDate", "startDate", "endDate"])
-                            .rename(columns={"tradingRestriction": "restricted"})
-                            .fillna(np.nan)
-                            .replace([np.nan], [None])
+            .rename(columns={"tradingRestriction": "restricted"})
+            .fillna(np.nan)
+            .replace([np.nan], [None])
         )
 
         # Build position sets
@@ -1262,10 +1265,10 @@ class PositionSet:
             if not isinstance(position_set.date, dt.date):
                 position_set.date = pd.Timestamp(position_set.date).to_pydatetime().date()
             positions_on_holding_date_df = position_sets_grouped_by_date.get_group(position_set.date)
-            position_set.positions = positions_on_holding_date_df.loc[~positions_on_holding_date_df['assetId'].isna(),
-                                                                      'positions'].tolist()
-            unresolved_positions = positions_on_holding_date_df.loc[positions_on_holding_date_df['assetId'].isna(),
-                                                                    'positions'].tolist()
+            position_set.positions = positions_on_holding_date_df.loc[
+                ~positions_on_holding_date_df['assetId'].isna(), 'positions'].tolist()
+            unresolved_positions = positions_on_holding_date_df.loc[
+                positions_on_holding_date_df['assetId'].isna(), 'positions'].tolist()
             if unresolved_positions:
                 position_set.__unresolved_positions = unresolved_positions
 
@@ -1357,7 +1360,6 @@ class PositionSet:
                 "quantity" not in position_sets_column_attributes:
             raise MqValueError("Unable to price positions without position weights and daily reference notional "
                                "or position quantities")
-
         should_allow_fractional_shares = True if weighting_strategy == PositionSetWeightingStrategy.Notional \
             else allow_fractional_shares
 
@@ -1463,7 +1465,7 @@ class PositionSet:
                 column_from_initial_position_sets_to_merge_by = "quantity"
                 column_from_priced_positions_results_to_merge_by = "quantity"
 
-            priced_positions_df = priced_positions_df\
+            priced_positions_df = priced_positions_df \
                 .drop_duplicates(subset=['assetId', column_from_priced_positions_results_to_merge_by])
 
             df_to_merge_left = position_sets_to_price_df.loc[position_sets_to_price_df['date'] ==
@@ -1483,15 +1485,12 @@ class PositionSet:
                 how="left",
                 left_on=['asset_id', column_from_initial_position_sets_to_merge_by],
                 right_on=['assetId', column_from_priced_positions_results_to_merge_by],
-                suffixes=("original", None)
+                suffixes=("_original", None)
             )
 
             if weighting_strategy == PositionSetWeightingStrategy.Weight:
                 unpriced_positions_df = priced_positions_df[priced_positions_df['weight'].isna()]
                 priced_positions_df = priced_positions_df[~priced_positions_df['weight'].isna()]
-            elif weighting_strategy == PositionSetWeightingStrategy.Notional:
-                unpriced_positions_df = priced_positions_df[priced_positions_df['notional'].isna()]
-                priced_positions_df = priced_positions_df[~priced_positions_df['notional'].isna()]
             else:
                 unpriced_positions_df = priced_positions_df[priced_positions_df['quantity'].isna()]
                 priced_positions_df = priced_positions_df[~priced_positions_df["quantity"].isna()]
@@ -1508,12 +1507,16 @@ class PositionSet:
                 curr_position._restricted = record.get('restricted')
                 positions.append(curr_position)
 
-            unpriced_positions = [Position(asset_id=unpriced_record.get('assetId'),
+            unpriced_positions = [Position(asset_id=unpriced_record.get('asset_id'),
                                            identifier=unpriced_record.get('identifier'),
-                                           name=unpriced_record.get('name')) for unpriced_record in
+                                           name=unpriced_record.get('name'),
+                                           weight=unpriced_record.get('weight_original'),
+                                           quantity=unpriced_record.get('quantity_original'),
+                                           notional=unpriced_record.get('notional_original')
+                                           ) for unpriced_record in
                                   unpriced_positions_df.to_dict('records')]
 
             input_position_set.positions = positions
-            input_position_set._unpriced_positions = unpriced_positions
+            input_position_set.__unpriced_positions = unpriced_positions
 
         _logger.info(f"Total time to process pricing results is {time() - next_start} seconds")

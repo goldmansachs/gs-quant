@@ -91,7 +91,9 @@ class GsReportApi:
         if tags is not None:
             tags_as_list = tuple(PositionTag(name=key, value=tags[key]) for key in tags)
             results = [r for r in results if r.parameters.tags == tags_as_list]
-        return results
+        else:
+            results = [r for r in results if r.parameters.tags is None]
+        return tuple(results)
 
     @classmethod
     def update_report(cls, report: Report) -> dict:

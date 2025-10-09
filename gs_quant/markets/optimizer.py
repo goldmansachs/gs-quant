@@ -1671,45 +1671,55 @@ class OptimizerStrategy:
         target = self.__result.get('target')
         hedged_target = self.__result.get('hedgedTarget')
 
-        performance_summary = pd.DataFrame({
-            "hedgedTarget": {
-                "risk": {
-                    "annualizedVolatility": hedged_target.get("volatility"),
-                    "specificRisk": hedged_target.get("specificExposure"),
-                    "factorRisk": hedged_target.get("systematicExposure"),
-                    "factorRiskDelta": hedged_target.get("systematicExposure") - target.get("systematicExposure")
-                },
-                "performance": {
-                    "pnl": hedged_target.get("totalPnl"),
-                    "pnlDelta": hedged_target.get("totalPnl") - target.get("totalPnl")
-                },
-                "estimatedTransactionCost": {
-                    "marketImpact": hedged_target.get("transactionCost"),
-                    "borrowCost": hedged_target.get("borrowCostBps") - target.get("borrowCostBps")
-                },
-                "comparisonWithInitialPortfolio": {
-                    "overlapWithCore": hedged_target.get("exposureOverlapWithTarget")
-                }
+        # Build performance summary with safe access to all metrics
+        hedged_target_data = {
+            "risk": {
+                "annualizedVolatility": hedged_target.get("volatility"),
+                "specificRisk": hedged_target.get("specificExposure"),
+                "factorRisk": hedged_target.get("systematicExposure"),
+                "factorRiskDelta": (hedged_target.get("systematicExposure") - target.get("systematicExposure")
+                                    if hedged_target.get("systematicExposure") is not None and
+                                    target.get("systematicExposure") is not None
+                                    else None)
             },
-            "target": {
-                "risk": {
-                    "annualizedVolatility": target.get("volatility"),
-                    "specificRisk": target.get("specificExposure"),
-                    "factorRisk": target.get("systematicExposure"),
-                    "factorRiskDelta": None
-                },
-                "performance": {
-                    "pnl": target.get("totalPnl"),
-                    "pnlDelta": None
-                },
-                "estimatedTransactionCost": {
-                    "marketImpact": target.get("transactionCost"),
-                    "borrowCost": None
-                },
-                "comparisonWithInitialPortfolio": {
-                    "overlapWithCore": None
-                }
+            "performance": {
+                "pnl": hedged_target.get("totalPnl"),
+                "pnlDelta": (hedged_target.get("totalPnl") - target.get("totalPnl")
+                             if hedged_target.get("totalPnl") is not None and target.get("totalPnl") is not None
+                             else None)
+            },
+            "estimatedTransactionCost": {
+                "marketImpact": hedged_target.get("transactionCost"),
+                "borrowCost": hedged_target.get("borrowCostBps")
+            },
+            "comparisonWithInitialPortfolio": {
+                "overlapWithCore": hedged_target.get("exposureOverlapWithTarget")
             }
+        }
+
+        target_data = {
+            "risk": {
+                "annualizedVolatility": target.get("volatility"),
+                "specificRisk": target.get("specificExposure"),
+                "factorRisk": target.get("systematicExposure"),
+                "factorRiskDelta": None
+            },
+            "performance": {
+                "pnl": target.get("totalPnl"),
+                "pnlDelta": None
+            },
+            "estimatedTransactionCost": {
+                "marketImpact": target.get("transactionCost"),
+                "borrowCost": None
+            },
+            "comparisonWithInitialPortfolio": {
+                "overlapWithCore": None
+            }
+        }
+
+        performance_summary = pd.DataFrame({
+            "hedgedTarget": hedged_target_data,
+            "target": target_data
         })
 
         return performance_summary
