@@ -133,14 +133,50 @@ class Dataset:
         return self.provider.build_query(start=start, end=end, as_of=as_of, since=since, fields=field_names,
                                          empty_intervals=empty_intervals, **kwargs), schema_varies
 
-    def _build_data_frame(self, data, schema_varies, standard_fields) -> pd.DataFrame:
+    def _filter_df_by_fields(self, df: pd.DataFrame, field_names=None) -> pd.DataFrame:
+        """
+        If caller requested specific fields, reduce to only those fields present in df.
+        field_names: original requested fields (list or None)
+        """
+        # If no explicit requested fields, return as-is
+        if not field_names:
+            return df
+
+        # Use inflection if available, otherwise fallback to a simple underscore converter
+        def _underscore(name: str) -> str:
+            if inflection:
+                return inflection.underscore(name)
+            # lightweight fallback: replace CamelCase and spaced chars
+            s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+            s2 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1)
+            return s2.replace('-', '_').replace(' ', '_').lower()
+
+        sanitized = []
+        for f in field_names:
+            # sanitize function-style names like diff(foo) -> diff_foo
+            fname = f.replace('(', '_').replace(')', '')
+            # add underscore between letter+digit if present
+            fname = re.sub(r'([a-zA-Z])(\d)', r'\1_\2', fname)
+            sanitized.append(_underscore(fname))
+
+        # Only select columns that actually exist in the DataFrame
+        selected = [c for c in sanitized if c in df.columns]
+        if selected:
+            return df.loc[:, selected]
+
+        # If nothing matches, preserve original df (makes the change non-breaking)
+        return df
+
+    def _build_data_frame(self, data, schema_varies, standard_fields, field_names=None) -> pd.DataFrame:
         if type(data) is tuple:
             df = self.provider.construct_dataframe_with_types(self.id, data[0], schema_varies,
                                                               standard_fields=standard_fields)
+            df = self._filter_df_by_fields(df, field_names)
             return df.groupby(data[1], group_keys=True).apply(lambda x: x)
         else:
-            return self.provider.construct_dataframe_with_types(self.id, data, schema_varies,
-                                                                standard_fields=standard_fields)
+            df = self.provider.construct_dataframe_with_types(self.id, data, schema_varies,
+                                                             standard_fields=standard_fields)
+            return self._filter_df_by_fields(df, field_names)
 
     def get_data(
             self,
