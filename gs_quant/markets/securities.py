@@ -1711,7 +1711,8 @@ class SecurityMaster:
         span = Tracer.active_span()
         tracer = Tracer('SecurityMaster.get_many_assets') if span and span.is_recording() else nullcontext()
         with tracer as scope:
-            scope.span.set_tag(f'request.ids.{id_type.value}', id_values)
+            if scope and scope.span:
+                scope.span.set_tag(f'request.ids.{id_type.value}', id_values)
             query, as_of = cls._get_asset_query(id_values, id_type, as_of, exchange_code)
             if sort_by_rank:
                 results = GsAssetApi.get_many_assets(as_of=as_of, order_by=['>rank'], limit=limit, **query)
@@ -1768,7 +1769,8 @@ class SecurityMaster:
         span = Tracer.active_span()
         tracer = Tracer('SecurityMaster.get_many_assets_async') if span and span.is_recording() else nullcontext()
         with tracer as scope:
-            scope.span.set_tag(f'request.ids.{id_type.value}', id_values)
+            if scope and scope.span:
+                scope.span.set_tag(f'request.ids.{id_type.value}', id_values)
             query, as_of = cls._get_asset_query(id_values, id_type, as_of, exchange_code)
             if sort_by_rank:
                 results = await GsAssetApi.get_many_assets_async(as_of=as_of, order_by=['>rank'], limit=limit, **query)
