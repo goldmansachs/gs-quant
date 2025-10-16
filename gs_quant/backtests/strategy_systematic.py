@@ -128,7 +128,12 @@ class StrategySystematic:
             None
         self.__trades = (Trade(tuple(trade_instruments), roll_frequency, trade_buy_dates, roll_frequency,
                                trade_exit_dates, quantity, quantity_type),)
-        self.__delta_hedge_frequency = '1b' if delta_hedge else None
+
+        hedge_frequency = None
+        if delta_hedge:
+            hedge_frequency = '1b' if delta_hedge.frequency == 'Daily' else delta_hedge.frequency
+
+        self.__delta_hedge_frequency = hedge_frequency
         self.__transaction_cost_config = transaction_cost_config
         self.__xasset_bt_service_config = Configuration(roll_date_mode=RollDateMode(roll_date_mode) if
                                                         roll_date_mode is not None else None,

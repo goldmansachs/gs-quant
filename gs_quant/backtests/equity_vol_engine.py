@@ -221,8 +221,6 @@ class EquityVolEngine(object):
                             'Error: HedgeAction: PeriodicTrigger frequency must be the same as trade_duration')
                     if not action.risk == EqDelta:
                         check_results.append('Error: HedgeAction: risk type must be EqDelta')
-                    if not trigger.trigger_requirements.frequency == '1b':
-                        check_results.append('Error: HedgeAction: frequency must be \'1b\'')
                 elif isinstance(action, (a.ExitPositionAction, a.ExitTradeAction)):
                     continue
                 else:
@@ -305,11 +303,7 @@ class EquityVolEngine(object):
                 transaction_cost.trade_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
                                                                  cls.__map_tc_model(action.transaction_cost_exit))
             elif isinstance(action, a.HedgeAction):
-                if trigger.trigger_requirements.frequency == '1b':
-                    frequency = 'Daily'
-                else:
-                    raise RuntimeError('unrecognised hedge frequency')
-                hedge = DeltaHedgeParameters(frequency=frequency)
+                hedge = DeltaHedgeParameters(frequency=trigger.trigger_requirements.frequency)
                 transaction_cost.hedge_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
                                                                  cls.__map_tc_model(action.transaction_cost_exit))
 

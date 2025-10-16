@@ -30,6 +30,7 @@ from requests.exceptions import HTTPError
 
 from gs_quant.api.api_cache import ApiRequestCache, InMemoryApiRequestCache
 from gs_quant.common import Entitlements, PositionType
+from gs_quant.context_base import nullcontext
 from gs_quant.errors import MqValueError, MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
@@ -214,6 +215,18 @@ class GsAssetApi:
             order_by=order_by
         )
 
+    @staticmethod
+    def _set_tags(scope, kwargs):
+        if kwargs and scope and scope.span:
+            for k, v in kwargs.items():
+                if isinstance(v, (list, tuple)):
+                    if len(v) > 5:
+                        scope.span.set_tag(f'request.payload.{k}', len(v))
+                    else:
+                        scope.span.set_tag(f'request.payload.{k}', ", ".join((str(x) for x in v)))
+                elif isinstance(v, (int, float, bool, str)):
+                    scope.span.set_tag(f'request.payload.{k}', v)
+
     @classmethod
     @_cached
     def get_many_assets(
@@ -225,9 +238,13 @@ class GsAssetApi:
             order_by: List[str] = None,
             **kwargs
     ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
-        query = cls.__create_query(fields, as_of, limit, order_by=order_by, **kwargs)
-        response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
-        return response['results']
+        span = Tracer.active_span()
+        tracer = Tracer('GsAsset.get_many_assets') if span and span.is_recording() else nullcontext()
+        with tracer as scope:
+            cls._set_tags(scope, kwargs)
+            query = cls.__create_query(fields, as_of, limit, order_by=order_by, **kwargs)
+            response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
+            return response['results']
 
     @classmethod
     @_cached_async
@@ -240,9 +257,13 @@ class GsAssetApi:
             order_by: List[str] = None,
             **kwargs
     ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
-        query = cls.__create_query(fields, as_of, limit, order_by=order_by, **kwargs)
-        response = await GsSession.current._post_async('/assets/query', payload=query, cls=return_type)
-        return response['results']
+        span = Tracer.active_span()
+        tracer = Tracer('GsAsset.get_many_assets_async') if span and span.is_recording() else nullcontext()
+        with tracer as scope:
+            cls._set_tags(scope, kwargs)
+            query = cls.__create_query(fields, as_of, limit, order_by=order_by, **kwargs)
+            response = await GsSession.current._post_async('/assets/query', payload=query, cls=return_type)
+            return response['results']
 
     @classmethod
     @_cached
@@ -256,14 +277,18 @@ class GsAssetApi:
             order_by: List[str] = None,
             **kwargs
     ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
-        query = cls.__create_query(fields, as_of, limit, scroll, order_by=order_by, **kwargs)
-        response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
-        results = get(response, 'results')
-        while (has(response, 'scrollId') and len(get(response, 'results'))):
-            query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
+        span = Tracer.active_span()
+        tracer = Tracer('GsAsset.get_many_assets_scroll') if span and span.is_recording() else nullcontext()
+        with tracer as scope:
+            cls._set_tags(scope, kwargs)
+            query = cls.__create_query(fields, as_of, limit, scroll, order_by=order_by, **kwargs)
             response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
-            results += get(response, 'results')
-        return results
+            results = get(response, 'results')
+            while (has(response, 'scrollId') and len(get(response, 'results'))):
+                query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
+                response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
+                results += get(response, 'results')
+            return results
 
     @classmethod
     @_cached
@@ -274,9 +299,30 @@ class GsAssetApi:
             limit: int = None,
             **kwargs
     ) -> dict:
-        query = cls.__create_query(fields, as_of, limit, **kwargs)
-        response = GsSession.current._post('/assets/data/query', payload=query)
-        return response['results']
+        span = Tracer.active_span()
+        tracer = Tracer('GsAsset.get_many_assets_data') if span and span.is_recording() else nullcontext()
+        with tracer as scope:
+            cls._set_tags(scope, kwargs)
+            query = cls.__create_query(fields, as_of, limit, **kwargs)
+            response = GsSession.current._post('/assets/data/query', payload=query)
+            return response['results']
+
+    @classmethod
+    @_cached
+    async def get_many_assets_data_async(
+            cls,
+            fields: IdList = None,
+            as_of: dt.datetime = None,
+            limit: int = None,
+            **kwargs
+    ) -> dict:
+        span = Tracer.active_span()
+        tracer = Tracer('GsAsset.get_many_assets_data_async') if span and span.is_recording() else nullcontext()
+        with tracer as scope:
+            cls._set_tags(scope, kwargs)
+            query = cls.__create_query(fields, as_of, limit, **kwargs)
+            response = await GsSession.current._post_async('/assets/data/query', payload=query)
+            return response['results']
 
     @classmethod
     @_cached
@@ -288,14 +334,18 @@ class GsAssetApi:
             limit: int = None,
             **kwargs
     ) -> dict:
-        query = cls.__create_query(fields, as_of, limit, scroll, **kwargs)
-        response = GsSession.current._post('/assets/data/query', payload=query)
-        results = get(response, 'results')
-        while (has(response, 'scrollId') and len(get(response, 'results'))):
-            query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
+        span = Tracer.active_span()
+        tracer = Tracer('GsAsset.get_many_assets_data_scroll') if span and span.is_recording() else nullcontext()
+        with tracer as scope:
+            cls._set_tags(scope, kwargs)
+            query = cls.__create_query(fields, as_of, limit, scroll, **kwargs)
             response = GsSession.current._post('/assets/data/query', payload=query)
-            results += get(response, 'results')
-        return results
+            results = get(response, 'results')
+            while (has(response, 'scrollId') and len(get(response, 'results'))):
+                query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
+                response = GsSession.current._post('/assets/data/query', payload=query)
+                results += get(response, 'results')
+            return results
 
     @classmethod
     @_cached
