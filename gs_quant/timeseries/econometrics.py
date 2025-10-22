@@ -16,7 +16,7 @@
 # description. Type annotations should be provided for parameters.
 import math
 from enum import IntEnum, Enum
-from typing import Union
+from typing import Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -28,7 +28,7 @@ from .analysis import LagMode, lag
 from .datetime import align, interpolate
 from .helper import CurveType, Interpolate, Window, normalize_window, apply_ramp, plot_session_function, \
     plot_function, Returns, SeriesType
-from .statistics import std, product, sum_
+from .statistics import std, product, sum_, mean, MeanType
 from ..data import DataContext
 from ..datetime import DayCountConvention, day_count_fraction
 from ..errors import MqValueError, MqTypeError
@@ -516,26 +516,45 @@ def annualize(x: pd.Series) -> pd.Series:
 
 @plot_function
 def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
-               returns_type: Returns = Returns.SIMPLE) -> pd.Series:
+               returns_type: Optional[Returns] = Returns.SIMPLE, assume_zero_mean: bool = False) -> pd.Series:
     """
-    Realized volatility of price series
+    Realized volatility of price or return series
 
-    :param x: time series of prices
+    :param x: time series of prices or returns (see returns_type parameter)
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
               Window size defaults to length of series.
-    :param returns_type: returns type: simple, logarithmic or absolute
-    :return: date-based time series of return
+    :param returns_type: returns type: simple, logarithmic or absolute. If None, x is assumed to be a returns series.
+    :param assume_zero_mean: if True, assumes zero mean for returns (uses population formula with N denominator).
+                            if False (default), uses sample statistics (N-1 denominator).
+    :return: date-based time series of annualized volatility (in percent)
 
     **Usage**
 
     Calculate rolling annualized realized volatility of a price series over a given window. Annual volatility of 20% is
     returned as 20.0:
 
+    **Standard volatility (assume_zero_mean=False, default):**
+
     :math:`Y_t = \\sqrt{\\frac{1}{N-1} \\sum_{i=t-w+1}^t (R_t - \\overline{R_t})^2} * \\sqrt{252} * 100`
 
     where N is the number of observations in each rolling window :math:`w`, :math:`R_t` is the return on time
     :math:`t` based on *returns_type*
+
+    **Zero-mean volatility (assume_zero_mean=True):**
+
+    Uses root-mean-square (RMS) with population formula:
+
+    :math:`Y_t = \\sqrt{\\frac{1}{N} \\sum_{i=t-w+1}^t R_i^2} \\times \\sqrt{252} \\times 100`
+
+    This assumes $$\\overline{R} = 0$$ and uses $$N$$ (not $$N-1$$) in the denominator. This is the standard
+    convention for:
+
+    - Correlation swap volatility calculations (to match zero-mean covariance)
+    - Variance swap realized volatility
+    - Pre-demeaned returns or zero-drift processes
+
+    **Returns types:**
 
     ===========   =======================================================
     Type          Description
@@ -549,13 +568,15 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
     absolute      Absolute change in asset prices:
                   :math:`Y_t = X_t - X_{t-obs}`
                   where :math:`X_t` is the asset price at time :math:`t`
+    NULL          Input x is already a returns series; no conversion
+                  is performed
     ===========   =======================================================
 
     and :math:`\\overline{R_t}` is the mean value over the same window:
 
     :math:`\\overline{R_t} = \\frac{\\sum_{i=t-w+1}^{t} R_t}{N}`
 
-    If window is not provided, computes realized volatility over the full series
+    If window is not provided, computes realized volatility over the full series.
 
     **Examples**
 
@@ -565,9 +586,22 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
     >>> vol_series = volatility(series, 22)
     >>> vol_series = volatility(series, Window(22, 30))
 
+    Compute volatility with logarithmic returns:
+
+    >>> vol_log = volatility(series, 22, returns_type=Returns.LOGARITHMIC)
+
+    Compute volatility from a returns series directly:
+
+    >>> returns_series = returns(series, Returns.SIMPLE)
+    >>> vol_from_returns = volatility(returns_series, 22, returns_type=None)
+
+    Compute zero-mean volatility:
+
+    >>> vol_zero_mean = volatility(series, 22, assume_zero_mean=True)
+
     **See also**
 
-    :func:`std` :func:`annualize` :func:`returns`
+    :func:`std` :func:`annualize` :func:`returns` :func:`mean` :func:`corr_swap_correlation`
 
     """
     w = normalize_window(x, w)
@@ -575,7 +609,11 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
     if x.size < 1:
         return x
 
-    return apply_ramp(annualize(std(returns(x, type=returns_type), Window(w.w, 0))).mul(100), w)
+    ret = returns(x, type=returns_type) if returns_type is not None else x
+    window = Window(w.w, 0)
+    vol = mean(ret, window, MeanType.QUADRATIC) if assume_zero_mean else std(ret, window)
+
+    return apply_ramp(annualize(vol).mul(100), w)
 
 
 @plot_function

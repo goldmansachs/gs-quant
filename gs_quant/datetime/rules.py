@@ -18,7 +18,7 @@ import datetime as dt
 import calendar
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import List, Union, Optional
 
 from dateutil.relativedelta import relativedelta, FR, SA, SU, TH, TU, WE, MO
 import numpy as np
@@ -38,6 +38,7 @@ class RDateRule(ABC):
     currencies: List[Union[Currency, str]] = None
     exchanges: List[Union[ExchangeCode, str]] = None
     holiday_calendar: List[dt.date] = None
+    sign: Optional[str] = None
 
     def __init__(self, result: dt.date, **params):
         self.result = result
@@ -47,6 +48,8 @@ class RDateRule(ABC):
         self.exchanges = params.get('exchanges')
         self.holiday_calendar = params.get('holiday_calendar')
         self.usd_calendar = params.get('usd_calendar')
+        self.roll = params.get('roll')
+        self.sign = params.get('sign')
         super().__init__()
 
     @abstractmethod
@@ -98,6 +101,9 @@ class RDateRule(ABC):
     def is_weekend(d: dt.date):
         return False if d.weekday() < 5 else True  # 5 Sat, 6 Sun
 
+    def roll_convention(self, default=None):
+        return self.roll or default
+
 
 class ARule(RDateRule):
     def handle(self) -> dt.date:
@@ -108,7 +114,7 @@ class ARule(RDateRule):
 class bRule(RDateRule):
     def handle(self) -> dt.date:
         holidays = self._get_holidays()
-        roll = 'forward' if self.number <= 0 else 'preceding'
+        roll = self.roll_convention('forward' if self.number <= 0 else 'preceding')
         return self._apply_business_days_logic(holidays, offset=self.number, roll=roll)
 
 
@@ -132,7 +138,7 @@ class gRule(RDateRule):
     def handle(self) -> dt.date:
         self.result = self.result + relativedelta(weeks=self.number)
         holidays = self._get_holidays()
-        return self._apply_business_days_logic(holidays, offset=0)
+        return self._apply_business_days_logic(holidays, offset=0, roll=self.roll_convention('backward'))
 
 
 class NRule(RDateRule):
@@ -161,13 +167,13 @@ class kRule(RDateRule):
         while self.week_mask[self.result.isoweekday() - 1] == '0':
             self.result += relativedelta(days=1)
         holidays = self._get_holidays()
-        return self._apply_business_days_logic(holidays, offset=0)
+        return self._apply_business_days_logic(holidays, offset=0, roll=self.roll_convention('backward'))
 
 
 class mRule(RDateRule):
     def handle(self) -> dt.date:
         self.result = self.result + relativedelta(months=self.number)
-        return self._apply_business_days_logic(self._get_holidays(), offset=0, roll='forward')
+        return self._apply_business_days_logic(self._get_holidays(), offset=0, roll=self.roll_convention('forward'))
 
 
 class MRule(RDateRule):
@@ -201,16 +207,9 @@ class TRule(RDateRule):
 
 
 class uRule(RDateRule):
-    def __init__(self, result: dt.date, **params):
-        super().__init__(result, **params)
-        self.roll = params.get('roll')
-
     def handle(self) -> dt.date:
         holidays = self._get_holidays()
-        if self.number == 0 and self.roll:
-            roll = self.roll
-        else:
-            roll = 'forward' if self.number <= 0 else 'preceding'
+        roll = 'preceding' if self.sign == "-" and self.number == 0 else 'forward' if self.number <= 0 else 'preceding'
         return self._apply_business_days_logic(holidays, offset=self.number, roll=roll)
 
 
@@ -225,7 +224,7 @@ class vRule(RDateRule):
         month_range = calendar.monthrange(self.result.year, self.result.month)
         self.result = self.result.replace(day=month_range[1])
         holidays = self._get_holidays()
-        return self._apply_business_days_logic(holidays, offset=0, roll='backward')
+        return self._apply_business_days_logic(holidays, offset=0, roll=self.roll_convention('backward'))
 
 
 class VRule(RDateRule):
@@ -242,7 +241,8 @@ class wRule(RDateRule):
     def handle(self) -> dt.date:
         self.result = self.result + relativedelta(weeks=self.number)
         holidays = self._get_holidays()
-        return self._apply_business_days_logic(holidays, offset=0)
+        roll = 'forward' if self.number >= 0 else 'backward'
+        return self._apply_business_days_logic(holidays, offset=0, roll=self.roll_convention(roll))
 
 
 class xRule(RDateRule):
@@ -250,7 +250,7 @@ class xRule(RDateRule):
         month_range = calendar.monthrange(self.result.year, self.result.month)
         self.result = self.result.replace(day=month_range[1])
         holidays = self._get_holidays()
-        return self._apply_business_days_logic(holidays, offset=0, roll='backward')
+        return self._apply_business_days_logic(holidays, offset=0, roll=self.roll_convention('backward'))
 
 
 class XRule(RDateRule):
@@ -264,7 +264,7 @@ class yRule(RDateRule):
         while self.week_mask[self.result.isoweekday() - 1] == '0':
             self.result += relativedelta(days=1)
         holidays = self._get_holidays()
-        return self._apply_business_days_logic(holidays, offset=0)
+        return self._apply_business_days_logic(holidays, offset=0, roll=self.roll_convention('backward'))
 
 
 class ZRule(RDateRule):

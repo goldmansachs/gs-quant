@@ -73,7 +73,7 @@ class OptimizationConstraintUnit(Enum):
 
 
 class HedgeTarget(Enum):
-    HEDGED_TARGET = "hedgeTarget"
+    HEDGED_TARGET = "hedgedTarget"
     HEDGE = "hedge"
     TARGET = "target"
 
@@ -1211,7 +1211,7 @@ class OptimizerSettings:
         :param allow_long_short: allow a long/short optimization
         :param min_names: minimum number of assets in the optimization
         :param max_names: maximum number of assets in the optimization
-        :param min_weight_per_constituent: minimum weight of each constituent in the optimization
+        :param min_weight_per_constituent: minimum weigh  t of each constituent in the optimization
         :param max_weight_per_constituent: maximum weight of each constituent in the optimization
         :param max_adv: maximum average daily volume of each constituent in the optimization (in percent)
         :param constraint_priorities: constraint priorities
@@ -1472,7 +1472,7 @@ class OptimizerStrategy:
         if self.settings is None:
             self.settings = OptimizerSettings()
 
-        backtest_start_date = self.initial_position_set.date - relativedelta(weeks=1)
+        backtest_start_date = self.initial_position_set.date - relativedelta(years=1)
         positions_frame = self.initial_position_set.to_frame()
         if self.initial_position_set.reference_notional:
             positions_as_dict = positions_frame[['asset_id', 'weight']]
@@ -1623,14 +1623,48 @@ class OptimizerStrategy:
         Get the cumulative PnL performance results of the optimization
 
         :param target: the target to get performance for (hedgedTarget, hedge, or target)
-        :return: a pandas dataframe with performance results
+        :return: a pandas dataframe with performance results with columns ['date', 'cumulativePnl']
         """
         if self.__result is None:
             raise MqValueError('Please run the optimization before calling this method')
         if self.__result.get(target.value) is None:
             raise MqValueError(f'The optimization result does not contain {target.value} data')
         cumulative_pnl = self.__result.get(target.value).get('cumulativePnl')
-        return pd.DataFrame(cumulative_pnl)
+        df = pd.DataFrame(cumulative_pnl, columns=['date', 'cumulativePnl'])
+        df['date'] = pd.to_datetime(df['date'])
+        return df
+
+    def get_style_factor_exposures(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
+        """
+        Get the style factor exposures from the hedge result
+
+        :param target: the target to get factor exposures for (hedgedTarget, hedge, or target)
+        :return: a dictionary with style factor exposures
+        """
+        if self.__result is None:
+            raise MqValueError('Please run the optimization before calling this method')
+        if self.__result.get(target.value) is None:
+            raise MqValueError(f'The optimization result does not contain {target.value} data')
+        if self.__result.get(target.value).get('factorExposures') is None:
+            raise MqValueError(f'The optimization result does not contain factor exposures for {target.value}')
+        factor_exposures = self.__result.get(target.value).get('factorExposures').get('style', [])
+        return factor_exposures
+
+    def get_risk_buckets(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
+        """
+        Get the risk buckets from the hedge result
+
+        :param target: the target to get risk buckets for (hedgedTarget, hedge, or target)
+        :return: a dictionary with risk buckets
+        """
+        if self.__result is None:
+            raise MqValueError('Please run the optimization before calling this method')
+        if self.__result.get(target.value) is None:
+            raise MqValueError(f'The optimization result does not contain {target.value} data')
+        if self.__result.get(target.value).get('riskBuckets') is None:
+            raise MqValueError(f'The optimization result does not contain risk buckets for {target.value}')
+        risk_buckets = self.__result.get(target.value).get('riskBuckets')
+        return {"risk_buckets": risk_buckets}
 
     def get_transaction_and_liquidity_constituents_performance(
             self,
@@ -1659,67 +1693,92 @@ class OptimizerStrategy:
         """
         Get the performance summary results of the optimization.
 
-        return a pandas dataframe with the above structure
+        Returns a dictionary containing multiple DataFrames for easy display:
+        - 'risk': Risk metrics comparison
+        - 'performance': Performance metrics comparison
+        - 'transaction_cost': Transaction cost metrics comparison
+        - 'comparison': Comparison with initial portfolio
+        - 'combined': All metrics in a single table
         """
         if self.__result is None:
             raise MqValueError('Please run the optimization before calling this method')
-        if self.__result.get('hedgedTarget') is None:
+        if self.__result.get(HedgeTarget.HEDGED_TARGET.value) is None:
             raise MqValueError('The optimization result does not contain hedgedTarget data')
-        if self.__result.get('target') is None:
+        if self.__result.get(HedgeTarget.TARGET.value) is None:
             raise MqValueError('The optimization result does not contain target data')
 
-        target = self.__result.get('target')
-        hedged_target = self.__result.get('hedgedTarget')
+        target = self.__result.get(HedgeTarget.TARGET.value)
+        hedged_target = self.__result.get(HedgeTarget.HEDGED_TARGET.value)
 
-        # Build performance summary with safe access to all metrics
-        hedged_target_data = {
-            "risk": {
-                "annualizedVolatility": hedged_target.get("volatility"),
-                "specificRisk": hedged_target.get("specificExposure"),
-                "factorRisk": hedged_target.get("systematicExposure"),
-                "factorRiskDelta": (hedged_target.get("systematicExposure") - target.get("systematicExposure")
-                                    if hedged_target.get("systematicExposure") is not None and
-                                    target.get("systematicExposure") is not None
-                                    else None)
-            },
-            "performance": {
-                "pnl": hedged_target.get("totalPnl"),
-                "pnlDelta": (hedged_target.get("totalPnl") - target.get("totalPnl")
-                             if hedged_target.get("totalPnl") is not None and target.get("totalPnl") is not None
-                             else None)
-            },
-            "estimatedTransactionCost": {
-                "marketImpact": hedged_target.get("transactionCost"),
-                "borrowCost": hedged_target.get("borrowCostBps")
-            },
-            "comparisonWithInitialPortfolio": {
-                "overlapWithCore": hedged_target.get("exposureOverlapWithTarget")
-            }
-        }
+        # Build individual DataFrames for each category
 
-        target_data = {
-            "risk": {
-                "annualizedVolatility": target.get("volatility"),
-                "specificRisk": target.get("specificExposure"),
-                "factorRisk": target.get("systematicExposure"),
-                "factorRiskDelta": None
-            },
-            "performance": {
-                "pnl": target.get("totalPnl"),
-                "pnlDelta": None
-            },
-            "estimatedTransactionCost": {
-                "marketImpact": target.get("transactionCost"),
-                "borrowCost": None
-            },
-            "comparisonWithInitialPortfolio": {
-                "overlapWithCore": None
-            }
-        }
-
-        performance_summary = pd.DataFrame({
-            "hedgedTarget": hedged_target_data,
-            "target": target_data
+        # Risk Metrics Table
+        risk_df = pd.DataFrame({
+            'Metric': ['Annualized Volatility', 'Specific Risk', 'Factor Risk', 'Factor Risk Delta'],
+            'Initial Portfolio': [
+                target.get("volatility"),
+                target.get("specificExposure"),
+                target.get("systematicExposure"),
+                None
+            ],
+            'Hedged Portfolio': [
+                hedged_target.get("volatility"),
+                hedged_target.get("specificExposure"),
+                hedged_target.get("systematicExposure"),
+                (hedged_target.get("systematicExposure") - target.get("systematicExposure")
+                 if hedged_target.get("systematicExposure") is not None and
+                 target.get("systematicExposure") is not None else None)
+            ]
         })
 
-        return performance_summary
+        # Performance Metrics Table
+        performance_df = pd.DataFrame({
+            'Metric': ['PnL', 'PnL Delta'],
+            'Initial Portfolio': [
+                target.get("totalPnl"),
+                None
+            ],
+            'Hedged Portfolio': [
+                hedged_target.get("totalPnl"),
+                (hedged_target.get("totalPnl") - target.get("totalPnl")
+                 if hedged_target.get("totalPnl") is not None and target.get("totalPnl") is not None
+                 else None)
+            ]
+        })
+
+        # Transaction Cost Table
+        transaction_cost_df = pd.DataFrame({
+            'Metric': ['Market Impact', 'Borrow Cost (bps)'],
+            'Initial Portfolio': [
+                target.get("transactionCost"),
+                None
+            ],
+            'Hedged Portfolio': [
+                hedged_target.get("transactionCost"),
+                hedged_target.get("borrowCostBps")
+            ]
+        })
+
+        # Comparison Table
+        comparison_df = pd.DataFrame({
+            'Metric': ['Overlap with Core'],
+            'Initial Portfolio': [None],
+            'Hedged Portfolio': [hedged_target.get("exposureOverlapWithTarget")]
+        })
+
+        # Combined Table
+        combined_df = pd.concat([
+            risk_df.assign(Category='Risk'),
+            performance_df.assign(Category='Performance'),
+            transaction_cost_df.assign(Category='Transaction Cost'),
+            comparison_df.assign(Category='Comparison')
+        ], ignore_index=True)
+        combined_df = combined_df[['Category', 'Metric', 'Initial Portfolio', 'Hedged Portfolio']]
+
+        return {
+            'risk': risk_df,
+            'performance': performance_df,
+            'transaction_cost': transaction_cost_df,
+            'comparison': comparison_df,
+            'combined': combined_df
+        }

@@ -251,8 +251,14 @@ def range_(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Ser
     return apply_ramp(max_v - min_v, w)
 
 
+class MeanType(Enum):
+    ARITHMETIC = 'arithmetic'
+    QUADRATIC = 'quadratic'
+
+
 @plot_function
-def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
+def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0),
+         mean_type: MeanType = MeanType.ARITHMETIC) -> pd.Series:
     """
     Arithmetic mean of series over given window
 
@@ -261,6 +267,7 @@ def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
               and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
               Window size defaults to length of series.
     :return: timeseries of mean value
+    :param mean_type: type of mean to compute - arithmetic or quadratic, arithmetic by default
 
     **Usage**
 
@@ -298,6 +305,10 @@ def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
         x = pd.concat(x, axis=1)
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
+
+    if mean_type is MeanType.QUADRATIC:
+        x = x ** 2
+
     if isinstance(w.w, pd.DateOffset):
         if isinstance(x, pd.Series):
             values = rolling_offset(x, w.w, np.nanmean, 'mean')
@@ -308,7 +319,10 @@ def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
             values = x.rolling(w.w, 0).mean()  # faster than slicing in Python
         else:
             values = [np.nanmean(x.iloc[max(idx - w.w + 1, 0): idx + 1]) for idx in range(0, len(x))]
-    return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
+    result = pd.Series(values, index=x.index, dtype=np.dtype(float))
+    if mean_type is MeanType.QUADRATIC:
+        result = np.sqrt(result)
+    return apply_ramp(result, w)
 
 
 @plot_function

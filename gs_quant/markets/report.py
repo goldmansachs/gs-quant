@@ -1159,6 +1159,16 @@ class FactorRiskReport(Report):
         >>> )
         >>> display(pd.DataFrame(pnl_table))
         """
+        # setting default values to start_date and end_date if they are None
+        if start_date is None and end_date is None:
+            start_date = self.latest_end_date - relativedelta(
+                months=1) if mode == FactorRiskTableMode.Pnl else self.latest_end_date
+            end_date = self.latest_end_date
+        elif start_date is None:
+            start_date = end_date - relativedelta(months=1) if mode == FactorRiskTableMode.Pnl else end_date
+        elif end_date is None:
+            end_date = start_date if mode != FactorRiskTableMode.Pnl else self.latest_end_date
+
         table = GsReportApi.get_factor_risk_report_table(risk_report_id=self.id,
                                                          mode=mode,
                                                          unit=unit.value if unit else None,
@@ -1166,6 +1176,8 @@ class FactorRiskReport(Report):
                                                          date=date,
                                                          start_date=start_date,
                                                          end_date=end_date)
+        if 'table' not in table and 'warning' in table:
+            raise MqValueError(table.get('warning'))
         if return_format == ReturnFormat.DATA_FRAME:
             column_info = table.get('table').get('metadata').get('columnInfo')
             column_info[0].update({'columns': ['name', 'symbol', 'sector']})

@@ -70,7 +70,7 @@ class StrategySystematic:
                  cash_accrual: bool = True,
                  combine_roll_signal_entries: bool = False,
                  transaction_cost_config: TransactionCostConfig = None,
-                 use_xasset_backtesting_service: bool = False):
+                 use_xasset_backtesting_service: bool = True):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name

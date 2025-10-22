@@ -298,6 +298,9 @@ def test_volatility():
     real_vol = volatility(x)
     assert (real_vol[-1] == vol)
 
+    vol_already_returns = volatility(returns(x), returns_type=None)
+    assert_series_equal(vol_already_returns, real_vol, obj="Volatility strdate")
+
     result = volatility(x, w="3d")
     expected = pd.Series([33.04542, 31.74902, 31.74902], index=daily_dates[3:])
     assert_series_equal(result, expected, obj="Volatility strdate")
@@ -305,6 +308,47 @@ def test_volatility():
     result = volatility(x, w="3m")
     expected = pd.Series(dtype=float)
     assert_series_equal(pd.Series(dtype=float), expected, obj="Volatility strdate too large for series")
+
+
+def test_volatility_assume_zero_mean():
+    dates = pd.date_range(start='2020-01-01', periods=50, freq='D')
+    prices = pd.Series([100, 102, 101, 103, 102, 104, 103, 105, 104, 106,
+                        105, 107, 106, 108, 107, 109, 108, 110, 109, 111,
+                        110, 112, 111, 113, 112, 114, 113, 115, 114, 116,
+                        115, 117, 116, 118, 117, 119, 118, 120, 119, 121,
+                        120, 122, 121, 123, 122, 124, 123, 125, 124, 126],
+                       index=dates)
+
+    window_size = 10
+
+    # zero-mean should give different result than standard volatility
+    vol_zero_mean = volatility(prices, w=window_size, assume_zero_mean=True)
+    vol_standard = volatility(prices, w=window_size, assume_zero_mean=False)
+    assert not np.allclose(vol_zero_mean.dropna(), vol_standard.dropna()), \
+        "Zero-mean and standard volatility should differ"
+
+    # manual calc check
+    result = volatility(prices, w=window_size, returns_type=Returns.LOGARITHMIC,
+                        assume_zero_mean=True)
+
+    log_returns = np.log(prices / prices.shift(1)).dropna()
+    last_window_returns = log_returns.iloc[-window_size:].values
+    expected_vol = np.sqrt(np.mean(last_window_returns ** 2)) * np.sqrt(252) * 100
+
+    assert abs(result.iloc[-1] - expected_vol) < 0.01, \
+        f"Manual calculation mismatch: {result.iloc[-1]} vs {expected_vol}"
+
+    # single value window
+    vol_single = volatility(prices, w=1, assume_zero_mean=True)
+    assert not vol_single.empty, "Should handle window size of 1"
+
+    # full series (no window)
+    vol_full = volatility(prices, returns_type=Returns.LOGARITHMIC, assume_zero_mean=True)
+    all_returns = np.log(prices / prices.shift(1)).dropna().values
+    expected_full = np.sqrt(np.mean(all_returns ** 2)) * np.sqrt(252) * 100
+
+    assert abs(vol_full.iloc[-1] - expected_full) < 0.01, \
+        f"Full series calculation incorrect: {vol_full.iloc[-1]} vs {expected_full}"
 
 
 def test_correlation():

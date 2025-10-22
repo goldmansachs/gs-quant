@@ -24,11 +24,14 @@ import sys
 import time
 from socket import gaierror
 from typing import Iterable, Optional, Union
+import re
+
 
 import msgpack
 from websockets import ConnectionClosed
 
 from gs_quant.api.risk import RiskApi
+from gs_quant.errors import MqValueError
 from gs_quant.risk import RiskRequest
 from gs_quant.target.risk import OptimizationRequest
 from gs_quant.tracing import Tracer, TracingSpan
@@ -333,3 +336,82 @@ class GsRiskApi(RiskApi):
         else:
             _logger.info('Optimization is fetched in {:.3f}s.'.format(time.perf_counter() - start))
             return results
+
+    @classmethod
+    def get_liquidity_and_factor_analysis(cls,
+                                          positions: list,
+                                          risk_model: str,
+                                          date: dt.date,
+                                          currency: str = 'USD',
+                                          participation_rate: float = 0.1,
+                                          measures: Optional[list] = None,
+                                          notional: Optional[float] = None,
+                                          time_series_benchmark_ids: Optional[list] = None):
+        """
+        Get liquidity and factor analysis for a portfolio using the /risk/liquidity endpoint.
+
+        :param positions: List of positions with assetId and quantity/weight
+        :param risk_model: Risk model identifier (e.g., 'BARRA_EFM_USALTL', 'AXIOMA_AXUS4S')
+        :param date: Analysis date
+        :param currency: Currency for analysis (default: USD)
+        :param participation_rate: Market participation rate (default: 0.1 = 10%)
+        :param measures: List of measures to include (default: all available measures)
+        :param notional: Optional reference notional
+        :param time_series_benchmark_ids: Optional benchmark IDs for time series comparison
+        :return: Dictionary with liquidity and factor analysis results
+        """
+        if measures is None:
+            measures = [
+                "Time Series Data",
+                "Risk Buckets",
+                "Factor Risk Buckets",
+                "Factor Exposure Buckets",
+                "Exposure Buckets"
+            ]
+
+        payload = {
+            "currency": currency,
+            "date": date.isoformat() if isinstance(date, dt.date) else date,
+            "positions": positions,
+            "participationRate": participation_rate,
+            "riskModel": risk_model,
+            "timeSeriesBenchmarkIds": time_series_benchmark_ids or [],
+            "measures": measures
+        }
+
+        if notional is not None:
+            payload["notional"] = notional
+
+        try:
+            response = cls.get_session()._post('/risk/liquidity', payload)
+
+            if isinstance(response, dict) and 'errorMessage' in response:
+                error_msg = response['errorMessage']
+
+                asset_ids_pattern = (r'Assets with the following ids are missing in marquee:'
+                                     r'\s*\[\s*([^\]]+)\s*\]')
+                asset_ids_match = re.search(asset_ids_pattern, error_msg, re.IGNORECASE)
+                if asset_ids_match:
+                    clean_error_pattern = (r'(Assets with the following ids are missing in '
+                                           r'marquee:\s*\[[^\]]+\])')
+                    clean_error_line = re.search(clean_error_pattern, error_msg, re.IGNORECASE)
+                    if clean_error_line:
+                        clean_message = (f"ERROR: liquidity analysis failed\n"
+                                         f"{clean_error_line.group(1)}")
+                        _logger.error(clean_message)
+                        raise MqValueError(clean_message)
+                    else:
+                        missing_assets = asset_ids_match.group(1).strip()
+                        clean_message = (f"ERROR: liquidity analysis failed\n"
+                                         f"Assets with the following ids are missing in marquee: "
+                                         f"[ {missing_assets} ]")
+                        _logger.error(clean_message)
+                        raise MqValueError(clean_message)
+                else:
+                    _logger.error(f'Liquidity analysis failed: {error_msg}')
+                    raise MqValueError("ERROR: liquidity analysis failed")
+
+            _logger.info('Liquidity analysis completed successfully')
+            return response
+        except Exception:
+            raise

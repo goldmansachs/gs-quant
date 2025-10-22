@@ -39,7 +39,8 @@ strategy = StrategySystematic(name="Mock Test",
                               quantity=1,
                               quantity_type=BacktestTradingQuantityType.notional,
                               trade_in_method=TradeInMethod.FixedRoll,
-                              roll_frequency='1m')
+                              roll_frequency='1m',
+                              use_xasset_backtesting_service=False)
 
 
 def set_session():

@@ -173,6 +173,10 @@ def test_rule_p_():
 def test_rule_w():
     date: dt = RelativeDate('1w', base_date=dt.date(2022, 3, 30)).apply_rule(holiday_calendar=holiday_calendar)
     assert date == dt.date(2022, 4, 6)
+    date: dt = RelativeDate('1w', base_date=dt.date(2025, 10, 11)).apply_rule(holiday_calendar=holiday_calendar)
+    assert date == dt.date(2025, 10, 20)
+    date: dt = RelativeDate('-1w', base_date=dt.date(2025, 10, 11)).apply_rule(holiday_calendar=holiday_calendar)
+    assert date == dt.date(2025, 10, 3)
 
 
 # k -> Relative years with no implicit USD calendar
@@ -197,6 +201,10 @@ def test_rule_u():
     assert date == dt.date(2021, 1, 21)
     date: dt = RelativeDate('-2u', base_date=dt.date(2021, 1, 19)).apply_rule(holiday_calendar=holiday_calendar)
     assert date == dt.date(2021, 1, 14)
+    date: dt = RelativeDate('-0u', base_date=dt.date(2025, 11, 30)).apply_rule(holiday_calendar=holiday_calendar)
+    assert date == dt.date(2025, 11, 28)
+    date: dt = RelativeDate('-1u', base_date=dt.date(2025, 11, 30)).apply_rule(holiday_calendar=holiday_calendar)
+    assert date == dt.date(2025, 11, 28)
 
 
 # v -> last business day of the month, gets last business day of month (number is months ahead)
@@ -223,6 +231,19 @@ def test_rule_y():
 def test_chaining():
     date: dt = RelativeDate('J+14d+0u+4u', base_date=dt.date(2021, 1, 19)).apply_rule(holiday_calendar=holiday_calendar)
     assert date == dt.date(2021, 1, 22)
+
+
+# last calendar day of month shifted earlier to immediately preceding business day. i.e. last business day of the month
+def test_rule_e_minus_u():
+    date: dt = RelativeDate('e-0u', base_date=dt.date(2025, 11, 19)).apply_rule()
+    assert date == dt.date(2025, 11, 28)
+
+
+def test_rule_roll_convention():
+    date: dt = RelativeDate('1w', base_date=dt.date(2025, 10, 11)).apply_rule()
+    assert date == dt.date(2025, 10, 20)
+    date: dt = RelativeDate('1w', base_date=dt.date(2025, 10, 11)).apply_rule(roll_convention='backward')
+    assert date == dt.date(2025, 10, 17)
 
 
 def mock_holiday_data(*args, **kwargs):

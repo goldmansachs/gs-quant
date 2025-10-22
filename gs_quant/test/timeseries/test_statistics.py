@@ -28,7 +28,8 @@ from gs_quant.errors import MqTypeError, MqValueError, MqError
 from gs_quant.timeseries import normalize_window, Window, Returns, returns
 from gs_quant.timeseries.statistics import (Direction, generate_series, LinearRegression, RollingLinearRegression,
                                             min_, max_, range_, mean, median, mode, sum_, product, std, exponential_std,
-                                            var, cov, zscores, winsorize, percentiles, percentile, SIRModel, SEIRModel)
+                                            var, cov, zscores, winsorize, percentiles, percentile, SIRModel, SEIRModel,
+                                            MeanType)
 
 
 def _random_series(days=365, nans=10):
@@ -240,6 +241,99 @@ def test_mean():
     result = mean(y, Window(2, 0))
     expected = pd.Series([4.0, 4.0, 4.0, 3.0, 2.0, 3.5], index=dates)
     assert_series_equal(result, expected, obj="Mean of single series with nan")
+
+
+def test_quadratic_mean():
+    dates = [
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 7),
+        dt.date(2019, 1, 8),
+    ]
+
+    x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+
+    result = mean(x, mean_type=MeanType.QUADRATIC)
+    expected = pd.Series([
+        np.sqrt(9.0),
+        np.sqrt((9.0 + 4.0) / 2),
+        np.sqrt((9.0 + 4.0 + 9.0) / 3),
+        np.sqrt((9.0 + 4.0 + 9.0 + 1.0) / 4),
+        np.sqrt((9.0 + 4.0 + 9.0 + 1.0 + 9.0) / 5),
+        np.sqrt((9.0 + 4.0 + 9.0 + 1.0 + 9.0 + 36.0) / 6)
+    ], index=dates)
+    assert_series_equal(result, expected, obj="Quadratic mean")
+
+    result = mean(x, Window(1, 0), mean_type=MeanType.QUADRATIC)
+    expected = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+    assert_series_equal(result, expected, obj="Quadratic mean window 1")
+
+    result = mean(x, Window(2, 0), mean_type=MeanType.QUADRATIC)
+    expected = pd.Series([
+        np.sqrt(9.0),
+        np.sqrt((9.0 + 4.0) / 2),
+        np.sqrt((4.0 + 9.0) / 2),
+        np.sqrt((9.0 + 1.0) / 2),
+        np.sqrt((1.0 + 9.0) / 2),
+        np.sqrt((9.0 + 36.0) / 2)
+    ], index=dates)
+    assert_series_equal(result, expected, obj="Quadratic mean window 2")
+
+    result = mean(x, Window('1w', 0), mean_type=MeanType.QUADRATIC)
+    expected = pd.Series([
+        np.sqrt(9.0),
+        np.sqrt((9.0 + 4.0) / 2),
+        np.sqrt((9.0 + 4.0 + 9.0) / 3),
+        np.sqrt((9.0 + 4.0 + 9.0 + 1.0) / 4),
+        np.sqrt((9.0 + 4.0 + 9.0 + 1.0 + 9.0) / 5),
+        np.sqrt((4.0 + 9.0 + 1.0 + 9.0 + 36.0) / 5)
+    ], index=dates)
+    assert_series_equal(result, expected, obj="Quadratic mean window 1w")
+
+    y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
+    result = mean([x, y], Window(2, 0), mean_type=MeanType.QUADRATIC)
+    expected = pd.Series([
+        np.sqrt((9.0 + 16.0) / 2),
+        np.sqrt((9.0 + 4.0 + 16.0) / 3),
+        np.sqrt((4.0 + 9.0 + 16.0) / 3),
+        np.sqrt((9.0 + 1.0 + 16.0 + 4.0) / 4),
+        np.sqrt((1.0 + 9.0 + 4.0 + 4.0) / 4),
+        np.sqrt((9.0 + 36.0 + 4.0 + 25.0) / 4)
+    ], index=dates)
+    assert_series_equal(result, expected, obj="Quadratic mean of multiple series")
+
+    result = mean([x, y], Window('2d', 0), mean_type=MeanType.QUADRATIC)
+    expected = pd.Series([
+        np.sqrt((9.0 + 16.0) / 2),
+        np.sqrt((9.0 + 4.0 + 16.0) / 3),
+        np.sqrt((4.0 + 9.0 + 16.0) / 3),
+        np.sqrt((9.0 + 1.0 + 16.0 + 4.0) / 4),
+        np.sqrt((9.0 + 4.0) / 2),
+        np.sqrt((9.0 + 36.0 + 4.0 + 25.0) / 4)
+    ], index=dates)
+    assert_series_equal(result, expected, obj="Quadratic mean of multiple series by date offset")
+
+    result = mean(y, Window(2, 0), mean_type=MeanType.QUADRATIC)
+    expected = pd.Series([
+        np.sqrt(16.0),
+        np.sqrt(16.0),
+        np.sqrt(16.0),
+        np.sqrt((16.0 + 4.0) / 2),
+        np.sqrt((4.0 + 4.0) / 2),
+        np.sqrt((4.0 + 25.0) / 2)
+    ], index=dates)
+    assert_series_equal(result, expected, obj="Quadratic mean of single series with nan")
+
+    z = pd.Series([-3.0, 4.0, -5.0], index=dates[:3])
+    result = mean(z, Window(2, 0), mean_type=MeanType.QUADRATIC)
+    expected = pd.Series([
+        np.sqrt(9.0),
+        np.sqrt((9.0 + 16.0) / 2),
+        np.sqrt((16.0 + 25.0) / 2)
+    ], index=dates[:3])
+    assert_series_equal(result, expected, obj="Quadratic mean with negative values")
 
 
 def test_median():
