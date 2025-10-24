@@ -489,6 +489,13 @@ class GsDataApi(DataApi):
         return result
 
     @classmethod
+    def get_catalog_url(cls, dataset_id: str) -> DataSetEntity:
+        url = cls.get_session()._build_url(domain=cls.get_session()._get_web_domain(),
+                                           path=f'/s/data-services/datasets/{dataset_id}',
+                                           include_version=False)
+        return url
+
+    @classmethod
     def delete_dataset(cls, dataset_id: str) -> dict:
         result = cls.get_session()._delete(f'/data/datasets/{dataset_id}')
         return result

@@ -858,6 +858,8 @@ class MarqueeDataIngestionLibrary:
         dataset_definition.type_ = DataSetType.NativeSnowflake
 
         result = self.provider.create(dataset_definition)
+        url = self.provider.get_catalog_url(dataset_id)
+        print(f"Dataset created successfully. Access it on Catalog: {url}")
         return result
 
     def write_data(self, df: pd.DataFrame, dataset_id: str) -> None:

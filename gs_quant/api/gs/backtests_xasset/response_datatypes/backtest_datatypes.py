@@ -70,6 +70,10 @@ class CostAggregationType(Enum):
     Min = 'Min'
 
 
+class HedgeRiskMeasure(Enum):
+    Delta = 'Delta'
+
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class Transaction:
@@ -262,3 +266,11 @@ class Configuration:
     cash_accrual: bool = False
     roll_date_mode: Optional[RollDateMode] = None
     combine_roll_signal_entries: bool = False
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class StrategyHedge:
+    risk: HedgeRiskMeasure = HedgeRiskMeasure.Delta
+    frequency: str = '1b'
+    risk_percentage: float = 100

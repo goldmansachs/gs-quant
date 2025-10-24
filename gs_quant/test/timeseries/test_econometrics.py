@@ -31,7 +31,7 @@ from gs_quant.markets.securities import Cash
 from gs_quant.timeseries import returns, prices, index, change, annualize, volatility, correlation, beta, \
     max_drawdown, Returns, Window, Direction, generate_series, SeriesType, Interpolate, CurveType
 from gs_quant.timeseries.econometrics import _get_ratio, excess_returns, RiskFreeRateCurrency, sharpe_ratio, \
-    excess_returns_
+    excess_returns_, corr_swap_correlation, vol_swap_volatility
 
 
 def test_returns():
@@ -351,6 +351,72 @@ def test_volatility_assume_zero_mean():
         f"Full series calculation incorrect: {vol_full.iloc[-1]} vs {expected_full}"
 
 
+def test_volatility_annualization_factor():
+    rng = np.random.default_rng(100)
+    dates = pd.date_range(start='2025-01-01', periods=252, freq='B')
+
+    # Generate returns with ~20% annual volatility
+    daily_vol = 0.20 / np.sqrt(252)
+    returns = rng.normal(0, daily_vol, 252)
+    prices = pd.Series(100 * np.exp(np.cumsum(returns)), index=dates)
+
+    vol_auto = volatility(prices, returns_type=Returns.LOGARITHMIC)
+    vol_252 = volatility(prices, returns_type=Returns.LOGARITHMIC, annualization_factor=252)
+    vol_255 = volatility(prices, returns_type=Returns.LOGARITHMIC, annualization_factor=255)
+
+    assert_series_equal(vol_auto, vol_252)
+
+    expected_ratio_255 = np.sqrt(255 / 252)
+    actual_ratio_255 = vol_255.iloc[-1] / vol_252.iloc[-1]
+    np.testing.assert_almost_equal(actual_ratio_255, expected_ratio_255, decimal=5)
+
+    vol_swap = volatility(prices, returns_type=Returns.LOGARITHMIC,
+                          annualization_factor=255, assume_zero_mean=True)
+
+    assert not np.allclose(vol_swap.iloc[-1], vol_255.iloc[-1]), \
+        "Zero-mean volatility should differ from standard volatility"
+
+    final_vol = vol_252.iloc[-1]
+    assert 15 < final_vol < 25, \
+        "Volatility should be around 20%"
+
+
+def test_vol_swap_volatility():
+    rng = np.random.default_rng(100)
+    dates = pd.date_range(start='2025-01-01', periods=50, freq='D')
+    returns = rng.normal(0, 0.01, 49)
+    prices = pd.Series(100 * np.exp(np.cumsum(np.concatenate([[0], returns]))), index=dates)
+
+    # ramp-up must be w - 1
+    with pytest.raises(MqTypeError):
+        vol_swap_volatility(prices, n_days=Window(22, 0))
+
+    for n_days in [3, 25, 49, 50]:
+        # Windows and numbers get treated identically
+        pd.testing.assert_series_equal(vol_swap_volatility(prices, n_days=n_days),
+                                       vol_swap_volatility(prices, n_days=Window(n_days, n_days - 1)))
+
+    result_wrapper = vol_swap_volatility(prices, n_days=22)
+    result_direct = volatility(prices, Window(22, 21), Returns.LOGARITHMIC, 252, True)
+
+    assert_series_equal(result_wrapper, result_direct)
+
+    result_wrapper = vol_swap_volatility(prices, n_days=22, annualization_factor=365)
+    result_direct = volatility(prices, Window(22, 21), Returns.LOGARITHMIC, 365, True)
+
+    assert_series_equal(result_wrapper, result_direct)
+
+    result_wrapper = vol_swap_volatility(prices, n_days=22, assume_zero_mean=False)
+    result_direct = volatility(prices, Window(22, 21), Returns.LOGARITHMIC, 252, False)
+
+    assert_series_equal(result_wrapper, result_direct)
+
+    result_wrapper = vol_swap_volatility(prices)
+    result_direct = volatility(prices, Window(50, 49), Returns.LOGARITHMIC, 252, True)
+
+    assert_series_equal(result_wrapper, result_direct)
+
+
 def test_correlation():
     x = pd.Series(dtype=float)
     assert_series_equal(pd.Series(dtype=float), correlation(x, x))
@@ -440,6 +506,60 @@ def test_correlation_returns():
         correlation(x, y, returns_type=[Returns.SIMPLE])
     with pytest.raises(MqTypeError):
         correlation(x, y, returns_type=["simple", "logarithmic"])
+
+
+def test_corr_swap_correlation():
+    assert corr_swap_correlation(pd.Series(), pd.Series()).empty
+
+    num_dates = 10
+    dates = pd.to_datetime(pd.date_range(start='2025-01-01', periods=num_dates))
+    rng = np.random.default_rng()
+    x = pd.Series(rng.random(num_dates), index=dates)
+    y = pd.Series(rng.random(num_dates), index=dates)
+
+    # ramp-up must be w - 1
+    with pytest.raises(MqTypeError):
+        corr_swap_correlation(x, y, n_days=Window(3, 0))
+
+    for n_days in [3, 5, 9, 10]:
+        # Windows and numbers get treated identically
+        pd.testing.assert_series_equal(corr_swap_correlation(x, y, n_days=n_days),
+                                       corr_swap_correlation(x, y, n_days=Window(n_days - 1, n_days - 2)))
+
+    # n_days left unspecified defaults to the number of price dates
+    pd.testing.assert_series_equal(corr_swap_correlation(x, y, n_days=num_dates),
+                                   corr_swap_correlation(x, y,))
+
+    for window_size in [3, 5, 9]:
+        # assume_zero_mean=False should match correlation function
+        corr = correlation(x, y, returns_type=Returns.LOGARITHMIC, w=Window(window_size, window_size - 1))
+        corr_swap_corr = corr_swap_correlation(x, y, n_days=window_size + 1, assume_zero_mean=False)
+        pd.testing.assert_series_equal(corr, corr_swap_corr)
+
+        # assume_zero_mean=True yields correct numbers that are different from assume_zero_mean=False
+        zero_mean_corr_swap_corr = corr_swap_correlation(x, y, n_days=window_size + 1)
+        assert not np.allclose(corr_swap_corr.values, zero_mean_corr_swap_corr.values, rtol=1e-10)
+
+        zero_mean_corr_swap_corr = zero_mean_corr_swap_corr.iloc[1:]  # drop the first NaN
+        assert np.all(zero_mean_corr_swap_corr.between(-1.0, 1.0))
+        # manually verify the first valid correlation (originally at index 1, now at iloc[0])
+        ret_x = np.log(x / x.shift(1)).dropna()
+        ret_y = np.log(y / y.shift(1)).dropna()
+        window_x = ret_x.iloc[0:window_size].values
+        window_y = ret_y.iloc[0:window_size].values
+        denom = len(window_x)
+        var_x = np.sum(window_x ** 2) / denom
+        var_y = np.sum(window_y ** 2) / denom
+        covar = np.sum(window_x * window_y) / denom
+        if var_x > 0 and var_y > 0:
+            expected_zero_mean_corr = covar / (np.sqrt(var_x) * np.sqrt(var_y))
+            actual_zero_mean_corr = zero_mean_corr_swap_corr.iloc[0]
+            np.testing.assert_almost_equal(
+                actual_zero_mean_corr,
+                expected_zero_mean_corr,
+                decimal=10,
+                err_msg=f"Zero-mean correlation mismatch for window_size={window_size}"
+            )
 
 
 def test_beta():

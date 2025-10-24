@@ -542,6 +542,10 @@ class GsSession(ContextBase):
         else:
             return env_config['MdsDomainEast']
 
+    def _get_web_domain(self):
+        env_config = GsSession._config_for_environment(self.environment.name)
+        return env_config['MarqueeWebDomain']
+
     @classmethod
     def _config_for_environment(cls, environment):
         if cls.__config is None:

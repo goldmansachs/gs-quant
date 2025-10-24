@@ -516,7 +516,8 @@ def annualize(x: pd.Series) -> pd.Series:
 
 @plot_function
 def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
-               returns_type: Optional[Returns] = Returns.SIMPLE, assume_zero_mean: bool = False) -> pd.Series:
+               returns_type: Optional[Returns] = Returns.SIMPLE, annualization_factor: Optional[int] = None,
+               assume_zero_mean: bool = False) -> pd.Series:
     """
     Realized volatility of price or return series
 
@@ -525,6 +526,8 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
               and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
               Window size defaults to length of series.
     :param returns_type: returns type: simple, logarithmic or absolute. If None, x is assumed to be a returns series.
+    :param annualization_factor: Annualization factor for volatility scaling. If None (default),
+                             auto-detects based on data frequency (252 for daily, 52 for weekly, etc.).
     :param assume_zero_mean: if True, assumes zero mean for returns (uses population formula with N denominator).
                             if False (default), uses sample statistics (N-1 denominator).
     :return: date-based time series of annualized volatility (in percent)
@@ -578,6 +581,21 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
 
     If window is not provided, computes realized volatility over the full series.
 
+    **Annualization:**
+
+    If `annualization_factor` is None, the factor is auto-detected based on average time between observations:
+
+    ==================  =============================
+    Data Frequency      Annualization Factor (F)
+    ==================  =============================
+    Daily               $$252$$
+    Weekly              $$52$$
+    Semi-Monthly        $$26$$
+    Monthly             $$12$$
+    Quarterly           $$4$$
+    Annually            $$1$$
+    ==================  =============================
+
     **Examples**
 
     Compute rolling :math:`1` month (:math:`22` business day) annualized volatility of price series
@@ -599,6 +617,10 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
 
     >>> vol_zero_mean = volatility(series, 22, assume_zero_mean=True)
 
+    Compute FX volatility with 365-day annualization:
+
+    >>> vol_fx = volatility(fx_series, 22, annualization_factor=365)
+
     **See also**
 
     :func:`std` :func:`annualize` :func:`returns` :func:`mean` :func:`corr_swap_correlation`
@@ -613,13 +635,87 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
     window = Window(w.w, 0)
     vol = mean(ret, window, MeanType.QUADRATIC) if assume_zero_mean else std(ret, window)
 
-    return apply_ramp(annualize(vol).mul(100), w)
+    annualized_vol = vol * math.sqrt(annualization_factor) if annualization_factor is not None else annualize(vol)
+
+    return apply_ramp(annualized_vol.mul(100), w)
+
+
+@plot_function
+def vol_swap_volatility(prices: pd.Series, n_days: Union[int, Window] = None, annualization_factor: int = 252,
+                        assume_zero_mean: bool = True) -> pd.Series:
+    """
+    Rolling volatility of a price series for volatility swap pricing
+
+    :param prices: price series
+    :param n_days: number of price days in the rolling window. Defaults to length of series if not provided.
+    :param annualization_factor: number of periods per year for annualization. Default is 252
+    :param assume_zero_mean: if False, uses sample mean in volatility calculation (standard volatility).
+                             if True (default), assumes zero mean for returns (volatility swap convention)
+    :return: date-based time series of annualized volatility in percentage terms
+
+    **Usage**
+
+    Calculate rolling realized volatility, :math:`\\sigma_t` of a price series over a given window
+    using logarithmic returns.
+
+    **When assume_zero_mean=True (default):**
+
+    Computes zero-mean volatility (volatility swap convention):
+
+    :math:`\\sigma_t = \\sqrt{AF \\times \\frac{1}{N}\\sum_{i=1}^{N} R_i^2}`
+
+    where :math:`AF` is the annualization factor (default 252), :math:`N` is the number of returns
+    (n_days - 1), and :math:`R_i` are the logarithmic returns:
+
+    :math:`R_i = \\ln\\left(\\frac{P_i}{P_{i-1}}\\right)`
+
+    This assumes :math:`\\overline{R} = 0`, which is the standard convention for volatility swap
+    payoff calculations. The divisor is :math:`N` (not :math:`N-1`).
+
+    **When assume_zero_mean=False:**
+
+    Computes standard sample volatility:
+
+    :math:`\\sigma_t = \\sqrt{AF \\times \\frac{1}{N-1}\\sum_{i=1}^{N} (R_i - \\overline{R})^2}`
+
+    where :math:`\\overline{R}` is the sample mean over the window, and the divisor is :math:`N-1`
+    (Bessel's correction for unbiased estimation).
+
+    **Examples**
+
+    Compute rolling 22 price day (21 return) volatility swap volatility:
+
+    >>> series = generate_series(100)
+    >>> vol_swap = vol_swap_volatility(series, n_days=22)
+
+    Compute with 365-day annualization instead of default 252:
+
+    >>> vol_252 = vol_swap_volatility(series, n_days=22, annualization_factor=365)
+
+    Compute volatility over the full series:
+
+    >>> full_vol = vol_swap_volatility(series)  # n_days defaults to series length
+
+    **See also**
+
+    :func:`volatility` :func:`returns`
+
+    """
+    if n_days is None:
+        n_days = len(prices)
+    if isinstance(n_days, Window):
+        if n_days.r != n_days.w - 1:
+            raise MqTypeError('Ramp-up must be the size of the window minus 1, e.g. Window(4, 3).')
+        window = n_days
+    else:
+        window = Window(n_days, n_days - 1)
+    return volatility(prices, window, Returns.LOGARITHMIC, annualization_factor, assume_zero_mean)
 
 
 @plot_function
 def correlation(x: pd.Series, y: pd.Series,
                 w: Union[Window, int, str] = Window(None, 0), type_: SeriesType = SeriesType.PRICES,
-                returns_type: Returns = Returns.SIMPLE) -> pd.Series:
+                returns_type: Returns = Returns.SIMPLE, assume_zero_mean: bool = False) -> pd.Series:
     """
     Rolling correlation of two price series
 
@@ -631,6 +727,9 @@ def correlation(x: pd.Series, y: pd.Series,
     :param type_: type of both input series: prices or returns
     :param returns_type: Method to calculate returns when type_ is PRICES, simple, logarithmic or absolute. You can
                         also pass two methods to calculate returns for x and y respectively.
+    :param assume_zero_mean: if False (default), uses sample mean in correlation calculation
+                            (standard Pearson correlation).
+                             if True, assumes zero mean for returns (correlation swap convention)
     :return: date-based time series of correlation
 
     **Usage**
@@ -692,22 +791,109 @@ def correlation(x: pd.Series, y: pd.Series,
         ret_1 = x
         ret_2 = y
 
-    clean_ret1 = ret_1.dropna()
-    clean_ret2 = ret_2.dropna()
+    aligned = pd.DataFrame({'r1': ret_1, 'r2': ret_2}).dropna()
+    clean_ret1 = aligned['r1']
+    clean_ret2 = aligned['r2']
 
-    if isinstance(w.w, pd.DateOffset):
-        if isinstance(clean_ret1.index, pd.DatetimeIndex):
-            values = [clean_ret1.loc[(clean_ret1.index > idx - w.w) & (clean_ret1.index <= idx)].corr(clean_ret2)
-                      for idx in clean_ret1.index]
-        else:
-            values = [clean_ret1.loc[(clean_ret1.index > (idx - w.w).date()) &
-                                     (clean_ret1.index <= idx)].corr(clean_ret2)
-                      for idx in clean_ret1.index]
-        corr = pd.Series(values, index=clean_ret1.index)
+    if assume_zero_mean:
+        def daily_vols(returns):
+            vols = volatility(returns, w, returns_type=None, assume_zero_mean=True)
+            annualization_factor = _get_annualization_factor(returns)
+            result = vols.div(math.sqrt(annualization_factor) * 100)
+            return result
+        zero_mean_cov = mean(clean_ret1 * clean_ret2, w)
+        vols_1 = daily_vols(clean_ret1)
+        vols_2 = daily_vols(clean_ret2)
+        corr = pd.Series(zero_mean_cov / (vols_1 * vols_2), index=clean_ret1.index)
     else:
-        corr = clean_ret1.rolling(w.w, 0).corr(clean_ret2)
+        if isinstance(w.w, pd.DateOffset):
+            if isinstance(clean_ret1.index, pd.DatetimeIndex):
+                values = [clean_ret1.loc[(clean_ret1.index > idx - w.w) & (clean_ret1.index <= idx)].corr(clean_ret2)
+                          for idx in clean_ret1.index]
+            else:
+                values = [clean_ret1.loc[(clean_ret1.index > (idx - w.w).date()) &
+                                         (clean_ret1.index <= idx)].corr(clean_ret2)
+                          for idx in clean_ret1.index]
+            corr = pd.Series(values, index=clean_ret1.index)
+        else:
+            corr = clean_ret1.rolling(w.w, 0).corr(clean_ret2)
 
     return apply_ramp(interpolate(corr, x, Interpolate.NAN), w)
+
+
+@plot_function
+def corr_swap_correlation(x: pd.Series, y: pd.Series, n_days: Union[int, Window] = None,
+                          assume_zero_mean: bool = True) -> pd.Series:
+    """
+    Rolling correlation of two price series for correlation swap pricing
+
+    :param x: price series
+    :param y: price series
+    :param n_days: number of price days in the rolling window. Defaults to length of series if not provided.
+                   Note: the returns window size will be n_days - 1
+    :param assume_zero_mean: if False, uses sample mean in correlation calculation (Pearson correlation).
+                             if True (default), assumes zero mean for returns (correlation swap convention)
+    :return: date-based time series of correlation
+
+    **Usage**
+
+    Calculate rolling `realized correlation <https://en.wikipedia.org/wiki/Correlation_and_dependence>`_,
+    :math:`\\rho_t` of two price series over a given window using logarithmic returns.
+
+    **When assume_zero_mean=False (default):**
+
+    Computes standard Pearson correlation:
+
+    :math:`\\rho_t =
+    \\frac{\\sum_{i=t-w+1}^t (R_i - \\overline{R})(S_i - \\overline{S})}{(w-1)\\sigma_R \\sigma_S}`
+
+    where :math:`w` is the window size (n_days - 1), :math:`R_i` and :math:`S_i` are the logarithmic returns:
+
+    :math:`R_i = \\ln\\left(\\frac{X_i}{X_{i-1}}\\right)` and :math:`S_i = \\ln\\left(\\frac{Y_i}{Y_{i-1}}\\right)`
+
+    :math:`\\overline{R}` and :math:`\\overline{S}` are the sample means, and :math:`\\sigma_R` and
+    :math:`\\sigma_S` are the sample standard deviations over the window.
+
+    **When assume_zero_mean=True:**
+
+    Computes zero-mean correlation (correlation swap convention):
+
+    :math:`\\rho_t =
+    \\frac{\\sum_{i=t-w+1}^t R_i S_i}{(w-1)\\sqrt{\\sum_{i=t-w+1}^t R_i^2} \\sqrt{\\sum_{i=t-w+1}^t S_i^2}}`
+
+    This assumes :math:`\\overline{R} = \\overline{S} = 0`, which is the standard convention for
+    correlation swap payoff calculations.
+
+    **Examples**
+
+    Compute rolling :math:`22` price day (21 return) standard Pearson correlation:
+
+    >>> series1 = generate_series(100)
+    >>> series2 = generate_series(100)
+    >>> corr = corr_swap_correlation(series1, series2, n_days=22, assume_zero_mean=False)
+
+    Compute zero-mean correlation for correlation swap pricing:
+
+    >>> corr_swap = corr_swap_correlation(series1, series2, n_days=22)
+
+    Compute correlation over the full series:
+
+    >>> full_corr = corr_swap_correlation(series1, series2)  # n_days defaults to series length
+
+    **See also**
+
+    :func:`correlation` :func:`returns` :func:`volatility`
+
+    """
+    if n_days is None:
+        n_days = min(len(x), len(y))
+    if isinstance(n_days, Window):
+        if n_days.r != n_days.w - 1:
+            raise MqTypeError('Ramp-up must be the size of the window minus 1, e.g. Window(4, 3).')
+        window = n_days
+    else:
+        window = Window(n_days - 1, n_days - 2)
+    return correlation(x, y, window, SeriesType.PRICES, Returns.LOGARITHMIC, assume_zero_mean)
 
 
 @plot_function

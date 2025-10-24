@@ -17,7 +17,9 @@ import copy
 import re
 import warnings
 from functools import reduce
+from typing import Union
 
+import datetime as dt
 import pandas as pd
 
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import TransactionCostConfig, \
@@ -367,10 +369,13 @@ class TenorParser(object):
     # match expiration dates expressed as 3m@listed
     expiry_regex = '(.*)@(.*)'
 
-    def __init__(self, expiry: str):
+    def __init__(self, expiry: Union[str, dt.date]):
         self.expiry = expiry
 
     def get_date(self):
+        if isinstance(self.expiry, dt.date):
+            return self.expiry
+
         parts = re.search(self.expiry_regex, self.expiry)
         if parts:
             return parts.group(1)
@@ -378,6 +383,9 @@ class TenorParser(object):
             return self.expiry
 
     def get_mode(self):
+        if isinstance(self.expiry, dt.date):
+            return None
+
         parts = re.search(self.expiry_regex, self.expiry)
         if parts:
             return parts.group(2)
