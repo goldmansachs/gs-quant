@@ -2871,18 +2871,18 @@ def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = '
 
     where = dict(priceMethod=price_method.upper(), quantityBucket=quantitybuckets_to_query, contract=contracts_to_query)
     with DataContext(start, end):
-        def _query_fwd(asset_, where_):
+        def _query_fwd(asset_, where_, source_=None):
             q = GsDataApi.build_market_data_query([asset_.get_marquee_id()], QueryType.FORWARD_PRICE,
-                                                  where=where_, source=None,
+                                                  where=where_, source=source_,
                                                   real_time=False)
             _logger.debug('q %s', q)
             return _market_data_timed(q)
 
-        forwards_data = _query_fwd(asset, where)
+        forwards_data = _query_fwd(asset, where, source)
         if forwards_data.empty:
             # For cases where uppercase priceMethod dont fetch data, try user input as is
             where['priceMethod'] = price_method
-            forwards_data = _query_fwd(asset, where)
+            forwards_data = _query_fwd(asset, where, source)
 
         dataset_ids = getattr(forwards_data, 'dataset_ids', ())
 
@@ -2916,7 +2916,7 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
     if real_time:
         raise MqValueError('Use daily frequency instead of intraday')
 
-    return _forward_price_elec(asset, price_method, bucket, contract_range)
+    return _forward_price_elec(asset, price_method, bucket, contract_range, source=source)
 
 
 @plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,

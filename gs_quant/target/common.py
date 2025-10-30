@@ -245,6 +245,8 @@ class AssetType(EnumBase, Enum):
     VolatilitySwap = 'VolatilitySwap'
     VolVarSwap = 'VolVarSwap'
     WeatherIndex = 'WeatherIndex'
+    WindowDoubleKnockout = 'WindowDoubleKnockout'
+    WindowKnockout = 'WindowKnockout'
     WorstOf = 'WorstOf'
     WorstOfLeg = 'WorstOfLeg'
     WorstOfKO = 'WorstOfKO'
