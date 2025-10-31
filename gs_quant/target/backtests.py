@@ -28,6 +28,7 @@ class BacktestRiskMeasureType(EnumBase, Enum):
     """The type of measure to perform risk on. e.g. Greeks"""
 
     Price = 'Price'
+    Price_Percent = 'Price Percent'
     Delta = 'Delta'
     Gamma = 'Gamma'
     Vega = 'Vega'
@@ -89,7 +90,6 @@ class FlowVolBacktestMeasure(EnumBase, Enum):
     PNL_higher_order_spot = 'PNL_higher_order_spot'
     PNL_higher_order_vol = 'PNL_higher_order_vol'
     PNL_theta = 'PNL_theta'
-    Total = 'Total'
     PNL_transactions = 'PNL_transactions'
     PNL_unexplained = 'PNL_unexplained'
     PNL_vega = 'PNL_vega'
@@ -97,7 +97,6 @@ class FlowVolBacktestMeasure(EnumBase, Enum):
     delta = 'delta'
     gamma = 'gamma'
     vega = 'vega'
-    portfolio = 'portfolio'
     NAV = 'NAV'    
 
 
