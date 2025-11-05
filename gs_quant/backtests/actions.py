@@ -325,6 +325,7 @@ class HedgeAction(Action):
     :param transaction_cost_exit: optionally specify a different model for exits; defaults to entry cost if None
     :param risk_transformation: optional a Transformer which will be applied to the raw risk numbers before hedging
     :param holiday_calendar: optional an iterable list of holiday dates
+    :param risk_percentage: proportion of risk to hedge expressed as a percentage. Default is 100%
     """
 
     risk: RiskMeasure = field(default=None, metadata=config(decoder=decode_risk_measure,
@@ -343,6 +344,7 @@ class HedgeAction(Action):
                                                                   decoder=dc_decode(ConstantTransactionModel)))
     risk_transformation: Transformer = None
     holiday_calendar: Iterable[dt.date] = None
+    risk_percentage: float = 100
     class_type: str = static_field('hedge_action')
 
     def __post_init__(self):

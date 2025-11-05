@@ -73,7 +73,7 @@ setuptools.setup(
         "python-dateutil>=2.7.0",
         "requests",
         "httpx>=0.28.1",
-        "scipy>=1.2.0,<=1.15.3",
+        "scipy>=1.2.0",
         "statsmodels>=0.13.0",
         "tqdm",
         "websockets",

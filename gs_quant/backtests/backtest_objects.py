@@ -351,13 +351,14 @@ class BackTest(BaseBacktest):
 
 class ScalingPortfolio:
     def __init__(self, trade, dates, risk, csa_term=None, scaling_parameter='notional_amount',
-                 risk_transformation: Transformer = None):
+                 risk_transformation: Transformer = None, risk_percentage: float = 100):
         self.trade = trade
         self.dates = dates
         self.risk = risk
         self.csa_term = csa_term
         self.scaling_parameter = scaling_parameter
         self.risk_transformation = risk_transformation
+        self.risk_percentage = risk_percentage
         self.results = None
 
 

@@ -372,7 +372,8 @@ class HedgeActionImpl(OrderBasedActionImpl):
                 scaling_portfolio = ScalingPortfolio(trade=hedge_trade, dates=active_dates, risk=self.action.risk,
                                                      csa_term=self.action.csa_term,
                                                      scaling_parameter=self.action.scaling_parameter,
-                                                     risk_transformation=self.action.risk_transformation)
+                                                     risk_transformation=self.action.risk_transformation,
+                                                     risk_percentage=self.action.risk_percentage)
                 tc_enter = TransactionCostEntry(create_date, hedge_trade, self.action.transaction_cost)
                 current_tc_entries.append(tc_enter)
                 entry_payment = CashPayment(trade=hedge_trade, effective_date=create_date, direction=-1,
@@ -882,7 +883,7 @@ class GenericEngine(BacktestBaseEngine):
                     continue
                 if current_risk.unit != hedge_risk.unit:
                     raise RuntimeError('cannot hedge in a different currency')
-                scaling_factor = current_risk / hedge_risk
+                scaling_factor = current_risk / hedge_risk * hedge.scaling_portfolio.risk_percentage / 100
                 hedge.entry_payment.transaction_cost_entry.additional_scaling = scaling_factor
                 if hedge.exit_payment is not None:
                     hedge.exit_payment.transaction_cost_entry.additional_scaling = scaling_factor
