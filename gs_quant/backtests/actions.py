@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+import warnings
 from collections import namedtuple
 from dataclasses import field, dataclass
 from enum import Enum
@@ -350,28 +351,34 @@ class HedgeAction(Action):
     def __post_init__(self):
         super().__post_init__()
         self._calc_type = CalcType.semi_path_dependent
-        if isinstance(self.priceables, Portfolio):
-            named_priceables = []
-            for i, priceable in enumerate(self.priceables):
-                if priceable.name is None:
-                    named_priceables.append(priceable.clone(name=f'{self.name}_Priceable{i}'))
-                elif priceable.name.startswith(self.name):
-                    named_priceables.append(priceable)
-                else:
-                    named_priceables.append(priceable.clone(name=f'{self.name}_{priceable.name}'))
-            named_priceable = Portfolio(named_priceables)
-        elif isinstance(self.priceables, Priceable):
-            if self.priceables.name is None:
-                named_priceable = self.priceables.clone(name=f'{self.name}_Priceable0')
-            elif self.priceable.name.startswith(self.name):
-                named_priceable = self.priceable
-            else:
-                named_priceable = self.priceables.clone(name=f'{self.name}_{self.priceables.name}')
-        else:
+        portfolio = (
+            self.priceables
+            if isinstance(self.priceables, Portfolio)
+            else Portfolio(self.priceables.clone(name=None), name=self.priceables.name)
+            if isinstance(self.priceables, Priceable)
+            else None
+        )
+
+        if not Portfolio:
             raise RuntimeError('hedge action only accepts one trade or one portfolio')
+
+        named_priceables = []
+        for i, priceable in enumerate(portfolio):
+            if priceable.name is None:
+                named_priceables.append(priceable.clone(name=f'{self.name}_Priceable{i}'))
+            elif priceable.name.startswith(self.name):
+                named_priceables.append(priceable)
+            else:
+                named_priceables.append(priceable.clone(name=f'{self.name}_{priceable.name}'))
+        named_priceable = Portfolio(named_priceables, name=portfolio.name)
+
         self.priceables = named_priceable
         if self.transaction_cost_exit is None:
             self.transaction_cost_exit = self.transaction_cost
+
+        if self.scaling_parameter != 'notional_amount':
+            warnings.warn('HedgeAction.scaling_parameter is deprecated. It is no longer used and will be removed '
+                          'in a future release', DeprecationWarning, stacklevel=2)
 
     @property
     def priceable(self):

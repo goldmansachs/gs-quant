@@ -48,6 +48,10 @@ def mock_pricing_context(self):
     return context
 
 
+def instrument_name(test_name: str, leg_name: str):
+    return f'{test_name}_{leg_name}'
+
+
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
 def test_generic_engine_simple(mocker):
     with MockCalc(mocker):
@@ -56,7 +60,8 @@ def test_generic_engine_simple(mocker):
 
         # Define trade
         call = FXOption(buy_sell='Buy', option_type='Call', pair='USDJPY', strike_price='ATMF',
-                        notional_amount=1e5, expiration_date='2y', name='2y_call')
+                        notional_amount=1e5, expiration_date='2y',
+                        name=instrument_name('test_generic_engine_simple', '2y_call'))
 
         # Periodic trigger: based on frequency
         freq = '1m'
@@ -89,10 +94,12 @@ def test_hedge_action_risk_trigger(mocker):
 
         # Define trade
         call = FXOption(buy_sell='Buy', option_type='Call', pair='USDJPY', strike_price='ATMF',
-                        notional_amount=1e5, expiration_date='2y', name='2y_call')
+                        notional_amount=1e5, expiration_date='2y',
+                        name=instrument_name('test_hedge_action_risk_trigger', '2y_call'))
 
         hedge_risk = FXDelta(aggregation_level='Type')
-        fwd_hedge = FXForward(pair='USDJPY', settlement_date='2y', notional_amount=1e5, name='2y_forward')
+        fwd_hedge = FXForward(pair='USDJPY', settlement_date='2y', notional_amount=1e5,
+                              name=instrument_name('test_hedge_action_risk_trigger', '2y_forward'))
 
         trig_req = RiskTriggerRequirements(risk=hedge_risk, trigger_level=0, direction=TriggerDirection.ABOVE)
         action_hedge = HedgeAction(hedge_risk, fwd_hedge, '2b', name='HedgeAction1')
@@ -124,7 +131,8 @@ def test_hedge_without_risk(mocker):
     with MockCalc(mocker):
         # Define trade
         call = FXOption(buy_sell='Buy', option_type='Call', pair='USDJPY', strike_price='ATMF',
-                        notional_amount=1e5, expiration_date='2y', name='2y_call')
+                        notional_amount=1e5, expiration_date='2y',
+                        name=instrument_name('test_hedge_without_risk', '2y_call'))
 
         trig_req = PeriodicTriggerRequirements(start_date=dt.date(2021, 12, 1), end_date=dt.date(2021, 12, 3),
                                                frequency='1b')
@@ -132,7 +140,8 @@ def test_hedge_without_risk(mocker):
         action = AddTradeAction(call, '1b', name='AddAction1')
 
         hedge_risk = FXDelta(aggregation_level='Type')
-        fwd_hedge = FXForward(pair='USDJPY', settlement_date='2y', notional_amount=1e5, name='2y_forward')
+        fwd_hedge = FXForward(pair='USDJPY', settlement_date='2y', notional_amount=1e5,
+                              name=instrument_name('test_hedge_without_risk', '2y_forward'))
 
         hedge_trig_req = PeriodicTriggerRequirements(start_date=dt.date(2021, 11, 1), end_date=dt.date(2022, 1, 1),
                                                      frequency='1b')
@@ -461,7 +470,7 @@ def test_hedge_transaction_costs(mocker):
         fixed_transaction_cost = ConstantTransactionModel(0)
 
         opt = EqOption(underlier='.SPX', option_type=OptionType.Call, number_of_options=1, expiration_date='3m',
-                       name='SPX_opt')
+                       name=instrument_name('test_hedge_transaction_costs', 'SPX_opt'))
         trade_action = AddTradeAction(priceables=opt, trade_duration='1m', name='Action1',
                                       transaction_cost=fixed_transaction_cost)
         trade_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date,
@@ -469,9 +478,11 @@ def test_hedge_transaction_costs(mocker):
                                                                                          frequency='1m'),
                                         actions=trade_action)
         hedge_port = Portfolio([EqOption(underlier='.SPX', option_type=OptionType.Call, number_of_options=1,
-                                         expiration_date='3m', name='syn_fwd_call'),
+                                         expiration_date='3m',
+                                         name=instrument_name('test_hedge_transaction_costs', 'syn_fwd_call')),
                                 EqOption(underlier='.SPX', option_type=OptionType.Put, number_of_options=1,
-                                         expiration_date='3m', name='syn_fwd_put')])
+                                         expiration_date='3m',
+                                         name=instrument_name('test_hedge_transaction_costs', 'syn_fwd_put'))])
         hedge_action = HedgeAction(risk=EqDelta, priceables=hedge_port, trade_duration='1b',
                                    transaction_cost=scaled_transaction_cost, name='HedgeAction1')
         hedge_trigger = PeriodicTrigger(trigger_requirements=PeriodicTriggerRequirements(start_date=start_date,

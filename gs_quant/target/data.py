@@ -30,6 +30,8 @@ class DataSetType(EnumBase, Enum):
     PlotTool_Pro = 'PlotTool Pro'
     Alloy = 'Alloy'
     Snowflake = 'Snowflake'
+    PDL = 'PDL'
+    LHSnowflake = 'LHSnowflake'
     NativeSnowflake = 'NativeSnowflake'
 
 

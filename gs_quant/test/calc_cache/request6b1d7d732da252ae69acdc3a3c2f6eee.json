@@ -1,0 +1,9 @@
+{
+    "request_id": "1_HedgeAction1_Priceable0ResolvedInstrumentValues2021Dec02",
+    "request_hash": "6b1d7d732da252ae69acdc3a3c2f6eee",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_action_risk_trigger"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"LegDefinition\",\"assetClass\":\"FX\",\"buySell\":\"Buy\",\"forwardRate\":110.60249056,\"notionalAmount\":100000.0,\"notionalAmountInOtherCurrency\":-11060249.056,\"notionalCurrency\":\"USD\",\"pair\":\"USD JPY\",\"settlementDate\":\"2023-12-06\",\"type\":\"Forward\"}]]]]"
+}

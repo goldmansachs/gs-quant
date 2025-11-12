@@ -350,13 +350,12 @@ class BackTest(BaseBacktest):
 
 
 class ScalingPortfolio:
-    def __init__(self, trade, dates, risk, csa_term=None, scaling_parameter='notional_amount',
+    def __init__(self, trade, dates, risk, csa_term=None,
                  risk_transformation: Transformer = None, risk_percentage: float = 100):
         self.trade = trade
         self.dates = dates
         self.risk = risk
         self.csa_term = csa_term
-        self.scaling_parameter = scaling_parameter
         self.risk_transformation = risk_transformation
         self.risk_percentage = risk_percentage
         self.results = None
@@ -527,14 +526,12 @@ class TransactionCostEntry:
 
 
 class CashPayment:
-    def __init__(self, trade, effective_date=None, scale_date=None, direction=1, scaling_parameter='notional_amount',
+    def __init__(self, trade, effective_date=None, direction=1,
                  transaction_cost_entry: Optional[TransactionCostEntry] = None):
         self.trade = trade
         self.effective_date = effective_date
-        self.scale_date = scale_date
         self.direction = direction
         self.cash_paid = defaultdict(float)
-        self.scaling_parameter = scaling_parameter
         self.transaction_cost_entry = transaction_cost_entry
 
     def to_frame(self):

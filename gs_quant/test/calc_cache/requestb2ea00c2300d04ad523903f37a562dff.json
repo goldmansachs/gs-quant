@@ -1,0 +1,9 @@
+{
+    "request_id": "2_AddAction1_test_hedge_without_risk_2y_call_2021-12-02-Scaled_test_hedge_without_risk_2y_forward_2021-12-01_HedgeAction1_Priceable0Price2021Dec03_AddAction1_test_hedge_without_risk_2y_call_2021-12-01Price2021Dec02",
+    "request_hash": "b2ea00c2300d04ad523903f37a562dff",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_without_risk"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":-1375.3354125070036}],[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":-7089.833271984011}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":1885.94041220285}]]]]"
+}

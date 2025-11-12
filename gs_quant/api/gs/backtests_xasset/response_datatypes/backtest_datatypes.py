@@ -87,11 +87,21 @@ class Transaction:
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
+class TradeEvent:
+    direction: TransactionDirection
+    price: float
+    trade_id: Optional[str] = None
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
 class AdditionalResults:
     hedges: Optional[Dict[dt.date, Tuple[Instrument, ...]]] = field(default=None,
                                                                     metadata=config(decoder=decode_daily_portfolio))
     hedge_pnl: Optional[Dict[dt.date, float]] = None
     no_of_calculations: Optional[int] = None
+    trade_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = None
+    hedge_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = None
 
     @classmethod
     def from_dict_custom(cls, data: Any, decode_instruments: bool = True):

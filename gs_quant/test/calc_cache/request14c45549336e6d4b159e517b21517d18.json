@@ -1,6 +1,6 @@
 {
-    "request_id": "1_Action1_SPX_optResolvedInstrumentValues2023Jun05",
-    "request_hash": "68aa516468897059b96af5b5df7f7de3",
+    "request_id": "1_Action1_test_hedge_transaction_costs_SPX_optResolvedInstrumentValues2023Jun05",
+    "request_hash": "14c45549336e6d4b159e517b21517d18",
     "type": "MockCalc",
     "tests": [
         "test_hedge_transaction_costs"

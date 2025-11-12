@@ -1,0 +1,9 @@
+{
+    "request_id": "1_test_hedge_action_risk_trigger_2y_call_2021-12-01ResolvedInstrumentValues2021Dec01",
+    "request_hash": "ba369474db70c4ca2f99d1236c773532",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_action_risk_trigger"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"LegDefinition\",\"assetClass\":\"FX\",\"buySell\":\"Buy\",\"callAmount\":\"100000\",\"callCurrency\":\"USD\",\"exerciseStyle\":\"Manual\",\"expirationDate\":\"2023-11-30\",\"expirationTime\":\"NYC\",\"methodOfSettlement\":\"Physical\",\"notionalAmount\":100000.0,\"notionalAmountInOtherCurrency\":11054466.772999996,\"notionalCurrency\":\"USD\",\"optionType\":\"Call\",\"pair\":\"USD JPY\",\"premium\":-4176.647676080006,\"premiumCurrency\":\"USD\",\"premiumPaymentDate\":\"2023-12-04\",\"putAmount\":\"11054466.772999996319\",\"putCurrency\":\"JPY\",\"settlementDate\":\"2023-12-04\",\"strikePrice\":110.54466772999996,\"type\":\"Option\"}]]]]"
+}

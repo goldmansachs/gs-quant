@@ -1,0 +1,9 @@
+{
+    "request_id": "1_Scaled_test_hedge_action_risk_trigger_2y_forward_2021-12-01_HedgeAction1_Priceable0Price2021Dec03",
+    "request_hash": "bb865103df394a5176b211859dfca415",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_action_risk_trigger"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":-7089.833273150027}]]]]"
+}

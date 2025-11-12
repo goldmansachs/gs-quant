@@ -1,0 +1,9 @@
+{
+    "request_id": "3_HedgeAction1_Priceable0ResolvedInstrumentValues2021Dec03_HedgeAction1_Priceable0ResolvedInstrumentValues2021Dec02_HedgeAction1_Priceable0ResolvedInstrumentValues2021Dec01",
+    "request_hash": "e335e05ef6904adc1c56772fef5b92c1",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_without_risk"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"LegDefinition\",\"assetClass\":\"FX\",\"buySell\":\"Buy\",\"forwardRate\":110.66383893,\"notionalAmount\":100000.0,\"notionalAmountInOtherCurrency\":-11066383.893,\"notionalCurrency\":\"USD\",\"pair\":\"USD JPY\",\"settlementDate\":\"2023-12-07\",\"type\":\"Forward\"}]]],[[[{\"$type\":\"LegDefinition\",\"assetClass\":\"FX\",\"buySell\":\"Buy\",\"forwardRate\":110.60249056,\"notionalAmount\":100000.0,\"notionalAmountInOtherCurrency\":-11060249.056,\"notionalCurrency\":\"USD\",\"pair\":\"USD JPY\",\"settlementDate\":\"2023-12-06\",\"type\":\"Forward\"}]]],[[[{\"$type\":\"LegDefinition\",\"assetClass\":\"FX\",\"buySell\":\"Buy\",\"forwardRate\":110.54466773,\"notionalAmount\":100000.0,\"notionalAmountInOtherCurrency\":-11054466.773,\"notionalCurrency\":\"USD\",\"pair\":\"USD JPY\",\"settlementDate\":\"2023-12-04\",\"type\":\"Forward\"}]]]]"
+}

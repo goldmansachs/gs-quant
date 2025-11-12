@@ -1,0 +1,9 @@
+{
+    "request_id": "3_Action1_test_generic_engine_simple_2y_call_2021-12-01Price2021Dec03_Action1_test_generic_engine_simple_2y_call_2021-12-01Price2021Dec02_Action1_test_generic_engine_simple_2y_call_2021-12-01Price2021Dec01",
+    "request_hash": "3d02eb9418db9237797173d4f68b4425",
+    "type": "MockCalc",
+    "tests": [
+        "test_generic_engine_simple"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":537.6278704525321}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":1885.940412188589}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":0.0}]]]]"
+}
