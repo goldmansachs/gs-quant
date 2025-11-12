@@ -93,6 +93,10 @@ class TradeEvent:
     trade_id: Optional[str] = None
 
 
+def decode_trade_event_tuple_dict(results: dict) -> Dict[dt.date, Tuple[TradeEvent, ...]]:
+    return {dt.date.fromisoformat(k): tuple(TradeEvent.from_dict(e) for e in v) for k, v in results.items()}
+
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class AdditionalResults:
@@ -100,8 +104,12 @@ class AdditionalResults:
                                                                     metadata=config(decoder=decode_daily_portfolio))
     hedge_pnl: Optional[Dict[dt.date, float]] = None
     no_of_calculations: Optional[int] = None
-    trade_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = None
-    hedge_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = None
+    trade_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = field(default=None,
+                                                                          metadata=config(
+                                                                              decoder=decode_trade_event_tuple_dict))
+    hedge_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = field(default=None,
+                                                                          metadata=config(
+                                                                              decoder=decode_trade_event_tuple_dict))
 
     @classmethod
     def from_dict_custom(cls, data: Any, decode_instruments: bool = True):
@@ -109,7 +117,9 @@ class AdditionalResults:
             return cls.from_dict(data)
         return AdditionalResults(hedges=decode_daily_portfolio(data['hedges'], decode_instruments),
                                  hedge_pnl=data['hedge_pnl'],
-                                 no_of_calculations=data['no_of_calculations'])
+                                 no_of_calculations=data['no_of_calculations'],
+                                 trade_events=decode_trade_event_tuple_dict(data['trade_events']),
+                                 hedge_events=decode_trade_event_tuple_dict(data['hedge_events']))
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
