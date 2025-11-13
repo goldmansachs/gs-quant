@@ -1,0 +1,9 @@
+{
+    "request_id": "3_Scaled_test_hedge_without_risk_2y_forward_2021-12-03_HedgeAction1_Priceable0FXDelta(aggregation_level:Type)-Price2021Dec03_Scaled_test_hedge_without_risk_2y_forward_2021-12-02_HedgeAction1_Priceable0FXDelta(aggregation_level:Type)-Price2021Dec02_Scaled_test_hedge_without_risk_2y_forward_2021-12-01_HedgeAction1_Priceable0FXDelta(aggregation_level:Type)-Price2021Dec01",
+    "request_hash": "53ced6371873432280aa8489c1b45f21",
+    "type": "MockCalc",
+    "tests": [
+        "test_hedge_without_risk"
+    ],
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"val\":-462.9241293150699}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":1.862645149230957e-9}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"val\":-0.5291989737088443}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":0.0}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"val\":-463.0912266293308}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":9.313225746154785e-10}]]]]"
+}

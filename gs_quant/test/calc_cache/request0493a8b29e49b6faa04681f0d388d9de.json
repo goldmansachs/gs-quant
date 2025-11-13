@@ -1,9 +1,0 @@
-{
-    "request_id": "2_Scaled_test_hedge_action_risk_trigger_2y_forward_2021-12-02_HedgeAction1_Priceable0FXDelta(aggregation_level:Type)-Price2021Dec03_Scaled_test_hedge_action_risk_trigger_2y_forward_2021-12-02_HedgeAction1_Priceable0FXDelta(aggregation_level:Type)-Price2021Dec02",
-    "request_hash": "0493a8b29e49b6faa04681f0d388d9de",
-    "type": "MockCalc",
-    "tests": [
-        "test_hedge_action_risk_trigger"
-    ],
-    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"val\":-2.9250456151430626}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":-22.10525700297876}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"val\":-2.928292833814794}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":-7.275957614183426e-12}]]]]"
-}

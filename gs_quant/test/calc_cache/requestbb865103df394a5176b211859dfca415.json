@@ -5,5 +5,5 @@
     "tests": [
         "test_hedge_action_risk_trigger"
     ],
-    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":-7089.833273150027}]]]]"
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":-7089.83327198308}]]]]"
 }

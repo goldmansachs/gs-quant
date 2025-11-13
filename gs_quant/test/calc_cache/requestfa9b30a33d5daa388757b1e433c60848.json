@@ -1,9 +1,0 @@
-{
-    "request_id": "1_Scaled_None_2023-06-05_HedgeAction1_test_hedge_transaction_costs_syn_fwd_call-Scaled_None_2023-06-05_HedgeAction1_test_hedge_transaction_costs_syn_fwd_putEqDelta-Price2023Jun05",
-    "request_hash": "fa9b30a33d5daa388757b1e433c60848",
-    "type": "MockCalc",
-    "tests": [
-        "test_hedge_transaction_costs"
-    ],
-    "mocked_data": "[[[[{\"$type\":\"RiskVector\",\"asset\":[-917211.0641140579],\"points\":[{\"asset\":\".SPX\",\"class_\":\"SPOT\",\"path\":\"\",\"point\":\"\",\"quoteStyle\":\"PROPSPREAD\",\"type\":\"RISK\"}],\"unit\":{\"United States Dollar\":1.0}}],[{\"$type\":\"RiskVector\",\"asset\":[668884.9676453213],\"points\":[{\"asset\":\".SPX\",\"class_\":\"SPOT\",\"path\":\"\",\"point\":\"\",\"quoteStyle\":\"PROPSPREAD\",\"type\":\"RISK\"}],\"unit\":{\"United States Dollar\":1.0}}]],[[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-52896.1369931871}],[{\"$type\":\"Risk\",\"unit\":{\"United States Dollar\":1.0},\"val\":-36827.95062147989}]]]]"
-}

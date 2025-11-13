@@ -848,22 +848,24 @@ class GenericEngine(BacktestBaseEngine):
 
     def _process_triggers_and_actions_for_date(self, d, strategy, backtest: BackTest, risks):
         logger.debug(f'{d}: Processing triggers and actions')
-        self.__ensure_risk_results([d], backtest, risks)
 
-        # path dependent
+        # need to ensure risk results for the day are available prior to the path-dependent action/trigger being applied
+        # note that __ensure_risk_results sends a risk calculation for the day, so it should only happen when required
         for trigger in strategy.triggers:
             if trigger.calc_type == CalcType.path_dependent:
                 if trigger.has_triggered(d, backtest):
                     for action in trigger.actions:
+                        self.__ensure_risk_results([d], backtest, risks)
                         self.get_action_handler(action).apply_action(d, backtest)
             else:
                 for action in trigger.actions:
                     if action.calc_type == CalcType.path_dependent:
                         if trigger.has_triggered(d, backtest):
+                            self.__ensure_risk_results([d], backtest, risks)
                             self.get_action_handler(action).apply_action(d, backtest)
-        # test to see if new trades have been added and calc
-        self.__ensure_risk_results([d], backtest, risks)
-
+        # explicit check needed because backtest.hedges is a defaultdict that gets populated on access below
+        if d not in backtest.hedges:
+            return
         for hedge in backtest.hedges[d]:
             sp = hedge.scaling_portfolio
             if sp.results is None:
@@ -872,10 +874,15 @@ class GenericEngine(BacktestBaseEngine):
                     port_sp = sp.trade if isinstance(sp.trade, Portfolio) else Portfolio([sp.trade])
                     sp.results = port_sp.calc(tuple(risks))
 
-        # semi path dependent scaling
-        if d in backtest.hedges:
-            if len(backtest.hedges[d]) and d not in backtest.results:
-                # No risk found to hedge, proceed to the next date
+        # semi path dependent scaling for hedges; only apply if there are any hedges to scale
+        if backtest.hedges[d]:
+            # ensure all risk results are available (including the hedge risk required to scale below)
+            # this is useful when there is overlap between hedges (e.g. an instrument hedging risk from another hedge)
+            # note it does not get applied when there is no overlap between hedges, as the ensure fn will skip the calc
+            self.__ensure_risk_results([d], backtest, risks)
+            # this needs to be applied after the "ensure" line above, which may add results
+            # if there is no risk to hedge, skip to the next day; hedges for this day can be ignored
+            if d not in backtest.results:
                 return
             for hedge in backtest.hedges[d]:
                 p = hedge.scaling_portfolio
@@ -905,8 +912,6 @@ class GenericEngine(BacktestBaseEngine):
                         # add scaled hedge position to portfolio for day.
                         # NOTE this adds leaves, not the portfolio
                         backtest.portfolio_dict[day] += copy.deepcopy(scaled_portfolio_position)
-
-                    self.__ensure_risk_results(p.dates, backtest, risks)
 
                     # scale trade in hedge cash payments
                     hedge.entry_payment.trade = copy.deepcopy(scaled_portfolio_position)

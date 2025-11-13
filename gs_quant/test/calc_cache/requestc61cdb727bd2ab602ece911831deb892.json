@@ -5,5 +5,5 @@
     "tests": [
         "test_hedge_action_risk_trigger"
     ],
-    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"val\":468.2125168710627}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":537.6278704553843}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"val\":465.6782464553544}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":1885.940412188589}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"val\":463.09122659749846}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":0.0}]]]]"
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"val\":468.2125168392304}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":537.6278704397264}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"val\":465.67824680096237}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":1885.940412188589}]]],[[[{\"$type\":\"Risk\",\"children\":{},\"val\":463.09122659749846}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":0.0}]]]]"
 }

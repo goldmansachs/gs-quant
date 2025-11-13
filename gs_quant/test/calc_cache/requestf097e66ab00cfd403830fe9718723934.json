@@ -5,5 +5,5 @@
     "tests": [
         "test_hedge_action_risk_trigger"
     ],
-    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"val\":884.916367722326}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":-1.862645149230957e-9}]]]]"
+    "mocked_data": "[[[[{\"$type\":\"Risk\",\"children\":{},\"val\":884.9163677950855}]],[[{\"$type\":\"Risk\",\"children\":{},\"unit\":{\"Japanese Yen\":1.0},\"val\":-3.725290298461914e-9}]]]]"
 }
