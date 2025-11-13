@@ -884,10 +884,6 @@ class MarqueeDataIngestionLibrary:
                       FieldColumnPair(field_=dataset.dimensions.symbol_dimensions[0],
                                       column=dataset.parameters.snowflake_config.id_column)))
 
-        if len(df.columns) != len(allFields):
-            raise ValueError(f"Mismatch in columns: DataFrame has {len(df.columns)} columns, "
-                             f"but dataset expects {len(allFields)} columns.")
-
         renamed_df = df.copy().rename(columns={
             column: field.field_
             for column in df.columns
