@@ -177,6 +177,16 @@ class StrategySystematic:
                          timeseries=tuple(FieldValueMap(date=d, value=r.result) for d, r in v.items()))
             for k, v in basic_bt_response.measures.items()
         )
+        events = []
+        if basic_bt_response.additional_results is not None:
+            if basic_bt_response.additional_results.trade_events is not None:
+                events.append(BacktestRisk(name="trade_events",
+                                           timeseries=tuple(FieldValueMap(date=d, value=e) for d, e in
+                                                            basic_bt_response.additional_results.trade_events.items())))
+            if basic_bt_response.additional_results.hedge_events is not None:
+                events.append(BacktestRisk(name="hedge_events",
+                                           timeseries=tuple(FieldValueMap(date=d, value=e) for d, e in
+                                                            basic_bt_response.additional_results.hedge_events.items())))
         portfolio = []
         for d in sorted(set().union(basic_bt_response.portfolio.keys(), basic_bt_response.transactions.keys())):
             if d in basic_bt_response.portfolio:
@@ -193,7 +203,7 @@ class StrategySystematic:
                               for i in t.portfolio] if t.portfolio is not None else []
                     transactions.append({'type': t.direction.value, 'trades': trades, 'cost': t.cost})
             portfolio.append({'date': d, 'positions': positions, 'transactions': transactions})
-        return BacktestResult(risks=risks, portfolio=portfolio)
+        return BacktestResult(risks=risks, events=tuple(events), portfolio=portfolio)
 
     def __position_quantity(self, instrument: dict) -> float:
         if instrument['assetClass'] == AssetClass.Equity.value:
