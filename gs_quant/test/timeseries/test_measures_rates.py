@@ -823,6 +823,20 @@ def test_policy_rate_term_structure(mocker):
             "Intraday"
         ).empty
 
+        df_without_meeting_date = pd.DataFrame({
+            'value': [1.5, 2.0],
+            'rateType': ['Meeting', 'Meeting']
+        })
+        mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        mock_get_data.return_value = df_without_meeting_date
+
+        result = tm_rates.policy_rate_term_structure(
+            mock_eur,
+            tm_rates.EventType.MEETING,
+            tm_rates.RateType.ABSOLUTE,
+            dt.date(2019, 12, 6))
+        assert_series_equal(result, pd.Series(dtype=float, name='value'))
+
     replace.restore()
 
 

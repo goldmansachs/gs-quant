@@ -22,7 +22,7 @@ from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.api.gs.backtests_xasset.apis import GsBacktestXassetApi
 from gs_quant.api.gs.backtests_xasset.request import BasicBacktestRequest
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, Configuration, \
-    RollDateMode, TransactionCostConfig
+    RollDateMode, TransactionCostConfig, StrategyHedge
 from gs_quant.backtests.core import Backtest, TradeInMethod
 from gs_quant.base import get_enum_value, Base
 from gs_quant.common import Currency
@@ -129,11 +129,15 @@ class StrategySystematic:
         self.__trades = (Trade(tuple(trade_instruments), roll_frequency, trade_buy_dates, roll_frequency,
                                trade_exit_dates, quantity, quantity_type),)
 
-        hedge_frequency = None
         if delta_hedge:
-            hedge_frequency = '1b' if delta_hedge.frequency == 'Daily' else delta_hedge.frequency
+            self.__hedge_params = StrategyHedge()
+            if delta_hedge.frequency:
+                self.__hedge_params.frequency = '1b' if delta_hedge.frequency == 'Daily' else delta_hedge.frequency
+            if delta_hedge.notional:
+                self.__hedge_params.risk_percentage = delta_hedge.notional
+        else:
+            self.__hedge_params = None
 
-        self.__delta_hedge_frequency = hedge_frequency
         self.__transaction_cost_config = transaction_cost_config
         self.__xasset_bt_service_config = Configuration(roll_date_mode=RollDateMode(roll_date_mode) if
                                                         roll_date_mode is not None else None,
@@ -163,8 +167,10 @@ class StrategySystematic:
         date_cfg = DateConfig(start, end)
         if not measures:
             measures = (FlowVolBacktestMeasure.PNL,)
-        basic_bt_request = BasicBacktestRequest(date_cfg, self.__trades, measures, self.__delta_hedge_frequency,
-                                                self.__transaction_cost_config, self.__xasset_bt_service_config)
+        basic_bt_request = BasicBacktestRequest(dates=date_cfg, trades=self.__trades, measures=measures,
+                                                transaction_costs=self.__transaction_cost_config,
+                                                configuration=self.__xasset_bt_service_config,
+                                                hedge=self.__hedge_params)
         basic_bt_response = GsBacktestXassetApi.calculate_basic_backtest(basic_bt_request, decode_instruments=False)
         risks = tuple(
             BacktestRisk(name=k.value,

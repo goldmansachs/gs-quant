@@ -1973,6 +1973,9 @@ def policy_rate_term_structure(asset: Asset, event_type: EventType = EventType.M
             df = ds.get_data(assetId=[mqid], rateType=event_type, valuationDate=valuation_date,
                              start=CENTRAL_BANK_WATCH_START_DATE)
 
+    if df.empty:
+        return pd.Series(dtype=float, name='value')
+
     if rate_type == RateType.RELATIVE:
         # df = remove_dates_with_null_entries(df)
         spot = df[df['meetingNumber'] == 0]['value'][0]

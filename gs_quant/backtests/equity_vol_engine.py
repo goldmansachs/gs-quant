@@ -305,7 +305,8 @@ class EquityVolEngine(object):
                 transaction_cost.trade_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
                                                                  cls.__map_tc_model(action.transaction_cost_exit))
             elif isinstance(action, a.HedgeAction):
-                hedge = DeltaHedgeParameters(frequency=trigger.trigger_requirements.frequency)
+                hedge = DeltaHedgeParameters(frequency=trigger.trigger_requirements.frequency,
+                                             notional=action.risk_percentage)
                 transaction_cost.hedge_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
                                                                  cls.__map_tc_model(action.transaction_cost_exit))
 
