@@ -1198,6 +1198,8 @@ class OptimizerSettings:
     def __init__(self,
                  notional: float = 10000000,
                  allow_long_short: bool = False,
+                 gross_notional: float = None,
+                 net_notional: float = None,
                  min_names: float = 0,
                  max_names: float = 100,
                  min_weight_per_constituent: float = None,
@@ -1205,25 +1207,109 @@ class OptimizerSettings:
                  max_adv: float = 15,
                  constraint_priorities: ConstraintPriorities = None):
         """
-        Optimizer settings
+        Optimizer settings for factor hedging.
 
-        :param notional: the max gross notional of the optimization
-        :param allow_long_short: allow a long/short optimization
-        :param min_names: minimum number of assets in the optimization
-        :param max_names: maximum number of assets in the optimization
-        :param min_weight_per_constituent: minimum weigh  t of each constituent in the optimization
-        :param max_weight_per_constituent: maximum weight of each constituent in the optimization
-        :param max_adv: maximum average daily volume of each constituent in the optimization (in percent)
-        :param constraint_priorities: constraint priorities
+        **Unidirectional Hedger** (default):
+        - Returns only short positions to hedge the target portfolio
+        - Use when you want to add short-only positions to reduce factor risk
+        - Set `allow_long_short=False` (default)
+        - Only `notional` parameter is used (gross = net for short-only positions)
+
+        **Bidirectional Hedger**:
+        - Returns both long and short positions to hedge the target portfolio
+        - Provides more flexibility in hedging factor exposures
+        - Set `allow_long_short=True`
+        - Specify `gross_notional` to control total hedge size
+        - Must specify `net_notional` for target net exposure (use 0 for market neutral)
+
+        :param notional: For unidirectional hedger: the notional of the hedge (all short positions).
+                        For bidirectional hedger: will be overridden by gross_notional if
+                        allow_long_short=True.
+        :param allow_long_short: Enable bidirectional hedge mode. When True, the hedge can contain both
+                                long and short positions. When False (default), hedge contains only
+                                short positions.
+        :param gross_notional: Total absolute notional (|long| + |short|) for the hedge.
+                              Only applicable when allow_long_short=True. If not specified when
+                              allow_long_short=True, defaults to the value of `notional`.
+                              Example: gross_notional=20M with net_notional=10M means 15M long + 5M
+                              short
+        :param net_notional: Net notional (long - short) for the hedge. Required when
+                            allow_long_short=True. Use 0 for market neutral hedge.
+        :param min_names: Minimum number of assets in the hedge.
+        :param max_names: Maximum number of assets in the hedge.
+        :param min_weight_per_constituent: Minimum absolute weight of each constituent in the hedge
+                                          (as decimal, positive value). The optimizer uses this as
+                                          an absolute value constraint. Example: 0.01 means each
+                                          position must be at least 1% (in absolute value)
+        :param max_weight_per_constituent: Maximum absolute weight of each constituent in the hedge
+                                          (as decimal, positive value). The optimizer uses this as
+                                          an absolute value constraint. Example: 0.05 means each
+                                          position cannot exceed 5% (in absolute value)
+        :param max_adv: Maximum percentage of average daily volume that can be traded for any constituent.
+        :param constraint_priorities: Priority settings for classification constraints (sectors, countries, etc.)
         """
         self.__notional = notional
         self.__allow_long_short = allow_long_short
+        self.__gross_notional = gross_notional
+        self.__net_notional = net_notional
         self.__min_names = min_names
         self.__max_names = max_names
         self.__min_weight_per_constituent = min_weight_per_constituent
         self.__max_weight_per_constituent = max_weight_per_constituent
         self.__max_adv = max_adv
         self.__constraint_priorities = constraint_priorities
+
+        # Validate settings
+        self._validate_settings()
+
+    def _validate_settings(self):
+        """Validate optimizer settings for consistency and proper usage"""
+
+        # Validate weight constraints are positive
+        if self.__min_weight_per_constituent is not None and self.__min_weight_per_constituent < 0:
+            self.__min_weight_per_constituent = 0
+            raise Warning(
+                "min_weight_per_constituent cannot be negative. Setting to 0."
+            )
+
+        if self.__max_weight_per_constituent is not None and self.__max_weight_per_constituent < 0:
+            raise MqValueError(
+                "max_weight_per_constituent must be a positive value (absolute weight constraint). "
+                f"Current value: {self.__max_weight_per_constituent}. "
+                "The optimizer interprets weight constraints as absolute values."
+            )
+
+        if (self.__min_weight_per_constituent is not None and
+                self.__max_weight_per_constituent is not None and
+                self.__min_weight_per_constituent > self.__max_weight_per_constituent):
+            raise MqValueError(
+                f"min_weight_per_constituent ({self.__min_weight_per_constituent}) cannot be greater than "
+                f"max_weight_per_constituent ({self.__max_weight_per_constituent})"
+            )
+
+        # Validation for bidirectional mode
+        if self.__allow_long_short:
+            # When both gross_notional and net_notional are set, validate the relationship
+            if self.__gross_notional is not None and self.__net_notional is not None:
+                if abs(self.__net_notional) > self.__gross_notional:
+                    raise MqValueError(
+                        "Invalid notional configuration: |net_notional| ({abs(self.__net_notional)}) "
+                        f"cannot be greater than gross_notional ({self.__gross_notional}). "
+                        "Formula: gross_notional = |long| + |short|, net_notional = long - short"
+                    )
+            # Allow bidirectional mode with only notional set (hedge notional use case)
+            # No additional validation needed for this case
+
+        else:
+            # Unidirectional hedger mode validation
+            # Prevent setting long/short parameters in unidirectional mode
+            if (self.__gross_notional is not None and self.__net_notional is not None and
+                    self.__gross_notional != self.__net_notional):
+                raise MqValueError(
+                    "Cannot set gross_notional != net_notional when allow_long_short=False. "
+                    "Use 'notional' parameter for unidirectional hedger mode, or set allow_long_short=True "
+                    "to enable bidirectional hedging with gross_notional and net_notional."
+                )
 
     @property
     def notional(self) -> float:
@@ -1232,6 +1318,7 @@ class OptimizerSettings:
     @notional.setter
     def notional(self, value: float):
         self.__notional = value
+        self._validate_settings()
 
     @property
     def allow_long_short(self) -> bool:
@@ -1240,6 +1327,34 @@ class OptimizerSettings:
     @allow_long_short.setter
     def allow_long_short(self, value: bool):
         self.__allow_long_short = value
+        self._validate_settings()
+
+    @property
+    def gross_notional(self) -> float:
+        """
+        Total absolute notional for the hedge (|long| + |short|).
+        Only applicable when allow_long_short=True.
+        """
+        return self.__gross_notional
+
+    @gross_notional.setter
+    def gross_notional(self, value: float):
+        self.__gross_notional = value
+        self._validate_settings()
+
+    @property
+    def net_notional(self) -> float:
+        """
+        Net notional for the hedge (long - short).
+        Only applicable when allow_long_short=True.
+        Set to 0 for market neutral hedge.
+        """
+        return self.__net_notional
+
+    @net_notional.setter
+    def net_notional(self, value: float):
+        self.__net_notional = value
+        self._validate_settings()
 
     @property
     def min_names(self) -> float:
@@ -1256,6 +1371,7 @@ class OptimizerSettings:
     @min_weight_per_constituent.setter
     def min_weight_per_constituent(self, value: float):
         self.__min_weight_per_constituent = value
+        self._validate_settings()
 
     @property
     def max_weight_per_constituent(self) -> float:
@@ -1264,6 +1380,7 @@ class OptimizerSettings:
     @max_weight_per_constituent.setter
     def max_weight_per_constituent(self, value: float):
         self.__max_weight_per_constituent = value
+        self._validate_settings()
 
     @property
     def max_names(self) -> float:
@@ -1290,19 +1407,47 @@ class OptimizerSettings:
         self.__constraint_priorities = value
 
     def to_dict(self):
+        """
+        Convert optimizer settings to dictionary format for API payload.
+        Handles both unidirectional and bidirectional hedger configurations.
+        """
+        # Start with common parameters
         as_dict = {
-            'hedgeNotional': self.notional,
-            'allowLongShort': self.allow_long_short,
             'minNames': self.min_names,
             'maxNames': self.max_names,
             'maxAdvPercentage': self.max_adv
         }
-        if self.min_weight_per_constituent:
+
+        # Configure notional parameters based on hedger mode
+        if self.__allow_long_short:
+            # Bidirectional Hedger mode
+            as_dict['allowLongShort'] = self.__allow_long_short
+
+            # Use grossNotional and netNotional if both are set
+            if self.__gross_notional is not None and self.__net_notional is not None:
+                as_dict['grossNotional'] = self.__gross_notional
+                as_dict['netNotional'] = self.__net_notional
+            # Otherwise, use hedgeNotional if only notional is set
+            elif self.__notional is not None:
+                as_dict['hedgeNotional'] = self.__notional
+
+        else:
+            # Unidirectional Hedger mode (default)
+            # In unidirectional mode, use hedgeNotional (all short positions)
+            as_dict['hedgeNotional'] = self.__notional
+            # Explicitly set allowLongShort to False for clarity
+            as_dict['allowLongShort'] = False
+
+        # Add weight constraints if specified
+        if self.min_weight_per_constituent is not None:
             as_dict['minWeight'] = self.min_weight_per_constituent * 100
-        if self.max_weight_per_constituent:
+        if self.max_weight_per_constituent is not None:
             as_dict['maxWeight'] = self.max_weight_per_constituent * 100
+
+        # Add constraint priorities if specified
         if self.constraint_priorities:
             as_dict['constraintPrioritySettings'] = self.constraint_priorities.to_dict()
+
         return as_dict
 
 
@@ -1573,10 +1718,10 @@ class OptimizerStrategy:
                     optimization_results = GsHedgeApi.calculate_hedge(strategy_as_dict)
                     if optimization_results.get('result') is None:
                         if 'errorMessage' in optimization_results:
-                            raise MqValueError(f"The optimizer returned an error: "
+                            raise MqValueError("The optimizer returned an error: "
                                                f"{optimization_results.get('errorMessage')}. "
-                                               f"Please adjust the constraints"
-                                               f"or contact the Marquee team for assistance")
+                                               "Please adjust the constraints"
+                                               "or contact the Marquee team for assistance")
                         elif counter == 1:
                             raise MqValueError(
                                 'Error calculating an optimization. Please contact the Marquee team for assistance.')
@@ -1604,8 +1749,6 @@ class OptimizerStrategy:
     def get_optimization(self, by_weight: bool = False):
         """
         Get the optimization results
-
-        :param by_weight: whether to return position set with weights instead of quantities
         """
         return self.__construct_position_set_from_hedge_result('hedge', by_weight)
 
@@ -1617,6 +1760,136 @@ class OptimizerStrategy:
         :param by_weight: whether to return position set with weights instead of quantities
         """
         return self.__construct_position_set_from_hedge_result('hedgedTarget', by_weight)
+
+    @_ensure_completed
+    def get_hedge_exposure_summary(self) -> Dict:
+        """
+        Get a summary of the hedge exposures including gross, net, long, and short exposures.
+
+        This is particularly useful for bidirectional hedges to understand the composition.
+
+        :return: Dictionary containing exposure metrics for target, hedge, and hedged target
+
+        **Example Output for bidirectional Hedger:**
+        {
+            'hedge': {
+                'gross_exposure': 20000000,
+                'net_exposure': 10000000,
+                'long_exposure': 15000000,
+                'short_exposure': 5000000,
+                'number_of_positions': 25,
+                'mode': 'bidirectional'
+            },
+            'target': {
+                'gross_exposure': 10000000,
+                'net_exposure': 10000000,
+                'long_exposure': 10000000,
+                'short_exposure': 0,
+                'number_of_positions': 1
+            },
+            'hedged_target': {
+                'gross_exposure': 30000000,
+                'net_exposure': 20000000,
+                'long_exposure': 25000000,
+                'short_exposure': 5000000,
+                'number_of_positions': 26
+            }
+        }
+        """
+        if self.__result is None:
+            raise MqValueError('Please run the optimization before calling this method')
+
+        def get_exposure_dict(result_key: str) -> Dict:
+            """Extract exposure metrics from result"""
+            if result_key not in self.__result:
+                return None
+
+            result = self.__result[result_key]
+            exposure_dict = {
+                'gross_exposure': result.get('grossExposure'),
+                'net_exposure': result.get('netExposure'),
+                'long_exposure': result.get('longExposure', 0),
+                'short_exposure': result.get('shortExposure', 0),
+                'number_of_positions': result.get('numberOfPositions')
+            }
+
+            # Add mode information for hedge
+            if result_key == 'hedge':
+                if result.get('longExposure', 0) > 0:
+                    exposure_dict['mode'] = 'bidirectional'
+                else:
+                    exposure_dict['mode'] = 'unidirectional (short positions only)'
+
+            return exposure_dict
+
+        summary = {
+            'hedge': get_exposure_dict('hedge'),
+            'target': get_exposure_dict('target'),
+            'hedged_target': get_exposure_dict('hedgedTarget')
+        }
+
+        return summary
+
+    @_ensure_completed
+    def get_hedge_constituents_by_direction(self) -> Dict:
+        """
+        For bidirectional hedges, split the hedge constituents into long and short positions.
+
+        This is useful to analyze the long and short sides of the hedge separately.
+
+        :return: Dictionary with 'long_positions' and 'short_positions' DataFrames
+
+        **Example:**
+        {
+            'long_positions': DataFrame with positive notional positions,
+            'short_positions': DataFrame with negative notional positions,
+            'summary': {
+                'num_long': 12,
+                'num_short': 13,
+                'total_long_notional': 15000000,
+                'total_short_notional': -5000000
+            }
+        }
+        """
+        if self.__result is None:
+            raise MqValueError('Please run the optimization before calling this method')
+        if self.__result.get('hedge') is None:
+            raise MqValueError('The optimization result does not contain hedge data')
+
+        constituents = self.__result.get('hedge').get('constituents', [])
+
+        if not constituents:
+            return {
+                'long_positions': pd.DataFrame(),
+                'short_positions': pd.DataFrame(),
+                'summary': {
+                    'num_long': 0,
+                    'num_short': 0,
+                    'total_long_notional': 0,
+                    'total_short_notional': 0
+                }
+            }
+
+        # Convert to DataFrame
+        df = pd.DataFrame(constituents)
+
+        # Split by notional sign
+        long_positions = df[df['notional'] > 0].copy() if 'notional' in df.columns else pd.DataFrame()
+        short_positions = df[df['notional'] < 0].copy() if 'notional' in df.columns else pd.DataFrame()
+
+        # Calculate summary statistics
+        summary = {
+            'num_long': len(long_positions),
+            'num_short': len(short_positions),
+            'total_long_notional': long_positions['notional'].sum() if len(long_positions) > 0 else 0,
+            'total_short_notional': short_positions['notional'].sum() if len(short_positions) > 0 else 0
+        }
+
+        return {
+            'long_positions': long_positions,
+            'short_positions': short_positions,
+            'summary': summary
+        }
 
     def get_cumulative_pnl_performance(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
         """
