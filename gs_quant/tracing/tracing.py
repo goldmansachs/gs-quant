@@ -25,7 +25,8 @@ from opentelemetry import trace, context
 from opentelemetry.context import Context
 from opentelemetry.propagate import extract, inject, set_global_textmap
 from opentelemetry.propagators.textmap import TextMapPropagator
-from opentelemetry.sdk.trace import TracerProvider, SynchronousMultiSpanProcessor, ReadableSpan, Span, Event
+from opentelemetry.sdk.trace import TracerProvider, SynchronousMultiSpanProcessor, ReadableSpan, Span, Event, \
+    SpanProcessor
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 from opentelemetry.trace import Tracer as OtelTracer, SpanContext, INVALID_SPAN
 from opentelemetry.trace import format_trace_id, format_span_id
@@ -389,18 +390,28 @@ class TransportableTracingEvent(TracingEvent):
 
 class TracerFactory:
     __tracer_instance = None
+    _extra_span_processors = []
 
     def get(self) -> OtelTracer:
         if TracerFactory.__tracer_instance is None:
             # Define which OpenTelemetry Tracer provider implementation to use.
             span_processor = SynchronousMultiSpanProcessor()
             span_processor.add_span_processor(SimpleSpanProcessor(SpanConsumer.get_instance()))
+            for extra_processor in TracerFactory._extra_span_processors:
+                span_processor.add_span_processor(extra_processor)
             trace.set_tracer_provider(TracerProvider(active_span_processor=span_processor))
 
             # Create an OpenTelemetry Tracer.
             otel_tracer = trace.get_tracer(__name__)
             TracerFactory.__tracer_instance = otel_tracer
         return TracerFactory.__tracer_instance
+
+    @staticmethod
+    def preregister_span_processor(processor: SpanProcessor):
+        if TracerFactory.__tracer_instance is not None:
+            _logger.error("Can't add span consumer after tracer has been created")
+        else:
+            TracerFactory._extra_span_processors.append(processor)
 
 
 class Tracer(ContextDecorator):
