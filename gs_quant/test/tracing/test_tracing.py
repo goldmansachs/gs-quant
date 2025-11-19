@@ -224,3 +224,46 @@ def test_ignore_active_span():
             assert scope_b.span.parent_id is None
         with Tracer.start_active_span('C') as scope_c:
             assert scope_c.span.parent_id == scope_a.span.span_id
+
+
+@pytest.mark.asyncio
+async def test_callback_in_scope():
+    import asyncio
+    Tracer.reset()
+
+    finished = asyncio.Future()
+
+    def my_callback_on_complete(future):
+        with Tracer('Callback Work') as scope:
+            scope.span.set_tag('callback', 'yes')
+            assert future.result() == "done"
+        finished.set_result(True)
+
+    async def some_async_work():
+        with Tracer('Async Work') as scope:
+            scope.span.set_tag('async', 'yes')
+            return "done"
+
+    with Tracer('Main Work') as main_scope:
+        main_scope.span.set_tag('main', 'yes')
+
+        task = asyncio.create_task(some_async_work())
+        task.add_done_callback(
+            Tracer.in_scope(my_callback_on_complete)
+        )
+        await task
+        await finished
+        assert finished.result()
+
+    spans = Tracer.get_spans()
+    assert len(spans) == 4
+    Tracer.print()
+    main_span = next(span for span in spans if span.operation_name == 'Main Work')
+    async_span = next(span for span in spans if span.operation_name == 'Async Work')
+    callback_span = next(span for span in spans if span.operation_name == 'callback')
+    callback_work_span = next(span for span in spans if span.operation_name == 'Callback Work')
+    assert main_span.tags['main'] == 'yes'
+    assert async_span.tags['async'] == 'yes'
+    assert async_span.parent_id == main_span.span_id
+    assert callback_span.parent_id == main_span.span_id
+    assert callback_work_span.parent_id == callback_span.span_id

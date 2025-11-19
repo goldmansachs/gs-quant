@@ -22,7 +22,7 @@ from typing import Any, Union, List
 import numpy as np
 import pandas as pd
 
-from .helper import _create_enum, Interpolate, plot_function
+from .helper import _create_enum, Interpolate, plot_function, requires_session
 from ..datetime import GsCalendar
 from ..datetime.date import DayCountConvention, PaymentFrequency, day_count_fraction
 from ..datetime.date import date_range as _date_range
@@ -684,6 +684,7 @@ def day_count(first: dt.date, second: dt.date) -> int:
     return np.busday_count(first, second)
 
 
+@requires_session
 @plot_function
 def align_calendar(series: pd.Series, calendar: str) -> pd.Series:
     """

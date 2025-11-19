@@ -96,6 +96,7 @@ setuptools.setup(
             "pytest-cov",
             "pytest-mock",
             "pytest-order",
+            "pytest-asyncio",
             "testfixtures",
             "nbconvert",
             "nbformat",

@@ -18,7 +18,7 @@ import logging
 import traceback
 from contextlib import ContextDecorator
 from enum import Enum
-from typing import Tuple, Optional, Sequence, Mapping, Union
+from typing import Tuple, Optional, Sequence, Mapping, Union, Callable
 
 import pandas as pd
 from opentelemetry import trace, context
@@ -471,7 +471,7 @@ class Tracer(ContextDecorator):
                 _logger.error("Error injecting trace context", exc_info=True)
 
     @staticmethod
-    def extract(carrier):
+    def extract(carrier) -> TracingContext:
         try:
             return TracingContext(extract(carrier))
         except Exception:
@@ -622,6 +622,28 @@ class Tracer(ContextDecorator):
         if reset:
             Tracer.reset()
         return tracing_str, total
+
+    @staticmethod
+    def in_scope(func: Callable, operation_name='callback') -> Callable:
+        """
+        for using with futures or callbacks that would otherwise lose the tracing context
+        e.g.
+        >>>my_future.add_done_callback(my_callback)
+        >>>my_other_future.add_done_callback(lambda fut: my_callback(fut.result())
+        `
+        becomes:
+
+        >>>my_future.add_done_callback(Tracer.in_scope(my_callback))
+        >>>my_other_future.add_done_callback(Tracer.in_scope(lambda fut: my_callback(fut.result())   )
+        """
+        span_carrier = {}
+        Tracer.inject(span_carrier)
+
+        def wrapper(*args, **kwargs):
+            span_ctx = Tracer.extract(span_carrier)
+            with Tracer(operation_name, parent_span=span_ctx):
+                return func(*args, **kwargs)
+        return wrapper
 
 
 def parse_tracing_line_args(line: str) -> Tuple[Optional[str], bool]:

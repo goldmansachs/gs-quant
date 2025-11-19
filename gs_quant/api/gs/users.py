@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 
 from pydash import get
 
@@ -57,3 +57,19 @@ class GsUsersApi:
     @classmethod
     def get_current_app_managers(cls) -> List[str]:
         return [f"guid:{manager}" for manager in get(GsSession.current._get('/users/self'), 'appManagers', [])]
+
+    @classmethod
+    def get_many(cls, key_type: str, keys: List[str], fields: Optional[List[str]] = None) -> dict:
+        users_by_key = {}
+        chunk_size = 100
+        glue = "&" + key_type + "="
+        if fields is not None and key_type not in fields:
+            fields = [*fields, key_type]
+        for i in range(0, len(keys), chunk_size):
+            chunk = keys[i:i + chunk_size]
+            fields_str = f"fields={','.join(fields)}&" if fields else ''
+            url = f'/users?{fields_str}{key_type}={glue.join(chunk)}&limit=200'
+            response = GsSession.current._get(url)
+            for user in response.get('results', []):
+                users_by_key[user[key_type]] = user
+        return users_by_key
