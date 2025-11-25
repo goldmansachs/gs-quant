@@ -26,7 +26,8 @@ from scipy.integrate import odeint
 from gs_quant.data import DataContext
 from gs_quant.errors import MqTypeError, MqValueError, MqError
 from gs_quant.timeseries import normalize_window, Window, Returns, returns
-from gs_quant.timeseries.statistics import (Direction, generate_series, LinearRegression, RollingLinearRegression,
+from gs_quant.timeseries.statistics import (Direction, IntradayDirection, generate_series, generate_series_intraday,
+                                            LinearRegression, RollingLinearRegression,
                                             min_, max_, range_, mean, median, mode, sum_, product, std, exponential_std,
                                             var, cov, zscores, winsorize, percentiles, percentile, SIRModel, SEIRModel,
                                             MeanType)
@@ -63,6 +64,30 @@ def test_generate_series():
     assert (len(x) == 100)
     assert (x.index[-1] == dt.date.today())
     assert (x.iloc[0] == 100)
+
+
+def test_generate_series_intraday():
+    # Test START_INTRADAY_NOW (default)
+    x = generate_series_intraday(100)
+    assert len(x) == 100
+    assert isinstance(x.index, pd.DatetimeIndex)
+    assert x.iloc[0] == 100
+    # Check that first timestamp is close to now (within 1 minute)
+    now = pd.Timestamp.now().floor('T')
+    assert abs((x.index[0] - now).total_seconds()) < 60
+    # Check that observations are 1 minute apart
+    assert (x.index[-1] - x.index[0]).total_seconds() == 99 * 60
+
+    # Test END_INTRADAY_NOW
+    x = generate_series_intraday(100, IntradayDirection.END_INTRADAY_NOW)
+    assert len(x) == 100
+    assert isinstance(x.index, pd.DatetimeIndex)
+    assert x.iloc[0] == 100
+    # Check that last timestamp is close to now (within 1 minute)
+    now = pd.Timestamp.now().floor('T')
+    assert abs((x.index[-1] - now).total_seconds()) < 60
+    # Check that observations are 1 minute apart
+    assert (x.index[-1] - x.index[0]).total_seconds() == 99 * 60
 
 
 def test_min():

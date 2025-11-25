@@ -73,7 +73,7 @@ class OptimizationConstraintUnit(Enum):
 
 
 class HedgeTarget(Enum):
-    HEDGED_TARGET = "hedgedTarget"
+    HEDGED_TARGET = "hedgeTarget"
     HEDGE = "hedge"
     TARGET = "target"
 
@@ -126,9 +126,9 @@ class OptimizerObjectiveTerm:
 class OptimizerObjectiveParameters:
 
     def __init__(
-        self,
-        objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK,
-        terms: List[OptimizerObjectiveTerm] = [OptimizerObjectiveTerm.DEFAULT_RISK_PARAMS]
+            self,
+            objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK,
+            terms: List[OptimizerObjectiveTerm] = [OptimizerObjectiveTerm.DEFAULT_RISK_PARAMS]
     ):
         self.__objective = objective
         self.__terms = terms
@@ -1515,6 +1515,13 @@ def _ensure_completed(func):
 
 
 class OptimizerStrategy:
+    VERBOSE_ERROR_MSG: Final = {
+        'Missing asset xref': lambda e: f"We noticed some underlying asset meta data error: {e}",
+        'ERROR: Could not find solution.': lambda e:
+            f"Potential infeasible inputs. {e}. "
+            f"Please relax your constraint or "
+            f"contact Marquee team for assistance.",
+    }
 
     def __init__(self,
                  initial_position_set: PositionSet,
@@ -1534,7 +1541,7 @@ class OptimizerStrategy:
         :param constraints: constraints for the optimization
         :param turnover: turnover constraints for the optimization
         :param settings: settings for the optimization
-        :param objective: objective for the optimization
+        :param objective: objective for the optimization:
         """
         self.__initial_position_set = initial_position_set
         self.__universe = universe
@@ -1697,6 +1704,12 @@ class OptimizerStrategy:
             'parameters': parameters
         }
 
+    def handle_error(self, error_message: str) -> List:
+        for key, val in self.VERBOSE_ERROR_MSG.items():
+            if error_message.startswith(key):
+                return [val(error_message), True]  # predefined
+        return [error_message, False]
+
     def run(self,
             optimizer_type: OptimizerType = OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER,
             fail_on_unpriced_positions: bool = True):
@@ -1713,15 +1726,23 @@ class OptimizerStrategy:
         if optimizer_type == OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER:
             strategy_as_dict = self.to_dict(fail_on_unpriced_positions)
             counter = 5
+            predefined_error = False
             while counter > 0:
                 try:
                     optimization_results = GsHedgeApi.calculate_hedge(strategy_as_dict)
                     if optimization_results.get('result') is None:
                         if 'errorMessage' in optimization_results:
-                            raise MqValueError("The optimizer returned an error: "
-                                               f"{optimization_results.get('errorMessage')}. "
-                                               "Please adjust the constraints"
-                                               "or contact the Marquee team for assistance")
+                            error_message = optimization_results['errorMessage']
+                            verbose_message, predefined_error = self.handle_error(error_message)
+                            if predefined_error:
+                                counter = 0
+                                raise MqValueError(f"The optimizer returns an error: "
+                                                   f"{verbose_message}. ")
+                            else:
+                                raise MqValueError(f"The optimizer returned an error: "
+                                                   f"{optimization_results.get('errorMessage')}. "
+                                                   f"Please adjust the constraints"
+                                                   f" or contact the Marquee team for assistance")
                         elif counter == 1:
                             raise MqValueError(
                                 'Error calculating an optimization. Please contact the Marquee team for assistance.')
@@ -1729,7 +1750,9 @@ class OptimizerStrategy:
                     else:
                         self.__result = optimization_results['result']
                         counter = 0
-                except Exception:
+                except Exception as e:
+                    if predefined_error:
+                        raise e
                     if counter == 1:
                         raise MqValueError(
                             'Error calculating an optimization. Please contact the Marquee team for assistance.')
@@ -1749,6 +1772,8 @@ class OptimizerStrategy:
     def get_optimization(self, by_weight: bool = False):
         """
         Get the optimization results
+
+        :param by_weight: whether to return position set with weights instead of quantities
         """
         return self.__construct_position_set_from_hedge_result('hedge', by_weight)
 

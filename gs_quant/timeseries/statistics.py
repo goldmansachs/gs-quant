@@ -874,6 +874,66 @@ def generate_series(length: int, direction: Direction = Direction.START_TODAY) -
     return pd.Series(data=levels, index=dates, dtype=np.dtype(float))
 
 
+class IntradayDirection(Enum):
+    START_INTRADAY_NOW = 'start_intraday_now'
+    END_INTRADAY_NOW = 'end_intraday_now'
+
+
+@plot_function
+def generate_series_intraday(length: int, direction: IntradayDirection = IntradayDirection.START_INTRADAY_NOW)\
+        -> pd.Series:
+    """
+    Generate sample intraday timeseries with minute-level granularity
+
+    :param length: number of observations (minutes)
+    :param direction: whether generated series should start from or end at current timestamp
+    :return: datetime-based time series of randomly generated prices at 1-minute intervals
+
+    **Usage**
+
+    Create intraday timeseries from returns generated from normally distributed random variables (IID). Length
+    determines the number of minute-level observations to be generated. The series can either start from the
+    current timestamp (START_INTRADAY_NOW) or end at the current timestamp (END_INTRADAY_NOW).
+
+    Assume random variables :math:`R` which follow a normal distribution with mean :math:`0` and standard deviation
+    of :math:`0.001` (scaled for intraday volatility):
+
+    :math:`R \\sim N(0, 0.001)`
+
+    The timeseries is generated from these random numbers through:
+
+    :math:`X_t = (1 + R)X_{t-1}`
+
+    where each observation is spaced 1 minute apart.
+
+    **Examples**
+
+    Generate intraday price series with 120 observations (2 hours) starting from current time:
+
+    >>> prices = generate_series_intraday(120)
+
+    Generate intraday price series for a full day (24 hours) ending at current time:
+
+    >>> prices = generate_series_intraday(1440, IntradayDirection.END_INTRADAY_NOW)
+
+    **See also**
+
+    :func:`generate_series` :func:`numpy.random.normal()`
+
+    """
+    levels = [100]
+    first = pd.Timestamp.now().floor('T')
+    if direction == IntradayDirection.END_INTRADAY_NOW:
+        first -= pd.Timedelta(minutes=length - 1)
+    times = [first]
+    rng = np.random.default_rng()
+
+    for i in range(length - 1):
+        levels.append(levels[i] * 1 + rng.standard_normal())
+        times.append(times[i] + pd.Timedelta(minutes=1))
+    return pd.Series(data=levels, index=times, dtype=np.dtype(float))
+
+
 @plot_function
 def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
