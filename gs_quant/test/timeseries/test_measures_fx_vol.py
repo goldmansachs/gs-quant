@@ -156,7 +156,7 @@ def test_cross_stored_direction_for_fx_vol():
 
 
 def test_get_tdapi_fxo_assets():
-    mock_asset_1 = GsAsset(asset_class='FX', id='MAW8SAXPSKYA94E2', type_='Option', name='Test_asset')
+    mock_asset_1 = GsAsset(asset_class='FX', id='MAW8SAXPSKYA94E2', type_='Option', name='FX Forward Test_asset_1')
     mock_asset_2 = GsAsset(asset_class='FX', id='MATDD783JM1C2GGD', type_='Option', name='Test_asset')
 
     replace = Replacer()
@@ -167,6 +167,16 @@ def test_get_tdapi_fxo_assets():
     assert 'MAW8SAXPSKYA94E2' == tm_fxo._get_tdapi_fxo_assets(**kwargs)
     replace.restore()
 
+    # Test case: Multiple assets, one with name starting with "FX Forward"
+    assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
+    assets.return_value = [mock_asset_1, mock_asset_2]
+    kwargs = dict(asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD',
+                  asset_parameters_put_currency='EUR', name_prefix='FX Forward')
+    assert 'MAW8SAXPSKYA94E2' == tm_fxo._get_tdapi_fxo_assets(**kwargs)
+    replace.restore()
+
+    # Test case: Multiple assets, none with name starting with "FX Forward"
+    mock_asset_1.name = "Test_asset_1"
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1, mock_asset_2]
     kwargs = dict(asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD',

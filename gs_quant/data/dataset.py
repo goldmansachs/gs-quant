@@ -707,7 +707,8 @@ class MarqueeDataIngestionLibrary:
 
     def _create_parameters(self,
                            time_dimension: str,
-                           symbol_dimension: str) -> DataSetParameters:
+                           symbol_dimension: str,
+                           is_internal_user: bool) -> DataSetParameters:
         """
         Create the parameters for the dataset.
 
@@ -716,7 +717,7 @@ class MarqueeDataIngestionLibrary:
         parameters = DataSetParameters()
         parameters.frequency = 'Daily'
         parameters.snowflake_config = DBConfig()
-        parameters.snowflake_config.db = "EXTERNAL"
+        parameters.snowflake_config.db = "TIMESERIES" if is_internal_user else "EXTERNAL"
         parameters.snowflake_config.date_time_column = self.to_upper_underscore(time_dimension)
         parameters.snowflake_config.id_column = self.to_upper_underscore(symbol_dimension)
         return parameters
@@ -740,7 +741,8 @@ class MarqueeDataIngestionLibrary:
             symbol_dimension: str,
             time_dimension: str,
             dimensions: Optional[List[str]],
-            measures: List[str]
+            measures: List[str],
+            internal_user: bool
     ) -> DataSetDimensions:
         """
         Create the dimensions for the dataset.
@@ -759,14 +761,17 @@ class MarqueeDataIngestionLibrary:
         dataset_dimensions.time_field = time_dimension
         dataset_dimensions.symbol_dimensions = [symbol_dimension]
 
-        drgName = self.user.get("drgName")
-        if drgName is None:
-            raise InvalidInputException("drgName is required but was not found.")
-        INVALID_DRG_NAME_CHARS = r"Pvt Ltd.*|Private Ltd.*|Limited.*|Ltd.*|Inc.*|LP$|LLP$|[^a-zA-Z0-9]"
-        drgName = re.sub(INVALID_DRG_NAME_CHARS, "", drgName)
+        if internal_user:
+            fieldMap = {field: self.to_camel_case(field) for field in (dimensions + measures)}
+        else:
+            drgName = self.user.get("drgName")
+            if drgName is None:
+                raise InvalidInputException("drgName is required but was not found.")
+            INVALID_DRG_NAME_CHARS = r"Pvt Ltd.*|Private Ltd.*|Limited.*|Ltd.*|Inc.*|LP$|LLP$|[^a-zA-Z0-9]"
+            drgName = re.sub(INVALID_DRG_NAME_CHARS, "", drgName)
 
-        fieldMap = {field: self.to_camel_case((field if field == 'updateTime' else f"{field}Org{drgName}")[:64])
-                    for field in (dimensions + measures)}
+            fieldMap = {field: self.to_camel_case((field if field == 'updateTime' else f"{field}Org{drgName}")[:64])
+                        for field in (dimensions + measures)}
 
         self._check_and_create_field(fieldMap, data)
 
@@ -803,19 +808,17 @@ class MarqueeDataIngestionLibrary:
         non-symbol dimensions. The data is validated to ensure compatibility with the platform's requirements.
 
         :param data: DataFrame containing the data to be ingested. The DataFrame must include the symbol
-                 and time dimensions, along with any additional dimensions or measures.
+                        and time dimensions, along with any additional dimensions or measures.
         :param dataset_id: The unique identifier for the dataset. This identifier is used to reference
-                       the dataset in the platform.
+                        the dataset in the platform.
         :param symbol_dimension: Column name in the DataFrame that represents the symbol dimension.
-                     Valid symbol dimensions are: {"isin", "bbid", "ric", "sedol", "cusip", "ticker"}.
+                        Valid symbol dimensions are: {"isin", "bbid", "ric", "sedol", "cusip", "ticker",
+                        "countryId", "currency"}.
         :param time_dimension: Column name in the DataFrame that represents the time dimension. This
-                           must be a date column, as intraday timestamps are not supported.
+                        must be a date column, as intraday timestamps are not supported.
         :param dimensions: Optional list of column names in the DataFrame that represent non-symbol dimensions.
         :return: A DataSetEntity object representing the dataset specification.
         """
-
-        if self.user.get("internal"):
-            raise InvalidInputException("This functionality is not supported for internal user.")
 
         if data.empty or not dataset_id or not symbol_dimension or not time_dimension:
             print(
@@ -845,16 +848,20 @@ class MarqueeDataIngestionLibrary:
             "ric",
             "sedol",
             "cusip",
-            "ticker"
+            "ticker",
+            "countryId",
+            "currency"
         }
 
-        custom_symbol_dimension = "customId" if (symbol_dimension.lower()
-                                                 not in VALID_SYMBOL_DIMENSION) else symbol_dimension.lower()
+        internal_user = self.user.get("internal")
+
+        custom_symbol_dimension = "customId" if (not internal_user and self.to_camel_case(symbol_dimension) not in
+                                                 VALID_SYMBOL_DIMENSION) else self.to_camel_case(symbol_dimension)
         custom_time_dimensions = "date" if time_dimension not in VALID_TIME_DIMENSION else time_dimension
 
-        dataset_definition.parameters = self._create_parameters(time_dimension, symbol_dimension)
-        dataset_definition.dimensions = self._create_dimensions(data, custom_symbol_dimension,
-                                                                custom_time_dimensions, dimensions, measures)
+        dataset_definition.parameters = self._create_parameters(time_dimension, symbol_dimension, internal_user)
+        dataset_definition.dimensions = self._create_dimensions(data, custom_symbol_dimension, custom_time_dimensions,
+                                                                dimensions, measures, internal_user)
         dataset_definition.type_ = DataSetType.NativeSnowflake
 
         result = self.provider.create(dataset_definition)

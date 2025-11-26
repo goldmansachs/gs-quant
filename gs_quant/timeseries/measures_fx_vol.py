@@ -319,9 +319,14 @@ def _get_tdapi_fxo_assets(**kwargs) -> Union[str, list]:
     # sanitize input for asset query.
     if "pricing_location" in kwargs:
         del kwargs["pricing_location"]
+    name_prefix = kwargs.pop("name_prefix", None)
     assets = GsAssetApi.get_many_assets(**kwargs)
 
     if len(assets) > 1:
+        if name_prefix:
+            for asset in assets:
+                if asset.name.startswith(name_prefix):
+                    return asset.id
         raise MqValueError('Specified arguments match multiple assets' + str(kwargs))
     elif len(assets) == 0:
         raise MqValueError('Specified arguments did not match any asset in the dataset' + str(kwargs))
@@ -472,6 +477,7 @@ def _get_fxfwd_data(asset: Asset, settlement_date: str,
     kwargs = dict(asset_class='FX', type='Forward',
                   asset_parameters_pair=cross,
                   asset_parameters_settlement_date=settlement_date,
+                  name_prefix='FX Forward'
                   )
 
     mqid = _get_tdapi_fxo_assets(**kwargs)
