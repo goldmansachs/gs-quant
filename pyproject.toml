@@ -1,0 +1,7 @@
+[tool.codeflash]
+# All paths are relative to this pyproject.toml's directory.
+module-root = "gs_quant"
+tests-root = "gs_quant/test"
+test-framework = "pytest"
+ignore-paths = []
+formatter-cmds = ["ruff check --exit-zero --fix $file", "ruff format $file"]
