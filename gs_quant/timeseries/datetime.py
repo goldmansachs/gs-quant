@@ -37,7 +37,7 @@ AggregateFunction: Union[Union[type, Enum], Any] = _create_enum(
     'AggregateFunction',
     ['max', 'min', 'mean', 'sum', 'first', 'last']
 )
-AggregatePeriod = _create_enum('AggregatePeriod', ['week', 'month', 'year'])
+AggregatePeriod = _create_enum('AggregatePeriod', ['week', 'month', 'quarter', 'year'])
 
 
 def __interpolate_step(x: pd.Series, dates: pd.Series = None) -> pd.Series:

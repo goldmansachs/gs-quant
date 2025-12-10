@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, config
 from enum import Enum
 from queue import Queue as FifoQueue
-from typing import Iterable, TypeVar, Optional, Union, Callable, Tuple
+from typing import Iterable, TypeVar, Optional, Union, Callable, Tuple, ClassVar
 
 import datetime as dt
 import numpy as np
@@ -82,6 +82,10 @@ class PnlDefinition:
 @dataclass_json
 @dataclass
 class BackTest(BaseBacktest):
+    CUMULATIVE_CASH_COLUMN: ClassVar[str] = "Cumulative Cash"
+    TRANSACTION_COSTS_COLUMN: ClassVar[str] = "Transaction Costs"
+    TOTAL_COLUMN: ClassVar[str] = "Total"
+
     strategy: object
     states: Iterable
     risks: Iterable[RiskMeasure]
@@ -177,12 +181,12 @@ class BackTest(BaseBacktest):
     def calculations(self, calculations):
         self._calculations = calculations
 
-    def get_risk_summary_dict(self, zero_on_empty_dates=False):
+    def get_risk_summary_df(self, zero_on_empty_dates=False):
         if self._risk_summary_dict is not None:
             summary_dict = self._risk_summary_dict
         else:
             if not self._results:
-                raise ValueError('Must run generic engine and populate results before results summary dict')
+                return pd.DataFrame(columns=self.risks)
             dates_with_results = list(filter(lambda x: len(x[1]), self._results.items()))
             summary_dict = defaultdict(dict)
             for date, results in dates_with_results:
@@ -198,27 +202,31 @@ class BackTest(BaseBacktest):
             for cash_only_date in set(self._cash_dict.keys()).difference(zero_risk_sd_copy.keys()):
                 for risk in self.risks:
                     zero_risk_sd_copy[cash_only_date][risk] = 0
-        return zero_risk_sd_copy
+        result = pd.DataFrame(zero_risk_sd_copy).T.sort_index()
+        return result
 
     @property
     def result_summary(self):
         """
         Get a dataframe showing the PV and other risks and cash on each day in the backtest
         """
-        summary_dict = self.get_risk_summary_dict()
-        summary = pd.DataFrame(summary_dict).T
+        summary = self.get_risk_summary_df()
         cash_summary = defaultdict(dict)
         for date, results in self._cash_dict.items():
             for ccy, value in results.items():
                 cash_summary[f'Cumulative Cash {ccy}'][date] = value
         if len(cash_summary) > 1:
             raise RuntimeError('Cannot aggregate cash in multiple currencies')
-        cash = pd.concat([pd.Series(cash_dict, name='Cumulative Cash')
-                          for name, cash_dict in cash_summary.items()], axis=1, sort=True)
-        transaction_costs = pd.Series(self.transaction_costs, name='Transaction Costs')
+        elif len(cash_summary) == 1:
+            cash = pd.concat([pd.Series(cash_dict, name=self.CUMULATIVE_CASH_COLUMN)
+                              for name, cash_dict in cash_summary.items()], axis=1, sort=True)
+        else:
+            cash = pd.DataFrame(columns=[self.CUMULATIVE_CASH_COLUMN])
+        transaction_costs = pd.Series(self.transaction_costs, name=self.TRANSACTION_COSTS_COLUMN)
         transaction_costs = transaction_costs.sort_index().cumsum()
         df = pd.concat([summary, cash, transaction_costs], axis=1, sort=True).ffill().fillna(0)
-        df['Total'] = df[self.price_measure] + df['Cumulative Cash'] + df['Transaction Costs']
+        df[self.TOTAL_COLUMN] = df[self.price_measure] + df[self.CUMULATIVE_CASH_COLUMN] + \
+            df[self.TRANSACTION_COSTS_COLUMN]
         return df[:self.states[-1]]
 
     @property
@@ -226,8 +234,7 @@ class BackTest(BaseBacktest):
         """
         Get a dataframe showing the risks in the backtest with zero values for days with no instruments held
         """
-        summary_dict = self.get_risk_summary_dict(zero_on_empty_dates=True)
-        return pd.DataFrame(summary_dict).T.sort_index()
+        return self.get_risk_summary_df(zero_on_empty_dates=True)
 
     def trade_ledger(self):
         # this is a ledger of each instrument when it was entered and when it was closed out.  The cash associated
@@ -423,6 +430,7 @@ class TransactionCostEntry:
         Used to link costs to CashPayments, which can be scaled throughout the backtest (e.g. hedges), and
         to resolve risk-based costs under the same PricingContext for efficiency.
     """
+
     def __init__(self, date: dt.date, instrument: Instrument, transaction_model: TransactionModel):
         self._date = date
         self._instrument = instrument
