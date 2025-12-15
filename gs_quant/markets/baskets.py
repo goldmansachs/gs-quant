@@ -532,6 +532,43 @@ class Basket(Asset, PositionedEntity):
             return SecAssetType[self.__gs_asset_type.name.upper()]
 
     @_validate(ErrorMessage.UNINITIALIZED)
+    def get_latest_position_set(self,
+                                position_type: PositionType = PositionType.CLOSE,
+                                source: str = "Basket") -> PositionSet:
+        if self.positioned_entity_type == EntityType.ASSET:
+            response = GsAssetApi.get_latest_positions(self.id, position_type)
+            return PositionSet.from_target(response, source=source)
+        raise NotImplementedError
+
+    @_validate(ErrorMessage.UNINITIALIZED)
+    def get_position_set_for_date(self,
+                                  date: dt.date,
+                                  position_type: PositionType = PositionType.CLOSE,
+                                  source: str = "Basket") -> PositionSet:
+        if self.positioned_entity_type == EntityType.ASSET:
+            response = GsAssetApi.get_asset_positions_for_date(self.id, date, position_type)
+            if len(response) == 0:
+                _logger.info("No positions available for {}".format(date))
+                return PositionSet([], date=date)
+            return PositionSet.from_target(response[0], source=source)
+        raise NotImplementedError
+
+    @_validate(ErrorMessage.UNINITIALIZED)
+    def get_position_sets(self,
+                          start: dt.date = DateLimit.LOW_LIMIT.value,
+                          end: dt.date = dt.date.today(),
+                          position_type: PositionType = PositionType.CLOSE,
+                          source: str = "Basket") -> List[PositionSet]:
+        if self.positioned_entity_type == EntityType.ASSET:
+            response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
+            if len(response) == 0:
+                _logger.info("No positions available in the date range {} - {}".format(start, end))
+                return []
+            return [PositionSet.from_target(position_set, source=source)
+                    for position_set in response]
+        raise NotImplementedError
+
+    @_validate(ErrorMessage.UNINITIALIZED)
     def get_url(self) -> str:
         """
         Retrieve url to basket's product page in Marquee

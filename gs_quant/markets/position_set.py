@@ -871,11 +871,11 @@ class PositionSet:
         return CommonPositionSet(positions, self.date) if common else list(positions)
 
     @classmethod
-    def from_target(cls, position_set: CommonPositionSet):
+    def from_target(cls, position_set: CommonPositionSet, source: Optional[str] = None):
         """ Create PostionSet instance from PostionSet type defined in target file """
         positions = position_set.positions
         mqids = [position.asset_id for position in positions]
-        position_data = cls.__get_positions_data(mqids)
+        position_data = cls.__get_positions_data(mqids, source=source)
         converted_positions = []
         for p in positions:
             asset = get(position_data, p.asset_id)
@@ -1040,8 +1040,9 @@ class PositionSet:
         return [id_map, unmapped_assets]
 
     @staticmethod
-    def __get_positions_data(mqids: List[str]) -> Dict:
-        response = GsAssetApi.get_many_assets_data(id=mqids, fields=['id', 'name', 'bbid'])
+    def __get_positions_data(mqids: List[str], source: Optional[str] = None) -> Dict:
+        response = GsAssetApi.get_many_assets_data(id=mqids, fields=['id', 'name', 'bbid'],
+                                                   source=source)
         data = {}
         for asset in response:
             data[get(asset, 'id')] = dict(name=get(asset, 'name'), bbid=get(asset, 'bbid'))

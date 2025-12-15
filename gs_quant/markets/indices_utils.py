@@ -499,7 +499,8 @@ def get_flagships_constituents(fields: List[str] = [],
     batch_size = 100
     for i in range(0, len(asset_ids), batch_size):
         batch = asset_ids[i:i + batch_size]
-        asset_data += GsAssetApi.get_many_assets_data_scroll(id=batch, fields=fields, limit=QUERY_LIMIT, scroll='1m')
+        asset_data += GsAssetApi.get_many_assets_data_scroll(id=batch, fields=fields, limit=QUERY_LIMIT,
+                                                             scroll='1m', source="Basket")
     asset_data_map = {get(asset, 'id'): asset for asset in asset_data}
 
     for row in constituents_data:

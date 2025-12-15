@@ -297,6 +297,7 @@ class GsAssetApi:
             fields: IdList = None,
             as_of: dt.datetime = None,
             limit: int = None,
+            source: Optional[str] = None,
             **kwargs
     ) -> dict:
         span = Tracer.active_span()
@@ -304,7 +305,8 @@ class GsAssetApi:
         with tracer as scope:
             cls._set_tags(scope, kwargs)
             query = cls.__create_query(fields, as_of, limit, **kwargs)
-            response = GsSession.current._post('/assets/data/query', payload=query)
+            request_headers = {'X-Application': 'Studio'} if source == "Basket" else None
+            response = GsSession.current._post('/assets/data/query', payload=query, request_headers=request_headers)
             return response['results']
 
     @classmethod
@@ -332,6 +334,7 @@ class GsAssetApi:
             fields: IdList = None,
             as_of: dt.datetime = None,
             limit: int = None,
+            source: Optional[str] = None,
             **kwargs
     ) -> dict:
         span = Tracer.active_span()
@@ -339,11 +342,12 @@ class GsAssetApi:
         with tracer as scope:
             cls._set_tags(scope, kwargs)
             query = cls.__create_query(fields, as_of, limit, scroll, **kwargs)
-            response = GsSession.current._post('/assets/data/query', payload=query)
+            request_headers = {'X-Application': 'Studio'} if source == "Basket" else None
+            response = GsSession.current._post('/assets/data/query', payload=query, request_headers=request_headers)
             results = get(response, 'results')
             while (has(response, 'scrollId') and len(get(response, 'results'))):
                 query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
-                response = GsSession.current._post('/assets/data/query', payload=query)
+                response = GsSession.current._post('/assets/data/query', payload=query, request_headers=request_headers)
                 results += get(response, 'results')
             return results
 
