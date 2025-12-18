@@ -284,8 +284,14 @@ class GsRiskApi(RiskApi):
                 api_version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
                 ws_url = f'/{api_version}/risk/calculate/results/subscribe'
                 subprotocols = ["msgpack-binary"] if cls.USE_MSGPACK else None
-                async with risk_session._connect_websocket(ws_url, include_version=False,
-                                                           subprotocols=subprotocols) as ws:
+                # we set a 50ms timeout for the websocket close to avoid manually waiting for marquee
+                # to acknowledge the close and close the underlying TCP stream. We have seen delays of up to 1000ms here
+                ws_close_timeout = 0.05
+                async with risk_session._connect_websocket(
+                        ws_url,
+                        include_version=False,
+                        subprotocols=subprotocols,
+                        close_timeout=ws_close_timeout) as ws:
                     error = await handle_websocket()
 
                 attempts = max_attempts
