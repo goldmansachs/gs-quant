@@ -85,7 +85,9 @@ class PriceFormat(EnumBase, Enum):
 
     Absolute = 'Absolute'
     Relative = 'Relative'
-    Cents = 'Cents'    
+    Cents = 'Cents'
+    Bps = 'Bps'
+    Percentage = 'Percentage'
 
 
 class RelativeExpiryType(EnumBase, Enum):    

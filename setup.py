@@ -65,7 +65,7 @@ setuptools.setup(
         "more_itertools",
         "msgpack",
         "nest-asyncio",
-        "numpy>1.17.0",
+        "numpy>1.17.0,<2.4.0",  # numpy failures in statistics - TypeError: only 0-dimensional arrays can be converted
         "opentelemetry-api",
         "opentelemetry-sdk",
         "pandas>=1.4",
