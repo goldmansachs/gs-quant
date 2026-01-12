@@ -1023,6 +1023,31 @@ class FXForward(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class FXForwardVolatilityAgreement(Instrument):
+    pair: Optional[str] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    strike_vol: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    notional_amount: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    expiration_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    fixing_source: Optional[str] = field(default=None, metadata=field_metadata)
+    settlement_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    underlying_expiration_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    underlying_settlement_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    strike_type: Optional[FVAStrikeType] = field(default=None, metadata=field_metadata)
+    underlying_payoff: Optional[FVAUnderlyingOptionType] = field(default=None, metadata=field_metadata)
+    underlying_fixing_source: Optional[str] = field(default=None, metadata=field_metadata)
+    underlying_premium_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    premium_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    premium_payment_date: Optional[str] = field(default=None, metadata=field_metadata)
+    premium: Optional[Union[float, str]] = field(default=0, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.FX, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.ForwardVolatilityAgreement, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class FXKnockout(Instrument):
     pair: Optional[str] = field(default=None, metadata=field_metadata)
     buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)

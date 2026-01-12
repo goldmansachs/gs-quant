@@ -168,6 +168,11 @@ class FxForecastHorizon(Enum):
     EOY4 = 'EOY4'
 
 
+class _FxForecastTimeSeriesPeriodType(Enum):
+    SHORT_TERM = '3/6/12-Month'
+    ANNUAL = 'Annual'
+
+
 class FundamentalMetricPeriodDirection(Enum):
     FORWARD = 'forward'
     TRAILING = 'trailing'
@@ -223,6 +228,13 @@ class _CommodityForecastType(Enum):
     SPOT_RETURN = 'spotReturn'
     ROLL_RETURN = 'rollReturn'
     TOTAL_RETURN = 'totalReturn'
+
+
+class _CommodityForecastTimeSeriesPeriodType(Enum):
+    SHORT_TERM = '3/6/12-Month Rolling'
+    MONTHLY = 'Monthly'
+    QUARTERLY = 'Quarterly'
+    ANNUAL = 'Annual'
 
 
 class _RatingMetric(Enum):
@@ -1633,7 +1645,6 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
 
     if relativePeriod:
         log_warning(request_id, _logger, "'relativePeriod' is deprecated, please use 'relative_period' instead.")
-
     cross_mqid = asset.get_marquee_id()
     usd_based_cross_mqid = cross_to_usd_based_cross(cross_mqid)
     query_type = QueryType.FX_FORECAST
@@ -1652,6 +1663,65 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
     if cross_mqid != usd_based_cross_mqid:
         series = 1 / series
 
+    series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+@plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
+    id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)])
+def fx_forecast_time_series(
+    asset: Union[Asset, str],
+    forecastFrequency: _FxForecastTimeSeriesPeriodType = _FxForecastTimeSeriesPeriodType.ANNUAL.value, *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None
+) -> pd.Series:
+    """
+    Short and long-term FX forecast time series.
+
+    :param asset: Asset object or string representing the asset ID
+    :param forecastFrequency: Forecast period type (e.g., Annual)
+    :param source: Name of the function caller
+    :param real_time: Whether to retrieve intraday data instead of EOD
+    :param request_id: Service request ID, if any
+    :return: Forecast time series for the Cross Asset
+    """
+    if real_time:
+        raise NotImplementedError('realtime fx_forecast_time_series not implemented')
+    if isinstance(asset, str):
+        cross_mqid = asset
+    elif isinstance(asset, Asset):
+        cross_mqid = asset.get_marquee_id()
+    else:
+        raise ValueError("Asset must be of type Asset or str")
+    usd_based_cross_mqid = cross_to_usd_based_cross(cross_mqid)
+    query_type = QueryType.FX_FORECAST
+    col_name = query_type.value.replace(' ', '')
+    col_name = col_name[0].lower() + col_name[1:]
+
+    q = GsDataApi.build_market_data_query(
+        [usd_based_cross_mqid],
+        query_type,
+        source=source,
+        real_time=real_time
+    )
+    log_debug(request_id, _logger, 'q %s', q)
+    df = _market_data_timed(q, request_id)
+    df.index.name = 'date'
+    df = df.reset_index().sort_values(by='date').groupby('relativePeriod')[['date', col_name]].last()
+    df = df.reset_index()
+    if forecastFrequency == _FxForecastTimeSeriesPeriodType.SHORT_TERM.value:
+        df = df[df['relativePeriod'].isin(['3m', '6m', '12m'])].drop('date', axis=1)
+        df['date'] = df['relativePeriod'].apply(lambda x: pd.Timestamp.today() + relativedelta(months=int(x[:-1])))
+        df = df[['date', col_name]].sort_values(by='date').set_index('date')
+    elif forecastFrequency == _FxForecastTimeSeriesPeriodType.ANNUAL.value:
+        df = df[df['relativePeriod'].str.startswith('EOY')].drop('date', axis=1)
+        df['date'] = df['relativePeriod'].apply(
+            lambda x: pd.Timestamp(f"{pd.Timestamp.today().year + int(x[3:])}-01-01"))
+        df = df[['date', col_name]].sort_values(by='date').set_index('date')
+    series = _extract_series_from_df(df, query_type)
+    if cross_mqid != usd_based_cross_mqid:
+        series = 1 / series
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     return series
 
@@ -4371,6 +4441,90 @@ def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
+    series = _extract_series_from_df(df, query_type)
+    return series
+
+
+@plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
+def commodity_forecast_time_series(
+    asset: Union[Asset, str],
+    forecastFrequency: _CommodityForecastTimeSeriesPeriodType = _CommodityForecastTimeSeriesPeriodType.ANNUAL.value,
+    forecastType: _CommodityForecastType = _CommodityForecastType.SPOT,
+    forecastHorizonYears: int = 12, *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None
+) -> pd.Series:
+    """
+    Short and long-term commodities forecast time series.
+
+    :param asset: Asset object or string representing the asset ID
+    :param forecastFrequency: Forecast period type (e.g., annual, quarterly)
+    :param forecastType: Type of return for commodity indices
+    :param forecastHorizonYears: Length of the forecast period in years
+    :param source: Name of the function caller
+    :param real_time: Whether to retrieve intraday data instead of EOD
+    :param request_id: Service request ID, if any
+    :return: Forecast time series for the commodity or index
+    """
+    if real_time:
+        raise NotImplementedError('real-time commodity_forecast not implemented')
+    if isinstance(asset, str):
+        mqid = asset
+    elif isinstance(asset, Asset):
+        mqid = asset.get_marquee_id()
+    else:
+        raise ValueError("Asset must be of type Asset or str")
+    query_type = QueryType.COMMODITY_FORECAST
+    col_name = query_type.value.replace(' ', '')
+    col_name = col_name[0].lower() + col_name[1:]
+
+    today = dt.date.today()
+    start_year = today.year
+    end_year = start_year + forecastHorizonYears
+    if forecastFrequency == _CommodityForecastTimeSeriesPeriodType.SHORT_TERM.value:
+        periods = ["3m", "6m", "12m"]
+    elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.MONTHLY.value:
+        periods = [f"{date.year}M{date.month}"
+                   for date in pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="MS")]
+    elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.QUARTERLY.value:
+        periods = pd.period_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="Q").strftime("%YQ%q")
+    elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.ANNUAL.value:
+        periods = pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="YS").strftime("%Y")
+    else:
+        raise ValueError(
+            "Invalid forecastFrequency. Must be one of '3/6/12-Month Rolling', "
+            "'Monthly', 'Quarterly', 'Annual'.")
+    results = []
+    for period in periods:
+        _logger.debug('where assetId=%s, forecastPeriod=%s, forecastType=%s, query_type=%s',
+                      mqid, period, forecastType, query_type.value)
+
+        q = GsDataApi.build_market_data_query(
+            [mqid],
+            query_type,
+            where=dict(forecastPeriod=period, forecastType=forecastType),
+            source=source,
+            real_time=real_time
+        )
+        log_debug(request_id, _logger, 'q %s', q)
+
+        df = _market_data_timed(q, request_id)
+        if not df.empty:
+            last_value = df[col_name].iloc[-1]
+            start_of_period = pd.Timestamp(period[:4] + "-01-01")  # Default to start of the year
+            if 'm' in period:
+                months = int(period[:-1])
+                start_of_period = pd.Timestamp.today() + relativedelta(months=months)
+            elif "Q" in period:
+                year = int(period[:4])
+                quarter = int(period[-1])
+                start_of_period = pd.Timestamp(f"{year}-{(quarter - 1) * 3 + 1:02d}-01")
+            elif "M" in period:
+                month = int(period[5:])
+                start_of_period = start_of_period.replace(month=month)
+            results.append({'date': start_of_period.strftime('%Y-%m-%d'), col_name: last_value})
+    df = pd.DataFrame(results).set_index('date')
     series = _extract_series_from_df(df, query_type)
     return series
 

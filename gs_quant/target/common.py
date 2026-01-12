@@ -14,46 +14,47 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.base import *
-import deprecation
 import datetime
-from typing import Dict, Optional, Tuple, Union
 from dataclasses import dataclass, field
-from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
+from typing import Optional, Tuple, Union
+
+from dataclasses_json import LetterCase, config, dataclass_json
+
+from gs_quant.base import *
 
 
-class AccrualConvention(EnumBase, Enum):    
-    
+class AccrualConvention(EnumBase, Enum):
+
     Adjusted = 'Adjusted'
-    Unadjusted = 'Unadjusted'    
+    Unadjusted = 'Unadjusted'
 
 
-class AccumOrDecum(EnumBase, Enum):    
-    
+class AccumOrDecum(EnumBase, Enum):
+
     Accum = 'Accum'
     Decum = 'Decum'
-    Non_Standard = 'Non-Standard'    
+    Non_Standard = 'Non-Standard'
 
 
-class AccumulatorType(EnumBase, Enum):    
-    
+class AccumulatorType(EnumBase, Enum):
+
     Terminating = 'Terminating'
-    Non_Terminating = 'Non-Terminating'    
+    Non_Terminating = 'Non-Terminating'
 
 
-class AggregationLevel(EnumBase, Enum):    
-    
+class AggregationLevel(EnumBase, Enum):
+
     """Aggregation Level"""
 
     Type = 'Type'
     Asset = 'Asset'
     Class = 'Class'
-    Point = 'Point'    
+    Point = 'Point'
 
 
-class AssetClass(EnumBase, Enum):    
-    
+class AssetClass(EnumBase, Enum):
+
     """Asset classification of security. Assets are classified into broad groups which
        exhibit similar characteristics and behave in a consistent way under
        different market conditions"""
@@ -72,30 +73,30 @@ class AssetClass(EnumBase, Enum):
     Repo = 'Repo'
     Loan = 'Loan'
     Social = 'Social'
-    Cryptocurrency = 'Cryptocurrency'    
+    Cryptocurrency = 'Cryptocurrency'
 
 
-class AssetStatsPeriod(EnumBase, Enum):    
-    
+class AssetStatsPeriod(EnumBase, Enum):
+
     """The period used to produce date range."""
 
     _1y = '1y'
     _3y = '3y'
     _5y = '5y'
-    _10y = '10y'    
+    _10y = '10y'
 
 
-class AssetStatsType(EnumBase, Enum):    
-    
+class AssetStatsType(EnumBase, Enum):
+
     """Is it rolling, none etc."""
 
     Rolling = 'Rolling'
     Calendar = 'Calendar'
-    YTD = 'YTD'    
+    YTD = 'YTD'
 
 
-class AssetType(EnumBase, Enum):    
-    
+class AssetType(EnumBase, Enum):
+
     """Asset type differentiates the product categorization or contract type"""
 
     Access = 'Access'
@@ -170,6 +171,7 @@ class AssetType(EnumBase, Enum):
     Floor = 'Floor'
     Forward = 'Forward'
     ForwardVarianceSwap = 'ForwardVarianceSwap'
+    ForwardVolatilityAgreement = 'ForwardVolatilityAgreement'
     Fund = 'Fund'
     Future = 'Future'
     FutureContract = 'FutureContract'
@@ -257,69 +259,69 @@ class AssetType(EnumBase, Enum):
     XccySwapMTM = 'XccySwapMTM'
     SyntheticOETTerms = 'SyntheticOETTerms'
     SyntheticSchedule = 'SyntheticSchedule'
-    SyntheticLeg = 'SyntheticLeg'    
+    SyntheticLeg = 'SyntheticLeg'
 
 
-class AswType(EnumBase, Enum):    
-    
+class AswType(EnumBase, Enum):
+
     """Asset Swap Type"""
 
     Par = 'Par'
-    Proceeds = 'Proceeds'    
+    Proceeds = 'Proceeds'
 
 
-class BasketAction(EnumBase, Enum):    
-    
+class BasketAction(EnumBase, Enum):
+
     """Indicates what was the action taken on basket - create/edit/rebalance"""
 
     Create = 'Create'
     Edit = 'Edit'
-    Rebalance = 'Rebalance'    
+    Rebalance = 'Rebalance'
 
 
-class BasketValuationSource(EnumBase, Enum):    
-    
+class BasketValuationSource(EnumBase, Enum):
+
     """The source of basket pricing"""
 
     GS = 'GS'
     BVAL = 'BVAL'
-    CBBT = 'CBBT'    
+    CBBT = 'CBBT'
 
 
-class BestWorst(EnumBase, Enum):    
-    
+class BestWorst(EnumBase, Enum):
+
     Best = 'Best'
-    Worst = 'Worst'    
+    Worst = 'Worst'
 
 
-class BondStrikeType(EnumBase, Enum):    
-    
+class BondStrikeType(EnumBase, Enum):
+
     """The type of the bond strike - price, yield etc"""
 
     Price = 'Price'
-    Yield = 'Yield'    
+    Yield = 'Yield'
 
 
-class BusinessDayConvention(EnumBase, Enum):    
-    
+class BusinessDayConvention(EnumBase, Enum):
+
     """Business Day Convention"""
 
     Following = 'Following'
     Modified_Following = 'Modified Following'
     Previous = 'Previous'
-    Unadjusted = 'Unadjusted'    
+    Unadjusted = 'Unadjusted'
 
 
-class BuySell(EnumBase, Enum):    
-    
+class BuySell(EnumBase, Enum):
+
     """Buy or Sell side of contract"""
 
     Buy = 'Buy'
-    Sell = 'Sell'    
+    Sell = 'Sell'
 
 
-class CDOptionType(EnumBase, Enum):    
-    
+class CDOptionType(EnumBase, Enum):
+
     """Credit Option Type"""
 
     Call = 'Call'
@@ -328,34 +330,34 @@ class CDOptionType(EnumBase, Enum):
     Payer = 'Payer'
     Receiver = 'Receiver'
     Digital_Call = 'Digital Call'
-    Digital_Put = 'Digital Put'    
+    Digital_Put = 'Digital Put'
 
 
-class CapOrFloor(EnumBase, Enum):    
-    
+class CapOrFloor(EnumBase, Enum):
+
     Cap = 'Cap'
-    Floor = 'Floor'    
+    Floor = 'Floor'
 
 
-class CashReinvestmentTreatmentType(EnumBase, Enum):    
-    
+class CashReinvestmentTreatmentType(EnumBase, Enum):
+
     """Cash reinvestment treatment for cash acquisitions and dividends."""
 
     Reinvest_At_Open = 'Reinvest At Open'
-    Add_To_Index = 'Add To Index'    
+    Add_To_Index = 'Add To Index'
 
 
-class CommodMeanRule(EnumBase, Enum):    
-    
+class CommodMeanRule(EnumBase, Enum):
+
     """Commodity mean rule"""
 
     Do_Not_Remove = 'Do Not Remove'
     Remove_Calculated = 'Remove Calculated'
-    Remove_Fixed = 'Remove Fixed'    
+    Remove_Fixed = 'Remove Fixed'
 
 
-class CommodUnit(EnumBase, Enum):    
-    
+class CommodUnit(EnumBase, Enum):
+
     """A coding scheme value to identify the unit of measure (e.g. Therms) in which the
        undelryer is denominated."""
 
@@ -365,22 +367,22 @@ class CommodUnit(EnumBase, Enum):
     Million_British_Thermal_Units = 'Million British Thermal Units'
     Oil_Barrel = 'Oil Barrel'
     Troy_Pound = 'Troy Pound'
-    US_Gallon = 'US Gallon'    
+    US_Gallon = 'US Gallon'
 
 
-class CommoditySector(EnumBase, Enum):    
-    
+class CommoditySector(EnumBase, Enum):
+
     """The sector of the commodity"""
 
     Base_metals = 'Base metals'
     Precious_metals = 'Precious metals'
     Energy = 'Energy'
     Agriculturals = 'Agriculturals'
-    Power = 'Power'    
+    Power = 'Power'
 
 
-class CountryCode(EnumBase, Enum):    
-    
+class CountryCode(EnumBase, Enum):
+
     """ISO Country code"""
 
     AU = 'AU'
@@ -631,34 +633,34 @@ class CountryCode(EnumBase, Enum):
     VC = 'VC'
     VU = 'VU'
     WS = 'WS'
-    YE = 'YE'    
+    YE = 'YE'
 
 
-class CreditBasketType(EnumBase, Enum):    
-    
+class CreditBasketType(EnumBase, Enum):
+
     """Credit basket type with regards to its constituents"""
 
     Corporate_Bond = 'Corporate Bond'
     CDS = 'CDS'
     Treasury = 'Treasury'
     Mixed = 'Mixed'
-    Unknown = 'Unknown'    
+    Unknown = 'Unknown'
 
 
-class CreditOptionStrikeType(EnumBase, Enum):    
-    
+class CreditOptionStrikeType(EnumBase, Enum):
+
     Spread_Adj = 'Spread Adj'
-    Delta = 'Delta'    
+    Delta = 'Delta'
 
 
-class CreditOptionType(EnumBase, Enum):    
-    
+class CreditOptionType(EnumBase, Enum):
+
     Payer = 'Payer'
-    Receiver = 'Receiver'    
+    Receiver = 'Receiver'
 
 
-class Currency(EnumBase, Enum):    
-    
+class Currency(EnumBase, Enum):
+
     """Currency, ISO 4217 currency code or exchange quote modifier (e.g. GBP vs GBp)"""
 
     _ = ''
@@ -1001,11 +1003,11 @@ class Currency(EnumBase, Enum):
     SGd = 'SGd'
     SZl = 'SZl'
     USd = 'USd'
-    ZAr = 'ZAr'    
+    ZAr = 'ZAr'
 
 
-class CurrencyName(EnumBase, Enum):    
-    
+class CurrencyName(EnumBase, Enum):
+
     """Currency Names"""
 
     United_States_Dollar = 'United States Dollar'
@@ -1025,11 +1027,11 @@ class CurrencyName(EnumBase, Enum):
     Russian_Rouble = 'Russian Rouble'
     Swedish_Krona = 'Swedish Krona'
     South_African_Rand = 'South African Rand'
-    Yuan_Renminbi_Onshore = 'Yuan Renminbi (Onshore)'    
+    Yuan_Renminbi_Onshore = 'Yuan Renminbi (Onshore)'
 
 
-class DayCountFraction(EnumBase, Enum):    
-    
+class DayCountFraction(EnumBase, Enum):
+
     """Day Count Fraction"""
 
     ACT_OVER_360 = 'ACT/360'
@@ -1040,30 +1042,42 @@ class DayCountFraction(EnumBase, Enum):
     ACT_OVER_ACT_ISDA = 'ACT/ACT ISDA'
     ACT_OVER_ACT_ISMA = 'ACT/ACT ISMA'
     _30_OVER_360 = '30/360'
-    _30E_OVER_360 = '30E/360'    
+    _30E_OVER_360 = '30E/360'
 
 
-class EqBasketHistoryMethodology(EnumBase, Enum):    
-    
+class FVAStrikeType(EnumBase, Enum):
+    Delta_Neutral = 'Delta Neutral'
+    ATM_Forward = 'ATM Forward'
+    Delta = 'Delta'
+
+
+class FVAUnderlyingOptionType(EnumBase, Enum):
+    Straddle = 'Straddle'
+    Call = 'Call'
+    Put = 'Put'
+
+
+class EqBasketHistoryMethodology(EnumBase, Enum):
+
     """Whether basket history should be backcasted, backtested, or uploaded manually
        after creation."""
 
     Backcast = 'Backcast'
     Backtest = 'Backtest'
-    Custom = 'Custom'    
+    Custom = 'Custom'
 
 
-class EqBasketHolidayCalendar(EnumBase, Enum):    
-    
+class EqBasketHolidayCalendar(EnumBase, Enum):
+
     """Holiday calendar by exchange."""
 
     NYSE = 'NYSE'
     LNSE = 'LNSE'
-    HKGE = 'HKGE'    
+    HKGE = 'HKGE'
 
 
-class EqBasketRebalanceFrequencyRule(EnumBase, Enum):    
-    
+class EqBasketRebalanceFrequencyRule(EnumBase, Enum):
+
     """Expected rebalance frequency for a basket."""
 
     First_Biz_Day_of_Month = 'First Biz Day of Month'
@@ -1072,19 +1086,19 @@ class EqBasketRebalanceFrequencyRule(EnumBase, Enum):
     Last_Biz_Day_of_Quarter = 'Last Biz Day of Quarter'
     Last_Biz_Day_of_Quarter_first_Month = 'Last Biz Day of Quarter first Month'
     Biweekly_Based_on_Last_Rebal = 'Biweekly Based on Last Rebal'
-    Custom = 'Custom'    
+    Custom = 'Custom'
 
 
-class FallbackType(EnumBase, Enum):    
-    
+class FallbackType(EnumBase, Enum):
+
     """Different Rules for Libor Fallback"""
 
     RFR = 'RFR'
-    LastFixing = 'LastFixing'    
+    LastFixing = 'LastFixing'
 
 
-class Field(EnumBase, Enum):    
-    
+class Field(EnumBase, Enum):
+
     """Field to be returned"""
 
     investmentRate = 'investmentRate'
@@ -3983,54 +3997,54 @@ class Field(EnumBase, Enum):
     totalDebtTotalAsset = 'totalDebtTotalAsset'
     totalReturn = 'totalReturn'
     unleveredFcfYield = 'unleveredFcfYield'
-    worstMonthDate = 'worstMonthDate'    
+    worstMonthDate = 'worstMonthDate'
 
 
-class FiniteDifferenceMethod(EnumBase, Enum):    
-    
+class FiniteDifferenceMethod(EnumBase, Enum):
+
     """Direction and dimension of finite difference"""
 
     Up = 'Up'
     Centered = 'Centered'
     Down = 'Down'
-    CenteredSecondOrder = 'CenteredSecondOrder'    
+    CenteredSecondOrder = 'CenteredSecondOrder'
 
 
-class Format(EnumBase, Enum):    
-    
+class Format(EnumBase, Enum):
+
     """Alternative format for data to be returned in"""
 
     Json = 'Json'
     Excel = 'Excel'
     MessagePack = 'MessagePack'
-    Pdf = 'Pdf'    
+    Pdf = 'Pdf'
 
 
-class FrequencyInterval(EnumBase, Enum):    
-    
+class FrequencyInterval(EnumBase, Enum):
+
     """Frequency interval."""
 
     Weekly = 'Weekly'
     Monthly = 'Monthly'
     Quarterly = 'Quarterly'
-    Annually = 'Annually'    
+    Annually = 'Annually'
 
 
-class InOut(EnumBase, Enum):    
-    
+class InOut(EnumBase, Enum):
+
     In = 'In'
-    Out = 'Out'    
+    Out = 'Out'
 
 
-class IndexCalculationType(EnumBase, Enum):    
-    
+class IndexCalculationType(EnumBase, Enum):
+
     """Quote type that is used for the bond price"""
 
-    Price_Return = 'Price Return'    
+    Price_Return = 'Price Return'
 
 
-class IndexNotTradingReasons(EnumBase, Enum):    
-    
+class IndexNotTradingReasons(EnumBase, Enum):
+
     """Reasons the index was not traded"""
 
     Cost = 'Cost'
@@ -4038,19 +4052,19 @@ class IndexNotTradingReasons(EnumBase, Enum):
     Basket_created_prematurely = 'Basket created prematurely'
     Economics_of_the_basket_changed__client_no_longer_interested_in_trading = 'Economics of the basket changed: client no longer interested in trading'
     GS_booking_OVER_operational_issues = 'GS booking/operational issues'
-    _ = ''    
+    _ = ''
 
 
-class IntradayExecutionType(EnumBase, Enum):    
-    
+class IntradayExecutionType(EnumBase, Enum):
+
     """Execution type of strategy that can execute multiple times per day"""
 
     Close = 'Close'
-    Intraday = 'Intraday'    
+    Intraday = 'Intraday'
 
 
-class KnockoutConvention(EnumBase, Enum):    
-    
+class KnockoutConvention(EnumBase, Enum):
+
     """Knockout convention"""
 
     Continuous = 'Continuous'
@@ -4059,11 +4073,11 @@ class KnockoutConvention(EnumBase, Enum):
     Korean = 'Korean'
     Malaysia = 'Malaysia'
     Philippines = 'Philippines'
-    Taipei = 'Taipei'    
+    Taipei = 'Taipei'
 
 
-class LiquidityMeasure(EnumBase, Enum):    
-    
+class LiquidityMeasure(EnumBase, Enum):
+
     """A list of the different liquidity measures to choose from."""
 
     Summary = 'Summary'
@@ -4087,31 +4101,31 @@ class LiquidityMeasure(EnumBase, Enum):
     Participation_Rate_With_Different_Time_Horizons = 'Participation Rate With Different Time Horizons'
     Risk_With_Different_Time_Horizons = 'Risk With Different Time Horizons'
     Historical_ADV_Percent_Curve = 'Historical ADV Percent Curve'
-    Time_Series_Data = 'Time Series Data'    
+    Time_Series_Data = 'Time Series Data'
 
 
-class LongShort(EnumBase, Enum):    
-    
+class LongShort(EnumBase, Enum):
+
     """Client long or short on tarf"""
 
     Long = 'Long'
-    Short = 'Short'    
+    Short = 'Short'
 
 
-class MarketBehaviour(EnumBase, Enum):    
-    
+class MarketBehaviour(EnumBase, Enum):
+
     ContraintsBased = 'ContraintsBased'
-    Calibrated = 'Calibrated'    
+    Calibrated = 'Calibrated'
 
 
-class MarketDataFrequency(EnumBase, Enum):    
-    
+class MarketDataFrequency(EnumBase, Enum):
+
     Real_Time = 'Real Time'
-    End_Of_Day = 'End Of Day'    
+    End_Of_Day = 'End Of Day'
 
 
-class MarketDataShockType(EnumBase, Enum):    
-    
+class MarketDataShockType(EnumBase, Enum):
+
     """Market data shock type"""
 
     Absolute = 'Absolute'
@@ -4122,11 +4136,11 @@ class MarketDataShockType(EnumBase, Enum):
     AutoDefault = 'AutoDefault'
     CSWFFR = 'CSWFFR'
     StdVolFactor = 'StdVolFactor'
-    StdVolFactorProportional = 'StdVolFactorProportional'    
+    StdVolFactorProportional = 'StdVolFactorProportional'
 
 
-class MarketDataVendor(EnumBase, Enum):    
-    
+class MarketDataVendor(EnumBase, Enum):
+
     Goldman_Sachs = 'Goldman Sachs'
     Thomson_Reuters = 'Thomson Reuters'
     Solactive = 'Solactive'
@@ -4190,80 +4204,80 @@ class MarketDataVendor(EnumBase, Enum):
     ICE = 'ICE'
     CME = 'CME'
     Cboe = 'Cboe'
-    Rose_AI = 'Rose.AI'    
+    Rose_AI = 'Rose.AI'
 
 
-class NewOrUnwind(EnumBase, Enum):    
-    
+class NewOrUnwind(EnumBase, Enum):
+
     """New or unwnd of product"""
 
     New = 'New'
     Unwind = 'Unwind'
-    Non_Standard = 'Non-Standard'    
+    Non_Standard = 'Non-Standard'
 
 
-class NotionalOrStrike(EnumBase, Enum):    
-    
+class NotionalOrStrike(EnumBase, Enum):
+
     """Notional or Strke on target adjustment"""
 
     Notional = 'Notional'
-    Strike = 'Strike'    
+    Strike = 'Strike'
 
 
-class OptionDeltaModel(EnumBase, Enum):    
-    
+class OptionDeltaModel(EnumBase, Enum):
+
     """Option Delta Model"""
 
     Black_Scholes_with_Multiplier = 'Black-Scholes with Multiplier'
-    Flat_Volatility = 'Flat Volatility'    
+    Flat_Volatility = 'Flat Volatility'
 
 
-class OptionExerciseStyle(EnumBase, Enum):    
-    
+class OptionExerciseStyle(EnumBase, Enum):
+
     """How the option is exercised (e.g. Auto, Manual)"""
 
     Auto = 'Auto'
-    Manual = 'Manual'    
+    Manual = 'Manual'
 
 
-class OptionExpiryType(EnumBase, Enum):    
-    
+class OptionExpiryType(EnumBase, Enum):
+
     _1m = '1m'
     _2m = '2m'
     _3m = '3m'
     _4m = '4m'
     _5m = '5m'
-    _6m = '6m'    
+    _6m = '6m'
 
 
-class OptionSettlementMethod(EnumBase, Enum):    
-    
+class OptionSettlementMethod(EnumBase, Enum):
+
     """How the option is settled (e.g. Cash, Physical)"""
 
     Cash = 'Cash'
     Physical = 'Physical'
     ElectDfltCash = 'ElectDfltCash'
     ElectDfltPhys = 'ElectDfltPhys'
-    NetShares = 'NetShares'    
+    NetShares = 'NetShares'
 
 
-class OptionStrikeType(EnumBase, Enum):    
-    
+class OptionStrikeType(EnumBase, Enum):
+
     Relative = 'Relative'
-    Delta = 'Delta'    
+    Delta = 'Delta'
 
 
-class OptionStyle(EnumBase, Enum):    
-    
+class OptionStyle(EnumBase, Enum):
+
     """Option Exercise Style"""
 
     European = 'European'
     American = 'American'
-    Bermudan = 'Bermudan'    
+    Bermudan = 'Bermudan'
 
 
-class OptionType(EnumBase, Enum):    
-    
+class OptionType(EnumBase, Enum):
+
     """Option Type"""
 
     Call = 'Call'
@@ -4271,39 +4285,39 @@ class OptionType(EnumBase, Enum):
     Binary_Call = 'Binary Call'
     Binary_Put = 'Binary Put'
     Digital_Call = 'Digital Call'
-    Digital_Put = 'Digital Put'    
+    Digital_Put = 'Digital Put'
 
 
-class PCOActionType(EnumBase, Enum):    
-    
+class PCOActionType(EnumBase, Enum):
+
     """Types of PCO Actions"""
 
     Generate_Orders = 'Generate Orders'
     Update_Parameters = 'Update Parameters'
     Update_Client_Data = 'Update Client Data'
     Update_Open_Hedge_Notional = 'Update Open Hedge Notional'
-    Add_Order = 'Add Order'    
+    Add_Order = 'Add Order'
 
 
-class PCOCurrencyType(EnumBase, Enum):    
-    
+class PCOCurrencyType(EnumBase, Enum):
+
     """Currency Type Options for PCO"""
 
     Exposure = 'Exposure'
     Base = 'Base'
-    Local = 'Local'    
+    Local = 'Local'
 
 
-class PCOOrigin(EnumBase, Enum):    
-    
+class PCOOrigin(EnumBase, Enum):
+
     """Origin of PCO Report"""
 
     PCOGui = 'PCOGui'
-    PCOBackend = 'PCOBackend'    
+    PCOBackend = 'PCOBackend'
 
 
-class PayReceive(EnumBase, Enum):    
-    
+class PayReceive(EnumBase, Enum):
+
     """Pay or receive fixed"""
 
     Pay = 'Pay'
@@ -4311,67 +4325,67 @@ class PayReceive(EnumBase, Enum):
     Receive = 'Receive'
     Receiver = 'Receiver'
     Straddle = 'Straddle'
-    Rec = 'Rec'    
+    Rec = 'Rec'
 
 
-class PaymentFrequency(EnumBase, Enum):    
-    
+class PaymentFrequency(EnumBase, Enum):
+
     Every_Return = 'Every Return'
-    Maturity = 'Maturity'    
+    Maturity = 'Maturity'
 
 
-class PayoutType(EnumBase, Enum):    
-    
+class PayoutType(EnumBase, Enum):
+
     """Delayed or Immediate payout"""
 
     Delayed = 'Delayed'
-    Immediate = 'Immediate'    
+    Immediate = 'Immediate'
 
 
-class Period(EnumBase, Enum):    
-    
+class Period(EnumBase, Enum):
+
     """A coding scheme to define a period corresponding to a quantity amount"""
 
     Month = 'Month'
     Quarter = 'Quarter'
     Hour = 'Hour'
     Day = 'Day'
-    BusinessDay = 'BusinessDay'    
+    BusinessDay = 'BusinessDay'
 
 
-class PositionSetWeightingStrategy(EnumBase, Enum):    
-    
+class PositionSetWeightingStrategy(EnumBase, Enum):
+
     """Strategy used to price the position set."""
 
     Equal = 'Equal'
     Market_Capitalization = 'Market Capitalization'
     Quantity = 'Quantity'
     Weight = 'Weight'
-    Notional = 'Notional'    
+    Notional = 'Notional'
 
 
-class PricingLocation(EnumBase, Enum):    
-    
+class PricingLocation(EnumBase, Enum):
+
     """Based on the location of the exchange. Called 'Native Region' in SecDB"""
 
     NYC = 'NYC'
     LDN = 'LDN'
     TKO = 'TKO'
-    HKG = 'HKG'    
+    HKG = 'HKG'
 
 
-class PrincipalExchange(EnumBase, Enum):    
-    
+class PrincipalExchange(EnumBase, Enum):
+
     """How principal is exchanged"""
 
     _None = 'None'
     Both = 'Both'
     First = 'First'
-    Last = 'Last'    
+    Last = 'Last'
 
 
-class ProductCode(EnumBase, Enum):    
-    
+class ProductCode(EnumBase, Enum):
+
     """Override the clearing destination/symbol"""
 
     CME__BB = 'CME::BB'
@@ -4441,11 +4455,11 @@ class ProductCode(EnumBase, Enum):
     OTC__RB_HO = 'OTC::RB-HO'
     OTC__RB_WTI = 'OTC::RB-WTI'
     OTC__WTI = 'OTC::WTI'
-    OTC__WTI_BRT = 'OTC::WTI-BRT'    
+    OTC__WTI_BRT = 'OTC::WTI-BRT'
 
 
-class ProductType(EnumBase, Enum):    
-    
+class ProductType(EnumBase, Enum):
+
     """Product type of basket"""
 
     Flow = 'Flow'
@@ -4453,11 +4467,11 @@ class ProductType(EnumBase, Enum):
     PWM = 'PWM'
     Volatility = 'Volatility'
     Single_Stock = 'Single Stock'
-    Indexified_Basket = 'Indexified Basket'    
+    Indexified_Basket = 'Indexified Basket'
 
 
-class QuoteType(EnumBase, Enum):    
-    
+class QuoteType(EnumBase, Enum):
+
     """Quote type that is used for the bond price"""
 
     Dirty_Price = 'Dirty Price'
@@ -4465,11 +4479,11 @@ class QuoteType(EnumBase, Enum):
     BM_Spread = 'BM Spread'
     Yield = 'Yield'
     Z_Spread = 'Z-Spread'
-    G_Spread = 'G-Spread'    
+    G_Spread = 'G-Spread'
 
 
-class Region(EnumBase, Enum):    
-    
+class Region(EnumBase, Enum):
+
     """Regional classification for the asset"""
 
     _ = ''
@@ -4477,35 +4491,35 @@ class Region(EnumBase, Enum):
     Asia = 'Asia'
     EM = 'EM'
     Europe = 'Europe'
-    Global = 'Global'    
+    Global = 'Global'
 
 
-class ReportJobPriority(EnumBase, Enum):    
-    
+class ReportJobPriority(EnumBase, Enum):
+
     """Report job priority."""
 
     High = 'High'
-    Normal = 'Normal'    
+    Normal = 'Normal'
 
 
-class ReturnStyle(EnumBase, Enum):    
-    
+class ReturnStyle(EnumBase, Enum):
+
     """Return calculation style"""
 
     Rate_of_Return = 'Rate of Return'
-    Price_Return = 'Price Return'    
+    Price_Return = 'Price Return'
 
 
-class ReturnType(EnumBase, Enum):    
-    
+class ReturnType(EnumBase, Enum):
+
     """Sum or Product of periodic return, relevant only if paying at maturity"""
 
     Sum = 'Sum'
-    Product = 'Product'    
+    Product = 'Product'
 
 
-class RiskMeasureType(EnumBase, Enum):    
-    
+class RiskMeasureType(EnumBase, Enum):
+
     """The type of measure to perform risk on. e.g. Greeks"""
 
     Annual_ATM_Implied_Volatility = 'Annual ATM Implied Volatility'
@@ -4620,55 +4634,55 @@ class RiskMeasureType(EnumBase, Enum):
     VegaLocalCcy = 'VegaLocalCcy'
     Volga = 'Volga'
     Volatility = 'Volatility'
-    XccyDelta = 'XccyDelta'    
+    XccyDelta = 'XccyDelta'
 
 
-class RiskMeasureUnit(EnumBase, Enum):    
-    
+class RiskMeasureUnit(EnumBase, Enum):
+
     """The unit of change of underlying in the risk computation."""
 
     Percent = 'Percent'
     Dollar = 'Dollar'
     BPS = 'BPS'
-    Pips = 'Pips'    
+    Pips = 'Pips'
 
 
-class RiskModelType(EnumBase, Enum):    
-    
+class RiskModelType(EnumBase, Enum):
+
     """Marquee risk model type"""
 
     Factor = 'Factor'
     Macro = 'Macro'
-    Thematic = 'Thematic'    
+    Thematic = 'Thematic'
 
 
-class ScenarioType(EnumBase, Enum):    
-    
+class ScenarioType(EnumBase, Enum):
+
     """Type of Scenario"""
 
     Spot_Vol = 'Spot Vol'
-    Greeks = 'Greeks'    
+    Greeks = 'Greeks'
 
 
-class SettlementType(EnumBase, Enum):    
-    
+class SettlementType(EnumBase, Enum):
+
     """Settlement Type"""
 
     Cash = 'Cash'
-    Physical = 'Physical'    
+    Physical = 'Physical'
 
 
-class Side(EnumBase, Enum):    
-    
+class Side(EnumBase, Enum):
+
     """Official side of an index"""
 
     Bid = 'Bid'
     Ask = 'Ask'
-    Mid = 'Mid'    
+    Mid = 'Mid'
 
 
-class Strategy(EnumBase, Enum):    
-    
+class Strategy(EnumBase, Enum):
+
     """More specific descriptor of a fund's investment approach. Same view permissions
        as the asset"""
 
@@ -4733,92 +4747,92 @@ class Strategy(EnumBase, Enum):
     Volatility_Target_10 = 'Volatility Target 10'
     Volatility_Target_12 = 'Volatility Target 12'
     Volatility_Target_15 = 'Volatility Target 15'
-    Yield_Alternative = 'Yield Alternative'    
+    Yield_Alternative = 'Yield Alternative'
 
 
-class StrikeMethodType(EnumBase, Enum):    
-    
+class StrikeMethodType(EnumBase, Enum):
+
     Spread = 'Spread'
     Delta = 'Delta'
     Percentage_of_Price = 'Percentage of Price'
-    Fixed = 'Fixed'    
+    Fixed = 'Fixed'
 
 
-class SwapClearingHouse(EnumBase, Enum):    
-    
+class SwapClearingHouse(EnumBase, Enum):
+
     """Swap Clearing House"""
 
     LCH = 'LCH'
     EUREX = 'EUREX'
     JSCC = 'JSCC'
     CME = 'CME'
-    NONE = 'NONE'    
+    NONE = 'NONE'
 
 
-class SwapSettlement(EnumBase, Enum):    
-    
+class SwapSettlement(EnumBase, Enum):
+
     """Swap Settlement Type"""
 
     Phys_CLEARED = 'Phys.CLEARED'
     Physical = 'Physical'
     Cash_CollatCash = 'Cash.CollatCash'
-    Cash_PYU = 'Cash.PYU'    
+    Cash_PYU = 'Cash.PYU'
 
 
-class SwapType(EnumBase, Enum):    
-    
+class SwapType(EnumBase, Enum):
+
     Eq_CFD_Standard = 'Eq CFD Standard'
     Eq_Swap = 'Eq Swap'
     Eq_Swap_OET_Asymmetric = 'Eq Swap OET Asymmetric'
     Eq_Swap_OET_Simple = 'Eq Swap OET Simple'
     Eq_Swap_Term = 'Eq Swap Term'
-    Eq_Synthetic_OET = 'Eq Synthetic OET'    
+    Eq_Synthetic_OET = 'Eq Synthetic OET'
 
 
-class TargetPaymentType(EnumBase, Enum):    
-    
+class TargetPaymentType(EnumBase, Enum):
+
     Capped = 'Capped'
     Full = 'Full'
-    _None = 'None'    
+    _None = 'None'
 
 
-class TargetType(EnumBase, Enum):    
-    
+class TargetType(EnumBase, Enum):
+
     """Target type for accural redemption forward"""
 
     Big_Figures = 'Big Figures'
     Amount = 'Amount'
-    Num_Of_ITM_Fixes = 'Num Of ITM Fixes'    
+    Num_Of_ITM_Fixes = 'Num Of ITM Fixes'
 
 
-class TouchNoTouch(EnumBase, Enum):    
-    
+class TouchNoTouch(EnumBase, Enum):
+
     """Indicates Touch or NoTouch"""
 
     Touch = 'Touch'
-    No_Touch = 'No Touch'    
+    No_Touch = 'No Touch'
 
 
-class TradeAs(EnumBase, Enum):    
-    
+class TradeAs(EnumBase, Enum):
+
     """Option trade as (i.e. listed, otc, lookalike etc)"""
 
     Listed = 'Listed'
     Listed_Look_alike_OTC = 'Listed Look alike OTC'
     Flex = 'Flex'
-    OTC = 'OTC'    
+    OTC = 'OTC'
 
 
-class TradeType(EnumBase, Enum):    
-    
+class TradeType(EnumBase, Enum):
+
     """Direction"""
 
     Buy = 'Buy'
-    Sell = 'Sell'    
+    Sell = 'Sell'
 
 
-class UnderlierType(EnumBase, Enum):    
-    
+class UnderlierType(EnumBase, Enum):
+
     """Type of underlyer"""
 
     BBID = 'BBID'
@@ -4827,17 +4841,17 @@ class UnderlierType(EnumBase, Enum):
     ISIN = 'ISIN'
     SEDOL = 'SEDOL'
     RIC = 'RIC'
-    Ticker = 'Ticker'    
+    Ticker = 'Ticker'
 
 
-class UpDown(EnumBase, Enum):    
-    
+class UpDown(EnumBase, Enum):
+
     Up = 'Up'
-    Down = 'Down'    
+    Down = 'Down'
 
 
-class ValuationTime(EnumBase, Enum):    
-    
+class ValuationTime(EnumBase, Enum):
+
     """The time of valuation, e.g. for an option"""
 
     MktClose = 'MktClose'
@@ -4846,30 +4860,30 @@ class ValuationTime(EnumBase, Enum):
     MktPreOpen = 'MktPreOpen'
     MktPrevClose = 'MktPrevClose'
     Hedge_Unwind = 'Hedge Unwind'
-    TWAP_PM = 'TWAP PM'    
+    TWAP_PM = 'TWAP PM'
 
 
-class VarianceConvention(EnumBase, Enum):    
-    
+class VarianceConvention(EnumBase, Enum):
+
     """Specifies whether the variance is Annualized or Total"""
 
     Annualized = 'Annualized'
-    Total = 'Total'    
+    Total = 'Total'
 
 
-class WeightingType(EnumBase, Enum):    
-    
+class WeightingType(EnumBase, Enum):
+
     """Weighting type that is used for the bond price"""
 
     Notional = 'Notional'
     Market_Value = 'Market Value'
-    Dollar_Duration = 'Dollar Duration'    
+    Dollar_Duration = 'Dollar Duration'
 
 
-class YesNo(EnumBase, Enum):    
-    
+class YesNo(EnumBase, Enum):
+
     Yes = 'Yes'
-    No = 'No'    
+    No = 'No'
 
 
 @dataclass
