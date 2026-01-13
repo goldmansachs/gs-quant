@@ -16,6 +16,7 @@ under the License.
 import datetime as dt
 from math import sqrt
 
+import numpy as np
 import pandas as pd
 import pytest
 from testfixtures import Replacer
@@ -387,6 +388,97 @@ def test_factor_returns_intraday():
     with DataContext(dt.datetime(2025, 1, 1, 0, 0, 0), dt.datetime(2025, 1, 1, 23, 59, 59)):
         actual = mrm.factor_returns_intraday(mock_risk_model(), 'Factor Name')
         assert len(actual.values) == 2
+    replace.restore()
+
+
+def test_factor_returns_percentile():
+    replace = Replacer()
+
+    # mock getting risk model factor entity
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
+    mock.return_value = mock_risk_model_factor_data
+
+    # mock getting risk model entity()
+    mock = replace('gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model', Mock())
+    mock.return_value = mock_risk_model_obj
+
+    mock_risk_model_factor_returns_data = {
+        "results": [
+            {
+                'date': '2025-01-10',
+                "factorData": [{
+                    'factorName': 'Factor Name',
+                    'factorCategory': 'Style',
+                    "factorId": "factor_id",
+                    "factorReturn": 1.022
+                }],
+            },
+            {
+                'date': '2025-01-09',
+                "factorData": [{
+                    'factorName': 'Factor Name',
+                    'factorCategory': 'Style',
+                    "factorId": "factor_id",
+                    "factorReturn": 2.033
+                }],
+            },
+            {
+                'date': '2025-01-08',
+                "factorData": [{
+                    'factorName': 'Factor Name',
+                    'factorCategory': 'Style',
+                    "factorId": "factor_id",
+                    "factorReturn": 3.044
+                }],
+            },
+            {
+                'date': '2025-01-07',
+                "factorData": [{
+                    'factorName': 'Factor Name',
+                    'factorCategory': 'Style',
+                    "factorId": "factor_id",
+                    "factorReturn": 4.055
+                }],
+            },
+            {
+                'date': '2025-01-06',
+                "factorData": [{
+                    'factorName': 'Factor Name',
+                    'factorCategory': 'Style',
+                    "factorId": "factor_id",
+                    "factorReturn": 5.066
+                }],
+            },
+            {
+                'date': '2025-01-05',
+                "factorData": [{
+                    'factorName': 'Factor Name',
+                    'factorCategory': 'Style',
+                    "factorId": "factor_id",
+                    "factorReturn": 6.077
+                }],
+            },
+            {
+                'date': '2025-01-04',
+                "factorData": [{
+                    'factorName': 'Factor Name',
+                    'factorCategory': 'Style',
+                    "factorId": "factor_id",
+                    "factorReturn": 7.088
+                }
+                ],
+            },
+        ]
+    }
+    expected_percentile_value = np.percentile(np.array([f['factorReturn'] for data in
+                                                        mock_risk_model_factor_returns_data['results']
+                                                        for f in data['factorData']]), 90)
+    mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
+    mock.return_value = mock_risk_model_factor_returns_data
+
+    with DataContext(dt.datetime(2025, 1, 10, 0, 0, 0), dt.datetime(2025, 1, 10, 23, 59, 59)):
+        actual = mrm.factor_returns_percentile(mock_risk_model(), 'Factor Name', n_percentile=90)
+        assert expected_percentile_value == actual
     replace.restore()
 
 

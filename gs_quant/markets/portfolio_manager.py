@@ -107,7 +107,7 @@ class PortfolioManager(PositionedEntity):
 
         :return: returns the PerformanceReport associated with portfolio if one exists
         """
-        reports = GsReportApi.get_reports(limit=100,
+        reports = GsReportApi.get_reports(limit=500,
                                           position_source_type='Portfolio',
                                           position_source_id=self.id,
                                           report_type='Portfolio Performance Analytics',

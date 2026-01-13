@@ -30,7 +30,9 @@ from gs_quant.models.risk_model import FactorRiskModel, MarqueeRiskModel
 from gs_quant.target.risk_models import RiskModelDataMeasure, RiskModelDataAssetsRequest, \
     RiskModelUniverseIdentifierRequest
 from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
+from .statistics import percentile
 from gs_quant.timeseries.measures import _extract_series_from_df
+import datetime as dt
 
 ModelMeasureStr = {
     'Asset Universe': RiskModelDataMeasure.Asset_Universe,
@@ -298,6 +300,23 @@ def factor_returns_intraday(risk_model_id: str, factor_name: str,
     factor_returns_df = factor.intraday_returns(DataContext.current.start_time, DataContext.current.end_time,
                                                 data_source)
     return factor_returns_df.squeeze()
+
+
+@plot_measure_entity(EntityType.RISK_MODEL, [])
+def factor_returns_percentile(risk_model_id: str, factor_name: str,
+                              lookback_days: int = 10,
+                              n_percentile: float = 90.0, *, source: str = None,
+                              real_time: bool = False, request_id: Optional[str] = None) -> float:
+    """
+    Percentile of factor returns over a lookback period for a factor in a risk model
+    """
+    start_date = (DataContext.current.start_time - dt.timedelta(days=lookback_days)).date()
+    end_date = DataContext.current.end_time.date()
+
+    model = FactorRiskModel.get(risk_model_id)
+    factor = model.get_factor(factor_name)
+    factor_returns_df = factor.returns(start_date=start_date, end_date=end_date, format=ReturnFormat.DATA_FRAME)
+    return percentile(factor_returns_df.squeeze(), n_percentile)
 
 
 def __format_plot_measure_results(time_series: Dict, query_type: QueryType, multiplier=1, handle_missing_column=False):
