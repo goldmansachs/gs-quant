@@ -4781,50 +4781,6 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_me
     return result
 
 
-@plot_measure((AssetClass.FX,), None, [QueryType.FORWARD_POINT])
-def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.DAILY, *,
-               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
-    """
-    Calculates carry using forward term structure i.e forwardpoints/spot with option to return it in annualized terms.
-
-    :param asset: asset object loaded from security master
-    :param tenor: relative date representation of expiration date e.g. 1m
-    :param annualized: whether to annualize carry, one of annualized or daily
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD
-    :param request_id: service request id, if any
-    :return: FX spot carry curve
-    """
-
-    if tenor not in ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '10m', '11m', '1y', '15m', '18m', '21m',
-                     '2y']:
-        raise MqValueError('tenor not included in dataset')
-    asset_id = cross_stored_direction_for_fx_vol(asset)
-    if real_time:
-        start, end = DataContext.current.start_time, DataContext.current.end_time
-        ds = Dataset(Dataset.GS.FXFORWARDPOINTS_INTRADAY)
-        mq_df = ds.get_data(asset_id=asset_id, start=start, end=end, tenor=tenor)
-        if 'm' in tenor:
-            mq_df['ann_factor'] = 12 / int(tenor.replace('m', ''))
-        else:
-            mq_df['ann_factor'] = 1 / int(tenor.replace('y', ''))
-    else:
-        start, end = DataContext.current.start_date, DataContext.current.end_date
-        ds = Dataset(Dataset.GS.FXFORWARDPOINTS_PREMIUM)
-        mq_df = ds.get_data(asset_id=asset_id, start=start, end=end, tenor=tenor)
-        mq_df = mq_df.reset_index()
-        mq_df['ann_factor'] = mq_df.apply(lambda x: 360 / (x.settlementDate - x.date).days, axis=1)
-        mq_df = mq_df.set_index('date')
-
-    if annualized == FXSpotCarry.ANNUALIZED:
-        mq_df['carry'] = -1 * mq_df['ann_factor'] * mq_df['forwardPoint'] / mq_df['spot']
-    else:
-        mq_df['carry'] = -1 * mq_df['forwardPoint'] / mq_df['spot']
-    series = ExtendedSeries(mq_df['carry'], name='spotCarry')
-    series.dataset_ids = ds.id
-    return series
-
-
 @plot_measure((AssetClass.FX,), None, [QueryType.IMPLIED_VOLATILITY])
 def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: str = None,
                            real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:

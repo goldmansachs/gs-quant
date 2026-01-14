@@ -22,18 +22,20 @@ from pandas.testing import assert_series_equal
 from testfixtures import Replacer
 from testfixtures.mock import Mock
 
+import gs_quant.timeseries
 import gs_quant.timeseries.measures as tm_rates
 import gs_quant.timeseries.measures_fx_vol as tm_fxo
-import gs_quant.timeseries.measures_xccy as tm
+import gs_quant.timeseries.measures_xccy as tm_xccy
 from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame, QueryType
 from gs_quant.common import PricingLocation
+from gs_quant.data import DataContext
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.markets.securities import Bond, Cross, Currency
 from gs_quant.session import GsSession, Environment
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries import Currency as CurrencyEnum, SecurityMaster
+from gs_quant.timeseries import Currency as CurrencyEnum, SecurityMaster, measures as tm
 from gs_quant.timeseries.measures_fx_vol import _currencypair_to_tdapi_fxo_asset, _currencypair_to_tdapi_fxfwd_asset
 from gs_quant.timeseries.measures_helper import VolReference
 
@@ -124,12 +126,14 @@ def test_get_fxo_csa_terms():
 def test_check_valid_indices():
     valid_indices = ['LIBOR']
     for index in valid_indices:
-        assert tm.CrossCurrencyRateOptionType[index] == tm._check_crosscurrency_rateoption_type(CurrencyEnum.GBP, index)
+        expected_rate_option_type = tm_xccy.CrossCurrencyRateOptionType[index]
+        actual_rate_option_type = tm_xccy._check_crosscurrency_rateoption_type(CurrencyEnum.GBP, index)
+        assert expected_rate_option_type == actual_rate_option_type
 
     invalid_indices = ['LIBORED', 'TestRateOption']
     for index in invalid_indices:
         with pytest.raises(MqError):
-            tm._check_crosscurrency_rateoption_type(CurrencyEnum.GBP, index)
+            tm_xccy._check_crosscurrency_rateoption_type(CurrencyEnum.GBP, index)
 
 
 def test_cross_stored_direction_for_fx_vol():
@@ -196,7 +200,7 @@ def test_get_tdapi_fxo_assets():
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1, mock_asset_2]
     kwargs = dict()
-    assert ['MAW8SAXPSKYA94E2', 'MATDD783JM1C2GGD'] == tm._get_tdapi_crosscurrency_rates_assets(**kwargs)
+    assert ['MAW8SAXPSKYA94E2', 'MATDD783JM1C2GGD'] == tm_xccy._get_tdapi_crosscurrency_rates_assets(**kwargs)
     replace.restore()
 
     #   test case will test matching sofr maturity with libor leg and flipping legs to get right asset
@@ -224,6 +228,36 @@ def mock_curr(_cls, _q):
         'forwardPoint': [7, 8, 9]
     }
     df = MarketDataResponseFrame(data=d, index=_index * 3)
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_fx_spot_carry_3m(*args, **kwargs):
+    """Mock Dataset.get_data for 3m tenor with fwdPoints column"""
+    d = pd.DataFrame({
+        'spot': [1.18250, 1.18566, 1.18511],
+        'fwdPoints': [0.00234, 0.00234, 0.00235],
+        'tenor': ['3m', '3m', '3m'],
+        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
+        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
+    })
+    d = d.set_index('date')
+    df = MarketDataResponseFrame(d)
+    df.dataset_ids = _test_datasets
+    return df
+
+
+def mock_fx_spot_carry_2y(*args, **kwargs):
+    """Mock Dataset.get_data for 2y tenor with fwdPoints column"""
+    d = pd.DataFrame({
+        'spot': [1.18250, 1.18566, 1.18511],
+        'fwdPoints': [0.02009, 0.02015, 0.02064],
+        'tenor': ['2y', '2y', '2y'],
+        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
+        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
+    })
+    d = d.set_index('date')
+    df = MarketDataResponseFrame(d)
     df.dataset_ids = _test_datasets
     return df
 
@@ -542,3 +576,64 @@ def test_implied_volatility_fxvol(mocker):
 
 if __name__ == '__main__':
     pytest.main(args=["test_measures_fx_vol.py"])
+
+
+def test_spot_carry(mocker):
+    replace = Replacer()
+    mock = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USDEUR'
+
+    identifiers = replace('gs_quant.timeseries.measures_fx_vol._get_tdapi_fxo_assets', Mock())
+    identifiers.return_value = 'MAA0NE9QX2ABETG6'
+
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+
+    mock_tdapi_asset_func = replace('gs_quant.timeseries.measures_fx_vol._currencypair_to_tdapi_fxfwd_asset', Mock())
+    mock_tdapi_asset_func.return_value = mock.get_marquee_id()
+    df = pd.DataFrame({
+        '3m': [-0.001978858350951374, -0.0019735843327766817, -0.00198293829264794],
+        '2y': [-0.016989429175475686, -0.016994753976688093, -0.017416104834150414],
+        '3m_ann': [-0.007660096842392416, -0.007400941247912555, -0.0075142924774027195],
+        'date': [pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-03'), pd.Timestamp('2020-09-04')],
+        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
+    })
+    df = df.set_index('date')
+
+    with DataContext(dt.date(2020, 9, 2), dt.date(2020, 9, 4)):
+
+        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_carry_3m)
+        actual_3m = gs_quant.timeseries.measures_fx_vol.spot_carry(mock, '3m')
+        assert_series_equal(df['3m'], pd.Series(actual_3m, name='3m'))
+
+        actual_3m_ann = gs_quant.timeseries.measures_fx_vol.spot_carry(mock, '3m', tm.FXSpotCarry.ANNUALIZED)
+        assert_series_equal(df['3m_ann'], pd.Series(actual_3m_ann, name='3m_ann'))
+
+        with pytest.raises(MqValueError):
+            gs_quant.timeseries.measures_fx_vol.spot_carry(mock, '13m')
+
+        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_carry_2y)
+        actual_2y = gs_quant.timeseries.measures_fx_vol.spot_carry(mock, '2y')
+        assert_series_equal(df['2y'], pd.Series(actual_2y, name='2y'))
+
+    with pytest.raises(NotImplementedError):
+        tm_fxo.spot_carry(mock, '3m', real_time=True)
+
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=MarketDataResponseFrame())
+    with DataContext(dt.date(2020, 9, 2), dt.date(2020, 9, 4)):
+        result = tm_fxo.spot_carry(mock, '3m')
+        assert result.empty
+        assert isinstance(result, pd.Series)
+
+    def mock_empty_dataset(*args, **kwargs):
+        return pd.DataFrame()
+
+    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    with DataContext(dt.date(2020, 9, 2), dt.date(2020, 9, 4)):
+        replace('gs_quant.data.dataset.Dataset.get_data', mock_empty_dataset)
+        result = tm_fxo.spot_carry(mock, '3m')
+        assert result.empty
+        assert isinstance(result, pd.Series)
+
+    replace.restore()

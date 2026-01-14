@@ -23,9 +23,10 @@ import pandas as pd
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import QueryType, GsDataApi
 from gs_quant.common import AssetClass, AssetType, PricingLocation
+from gs_quant.data import DataContext, Dataset
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset, SecurityMaster
-from gs_quant.timeseries import ASSET_SPEC, plot_measure, MeasureDependency
+from gs_quant.timeseries import ASSET_SPEC, plot_measure, MeasureDependency, FXSpotCarry
 from gs_quant.timeseries import ExtendedSeries, measures_rates as tm_rates
 from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _cross_stored_direction_helper, \
     _preprocess_implied_vol_strikes_fx, _tenor_month_to_year
@@ -681,4 +682,54 @@ def vol_swap_strike(asset: Asset, expiry_tenor: str, strike_type: str = None,
 
     series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['strikeVol'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
+    return series
+
+
+@plot_measure((AssetClass.FX,), None, [QueryType.FORWARD_POINT])
+def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.DAILY,
+               pricing_location: Optional[PricingLocation] = None, *, source: str = None,
+               real_time: bool = False) -> pd.Series:
+    """
+    Calculates carry using forward term structure i.e forwardpoints/spot with option to return it in annualized terms.
+
+    :param asset: asset object loaded from security master
+    :param tenor: relative date representation of expiration date e.g. 1m
+    :param annualized: whether to annualize carry, one of annualized or daily
+    :param pricing_location: EOD location if multiple available example - "HKG", "LDN", "NYC"
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD
+    :return: FX spot carry curve
+    """
+
+    if real_time:
+        raise NotImplementedError('realtime spot_carry not implemented')
+
+    if tenor not in ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '10m', '11m', '1y', '15m', '18m', '21m',
+                     '2y']:
+        raise MqValueError('tenor not included in dataset')
+    asset_id = _currencypair_to_tdapi_fxfwd_asset(asset)
+    q = GsDataApi.build_market_data_query([asset_id], QueryType.FWD_POINTS,
+                                          source=source, real_time=real_time)
+    _logger.debug('q %s', q)
+    df = _market_data_timed(q)
+    if df.empty:
+        return pd.Series(dtype=float)
+    dataset_ids = getattr(df, 'dataset_ids', ())
+    ds = Dataset(dataset_ids[0])
+    location = pricing_location if pricing_location else PricingLocation.NYC
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    mq_df = ds.get_data(asset_id=asset_id, start=start, end=end, tenor=tenor,
+                        pricingLocation=location.value)
+    if mq_df.empty:
+        return pd.Series(dtype=float)
+    mq_df = mq_df.reset_index()
+    mq_df['ann_factor'] = mq_df.apply(lambda x: 360 / (x.settlementDate - x.date).days, axis=1)
+    mq_df = mq_df.set_index('date')
+
+    if annualized == FXSpotCarry.ANNUALIZED:
+        mq_df['carry'] = -1 * mq_df['ann_factor'] * mq_df['fwdPoints'] / mq_df['spot']
+    else:
+        mq_df['carry'] = -1 * mq_df['fwdPoints'] / mq_df['spot']
+    series = ExtendedSeries(mq_df['carry'], name='spotCarry')
+    series.dataset_ids = dataset_ids
     return series

@@ -5174,52 +5174,6 @@ def test_commodity_forecast_time_series():
     replace.restore()
 
 
-def test_spot_carry():
-    replace = Replacer()
-    mock = Cross('MAA0NE9QX2ABETG6', 'USD/EUR')
-    assets = replace('gs_quant.timeseries.measures.cross_stored_direction_for_fx_vol', Mock())
-    assets.return_value = mock.get_marquee_id()
-    df = pd.DataFrame({
-        '3m': [-0.001978858350951374, -0.0019735843327766817, -0.00198293829264794],
-        '2y': [-0.016989429175475686, -0.016994753976688093, -0.017416104834150414],
-        '3m_ann': [-0.007660096842392416, -0.007400941247912555, -0.0075142924774027195],
-        'date': [pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-03'), pd.Timestamp('2020-09-04')],
-        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
-    })
-    df = df.set_index('date')
-
-    with DataContext(dt.date(2020, 9, 2), dt.date(2020, 9, 4)):
-        # tenors in terms of months
-        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_fwd_3m)
-        actual_3m = tm.spot_carry(mock, '3m')
-        assert_series_equal(df['3m'], pd.Series(actual_3m, name='3m'))
-
-        # annualized
-        actual_3m_ann = tm.spot_carry(mock, '3m', tm.FXSpotCarry.ANNUALIZED)
-        assert_series_equal(df['3m_ann'], pd.Series(actual_3m_ann, name='3m_ann'))
-
-        with pytest.raises(MqError):
-            tm.spot_carry(mock, '13m')
-
-        # tenors in terms of years
-        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_fwd_2y)
-        actual_2y = tm.spot_carry(mock, '2y')
-        assert_series_equal(df['2y'], pd.Series(actual_2y, name='2y'))
-
-    with DataContext(pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-04')):
-        df.index.names = ['time']
-
-        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_fwd_3m_rt)
-        actual_3m = tm.spot_carry(mock, '3m', real_time=True)
-        assert_series_equal(df['3m'], pd.Series(actual_3m, name='3m'))
-
-        replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_fwd_2y_rt)
-        actual_2y = tm.spot_carry(mock, '2y', real_time=True)
-        assert_series_equal(df['2y'], pd.Series(actual_2y, name='2y'))
-
-    replace.restore()
-
-
 def test_fx_implied_correlation():
     replace = Replacer()
 
