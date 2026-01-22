@@ -68,7 +68,7 @@ setuptools.setup(
         "numpy>1.17.0,<2.4.0",  # numpy failures in statistics - TypeError: only 0-dimensional arrays can be converted
         "opentelemetry-api",
         "opentelemetry-sdk",
-        "pandas>=1.4",
+        "pandas>=1.4,<3.0.0",  # pinned until we can cope with v3.0
         "pydash<7.0.0",
         "python-dateutil>=2.7.0",
         "requests",
