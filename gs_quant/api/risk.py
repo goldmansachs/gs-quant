@@ -42,7 +42,7 @@ class GenericRiskApi(ApiWithCustomSession, metaclass=ABCMeta):
     @classmethod
     @abstractmethod
     def populate_pending_futures(cls, requests: list, session: GsSession,
-                                 pending: Dict[Tuple[RiskKey, Priceable], PricingFuture]):
+                                 pending: Dict[Tuple[RiskKey, Priceable], PricingFuture], **kwargs):
         ...
 
     @classmethod

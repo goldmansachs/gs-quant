@@ -14,15 +14,20 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import pandas as pd
-
 from dataclasses import dataclass, field
 from typing import Optional
 
+import pandas as pd
 from dataclasses_json import dataclass_json, LetterCase, config
 
-from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import \
-    encode_series_result, decode_series_result, encode_dataframe_result, decode_dataframe_result
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import decode_inst
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import (
+    encode_series_result,
+    decode_series_result,
+    encode_dataframe_result,
+    decode_dataframe_result,
+)
+from gs_quant.priceable import PriceableImpl
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -86,14 +91,30 @@ class StringWithData(RiskResultWithData):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class VectorWithData(RiskResultWithData):
-    result: Optional[pd.Series] = field(default=None, metadata=config(encoder=encode_series_result,
-                                                                      decoder=decode_series_result))
+    result: Optional[pd.Series] = field(
+        default=None, metadata=config(encoder=encode_series_result, decoder=decode_series_result)
+    )
     type: str = 'vector'
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class MatrixWithData(RiskResultWithData):
-    result: pd.DataFrame = field(default=None, metadata=config(encoder=encode_dataframe_result,
-                                                               decoder=decode_dataframe_result))
+    result: pd.DataFrame = field(
+        default=None, metadata=config(encoder=encode_dataframe_result, decoder=decode_dataframe_result)
+    )
     type: str = 'matrix'
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class DefnValuesWithData(RiskResultWithData):
+    result: Optional[PriceableImpl] = field(default=None, metadata=config(decoder=decode_inst))
+    type: str = 'defn'
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class DictsWithData(RiskResultWithData):
+    result: Optional[dict] = None
+    type: str = 'dict'

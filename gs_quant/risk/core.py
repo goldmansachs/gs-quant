@@ -40,11 +40,11 @@ __risk_columns = ('date', 'time', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_poi
 class ResultInfo(metaclass=ABCMeta):
 
     def __init__(
-            self,
-            risk_key: RiskKey,
-            unit: Optional[dict] = None,
-            error: Optional[Union[str, dict]] = None,
-            request_id: Optional[str] = None
+        self,
+        risk_key: RiskKey,
+        unit: Optional[dict] = None,
+        error: Optional[Union[str, dict]] = None,
+        request_id: Optional[str] = None
     ):
         self.__risk_key = risk_key
         self.__unit = unit
@@ -160,12 +160,12 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
 
     def __init__(self,
                  risk_key: RiskKey,
-                 value: Union[float, str],
+                 value: Union[float, str, dict],
                  unit: Optional[dict] = None,
                  error: Optional[Union[str, dict]] = None,
                  request_id: Optional[str] = None):
-        float.__init__(value)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
+        float.__init__(value)
 
     def __reduce__(self):
         return self.__class__, (self.risk_key, self.raw_value, self.unit, self.error, self.request_id)
@@ -242,19 +242,46 @@ class StringWithInfo(ScalarWithInfo, str):
         return self.error if self.error else str.__repr__(self)
 
 
+class DictWithInfo(ScalarWithInfo, dict):
+
+    def __new__(cls,
+                risk_key: RiskKey,
+                value: Union[float, str, dict],
+                unit: Optional[dict] = None,
+                error: Optional[str] = None,
+                request_id: Optional[str] = None):
+        return dict.__new__(cls, value)
+
+    def __init__(self,
+                 risk_key: RiskKey,
+                 value: Union[float, str, dict],
+                 unit: Optional[dict] = None,
+                 error: Optional[Union[str, dict]] = None,
+                 request_id: Optional[str] = None):
+        dict.__init__(self, value)
+        ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
+
+    @property
+    def raw_value(self) -> dict:
+        return dict(self)
+
+    def __repr__(self):
+        return self.error if self.error else dict.__repr__(self)
+
+
 class SeriesWithInfo(pd.Series, ResultInfo):
     _internal_names = pd.DataFrame._internal_names + \
                       ['_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
     _internal_names_set = set(_internal_names)
 
     def __init__(
-            self,
-            *args,
-            risk_key: Optional[RiskKey] = None,
-            unit: Optional[dict] = None,
-            error: Optional[Union[str, dict]] = None,
-            request_id: Optional[str] = None,
-            **kwargs
+        self,
+        *args,
+        risk_key: Optional[RiskKey] = None,
+        unit: Optional[dict] = None,
+        error: Optional[Union[str, dict]] = None,
+        request_id: Optional[str] = None,
+        **kwargs
     ):
         pd.Series.__init__(self, *args, **kwargs)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
@@ -308,13 +335,13 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     _internal_names_set = set(_internal_names)
 
     def __init__(
-            self,
-            *args,
-            risk_key: Optional[RiskKey] = None,
-            unit: Optional[dict] = None,
-            error: Optional[Union[str, dict]] = None,
-            request_id: Optional[str] = None,
-            **kwargs
+        self,
+        *args,
+        risk_key: Optional[RiskKey] = None,
+        unit: Optional[dict] = None,
+        error: Optional[Union[str, dict]] = None,
+        request_id: Optional[str] = None,
+        **kwargs
     ):
         pd.DataFrame.__init__(self, *args, **kwargs)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)

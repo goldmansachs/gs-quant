@@ -21,7 +21,7 @@ from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.common import RiskMeasure, AssetClass, RiskMeasureType
 from gs_quant.risk.measures import PnlExplain
 from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
-    sort_values, MQVSValidatorDefnsWithInfo, MQVSValidatorDefn
+    sort_values, MQVSValidatorDefnsWithInfo, MQVSValidatorDefn, DictWithInfo
 
 _logger = logging.getLogger(__name__)
 
@@ -121,6 +121,12 @@ def required_assets_handler(result: dict, risk_key: RiskKey, _instrument: Instru
                             request_id: Optional[str] = None) -> DataFrameWithInfo:
     mappings = (('mkt_type', 'type'), ('mkt_asset', 'asset'))
     return __dataframe_handler(result['requiredAssets'], mappings, risk_key, request_id=request_id)
+
+
+def dict_risk_handler(
+        result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DictWithInfo:
+    return DictWithInfo(risk_key, result, unit=None, request_id=request_id)
 
 
 def risk_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
@@ -448,6 +454,7 @@ result_handlers = {
     'MMAPIPCAHedgeTable': mmapi_pca_hedge_table_handler,
     'MQVSValidators': mqvs_validators_handler,
     'NumberAndUnit': number_and_unit_handler,
+    'PriceGrid': dict_risk_handler,
     'RequireAssets': required_assets_handler,
     'Risk': risk_handler,
     'RiskByClass': risk_by_class_handler,
