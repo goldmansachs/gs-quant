@@ -1,0 +1,215 @@
+[build-system]
+requires = ["setuptools>=61.0", "versioneer[toml]==0.28"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gs_quant"
+dynamic = ["version"]
+authors = [
+    {name = "Goldman Sachs", email = "developer@gs.com"}
+]
+description = "Goldman Sachs Quant"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: Apache Software License",
+]
+dependencies = [
+    "aenum",
+    "backoff",
+    "backports.zoneinfo; python_version < '3.9'",
+    "cachetools",
+    "certifi",
+    "dataclasses_json",
+    "deprecation",
+    "inflection",
+    "lmfit",
+    "more_itertools",
+    "msgpack",
+    "nest-asyncio",
+    "numpy>1.17.0,<2.4.0",
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "pandas>=1.4,<3.0.0",
+    "pydash<7.0.0",
+    "python-dateutil>=2.7.0",
+    "requests",
+    "httpx>=0.28.1",
+    "scipy>=1.2.0",
+    "statsmodels>=0.13.0",
+    "tqdm",
+    "websockets",
+]
+
+[project.optional-dependencies]
+turbo = [
+    "quant-extensions",
+]
+notebook = [
+    "jupyter",
+    "matplotlib",
+    "seaborn",
+    "treelib",
+]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-order",
+    "pytest-asyncio",
+    "testfixtures",
+    "nbconvert",
+    "nbformat",
+    "plotly",
+    "freezegun",
+    "ruff",
+]
+develop = [
+    "wheel",
+    "sphinx",
+    "sphinx_rtd_theme",
+    "sphinx_autodoc_typehints",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-order",
+    "testfixtures",
+]
+
+[project.urls]
+Homepage = "https://marquee.gs.com"
+
+[dependency-groups]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-order",
+    "pytest-asyncio",
+    "testfixtures",
+    "nbconvert",
+    "nbformat",
+    "plotly",
+    "freezegun",
+    "ruff",
+]
+dev = [
+    "wheel",
+    "sphinx",
+    "sphinx_rtd_theme",
+    "sphinx_autodoc_typehints",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-order",
+    "testfixtures",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "gs_quant.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["gs_quant*"]
+
+[tool.setuptools.package-data]
+gs_quant = [
+    "config.ini",
+    "resources/asset-service.json",
+    "resources/data-service.json",
+    "resources/risk-service.json",
+    "resources/certificates/*",
+    "examples/*",
+    "guides/*",
+    "tutorials/*",
+    "docs/*",
+    "_version.py",
+]
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "gs_quant/_version.py"
+versionfile_build = "gs_quant/_version.py"
+tag_prefix = "release-"
+parentdir_prefix = "gs_quant-"
+
+
+[tool.ruff]
+# Setting can be seen here
+# https://docs.astral.sh/ruff/settings/
+
+# Line lenght override
+line-length = 120
+indent-width = 4
+
+# In addition to the standard set of exclusions, omit all tests, plus a specific file.
+extend-exclude = ["_version.py", "versioneer.py", "*.json", "target", "__init__.py", "content", "documentation", "datacube"]
+
+# Assume at least Python 3.10, code will be compatible with 3.10 or later
+target-version = "py310"
+
+[tool.ruff.format]
+# Keep the quotes as they are
+quote-style = "preserve"
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.lint]
+# We add the tidy import selection to pickup banned-api
+extend-select = [
+    "TID251", # see flake8-tidy-imports.banned-api below
+    "ICN", # import conventions, e.g. import pandas as pd
+    "NPY", # Mainly for numpy 2.0 deprecation check
+]
+
+# e.g. block
+# from pandas import DataFrame, Series
+# instead do
+# import pandas as pd
+# pd.DataFrame(), pd.Series()
+[tool.ruff.lint.flake8-import-conventions]
+banned-from = [
+    "pandas",
+    "numpy",
+    "datetime"
+]
+# The default list include "pandas as pd", "numpy as np"
+extend-aliases = { "datetime" = "dt" }
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"gs_quant.target.common".msg = "Use gs_quant.common instead of gs_quant.target.common"
+"gs_quant.target.instrument".msg = "Use gs_quant.instrument instead of gs_quant.target.instrument"
+"gs_quant.target.workflow_quote".msg = "Use gs_quant.workflow instead of gs_quant.target.workflow_quote"
+"pytz".msg = "Use zoneinfo package or datetime.timezone instead of pytz"
+# When we support a minimium version of python 3.10
+#"typing.List".msg = "Use built-in list instead of typing.List"
+#"typing.Tuple".msg = "Use built-in tuple instead of typing.Tuple"
+#"typing.Dict".msg = "Use built-in dict instead of typing.Dict"
+#"typing.Set".msg = "Use built-in set instead of typing.set"
+
+[tool.uv]
+default-groups = ["test", "dev"]
+native-tls = true
+
+[[tool.uv.index]]
+name = "aws"
+url = "https://pypi.aws.site.gs.com/repository/pypi-group/simple"
+default = true
+
+[tool.uv.pip]
+index-url = "https://pypi.aws.site.gs.com/repository/pypi-group/simple"
+emit-index-url = true
+universal = true
