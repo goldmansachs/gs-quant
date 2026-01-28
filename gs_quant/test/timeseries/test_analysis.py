@@ -208,6 +208,13 @@ def test_lag():
     expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag RDate 2y")
 
+    # Test that business day offsets raise an error
+    with pytest.raises(MqValueError, match="Business day offset '1b' is not supported"):
+        lag(x, '1b')
+
+    with pytest.raises(MqValueError, match="Business day offset '-2B' is not supported"):
+        lag(x, '-2B')
+
 
 def test_repeat_empty_series():
     # Test case for an empty series

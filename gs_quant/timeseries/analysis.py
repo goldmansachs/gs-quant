@@ -362,6 +362,13 @@ def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.
     :func:`diff`
     """
     if isinstance(obs, str):
+        # Check for business day pattern and raise an error
+        if re.search('[bB]', obs):
+            raise MqValueError(
+                f"Business day offset '{obs}' is not supported. "
+                "If your dataset is indexed on business days, use an integer offset instead (e.g., 1, 2, -1)."
+            )
+
         end = x.index[-1]
         y = x.copy()  # avoid mutating the provided series
 
