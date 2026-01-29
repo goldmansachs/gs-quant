@@ -22,7 +22,8 @@ from time import sleep
 from typing import Tuple, Union, List, Dict
 
 from gs_quant.api.api_session import ApiWithCustomSession
-from gs_quant.common import PositionType
+
+from gs_quant.common import PositionType, PositionTag
 from gs_quant.common import RiskRequest, Currency
 from gs_quant.errors import MqInternalServerError, MqTimeoutError, MqRateLimitedError
 from gs_quant.instrument import Instrument
@@ -306,7 +307,7 @@ class GsPortfolioApi(ApiWithCustomSession):
     def get_reports(cls, portfolio_id: str, tags: Dict) -> Tuple[Report, ...]:
         results = cls.get_session()._get('/portfolios/{id}/reports'.format(id=portfolio_id), cls=Report)['results']
         if tags is not None:
-            tags_as_list = [{'name': key, 'value': tags[key]} for key in tags]
+            tags_as_list = tuple(PositionTag(name=key, value=tags[key]) for key in tags)
             results = [r for r in results if r.parameters.tags == tags_as_list]
         return results
 

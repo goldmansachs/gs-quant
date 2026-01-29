@@ -707,8 +707,14 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
     if tenor not in ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '10m', '11m', '1y', '15m', '18m', '21m',
                      '2y']:
         raise MqValueError('tenor not included in dataset')
-    asset_id = _currencypair_to_tdapi_fxfwd_asset(asset)
-    q = GsDataApi.build_market_data_query([asset_id], QueryType.FWD_POINTS,
+    cross = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    kwargs = dict(asset_class='FX', type='Forward',
+                  asset_parameters_pair=cross,
+                  asset_parameters_settlement_date=tenor,
+                  name_prefix='FX Forward'
+                  )
+    mqid = _get_tdapi_fxo_assets(**kwargs)
+    q = GsDataApi.build_market_data_query([mqid], QueryType.FWD_POINTS,
                                           source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
@@ -718,7 +724,7 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
     ds = Dataset(dataset_ids[0])
     location = pricing_location if pricing_location else PricingLocation.NYC
     start, end = DataContext.current.start_date, DataContext.current.end_date
-    mq_df = ds.get_data(asset_id=asset_id, start=start, end=end, tenor=tenor,
+    mq_df = ds.get_data(asset_id=mqid, start=start, end=end,
                         pricingLocation=location.value)
     if mq_df.empty:
         return pd.Series(dtype=float)

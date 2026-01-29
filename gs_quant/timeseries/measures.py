@@ -1671,7 +1671,7 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
     id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)])
 def fx_forecast_time_series(
     asset: Union[Asset, str],
-    forecastFrequency: _FxForecastTimeSeriesPeriodType = _FxForecastTimeSeriesPeriodType.ANNUAL.value, *,
+    forecastFrequency: Union[str, _FxForecastTimeSeriesPeriodType] = _FxForecastTimeSeriesPeriodType.ANNUAL, *,
     source: str = None,
     real_time: bool = False,
     request_id: Optional[str] = None
@@ -1694,6 +1694,8 @@ def fx_forecast_time_series(
         cross_mqid = asset.get_marquee_id()
     else:
         raise ValueError("Asset must be of type Asset or str")
+    if isinstance(forecastFrequency, Enum):
+        forecastFrequency = forecastFrequency.value
     usd_based_cross_mqid = cross_to_usd_based_cross(cross_mqid)
     query_type = QueryType.FX_FORECAST
     col_name = query_type.value.replace(' ', '')
@@ -1719,6 +1721,9 @@ def fx_forecast_time_series(
         df['date'] = df['relativePeriod'].apply(
             lambda x: pd.Timestamp(f"{pd.Timestamp.today().year + int(x[3:])}-01-01"))
         df = df[['date', col_name]].sort_values(by='date').set_index('date')
+    else:
+        raise ValueError(
+            "Invalid forecastFrequency. Must be one of '3/6/12-Month', 'Annual'.")
     series = _extract_series_from_df(df, query_type)
     if cross_mqid != usd_based_cross_mqid:
         series = 1 / series
@@ -4448,7 +4453,8 @@ def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
 @plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
 def commodity_forecast_time_series(
     asset: Union[Asset, str],
-    forecastFrequency: _CommodityForecastTimeSeriesPeriodType = _CommodityForecastTimeSeriesPeriodType.ANNUAL.value,
+    forecastFrequency: Union[str, _CommodityForecastTimeSeriesPeriodType] =
+    _CommodityForecastTimeSeriesPeriodType.ANNUAL,
     forecastType: _CommodityForecastType = _CommodityForecastType.SPOT,
     forecastHorizonYears: int = 12, *,
     source: str = None,
@@ -4475,6 +4481,8 @@ def commodity_forecast_time_series(
         mqid = asset.get_marquee_id()
     else:
         raise ValueError("Asset must be of type Asset or str")
+    if isinstance(forecastFrequency, Enum):
+        forecastFrequency = forecastFrequency.value
     query_type = QueryType.COMMODITY_FORECAST
     col_name = query_type.value.replace(' ', '')
     col_name = col_name[0].lower() + col_name[1:]

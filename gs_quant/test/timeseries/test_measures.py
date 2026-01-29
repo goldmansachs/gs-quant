@@ -1621,11 +1621,15 @@ def test_fx_forecast_time_series():
 
     with pytest.raises(ValueError):
         tm.fx_forecast_time_series(100, tm._FxForecastTimeSeriesPeriodType.ANNUAL.value)
+    with pytest.raises(ValueError):
+        tm.fx_forecast_time_series(mock, 'Monthly')
     actual = tm.fx_forecast_time_series('MATGYV0J9MPX534Z', tm._FxForecastTimeSeriesPeriodType.ANNUAL.value)
     assert not pd.Series(actual).empty
     actual = tm.fx_forecast_time_series(mock, tm._FxForecastTimeSeriesPeriodType.SHORT_TERM.value)
     assert not pd.Series(actual).empty
     actual = tm.fx_forecast_time_series(mock, tm._FxForecastTimeSeriesPeriodType.ANNUAL.value)
+    assert not pd.Series(actual).empty
+    actual = tm.fx_forecast_time_series(mock, tm._FxForecastTimeSeriesPeriodType.ANNUAL)
     assert not pd.Series(actual).empty
     actual = tm.fx_forecast_time_series(mock, 'Annual')
     assert not pd.Series(actual).empty
@@ -5118,10 +5122,6 @@ def test_commodity_forecast():
 
 
 def test_commodity_forecast_time_series():
-    # import sys
-    # sys.path.append(r'Z:\\My Documents\\Gitlab\\gs_quant\\gs_quant\\timeseries')
-    # import measures as tm
-
     mock_brent = Index('MA8MBQN6VHKZMW92', 'CO', 'Brent')
     replace = Replacer()
     replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', mock_commodity_forecast_time_series)
@@ -5154,6 +5154,12 @@ def test_commodity_forecast_time_series():
     actual = tm.commodity_forecast_time_series(
         mock_brent,
         forecastFrequency=tm._CommodityForecastTimeSeriesPeriodType.SHORT_TERM.value,
+        forecastType=tm._CommodityForecastType.SPOT
+    )
+    assert not pd.Series(actual).empty
+    actual = tm.commodity_forecast_time_series(
+        mock_brent,
+        forecastFrequency=tm._CommodityForecastTimeSeriesPeriodType.ANNUAL,
         forecastType=tm._CommodityForecastType.SPOT
     )
     assert not pd.Series(actual).empty
