@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 from typing import Tuple, List, Dict
@@ -29,10 +30,7 @@ class GsHedgeApi:
     """GS Hedge API client implementation"""
 
     @classmethod
-    def get_many_hedges(cls,
-                        ids: List[str] = None,
-                        names: List[str] = None,
-                        limit: int = 100):
+    def get_many_hedges(cls, ids: List[str] = None, names: List[str] = None, limit: int = 100):
         url = f'/hedges?limit={limit}'
         if ids:
             url += f'&id={"&id=".join(ids)}'
@@ -49,10 +47,7 @@ class GsHedgeApi:
         return GsSession.current._get(f'/hedges/{hedge_id}', cls=Hedge)
 
     @classmethod
-    def get_hedge_data(cls,
-                       ids: List[str] = None,
-                       names: List[str] = None,
-                       limit: int = 100) -> List[Dict]:
+    def get_hedge_data(cls, ids: List[str] = None, names: List[str] = None, limit: int = 100) -> List[Dict]:
         url = f'/hedges/data?limit={limit}'
         if ids:
             url += f'&id={"&id=".join(ids)}'
@@ -61,10 +56,7 @@ class GsHedgeApi:
         return GsSession.current._get(url, cls=Hedge)['results']
 
     @classmethod
-    def get_hedge_results(cls,
-                          hedge_id: str,
-                          start_date: dt.date = None,
-                          end_date: dt.date = None) -> Dict:
+    def get_hedge_results(cls, hedge_id: str, start_date: dt.date = None, end_date: dt.date = None) -> Dict:
         url = f'/hedges/results?id={hedge_id}'
         if start_date is not None:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
@@ -81,25 +73,36 @@ class GsHedgeApi:
         return GsSession.current._delete(f'/hedges/{hedge_id}', cls=Hedge)
 
     @classmethod
-    def construct_performance_hedge_query(cls, hedge_target: str, universe: Tuple[str, ...], notional: float,
-                                          observation_start_date: dt.date, observation_end_date: dt.date,
-                                          backtest_start_date: dt.date, backtest_end_date: dt.date,
-                                          use_machine_learning: bool = False, lasso_weight: float = None,
-                                          ridge_weight: float = None,
-                                          max_return_deviation: float = 5, max_adv_percentage: float = 15,
-                                          max_leverage: float =
-                                          100, max_weight: float = 100, min_market_cap: float = None,
-                                          max_market_cap: float = None,
-                                          asset_constraints: Tuple[AssetConstraint, ...] = None,
-                                          benchmarks: Tuple[str, ...] = None,
-                                          classification_constraints: Tuple[ClassificationConstraint, ...] = None,
-                                          exclude_corporate_actions: bool = False,
-                                          exclude_corporate_actions_types: Tuple = None,
-                                          exclude_hard_to_borrow_assets: bool = False,
-                                          exclude_restricted_assets: bool = False,
-                                          exclude_target_assets: bool = True, explode_universe: bool = True,
-                                          market_participation_rate: float = 10,
-                                          sampling_period: str = 'Daily') -> dict:
+    def construct_performance_hedge_query(
+        cls,
+        hedge_target: str,
+        universe: Tuple[str, ...],
+        notional: float,
+        observation_start_date: dt.date,
+        observation_end_date: dt.date,
+        backtest_start_date: dt.date,
+        backtest_end_date: dt.date,
+        use_machine_learning: bool = False,
+        lasso_weight: float = None,
+        ridge_weight: float = None,
+        max_return_deviation: float = 5,
+        max_adv_percentage: float = 15,
+        max_leverage: float = 100,
+        max_weight: float = 100,
+        min_market_cap: float = None,
+        max_market_cap: float = None,
+        asset_constraints: Tuple[AssetConstraint, ...] = None,
+        benchmarks: Tuple[str, ...] = None,
+        classification_constraints: Tuple[ClassificationConstraint, ...] = None,
+        exclude_corporate_actions: bool = False,
+        exclude_corporate_actions_types: Tuple = None,
+        exclude_hard_to_borrow_assets: bool = False,
+        exclude_restricted_assets: bool = False,
+        exclude_target_assets: bool = True,
+        explode_universe: bool = True,
+        market_participation_rate: float = 10,
+        sampling_period: str = 'Daily',
+    ) -> dict:
         """
         Function to construct a performance hedge query (for both the New Performance Hedger and Standard Hedger)
         by passing in required/optional arguments similar to the performance hedger on the Marquee UI.
@@ -151,20 +154,38 @@ class GsHedgeApi:
         :param sampling_period: str, the sampling period to use (i.e. 'Daily' or 'Weekly')
         :return: dict, the hedge query represented by a dictionary of inputs
         """
-        hedge_dict = {'objective': 'Replicate Performance',
-                      'parameters': PerformanceHedgeParameters(Target(id=hedge_target), universe, notional,
-                                                               observation_start_date, observation_end_date,
-                                                               max_leverage, backtest_start_date, backtest_end_date,
-                                                               sampling_period, exclude_target_assets,
-                                                               exclude_corporate_actions,
-                                                               exclude_corporate_actions_types,
-                                                               exclude_hard_to_borrow_assets, exclude_restricted_assets,
-                                                               max_adv_percentage, explode_universe,
-                                                               max_return_deviation, max_weight, min_market_cap,
-                                                               max_market_cap, market_participation_rate,
-                                                               asset_constraints, classification_constraints,
-                                                               benchmarks, use_machine_learning, lasso_weight,
-                                                               ridge_weight)}
+        hedge_dict = {
+            'objective': 'Replicate Performance',
+            'parameters': PerformanceHedgeParameters(
+                Target(id=hedge_target),
+                universe,
+                notional,
+                observation_start_date,
+                observation_end_date,
+                max_leverage,
+                backtest_start_date,
+                backtest_end_date,
+                sampling_period,
+                exclude_target_assets,
+                exclude_corporate_actions,
+                exclude_corporate_actions_types,
+                exclude_hard_to_borrow_assets,
+                exclude_restricted_assets,
+                max_adv_percentage,
+                explode_universe,
+                max_return_deviation,
+                max_weight,
+                min_market_cap,
+                max_market_cap,
+                market_participation_rate,
+                asset_constraints,
+                classification_constraints,
+                benchmarks,
+                use_machine_learning,
+                lasso_weight,
+                ridge_weight,
+            ),
+        }
         return hedge_dict
 
     @classmethod
@@ -177,3 +198,145 @@ class GsHedgeApi:
         :return: dict, the results of calling the Marquee performance hedger
         """
         return GsSession.current._post('/hedges/calculations', payload=hedge_query, timeout=CALCULATION_TIMEOUT)
+
+    @classmethod
+    def share_hedge_group(
+        cls,
+        hedge_group_id: str,
+        strategy_request: Dict,
+        optimization_response: Dict,
+        hedge_name: str = "Custom Hedge",
+        group_name: str = "New Hedge Group",
+        view_emails: List[str] = None,
+        admin_emails: List[str] = None,
+    ) -> Dict:
+        """
+        Share a saved hedge group with other users by updating entitlements using email addresses.
+
+        :param hedge_group_id: The ID of the hedge group to share (from save response)
+        :param strategy_request: The strategy_as_dict from run() - the request payload sent to optimizer
+        :param optimization_response: The optimization_results from run() - the response from optimizer
+        :param hedge_name: Name for the individual hedge
+        :param group_name: Name for the hedge group
+        :param view_emails: List of user email addresses to grant view access
+        :param admin_emails: List of user email addresses to grant admin access
+        :return: API response with updated entitlements
+
+        Example:
+            >>> from gs_quant.api.gs.hedges import GsHedgeApi
+            >>> response = GsHedgeApi.share_hedge_group(
+            ...     hedge_group_id="HEDGE123",
+            ...     strategy_request=strategy_request,
+            ...     optimization_response=optimization_response,
+            ...     hedge_name="Factor Hedge",
+            ...     group_name="My Hedge Group",
+            ...     view_emails=["user1@example.com", "user2@example.com"]
+            ... )
+        """
+        from gs_quant.entities.entitlements import User
+
+        url = f"/hedges/groups/{hedge_group_id}"
+
+        try:
+            # First, GET the current hedge group to retrieve existing metadata
+            hedge_group_data = GsSession.current._get(url)
+
+            # Get current user's GUID from existing entitlements
+            current_user_guid = hedge_group_data.get('ownerId', '')
+            if current_user_guid:
+                current_user_guid = f"guid:{current_user_guid}"
+
+            # Build updated entitlements, preserving owner's access
+            entitlements = hedge_group_data.get('entitlements', {})
+
+            # Ensure owner always has access
+            if current_user_guid:
+                # Admin access
+                if 'admin' not in entitlements:
+                    entitlements['admin'] = []
+                if current_user_guid not in entitlements['admin']:
+                    entitlements['admin'].append(current_user_guid)
+
+                # Edit access
+                if 'edit' not in entitlements:
+                    entitlements['edit'] = []
+                if current_user_guid not in entitlements['edit']:
+                    entitlements['edit'].append(current_user_guid)
+
+                # View access
+                if 'view' not in entitlements:
+                    entitlements['view'] = []
+                if current_user_guid not in entitlements['view']:
+                    entitlements['view'].append(current_user_guid)
+
+            # Convert emails to user GUIDs and add view access
+            if view_emails:
+                view_users = User.get_many(emails=view_emails)
+                for user in view_users:
+                    user_guid = f"guid:{user.id}"
+                    if user_guid not in entitlements['view']:
+                        entitlements['view'].append(user_guid)
+
+            # Convert emails to user GUIDs and add admin access (admin users also need edit and view access)
+            if admin_emails:
+                admin_users = User.get_many(emails=admin_emails)
+                for user in admin_users:
+                    user_guid = f"guid:{user.id}"
+                    if user_guid not in entitlements['admin']:
+                        entitlements['admin'].append(user_guid)
+                    if user_guid not in entitlements['edit']:
+                        entitlements['edit'].append(user_guid)
+                    if user_guid not in entitlements['view']:
+                        entitlements['view'].append(user_guid)
+
+            # Build the complete payload with updated entitlements
+            payload = {
+                "active": True,
+                "entitlements": entitlements,
+                "hedges": [
+                    {
+                        "entitlements": entitlements,
+                        "id": hedge_group_data.get('hedgeIds', [])[0] if hedge_group_data.get('hedgeIds') else None,
+                        "name": hedge_name,
+                        "objective": strategy_request.get("objective", "Minimize Factor Risk"),
+                        "parameters": strategy_request.get("parameters", {}),
+                        "result": optimization_response.get("result", {}),
+                    }
+                ],
+                "id": hedge_group_id,
+                "name": group_name,
+                "objective": strategy_request.get("objective", "Minimize Factor Risk"),
+                "ownerId": hedge_group_data.get('ownerId', ''),
+                "createdById": hedge_group_data.get('createdById', ''),
+                "createdTime": hedge_group_data.get('createdTime', ''),
+                "lastUpdatedById": hedge_group_data.get('lastUpdatedById', ''),
+                "lastUpdatedTime": hedge_group_data.get('lastUpdatedTime', ''),
+                "hedgeIds": hedge_group_data.get('hedgeIds', []),
+            }
+
+            # PUT the updated hedge group back
+            result = GsSession.current._put(url, payload)
+
+            print("Hedge group shared successfully!")
+            print(f"  Hedge Group ID: {hedge_group_id}")
+            print("\n  Updated Entitlements:")
+            print(f"    View Access: {len(result.get('entitlements', {}).get('view', []))} users/groups")
+            print(f"    Admin Access: {len(result.get('entitlements', {}).get('admin', []))} users/groups")
+
+            return result
+
+        except Exception as e:
+            print(f"Failed to share hedge: {e}")
+            raise
+
+            print("Hedge group shared successfully!")
+            print(f"  Hedge Group ID: {hedge_group_id}")
+            print("\n  Updated Entitlements:")
+            print(f"    View Access: {len(result.get('entitlements', {}).get('view', []))} users/groups")
+            print(f"    Admin Access: {len(result.get('entitlements', {}).get('admin', []))} users/groups")
+
+            return result
+
+        except Exception as e:
+            print(f"✗ Failed to share hedge: {e}")
+            raise

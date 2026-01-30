@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import logging
 from enum import Enum
 from functools import wraps
@@ -37,25 +38,31 @@ import datetime as dt
 _logger = logging.getLogger(__name__)
 
 
-def resolve_assets_in_batches(identifiers: List[str],
-                              fields: List[str] = None,
-                              as_of_date: dt.date = dt.date.today(),
-                              batch_size: int = 100,
-                              **kwargs) -> List[Dict]:
+def resolve_assets_in_batches(
+    identifiers: List[str],
+    fields: List[str] = None,
+    as_of_date: dt.date = dt.date.today(),
+    batch_size: int = 100,
+    **kwargs,
+) -> List[Dict]:
     all_fields = ["id", "name", "bbid"]
     if fields:
         all_fields += fields
-    identifiers_batches = np.array_split(identifiers, math.ceil(len(identifiers) / batch_size)) \
-        if len(identifiers) > batch_size else [identifiers]
+    identifiers_batches = (
+        np.array_split(identifiers, math.ceil(len(identifiers) / batch_size))
+        if len(identifiers) > batch_size
+        else [identifiers]
+    )
 
     all_assets_resolved = {}
     for batch in identifiers_batches:
-        res = GsAssetApi.resolve_assets(identifier=list(batch),
-                                        as_of=dt.datetime.combine(as_of_date, dt.datetime.min.time()),
-                                        fields=all_fields,
-                                        limit=1,
-                                        **kwargs
-                                        )
+        res = GsAssetApi.resolve_assets(
+            identifier=list(batch),
+            as_of=dt.datetime.combine(as_of_date, dt.datetime.min.time()),
+            fields=all_fields,
+            limit=1,
+            **kwargs,
+        )
         all_assets_resolved = {**all_assets_resolved, **res}
 
     assets_resolved_as_records = []
@@ -73,7 +80,7 @@ class OptimizationConstraintUnit(Enum):
 
 
 class HedgeTarget(Enum):
-    HEDGED_TARGET = "hedgeTarget"
+    HEDGED_TARGET = "hedgedTarget"
     HEDGE = "hedge"
     TARGET = "target"
 
@@ -124,11 +131,10 @@ class OptimizerObjectiveTerm:
 
 
 class OptimizerObjectiveParameters:
-
     def __init__(
-            self,
-            objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK,
-            terms: List[OptimizerObjectiveTerm] = [OptimizerObjectiveTerm.DEFAULT_RISK_PARAMS]
+        self,
+        objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK,
+        terms: List[OptimizerObjectiveTerm] = [OptimizerObjectiveTerm.DEFAULT_RISK_PARAMS],
     ):
         self.__objective = objective
         self.__terms = terms
@@ -175,10 +181,7 @@ class TurnoverNotionalType(Enum):
 
 
 class AssetUniverse:
-    def __init__(self,
-                 identifiers: List[str],
-                 asset_ids: List[str] = None,
-                 as_of_date: dt.date = dt.date.today()):
+    def __init__(self, identifiers: List[str], asset_ids: List[str] = None, as_of_date: dt.date = dt.date.today()):
         self.__identifiers = identifiers
         self.__as_of_date = as_of_date
         self.__asset_ids = asset_ids
@@ -209,24 +212,25 @@ class AssetUniverse:
 
     def resolve(self):
         if not self.__asset_ids:
-            assets_resolved_as_records = resolve_assets_in_batches(identifiers=self.identifiers,
-                                                                   as_of_date=self.as_of_date,
-                                                                   batch_size=250
-                                                                   )
+            assets_resolved_as_records = resolve_assets_in_batches(
+                identifiers=self.identifiers, as_of_date=self.as_of_date, batch_size=250
+            )
 
-            assets_resolved_df = (pd.DataFrame(assets_resolved_as_records).set_index("identifier")
-                                  .reindex(self.identifiers))
+            assets_resolved_df = (
+                pd.DataFrame(assets_resolved_as_records).set_index("identifier").reindex(self.identifiers)
+            )
 
             self.asset_ids = assets_resolved_df['id'].values.tolist()
 
 
 class AssetConstraint:
-
-    def __init__(self,
-                 asset: Union[Asset, str],
-                 minimum: float = 0,
-                 maximum: float = 100,
-                 unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+    def __init__(
+        self,
+        asset: Union[Asset, str],
+        minimum: float = 0,
+        maximum: float = 100,
+        unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT,
+    ):
         self.__asset = asset
         self.__minimum = minimum
         self.__maximum = maximum
@@ -268,15 +272,17 @@ class AssetConstraint:
         return {
             'assetId': self.asset if isinstance(self.asset, str) else self.asset.get_marquee_id(),
             'min': self.minimum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.minimum,
-            'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
+            'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum,
         }
 
     @classmethod
-    def build_many_constraints(cls,
-                               asset_constraints: Union[pd.DataFrame, List[Dict]],
-                               as_of_date: dt.date = dt.date.today(),
-                               fail_on_unresolved_positions: bool = True,
-                               **kwargs):
+    def build_many_constraints(
+        cls,
+        asset_constraints: Union[pd.DataFrame, List[Dict]],
+        as_of_date: dt.date = dt.date.today(),
+        fail_on_unresolved_positions: bool = True,
+        **kwargs,
+    ):
         """Create many asset constraints from a dataframe or a list of dictionaries
         :param asset_constraints: dataframe or list of dictionaries containing the asset constraints
         :param as_of_date: the date on which to resolve the assets
@@ -324,10 +330,12 @@ class AssetConstraint:
 
         """
 
-        asset_constraints_df = pd.DataFrame(asset_constraints) if isinstance(asset_constraints, list) \
-            else asset_constraints
-        missing_columns = [col for col in ['identifier', 'minimum', "maximum", "unit"]
-                           if col not in asset_constraints_df.columns]
+        asset_constraints_df = (
+            pd.DataFrame(asset_constraints) if isinstance(asset_constraints, list) else asset_constraints
+        )
+        missing_columns = [
+            col for col in ['identifier', 'minimum', "maximum", "unit"] if col not in asset_constraints_df.columns
+        ]
         if missing_columns:
             raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
 
@@ -337,42 +345,48 @@ class AssetConstraint:
         if 'assetId' not in asset_constraints_df:
             identifiers = asset_constraints_df['identifier'].values.tolist()
 
-            assets_resolved_as_records = resolve_assets_in_batches(identifiers=identifiers,
-                                                                   as_of_date=as_of_date,
-                                                                   batch_size=250,
-                                                                   **kwargs
-                                                                   )
+            assets_resolved_as_records = resolve_assets_in_batches(
+                identifiers=identifiers, as_of_date=as_of_date, batch_size=250, **kwargs
+            )
 
-            asset_constraints_df = pd.merge(asset_constraints_df, pd.DataFrame(assets_resolved_as_records),
-                                            on='identifier',
-                                            how='left')
+            asset_constraints_df = pd.merge(
+                asset_constraints_df, pd.DataFrame(assets_resolved_as_records), on='identifier', how='left'
+            )
 
             if fail_on_unresolved_positions and asset_constraints_df['id'].isna().any():
                 missing_ids = asset_constraints_df[asset_constraints_df['id'].isna()]['identifier'].values.tolist()
                 raise MqValueError(
                     f"The following identifiers could not be resolved on {as_of_date.strftime('%Y-%m-%d')}: "
-                    f"{', '.join(missing_ids)}")
+                    f"{', '.join(missing_ids)}"
+                )
             else:
                 asset_constraints_df = asset_constraints_df[asset_constraints_df['id'].notna()]
 
-            asset_constraints_df = asset_constraints_df.rename(
-                columns={'id': 'assetId'})[['assetId', 'minimum', 'maximum', 'unit']]
+            asset_constraints_df = asset_constraints_df.rename(columns={'id': 'assetId'})[
+                ['assetId', 'minimum', 'maximum', 'unit']
+            ]
 
         asset_constraints_df = asset_constraints_df.to_dict(orient='records')
 
-        return [cls(asset=row.get('assetId'),
-                    minimum=row.get('minimum'),
-                    maximum=row.get('maximum'),
-                    unit=OptimizationConstraintUnit(row.get('unit'))) for row in asset_constraints_df]
+        return [
+            cls(
+                asset=row.get('assetId'),
+                minimum=row.get('minimum'),
+                maximum=row.get('maximum'),
+                unit=OptimizationConstraintUnit(row.get('unit')),
+            )
+            for row in asset_constraints_df
+        ]
 
 
 class CountryConstraint:
-
-    def __init__(self,
-                 country_name: str,
-                 minimum: float = 0,
-                 maximum: float = 100,
-                 unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+    def __init__(
+        self,
+        country_name: str,
+        minimum: float = 0,
+        maximum: float = 100,
+        unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT,
+    ):
         """
         Constrain notional held in any particular country in the resulting optimization
 
@@ -427,12 +441,11 @@ class CountryConstraint:
             'type': 'Country',
             'name': self.country_name,
             'min': self.minimum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.minimum,
-            'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
+            'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum,
         }
 
     @classmethod
-    def build_many_constraints(cls,
-                               country_constraints: Union[pd.DataFrame, List[Dict]]):
+    def build_many_constraints(cls, country_constraints: Union[pd.DataFrame, List[Dict]]):
         """
         Create many country constraints from a dataframe or a list of dictionaries
         :param country_constraints: dataframe or list of dictionaries containing the country constraints
@@ -458,28 +471,36 @@ class CountryConstraint:
         >>>                   {"country": "Germany", "minimum": 0, "maximum": 5, "unit": "Percent"}])
         >>>     )
         """
-        country_constraints = pd.DataFrame(country_constraints) \
-            if isinstance(country_constraints, list) else country_constraints
+        country_constraints = (
+            pd.DataFrame(country_constraints) if isinstance(country_constraints, list) else country_constraints
+        )
 
-        missing_columns = [col for col in ['country', 'minimum', 'maximum', 'unit']
-                           if col not in country_constraints.columns]
+        missing_columns = [
+            col for col in ['country', 'minimum', 'maximum', 'unit'] if col not in country_constraints.columns
+        ]
         if missing_columns:
             raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
         country_constraints_as_records = country_constraints.to_dict(orient='records')
 
-        return [cls(country_name=row.get('country'),
-                    minimum=row.get('minimum'),
-                    maximum=row.get('maximum'),
-                    unit=OptimizationConstraintUnit(row.get('unit'))) for row in country_constraints_as_records]
+        return [
+            cls(
+                country_name=row.get('country'),
+                minimum=row.get('minimum'),
+                maximum=row.get('maximum'),
+                unit=OptimizationConstraintUnit(row.get('unit')),
+            )
+            for row in country_constraints_as_records
+        ]
 
 
 class SectorConstraint:
-
-    def __init__(self,
-                 sector_name: str,
-                 minimum: float = 0,
-                 maximum: float = 100,
-                 unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+    def __init__(
+        self,
+        sector_name: str,
+        minimum: float = 0,
+        maximum: float = 100,
+        unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT,
+    ):
         """
         Constrain notional held in any particular GICS Sector in the resulting optimization
 
@@ -534,12 +555,11 @@ class SectorConstraint:
             'type': 'Sector',
             'name': self.sector_name,
             'min': self.minimum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.minimum,
-            'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
+            'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum,
         }
 
     @classmethod
-    def build_many_constraints(cls,
-                               sector_constraints: Union[pd.DataFrame, List[Dict]]):
+    def build_many_constraints(cls, sector_constraints: Union[pd.DataFrame, List[Dict]]):
         """
         Create many sector constraints from a dataframe or a list of dictionaries
         :param sector_constraints: dataframe or list of dictionaries containing the sector constraints
@@ -565,28 +585,36 @@ class SectorConstraint:
         >>>                   {"sector": "Finance", "minimum": 0, "maximum": 5, "unit": "Percent"}])
         >>>     )
         """
-        sector_constraints = pd.DataFrame(sector_constraints) \
-            if isinstance(sector_constraints, list) else sector_constraints
+        sector_constraints = (
+            pd.DataFrame(sector_constraints) if isinstance(sector_constraints, list) else sector_constraints
+        )
 
-        missing_columns = [col for col in ['sector', 'minimum', 'maximum', 'unit']
-                           if col not in sector_constraints.columns]
+        missing_columns = [
+            col for col in ['sector', 'minimum', 'maximum', 'unit'] if col not in sector_constraints.columns
+        ]
         if missing_columns:
             raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
         sector_constraints_as_records = sector_constraints.to_dict(orient='records')
 
-        return [cls(sector_name=row.get('sector'),
-                    minimum=row.get('minimum'),
-                    maximum=row.get('maximum'),
-                    unit=OptimizationConstraintUnit(row.get('unit'))) for row in sector_constraints_as_records]
+        return [
+            cls(
+                sector_name=row.get('sector'),
+                minimum=row.get('minimum'),
+                maximum=row.get('maximum'),
+                unit=OptimizationConstraintUnit(row.get('unit')),
+            )
+            for row in sector_constraints_as_records
+        ]
 
 
 class IndustryConstraint:
-
-    def __init__(self,
-                 industry_name: str,
-                 minimum: float = 0,
-                 maximum: float = 100,
-                 unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+    def __init__(
+        self,
+        industry_name: str,
+        minimum: float = 0,
+        maximum: float = 100,
+        unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT,
+    ):
         """
         Constrain notional held in any particular GICS Industry in the resulting optimization
 
@@ -641,12 +669,11 @@ class IndustryConstraint:
             'type': 'Industry',
             'name': self.industry_name,
             'min': self.minimum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.minimum,
-            'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum
+            'max': self.maximum * 100 if self.unit == OptimizationConstraintUnit.DECIMAL else self.maximum,
         }
 
     @classmethod
-    def build_many_constraints(cls,
-                               industry_constraints: Union[pd.DataFrame, List[Dict]]):
+    def build_many_constraints(cls, industry_constraints: Union[pd.DataFrame, List[Dict]]):
         """
         Create many industry constraints from a dataframe or a list of dictionaries
         :param industry_constraints: dataframe or list of dictionaries containing the industry constraints
@@ -672,26 +699,30 @@ class IndustryConstraint:
         >>>                   {"industry": "Banking", "minimum": 0, "maximum": 5, "unit": "Percent"}])
         >>>     )
         """
-        industry_constraints = pd.DataFrame(industry_constraints) \
-            if isinstance(industry_constraints, list) else industry_constraints
+        industry_constraints = (
+            pd.DataFrame(industry_constraints) if isinstance(industry_constraints, list) else industry_constraints
+        )
 
-        missing_columns = [col for col in ['industry', 'minimum', 'maximum', 'unit']
-                           if col not in industry_constraints.columns]
+        missing_columns = [
+            col for col in ['industry', 'minimum', 'maximum', 'unit'] if col not in industry_constraints.columns
+        ]
         if missing_columns:
             raise MqValueError(f"The input is missing required columns: {', '.join(missing_columns)}")
         industry_constraints_as_records = industry_constraints.to_dict(orient='records')
 
-        return [cls(industry_name=row.get('industry'),
-                    minimum=row.get('minimum'),
-                    maximum=row.get('maximum'),
-                    unit=OptimizationConstraintUnit(row.get('unit'))) for row in industry_constraints_as_records]
+        return [
+            cls(
+                industry_name=row.get('industry'),
+                minimum=row.get('minimum'),
+                maximum=row.get('maximum'),
+                unit=OptimizationConstraintUnit(row.get('unit')),
+            )
+            for row in industry_constraints_as_records
+        ]
 
 
 class FactorConstraint:
-
-    def __init__(self,
-                 factor: Factor,
-                 max_exposure: float):
+    def __init__(self, factor: Factor, max_exposure: float):
         """
         Constrain a factor by a max exposure
 
@@ -718,15 +749,10 @@ class FactorConstraint:
         self.__max_exposure = value
 
     def to_dict(self):
-        return {
-            'factor': self.factor.name,
-            'exposure': self.max_exposure
-        }
+        return {'factor': self.factor.name, 'exposure': self.max_exposure}
 
     @classmethod
-    def build_many_constraints(cls,
-                               factor_constraints: Union[pd.DataFrame, List[Dict]],
-                               risk_model_id: str):
+    def build_many_constraints(cls, factor_constraints: Union[pd.DataFrame, List[Dict]], risk_model_id: str):
         """
         Create many factor constraints from a dataframe or a list of dictionaries
         :param factor_constraints: dataframe or list of dictionaries containing the factor constraints
@@ -751,8 +777,9 @@ class FactorConstraint:
         >>>                   ]), "BARRA_USFAST")
 
         """
-        factor_constraints_df = pd.DataFrame(factor_constraints) if isinstance(factor_constraints, list) \
-            else factor_constraints
+        factor_constraints_df = (
+            pd.DataFrame(factor_constraints) if isinstance(factor_constraints, list) else factor_constraints
+        )
 
         missing_columns = [col for col in ['factor', 'exposure'] if col not in factor_constraints_df.columns]
         if missing_columns:
@@ -766,8 +793,7 @@ class FactorConstraint:
 
         factor_constraints_df = factor_constraints_df.merge(name_to_factor_obj_df, on='factor', how='inner')
 
-        factor_constraints_df = (factor_constraints_df[["factorObj", "exposure"]]
-                                 .rename(columns={"factorObj": "factor"}))
+        factor_constraints_df = factor_constraints_df[["factorObj", "exposure"]].rename(columns={"factorObj": "factor"})
 
         all_constraints = factor_constraints_df.to_dict(orient='records')
 
@@ -775,16 +801,17 @@ class FactorConstraint:
 
 
 class OptimizerUniverse:
-
-    def __init__(self,
-                 assets: Union[List[Asset], AssetUniverse] = None,
-                 explode_composites: bool = True,
-                 exclude_initial_position_set_assets: bool = True,
-                 exclude_corporate_actions_types: List[CorporateActionsTypes] = [],
-                 exclude_hard_to_borrow_assets: bool = False,
-                 exclude_restricted_assets: bool = False,
-                 min_market_cap: float = None,
-                 max_market_cap: float = None):
+    def __init__(
+        self,
+        assets: Union[List[Asset], AssetUniverse] = None,
+        explode_composites: bool = True,
+        exclude_initial_position_set_assets: bool = True,
+        exclude_corporate_actions_types: List[CorporateActionsTypes] = [],
+        exclude_hard_to_borrow_assets: bool = False,
+        exclude_restricted_assets: bool = False,
+        min_market_cap: float = None,
+        max_market_cap: float = None,
+    ):
         """
         The universe of assets with which to construct an optimization
 
@@ -878,10 +905,7 @@ class OptimizerUniverse:
         else:
             asset_ids = [asset.get_marquee_id() for asset in self.assets]
         as_dict = {
-            'hedgeUniverse': {
-                'assetIds': asset_ids,
-                'assetTypes': []
-            },
+            'hedgeUniverse': {'assetIds': asset_ids, 'assetTypes': []},
             'excludeCorporateActions': len(self.exclude_corporate_actions_types) != 0,
             'excludeCorporateActionsTypes': [x.value for x in self.exclude_corporate_actions_types],
             'excludeHardToBorrowAssets': self.exclude_hard_to_borrow_assets,
@@ -897,10 +921,11 @@ class OptimizerUniverse:
 
 
 class MaxFactorProportionOfRiskConstraint:
-
-    def __init__(self,
-                 max_factor_proportion_of_risk: float,
-                 unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+    def __init__(
+        self,
+        max_factor_proportion_of_risk: float,
+        unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT,
+    ):
         if unit not in [OptimizationConstraintUnit.PERCENT, OptimizationConstraintUnit.DECIMAL]:
             raise MqValueError('Max Factor Proportion of Risk can only be set by percent or decimal.')
         if unit == OptimizationConstraintUnit.PERCENT:
@@ -918,11 +943,12 @@ class MaxFactorProportionOfRiskConstraint:
 
 
 class MaxProportionOfRiskByGroupConstraint:
-
-    def __init__(self,
-                 factors: List[Factor],
-                 max_factor_proportion_of_risk: float,
-                 unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT):
+    def __init__(
+        self,
+        factors: List[Factor],
+        max_factor_proportion_of_risk: float,
+        unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT,
+    ):
         """
         Constrain the maximum proportion of risk coming from a group of factors in the final optimized result.
 
@@ -955,22 +981,20 @@ class MaxProportionOfRiskByGroupConstraint:
         self.__max_factor_proportion_of_risk = value
 
     def to_dict(self):
-        return {
-            'factors': [f.name for f in self.factors],
-            'max': self.max_factor_proportion_of_risk
-        }
+        return {'factors': [f.name for f in self.factors], 'max': self.max_factor_proportion_of_risk}
 
 
 class OptimizerConstraints:
-
-    def __init__(self,
-                 asset_constraints: List[AssetConstraint] = [],
-                 country_constraints: List[CountryConstraint] = [],
-                 sector_constraints: List[SectorConstraint] = [],
-                 industry_constraints: List[IndustryConstraint] = [],
-                 factor_constraints: List[FactorConstraint] = [],
-                 max_factor_proportion_of_risk: MaxFactorProportionOfRiskConstraint = None,
-                 max_proportion_of_risk_by_groups: List[MaxProportionOfRiskByGroupConstraint] = None):
+    def __init__(
+        self,
+        asset_constraints: List[AssetConstraint] = [],
+        country_constraints: List[CountryConstraint] = [],
+        sector_constraints: List[SectorConstraint] = [],
+        industry_constraints: List[IndustryConstraint] = [],
+        factor_constraints: List[FactorConstraint] = [],
+        max_factor_proportion_of_risk: MaxFactorProportionOfRiskConstraint = None,
+        max_proportion_of_risk_by_groups: List[MaxProportionOfRiskByGroupConstraint] = None,
+    ):
         """Set of Constraints for the optimizer
 
         :param asset_constraints: list of asset constraints
@@ -1055,7 +1079,7 @@ class OptimizerConstraints:
             'assetConstraints': [c.to_dict() for c in self.asset_constraints],
             'classificationConstraints': [c.to_dict() for c in classification_constraints],
             'factorConstraints': [c.to_dict() for c in self.factor_constraints],
-            'constrainAssetsByNotional': constrain_by_notional
+            'constrainAssetsByNotional': constrain_by_notional,
         }
 
         if self.max_factor_proportion_of_risk:
@@ -1068,18 +1092,18 @@ class OptimizerConstraints:
 
 
 class ConstraintPriorities:
-
-    def __init__(self,
-                 min_sector_weights: PrioritySetting = None,
-                 max_sector_weights: PrioritySetting = None,
-                 min_industry_weights: PrioritySetting = None,
-                 max_industry_weights: PrioritySetting = None,
-                 min_region_weights: PrioritySetting = None,
-                 max_region_weights: PrioritySetting = None,
-                 min_country_weights: PrioritySetting = None,
-                 max_country_weights: PrioritySetting = None,
-                 style_factor_exposures: PrioritySetting = None,
-                 ):
+    def __init__(
+        self,
+        min_sector_weights: PrioritySetting = None,
+        max_sector_weights: PrioritySetting = None,
+        min_industry_weights: PrioritySetting = None,
+        max_industry_weights: PrioritySetting = None,
+        min_region_weights: PrioritySetting = None,
+        max_region_weights: PrioritySetting = None,
+        min_country_weights: PrioritySetting = None,
+        max_country_weights: PrioritySetting = None,
+        style_factor_exposures: PrioritySetting = None,
+    ):
         """
         Priority of the constraint from 0-5 (prioritized in that order). The optimization will fail if it cannot meet a
         constraint with 0 priority.  A constraint with priority of 1-5 can be called a relaxed constraint, which means
@@ -1178,34 +1202,39 @@ class ConstraintPriorities:
         self.__style_factor_exposures = value
 
     def to_dict(self) -> Dict:
-        as_dict = {
-            'minSectorWeights': self.min_sector_weights,
-            'maxSectorWeights': self.max_sector_weights,
-            'minIndustryWeights': self.min_industry_weights,
-            'maxIndustryWeights': self.max_industry_weights,
-            'minRegionWeights': self.min_region_weights,
-            'maxRegionWeights': self.max_region_weights,
-            'minCountryWeights': self.min_country_weights,
-            'maxCountryWeights': self.max_country_weights,
-            'styleExposures': self.style_factor_exposures
-        } if self is not None else {}
+        as_dict = (
+            {
+                'minSectorWeights': self.min_sector_weights,
+                'maxSectorWeights': self.max_sector_weights,
+                'minIndustryWeights': self.min_industry_weights,
+                'maxIndustryWeights': self.max_industry_weights,
+                'minRegionWeights': self.min_region_weights,
+                'maxRegionWeights': self.max_region_weights,
+                'minCountryWeights': self.min_country_weights,
+                'maxCountryWeights': self.max_country_weights,
+                'styleExposures': self.style_factor_exposures,
+            }
+            if self is not None
+            else {}
+        )
         as_dict = {k: as_dict[k].value for k in as_dict.keys() if as_dict[k] is not None}
         return as_dict if len(as_dict.keys()) > 0 else None
 
 
 class OptimizerSettings:
-
-    def __init__(self,
-                 notional: float = 10000000,
-                 allow_long_short: bool = False,
-                 gross_notional: float = None,
-                 net_notional: float = None,
-                 min_names: float = 0,
-                 max_names: float = 100,
-                 min_weight_per_constituent: float = None,
-                 max_weight_per_constituent: float = None,
-                 max_adv: float = 15,
-                 constraint_priorities: ConstraintPriorities = None):
+    def __init__(
+        self,
+        notional: float = 10000000,
+        allow_long_short: bool = False,
+        gross_notional: float = None,
+        net_notional: float = None,
+        min_names: float = 0,
+        max_names: float = 100,
+        min_weight_per_constituent: float = None,
+        max_weight_per_constituent: float = None,
+        max_adv: float = 15,
+        constraint_priorities: ConstraintPriorities = None,
+    ):
         """
         Optimizer settings for factor hedging.
 
@@ -1268,9 +1297,7 @@ class OptimizerSettings:
         # Validate weight constraints are positive
         if self.__min_weight_per_constituent is not None and self.__min_weight_per_constituent < 0:
             self.__min_weight_per_constituent = 0
-            raise Warning(
-                "min_weight_per_constituent cannot be negative. Setting to 0."
-            )
+            raise Warning("min_weight_per_constituent cannot be negative. Setting to 0.")
 
         if self.__max_weight_per_constituent is not None and self.__max_weight_per_constituent < 0:
             raise MqValueError(
@@ -1279,9 +1306,11 @@ class OptimizerSettings:
                 "The optimizer interprets weight constraints as absolute values."
             )
 
-        if (self.__min_weight_per_constituent is not None and
-                self.__max_weight_per_constituent is not None and
-                self.__min_weight_per_constituent > self.__max_weight_per_constituent):
+        if (
+            self.__min_weight_per_constituent is not None and
+            self.__max_weight_per_constituent is not None and
+            self.__min_weight_per_constituent > self.__max_weight_per_constituent
+        ):
             raise MqValueError(
                 f"min_weight_per_constituent ({self.__min_weight_per_constituent}) cannot be greater than "
                 f"max_weight_per_constituent ({self.__max_weight_per_constituent})"
@@ -1303,8 +1332,11 @@ class OptimizerSettings:
         else:
             # Unidirectional hedger mode validation
             # Prevent setting long/short parameters in unidirectional mode
-            if (self.__gross_notional is not None and self.__net_notional is not None and
-                    self.__gross_notional != self.__net_notional):
+            if (
+                self.__gross_notional is not None and
+                self.__net_notional is not None and
+                self.__gross_notional != self.__net_notional
+            ):
                 raise MqValueError(
                     "Cannot set gross_notional != net_notional when allow_long_short=False. "
                     "Use 'notional' parameter for unidirectional hedger mode, or set allow_long_short=True "
@@ -1412,11 +1444,7 @@ class OptimizerSettings:
         Handles both unidirectional and bidirectional hedger configurations.
         """
         # Start with common parameters
-        as_dict = {
-            'minNames': self.min_names,
-            'maxNames': self.max_names,
-            'maxAdvPercentage': self.max_adv
-        }
+        as_dict = {'minNames': self.min_names, 'maxNames': self.max_names, 'maxAdvPercentage': self.max_adv}
 
         # Configure notional parameters based on hedger mode
         if self.__allow_long_short:
@@ -1452,11 +1480,12 @@ class OptimizerSettings:
 
 
 class TurnoverConstraint:
-
-    def __init__(self,
-                 turnover_portfolio: PositionSet,
-                 max_turnover_percent: float,
-                 turnover_notional_type: Optional[TurnoverNotionalType] = None):
+    def __init__(
+        self,
+        turnover_portfolio: PositionSet,
+        max_turnover_percent: float,
+        turnover_notional_type: Optional[TurnoverNotionalType] = None,
+    ):
         """
         Specifying a list of positions and max turnover from those positions in the optimization result
 
@@ -1496,7 +1525,7 @@ class TurnoverConstraint:
         positions = self.turnover_portfolio.positions
         payload = {
             'turnoverPortfolio': [{'assetId': p.asset_id, 'quantity': p.quantity} for p in positions],
-            'maxTurnoverPercentage': self.max_turnover_percent
+            'maxTurnoverPercentage': self.max_turnover_percent,
         }
         if self.turnover_notional_type:
             payload['turnoverNotionalType'] = self.turnover_notional_type.value
@@ -1517,21 +1546,22 @@ def _ensure_completed(func):
 class OptimizerStrategy:
     VERBOSE_ERROR_MSG: Final = {
         'Missing asset xref': lambda e: f"We noticed some underlying asset meta data error: {e}",
-        'ERROR: Could not find solution.': lambda e:
-            f"Potential infeasible inputs. {e}. "
-            f"Please relax your constraint or "
-            f"contact Marquee team for assistance.",
+        'ERROR: Could not find solution.': lambda e: f"Potential infeasible inputs. {e}. "
+        f"Please relax your constraint or "
+        f"contact Marquee team for assistance.",
     }
 
-    def __init__(self,
-                 initial_position_set: PositionSet,
-                 universe: OptimizerUniverse,
-                 risk_model: FactorRiskModel,
-                 constraints: OptimizerConstraints = None,
-                 turnover: TurnoverConstraint = None,
-                 settings: OptimizerSettings = None,
-                 objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK,
-                 objective_parameters: OptimizerObjectiveParameters = None):
+    def __init__(
+        self,
+        initial_position_set: PositionSet,
+        universe: OptimizerUniverse,
+        risk_model: FactorRiskModel,
+        constraints: OptimizerConstraints = None,
+        turnover: TurnoverConstraint = None,
+        settings: OptimizerSettings = None,
+        objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK,
+        objective_parameters: OptimizerObjectiveParameters = None,
+    ):
         """
         A strategy that can be passed into the optimizer and run
 
@@ -1634,15 +1664,13 @@ class OptimizerStrategy:
         positions_as_dict = positions_as_dict.rename(columns={'asset_id': 'assetId'}).to_dict(orient='records')
 
         parameters = {
-            'hedgeTarget': {
-                'positions': positions_as_dict
-            },
+            'hedgeTarget': {'positions': positions_as_dict},
             'hedgeDate': self.initial_position_set.date.strftime('%Y-%m-%d'),
             'backtestStartDate': backtest_start_date.strftime('%Y-%m-%d'),
             'backtestEndDate': self.initial_position_set.date.strftime('%Y-%m-%d'),
             'comparisons': [],
             'fxHedged': False,
-            'marketParticipationRate': 10
+            'marketParticipationRate': 10,
         }
         constraints = self.constraints.to_dict()
         for key in constraints:
@@ -1680,8 +1708,8 @@ class OptimizerStrategy:
                 'useUnadjustedClosePrice': False,  # Optimizer uses adjusted prices for all calculations
                 'frequency': 'End Of Day',
                 'priceRegardlessOfAssetsMissingPrices': not fail_on_unpriced_positions,
-                'fallbackDate': '5d'
-            }
+                'fallbackDate': '5d',
+            },
         }
         if self.initial_position_set.reference_notional is not None:
             payload['parameters']['targetNotional'] = self.initial_position_set.reference_notional
@@ -1691,18 +1719,18 @@ class OptimizerStrategy:
             raise MqValueError(f'There was an error pricing your positions: {e}')
         if 'errorMessage' in price_results:
             if len(price_results.get('assetIdsMissingPrices', [])) > 0:
-                _logger.warning(f'Marquee is missing prices on {self.initial_position_set.date} for '
-                                f'the following assets: {price_results["assetIdsMissingPrices"]}. ')
+                _logger.warning(
+                    f'Marquee is missing prices on {self.initial_position_set.date} for '
+                    f'the following assets: {price_results["assetIdsMissingPrices"]}. '
+                )
             raise MqValueError(f'There was an error pricing your positions: {price_results["errorMessage"]}')
         if self.initial_position_set.reference_notional is None:
             parameters['targetNotional'] = price_results.get('actualNotional')
         else:
-            parameters['hedgeTarget']['positions'] = [{'assetId': p['assetId'], 'quantity': p['quantity']}
-                                                      for p in price_results.get('positions', [])]
-        return {
-            'objective': self.objective.value,
-            'parameters': parameters
-        }
+            parameters['hedgeTarget']['positions'] = [
+                {'assetId': p['assetId'], 'quantity': p['quantity']} for p in price_results.get('positions', [])
+            ]
+        return {'objective': self.objective.value, 'parameters': parameters}
 
     def handle_error(self, error_message: str) -> List:
         for key, val in self.VERBOSE_ERROR_MSG.items():
@@ -1710,9 +1738,11 @@ class OptimizerStrategy:
                 return [val(error_message), True]  # predefined
         return [error_message, False]
 
-    def run(self,
-            optimizer_type: OptimizerType = OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER,
-            fail_on_unpriced_positions: bool = True):
+    def run(
+        self,
+        optimizer_type: OptimizerType = OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER,
+        fail_on_unpriced_positions: bool = True,
+    ):
         """
         Run an optimization strategy, after which you can use the .get_optimization or get_optimized_position_set
         functions to pull results
@@ -1736,16 +1766,18 @@ class OptimizerStrategy:
                             verbose_message, predefined_error = self.handle_error(error_message)
                             if predefined_error:
                                 counter = 0
-                                raise MqValueError(f"The optimizer returns an error: "
-                                                   f"{verbose_message}. ")
+                                raise MqValueError(f"The optimizer returns an error: {verbose_message}. ")
                             else:
-                                raise MqValueError(f"The optimizer returned an error: "
-                                                   f"{optimization_results.get('errorMessage')}. "
-                                                   f"Please adjust the constraints"
-                                                   f" or contact the Marquee team for assistance")
+                                raise MqValueError(
+                                    f"The optimizer returned an error: "
+                                    f"{optimization_results.get('errorMessage')}. "
+                                    f"Please adjust the constraints"
+                                    f" or contact the Marquee team for assistance"
+                                )
                         elif counter == 1:
                             raise MqValueError(
-                                'Error calculating an optimization. Please contact the Marquee team for assistance.')
+                                'Error calculating an optimization. Please contact the Marquee team for assistance.'
+                            )
                         counter -= 1
                     else:
                         self.__result = optimization_results['result']
@@ -1755,18 +1787,82 @@ class OptimizerStrategy:
                         raise e
                     if counter == 1:
                         raise MqValueError(
-                            'Error calculating an optimization. Please contact the Marquee team for assistance.')
+                            'Error calculating an optimization. Please contact the Marquee team for assistance.'
+                        )
                     counter -= 1
+
+    def run_save_share(
+        self,
+        optimizer_type: OptimizerType = OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER,
+        fail_on_unpriced_positions: bool = True,
+    ):
+        """
+        Run an optimization strategy, after which you can use the .get_optimization or get_optimized_position_set
+        functions to pull results
+
+        :param optimizer_type: optimizer type
+        :param fail_on_unpriced_positions: whether to fail the calculations if some of the portfolio positions do not
+        have pricing data in Marquee. If set to false, unpriced assets will be sifted out before the optimization is run
+        :return: tuple of (strategy_as_dict, optimization_results) - the request payload and response from the optimizer
+        """
+        if optimizer_type is None:
+            raise MqValueError('You must pass an optimizer type.')
+        if optimizer_type == OptimizerType.AXIOMA_PORTFOLIO_OPTIMIZER:
+            strategy_as_dict = self.to_dict(fail_on_unpriced_positions)
+            counter = 5
+            predefined_error = False
+            while counter > 0:
+                try:
+                    optimization_results = GsHedgeApi.calculate_hedge(strategy_as_dict)
+                    if optimization_results.get('result') is None:
+                        if 'errorMessage' in optimization_results:
+                            error_message = optimization_results['errorMessage']
+                            verbose_message, predefined_error = self.handle_error(error_message)
+                            if predefined_error:
+                                counter = 0
+                                raise MqValueError(f"The optimizer returns an error: {verbose_message}. ")
+                            else:
+                                raise MqValueError(
+                                    f"The optimizer returned an error: "
+                                    f"{optimization_results.get('errorMessage')}. "
+                                    f"Please adjust the constraints"
+                                    f" or contact the Marquee team for assistance"
+                                )
+                        elif counter == 1:
+                            raise MqValueError(
+                                'Error calculating an optimization. Please contact the Marquee team for assistance.'
+                            )
+                        counter -= 1
+                    else:
+                        self.__result = optimization_results['result']
+                        counter = 0
+                except Exception as e:
+                    if predefined_error:
+                        raise e
+                    if counter == 1:
+                        raise MqValueError(
+                            'Error calculating an optimization. Please contact the Marquee team for assistance.'
+                        )
+                    counter -= 1
+
+            # Return both the request and response for easy hedge saving
+            return strategy_as_dict, optimization_results
 
     def __construct_position_set_from_hedge_result(self, result_key: str, by_weight: bool = True):
         result = self.__result[result_key]
         return PositionSet(
             date=self.initial_position_set.date,
             reference_notional=result['netExposure'] if by_weight else None,
-            positions=[Position(identifier=asset.get('bbid', asset['name']),
-                                asset_id=asset['assetId'],
-                                quantity=asset['shares'] if not by_weight else None,
-                                weight=asset['weight']) for asset in result['constituents']])
+            positions=[
+                Position(
+                    identifier=asset.get('bbid', asset['name']),
+                    asset_id=asset['assetId'],
+                    quantity=asset['shares'] if not by_weight else None,
+                    weight=asset['weight'],
+                )
+                for asset in result['constituents']
+            ],
+        )
 
     @_ensure_completed
     def get_optimization(self, by_weight: bool = False):
@@ -1835,7 +1931,7 @@ class OptimizerStrategy:
                 'net_exposure': result.get('netExposure'),
                 'long_exposure': result.get('longExposure', 0),
                 'short_exposure': result.get('shortExposure', 0),
-                'number_of_positions': result.get('numberOfPositions')
+                'number_of_positions': result.get('numberOfPositions'),
             }
 
             # Add mode information for hedge
@@ -1850,7 +1946,7 @@ class OptimizerStrategy:
         summary = {
             'hedge': get_exposure_dict('hedge'),
             'target': get_exposure_dict('target'),
-            'hedged_target': get_exposure_dict('hedgedTarget')
+            'hedged_target': get_exposure_dict('hedgedTarget'),
         }
 
         return summary
@@ -1887,12 +1983,7 @@ class OptimizerStrategy:
             return {
                 'long_positions': pd.DataFrame(),
                 'short_positions': pd.DataFrame(),
-                'summary': {
-                    'num_long': 0,
-                    'num_short': 0,
-                    'total_long_notional': 0,
-                    'total_short_notional': 0
-                }
+                'summary': {'num_long': 0, 'num_short': 0, 'total_long_notional': 0, 'total_short_notional': 0},
             }
 
         # Convert to DataFrame
@@ -1907,14 +1998,10 @@ class OptimizerStrategy:
             'num_long': len(long_positions),
             'num_short': len(short_positions),
             'total_long_notional': long_positions['notional'].sum() if len(long_positions) > 0 else 0,
-            'total_short_notional': short_positions['notional'].sum() if len(short_positions) > 0 else 0
+            'total_short_notional': short_positions['notional'].sum() if len(short_positions) > 0 else 0,
         }
 
-        return {
-            'long_positions': long_positions,
-            'short_positions': short_positions,
-            'summary': summary
-        }
+        return {'long_positions': long_positions, 'short_positions': short_positions, 'summary': summary}
 
     def get_cumulative_pnl_performance(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
         """
@@ -1965,8 +2052,8 @@ class OptimizerStrategy:
         return {"risk_buckets": risk_buckets}
 
     def get_transaction_and_liquidity_constituents_performance(
-            self,
-            target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
+        self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET
+    ) -> Dict:
         """
         Get the constituents performance results of the optimization
 
@@ -1979,9 +2066,20 @@ class OptimizerStrategy:
             raise MqValueError(f'The optimization result does not contain {target.value} data')
         constituents = self.__result.get(target.value).get('constituents')
         filtered_constituents = []
-        keys_to_keep = {"name", "assetId", "bbid", "notional", "shares",
-                        "price", "weight", "currency", "transactionCost",
-                        "marginalCost", "advPercentage", "borrowCost"}
+        keys_to_keep = {
+            "name",
+            "assetId",
+            "bbid",
+            "notional",
+            "shares",
+            "price",
+            "weight",
+            "currency",
+            "transactionCost",
+            "marginalCost",
+            "advPercentage",
+            "borrowCost",
+        }
         for constituent in constituents:
             filtered_constituent = {key: value for key, value in constituent.items() if key in keys_to_keep}
             filtered_constituents.append(filtered_constituent)
@@ -2011,66 +2109,73 @@ class OptimizerStrategy:
         # Build individual DataFrames for each category
 
         # Risk Metrics Table
-        risk_df = pd.DataFrame({
-            'Metric': ['Annualized Volatility', 'Specific Risk', 'Factor Risk', 'Factor Risk Delta'],
-            'Initial Portfolio': [
-                target.get("volatility"),
-                target.get("specificExposure"),
-                target.get("systematicExposure"),
-                None
-            ],
-            'Hedged Portfolio': [
-                hedged_target.get("volatility"),
-                hedged_target.get("specificExposure"),
-                hedged_target.get("systematicExposure"),
-                (hedged_target.get("systematicExposure") - target.get("systematicExposure")
-                 if hedged_target.get("systematicExposure") is not None and
-                 target.get("systematicExposure") is not None else None)
-            ]
-        })
+        risk_df = pd.DataFrame(
+            {
+                'Metric': ['Annualized Volatility', 'Specific Risk', 'Factor Risk', 'Factor Risk Delta'],
+                'Initial Portfolio': [
+                    target.get("volatility"),
+                    target.get("specificExposure"),
+                    target.get("systematicExposure"),
+                    None,
+                ],
+                'Hedged Portfolio': [
+                    hedged_target.get("volatility"),
+                    hedged_target.get("specificExposure"),
+                    hedged_target.get("systematicExposure"),
+                    (
+                        hedged_target.get("systematicExposure") - target.get("systematicExposure")
+                        if hedged_target.get("systematicExposure") is not None and
+                        target.get("systematicExposure") is not None
+                        else None
+                    ),
+                ],
+            }
+        )
 
         # Performance Metrics Table
-        performance_df = pd.DataFrame({
-            'Metric': ['PnL', 'PnL Delta'],
-            'Initial Portfolio': [
-                target.get("totalPnl"),
-                None
-            ],
-            'Hedged Portfolio': [
-                hedged_target.get("totalPnl"),
-                (hedged_target.get("totalPnl") - target.get("totalPnl")
-                 if hedged_target.get("totalPnl") is not None and target.get("totalPnl") is not None
-                 else None)
-            ]
-        })
+        performance_df = pd.DataFrame(
+            {
+                'Metric': ['PnL', 'PnL Delta'],
+                'Initial Portfolio': [target.get("totalPnl"), None],
+                'Hedged Portfolio': [
+                    hedged_target.get("totalPnl"),
+                    (
+                        hedged_target.get("totalPnl") - target.get("totalPnl")
+                        if hedged_target.get("totalPnl") is not None and target.get("totalPnl") is not None
+                        else None
+                    ),
+                ],
+            }
+        )
 
         # Transaction Cost Table
-        transaction_cost_df = pd.DataFrame({
-            'Metric': ['Market Impact', 'Borrow Cost (bps)'],
-            'Initial Portfolio': [
-                target.get("transactionCost"),
-                None
-            ],
-            'Hedged Portfolio': [
-                hedged_target.get("transactionCost"),
-                hedged_target.get("borrowCostBps")
-            ]
-        })
+        transaction_cost_df = pd.DataFrame(
+            {
+                'Metric': ['Market Impact', 'Borrow Cost (bps)'],
+                'Initial Portfolio': [target.get("transactionCost"), None],
+                'Hedged Portfolio': [hedged_target.get("transactionCost"), hedged_target.get("borrowCostBps")],
+            }
+        )
 
         # Comparison Table
-        comparison_df = pd.DataFrame({
-            'Metric': ['Overlap with Core'],
-            'Initial Portfolio': [None],
-            'Hedged Portfolio': [hedged_target.get("exposureOverlapWithTarget")]
-        })
+        comparison_df = pd.DataFrame(
+            {
+                'Metric': ['Overlap with Core'],
+                'Initial Portfolio': [None],
+                'Hedged Portfolio': [hedged_target.get("exposureOverlapWithTarget")],
+            }
+        )
 
         # Combined Table
-        combined_df = pd.concat([
-            risk_df.assign(Category='Risk'),
-            performance_df.assign(Category='Performance'),
-            transaction_cost_df.assign(Category='Transaction Cost'),
-            comparison_df.assign(Category='Comparison')
-        ], ignore_index=True)
+        combined_df = pd.concat(
+            [
+                risk_df.assign(Category='Risk'),
+                performance_df.assign(Category='Performance'),
+                transaction_cost_df.assign(Category='Transaction Cost'),
+                comparison_df.assign(Category='Comparison'),
+            ],
+            ignore_index=True,
+        )
         combined_df = combined_df[['Category', 'Metric', 'Initial Portfolio', 'Hedged Portfolio']]
 
         return {
@@ -2078,5 +2183,104 @@ class OptimizerStrategy:
             'performance': performance_df,
             'transaction_cost': transaction_cost_df,
             'comparison': comparison_df,
-            'combined': combined_df
+            'combined': combined_df,
         }
+
+    def build_hedge_payload(
+        self,
+        strategy_request: Dict,
+        optimization_response: Dict,
+        hedge_name: str = "Custom Hedge",
+        group_name: str = "New Hedge Group",
+    ) -> Dict:
+        """
+        Build the payload for saving a hedge to Marquee API.
+
+        This method takes the request sent to the optimizer and the response received,
+        and constructs the proper payload for the save hedge API.
+
+        :param strategy_request: The strategy_as_dict from run() - the request payload sent to optimizer
+        :param optimization_response: The optimization_results from run() - the response from optimizer
+        :param hedge_name: Name for the individual hedge
+        :param group_name: Name for the hedge group
+        :return: Payload ready to POST to /v1/hedges/groups
+        """
+        # The save hedge payload is simply:
+        # - parameters: the request that was sent to the optimizer
+        # - result: the response received from the optimizer
+
+        payload = {
+            "name": group_name,
+            "objective": strategy_request.get("objective", "Minimize Factor Risk"),
+            "hedges": [
+                {
+                    "name": hedge_name,
+                    "objective": strategy_request.get("objective", "Minimize Factor Risk"),
+                    "parameters": strategy_request.get("parameters", {}),
+                    "result": optimization_response.get("result", {}),
+                }
+            ],
+        }
+
+        return payload
+
+    def save_to_marquee(
+        self,
+        strategy_request: Dict,
+        optimization_response: Dict,
+        hedge_name: str = "Custom Hedge",
+        group_name: str = "New Hedge Group",
+    ) -> Dict:
+        """
+        Save the hedge to Marquee via API POST.
+
+        :param strategy_request: The strategy_as_dict from run() - the request payload sent to optimizer
+        :param optimization_response: The optimization_results from run() - the response from optimizer
+        :param hedge_name: Name for the individual hedge
+        :param group_name: Name for the hedge group
+        :return: API response with hedge group details including ID
+
+        Example:
+            >>> strategy_request, optimization_response = strategy.run()
+            >>> saved_hedge = strategy.save_to_marquee(
+            ...     strategy_request,
+            ...     optimization_response,
+            ...     hedge_name="Factor Hedge",
+            ...     group_name="My Hedge Group"
+            ... )
+            >>> print(f"Saved hedge ID: {saved_hedge['id']}")
+        """
+        # Build the payload
+        payload = self.build_hedge_payload(
+            strategy_request=strategy_request,
+            optimization_response=optimization_response,
+            hedge_name=hedge_name,
+            group_name=group_name,
+        )
+
+        url = "/hedges/groups"
+
+        try:
+            response = GsSession.current._post(url, payload=payload)
+
+            result = response
+            hedge_group_id = result.get('id', 'N/A')
+
+            print("Hedge saved successfully!")
+            print(f"  Hedge Group ID: {hedge_group_id}")
+            print(f"  Name: {result.get('name', 'N/A')}")
+            print(f"  Created Time: {result.get('createdTime', 'N/A')}")
+
+            # Display link to Marquee UI
+            if hedge_group_id != 'N/A':
+                marquee_url = f"https://marquee.gs.com/s/hedging/multi/{hedge_group_id}"
+                print("\n View in Marquee UI:")
+                print(f"  {marquee_url}")
+
+            return result
+
+        except Exception as e:
+            print(f"✗ Failed to save hedge: {e}")
+            if hasattr(e, 'response'):
+                print(f"  Response: {e.response.text}")
+            raise MqValueError(f"Failed to save hedge to Marquee: {e}")
