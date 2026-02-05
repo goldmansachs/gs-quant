@@ -276,13 +276,16 @@ class GsSession(ContextBase):
             tracing_scope.span.set_tag(Tags.HTTP_METHOD, method)
             tracing_scope.span.set_tag('span.kind', 'client')
 
-        if method in ['GET', 'DELETE'] and not use_body:
+        if method in ('GET', 'DELETE') and not use_body:
             kwargs['params'] = payload
-            if tracing_scope:
+            if tracing_scope or request_headers:
                 headers = self._session.headers.copy()
-                Tracer.inject(headers)
+                if request_headers:
+                    headers.update(request_headers)
+                if tracing_scope:
+                    Tracer.inject(headers)
                 kwargs['headers'] = headers
-        elif method in ['POST', 'PUT'] or (method in ['GET', 'DELETE'] and use_body):
+        elif method in ('POST', 'PUT') or (method in ('GET', 'DELETE') and use_body):
             headers = self._session.headers.copy()
 
             if request_headers:
