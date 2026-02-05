@@ -27,7 +27,6 @@ class DataSetType(EnumBase, Enum):
     
     """Type of the dataset"""
 
-    PlotTool_Pro = 'PlotTool Pro'
     Alloy = 'Alloy'
     Snowflake = 'Snowflake'
     PDL = 'PDL'

@@ -28,7 +28,7 @@ from gs_quant.errors import MqValueError, MqTypeError
 from gs_quant.test.api.test_risk import set_session
 from gs_quant.timeseries import Interpolate, align, interpolate, value, day, weekday, quarter, year, date_range, \
     day_count_fractions, append, prepend, union, bucketize, AggregateFunction, day_count, align_calendar, \
-    AggregatePeriod, month
+    AggregatePeriod, month, day_countdown
 
 
 def test_basic():
@@ -488,6 +488,74 @@ def test_day_count():
 
     with pytest.raises(MqValueError):
         day_count(dt.date(2021, 5, 7), '2021-05-10')
+
+
+def test_day_countdown():
+    start_dt = dt.date(2021, 5, 7)
+    end_dt = dt.date(2021, 5, 17)
+
+    # calendar days (default)
+    actual = day_countdown(end_dt, start_dt)
+    expected_idx = pd.date_range(start=start_dt, end=end_dt, freq='D')
+    expected = pd.Series(list(range(10, -1, -1)), index=expected_idx, dtype=np.int64)
+    assert_series_equal(actual, expected, obj='day_countdown calendar days')
+
+    # business days (Mon-Fri)
+    actual_bus = day_countdown(end_dt, start_dt, business_days=True)
+    expected_bus_idx = pd.bdate_range(start=start_dt, end=end_dt)
+    expected_bus = pd.Series([6, 5, 4, 3, 2, 1, 0], index=expected_bus_idx, dtype=np.int64)
+    assert_series_equal(actual_bus, expected_bus, obj='day_countdown business days')
+
+    # start_date after end_date => empty
+    actual_empty = day_countdown(end_dt, dt.date(2021, 5, 18))
+    assert_series_equal(actual_empty, pd.Series(dtype=np.int64), obj='day_countdown empty range')
+
+    # type validation
+    with pytest.raises(MqValueError):
+        day_countdown(end_dt, '2021-05-07')
+
+    with pytest.raises(MqValueError):
+        day_countdown('2021-05-07', start_dt)
+
+    # calendar single-day
+    actual_single = day_countdown(dt.date(2021, 5, 17), dt.date(2021, 5, 17))
+    expected_single_idx = pd.date_range(start=dt.date(2021, 5, 17), end=dt.date(2021, 5, 17), freq='D')
+    expected_single = pd.Series([0], index=expected_single_idx, dtype=np.int64)
+    assert_series_equal(actual_single, expected_single, obj='day_countdown single day calendar')
+
+    # business single-day on weekend
+    weekend = dt.date(2021, 5, 15)  # Saturday
+    actual_weekend = day_countdown(weekend, weekend, business_days=True)
+    expected_weekend = pd.Series(dtype=np.int64)
+    assert_series_equal(actual_weekend, expected_weekend, obj='day_countdown single day business weekend')
+
+    # business countdown over a weekend: Fri -> Mon
+    fri = dt.date(2021, 5, 14)
+    mon = dt.date(2021, 5, 17)
+    actual_fri_mon = day_countdown(mon, fri, business_days=True)
+    expected_fri_mon_idx = pd.bdate_range(start=fri, end=mon)
+    expected_fri_mon = pd.Series([1, 0], index=expected_fri_mon_idx, dtype=np.int64)
+    assert_series_equal(actual_fri_mon, expected_fri_mon, obj='day_countdown business cross weekend')
+
+    # default start_date
+    class _PatchedDate(dt.date):
+        @classmethod
+        def today(cls):
+            return cls(2021, 5, 15)
+
+    class _DtShim:
+        date = _PatchedDate
+
+    with mock.patch.dict(day_countdown.__globals__, {'dt': _DtShim}):
+        actual_default = day_countdown(_PatchedDate(end_dt.year, end_dt.month, end_dt.day))
+
+        expected_default_idx = pd.date_range(
+            start=dt.date(2021, 5, 15),
+            end=dt.date(2021, 5, 17),
+            freq='D'
+        )
+        expected_default = pd.Series([2, 1, 0], index=expected_default_idx, dtype=np.int64)
+        assert_series_equal(actual_default, expected_default, obj='day_countdown default start_date')
 
 
 @mock.patch.object(Dataset, 'get_coverage')

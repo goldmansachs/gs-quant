@@ -684,6 +684,63 @@ def day_count(first: dt.date, second: dt.date) -> int:
     return np.busday_count(first, second)
 
 
+@plot_function
+def day_countdown(end_date: dt.date, start_date: dt.date = None, business_days: bool = False) -> pd.Series:
+    """Create a series counting down the number of days from each date to ``end_date``.
+
+    :param end_date: last date / countdown target
+    :param start_date: first date in the generated series (default: today)
+    :param business_days: whether to use business days (default False)
+    :return: timeseries of day counts
+
+    **Usage**
+
+    The returned series is indexed by dates from ``start_date`` to ``end_date`` (inclusive). Values are integers giving
+    the number of days between the index date and ``end_date``.
+
+    If ``business_days`` is True, the index will include only Monday through Friday as business days and the
+    counts will be business-day counts. If False (default), the index will include all
+    calendar days and the counts will be calendar-day counts.
+
+    **Examples**
+
+    Calendar-day countdown from 7May21 to 17May21:
+    >>> day_countdown(Date(2035, 5, 17), Date(2025, 5, 7))
+
+    Business-day countdown (Mon-Fri only):
+    >>> day_countdown(Date(2035, 5, 17), Date(2025, 5, 7), True)
+
+    Calendar-day countdown starting today:
+    >>> day_countdown(Date(2035, 5, 17))
+    """
+    if start_date is None:
+        start_date = dt.date.today()
+
+    if not isinstance(start_date, dt.date):
+        raise MqValueError('start_date must be a date')
+    if not isinstance(end_date, dt.date):
+        raise MqValueError('end_date must be a date')
+
+    if start_date > end_date:
+        return pd.Series(dtype=np.int64)
+
+    if business_days:
+        idx = pd.bdate_range(start=start_date, end=end_date)
+        if idx.empty:
+            return pd.Series(dtype=np.int64)
+        # busday_count is [start, end) so end_date itself is 0
+        start_days = idx.values.astype('datetime64[D]')
+        end_day = np.datetime64(end_date).astype('datetime64[D]')
+        values = np.busday_count(start_days, end_day).astype(np.int64)
+    else:
+        idx = pd.date_range(start=start_date, end=end_date, freq='D')
+        start_days = idx.values.astype('datetime64[D]')
+        end_day = np.datetime64(end_date).astype('datetime64[D]')
+        values = (end_day - start_days).astype(np.int64)
+
+    return pd.Series(values, index=idx)
+
+
 @requires_session
 @plot_function
 def align_calendar(series: pd.Series, calendar: str) -> pd.Series:

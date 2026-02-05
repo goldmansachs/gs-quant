@@ -14,10 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-# This file is maintained for backwards compatibility.
-# The project is now configured using pyproject.toml
-# For building, use: python -m build
-
 import setuptools
+import versioneer
 
-setuptools.setup()
+setuptools.setup(
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
+)
