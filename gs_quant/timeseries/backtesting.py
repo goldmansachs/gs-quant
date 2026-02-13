@@ -93,52 +93,55 @@ def backtest_basket(
         # Convert the hypothetical weekly/monthly rebalance dates to actual calendar days
         rebal_dates = [min(cal[cal >= date]) for date in rebal_dates if date < max(cal)]
 
-    # Create Units dataframe
-    units = pd.DataFrame(index=cal, columns=series.columns)
-    actual_weights = pd.DataFrame(index=cal, columns=series.columns)
-    output = pd.Series(dtype='float64', index=cal)
+    n = len(cal)
+    output_arr = np.zeros(n)
+    units_arr = np.zeros((n, num_assets))
+    actual_weights_arr = np.zeros((n, num_assets))
 
     # Initialize backtest
-    output.values[0] = 100
-    units.values[0, ] = (
-        output.values[0] * weights.values[0, ] / series.values[0, ]
+    output_arr[0] = 100
+    units_arr[0, ] = (
+        output_arr[0] * weights.values[0, ] / series.values[0, ]
     )
-    actual_weights.values[0, ] = weights.values[0, ]
+    actual_weights_arr[0, ] = weights.values[0, ]
 
     # Run backtest
     prev_rebal = 0
     for i, date in enumerate(cal[1:], 1):
         # Update performance
-        output.values[i] = output.values[i - 1] + np.dot(
-            units.values[i - 1, ], series.values[i, ] - series.values[i - 1, ]
+        output_arr[i] = output_arr[i - 1] + np.dot(
+            units_arr[i - 1, ], series.values[i, ] - series.values[i - 1, ]
         )
 
-        actual_weights.values[i, ] = (
+        actual_weights_arr[i, ] = (
             weights.values[prev_rebal, ] *
             (series.values[i, ] / series.values[prev_rebal, ]) *
-            (output.values[prev_rebal] / output.values[i])
+            (output_arr[prev_rebal] / output_arr[i])
         )
 
         # Rebalance on rebal_dates
         if date in rebal_dates:
             # Compute costs
-            output.values[i] -= (
-                np.dot(costs.values[i, ], np.abs(weights.values[i, ] - actual_weights.values[i, ])) *
-                output.values[i]
+            output_arr[i] -= (
+                np.dot(costs.values[i, ], np.abs(weights.values[i, ] - actual_weights_arr[i, ])) *
+                output_arr[i]
             )
 
             # Rebalance
-            units.values[i, ] = (
-                output.values[i] * weights.values[i, ] / series.values[i, ]
+            units_arr[i, ] = (
+                output_arr[i] * weights.values[i, ] / series.values[i, ]
             )
             prev_rebal = i
 
-            actual_weights.values[i, ] = weights.values[i, ]
+            actual_weights_arr[i, ] = weights.values[i, ]
         else:
-            units.values[i, ] = units.values[
+            units_arr[i, ] = units_arr[
                 i - 1,
             ]
 
+    # Copy results back to pandas objects
+    output = pd.Series(output_arr, index=cal)
+    actual_weights = pd.DataFrame(actual_weights_arr, index=cal, columns=series.columns)
     return output, actual_weights
 
 

@@ -73,7 +73,7 @@ def test_generate_series_intraday():
     assert isinstance(x.index, pd.DatetimeIndex)
     assert x.iloc[0] == 100
     # Check that first timestamp is close to now (within 1 minute)
-    now = pd.Timestamp.now().floor('T')
+    now = pd.Timestamp.now().floor('min')
     assert abs((x.index[0] - now).total_seconds()) < 60
     # Check that observations are 1 minute apart
     assert (x.index[-1] - x.index[0]).total_seconds() == 99 * 60
@@ -84,7 +84,7 @@ def test_generate_series_intraday():
     assert isinstance(x.index, pd.DatetimeIndex)
     assert x.iloc[0] == 100
     # Check that last timestamp is close to now (within 1 minute)
-    now = pd.Timestamp.now().floor('T')
+    now = pd.Timestamp.now().floor('min')
     assert abs((x.index[-1] - now).total_seconds()) < 60
     # Check that observations are 1 minute apart
     assert (x.index[-1] - x.index[0]).total_seconds() == 99 * 60

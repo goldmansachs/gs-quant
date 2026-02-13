@@ -476,9 +476,14 @@ def test_factor_returns_percentile():
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
     mock.return_value = mock_risk_model_factor_returns_data
 
-    with DataContext(dt.datetime(2025, 1, 10, 0, 0, 0), dt.datetime(2025, 1, 10, 23, 59, 59)):
+    start_time = dt.datetime(2025, 1, 10, 0, 0, 0)
+    end_time = dt.datetime(2025, 1, 10, 23, 59, 59)
+
+    expected_series = pd.Series(expected_percentile_value, index=pd.date_range(start=start_time,
+                                                                               end=end_time, freq='2h'))
+    with DataContext(start_time, end_time):
         actual = mrm.factor_returns_percentile(mock_risk_model(), 'Factor Name', n_percentile=90)
-        assert expected_percentile_value == actual
+        assert expected_series.equals(actual)
     replace.restore()
 
 

@@ -1670,11 +1670,11 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
 @plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
     id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)])
 def fx_forecast_time_series(
-    asset: Union[Asset, str],
-    forecastFrequency: Union[str, _FxForecastTimeSeriesPeriodType] = _FxForecastTimeSeriesPeriodType.ANNUAL, *,
-    source: str = None,
-    real_time: bool = False,
-    request_id: Optional[str] = None
+        asset: Union[Asset, str],
+        forecastFrequency: Union[str, _FxForecastTimeSeriesPeriodType] = _FxForecastTimeSeriesPeriodType.ANNUAL, *,
+        source: str = None,
+        real_time: bool = False,
+        request_id: Optional[str] = None
 ) -> pd.Series:
     """
     Short and long-term FX forecast time series.
@@ -2025,8 +2025,9 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
     else:
         df = df.loc[p_date]
         df.index = pd.DatetimeIndex(df.index) if not isinstance(df.index, pd.DatetimeIndex) else df.index
-        df.index = pd.DatetimeIndex([RelativeDate(df['tenor'][i], df.index.date[i]).apply_rule(exchange=asset.exchange)
-                                     for i in range(len(df))])
+        df.index = pd.DatetimeIndex(
+            [RelativeDate(df['tenor'].iloc[i], df.index.date[i]).apply_rule(exchange=asset.exchange)
+             for i in range(len(df))])
         series = _skew(df, 'relativeStrike', 'impliedVolatility', q_strikes, normalization_mode)
 
     # Add additional data from expiry DF
@@ -3126,7 +3127,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     if granularity.lower() in ['daily', 'd']:
         granularity = 'D'
     elif granularity.lower() in ['monthly', 'm']:
-        granularity = 'M'
+        granularity = 'ME'
     else:
         raise MqValueError('Invalid granularity: ' + granularity + '. Expected Value: daily or monthly.')
 
@@ -3192,7 +3193,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
 
         # drop dates and months which have missing data
         df = df.loc[(~df['date'].isin(missing_dates))]
-        if granularity == 'M':
+        if granularity == 'ME':
             df = df.loc[(~df['month'].astype('str').isin(missing_months))]
 
         df = _filter_by_bucket(df, bucket, holidays, region)
@@ -4452,14 +4453,14 @@ def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
 
 @plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
 def commodity_forecast_time_series(
-    asset: Union[Asset, str],
-    forecastFrequency: Union[str, _CommodityForecastTimeSeriesPeriodType] =
-    _CommodityForecastTimeSeriesPeriodType.ANNUAL,
-    forecastType: _CommodityForecastType = _CommodityForecastType.SPOT,
-    forecastHorizonYears: int = 12, *,
-    source: str = None,
-    real_time: bool = False,
-    request_id: Optional[str] = None
+        asset: Union[Asset, str],
+        forecastFrequency: Union[str, _CommodityForecastTimeSeriesPeriodType] =
+        _CommodityForecastTimeSeriesPeriodType.ANNUAL,
+        forecastType: _CommodityForecastType = _CommodityForecastType.SPOT,
+        forecastHorizonYears: int = 12, *,
+        source: str = None,
+        real_time: bool = False,
+        request_id: Optional[str] = None
 ) -> pd.Series:
     """
     Short and long-term commodities forecast time series.
@@ -4520,7 +4521,6 @@ def commodity_forecast_time_series(
         df = _market_data_timed(q, request_id)
         if not df.empty:
             last_value = df[col_name].iloc[-1]
-            start_of_period = pd.Timestamp(period[:4] + "-01-01")  # Default to start of the year
             if 'm' in period:
                 months = int(period[:-1])
                 start_of_period = pd.Timestamp.today() + relativedelta(months=months)
@@ -4530,7 +4530,10 @@ def commodity_forecast_time_series(
                 start_of_period = pd.Timestamp(f"{year}-{(quarter - 1) * 3 + 1:02d}-01")
             elif "M" in period:
                 month = int(period[5:])
+                start_of_period = pd.Timestamp(period[:4] + "-01-01")
                 start_of_period = start_of_period.replace(month=month)
+            else:
+                start_of_period = pd.Timestamp(period[:4] + "-01-01")
             results.append({'date': start_of_period.strftime('%Y-%m-%d'), col_name: last_value})
     df = pd.DataFrame(results).set_index('date')
     series = _extract_series_from_df(df, query_type)

@@ -296,7 +296,7 @@ def test_volatility():
     vol = std * math.sqrt(252) * 100
 
     real_vol = volatility(x)
-    assert (real_vol[-1] == vol)
+    assert (real_vol.iloc[-1] == vol)
 
     vol_already_returns = volatility(returns(x), returns_type=None)
     assert_series_equal(vol_already_returns, real_vol, obj="Volatility strdate")

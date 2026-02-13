@@ -438,7 +438,7 @@ def change(x: pd.Series) -> pd.Series:
     :func:`index`
 
     """
-    return x - x[0]
+    return x - x.iloc[0]
 
 
 def _get_annualization_factor(x):

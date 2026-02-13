@@ -93,9 +93,9 @@ def test_backtest_predefined_timezone_aware():
     start_dt = '2021-01-01T08:00'
     end_dt = '2021-12-31T17:00'
 
-    states = pd.bdate_range(start_dt, end_dt, freq='1H', tz=tz).to_series().between_time('08:00',
+    states = pd.bdate_range(start_dt, end_dt, freq='1h', tz=tz).to_series().between_time('08:00',
                                                                                          '17:00').index.tolist()
-    trigger_dates = pd.bdate_range(start_dt, end_dt, freq='1H', tz=tz).to_series().at_time('17:00').index.tolist()
+    trigger_dates = pd.bdate_range(start_dt, end_dt, freq='1h', tz=tz).to_series().at_time('17:00').index.tolist()
     data = np.random.default_rng().standard_normal(len(states))
     s_rt = pd.Series(index=states, data=data)
     s_eod = s_rt.at_time('17:00')

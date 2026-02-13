@@ -21,6 +21,20 @@ from pydash import get
 from gs_quant.session import GsSession
 from gs_quant.target.reports import User
 
+DEFAULT_SEARCH_FIELDS = [
+    "id",
+    "name",
+    "firstName",
+    "lastName",
+    "kerberos",
+    "company",
+    "departmentName",
+    "divisionName",
+    "title",
+    "email",
+    "internal",
+]
+
 
 class GsUsersApi:
     @classmethod
@@ -73,3 +87,15 @@ class GsUsersApi:
             for user in response.get('results', []):
                 users_by_key[user[key_type]] = user
         return users_by_key
+
+    @classmethod
+    def search(cls,
+               query: str,
+               fields: Optional[List[str]] = None,
+               where: Optional[Dict[str, any]] = None) -> Dict[str, Any]:
+        payload = {
+            "q": query,
+            "fields": fields or DEFAULT_SEARCH_FIELDS,
+            **({"where": where} if where else {}),
+        }
+        return GsSession.current._post("/search/users/query", payload=payload)

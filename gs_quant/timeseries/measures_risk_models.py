@@ -306,7 +306,7 @@ def factor_returns_intraday(risk_model_id: str, factor_name: str,
 def factor_returns_percentile(risk_model_id: str, factor_name: str,
                               lookback_days: int = 10,
                               n_percentile: float = 90.0, *, source: str = None,
-                              real_time: bool = False, request_id: Optional[str] = None) -> float:
+                              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     Percentile of factor returns over a lookback period for a factor in a risk model
     """
@@ -316,7 +316,12 @@ def factor_returns_percentile(risk_model_id: str, factor_name: str,
     model = FactorRiskModel.get(risk_model_id)
     factor = model.get_factor(factor_name)
     factor_returns_df = factor.returns(start_date=start_date, end_date=end_date, format=ReturnFormat.DATA_FRAME)
-    return percentile(factor_returns_df.squeeze(), n_percentile)
+    percentile_value = percentile(factor_returns_df.squeeze(), n_percentile)
+    # Return the percentile value as pandas series for the entire time range from start_time to end_time
+    return pd.Series(percentile_value,
+                     index=pd.date_range(start=DataContext.current.start_time,
+                                         end=DataContext.current.end_time,
+                                         freq='2h'))
 
 
 def __format_plot_measure_results(time_series: Dict, query_type: QueryType, multiplier=1, handle_missing_column=False):

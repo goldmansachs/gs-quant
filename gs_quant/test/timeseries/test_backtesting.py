@@ -103,7 +103,8 @@ def test_basket_series():
 
 
 def _mock_spot_data():
-    dates = pd.date_range(start='2021-01-01', periods=6)
+    dates = pd.DatetimeIndex([dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3),
+                              dt.date(2021, 1, 4), dt.date(2021, 1, 5), dt.date(2021, 1, 6)])
     x = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 100, 100, 100, 100, 100]}, index=dates)
@@ -112,7 +113,8 @@ def _mock_spot_data():
 
 
 def _mock_spot_data_feb():
-    dates_feb = pd.date_range(start='2021-02-01', periods=6)
+    dates_feb = pd.DatetimeIndex([dt.date(2021, 2, 1), dt.date(2021, 2, 2), dt.date(2021, 2, 3),
+                                  dt.date(2021, 2, 4), dt.date(2021, 2, 5), dt.date(2021, 2, 6)])
     x = pd.DataFrame({'spot': [100.0, 101.5, 106.02, 100.1, 105.3, 102.9]}, index=dates_feb)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 101.5, 100.02, 98.1, 95.3, 93.9]}, index=dates_feb)
@@ -263,7 +265,8 @@ def _mock_data_simple():
 
 
 def _mock_spot_data_identical():
-    dates = pd.date_range(start='2021-01-01', periods=6)
+    dates = pd.DatetimeIndex([dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3),
+                              dt.date(2021, 1, 4), dt.date(2021, 1, 5), dt.date(2021, 1, 6)])
     x = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
@@ -272,7 +275,8 @@ def _mock_spot_data_identical():
 
 
 def _mock_spot_data_corr():
-    dates = pd.date_range(start='2021-01-01', periods=6)
+    dates = pd.DatetimeIndex([dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3),
+                              dt.date(2021, 1, 4), dt.date(2021, 1, 5), dt.date(2021, 1, 6)])
     x = pd.DataFrame({'spot': [78, 9, 1003, 17, -12, 5], 'assetId': 'MA4B66MW5E27U9VBB94'}, index=dates)
     y = pd.DataFrame({'spot': [-33, 33, 15, 21, -3, 2], 'assetId': 'MA4B66MW5E27UAL9SUX'}, index=dates)
     z = pd.DataFrame({'spot': [86, 86, 56, 86, 86, 9], 'assetId': 'MA4B66MW5E27UANZH2M'}, index=dates)

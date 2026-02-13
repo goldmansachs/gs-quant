@@ -38,7 +38,7 @@ dependencies = [
     "numpy>1.17.0,<2.4.0",
     "opentelemetry-api",
     "opentelemetry-sdk",
-    "pandas>=1.4,<3.0.0",
+    "pandas>=2.2,<3.0.0",
     "pydash<7.0.0",
     "python-dateutil>=2.7.0",
     "requests",

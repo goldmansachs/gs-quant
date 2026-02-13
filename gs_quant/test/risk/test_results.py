@@ -15,10 +15,9 @@ under the License.
 """
 import datetime as dt
 
+import gs_quant.risk as risk
 import numpy as np
 import pytest
-
-import gs_quant.risk as risk
 from gs_quant.base import RiskKey
 from gs_quant.common import MarketDataPattern, RiskRequestParameters
 from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg, CommodSwap
@@ -713,3 +712,21 @@ def test_scalar_with_info_on_instrument():
     assert swap_dict["fixedRate"] == 1.56
 
     assert swap.to_json() is not None
+
+
+def test_display_unit():
+    unit = {'A': 1, 'B': -1}
+    risk_key = RiskKey("provider", "the_date", "mkt", RiskRequestParameters(), None, None)
+    value = 1.0
+    float_with_unit = FloatWithInfo(risk_key, value, unit)
+    assert float_with_unit.__repr__() == '1.0 (A/B)'
+
+    unit = {'A': 1, 'B': -2}
+    float_with_unit = FloatWithInfo(risk_key, value, unit)
+    assert float_with_unit.__repr__() == '1.0 (A/B^2)'
+
+    unit = {'A': 2}
+    float_with_unit = FloatWithInfo(risk_key, value, unit)
+    assert float_with_unit.__repr__() == '1.0 (A^2)'
+
+    assert str(float_with_unit) == '1.0'

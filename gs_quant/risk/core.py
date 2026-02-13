@@ -21,10 +21,9 @@ from copy import copy
 from dataclasses import dataclass, fields
 from typing import Iterable, Optional, Union, Tuple, Dict, Callable, List
 
+import gs_quant
 import pandas as pd
 from dataclasses_json import dataclass_json
-
-import gs_quant
 from gs_quant.base import RiskKey
 from gs_quant.config import DisplayOptions
 from gs_quant.datetime import point_sort_order
@@ -40,11 +39,11 @@ __risk_columns = ('date', 'time', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_poi
 class ResultInfo(metaclass=ABCMeta):
 
     def __init__(
-        self,
-        risk_key: RiskKey,
-        unit: Optional[dict] = None,
-        error: Optional[Union[str, dict]] = None,
-        request_id: Optional[str] = None
+            self,
+            risk_key: RiskKey,
+            unit: Optional[dict] = None,
+            error: Optional[Union[str, dict]] = None,
+            request_id: Optional[str] = None
     ):
         self.__risk_key = risk_key
         self.__unit = unit
@@ -201,8 +200,42 @@ class FloatWithInfo(ScalarWithInfo, float):
     def raw_value(self) -> float:
         return float(self)
 
+    def __str__(self):
+        return float.__repr__(self)
+
     def __repr__(self):
-        return self.error if self.error else float.__repr__(self)
+        if self.error:
+            return self.error
+        else:
+            res = float.__repr__(self)
+            if self.unit and isinstance(self.unit, dict):
+                # Build unit string from dict like {'A': 1, 'B': -1} -> "A/B"
+                numerator = []
+                denominator = []
+
+                for unit_name, power in self.unit.items():
+                    if power > 0:
+                        if power == 1:
+                            numerator.append(unit_name)
+                        else:
+                            numerator.append(f"{unit_name}^{power}")
+                    elif power < 0:
+                        if power == -1:
+                            denominator.append(unit_name)
+                        else:
+                            denominator.append(f"{unit_name}^{abs(power)}")
+
+                if numerator and denominator:
+                    unit_str = f"{'*'.join(numerator)}/{'*'.join(denominator)}"
+                elif numerator:
+                    unit_str = '*'.join(numerator)
+                elif denominator:
+                    unit_str = f"1/{'*'.join(denominator)}"
+                else:
+                    unit_str = ""
+
+                return f"{res} ({unit_str})" if unit_str else res
+            return res
 
     def __add__(self, other):
         if isinstance(other, FloatWithInfo):
@@ -275,13 +308,13 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     _internal_names_set = set(_internal_names)
 
     def __init__(
-        self,
-        *args,
-        risk_key: Optional[RiskKey] = None,
-        unit: Optional[dict] = None,
-        error: Optional[Union[str, dict]] = None,
-        request_id: Optional[str] = None,
-        **kwargs
+            self,
+            *args,
+            risk_key: Optional[RiskKey] = None,
+            unit: Optional[dict] = None,
+            error: Optional[Union[str, dict]] = None,
+            request_id: Optional[str] = None,
+            **kwargs
     ):
         pd.Series.__init__(self, *args, **kwargs)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
@@ -335,13 +368,13 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     _internal_names_set = set(_internal_names)
 
     def __init__(
-        self,
-        *args,
-        risk_key: Optional[RiskKey] = None,
-        unit: Optional[dict] = None,
-        error: Optional[Union[str, dict]] = None,
-        request_id: Optional[str] = None,
-        **kwargs
+            self,
+            *args,
+            risk_key: Optional[RiskKey] = None,
+            unit: Optional[dict] = None,
+            error: Optional[Union[str, dict]] = None,
+            request_id: Optional[str] = None,
+            **kwargs
     ):
         pd.DataFrame.__init__(self, *args, **kwargs)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)

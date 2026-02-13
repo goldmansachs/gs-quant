@@ -480,7 +480,7 @@ def max_recovery_period(report_id: str, rolling_window: Union[int, str], *,
 
 
 def _max_recovery_period(series):
-    peak = series[0]
+    peak = series.iloc[0]
     recovery_periods = []
     current_drawdown = 0
     in_drawdown = False
@@ -499,7 +499,7 @@ def _max_recovery_period(series):
 
 
 def _drawdown_length(series):
-    peak = series[0]
+    peak = series.iloc[0]
     drawdown_start = None
     max_drawdown_length = 0
     current_length = 0
@@ -1401,7 +1401,7 @@ def _max_drawdown(series):
     running_max = series.cummax()
     drawdown = (series - running_max) / running_max
     max_drawdown_ts = drawdown.cummin()
-    return max_drawdown_ts[-1]
+    return max_drawdown_ts.iloc[-1]
 
 
 def _compute_sortino(series):

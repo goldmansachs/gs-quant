@@ -300,7 +300,8 @@ def test_construct_dataframe_with_types(mocker):
     assert np.issubdtype(df.index.dtype, np.datetime64)
     assert df['adjustedAskPrice'].dtype == np.int64
     assert df['adjustedBidPrice'].dtype == np.float64
-    assert df['assetId'].dtype == object  # https://pbpython.com/pandas_dtypes.html python str == dtype object
+    # pandas 3.0 uses StringDtype for strings, older versions use object
+    assert df['assetId'].dtype == object or pd.api.types.is_string_dtype(df['assetId'])
     assert np.issubdtype(df['updateTime'].dtype, np.datetime64)
 
 

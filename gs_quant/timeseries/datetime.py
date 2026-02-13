@@ -658,7 +658,9 @@ def bucketize(series: pd.Series, aggregate_function: AggregateFunction, period: 
     :func:`moving_average`
     """
     series.index = pd.to_datetime(series.index)
-    frequency = period.value[0].upper()
+    period_char = period.value[0].upper()
+    frequency_map = {'W': 'W', 'M': 'ME', 'Q': 'QE', 'Y': 'YE'}
+    frequency = frequency_map.get(period_char, period_char)
     agg = aggregate_function.value
     result = series.resample(frequency).apply(agg)
 

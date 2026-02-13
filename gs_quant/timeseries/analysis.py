@@ -175,7 +175,7 @@ def last(x: pd.Series) -> pd.Series:
     :func:`first`
 
     """
-    return pd.Series(x.dropna()[-1], x.index)
+    return pd.Series(x.dropna().iloc[-1], x.index)
 
 
 @plot_function

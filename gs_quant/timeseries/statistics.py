@@ -922,7 +922,7 @@ def generate_series_intraday(length: int, direction: IntradayDirection = Intrada
 
     """
     levels = [100]
-    first = pd.Timestamp.now().floor('T')
+    first = pd.Timestamp.now().floor('min')
     if direction == IntradayDirection.END_INTRADAY_NOW:
         first -= pd.Timedelta(minutes=length - 1)
     times = [first]
@@ -1268,7 +1268,7 @@ class SIRModel:
         if not isinstance(fit, bool):
             raise MqTypeError('expected a boolean value for "fit"')
 
-        n = n.dropna()[0] if isinstance(n, pd.Series) else n
+        n = n.dropna().iloc[0] if isinstance(n, pd.Series) else n
         n = 100 if n is None else n
         fit = False if s is None and i is None and r is None else fit
         s = n if s is None else s
@@ -1452,7 +1452,7 @@ class SEIRModel(SIRModel):
         if not isinstance(fit, bool):
             raise MqTypeError('expected a boolean value for "fit"')
 
-        n = n.dropna()[0] if isinstance(n, pd.Series) else n
+        n = n.dropna().iloc[0] if isinstance(n, pd.Series) else n
         n = 100 if n is None else n
         fit = False if all(state is None for state in (s, e, i, r)) else fit
         s = n if s is None else s

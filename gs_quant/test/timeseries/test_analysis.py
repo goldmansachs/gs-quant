@@ -198,7 +198,7 @@ def test_lag():
     expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0], index=pd.date_range("2019-01-01", periods=6, freq="D"))
     assert_series_equal(result, expected, obj="Lag 2 Default")
 
-    y = pd.Series([0] * 4, index=pd.date_range('2020-01-01T00:00:00Z', periods=4, freq='S'))
+    y = pd.Series([0] * 4, index=pd.date_range('2020-01-01T00:00:00Z', periods=4, freq='s'))
     with pytest.raises(Exception):
         lag(y, 5, LagMode.EXTEND)
 

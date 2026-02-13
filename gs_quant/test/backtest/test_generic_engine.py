@@ -19,7 +19,6 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
-
 from gs_quant.backtests.actions import AddTradeAction, HedgeAction, ExitTradeAction, AddScaledTradeAction, \
     ScalingActionType, ExitAllPositionsAction
 from gs_quant.backtests.backtest_objects import (ScaledTransactionModel, AggregateTransactionModel, TransactionAggType,
@@ -83,7 +82,7 @@ def test_generic_engine_simple(mocker):
         summary = backtest.result_summary
         assert len(summary) == 3
         assert round(summary[Price].sum()) == 2424
-        assert round(summary['Cumulative Cash'][-1]) == 0
+        assert round(summary['Cumulative Cash'].iloc[-1]) == 0
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -122,7 +121,7 @@ def test_hedge_action_risk_trigger(mocker):
         summary = backtest.result_summary
         assert len(summary) == 3
         assert round(summary[hedge_risk].sum()) == 0
-        assert round(summary['Cumulative Cash'][-1]) == -7090
+        assert round(summary['Cumulative Cash'].iloc[-1]) == -7090
         assert Price in summary.columns
 
 
@@ -160,7 +159,7 @@ def test_hedge_without_risk(mocker):
         summary = backtest.result_summary
         assert len(summary) == 3
         assert round(summary[hedge_risk].sum()) == 0
-        assert round(summary['Cumulative Cash'][-1]) == -6579
+        assert round(summary['Cumulative Cash'].iloc[-1]) == -6579
         assert Price in summary.columns
 
 
@@ -200,7 +199,7 @@ def test_mkt_trigger_data_sources(mocker):
         assert len(summary) == 12
         assert len(ledger) == 6
         assert round(summary[Price].sum()) == 25163614
-        assert round(summary['Cumulative Cash'][-1]) == -2153015
+        assert round(summary['Cumulative Cash'].iloc[-1]) == -2153015
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -342,7 +341,7 @@ def test_add_scaled_action(mocker):
         assert len(summary) == 5
         assert len(ledger) == 10
         assert round(summary[Price].sum()) == 2715
-        assert round(summary['Cumulative Cash'][-1]) == -922
+        assert round(summary['Cumulative Cash'].iloc[-1]) == -922
 
         # Trade the position monthly and scale the quantity of the trade
         trade_action_scaled = AddScaledTradeAction(priceables=portfolio, trade_duration='1m',
@@ -363,7 +362,8 @@ def test_add_scaled_action(mocker):
         assert len(summary_scaled) == len(summary)
         assert len(ledger_scaled) == len(ledger)
         assert round(summary_scaled[Price].sum()) == round(summary[Price].sum() * scale_factor)
-        assert round(summary_scaled['Cumulative Cash'][-1]) == round(summary['Cumulative Cash'][-1] * scale_factor)
+        assert round(summary_scaled['Cumulative Cash'].iloc[-1]) == round(
+            summary['Cumulative Cash'].iloc[-1] * scale_factor)
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -394,7 +394,7 @@ def test_scaled_transaction_cost(mocker):
         assert len(summary) == 5
         assert len(ledger) == 5
         assert round(summary[Price].sum()) == 90
-        assert round(summary['Transaction Costs'][-1]) == 50000 * 0.0001 * 5 * -1
+        assert round(summary['Transaction Costs'].iloc[-1]) == 50000 * 0.0001 * 5 * -1
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -426,7 +426,7 @@ def test_agg_transaction_cost(mocker):
         assert len(summary) == 5
         assert len(ledger) == 5
         assert round(summary[Price].sum()) == 90
-        assert round(summary['Transaction Costs'][-1]) == (50000 * 0.0001 * 5 * -1) - 5
+        assert round(summary['Transaction Costs'].iloc[-1]) == (50000 * 0.0001 * 5 * -1) - 5
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -457,7 +457,7 @@ def test_risk_scaled_transaction_cost(mocker):
         assert len(summary) == 5
         assert len(ledger) == 5
         assert round(summary[Price].sum()) == -64
-        assert round(summary['Transaction Costs'][-1]) == -62
+        assert round(summary['Transaction Costs'].iloc[-1]) == -62
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -589,9 +589,9 @@ def test_add_scaled_action_nav(mocker):
                                        -ledger['QuantityScaledAction1_call_2021-12-09']['Close Value'])
 
         # Total cash spent is the initial cash throughout the entire strategy
-        np.testing.assert_almost_equal(summary['Cumulative Cash'][0], -initial_cash)
+        np.testing.assert_almost_equal(summary['Cumulative Cash'].iloc[0], -initial_cash)
         for c in summary['Cumulative Cash']:
-            np.testing.assert_almost_equal(c, summary['Cumulative Cash'][0])
+            np.testing.assert_almost_equal(c, summary['Cumulative Cash'].iloc[0])
 
 
 def nav_scaled_action_transaction_cost_test_for_agg_type(mocker, agg_type):
@@ -648,9 +648,9 @@ def nav_scaled_action_transaction_cost_test_for_agg_type(mocker, agg_type):
 
         # Cash spent on trades + Transaction costs are equal to the initial cash throughout the entire strategy
         total_cash_spent = summary['Cumulative Cash'] + summary['Transaction Costs']
-        np.testing.assert_almost_equal(total_cash_spent[0], -initial_cash)
+        np.testing.assert_almost_equal(total_cash_spent.iloc[0], -initial_cash)
         for c in total_cash_spent:
-            np.testing.assert_almost_equal(c, total_cash_spent[0])
+            np.testing.assert_almost_equal(c, total_cash_spent.iloc[0])
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
@@ -679,7 +679,7 @@ def test_generic_engine_custom_price_measure(mocker):
         summary = backtest.result_summary
         assert len(summary) == 3
         assert round(summary[DollarPrice].sum()) == 804
-        assert round(summary['Cumulative Cash'][-1]) == -291
+        assert round(summary['Cumulative Cash'].iloc[-1]) == -291
 
 
 def test_serialisation(mocker):
