@@ -27,10 +27,6 @@ import numpy as np
 import pandas as pd
 from dateutil import tz
 from dateutil.relativedelta import relativedelta
-from pandas.tseries.holiday import AbstractHolidayCalendar, Holiday, USLaborDay, USMemorialDay, USThanksgivingDay, \
-    sunday_to_monday
-from pydash import chunk, flatten, get
-
 from gs_quant.api.gs.assets import GsAssetApi, GsIdType
 from gs_quant.api.gs.data import MarketDataResponseFrame, QueryType, GsDataApi
 from gs_quant.api.gs.indices import GsIndexApi
@@ -47,14 +43,24 @@ from gs_quant.entities.entity import PositionedEntity
 from gs_quant.errors import MqValueError, MqTypeError
 from gs_quant.markets.securities import Asset, AssetIdentifier, AssetType as SecAssetType, SecurityMaster, Stock
 from gs_quant.timeseries import Basket, RelativeDate, Returns, Window, sqrt, volatility
-from gs_quant.timeseries.helper import (_month_to_tenor, _split_where_conditions, _tenor_to_month, _to_offset,
-                                        check_forward_looking, get_dataset_with_many_assets, get_df_with_retries,
-                                        log_return, plot_measure)
+from gs_quant.timeseries.helper import (FREQ_MONTH_END, _month_to_tenor, _split_where_conditions, _tenor_to_month,
+                                        _to_offset, check_forward_looking, get_dataset_with_many_assets,
+                                        get_df_with_retries, log_return, plot_measure)
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
+from pandas.tseries.holiday import AbstractHolidayCalendar, Holiday, USLaborDay, USMemorialDay, USThanksgivingDay, \
+    sunday_to_monday
+from pydash import chunk, flatten, get
 
 GENERIC_DATE = Union[dt.date, str]
 ASSET_SPEC = Union[Asset, str]
 TD_ONE = dt.timedelta(days=1)
+
+
+def _normalize_dtidx(idx):
+    if not isinstance(idx, pd.DatetimeIndex):
+        idx = pd.DatetimeIndex(idx)
+    return idx.as_unit('ns') if hasattr(idx, 'as_unit') else idx
+
 
 _logger = logging.getLogger(__name__)
 
@@ -1811,6 +1817,7 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
         else:
             series = ExtendedSeries(sqrt((t2_month * lg ** 2 - t1_month * sg ** 2) / _tenor_to_month(tenor)),
                                     name='forwardVol')
+            series.index = _normalize_dtidx(series.index)
     series.dataset_ids = tuple(dataset_ids)
     return series
 
@@ -1833,6 +1840,7 @@ def _process_forward_vol_term(asset: Asset, vol_series: pd.Series, vol_col: str,
             (vol_df['timeToExp'] - vol_df['timeToExp'].shift(1)))
         ext_series = ExtendedSeries(vol_df['fwdVol'], name=series_name)[DataContext.current.start_date:
                                                                         DataContext.current.end_date]
+        ext_series.index = _normalize_dtidx(ext_series.index)
         ext_series.dataset_ids = getattr(vol_series, 'dataset_ids', ())
         ext_series = ext_series.sort_index()
         return ext_series
@@ -1916,7 +1924,7 @@ def _skew(df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes, n
     ext_series = ((series[0] - series[1]) / series[2]) if normalization_mode == NormalizationMode.NORMALIZED \
         else (series[0] - series[1])
     series = ExtendedSeries(ext_series)
-    series.index = pd.to_datetime(series.index)
+    series.index = _normalize_dtidx(series.index)
     return series
 
 
@@ -2121,13 +2129,14 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
         cbd = _get_custom_bd(asset.exchange)
         df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
         series = df.set_index('expirationDate')['impliedVolatility']
+        series.index = _normalize_dtidx(series.index)
 
     if df_expiry.empty:
         series_expiry = pd.Series(dtype='float64')
     else:
         df_expiry = df_expiry.loc[latest]
         series_expiry = df_expiry.set_index('expirationDate')['impliedVolatilityByExpiration']
-        series_expiry.index = pd.to_datetime(series_expiry.index)
+        series_expiry.index = _normalize_dtidx(series_expiry.index)
 
     extra = series_expiry[~series_expiry.index.isin(series.index)]
     if not extra.empty:
@@ -2240,6 +2249,7 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
         df = df.loc[latest]
         df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
         df = df.set_index('expirationDate')
+        df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[forward_col_name])
@@ -2302,6 +2312,7 @@ def fx_fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
         df = df.loc[latest]
         df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
         df = df.set_index('expirationDate')
+        df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         if get_spot:
@@ -2360,6 +2371,7 @@ def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
         df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
 
         df = df.set_index('expirationDate')
+        df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         spot = spot_df.loc[latest]['spot']
@@ -2506,6 +2518,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
         cbd = _get_custom_bd(asset.exchange)
         df.loc[:, Fields.EXPIRATION_DATE.value] = df.index + df[Fields.TENOR.value].map(_to_offset) + cbd - cbd
         df = df.set_index(Fields.EXPIRATION_DATE.value)
+        df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
@@ -2861,7 +2874,9 @@ def fair_price(asset: Asset, tenor: str = None, *,
                                           real_time=real_time)
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
-    return _extract_series_from_df(df, QueryType.FAIR_PRICE)
+    series = _extract_series_from_df(df, QueryType.FAIR_PRICE)
+    series.index = _normalize_dtidx(series.index)
+    return series
 
 
 def _get_start_and_end_dates(contract_range: str) -> (int, int):
@@ -3127,7 +3142,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     if granularity.lower() in ['daily', 'd']:
         granularity = 'D'
     elif granularity.lower() in ['monthly', 'm']:
-        granularity = 'ME'
+        granularity = FREQ_MONTH_END
     else:
         raise MqValueError('Invalid granularity: ' + granularity + '. Expected Value: daily or monthly.')
 
@@ -3185,7 +3200,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
             raise MqValueError('Duplicate data rows probable for this period')
         # checking missing data points
         ref_hour_range = pd.date_range(str(start_date), str(end_date + dt.timedelta(days=1)),
-                                       None, str(freq) + "S", timezone, False, None, 'left')
+                                       None, str(freq) + "s", timezone, False, None, 'left')
 
         missing_hours = ref_hour_range[~ref_hour_range.isin(df.index)]
         missing_dates = np.unique(missing_hours.date)
@@ -3193,7 +3208,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
 
         # drop dates and months which have missing data
         df = df.loc[(~df['date'].isin(missing_dates))]
-        if granularity == 'ME':
+        if granularity == FREQ_MONTH_END:
             df = df.loc[(~df['month'].astype('str').isin(missing_months))]
 
         df = _filter_by_bucket(df, bucket, holidays, region)
@@ -4336,7 +4351,7 @@ def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source
     df = _market_data_timed(q, request_id)
     series = _extract_series_from_df(df, query_type)
     if query_type == QueryType.RATING:
-        series = series.replace(['Buy', 'Sell', 'Neutral'], [1, -1, 0])
+        series = series.replace(['Buy', 'Sell', 'Neutral'], [1, -1, 0]).astype('int64')
     return series
 
 
@@ -4652,8 +4667,7 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
         df = df.reset_index()
 
     # Map contract to plot date and format output
-    for row in df.itertuples():
-        df.at[row.Index, 'contract'] = forward_dates_to_plot[df.at[row.Index, 'contract']]
+    df['contract'] = df['contract'].map(forward_dates_to_plot)
     df = df.sort_values(by=['contract'])
     df = df.set_index('contract')
 
@@ -4723,8 +4737,8 @@ def forward_curve_ng(asset: Asset, price_method: str = 'GDD', market_date: str =
     df = df.reset_index(drop=True)
 
     # Map contract to plot date and format output
-    for row in df.itertuples():
-        df.at[row.Index, 'contract'] = forward_dates_to_plot[df.at[row.Index, 'contract']]
+    df['contract'] = df['contract'].map(forward_dates_to_plot)
+
     df = df.sort_values(by=['contract'])
     df = df.set_index('contract')
 

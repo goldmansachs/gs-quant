@@ -1246,6 +1246,7 @@ def swaption_vol_term(asset: Asset, tenor_type: SwaptionTenorType, tenor: str, r
         business_day = _get_custom_bd(asset.exchange)
         df = df.assign(expirationDate=df.index + df[tenor_to_plot].map(_to_offset) + business_day - business_day)
         df = df.set_index('expirationDate')
+        df.index = pd.DatetimeIndex(df.index)
         df = df.sort_index()
         df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swaptionVol'])

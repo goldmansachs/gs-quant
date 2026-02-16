@@ -14,13 +14,18 @@ specific language governing permissions and limitations
 under the License.
 """
 import datetime as dt
-import pandas as pd
-import numpy as np
-import pytest
-from pandas.testing import assert_series_equal
 
+import numpy as np
+import pandas as pd
+import pytest
 from gs_quant.errors import MqValueError
 from gs_quant.timeseries import first, last, last_value, count, Interpolate, compare, diff, lag, LagMode, repeat
+from gs_quant.timeseries.helper import FREQ_SECOND
+from pandas.testing import assert_series_equal
+
+
+def _normalize_index(idx):
+    return idx.as_unit('ns') if hasattr(idx, 'as_unit') else idx
 
 
 def test_first():
@@ -167,12 +172,12 @@ def test_lag():
     x = pd.Series([1.0, 2.0, 3.0, 4.0], index=dates)
 
     result = lag(x, '1m')
-    expected = pd.Series([1.0, 2.0, 3.0, 4.0], index=pd.date_range("2019-01-31", periods=4, freq="D"))
+    expected = pd.Series([1.0, 2.0, 3.0, 4.0], index=_normalize_index(pd.date_range("2019-01-31", periods=4, freq="D")))
     expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag 1m")
 
     result = lag(x, '2d', LagMode.TRUNCATE)
-    expected = pd.Series([1.0, 2.0], index=pd.date_range("2019-01-03", periods=2, freq="D"))
+    expected = pd.Series([1.0, 2.0], index=_normalize_index(pd.date_range("2019-01-03", periods=2, freq="D")))
     expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag 2d truncate")
 
@@ -187,24 +192,27 @@ def test_lag():
     assert_series_equal(result, expected, obj="Lag 2")
 
     result = lag(x, 2, LagMode.EXTEND)
-    expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0], index=pd.date_range("2019-01-01", periods=6, freq="D"))
+    expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0],
+                         index=_normalize_index(pd.date_range("2019-01-01", periods=6, freq="D")))
     assert_series_equal(result, expected, obj="Lag 2 Extend")
 
     result = lag(x, -2, LagMode.EXTEND)
-    expected = pd.Series([1.0, 2.0, 3.0, 4.0, np.nan, np.nan], index=pd.date_range("2018-12-30", periods=6, freq="D"))
+    expected = pd.Series([1.0, 2.0, 3.0, 4.0, np.nan, np.nan],
+                         index=_normalize_index(pd.date_range("2018-12-30", periods=6, freq="D")))
     assert_series_equal(result, expected, obj="Lag Negative 2 Extend")
 
     result = lag(x, 2)
-    expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0], index=pd.date_range("2019-01-01", periods=6, freq="D"))
+    expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0],
+                         index=_normalize_index(pd.date_range("2019-01-01", periods=6, freq="D")))
     assert_series_equal(result, expected, obj="Lag 2 Default")
 
-    y = pd.Series([0] * 4, index=pd.date_range('2020-01-01T00:00:00Z', periods=4, freq='s'))
+    y = pd.Series([0] * 4, index=pd.date_range('2020-01-01T00:00:00Z', periods=4, freq=FREQ_SECOND))
     with pytest.raises(Exception):
         lag(y, 5, LagMode.EXTEND)
 
     z = pd.Series([10, 11, 12], index=pd.date_range('2020-02-28', periods=3, freq='D'))
     result = lag(z, '2y')
-    expected = pd.Series([10, 12], index=pd.date_range('2022-02-28', periods=2, freq='D'))
+    expected = pd.Series([10, 12], index=_normalize_index(pd.date_range('2022-02-28', periods=2, freq='D')))
     expected.index.freq = None
     assert_series_equal(result, expected, obj="Lag RDate 2y")
 

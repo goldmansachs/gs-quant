@@ -546,7 +546,7 @@ def test_smooth_spikes():
 
     s = pd.Series([1, 2, 3, 4], index=sparse_index)
     actual = smooth_spikes(s, 0.25, ThresholdType.absolute)
-    expected = pd.Series([2, 3], index=sparse_index[1:3])
+    expected = pd.Series([2.0, 3.0], index=sparse_index[1:3])
     assert_series_equal(actual, expected)
 
     s = pd.Series([1, 3, 2, 4], index=sparse_index)

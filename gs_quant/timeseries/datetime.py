@@ -22,7 +22,8 @@ from typing import Any, Union, List
 import numpy as np
 import pandas as pd
 
-from .helper import _create_enum, Interpolate, plot_function, requires_session
+from .helper import (_create_enum, Interpolate, plot_function, requires_session,
+                     FREQ_MONTH_END, FREQ_QUARTER_END, FREQ_YEAR_END)
 from ..datetime import GsCalendar
 from ..datetime.date import DayCountConvention, PaymentFrequency, day_count_fraction
 from ..datetime.date import date_range as _date_range
@@ -520,7 +521,10 @@ def date_range(x: pd.Series, start_date: Union[dt.date, int], end_date: Union[dt
     else:
         week_mask = tuple([True] * 7)
 
-    return x.loc[x.index.isin(list(_date_range(start_date, end_date, week_mask=week_mask)))]
+    date_list = list(_date_range(start_date, end_date, week_mask=week_mask))
+    if isinstance(x.index, pd.DatetimeIndex):
+        date_list = [pd.Timestamp(d) for d in date_list]
+    return x.loc[x.index.isin(date_list)]
 
 
 @plot_function
@@ -586,14 +590,19 @@ def prepend(x: List[pd.Series]) -> pd.Series:
     :func:`union`
 
     """
-    res = pd.Series(dtype='float64')
+    if not x:
+        return pd.Series(dtype='float64')
+    if len(x) == 1:
+        return x[0].copy()
+    parts = []
     for i in range(len(x)):
         this = x[i]
         if i == len(x) - 1:
-            return pd.concat([res, this])
-        end = x[i + 1].index[0]
-        res = pd.concat([res, this.loc[this.index < end]])
-    return res
+            parts.append(this)
+        else:
+            end = x[i + 1].index[0]
+            parts.append(this.loc[this.index < end])
+    return pd.concat(parts)
 
 
 @plot_function
@@ -659,7 +668,7 @@ def bucketize(series: pd.Series, aggregate_function: AggregateFunction, period: 
     """
     series.index = pd.to_datetime(series.index)
     period_char = period.value[0].upper()
-    frequency_map = {'W': 'W', 'M': 'ME', 'Q': 'QE', 'Y': 'YE'}
+    frequency_map = {'W': 'W', 'M': FREQ_MONTH_END, 'Q': FREQ_QUARTER_END, 'Y': FREQ_YEAR_END}
     frequency = frequency_map.get(period_char, period_char)
     agg = aggregate_function.value
     result = series.resample(frequency).apply(agg)

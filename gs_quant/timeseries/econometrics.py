@@ -291,6 +291,10 @@ def returns(series: pd.Series, obs: Union[Window, int, str] = 1, type: Returns =
 
     shifted_series = lag(series, obs, LagMode.TRUNCATE)
 
+    if isinstance(obs, str) and not isinstance(series.index, pd.DatetimeIndex):
+        series = series.copy()
+        series.index = pd.DatetimeIndex(series.index)
+
     if type == Returns.SIMPLE:
         ret_series = series / shifted_series - 1
     elif type == Returns.LOGARITHMIC:

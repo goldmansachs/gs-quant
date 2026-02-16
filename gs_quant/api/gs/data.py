@@ -1322,8 +1322,10 @@ class GsDataApi(DataApi):
             for field_name, type_name in dataset_types.items():
                 if df.get(field_name) is not None and type_name in ('date', 'date-time') and \
                         len(df.get(field_name).value_counts()) > 0:
-                    # pandas 2.x and 3.x both support ISO8601 format for mixed datetime strings
-                    df[field_name] = pd.to_datetime(df[field_name], format='ISO8601')
+                    if int(pd.__version__.split('.')[0]) > 1:
+                        df[field_name] = pd.to_datetime(df[field_name], format='ISO8601')
+                    else:
+                        df[field_name] = pd.to_datetime(df[field_name])
 
             field_names = dataset_types.keys()
 

@@ -19,7 +19,6 @@ import types
 
 import pandas as pd
 import pytest
-
 from gs_quant.markets.securities import Asset
 from gs_quant.timeseries import Window
 

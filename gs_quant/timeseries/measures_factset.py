@@ -1231,6 +1231,8 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
     df = df[df['date'] >= pd.to_datetime(start)]
     df = df.sort_values(by='date', ascending=True).set_index('date')
     series = ExtendedSeries(df[column], name=statistic.value)
+    _idx = pd.DatetimeIndex(series.index)
+    series.index = _idx.as_unit('ns') if hasattr(_idx, 'as_unit') else _idx
     series.dataset_ids = ds.id
 
     return series
@@ -1279,6 +1281,8 @@ def factset_fundamentals(asset: Asset,
     df = df[df['date'] >= pd.to_datetime(start)]
     df = df.sort_values(by='date', ascending=True).set_index('date')
     series = ExtendedSeries(df[column], name=metric.value)
+    _idx = pd.DatetimeIndex(series.index)
+    series.index = _idx.as_unit('ns') if hasattr(_idx, 'as_unit') else _idx
     series.dataset_ids = ds.id
 
     return series
@@ -1311,6 +1315,8 @@ def factset_ratings(asset: Asset,
         columns={'date_range': 'date'})
     df = df[df['date'] >= pd.to_datetime(start)].sort_values(by='date', ascending=True).set_index('date')
     series = ExtendedSeries(df[RATING_TO_FIELD[rating_type]], name=rating_type.value)
+    _idx = pd.DatetimeIndex(series.index)
+    series.index = _idx.as_unit('ns') if hasattr(_idx, 'as_unit') else _idx
     series.dataset_ids = ds.id
 
     return series

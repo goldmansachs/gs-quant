@@ -81,7 +81,7 @@ def smooth_spikes(x: pd.Series, threshold: float,
     threshold_value, check_spike = (threshold, check_absolute) if threshold_type == ThresholdType.absolute else (
         (1 + threshold), check_percentage)
 
-    result = x.copy()
+    result = x.astype(float)
     current, next_ = x.iloc[0:2]
     for i in range(1, len(x) - 1):
         previous = current
@@ -376,8 +376,11 @@ def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.
         if match:
             y.index += pd.DateOffset(years=int(match.group(1)))
             y = y.groupby(y.index).first()
+            if hasattr(y.index, 'as_unit'):
+                y.index = y.index.as_unit('ns')
         else:
-            y.index = pd.DatetimeIndex([(i + pd.DateOffset(relative_date_add(obs))).date() for i in y.index])
+            _idx = pd.DatetimeIndex([(i + pd.DateOffset(relative_date_add(obs))).date() for i in y.index])
+            y.index = _idx.as_unit('ns') if hasattr(_idx, 'as_unit') else _idx
 
         if mode == LagMode.EXTEND:
             return y
@@ -396,4 +399,6 @@ def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.
         else:
             kwargs['end'] = x.index[0]
         x = x.reindex(x.index.union(pd.date_range(**kwargs)))
+        if hasattr(x.index, 'as_unit'):
+            x.index = x.index.as_unit('ns')
     return x.shift(obs)

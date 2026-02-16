@@ -33,6 +33,28 @@ from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError, MqRequestError
 from gs_quant.timeseries.measure_registry import register_measure
 
+_PD_VERSION_MATCH = re.match(r'^(\d+)\.(\d+)', pd.__version__)
+_PD_VERSION = (int(_PD_VERSION_MATCH.group(1)), int(_PD_VERSION_MATCH.group(2))) if _PD_VERSION_MATCH else (0, 0)
+
+if _PD_VERSION >= (2, 2):
+    FREQ_MONTH_END = 'ME'
+    FREQ_QUARTER_END = 'QE'
+    FREQ_YEAR_END = 'YE'
+    FREQ_HOUR = 'h'
+    FREQ_SECOND = 's'
+    FREQ_BUSINESS_MONTH_END = 'BME'
+    FREQ_BUSINESS_QUARTER_END = 'BQE'
+    FREQ_BUSINESS_YEAR_END = 'BYE'
+else:  # pragma: no cover
+    FREQ_MONTH_END = 'M'
+    FREQ_QUARTER_END = 'Q'
+    FREQ_YEAR_END = 'Y'
+    FREQ_HOUR = 'H'
+    FREQ_SECOND = 'S'
+    FREQ_BUSINESS_MONTH_END = 'BM'
+    FREQ_BUSINESS_QUARTER_END = 'BQ'
+    FREQ_BUSINESS_YEAR_END = 'BY'
+
 ENABLE_DISPLAY_NAME = 'GSQ_ENABLE_MEASURE_DISPLAY_NAME'
 USE_DISPLAY_NAME = os.environ.get(ENABLE_DISPLAY_NAME) == "1"
 _logger = logging.getLogger(__name__)

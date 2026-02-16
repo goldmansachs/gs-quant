@@ -56,6 +56,15 @@ _test_datasets2 = ('TEST_DATASET2',)
 _test_datasets_rt = ('TEST_DATASET_RT',)
 
 
+def _make_index(dates, name=None):
+    idx = pd.DatetimeIndex(dates)
+    if hasattr(idx, 'as_unit'):
+        idx = idx.as_unit('ns')
+    if name is not None:
+        idx.name = name
+    return idx
+
+
 def mock_empty_market_data_response():
     df = MarketDataResponseFrame()
     df.dataset_ids = ()
@@ -2839,7 +2848,7 @@ def test_forward_var_term():
     # Equity
     expected = pd.Series([np.nan, 19.05194455628533, 18.02476051953111, 18.088723159586152, 22.74345522665404],
                          name='forwardVarTerm',
-                         index=pd.DatetimeIndex(['2023-02-15', '2023-02-22', '2023-03-01', '2023-03-08', '2023-03-15']))
+                         index=_make_index(['2023-02-15', '2023-02-22', '2023-03-01', '2023-03-08', '2023-03-15']))
     with DataContext('2023-01-31', '2024-07-31'):
         actual = tm.forward_var_term(Index('MA123', AssetClass.Equity, '123'))
     assert_series_equal(expected, pd.Series(actual))
@@ -2992,7 +3001,7 @@ def _var_term_typical():
     market_mock.side_effect = [pd.DataFrame(), out]
 
     actual = tm.var_term(Index('MA123', AssetClass.Equity, '123'))
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='varSwap')
+    idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='varSwap')
     expected = pd.Series([1, 2, 3, 4], name='varSwap', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -3040,7 +3049,7 @@ def _var_term_fwd():
     tenors_mock.return_value = ['1m', '2m', '3m']
 
     actual = tm.var_term(Index('MA123', AssetClass.Equity, '123'), forward_start_date='1m')
-    idx = pd.DatetimeIndex(['2018-02-02', '2018-03-02'], name='varSwap')
+    idx = _make_index(['2018-02-02', '2018-03-02'], name='varSwap')
     expected = pd.Series([2, 4], name='varSwap', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -3069,7 +3078,7 @@ def _var_term_latest():
     market_mock.side_effect = [out.iloc[-1:], out]
 
     actual = tm.var_term(Index('MA123', AssetClass.Equity, '123'))
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1, 2, 3, 4], name='varSwap', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -3158,7 +3167,7 @@ def test_forward_vol():
 
     # Equity
     expected = pd.Series([5.58659, 5.47723], name='forwardVol',
-                         index=pd.to_datetime(['2020-05-01', '2020-05-02']))
+                         index=_make_index(['2020-05-01', '2020-05-02']))
     with DataContext('2020-01-01', '2020-09-01'):
         actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
     assert_series_equal(expected, pd.Series(actual))
@@ -3178,7 +3187,7 @@ def test_forward_vol():
     market_mock.reset_mock()
     market_mock.side_effect = _mock_forward_vol_data_with_last
     expected = pd.Series([5.58659, 5.47723, 5.47723], name='forwardVol',
-                         index=pd.to_datetime(['2020-05-01', '2020-05-02', '2020-05-03']))
+                         index=_make_index(['2020-05-01', '2020-05-02', '2020-05-03']))
     actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
     assert_series_equal(expected, pd.Series(actual))
     for t in _test_datasets + _test_datasets_rt:
@@ -3189,7 +3198,7 @@ def test_forward_vol():
     market_mock.reset_mock()
     market_mock.side_effect = _mock_forward_vol_data_error
     expected = pd.Series([5.58659, 5.47723], name='forwardVol',
-                         index=pd.to_datetime(['2020-05-01', '2020-05-02']))
+                         index=_make_index(['2020-05-01', '2020-05-02']))
     actual = tm.forward_vol(Index('MA123', AssetClass.Equity, '123'), '1m', '2m', tm.VolReference.SPOT, 100)
     assert_series_equal(expected, pd.Series(actual))
     assert market_mock.call_count == 2
@@ -3234,7 +3243,7 @@ def test_forward_vol_term():
     # Equity
     expected = pd.Series([np.nan, 18.51754260110053, 24.835557737474247, 14.242257163702778, 20.171543580777623],
                          name='forwardVolTerm',
-                         index=pd.DatetimeIndex(['2023-02-01', '2023-02-02', '2023-02-03', '2023-02-06', '2023-02-07']))
+                         index=_make_index(['2023-02-01', '2023-02-02', '2023-02-03', '2023-02-06', '2023-02-07']))
     with DataContext('2023-01-31', '2024-07-31'):
         actual = tm.forward_vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100,
                                      dt.date(2023, 1, 31))
@@ -3300,8 +3309,8 @@ def _vol_term_typical(reference, value):
     market_mock.side_effect = [pd.DataFrame(), pd.DataFrame(), out, out_expiry]
 
     actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), reference, value)
-    idx = pd.DatetimeIndex(['2018-01-06', '2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'],
-                           name='expirationDate')
+    idx = _make_index(['2018-01-06', '2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'],
+                      name='expirationDate')
     expected = pd.Series([1.2, 1, 2, 3, 4], name='impliedVolatility', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -3341,7 +3350,7 @@ def _skew_term_typical(reference, value, normalization_mode=None):
 
     actual = tm.skew_term(Index('MA123', AssetClass.Equity, '123'), reference, value,
                           normalization_mode=normalization_mode)
-    idx = pd.DatetimeIndex(['2022-01-12', '2023-02-13', '2032-01-12'])
+    idx = _make_index(['2022-01-12', '2023-02-13', '2032-01-12'])
 
     if normalization_mode is None:
         normalization_mode = tm.NormalizationMode.NORMALIZED
@@ -3388,7 +3397,7 @@ def _skew_term_typical_fx(reference, value, normalization_mode=None):
 
     actual = tm.skew_term(Index('MA123', AssetClass.FX, '123'), reference, value,
                           normalization_mode=normalization_mode)
-    idx = pd.DatetimeIndex(['2022-01-12', '2023-02-13', '2032-01-12'])
+    idx = _make_index(['2022-01-12', '2023-02-13', '2032-01-12'])
 
     if normalization_mode is None:
         normalization_mode = tm.NormalizationMode.OUTRIGHT
@@ -3446,7 +3455,7 @@ def _vol_term_latest():
     market_mock.side_effect = [out.iloc[-1:], out, pd.DataFrame(), pd.DataFrame()]
 
     actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100)
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1, 2, 3, 4], name='impliedVolatility', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -3509,12 +3518,12 @@ def test__skew():
     q_strikes = [0.75, 0.25, 0.5]
     res = tm._skew(df, 'relativeStrike', 'iv', q_strikes, tm.NormalizationMode.OUTRIGHT)
     expected = tm.ExtendedSeries(pd.Series([10, 100], name='iv',
-                                           index=pd.to_datetime(['2021-01-01', '2021-02-01'])))
+                                           index=_make_index(['2021-01-01', '2021-02-01'])))
     assert_series_equal(res, expected)
 
     res = tm._skew(df, 'relativeStrike', 'iv', q_strikes, tm.NormalizationMode.NORMALIZED)
     expected = tm.ExtendedSeries(pd.Series([1.0, 0.6666666666666666], name='iv',
-                                           index=pd.to_datetime(['2021-01-01', '2021-02-01'])))
+                                           index=_make_index(['2021-01-01', '2021-02-01'])))
     assert_series_equal(res, expected)
     with pytest.raises(MqValueError):
         tm._skew(df.loc[df['relativeStrike'].isin([0.25, 0.5])], 'relativeStrike', 'iv', q_strikes,
@@ -3592,8 +3601,8 @@ def _vol_term_fx(reference, value):
     cross_mock.return_value = 'EURUSD'
 
     actual = tm.vol_term(Cross('ABCDE', 'EURUSD'), reference, value)
-    idx = pd.DatetimeIndex(['2018-01-06', '2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'],
-                           name='expirationDate')
+    idx = _make_index(['2018-01-06', '2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'],
+                      name='expirationDate')
     expected = pd.Series([1.2, 1, 2, 3, 4], name='impliedVolatility', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -3623,8 +3632,8 @@ def _vol_term_fx_no_expiry(reference, value):
     cross_mock.return_value = 'EURUSD'
 
     actual = tm.vol_term(Cross('ABCDE', 'EURUSD'), reference, value)
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01'],
-                           name='expirationDate')
+    idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01'],
+                      name='expirationDate')
     expected = pd.Series([1, 2, 3], name='impliedVolatility', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -3667,7 +3676,7 @@ def _fwd_term_typical():
     market_mock.return_value = out
 
     actual = tm.fwd_term(Index('MA123', AssetClass.Equity, '123'))
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1, 2, 3, 4], name='forward', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -3705,14 +3714,14 @@ def _fx_fwd_term_typical():
     thread_mock.return_value = [out, spot]
 
     actual = tm.fx_fwd_term(Index('MA123', AssetClass.FX, '123'))
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([101, 102, 103, 104], name='forwardPoint', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
     assert_series_equal(pd.Series(actual), expected)
     assert actual.dataset_ids == _test_datasets
 
     actual = tm.fx_fwd_term(Index('MA123', AssetClass.FX, '123'), fwd_type=tm.FXForwardType.POINTS)
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1, 2, 3, 4], name='forwardPoint', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
     assert_series_equal(pd.Series(actual), expected)
@@ -3797,7 +3806,7 @@ def _carry_term_typical():
     thread_mock.return_value = [out, spot]
 
     actual = tm.carry_term(Index('MA123', AssetClass.FX, '123'), annualized=tm.FXSpotCarry.DAILY)
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([0.01, 0.02, 0.03, 0.04], name='carry', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -3805,7 +3814,7 @@ def _carry_term_typical():
     assert actual.dataset_ids == _test_datasets
 
     actual = tm.carry_term(Index('MA123', AssetClass.FX, '123'))
-    idx = pd.DatetimeIndex(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
+    idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([0.001667, 0.004714, 0.036105, 0.05621], name='carry', index=idx)
     expected = expected.loc[DataContext.current.start_date: DataContext.current.end_date]
 
@@ -4583,7 +4592,7 @@ def test_fair_price():
         actual = tm.fair_price(mock2)
 
         assert_series_equal(pd.Series([2.880],
-                                      index=[pd.Timestamp('2019-01-02')],
+                                      index=_make_index(['2019-01-02']),
                                       name='fairPrice'),
                             pd.Series(actual),
                             )
