@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from typing import Union
 
 from gs_quant.base import Market
@@ -23,13 +24,15 @@ DEPRECATED_MEASURES = {}
 
 
 class __RelativeRiskMeasure(RiskMeasure):
-    def __init__(self,
-                 to_market: Market,
-                 asset_class: Union[AssetClass, str] = None,
-                 measure_type: Union[RiskMeasureType, str] = None,
-                 unit: Union[RiskMeasureUnit, str] = None,
-                 value: Union[float, str] = None,
-                 name: str = None):
+    def __init__(
+        self,
+        to_market: Market,
+        asset_class: Union[AssetClass, str] = None,
+        measure_type: Union[RiskMeasureType, str] = None,
+        unit: Union[RiskMeasureUnit, str] = None,
+        value: Union[float, str] = None,
+        name: str = None,
+    ):
         super().__init__(asset_class=asset_class, measure_type=measure_type, unit=unit, value=value)
         self.__to_market = to_market
         self.name = name
@@ -37,36 +40,38 @@ class __RelativeRiskMeasure(RiskMeasure):
     @property
     def pricing_context(self):
         from gs_quant.markets import PricingContext, RelativeMarket
+
         current = PricingContext.current
         return current.clone(market=RelativeMarket(from_market=current.market, to_market=self.__to_market))
 
 
 class PnlExplain(__RelativeRiskMeasure):
-    """ Pnl Explained """
+    """Pnl Explained"""
 
     def __init__(self, to_market: Market):
         super().__init__(to_market, measure_type=RiskMeasureType.PnlExplain, name=RiskMeasureType.PnlExplain.value)
 
 
 class PnlExplainClose(PnlExplain):
-
     def __init__(self):
         from gs_quant.markets import CloseMarket
+
         super().__init__(CloseMarket())
 
 
 class PnlExplainLive(PnlExplain):
-
     def __init__(self):
         from gs_quant.markets import LiveMarket
+
         super().__init__(LiveMarket())
 
 
 class PnlPredictLive(__RelativeRiskMeasure):
-    """ Pnl Predicted """
+    """Pnl Predicted"""
 
     def __init__(self):
         from gs_quant.markets import LiveMarket
+
         super().__init__(LiveMarket(), measure_type=RiskMeasureType.PnlPredict, name=RiskMeasureType.PnlPredict.value)
 
 

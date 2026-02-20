@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from dataclasses import dataclass, field
 from enum import Enum
@@ -20,8 +21,15 @@ from typing import ClassVar, List, Optional, Iterable, Union
 
 from dataclasses_json import dataclass_json, config
 
-from gs_quant.backtests.actions import AddTradeAction, AddTradeActionInfo, AddScaledTradeAction, \
-    AddScaledTradeActionInfo, HedgeAction, HedgeActionInfo, Action
+from gs_quant.backtests.actions import (
+    AddTradeAction,
+    AddTradeActionInfo,
+    AddScaledTradeAction,
+    AddScaledTradeActionInfo,
+    HedgeAction,
+    HedgeActionInfo,
+    Action,
+)
 from gs_quant.backtests.backtest_objects import BackTest, PredefinedAssetBacktest
 from gs_quant.backtests.backtest_utils import make_list, CalcType
 from gs_quant.backtests.data_sources import DataSource, GsDataSource
@@ -48,7 +56,6 @@ class AggType(Enum):
 @dataclass_json
 @dataclass
 class TriggerRequirements:
-
     __sub_classes: ClassVar[List[type]] = []
 
     def __init_subclass__(cls, **kwargs):
@@ -99,15 +106,17 @@ class PeriodicTriggerRequirements(TriggerRequirements):
     start_date: Optional[dt.date] = field(default=None, metadata=field_metadata)
     end_date: Optional[dt.date] = field(default=None, metadata=field_metadata)
     frequency: Optional[str] = field(default=None, metadata=field_metadata)
-    calendar: Optional[Iterable[dt.date]] = field(default=None, metadata=config(exclude=exclude_none,
-                                                                                decoder=decode_date_tuple))
+    calendar: Optional[Iterable[dt.date]] = field(
+        default=None, metadata=config(exclude=exclude_none, decoder=decode_date_tuple)
+    )
     trigger_dates = []
     class_type: str = static_field('periodic_trigger_requirements')
 
     def get_trigger_times(self) -> [dt.date]:
         if not self.trigger_dates:
-            self.trigger_dates = RelativeDateSchedule(self.frequency, self.start_date,
-                                                      self.end_date).apply_rule(holiday_calendar=self.calendar)
+            self.trigger_dates = RelativeDateSchedule(self.frequency, self.start_date, self.end_date).apply_rule(
+                holiday_calendar=self.calendar
+            )
         return self.trigger_dates
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
@@ -117,9 +126,14 @@ class PeriodicTriggerRequirements(TriggerRequirements):
             next_state = None
             if self.trigger_dates.index(state) != len(self.trigger_dates) - 1:
                 next_state = self.trigger_dates[self.trigger_dates.index(state) + 1]
-            return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=None, next_schedule=next_state),
-                                      AddScaledTradeAction: AddScaledTradeActionInfo(next_schedule=next_state),
-                                      HedgeAction: HedgeActionInfo(next_schedule=next_state)})
+            return TriggerInfo(
+                True,
+                {
+                    AddTradeAction: AddTradeActionInfo(scaling=None, next_schedule=next_state),
+                    AddScaledTradeAction: AddScaledTradeActionInfo(next_schedule=next_state),
+                    HedgeAction: HedgeActionInfo(next_schedule=next_state),
+                },
+            )
         return TriggerInfo(False)
 
 
@@ -149,8 +163,9 @@ class IntradayTriggerRequirements(TriggerRequirements):
 @dataclass_json
 @dataclass
 class MktTriggerRequirements(TriggerRequirements):
-    data_source: DataSource = field(default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(),
-                                                                                    allow_missing=True)))
+    data_source: DataSource = field(
+        default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(), allow_missing=True))
+    )
     trigger_level: float = field(default=None, metadata=field_metadata)
     direction: TriggerDirection = field(default=None, metadata=field_metadata)
     class_type: str = static_field('mkt_trigger_requirements')
@@ -179,9 +194,11 @@ class RiskTriggerRequirements(TriggerRequirements):
         if self.risk_transformation is None:
             risk_value = backtest.results[state][self.risk].aggregate()
         else:
-            risk_value = backtest.results[state][self.risk].transform(
-                risk_transformation=self.risk_transformation).aggregate(
-                allow_mismatch_risk_keys=True)
+            risk_value = (
+                backtest.results[state][self.risk]
+                .transform(risk_transformation=self.risk_transformation)
+                .aggregate(allow_mismatch_risk_keys=True)
+            )
         return check_barrier(self.direction, risk_value, self.trigger_level)
 
     @property
@@ -262,15 +279,17 @@ class NotTriggerRequirements(TriggerRequirements):
 @dataclass_json
 @dataclass
 class DateTriggerRequirements(TriggerRequirements):
-    dates: Iterable[Union[dt.datetime, dt.date]] = field(default=None, metadata=config(
-        exclude=exclude_none, decoder=decode_iso_date_or_datetime))
+    dates: Iterable[Union[dt.datetime, dt.date]] = field(
+        default=None, metadata=config(exclude=exclude_none, decoder=decode_iso_date_or_datetime)
+    )
     entire_day: bool = field(default=False, metadata=field_metadata)
     class_type: str = static_field('date_trigger_requirements')
     dates_from_datetimes = []
 
     def __post_init__(self):
-        self.dates_from_datetimes = [d.date() if isinstance(d, dt.datetime)
-                                     else d for d in self.dates] if self.entire_day else None
+        self.dates_from_datetimes = (
+            [d.date() if isinstance(d, dt.datetime) else d for d in self.dates] if self.entire_day else None
+        )
 
     def has_triggered(self, state: Union[dt.date, dt.datetime], backtest: BackTest = None) -> TriggerInfo:
         if self.entire_day:
@@ -283,9 +302,14 @@ class DateTriggerRequirements(TriggerRequirements):
             next_state = None
             if dates.index(state) < len(dates) - 1:
                 next_state = dates[dates.index(state) + 1]
-            return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=None, next_schedule=next_state),
-                                      AddScaledTradeAction: AddScaledTradeActionInfo(next_schedule=next_state),
-                                      HedgeAction: HedgeActionInfo(next_schedule=next_state)})
+            return TriggerInfo(
+                True,
+                {
+                    AddTradeAction: AddTradeActionInfo(scaling=None, next_schedule=next_state),
+                    AddScaledTradeAction: AddScaledTradeActionInfo(next_schedule=next_state),
+                    HedgeAction: HedgeActionInfo(next_schedule=next_state),
+                },
+            )
         return TriggerInfo(False)
 
     def get_trigger_times(self):
@@ -318,8 +342,9 @@ class PortfolioTriggerRequirements(TriggerRequirements):
 @dataclass_json
 @dataclass
 class MeanReversionTriggerRequirements(TriggerRequirements):
-    data_source: DataSource = field(default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(),
-                                                                                    allow_missing=True)))
+    data_source: DataSource = field(
+        default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(), allow_missing=True))
+    )
     z_score_bound: float = field(default=None, metadata=field_metadata)
     rolling_mean_window: int = field(default=None, metadata=field_metadata)
     rolling_std_window: int = field(default=None, metadata=field_metadata)
@@ -381,8 +406,9 @@ class TradeCountTriggerRequirements(TriggerRequirements):
 class EventTriggerRequirements(TriggerRequirements):
     event_name: str = field(default=None, metadata=field_metadata)
     offset_days: int = 0
-    data_source: DataSource = field(default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(),
-                                                                                    allow_missing=True)))
+    data_source: DataSource = field(
+        default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(), allow_missing=True))
+    )
     class_type: str = static_field('event_requirements')
     trigger_dates = []
 
@@ -393,8 +419,9 @@ class EventTriggerRequirements(TriggerRequirements):
     def get_trigger_times(self) -> [dt.date]:
         if not self.trigger_dates:
             kwargs = {'eventName': self.event_name}
-            self.trigger_dates = [d.date() + dt.timedelta(days=self.offset_days) for d in
-                                  self.data_source.get_data(None, **kwargs).index]
+            self.trigger_dates = [
+                d.date() + dt.timedelta(days=self.offset_days) for d in self.data_source.get_data(None, **kwargs).index
+            ]
         return self.trigger_dates
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:
@@ -403,15 +430,18 @@ class EventTriggerRequirements(TriggerRequirements):
             next_state = None
             if dates.index(state) < len(dates) - 1:
                 next_state = dates[dates.index(state) + 1]
-            return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=None, next_schedule=next_state),
-                                      AddScaledTradeAction: AddScaledTradeActionInfo(next_schedule=next_state),
-                                      HedgeAction: HedgeActionInfo(next_schedule=next_state)})
+            return TriggerInfo(
+                True,
+                {
+                    AddTradeAction: AddTradeActionInfo(scaling=None, next_schedule=next_state),
+                    AddScaledTradeAction: AddScaledTradeActionInfo(next_schedule=next_state),
+                    HedgeAction: HedgeActionInfo(next_schedule=next_state),
+                },
+            )
         return TriggerInfo(False)
 
     @staticmethod
-    def list_events(currency: str,
-                    start=Optional[dt.datetime],
-                    end=Optional[dt.datetime], **kwargs):
+    def list_events(currency: str, start=Optional[dt.datetime], end=Optional[dt.datetime], **kwargs):
         kwargs['currency'] = currency
         dataset = Dataset('MACRO_EVENTS_CALENDAR')
         return dataset.get_data(start, end, **kwargs)['eventName'].unique()
@@ -421,9 +451,9 @@ class EventTriggerRequirements(TriggerRequirements):
 @dataclass
 class Trigger:
     trigger_requirements: Optional[TriggerRequirements] = field(default=None, metadata=field_metadata)
-    actions: Union[Action, Iterable[Action]] = field(default=None,
-                                                     metadata=config(
-                                                         decoder=dc_decode(*Action.sub_classes(), allow_missing=True)))
+    actions: Union[Action, Iterable[Action]] = field(
+        default=None, metadata=config(decoder=dc_decode(*Action.sub_classes(), allow_missing=True))
+    )
     __sub_classes: ClassVar[List[type]] = []
 
     def __init_subclass__(cls, **kwargs):

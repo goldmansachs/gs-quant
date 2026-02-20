@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import copy
 import datetime as dt
 import json
@@ -24,8 +25,16 @@ from gs_quant.base import EnumBase
 from gs_quant.api.gs.assets import GsAsset, GsAssetApi
 from gs_quant.errors import MqTypeError, MqValueError, MqRequestError
 from gs_quant.markets import PricingContext
-from gs_quant.markets.securities import SecurityMaster, AssetIdentifier, AssetType, ExchangeCode, \
-    SecurityMasterSource, SecurityIdentifier, Asset, SecMasterAsset
+from gs_quant.markets.securities import (
+    SecurityMaster,
+    AssetIdentifier,
+    AssetType,
+    ExchangeCode,
+    SecurityMasterSource,
+    SecurityIdentifier,
+    Asset,
+    SecMasterAsset,
+)
 from gs_quant.common import AssetClass, AssetType as GsAssetType
 from gs_quant.session import GsSession, Environment
 
@@ -36,12 +45,8 @@ def test_get_asset(mocker):
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
@@ -83,8 +88,9 @@ def test_get_asset(mocker):
     assert asset.name == "Test Asset"
     assert asset.get_type() == AssetType.ETF
 
-    mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.Custom_Basket, name='Test Asset',
-                            id_=marquee_id)
+    mock_response = GsAsset(
+        asset_class=AssetClass.Equity, type_=GsAssetType.Custom_Basket, name='Test Asset', id_=marquee_id
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
@@ -117,41 +123,33 @@ def test_get_asset(mocker):
 def test_asset_identifiers(mocker):
     marquee_id = 'MA1234567890'
 
-    mocker.patch.object(
-        GsSession,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
-    mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.Custom_Basket, name='Test Asset',
-                            id_=marquee_id)
+    mocker.patch.object(GsSession, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mock_response = GsAsset(
+        asset_class=AssetClass.Equity, type_=GsAssetType.Custom_Basket, name='Test Asset', id_=marquee_id
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
 
-    mock_response = {'xrefs': (
-        {
-            'startDate': '1952-01-01',
-            'endDate': '2018-12-31',
-            'identifiers': {
-                'ric': '.GSTHHOLD',
-                'bbid': 'GSTHHOLD',
-                'cusip': '9EQ24FOLD',
-                'ticker': 'GSTHHOLD'
-            }
-        },
-        {
-            'startDate': '2019-01-01',
-            'endDate': '2952-12-31',
-            'identifiers': {
-                'ric': '.GSTHHVIP',
-                'bbid': 'GSTHHVIP',
-                'cusip': '9EQ24FPE5',
-                'ticker': 'GSTHHVIP',
-            }
-        }
-    )}
+    mock_response = {
+        'xrefs': (
+            {
+                'startDate': '1952-01-01',
+                'endDate': '2018-12-31',
+                'identifiers': {'ric': '.GSTHHOLD', 'bbid': 'GSTHHOLD', 'cusip': '9EQ24FOLD', 'ticker': 'GSTHHOLD'},
+            },
+            {
+                'startDate': '2019-01-01',
+                'endDate': '2952-12-31',
+                'identifiers': {
+                    'ric': '.GSTHHVIP',
+                    'bbid': 'GSTHHVIP',
+                    'cusip': '9EQ24FPE5',
+                    'ticker': 'GSTHHVIP',
+                },
+            },
+        )
+    }
 
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
@@ -247,29 +245,14 @@ def test_get_security(mocker):
                     "bcid": "GS US",
                     "gss": "GS",
                     "primeId": "1003232152",
-                    "assetId": "MA4B66MW5E27UAHKG34"
+                    "assetId": "MA4B66MW5E27UAHKG34",
                 },
-                "company": {
-                    "name": "GOLDMAN SACHS GROUP INC",
-                    "identifiers": {
-                        "gsCompanyId": 25998
-                    }
-                },
-                "product": {
-                    "name": "GOLDMAN SACHS GROUP INC",
-                    "identifiers": {
-                        "gsid": 901026
-                    }
-                },
-                "exchange": {
-                    "name": "New York Stock",
-                    "identifiers": {
-                        "gsExchangeId": 154
-                    }
-                }
+                "company": {"name": "GOLDMAN SACHS GROUP INC", "identifiers": {"gsCompanyId": 25998}},
+                "product": {"name": "GOLDMAN SACHS GROUP INC", "identifiers": {"gsid": 901026}},
+                "exchange": {"name": "New York Stock", "identifiers": {"gsExchangeId": 154}},
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
 
     mock_identifier_history_response = {
@@ -279,21 +262,21 @@ def test_get_security(mocker):
                 "endDate": "9999-99-99",
                 "value": "GS",
                 "updateTime": "2002-02-09T17:58:27.58Z",
-                "type": "bbg"
+                "type": "bbg",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "GS",
                 "updateTime": "2002-02-09T17:57:14.546Z",
-                "type": "ticker"
+                "type": "ticker",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "type": "assetId",
                 "value": "MA4B66MW5E27UAHKG34",
-                "updateTime": "2002-10-30T21:30:29.993Z"
+                "updateTime": "2002-10-30T21:30:29.993Z",
             },
             {
                 "startDate": "2007-01-01",
@@ -301,8 +284,8 @@ def test_get_security(mocker):
                 "type": "ric",
                 "value": "GS.N",
                 "updateTime": "2002-10-30T21:30:29.993Z",
-                "gsExchangeId": 154
-            }
+                "gsExchangeId": 154,
+            },
         ]
     }
     mocker.patch.object(GsSession.current, '_get', side_effect=[mock_response, mock_identifier_history_response])
@@ -339,17 +322,12 @@ def test_get_security_fields(mocker):
                     "bcid": "GS US",
                     "gss": "GS",
                     "primeId": "1003232152",
-                    "assetId": "MA4B66MW5E27UAHKG34"
+                    "assetId": "MA4B66MW5E27UAHKG34",
                 },
-                "exchange": {
-                    "name": "New York Stock",
-                    "identifiers": {
-                        "gsExchangeId": 154
-                    }
-                }
+                "exchange": {"name": "New York Stock", "identifiers": {"gsExchangeId": 154}},
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
 
     mock_identifiers_response = {
@@ -359,21 +337,21 @@ def test_get_security_fields(mocker):
                 "endDate": "9999-99-99",
                 "value": "GS",
                 "updateTime": "2002-02-09T17:58:27.58Z",
-                "type": "bbg"
+                "type": "bbg",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "1003232152",
                 "updateTime": "2003-01-16T15:22:54.1Z",
-                "type": "primeId"
+                "type": "primeId",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "type": "assetId",
                 "value": "MA4B66MW5E27UAHKG34",
-                "updateTime": "2002-10-30T21:30:29.993Z"
+                "updateTime": "2002-10-30T21:30:29.993Z",
             },
             {
                 "startDate": "2007-01-01",
@@ -381,8 +359,8 @@ def test_get_security_fields(mocker):
                 "type": "ric",
                 "value": "GS.N",
                 "updateTime": "2002-10-30T21:30:29.993Z",
-                "gsExchangeId": 154
-            }
+                "gsExchangeId": 154,
+            },
         ],
     }
     mocker.patch.object(GsSession.current, '_get', side_effect=[mock_response, mock_identifiers_response])
@@ -402,20 +380,10 @@ def test_get_security_fields(mocker):
 def test_get_identifiers(mocker):
     assets = {
         "results": [
-            {
-                "id": "GSPD901026E154",
-                "identifiers": {
-                    "bbid": "GS UN"
-                }
-            },
-            {
-                "id": "GSPD14593E459",
-                "identifiers": {
-                    "bbid": "AAPL UW"
-                }
-            }
+            {"id": "GSPD901026E154", "identifiers": {"bbid": "GS UN"}},
+            {"id": "GSPD14593E459", "identifiers": {"bbid": "AAPL UW"}},
         ],
-        "totalResults": 2
+        "totalResults": 2,
     }
     ids_gs = {
         "results": [
@@ -424,15 +392,15 @@ def test_get_identifiers(mocker):
                 "endDate": "9999-99-99",
                 "value": "38141G10",
                 "updateTime": "2002-02-09T17:54:27.99Z",
-                "type": "cusip"
+                "type": "cusip",
             },
             {
                 "startDate": "2021-01-01",
                 "endDate": "9999-99-99",
                 "value": "2407966",
                 "updateTime": "2002-02-09T17:54:47.77Z",
-                "type": "sedol"
-            }
+                "type": "sedol",
+            },
         ]
     }
     ids_ap = {
@@ -442,15 +410,15 @@ def test_get_identifiers(mocker):
                 "endDate": "9999-99-99",
                 "value": "03783310",
                 "updateTime": "2003-04-15T22:36:17.593Z",
-                "type": "cusip"
+                "type": "cusip",
             },
             {
                 "startDate": "2021-01-01",
                 "endDate": "9999-99-99",
                 "value": "2046251",
                 "updateTime": "2003-04-15T22:36:17.6Z",
-                "type": "sedol"
-            }
+                "type": "sedol",
+            },
         ]
     }
     mocker.patch.object(GsSession.current, '_get', side_effect=[assets, ids_gs, ids_ap])
@@ -469,15 +437,10 @@ def test_get_all_identifiers(mocker):
                 "type": "Common Stock",
                 "id": "GSPD901026E154",
                 "assetClass": "Equity",
-                "identifiers": {
-                    "gsid": 901026,
-                    "ric": "GS.N",
-                    "id": "GSPD901026E154",
-                    "bbid": "GS UN"
-                }
+                "identifiers": {"gsid": 901026, "ric": "GS.N", "id": "GSPD901026E154", "bbid": "GS UN"},
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
     p2 = {
         "results": [
@@ -490,23 +453,16 @@ def test_get_all_identifiers(mocker):
                     "ric": "AAPL.OQ",
                     "id": "GSPD14593E459",
                     "bbid": "AAPL UW",
-                }
+                },
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
-    p3 = {
-        "results": [],
-        "totalResults": 0
-    }
+    p3 = {"results": [], "totalResults": 0}
 
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', side_effect=[p1, p2, p3])
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers(use_offset_key=False)
@@ -529,15 +485,10 @@ def test_get_all_identifiers_with_assetTypes_not_none(mocker):
                 "type": "ETF",
                 "id": "mock_ETF_id",
                 "assetClass": "Equity",
-                "identifiers": {
-                    "gsid": 1111111,
-                    "ric": "mock_ETF_ric",
-                    "id": "mock_ETF_id",
-                    "bbid": "mock_ETF_bbid"
-                }
+                "identifiers": {"gsid": 1111111, "ric": "mock_ETF_ric", "id": "mock_ETF_id", "bbid": "mock_ETF_bbid"},
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
     mock_stock = {
         "results": [
@@ -548,17 +499,14 @@ def test_get_all_identifiers_with_assetTypes_not_none(mocker):
                 "identifiers": {
                     "gsid": 222222,
                     "ric": "mock_stock_ric",
-                    "bbid": "mock_stock_bbid"
+                    "bbid": "mock_stock_bbid",
                     # id omitted from nested dict for testing
-                }
+                },
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
-    mock_etf_and_stock = {
-        "results": mock_stock['results'] + mock_etf['results'],
-        "totalResults": 2
-    }
+    mock_etf_and_stock = {"results": mock_stock['results'] + mock_etf['results'], "totalResults": 2}
 
     def get_identifiers_byte(*args, **kwargs):
         types = kwargs['payload']['type']
@@ -571,12 +519,8 @@ def test_get_all_identifiers_with_assetTypes_not_none(mocker):
             return mock_etf_and_stock
 
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
 
     mocker.patch.object(GsSession.current, '_get', side_effect=get_identifiers_byte)
     with SecMasterContext():
@@ -604,16 +548,11 @@ def test_offset_key(mocker):
                 "type": "Common Stock",
                 "id": "GSPD901026E154",
                 "assetClass": "Equity",
-                "identifiers": {
-                    "gsid": 901026,
-                    "ric": "GS.N",
-                    "id": "GSPD901026E154",
-                    "bbid": "GS UN"
-                }
+                "identifiers": {"gsid": 901026, "ric": "GS.N", "id": "GSPD901026E154", "bbid": "GS UN"},
             }
         ],
         "offsetKey": "qwerty",
-        "totalResults": 1
+        "totalResults": 1,
     }
     p2 = {
         "results": [
@@ -626,16 +565,13 @@ def test_offset_key(mocker):
                     "ric": "AAPL.OQ",
                     "id": "GSPD14593E459",
                     "bbid": "AAPL UW",
-                }
+                },
             }
         ],
         "offsetKey": "azerty",
-        "totalResults": 1
+        "totalResults": 1,
     }
-    p3 = {
-        "results": [],
-        "totalResults": 0
-    }
+    p3 = {"results": [], "totalResults": 0}
 
     limited = False
     hits = [0] * 3
@@ -657,12 +593,8 @@ def test_offset_key(mocker):
             return p3
 
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', side_effect=fetch)
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers(sleep=0)
@@ -704,7 +636,7 @@ def test_map_identifiers(mocker):
                 "outputValue": "AAPL.O",
                 "startDate": "2021-10-11",
                 "endDate": "2021-10-12",
-                "input": "AAPL UN"
+                "input": "AAPL UN",
             },
             {
                 "assetId": "MARCRZHY163GQ4H3",
@@ -712,7 +644,7 @@ def test_map_identifiers(mocker):
                 "outputValue": "AAPL.N",
                 "startDate": "2021-10-11",
                 "endDate": "2021-10-12",
-                "input": "AAPL UN"
+                "input": "AAPL UN",
             },
             {
                 "assetId": "MA4B66MW5E27UAHKG34",
@@ -720,151 +652,78 @@ def test_map_identifiers(mocker):
                 "outputValue": "GS.N",
                 "startDate": "2021-10-11",
                 "endDate": "2021-10-12",
-                "input": "GS UN"
+                "input": "GS UN",
             },
             {
                 "outputType": "rcic",
                 "outputValue": "GS",
                 "startDate": "2021-10-11",
                 "endDate": "2021-10-12",
-                "input": "GS UN"
+                "input": "GS UN",
             },
             {
                 "outputType": "gsid",
                 "outputValue": 14593,
                 "startDate": "2021-10-11",
                 "endDate": "2021-10-12",
-                "input": "AAPL UN"
+                "input": "AAPL UN",
             },
             {
                 "outputType": "gsid",
                 "outputValue": 901026,
                 "startDate": "2021-10-11",
                 "endDate": "2021-10-12",
-                "input": "GS UN"
-            }
+                "input": "GS UN",
+            },
         ]
     }
     mock2 = copy.deepcopy(mock1)
-    mock2["results"].extend([
-        {
-            "outputType": "bbg",
-            "outputValue": "AAPL",
-            "exchange": "UN",
-            "compositeExchange": "US",
-            "startDate": "2021-10-11",
-            "endDate": "2021-10-12",
-            "input": "AAPL UN"
-        },
-        {
-            "outputType": "bbg",
-            "outputValue": "GS",
-            "exchange": "UN",
-            "compositeExchange": "US",
-            "startDate": "2021-10-11",
-            "endDate": "2021-10-12",
-            "input": "GS UN"
-        }
-    ])
+    mock2["results"].extend(
+        [
+            {
+                "outputType": "bbg",
+                "outputValue": "AAPL",
+                "exchange": "UN",
+                "compositeExchange": "US",
+                "startDate": "2021-10-11",
+                "endDate": "2021-10-12",
+                "input": "AAPL UN",
+            },
+            {
+                "outputType": "bbg",
+                "outputValue": "GS",
+                "exchange": "UN",
+                "compositeExchange": "US",
+                "startDate": "2021-10-11",
+                "endDate": "2021-10-12",
+                "input": "GS UN",
+            },
+        ]
+    )
 
     mocker.patch.object(GsSession.current, '_get', side_effect=[mock2, mock2])
     start = dt.date(2021, 10, 11)
     end = dt.date(2021, 10, 12)
 
     expected = {
-        "2021-10-11": {
-            "AAPL UN": {
-                "ric": [
-                    "AAPL.N"
-                ],
-                "gsid": [
-                    14593
-                ]
-            },
-            "GS UN": {
-                "ric": [
-                    "GS.N"
-                ],
-                "gsid": [
-                    901026
-                ]
-            }
-        },
-        "2021-10-12": {
-            "AAPL UN": {
-                "ric": [
-                    "AAPL.N"
-                ],
-                "gsid": [
-                    14593
-                ]
-            },
-            "GS UN": {
-                "ric": [
-                    "GS.N"
-                ],
-                "gsid": [
-                    901026
-                ]
-            }
-        }
+        "2021-10-11": {"AAPL UN": {"ric": ["AAPL.N"], "gsid": [14593]}, "GS UN": {"ric": ["GS.N"], "gsid": [901026]}},
+        "2021-10-12": {"AAPL UN": {"ric": ["AAPL.N"], "gsid": [14593]}, "GS UN": {"ric": ["GS.N"], "gsid": [901026]}},
     }
     with SecMasterContext():
-        actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
-                                                ['GS UN', 'AAPL UN'],
-                                                [SecurityIdentifier.RIC, SecurityIdentifier.GSID],
-                                                start, end)
+        actual = SecurityMaster.map_identifiers(
+            SecurityIdentifier.BBID, ['GS UN', 'AAPL UN'], [SecurityIdentifier.RIC, SecurityIdentifier.GSID], start, end
+        )
     assert actual == expected
 
     expected = {
         "2021-10-11": {
-            "AAPL UN": {
-                "assetId": [
-                    "MARCRZHY163GQ4H3"
-                ],
-                "gsid": [
-                    14593
-                ],
-                "bbid": [
-                    "AAPL UN"
-                ]
-            },
-            "GS UN": {
-                "assetId": [
-                    "MA4B66MW5E27UAHKG34"
-                ],
-                "gsid": [
-                    901026
-                ],
-                "bbid": [
-                    "GS UN"
-                ]
-            }
+            "AAPL UN": {"assetId": ["MARCRZHY163GQ4H3"], "gsid": [14593], "bbid": ["AAPL UN"]},
+            "GS UN": {"assetId": ["MA4B66MW5E27UAHKG34"], "gsid": [901026], "bbid": ["GS UN"]},
         },
         "2021-10-12": {
-            "AAPL UN": {
-                "assetId": [
-                    "MARCRZHY163GQ4H3"
-                ],
-                "gsid": [
-                    14593
-                ],
-                "bbid": [
-                    "AAPL UN"
-                ]
-            },
-            "GS UN": {
-                "assetId": [
-                    "MA4B66MW5E27UAHKG34"
-                ],
-                "gsid": [
-                    901026
-                ],
-                "bbid": [
-                    "GS UN"
-                ]
-            }
-        }
+            "AAPL UN": {"assetId": ["MARCRZHY163GQ4H3"], "gsid": [14593], "bbid": ["AAPL UN"]},
+            "GS UN": {"assetId": ["MA4B66MW5E27UAHKG34"], "gsid": [901026], "bbid": ["GS UN"]},
+        },
     }
     targets = [SecurityIdentifier.ASSET_ID, SecurityIdentifier.GSID, SecurityIdentifier.BBID]
     with SecMasterContext():
@@ -882,7 +741,7 @@ def test_map_identifiers_change(mocker):
                 "compositeExchange": "US",
                 "startDate": "2021-01-01",
                 "endDate": "2021-04-18",
-                "input": "104563"
+                "input": "104563",
             },
             {
                 "outputType": "bbg",
@@ -891,7 +750,7 @@ def test_map_identifiers_change(mocker):
                 "compositeExchange": "US",
                 "startDate": "2021-04-19",
                 "endDate": "2021-11-01",
-                "input": "104563"
+                "input": "104563",
             },
             {
                 "assetId": "MAY8Z19T2WE6RVHG",
@@ -899,7 +758,7 @@ def test_map_identifiers_change(mocker):
                 "outputValue": "USAT.O",
                 "startDate": "2021-01-01",
                 "endDate": "2021-04-17",
-                "input": "104563"
+                "input": "104563",
             },
             {
                 "assetId": "MA4B66MW5E27UANLYDS",
@@ -907,7 +766,7 @@ def test_map_identifiers_change(mocker):
                 "outputValue": "USAT.OQ",
                 "startDate": "2021-01-01",
                 "endDate": "2021-04-17",
-                "input": "104563"
+                "input": "104563",
             },
             {
                 "assetId": "MA2640YQADTHYZ4M",
@@ -915,7 +774,7 @@ def test_map_identifiers_change(mocker):
                 "outputValue": "CTLP.O",
                 "startDate": "2021-04-19",
                 "endDate": "2021-11-01",
-                "input": "104563"
+                "input": "104563",
             },
             {
                 "assetId": "MAR754Z5RQYZ3V8E",
@@ -923,7 +782,7 @@ def test_map_identifiers_change(mocker):
                 "outputValue": "CTLP.OQ",
                 "startDate": "2021-04-19",
                 "endDate": "2021-11-01",
-                "input": "104563"
+                "input": "104563",
             },
             # additional RICs omitted from test
             {
@@ -931,29 +790,29 @@ def test_map_identifiers_change(mocker):
                 "outputValue": 104563,
                 "startDate": "2021-01-01",
                 "endDate": "2021-04-18",
-                "input": "104563"
+                "input": "104563",
             },
             {
                 "outputType": "gsid",
                 "outputValue": 104563,
                 "startDate": "2021-04-19",
                 "endDate": "2021-11-01",
-                "input": "104563"
+                "input": "104563",
             },
             {
                 "outputType": "isin",
                 "outputValue": "US90328S5001",
                 "startDate": "2021-01-01",
                 "endDate": "2021-04-18",
-                "input": "104563"
+                "input": "104563",
             },
             {
                 "outputType": "isin",
                 "outputValue": "US1381031061",
                 "startDate": "2021-04-19",
                 "endDate": "2021-11-01",
-                "input": "104563"
-            }
+                "input": "104563",
+            },
         ]
     }
     mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
@@ -961,38 +820,8 @@ def test_map_identifiers_change(mocker):
     end = dt.date(2021, 11, 1)
 
     expected = {
-        "2021-04-16": {
-            "104563": {
-                "ric": [
-                    "USAT.OQ"
-                ],
-                "gsid": [
-                    104563
-                ],
-                "isin": [
-                    "US90328S5001"
-                ],
-                "bcid": [
-                    "USAT US"
-                ]
-            }
-        },
-        "2021-04-19": {
-            "104563": {
-                "ric": [
-                    "CTLP.OQ"
-                ],
-                "gsid": [
-                    104563
-                ],
-                "isin": [
-                    "US1381031061"
-                ],
-                "bcid": [
-                    "CTLP US"
-                ]
-            }
-        }
+        "2021-04-16": {"104563": {"ric": ["USAT.OQ"], "gsid": [104563], "isin": ["US90328S5001"], "bcid": ["USAT US"]}},
+        "2021-04-19": {"104563": {"ric": ["CTLP.OQ"], "gsid": [104563], "isin": ["US1381031061"], "bcid": ["CTLP US"]}},
     }
     targets = [SecurityIdentifier.RIC, SecurityIdentifier.GSID, SecurityIdentifier.ISIN, SecurityIdentifier.BCID]
     with SecMasterContext():
@@ -1002,10 +831,7 @@ def test_map_identifiers_change(mocker):
 
 
 def test_map_identifiers_empty(mocker):
-    mock = {
-        "results": [
-        ]
-    }
+    mock = {"results": []}
     mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
 
     with SecMasterContext():
@@ -1025,15 +851,16 @@ def test_map_identifiers_eq_index(mocker):
                 "outputValue": "SPX",
                 "startDate": "2022-03-17",
                 "endDate": "2022-03-17",
-                "input": "100"
+                "input": "100",
             }
         ]
     }
     mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
 
     with SecMasterContext():
-        actual = SecurityMaster.map_identifiers(SecurityIdentifier.GSID, ['100'],
-                                                [SecurityIdentifier.BBID, SecurityIdentifier.BCID])
+        actual = SecurityMaster.map_identifiers(
+            SecurityIdentifier.GSID, ['100'], [SecurityIdentifier.BBID, SecurityIdentifier.BCID]
+        )
     assert actual == {'2022-03-17': {'100': {'bbid': ['SPX']}}}
 
 
@@ -1060,7 +887,7 @@ def test_secmaster_map_identifiers_with_passed_input_types(mocker):
                     "outputValue": "mock output for " + id,
                     "startDate": start,
                     "endDate": end,
-                    "input": id
+                    "input": id,
                 }
                 if output_type in (SecurityIdentifier.BBID, SecurityIdentifier.BBG, SecurityIdentifier.BCID):
                     row['exchange'] = 'mock-exchange'
@@ -1068,76 +895,45 @@ def test_secmaster_map_identifiers_with_passed_input_types(mocker):
                 mock_output['results'].append(row)
         return mock_output
 
-    mocker.patch.object(GsSession.current, '_get',
-                        side_effect=mock_mapping_service_response_by_input_type)
+    mocker.patch.object(GsSession.current, '_get', side_effect=mock_mapping_service_response_by_input_type)
 
     with SecMasterContext():
         mock_any_ids = ["mock-any-1", "mock-any-2"]
-        any_to_cusip_results = SecurityMaster.map_identifiers(input_type=SecurityIdentifier.ANY, ids=mock_any_ids,
-                                                              output_types=[SecurityIdentifier.CUSIP])
+        any_to_cusip_results = SecurityMaster.map_identifiers(
+            input_type=SecurityIdentifier.ANY, ids=mock_any_ids, output_types=[SecurityIdentifier.CUSIP]
+        )
         assert start in any_to_cusip_results.keys()
         for input_id in mock_any_ids:
             assert input_id in any_to_cusip_results[start].keys()
             assert SecurityIdentifier.CUSIP.value in any_to_cusip_results[start][input_id].keys()
         assert any_to_cusip_results == {
             "2021-10-11": {
-                "mock-any-1": {
-                    "cusip": [
-                        "mock output for mock-any-1"
-                    ]
-                },
-                "mock-any-2": {
-                    "cusip": [
-                        "mock output for mock-any-2"
-                    ]
-                }
+                "mock-any-1": {"cusip": ["mock output for mock-any-1"]},
+                "mock-any-2": {"cusip": ["mock output for mock-any-2"]},
             },
             "2021-10-12": {
-                "mock-any-1": {
-                    "cusip": [
-                        "mock output for mock-any-1"
-                    ]
-                },
-                "mock-any-2": {
-                    "cusip": [
-                        "mock output for mock-any-2"
-                    ]
-                }
-            }
+                "mock-any-1": {"cusip": ["mock output for mock-any-1"]},
+                "mock-any-2": {"cusip": ["mock output for mock-any-2"]},
+            },
         }
 
         mock_cusip_ids = ["mock-cusip-input1", "mock-cusip-input2"]
-        cusip_to_isin_result = SecurityMaster.map_identifiers(input_type=SecurityIdentifier.CUSIP, ids=mock_cusip_ids,
-                                                              output_types=[SecurityIdentifier.ISIN])
+        cusip_to_isin_result = SecurityMaster.map_identifiers(
+            input_type=SecurityIdentifier.CUSIP, ids=mock_cusip_ids, output_types=[SecurityIdentifier.ISIN]
+        )
         assert start in cusip_to_isin_result.keys()
         for cusip_input_id in mock_cusip_ids:
             assert cusip_input_id in cusip_to_isin_result[start].keys()
             assert SecurityIdentifier.ISIN.value in cusip_to_isin_result[start][cusip_input_id].keys()
         assert cusip_to_isin_result == {
             "2021-10-11": {
-                "mock-cusip-input1": {
-                    "isin": [
-                        "mock output for mock-cusip-input1"
-                    ]
-                },
-                "mock-cusip-input2": {
-                    "isin": [
-                        "mock output for mock-cusip-input2"
-                    ]
-                }
+                "mock-cusip-input1": {"isin": ["mock output for mock-cusip-input1"]},
+                "mock-cusip-input2": {"isin": ["mock output for mock-cusip-input2"]},
             },
             "2021-10-12": {
-                "mock-cusip-input1": {
-                    "isin": [
-                        "mock output for mock-cusip-input1"
-                    ]
-                },
-                "mock-cusip-input2": {
-                    "isin": [
-                        "mock output for mock-cusip-input2"
-                    ]
-                }
-            }
+                "mock-cusip-input1": {"isin": ["mock output for mock-cusip-input1"]},
+                "mock-cusip-input2": {"isin": ["mock output for mock-cusip-input2"]},
+            },
         }
 
 
@@ -1154,14 +950,14 @@ def test_secmaster_map_identifiers_return_array_results(mocker):
                 "compositeExchange": "US",
                 "startDate": "2022-03-21",
                 "endDate": "2022-03-21",
-                "input": "38141G104"
+                "input": "38141G104",
             },
             {
                 "outputType": "cusip",
                 "outputValue": "38141G104",
                 "startDate": "2022-03-21",
                 "endDate": "2022-03-21",
-                "input": "38141G104"
+                "input": "38141G104",
             },
             {
                 "outputType": "bbg",
@@ -1169,7 +965,7 @@ def test_secmaster_map_identifiers_return_array_results(mocker):
                 "exchange": "TH",
                 "startDate": "2022-03-21",
                 "endDate": "2022-03-21",
-                "input": "38141G104"
+                "input": "38141G104",
             },
             {
                 "outputType": "bbg",
@@ -1177,7 +973,7 @@ def test_secmaster_map_identifiers_return_array_results(mocker):
                 "exchange": "EU",
                 "startDate": "2022-03-21",
                 "endDate": "2022-03-21",
-                "input": "38141G104"
+                "input": "38141G104",
             },
             {
                 "outputType": "bbg",
@@ -1186,23 +982,24 @@ def test_secmaster_map_identifiers_return_array_results(mocker):
                 "compositeExchange": "SW",
                 "startDate": "2022-03-21",
                 "endDate": "2022-03-21",
-                "input": "38141G104"
-            }
+                "input": "38141G104",
+            },
         ]
     }
     mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
     with SecMasterContext():
-        actual = SecurityMaster.map_identifiers(input_type=SecurityIdentifier.CUSIP, ids=['38141G104'],
-                                                output_types=[SecurityIdentifier.BBID, SecurityIdentifier.BCID,
-                                                              SecurityIdentifier.CUSIP])
+        actual = SecurityMaster.map_identifiers(
+            input_type=SecurityIdentifier.CUSIP,
+            ids=['38141G104'],
+            output_types=[SecurityIdentifier.BBID, SecurityIdentifier.BCID, SecurityIdentifier.CUSIP],
+        )
     assert actual == {
         '2022-03-21': {
-            '38141G104':
-                {
-                    'bbid': ['GS UN', 'GOS TH', 'GSCHF EU', 'GSUSD SE'],
-                    'bcid': ['GS US', 'GSUSD SW'],
-                    'cusip': ['38141G104']
-                }
+            '38141G104': {
+                'bbid': ['GS UN', 'GOS TH', 'GSCHF EU', 'GSUSD SE'],
+                'bcid': ['GS US', 'GSUSD SW'],
+                'cusip': ['38141G104'],
+            }
         }
     }
 
@@ -1226,25 +1023,17 @@ def test_secmaster_get_asset_no_asset_id_response_should_fail(mocker):
                     "bcid": "GS US",
                     "primeId": "1003232152",
                     "factSetRegionalId": "JLJ0VZ-R",
-                    "rcic": "GS"
+                    "rcic": "GS",
                 },
-                "exchange": {
-                    "name": "US Stock Exchange Composite",
-                    "identifiers": {
-                        "gsExchangeId": 161
-                    }
-                },
-                "id": "GSPD901026E161"
+                "exchange": {"name": "US Stock Exchange Composite", "identifiers": {"gsExchangeId": 161}},
+                "id": "GSPD901026E161",
             }
         ],
         "totalResults": 1,
     }
 
-    mock_no_asset_id_response = {
-        "results": []
-    }
-    mocker.patch.object(GsSession.current, '_get',
-                        side_effect=[mock_response, mock_no_asset_id_response])
+    mock_no_asset_id_response = {"results": []}
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_response, mock_no_asset_id_response])
 
     with SecMasterContext():
         asset = SecurityMaster.get_asset(id_value="GS", id_type=SecurityIdentifier.TICKER)
@@ -1279,18 +1068,13 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                     "factSetRegionalId": "JLJ0VZ-R",
                     "rcic": "GS",
                     "ric": "GS.N",
-                    "assetId": "MA4B66MW5E27UAHKG34"
+                    "assetId": "MA4B66MW5E27UAHKG34",
                 },
-                "exchange": {
-                    "name": "New York Stock",
-                    "identifiers": {
-                        "gsExchangeId": 154
-                    }
-                },
+                "exchange": {"name": "New York Stock", "identifiers": {"gsExchangeId": 154}},
                 "id": "GSPD901026E154",
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
 
     mock_eq_id_history_response = {
@@ -1300,63 +1084,63 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                 "endDate": "9999-99-99",
                 "value": "GS",
                 "updateTime": "2002-02-09T17:58:27.58Z",
-                "type": "bbg"
+                "type": "bbg",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "38141G104",
                 "updateTime": "2002-02-09T17:54:27.99Z",
-                "type": "cusip"
+                "type": "cusip",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "38141G10",
                 "updateTime": "2002-02-09T17:54:27.99Z",
-                "type": "cusip8"
+                "type": "cusip8",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "JLJ0VZ-R",
                 "updateTime": "2021-08-16T08:41:43.586Z",
-                "type": "factSetRegionalId"
+                "type": "factSetRegionalId",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "US38141G1040",
                 "updateTime": "2002-02-09T17:55:18.513Z",
-                "type": "isin"
+                "type": "isin",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "1003232152",
                 "updateTime": "2003-01-16T15:22:54.1Z",
-                "type": "primeId"
+                "type": "primeId",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "2407966",
                 "updateTime": "2002-02-09T17:54:47.77Z",
-                "type": "sedol"
+                "type": "sedol",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "GS",
                 "updateTime": "2002-02-09T17:57:14.546Z",
-                "type": "ticker"
+                "type": "ticker",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "type": "assetId",
                 "value": "MA4B66MW5E27UAHKG34",
-                "updateTime": "2002-10-30T21:30:29.993Z"
+                "updateTime": "2002-10-30T21:30:29.993Z",
             },
             {
                 "startDate": "2007-01-01",
@@ -1364,20 +1148,19 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                 "type": "ric",
                 "value": "GS.N",
                 "updateTime": "2002-10-30T21:30:29.993Z",
-                "gsExchangeId": 154
+                "gsExchangeId": 154,
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "1003232152",
                 "updateTime": "2003-01-16T15:22:54.1Z",
-                "type": "primeId"
+                "type": "primeId",
             },
         ]
     }
 
-    mocker.patch.object(GsSession.current, '_get',
-                        side_effect=[mock_equity_response, mock_eq_id_history_response])
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_equity_response, mock_eq_id_history_response])
     with SecMasterContext():
         stock = SecurityMaster.get_asset(id_value=901026, id_type=SecurityIdentifier.GSID)
     assert isinstance(stock, SecMasterAsset)
@@ -1387,18 +1170,19 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
     assert stock.get_identifier(id_type=SecurityIdentifier.ID) == "GSPD901026E154"
     assert stock.get_identifier(id_type=SecurityIdentifier.ASSET_ID) == "MA4B66MW5E27UAHKG34"
     assert stock.currency == "USD"
-    assert stock.get_identifiers() == \
-           {'assetId': 'MA4B66MW5E27UAHKG34',
-            'bbg': 'GS',
-            'cusip': '38141G104',
-            'cusip8': '38141G10',
-            'gsid': 901026,
-            'id': 'GSPD901026E154',
-            'isin': 'US38141G1040',
-            'primeId': '1003232152',
-            'ric': 'GS.N',
-            'sedol': '2407966',
-            'ticker': 'GS'}
+    assert stock.get_identifiers() == {
+        'assetId': 'MA4B66MW5E27UAHKG34',
+        'bbg': 'GS',
+        'cusip': '38141G104',
+        'cusip8': '38141G10',
+        'gsid': 901026,
+        'id': 'GSPD901026E154',
+        'isin': 'US38141G1040',
+        'primeId': '1003232152',
+        'ric': 'GS.N',
+        'sedol': '2407966',
+        'ticker': 'GS',
+    }
     assert_asset_common(stock)
 
     # get_asset() should return Index instance when type: Equity Index
@@ -1415,18 +1199,13 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                     "ticker": "SPX",
                     "bbid": "SPX",
                     "ric": ".SPX",
-                    "assetId": "MA4B66MW5E27U8P32SB"
+                    "assetId": "MA4B66MW5E27U8P32SB",
                 },
-                "company": {
-                    "name": "S&P 500 Index",
-                    "identifiers": {
-                        "gsCompanyId": 10756
-                    }
-                },
-                "id": "GSPD100"
+                "company": {"name": "S&P 500 Index", "identifiers": {"gsCompanyId": 10756}},
+                "id": "GSPD100",
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
     mock_index_id_history_response = {
         "results": [
@@ -1435,49 +1214,49 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                 "endDate": "2012-08-24",
                 "value": "SPX",
                 "updateTime": "2012-08-25T23:27:53.44Z",
-                "type": "bbg"
+                "type": "bbg",
             },
             {
                 "startDate": "2012-08-25",
                 "endDate": "2012-08-25",
                 "value": "SPX",
                 "updateTime": "2020-12-10T21:07:06.26Z",
-                "type": "bbg"
+                "type": "bbg",
             },
             {
                 "startDate": "2012-08-26",
                 "endDate": "9999-99-99",
                 "value": "SPX",
                 "updateTime": "2012-08-27T01:48:07.046Z",
-                "type": "bbg"
+                "type": "bbg",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "2012-08-24",
                 "value": "SPX",
                 "updateTime": "2012-08-25T23:27:53.4Z",
-                "type": "ticker"
+                "type": "ticker",
             },
             {
                 "startDate": "2012-08-25",
                 "endDate": "2012-08-25",
                 "value": "SPX",
                 "updateTime": "2020-12-10T21:06:44.82Z",
-                "type": "ticker"
+                "type": "ticker",
             },
             {
                 "startDate": "2012-08-26",
                 "endDate": "9999-99-99",
                 "value": "SPX",
                 "updateTime": "2012-08-27T01:48:07.043Z",
-                "type": "ticker"
+                "type": "ticker",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "type": "assetId",
                 "value": "MA4B66MW5E27U8P32SB",
-                "updateTime": "2003-01-14T17:28:15.29Z"
+                "updateTime": "2003-01-14T17:28:15.29Z",
             },
             {
                 "startDate": "2007-01-01",
@@ -1485,12 +1264,11 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                 "type": "ric",
                 "value": ".SPX",
                 "updateTime": "2003-01-14T17:28:15.29Z",
-                "gsExchangeId": 0
-            }
+                "gsExchangeId": 0,
+            },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get',
-                        side_effect=[mock_index_response, mock_index_id_history_response])
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_index_response, mock_index_id_history_response])
     with SecMasterContext():
         index = SecurityMaster.get_asset(id_value=100, id_type=SecurityIdentifier.GSID)
     assert isinstance(index, SecMasterAsset)
@@ -1506,7 +1284,7 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
         'gsid': 100,
         'id': 'GSPD100',
         'ric': '.SPX',
-        'ticker': 'SPX'
+        'ticker': 'SPX',
     }
     assert_asset_common(index)
 
@@ -1531,18 +1309,13 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                     "cusip8": "46428719",
                     "rcic": "IYT",
                     "ric": "IYT.Z",
-                    "assetId": "MAZ08H8QPDQ4T7SE"
+                    "assetId": "MAZ08H8QPDQ4T7SE",
                 },
-                "exchange": {
-                    "name": "BATS US Trading",
-                    "identifiers": {
-                        "gsExchangeId": 535
-                    }
-                },
+                "exchange": {"name": "BATS US Trading", "identifiers": {"gsExchangeId": 535}},
                 "id": "GSPD159943E535",
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
 
     mock_etf_id_history_response = {
@@ -1552,63 +1325,63 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                 "endDate": "9999-99-99",
                 "value": "IYT",
                 "updateTime": "2003-09-16T22:00:44.586Z",
-                "type": "bbg"
+                "type": "bbg",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "464287192",
                 "updateTime": "2003-09-16T22:00:44.506Z",
-                "type": "cusip"
+                "type": "cusip",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "46428719",
                 "updateTime": "2003-09-16T22:00:44.506Z",
-                "type": "cusip8"
+                "type": "cusip8",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "US4642871929",
                 "updateTime": "2003-09-16T22:00:44.52Z",
-                "type": "isin"
+                "type": "isin",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "355769575",
                 "updateTime": "2003-10-02T05:12:03.51Z",
-                "type": "primeId"
+                "type": "primeId",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "2012423",
                 "updateTime": "2003-10-10T23:49:00.12Z",
-                "type": "sedol"
+                "type": "sedol",
             },
             {
                 "startDate": "2007-01-01",
                 "endDate": "9999-99-99",
                 "value": "IYT",
                 "updateTime": "2003-09-16T22:00:44.56Z",
-                "type": "ticker"
+                "type": "ticker",
             },
             {
                 "startDate": "2008-11-09",
                 "endDate": "2017-08-01",
                 "type": "assetId",
                 "value": "MAZ08H8QPDQ4T7SE",
-                "updateTime": "2017-08-02T05:36:56.823Z"
+                "updateTime": "2017-08-02T05:36:56.823Z",
             },
             {
                 "startDate": "2017-08-03",
                 "endDate": "9999-99-99",
                 "type": "assetId",
                 "value": "MAZ08H8QPDQ4T7SE",
-                "updateTime": "2017-08-02T16:09:56.146Z"
+                "updateTime": "2017-08-02T16:09:56.146Z",
             },
             {
                 "startDate": "2008-11-09",
@@ -1616,7 +1389,7 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                 "type": "ric",
                 "value": "IYT.Z",
                 "updateTime": "2017-08-02T05:36:56.823Z",
-                "gsExchangeId": 535
+                "gsExchangeId": 535,
             },
             {
                 "startDate": "2017-08-03",
@@ -1624,12 +1397,11 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                 "type": "ric",
                 "value": "IYT.Z",
                 "updateTime": "2017-08-02T16:09:56.146Z",
-                "gsExchangeId": 535
-            }
+                "gsExchangeId": 535,
+            },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get',
-                        side_effect=[mock_ETF_response, mock_etf_id_history_response])
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_ETF_response, mock_etf_id_history_response])
     with SecMasterContext():
         etf = SecurityMaster.get_asset(id_value=159943, id_type=SecurityIdentifier.GSID)
     assert isinstance(etf, SecMasterAsset)
@@ -1650,7 +1422,7 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
         "cusip8": "46428719",
         "ric": "IYT.Z",
         "assetId": "MAZ08H8QPDQ4T7SE",
-        'id': 'GSPD159943E535'
+        'id': 'GSPD159943E535',
     }
     assert_asset_common(etf)
 
@@ -1663,15 +1435,11 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                 "currency": "USD",
                 "tags": [],
                 "assetClass": "Cash",
-                "identifiers": {
-                    "gsid": 4007,
-                    "assetId": "MAZ7RWC904JYHYPS",
-                    "ticker": "USD"
-                },
-                "id": "GSPD4007"
+                "identifiers": {"gsid": 4007, "assetId": "MAZ7RWC904JYHYPS", "ticker": "USD"},
+                "id": "GSPD4007",
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
 
     mock_currency_id_history_response = {
@@ -1681,12 +1449,13 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
                 "endDate": "9999-99-99",
                 "value": "USD",
                 "updateTime": "2003-05-01T16:20:44.47Z",
-                "type": "ticker"
+                "type": "ticker",
             }
         ]
     }
-    mocker.patch.object(GsSession.current, '_get',
-                        side_effect=[mock_currency_response, mock_currency_id_history_response])
+    mocker.patch.object(
+        GsSession.current, '_get', side_effect=[mock_currency_response, mock_currency_id_history_response]
+    )
     with SecMasterContext():
         currency = SecurityMaster.get_asset(id_value=4007, id_type=SecurityIdentifier.GSID)
     assert isinstance(currency, SecMasterAsset)
@@ -1699,7 +1468,7 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
         "gsid": 4007,
         "assetId": "MAZ7RWC904JYHYPS",
         "ticker": "USD",
-        "id": "GSPD4007"
+        "id": "GSPD4007",
     }
     assert_asset_common(currency)
 
@@ -1713,19 +1482,12 @@ def test_get_asset_get_data_series_with_range_over_many_asset_id_should_throw_mq
                 "currency": "USD",
                 "tags": [],
                 "assetClass": "Equity",
-                "identifiers": {
-                    "assetId": "MAZ08H8QPDQ4T7SE"
-                },
-                "exchange": {
-                    "name": "BATS US Trading",
-                    "identifiers": {
-                        "gsExchangeId": 535
-                    }
-                },
+                "identifiers": {"assetId": "MAZ08H8QPDQ4T7SE"},
+                "exchange": {"name": "BATS US Trading", "identifiers": {"gsExchangeId": 535}},
                 "id": "GSPD159943E535",
             }
         ],
-        "totalResults": 1
+        "totalResults": 1,
     }
     mock_id_history_response = {
         "results": [
@@ -1734,19 +1496,18 @@ def test_get_asset_get_data_series_with_range_over_many_asset_id_should_throw_mq
                 "endDate": "9999-99-99",
                 "value": "marqueid 1",
                 "updateTime": "2003-05-01T16:20:44.47Z",
-                "type": "assetId"
+                "type": "assetId",
             },
             {
                 "startDate": "2007-12-30",
                 "endDate": "2019-12-31",
                 "value": "marqueid 2",
                 "updateTime": "2003-05-01T16:20:44.47Z",
-                "type": "assetId"
-            }
+                "type": "assetId",
+            },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get',
-                        side_effect=[mock_asset, mock_id_history_response])
+    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_asset, mock_id_history_response])
 
     with SecMasterContext():
         asset = SecurityMaster.get_asset(id_value=4007, id_type=SecurityIdentifier.GSID)
@@ -1757,41 +1518,26 @@ def test_get_asset_get_data_series_with_range_over_many_asset_id_should_throw_mq
 def test_map_identifiers_asset_service(mocker):
     response = {'AAPL UN': ['AAPL.N'], 'GS UN': ['GS.N']}
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=lambda *arg, **kwargs: response)
-    expected = {
-        "2021-10-11": {
-            "AAPL UN": {
-                "ric": [
-                    "AAPL.N"
-                ]
-            },
-            "GS UN": {
-                "ric": [
-                    "GS.N"
-                ]
-            }
-        }
-    }
+    expected = {"2021-10-11": {"AAPL UN": {"ric": ["AAPL.N"]}, "GS UN": {"ric": ["GS.N"]}}}
     with AssetContext():
-        actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
-                                                ['GS UN', 'AAPL UN'],
-                                                [SecurityIdentifier.RIC],
-                                                as_of_date=dt.date(2021, 10, 11))
+        actual = SecurityMaster.map_identifiers(
+            SecurityIdentifier.BBID, ['GS UN', 'AAPL UN'], [SecurityIdentifier.RIC], as_of_date=dt.date(2021, 10, 11)
+        )
     assert actual == expected
 
     date_string = dt.date.today().strftime('%Y-%m-%d')
     expected2 = {date_string: expected["2021-10-11"]}
     with AssetContext():
-        actual2 = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
-                                                 ['GS UN', 'AAPL UN'],
-                                                 [SecurityIdentifier.RIC])
+        actual2 = SecurityMaster.map_identifiers(
+            SecurityIdentifier.BBID, ['GS UN', 'AAPL UN'], [SecurityIdentifier.RIC]
+        )
     assert actual2 == expected2
 
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=lambda *arg, **kwargs: {})
     with AssetContext():
-        actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
-                                                ['invalid id'],
-                                                [SecurityIdentifier.RIC],
-                                                as_of_date=dt.date(2021, 10, 11))
+        actual = SecurityMaster.map_identifiers(
+            SecurityIdentifier.BBID, ['invalid id'], [SecurityIdentifier.RIC], as_of_date=dt.date(2021, 10, 11)
+        )
     assert actual == {}
 
 
@@ -1799,33 +1545,34 @@ def test_map_identifiers_asset_service_exceptions():
     with pytest.raises(MqValueError):
         # multiple output types
         with AssetContext():
-            SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
-                                           ['GS UN', 'AAPL UN'],
-                                           [SecurityIdentifier.RIC, SecurityIdentifier.GSID],
-                                           as_of_date=dt.date(2021, 10, 11))
+            SecurityMaster.map_identifiers(
+                SecurityIdentifier.BBID,
+                ['GS UN', 'AAPL UN'],
+                [SecurityIdentifier.RIC, SecurityIdentifier.GSID],
+                as_of_date=dt.date(2021, 10, 11),
+            )
 
     with pytest.raises(MqValueError):
         # start date
         with AssetContext():
-            SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
-                                           ['GS UN', 'AAPL UN'],
-                                           [SecurityIdentifier.RIC],
-                                           start_date=dt.date(2021, 10, 11))
+            SecurityMaster.map_identifiers(
+                SecurityIdentifier.BBID,
+                ['GS UN', 'AAPL UN'],
+                [SecurityIdentifier.RIC],
+                start_date=dt.date(2021, 10, 11),
+            )
 
     with pytest.raises(MqValueError):
         # end date
         with AssetContext():
-            SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
-                                           ['GS UN', 'AAPL UN'],
-                                           [SecurityIdentifier.RIC],
-                                           end_date=dt.date(2021, 10, 11))
+            SecurityMaster.map_identifiers(
+                SecurityIdentifier.BBID, ['GS UN', 'AAPL UN'], [SecurityIdentifier.RIC], end_date=dt.date(2021, 10, 11)
+            )
 
     with pytest.raises(MqValueError):
         # unsupported output type
         with AssetContext():
-            SecurityMaster.map_identifiers(SecurityIdentifier.BBID,
-                                           ['GS UN', 'AAPL UN'],
-                                           [SecurityIdentifier.BBG])
+            SecurityMaster.map_identifiers(SecurityIdentifier.BBID, ['GS UN', 'AAPL UN'], [SecurityIdentifier.BBG])
 
 
 if __name__ == "__main__":

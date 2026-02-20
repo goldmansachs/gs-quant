@@ -23,11 +23,7 @@ import datetime as dt
 
 
 class OrderBase(metaclass=ABCMeta):
-    def __init__(self,
-                 instrument: Instrument,
-                 quantity: float,
-                 generation_time: dt.datetime,
-                 source: str):
+    def __init__(self, instrument: Instrument, quantity: float, generation_time: dt.datetime, source: str):
         """
         Create an order
         :param instrument: an Instrument or Security to be traded
@@ -64,20 +60,18 @@ class OrderBase(metaclass=ABCMeta):
         raise RuntimeError('The method _short_name is not implemented on OrderBase')
 
     def to_dict(self, data_hander: DataHandler) -> dict:
-        return {'Instrument': self.instrument.ric,
-                'Type': self._short_name(),
-                'Price': self.execution_price(data_hander),
-                'Quantity': self.execution_quantity()
-                }
+        return {
+            'Instrument': self.instrument.ric,
+            'Type': self._short_name(),
+            'Price': self.execution_price(data_hander),
+            'Quantity': self.execution_quantity(),
+        }
 
 
 class OrderTWAP(OrderBase):
-    def __init__(self,
-                 instrument: Instrument,
-                 quantity: float,
-                 generation_time: dt.datetime,
-                 source: str,
-                 window: TimeWindow):
+    def __init__(
+        self, instrument: Instrument, quantity: float, generation_time: dt.datetime, source: str, window: TimeWindow
+    ):
         super().__init__(instrument, quantity, generation_time, source)
         """
         Create a TWAP order
@@ -90,8 +84,9 @@ class OrderTWAP(OrderBase):
 
     def _execution_price(self, data_handler: DataHandler) -> float:
         if self.executed_price is None:
-            fixings = data_handler.get_data_range(self.window.start, self.window.end,
-                                                  self.instrument, ValuationFixingType.PRICE)
+            fixings = data_handler.get_data_range(
+                self.window.start, self.window.end, self.instrument, ValuationFixingType.PRICE
+            )
             self.executed_price = np.mean(fixings)
         return self.executed_price
 
@@ -103,12 +98,14 @@ class OrderTWAP(OrderBase):
 
 
 class OrderMarketOnClose(OrderBase):
-    def __init__(self,
-                 instrument: Instrument,
-                 quantity: float,
-                 generation_time: dt.datetime,
-                 execution_date: dt.date,
-                 source: str):
+    def __init__(
+        self,
+        instrument: Instrument,
+        quantity: float,
+        generation_time: dt.datetime,
+        execution_date: dt.date,
+        source: str,
+    ):
         super().__init__(instrument, quantity, generation_time, source)
         self.execution_date = execution_date
 
@@ -151,20 +148,23 @@ class OrderCost(OrderBase):
         return 'Cost'
 
     def to_dict(self, data_hander: DataHandler) -> dict:
-        return {'Instrument': self.instrument.currency,
-                'Type': self._short_name(),
-                'Price': self.execution_price(data_hander),
-                'Quantity': self.execution_quantity()
-                }
+        return {
+            'Instrument': self.instrument.currency,
+            'Type': self._short_name(),
+            'Price': self.execution_price(data_hander),
+            'Quantity': self.execution_quantity(),
+        }
 
 
 class OrderAtMarket(OrderBase):
-    def __init__(self,
-                 instrument: Instrument,
-                 quantity: float,
-                 generation_time: dt.datetime,
-                 execution_datetime: dt.datetime,
-                 source: str):
+    def __init__(
+        self,
+        instrument: Instrument,
+        quantity: float,
+        generation_time: dt.datetime,
+        execution_datetime: dt.datetime,
+        source: str,
+    ):
         super().__init__(instrument, quantity, generation_time, source)
         self.execution_datetime = execution_datetime
 
@@ -173,8 +173,9 @@ class OrderAtMarket(OrderBase):
 
     def _execution_price(self, data_handler: DataHandler) -> float:
         if self.executed_price is None:
-            self.executed_price = data_handler.get_data(self.execution_datetime,
-                                                        self.instrument, ValuationFixingType.PRICE)
+            self.executed_price = data_handler.get_data(
+                self.execution_datetime, self.instrument, ValuationFixingType.PRICE
+            )
         return self.executed_price
 
     def execution_quantity(self) -> float:
@@ -185,14 +186,16 @@ class OrderAtMarket(OrderBase):
 
 
 class OrderTwapBTIC(OrderTWAP):
-    def __init__(self,
-                 instrument: Instrument,
-                 quantity: float,
-                 generation_time: dt.datetime,
-                 source: str,
-                 window: TimeWindow,
-                 btic_instrument: Instrument,
-                 future_underlying):
+    def __init__(
+        self,
+        instrument: Instrument,
+        quantity: float,
+        generation_time: dt.datetime,
+        source: str,
+        window: TimeWindow,
+        btic_instrument: Instrument,
+        future_underlying,
+    ):
         super().__init__(instrument, quantity, generation_time, source, window)
         """
         Create a BTIC TWAP order: an order for a future executed at underlying spot + BTIC TWAP
@@ -202,8 +205,9 @@ class OrderTwapBTIC(OrderTWAP):
 
     def _execution_price(self, data_handler: DataHandler) -> float:
         if self.executed_price is None:
-            btic_fixings = data_handler.get_data_range(self.window.start, self.window.end,
-                                                       self.btic_instrument, ValuationFixingType.PRICE)
+            btic_fixings = data_handler.get_data_range(
+                self.window.start, self.window.end, self.btic_instrument, ValuationFixingType.PRICE
+            )
             btic_twap = np.mean(btic_fixings)
             close = data_handler.get_data(self.window.end.date(), self.future_underlying)
             self.executed_price = close + btic_twap

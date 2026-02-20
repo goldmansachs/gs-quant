@@ -19,12 +19,18 @@ import pandas as pd
 
 from typing import Dict, Any, Tuple, Union
 
-from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import \
-    decode_inst_tuple, decode_inst
-from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import \
-    encode_series_result, encode_dataframe_result
-from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_encoders import decode_risk_result, \
-    decode_risk_result_with_data
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import (
+    decode_inst_tuple,
+    decode_inst,
+)
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import (
+    encode_series_result,
+    encode_dataframe_result,
+)
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_encoders import (
+    decode_risk_result,
+    decode_risk_result_with_data,
+)
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction, TransactionDirection
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
 from gs_quant.common import Currency, CurrencyName, RiskMeasure
@@ -56,12 +62,15 @@ def decode_result_tuple(results: tuple):
 
 
 def decode_basic_bt_measure_dict(results: dict) -> Dict[FlowVolBacktestMeasure, Dict[dt.date, RiskResultWithData]]:
-    return {FlowVolBacktestMeasure(k): {dt.date.fromisoformat(d): decode_risk_result_with_data(r) for d, r in v.items()}
-            for k, v in results.items()}
+    return {
+        FlowVolBacktestMeasure(k): {dt.date.fromisoformat(d): decode_risk_result_with_data(r) for d, r in v.items()}
+        for k, v in results.items()
+    }
 
 
-def decode_basic_bt_transactions(results: dict, decode_instruments: bool = True) -> \
-        Dict[dt.date, Tuple[Transaction, ...]]:
+def decode_basic_bt_transactions(
+    results: dict, decode_instruments: bool = True
+) -> Dict[dt.date, Tuple[Transaction, ...]]:
     def to_ccy(s: str) -> Union[Currency, CurrencyName, str]:
         if s in [x.value for x in Currency]:
             return Currency(s)
@@ -70,8 +79,17 @@ def decode_basic_bt_transactions(results: dict, decode_instruments: bool = True)
         else:
             return s
 
-    return {dt.date.fromisoformat(k): tuple(
-            Transaction(decode_inst_tuple(t['portfolio']) if decode_instruments else t['portfolio'],
-                        t.get('portfolio_price'), t.get('cost'), to_ccy(t['currency']) if t.get('currency') else None,
-                        TransactionDirection(t['direction']) if t.get('direction') else None, t.get('quantity'))
-            for t in v) for k, v in results.items()}
+    return {
+        dt.date.fromisoformat(k): tuple(
+            Transaction(
+                decode_inst_tuple(t['portfolio']) if decode_instruments else t['portfolio'],
+                t.get('portfolio_price'),
+                t.get('cost'),
+                to_ccy(t['currency']) if t.get('currency') else None,
+                TransactionDirection(t['direction']) if t.get('direction') else None,
+                t.get('quantity'),
+            )
+            for t in v
+        )
+        for k, v in results.items()
+    }

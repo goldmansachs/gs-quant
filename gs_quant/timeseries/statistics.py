@@ -28,8 +28,16 @@ from statsmodels.regression.rolling import RollingOLS
 
 from .algebra import ceil, floor
 from .datetime import interpolate
-from .helper import Window, normalize_window, rolling_offset, apply_ramp, plot_function, rolling_apply, Interpolate, \
-    plot_method
+from .helper import (
+    Window,
+    normalize_window,
+    rolling_offset,
+    apply_ramp,
+    plot_function,
+    rolling_apply,
+    Interpolate,
+    plot_method,
+)
 from ..data import DataContext
 from ..errors import MqValueError, MqTypeError
 from ..models.epidemiology import SIR, SEIR, EpidemicModel
@@ -43,6 +51,7 @@ Generally not finance-specific routines.
 try:
     from quant_extensions.timeseries.statistics import rolling_std
 except ImportError:
+
     def rolling_std(x: pd.Series, offset: pd.DateOffset) -> pd.Series:
         size = len(x)
         index = x.index
@@ -56,7 +65,7 @@ except ImportError:
                 if pd.Timestamp(index[j]) > index[i] - offset:
                     start = j
                     break
-            section = values[start:i + 1]
+            section = values[start : i + 1]
             results[i] = np.std(section[section == section], ddof=1)
         return pd.Series(results, index=index, dtype=np.double)
 
@@ -136,8 +145,11 @@ def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = rolling_offset(x, w.w, np.nanmin, 'min') if isinstance(x, pd.Series) else [
-            x.loc[(x.index > (idx - w.w).datetime()) & (x.index <= idx)].min() for idx in x.index]
+        values = (
+            rolling_offset(x, w.w, np.nanmin, 'min')
+            if isinstance(x, pd.Series)
+            else [x.loc[(x.index > (idx - w.w).datetime()) & (x.index <= idx)].min() for idx in x.index]
+        )
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).min(), w)
@@ -203,8 +215,11 @@ def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = rolling_offset(x, w.w, np.nanmax, 'max') if isinstance(x, pd.Series) else [
-            x.loc[(x.index > idx - w.w) & (x.index <= idx)].max() for idx in x.index]
+        values = (
+            rolling_offset(x, w.w, np.nanmax, 'max')
+            if isinstance(x, pd.Series)
+            else [x.loc[(x.index > idx - w.w) & (x.index <= idx)].max() for idx in x.index]
+        )
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).max(), w)
@@ -257,8 +272,11 @@ class MeanType(Enum):
 
 
 @plot_function
-def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0),
-         mean_type: MeanType = MeanType.ARITHMETIC) -> pd.Series:
+def mean(
+    x: Union[pd.Series, List[pd.Series]],
+    w: Union[Window, int, str] = Window(None, 0),
+    mean_type: MeanType = MeanType.ARITHMETIC,
+) -> pd.Series:
     """
     Arithmetic mean of series over given window
 
@@ -307,7 +325,7 @@ def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
 
     if mean_type is MeanType.QUADRATIC:
-        x = x ** 2
+        x = x**2
 
     if isinstance(w.w, pd.DateOffset):
         if isinstance(x, pd.Series):
@@ -318,7 +336,7 @@ def mean(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
         if isinstance(x, pd.Series):
             values = x.rolling(w.w, 0).mean()  # faster than slicing in Python
         else:
-            values = [np.nanmean(x.iloc[max(idx - w.w + 1, 0): idx + 1]) for idx in range(0, len(x))]
+            values = [np.nanmean(x.iloc[max(idx - w.w + 1, 0) : idx + 1]) for idx in range(0, len(x))]
     result = pd.Series(values, index=x.index, dtype=np.dtype(float))
     if mean_type is MeanType.QUADRATIC:
         result = np.sqrt(result)
@@ -363,8 +381,11 @@ def median(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Ser
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = rolling_offset(x, w.w, np.nanmedian, 'median') if isinstance(x, pd.Series) else [
-            x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].median() for idx in x.index]
+        values = (
+            rolling_offset(x, w.w, np.nanmedian, 'median')
+            if isinstance(x, pd.Series)
+            else [x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].median() for idx in x.index]
+        )
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).median(), w)
@@ -403,8 +424,11 @@ def mode(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Serie
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = rolling_apply(x, w.w, lambda a: stats.mode(a).mode[0]) if isinstance(x, pd.Series) else [
-            stats.mode(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]).mode[0] for idx in x.index]
+        values = (
+            rolling_apply(x, w.w, lambda a: stats.mode(a).mode[0])
+            if isinstance(x, pd.Series)
+            else [stats.mode(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]).mode[0] for idx in x.index]
+        )
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).apply(lambda y: stats.mode(y).mode, raw=True), w)
@@ -498,8 +522,11 @@ def product(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Se
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing
     if isinstance(w.w, pd.DateOffset):
-        values = rolling_offset(x, w.w, np.nanprod, 'prod') if isinstance(x, pd.Series) else [
-            x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].prod() for idx in x.index]
+        values = (
+            rolling_offset(x, w.w, np.nanprod, 'prod')
+            if isinstance(x, pd.Series)
+            else [x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].prod() for idx in x.index]
+        )
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).agg(pd.Series.prod), w)
@@ -638,8 +665,11 @@ def var(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series
     w = normalize_window(x, w)
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
-        values = rolling_offset(x, w.w, lambda a: np.nanvar(a, ddof=1), 'var') if isinstance(x, pd.Series) else [
-            x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].var() for idx in x.index]
+        values = (
+            rolling_offset(x, w.w, lambda a: np.nanvar(a, ddof=1), 'var')
+            if isinstance(x, pd.Series)
+            else [x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)].var() for idx in x.index]
+        )
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
         return apply_ramp(x.rolling(w.w, 0).var(), w)
@@ -880,8 +910,9 @@ class IntradayDirection(Enum):
 
 
 @plot_function
-def generate_series_intraday(length: int, direction: IntradayDirection = IntradayDirection.START_INTRADAY_NOW)\
-        -> pd.Series:
+def generate_series_intraday(
+    length: int, direction: IntradayDirection = IntradayDirection.START_INTRADAY_NOW
+) -> pd.Series:
     """
     Generate sample intraday timeseries with minute-level granularity
 
@@ -992,9 +1023,10 @@ def percentiles(x: pd.Series, y: Optional[pd.Series] = None, w: Union[Window, in
             res.loc[idx] = percentileofscore(sample, val, kind='mean')
     elif not y.empty:
         min_periods = 0 if isinstance(w.r, pd.DateOffset) else w.r
-        rolling_window = x[:y.index[-1]].rolling(w.w, min_periods)
-        percentile_on_x_index = rolling_window.apply(lambda a: percentileofscore(a, y[a.index[-1]:].iloc[0],
-                                                                                 kind="mean"))
+        rolling_window = x[: y.index[-1]].rolling(w.w, min_periods)
+        percentile_on_x_index = rolling_window.apply(
+            lambda a: percentileofscore(a, y[a.index[-1] :].iloc[0], kind="mean")
+        )
         joined_index = pd.concat([x, y], axis=1).index
         res = percentile_on_x_index.reindex(joined_index, method="ffill")[y.index]
     return apply_ramp(res, w)
@@ -1261,10 +1293,17 @@ class SIRModel:
 
     """
 
-    def __init__(self, beta: float = None, gamma: float = None, s: Union[pd.Series, float] = None,
-                 i: Union[pd.Series, float] = None, r: Union[pd.Series, float] = None,
-                 n: Union[pd.Series, float] = None, fit: bool = True,
-                 fit_period: int = None):
+    def __init__(
+        self,
+        beta: float = None,
+        gamma: float = None,
+        s: Union[pd.Series, float] = None,
+        i: Union[pd.Series, float] = None,
+        r: Union[pd.Series, float] = None,
+        n: Union[pd.Series, float] = None,
+        fit: bool = True,
+        fit_period: int = None,
+    ):
         if not isinstance(fit, bool):
             raise MqTypeError('expected a boolean value for "fit"')
 
@@ -1301,14 +1340,24 @@ class SIRModel:
         beta_init = self.beta_init if self.beta_init is not None else 0.9
         gamma_init = self.gamma_init if self.gamma_init is not None else 0.01
 
-        parameters, initial_conditions = SIR.get_parameters(self.s.iloc[0], self.i.iloc[0], self.r.iloc[0], n,
-                                                            beta=beta_init, gamma=gamma_init,
-                                                            beta_fixed=self.beta_fixed, gamma_fixed=self.gamma_fixed,
-                                                            S0_fixed=True, I0_fixed=True, R0_fixed=True)
+        parameters, initial_conditions = SIR.get_parameters(
+            self.s.iloc[0],
+            self.i.iloc[0],
+            self.r.iloc[0],
+            n,
+            beta=beta_init,
+            gamma=gamma_init,
+            beta_fixed=self.beta_fixed,
+            gamma_fixed=self.gamma_fixed,
+            S0_fixed=True,
+            I0_fixed=True,
+            R0_fixed=True,
+        )
         self.parameters = parameters
 
-        self._model = EpidemicModel(SIR, parameters=parameters, data=data, initial_conditions=initial_conditions,
-                                    fit_period=self.fit_period)
+        self._model = EpidemicModel(
+            SIR, parameters=parameters, data=data, initial_conditions=initial_conditions, fit_period=self.fit_period
+        )
         if self.fit:
             self._model.fit(verbose=False)
 
@@ -1445,10 +1494,19 @@ class SEIRModel(SIRModel):
 
     """
 
-    def __init__(self, beta: float = None, gamma: float = None, sigma: float = None, s: Union[pd.Series, float] = None,
-                 e: Union[pd.Series, float] = None, i: Union[pd.Series, float] = None,
-                 r: Union[pd.Series, float] = None, n: Union[pd.Series, float] = None,
-                 fit: bool = True, fit_period: int = None):
+    def __init__(
+        self,
+        beta: float = None,
+        gamma: float = None,
+        sigma: float = None,
+        s: Union[pd.Series, float] = None,
+        e: Union[pd.Series, float] = None,
+        i: Union[pd.Series, float] = None,
+        r: Union[pd.Series, float] = None,
+        n: Union[pd.Series, float] = None,
+        fit: bool = True,
+        fit_period: int = None,
+    ):
         if not isinstance(fit, bool):
             raise MqTypeError('expected a boolean value for "fit"')
 
@@ -1490,25 +1548,39 @@ class SEIRModel(SIRModel):
         gamma_init = self.gamma_init if self.gamma_init is not None else 0.01
         sigma_init = self.sigma_init if self.sigma_init is not None else 0.2
 
-        parameters, initial_conditions = SEIR.get_parameters(self.s.iloc[0], self.e.iloc[0],
-                                                             self.i.iloc[0], self.r.iloc[0], n,
-                                                             beta=beta_init, gamma=gamma_init, sigma=sigma_init,
-                                                             beta_fixed=self.beta_fixed,
-                                                             gamma_fixed=self.gamma_fixed,
-                                                             sigma_fixed=self.sigma_fixed,
-                                                             S0_fixed=True, I0_fixed=True,
-                                                             R0_fixed=True, E0_fixed=True, S0_max=5e6, I0_max=5e6,
-                                                             E0_max=10e6, R0_max=10e6)
+        parameters, initial_conditions = SEIR.get_parameters(
+            self.s.iloc[0],
+            self.e.iloc[0],
+            self.i.iloc[0],
+            self.r.iloc[0],
+            n,
+            beta=beta_init,
+            gamma=gamma_init,
+            sigma=sigma_init,
+            beta_fixed=self.beta_fixed,
+            gamma_fixed=self.gamma_fixed,
+            sigma_fixed=self.sigma_fixed,
+            S0_fixed=True,
+            I0_fixed=True,
+            R0_fixed=True,
+            E0_fixed=True,
+            S0_max=5e6,
+            I0_max=5e6,
+            E0_max=10e6,
+            R0_max=10e6,
+        )
         self.parameters = parameters
 
-        self._model = EpidemicModel(SEIR, parameters=parameters, data=data, initial_conditions=initial_conditions,
-                                    fit_period=self.fit_period)
+        self._model = EpidemicModel(
+            SEIR, parameters=parameters, data=data, initial_conditions=initial_conditions, fit_period=self.fit_period
+        )
         if self.fit:
             self._model.fit(verbose=False)
 
         t = np.arange((end_date - start_date).days + 1)
-        predict = self._model.solve(t, (self.s0(), self.e0(), self.i0(), self.r0()),
-                                    (self.beta(), self.gamma(), self.sigma(), n))
+        predict = self._model.solve(
+            t, (self.s0(), self.e0(), self.i0(), self.r0()), (self.beta(), self.gamma(), self.sigma(), n)
+        )
 
         predict_dates = pd.date_range(start_date, end_date)
 

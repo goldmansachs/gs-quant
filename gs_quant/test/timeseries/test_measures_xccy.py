@@ -32,8 +32,11 @@ from gs_quant.markets.securities import Bond, Cross, Currency
 from gs_quant.session import GsSession, Environment
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import CurrencyEnum, SecurityMaster, CrossCurrencyRateOptionType
-from gs_quant.timeseries.measures_xccy import _currency_to_tdapi_crosscurrency_swap_rate_asset, \
-    CROSSCURRENCY_RATES_DEFAULTS, TdapiCrossCurrencyRatesDefaultsProvider
+from gs_quant.timeseries.measures_xccy import (
+    _currency_to_tdapi_crosscurrency_swap_rate_asset,
+    CROSSCURRENCY_RATES_DEFAULTS,
+    TdapiCrossCurrencyRatesDefaultsProvider,
+)
 
 _index = [pd.Timestamp('2021-03-30')]
 _test_datasets = ('TEST_DATASET',)
@@ -53,29 +56,18 @@ def test_get_floating_rate_option_for_benchmark_retuns_rate_usd():
 
 def test_currency_to_tdapi_xccy_swap_rate_asset(mocker):
     replace = Replacer()
-    mocker.patch.object(GsSession.__class__, 'current',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures_xccy.Asset.get_identifier', Mock())
 
     with PricingContext(dt.date.today()):
         cur = [
-            {
-                "currency_assetId": "MAK1FHKH5P5GJSHH",
-                "currency": "JPY",
-                "xccy_id": "MAFMW4HJC5TDE51H"
-            },
-            {
-                "currency_assetId": "MA66CZBQJST05XKG",
-                "currency": "GBP",
-                "xccy_id": "MATDD783JM1C2GGD"
-            },
-            {
-                "currency_assetId": "MAJNQPFGN1EBDHAE",
-                "currency": "EUR",
-                "xccy_id": "MAW8SAXPSKYA94E2"
-            },
+            {"currency_assetId": "MAK1FHKH5P5GJSHH", "currency": "JPY", "xccy_id": "MAFMW4HJC5TDE51H"},
+            {"currency_assetId": "MA66CZBQJST05XKG", "currency": "GBP", "xccy_id": "MATDD783JM1C2GGD"},
+            {"currency_assetId": "MAJNQPFGN1EBDHAE", "currency": "EUR", "xccy_id": "MAW8SAXPSKYA94E2"},
         ]
         for c in cur:
             print(c)
@@ -90,28 +82,39 @@ def test_currency_to_tdapi_xccy_swap_rate_asset(mocker):
 
 
 def test_get_crosscurrency_swap_leg_defaults():
-    result_dict = dict(currency=CurrEnum.JPY, rateOption="JPY-LIBOR-BBA",
-                       designatedMaturity="3m", pricing_location=PricingLocation.TKO)
+    result_dict = dict(
+        currency=CurrEnum.JPY, rateOption="JPY-LIBOR-BBA", designatedMaturity="3m", pricing_location=PricingLocation.TKO
+    )
     defaults = tm._get_crosscurrency_swap_leg_defaults(CurrEnum.JPY, tm.CrossCurrencyRateOptionType.LIBOR)
     assert result_dict == defaults
 
-    result_dict = dict(currency=CurrEnum.EUR, rateOption="EUR-EURIBOR-TELERATE",
-                       designatedMaturity="3m", pricing_location=PricingLocation.LDN)
+    result_dict = dict(
+        currency=CurrEnum.EUR,
+        rateOption="EUR-EURIBOR-TELERATE",
+        designatedMaturity="3m",
+        pricing_location=PricingLocation.LDN,
+    )
     defaults = tm._get_crosscurrency_swap_leg_defaults(CurrEnum.EUR, tm.CrossCurrencyRateOptionType.LIBOR)
     assert result_dict == defaults
 
-    result_dict = dict(currency=CurrEnum.EUR, rateOption="EUR-EONIA-OIS-COMPOUND",
-                       designatedMaturity="3m", pricing_location=PricingLocation.LDN)
+    result_dict = dict(
+        currency=CurrEnum.EUR,
+        rateOption="EUR-EONIA-OIS-COMPOUND",
+        designatedMaturity="3m",
+        pricing_location=PricingLocation.LDN,
+    )
     defaults = tm._get_crosscurrency_swap_leg_defaults(CurrEnum.EUR, tm.CrossCurrencyRateOptionType.OIS)
     assert result_dict == defaults
 
-    result_dict = dict(currency=CurrEnum.GBP, rateOption="GBP-LIBOR-BBA",
-                       designatedMaturity="3m", pricing_location=PricingLocation.LDN)
+    result_dict = dict(
+        currency=CurrEnum.GBP, rateOption="GBP-LIBOR-BBA", designatedMaturity="3m", pricing_location=PricingLocation.LDN
+    )
     defaults = tm._get_crosscurrency_swap_leg_defaults(CurrEnum.GBP, tm.CrossCurrencyRateOptionType.LIBOR)
     assert result_dict == defaults
 
-    result_dict = dict(currency=CurrEnum.GBP, rateOption="GBP-LIBOR-BBA",
-                       designatedMaturity="3m", pricing_location=PricingLocation.LDN)
+    result_dict = dict(
+        currency=CurrEnum.GBP, rateOption="GBP-LIBOR-BBA", designatedMaturity="3m", pricing_location=PricingLocation.LDN
+    )
     defaults = tm._get_crosscurrency_swap_leg_defaults(CurrEnum.GBP, None)
     assert result_dict == defaults
 
@@ -119,8 +122,9 @@ def test_get_crosscurrency_swap_leg_defaults():
 def test_get_crosscurrency_swap_csa_terms():
     valid_ccy = ['EUR', 'GBP', 'JPY']
     for ccy in valid_ccy:
-        assert dict(csaTerms=ccy + '-1') == \
-               tm._get_crosscurrency_swap_csa_terms(ccy, tm.CrossCurrencyRateOptionType.LIBOR.value)
+        assert dict(csaTerms=ccy + '-1') == tm._get_crosscurrency_swap_csa_terms(
+            ccy, tm.CrossCurrencyRateOptionType.LIBOR.value
+        )
 
 
 def test_check_valid_indices():
@@ -153,14 +157,16 @@ def test_get_tdapi_crosscurrency_rates_assets(mocker):
 
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = []
-    kwargs = dict(asset_parameters_clearing_house='NONE',
-                  asset_parameters_payer_rate_option="EUR-EURIBOR-TELERATE",
-                  asset_parameters_payer_currency='EUR',
-                  asset_parameters_payer_designated_maturity='3m',
-                  asset_parameters_receiver_rate_option="USD-LIBOR-BBA",
-                  asset_parameters_receiver_currency='USD',
-                  asset_parameters_receiver_designated_maturity='3m',
-                  pricing_location='LDN')
+    kwargs = dict(
+        asset_parameters_clearing_house='NONE',
+        asset_parameters_payer_rate_option="EUR-EURIBOR-TELERATE",
+        asset_parameters_payer_currency='EUR',
+        asset_parameters_payer_designated_maturity='3m',
+        asset_parameters_receiver_rate_option="USD-LIBOR-BBA",
+        asset_parameters_receiver_currency='USD',
+        asset_parameters_receiver_designated_maturity='3m',
+        pricing_location='LDN',
+    )
     with pytest.raises(MqValueError):
         tm._get_tdapi_crosscurrency_rates_assets(**kwargs)
     replace.restore()
@@ -172,15 +178,19 @@ def test_get_tdapi_crosscurrency_rates_assets(mocker):
     replace.restore()
 
     #   test case will test matching sofr maturity with libor leg and flipping legs to get right asset
-    kwargs = dict(type='XccySwapMTM', asset_parameters_termination_date='5y',
-                  asset_parameters_payer_rate_option="EUR-EURIBOR-TELERATE",
-                  asset_parameters_payer_currency="EUR",
-                  asset_parameters_payer_designated_maturity='3m',
-                  asset_parameters_receiver_rate_option="USD-LIBOR-BBA",
-                  asset_parameters_receiver_currency="USD",
-                  asset_parameters_receiver_designated_maturity='3m',
-                  asset_parameters_clearing_house='None', asset_parameters_effective_date='5y',
-                  pricing_location='LDN')
+    kwargs = dict(
+        type='XccySwapMTM',
+        asset_parameters_termination_date='5y',
+        asset_parameters_payer_rate_option="EUR-EURIBOR-TELERATE",
+        asset_parameters_payer_currency="EUR",
+        asset_parameters_payer_designated_maturity='3m',
+        asset_parameters_receiver_rate_option="USD-LIBOR-BBA",
+        asset_parameters_receiver_currency="USD",
+        asset_parameters_receiver_designated_maturity='3m',
+        asset_parameters_clearing_house='None',
+        asset_parameters_effective_date='5y',
+        pricing_location='LDN',
+    )
 
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1]

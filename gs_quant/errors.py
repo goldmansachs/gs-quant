@@ -19,6 +19,7 @@ import sys
 
 class MqError(Exception):
     """Base class for errors in this module"""
+
     pass
 
 

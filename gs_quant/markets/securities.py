@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import calendar
 import datetime as dt
 import json
@@ -257,14 +258,16 @@ class ReturnType(Enum):
 
 
 class Asset(Entity, metaclass=ABCMeta):
-    def __init__(self,
-                 id_: str,
-                 asset_class: AssetClass,
-                 name: str,
-                 exchange: Optional[str] = None,
-                 currency: Optional[str] = None,
-                 parameters: AssetParameters = None,
-                 entity: Optional[Dict] = None):
+    def __init__(
+        self,
+        id_: str,
+        asset_class: AssetClass,
+        name: str,
+        exchange: Optional[str] = None,
+        currency: Optional[str] = None,
+        parameters: AssetParameters = None,
+        entity: Optional[Dict] = None,
+    ):
         super().__init__(id_, EntityType.ASSET, entity=entity)
         self.__id = id_
         self.asset_class = asset_class
@@ -343,9 +346,11 @@ class Asset(Entity, metaclass=ABCMeta):
 
         return identifiers
 
-    @cachetools.cached(cachetools.TTLCache(256, 600),
-                       lambda s, id_type, as_of=None: cachetools.keys.hashkey(s.get_marquee_id(), id_type, as_of),
-                       threading.RLock())
+    @cachetools.cached(
+        cachetools.TTLCache(256, 600),
+        lambda s, id_type, as_of=None: cachetools.keys.hashkey(s.get_marquee_id(), id_type, as_of),
+        threading.RLock(),
+    )
     def get_identifier(self, id_type: AssetIdentifier, as_of: dt.date = None):
         """
         Get asset identifier
@@ -426,14 +431,16 @@ class Asset(Entity, metaclass=ABCMeta):
 
         return list(final_measure_set)
 
-    def get_data_series(self,
-                        measure: DataMeasure,
-                        dimensions: Optional[DataDimensions] = None,
-                        frequency: Optional[DataFrequency] = None,
-                        start: Optional[DateOrDatetime] = None,
-                        end: Optional[DateOrDatetime] = None,
-                        dates: List[dt.date] = None,
-                        operator: DataAggregationOperator = None) -> pd.Series:
+    def get_data_series(
+        self,
+        measure: DataMeasure,
+        dimensions: Optional[DataDimensions] = None,
+        frequency: Optional[DataFrequency] = None,
+        start: Optional[DateOrDatetime] = None,
+        end: Optional[DateOrDatetime] = None,
+        dates: List[dt.date] = None,
+        operator: DataAggregationOperator = None,
+    ) -> pd.Series:
         """
         Get asset series
 
@@ -474,16 +481,16 @@ class Asset(Entity, metaclass=ABCMeta):
     def get_latest_close_price(self) -> float:
         coordinate = self.get_data_coordinate(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY)
         if coordinate is None:
-            raise MqValueError(f"No data co-ordinate found for these parameters: \
-                {DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY}")
+            raise MqValueError(
+                f"No data co-ordinate found for these parameters: \
+                {DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY}"
+            )
         return coordinate.last_value()
 
     def get_close_price_for_date(self, date: dt.date) -> pd.Series:
         return self.get_data_series(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY, date, date)
 
-    def get_close_prices(self,
-                         start: dt.date = DateLimit.LOW_LIMIT.value,
-                         end: dt.date = dt.date.today()) -> pd.Series:
+    def get_close_prices(self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()) -> pd.Series:
         """
         Get close price series
 
@@ -509,10 +516,12 @@ class Asset(Entity, metaclass=ABCMeta):
         """
         return self.get_data_series(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY, start, end)
 
-    def get_hloc_prices(self,
-                        start: dt.date = DateLimit.LOW_LIMIT.value,
-                        end: dt.date = dt.date.today(),
-                        interval_frequency: IntervalFrequency = IntervalFrequency.DAILY) -> pd.DataFrame:
+    def get_hloc_prices(
+        self,
+        start: dt.date = DateLimit.LOW_LIMIT.value,
+        end: dt.date = dt.date.today(),
+        interval_frequency: IntervalFrequency = IntervalFrequency.DAILY,
+    ) -> pd.DataFrame:
         """
         Get high, low, open, close (hloc) prices
 
@@ -555,14 +564,46 @@ class Asset(Entity, metaclass=ABCMeta):
                 raise MqValueError(f'Unsupported IntervalFrequency {interval_frequency.value} for get_hloc_prices')
 
             tasks = [
-                partial(self.get_data_series, DataMeasure.ADJUSTED_HIGH_PRICE, None, DataFrequency.DAILY, start, end,
-                        dates=dates, operator=DataAggregationOperator.MAX if use_field else None),
-                partial(self.get_data_series, DataMeasure.ADJUSTED_LOW_PRICE, None, DataFrequency.DAILY, start, end,
-                        dates=dates, operator=DataAggregationOperator.MIN if use_field else None),
-                partial(self.get_data_series, DataMeasure.ADJUSTED_OPEN_PRICE, None, DataFrequency.DAILY, start, end,
-                        dates=dates, operator=DataAggregationOperator.FIRST if use_field else None),
-                partial(self.get_data_series, DataMeasure.ADJUSTED_CLOSE_PRICE, None, DataFrequency.DAILY, start, end,
-                        dates=dates, operator=DataAggregationOperator.LAST if use_field else None)
+                partial(
+                    self.get_data_series,
+                    DataMeasure.ADJUSTED_HIGH_PRICE,
+                    None,
+                    DataFrequency.DAILY,
+                    start,
+                    end,
+                    dates=dates,
+                    operator=DataAggregationOperator.MAX if use_field else None,
+                ),
+                partial(
+                    self.get_data_series,
+                    DataMeasure.ADJUSTED_LOW_PRICE,
+                    None,
+                    DataFrequency.DAILY,
+                    start,
+                    end,
+                    dates=dates,
+                    operator=DataAggregationOperator.MIN if use_field else None,
+                ),
+                partial(
+                    self.get_data_series,
+                    DataMeasure.ADJUSTED_OPEN_PRICE,
+                    None,
+                    DataFrequency.DAILY,
+                    start,
+                    end,
+                    dates=dates,
+                    operator=DataAggregationOperator.FIRST if use_field else None,
+                ),
+                partial(
+                    self.get_data_series,
+                    DataMeasure.ADJUSTED_CLOSE_PRICE,
+                    None,
+                    DataFrequency.DAILY,
+                    start,
+                    end,
+                    dates=dates,
+                    operator=DataAggregationOperator.LAST if use_field else None,
+                ),
             ]
 
             results = ThreadPoolManager.run_async(tasks)
@@ -591,29 +632,41 @@ class Asset(Entity, metaclass=ABCMeta):
         return 'assetId'
 
     @classmethod
-    def get(cls,
-            id_value: str,
-            id_type: AssetIdentifier,
-            as_of: Union[dt.date, dt.datetime] = None,
-            exchange_code: ExchangeCode = None,
-            asset_type: AssetType = None,
-            sort_by_rank: bool = False) -> Optional['Asset']:
+    def get(
+        cls,
+        id_value: str,
+        id_type: AssetIdentifier,
+        as_of: Union[dt.date, dt.datetime] = None,
+        exchange_code: ExchangeCode = None,
+        asset_type: AssetType = None,
+        sort_by_rank: bool = False,
+    ) -> Optional['Asset']:
         asset = SecurityMaster.get_asset(id_value, id_type, as_of, exchange_code, asset_type, sort_by_rank)
         return asset
 
 
 class SecMasterAsset(Asset):
-    def __init__(self,
-                 id_: str,
-                 asset_type: AssetType,
-                 asset_class: AssetClass,
-                 name: str,
-                 exchange: Optional[str] = None,
-                 currency: Optional[str] = None,
-                 parameters: AssetParameters = None,
-                 entity: Optional[Dict] = None):
-        Asset.__init__(self, id_, asset_class=asset_class, name=name, exchange=exchange, currency=currency,
-                       parameters=parameters, entity=entity)
+    def __init__(
+        self,
+        id_: str,
+        asset_type: AssetType,
+        asset_class: AssetClass,
+        name: str,
+        exchange: Optional[str] = None,
+        currency: Optional[str] = None,
+        parameters: AssetParameters = None,
+        entity: Optional[Dict] = None,
+    ):
+        Asset.__init__(
+            self,
+            id_,
+            asset_class=asset_class,
+            name=name,
+            exchange=exchange,
+            currency=currency,
+            parameters=parameters,
+            entity=entity,
+        )
         self.__asset_type = asset_type
         self.__cached_identifiers = None
 
@@ -632,7 +685,8 @@ class SecMasterAsset(Asset):
                 current_pricing_date = current.pricing_date
             raise MqValueError(
                 f"Current SecMasterAsset does not have a Marquee Id as of {current_pricing_date}. "
-                f"Perhaps asset did not exist at that time, or is a not an exchange-level asset.")
+                f"Perhaps asset did not exist at that time, or is a not an exchange-level asset."
+            )
         return marquee_id
 
     def get_identifier(self, id_type: Union[AssetIdentifier, SecurityIdentifier], as_of: dt.date = None):
@@ -640,7 +694,8 @@ class SecMasterAsset(Asset):
         if not isinstance(id_type, SecurityIdentifier):
             raise MqTypeError(
                 f"""Expected id_type: SecurityIdentifier.enum for Assets sourced from SecurityMaster.
-                Received: {id_type}""")
+                Received: {id_type}"""
+            )
         if id_type == SecurityIdentifier.GSID:
             return self.entity['identifiers'].get(SecurityIdentifier.GSID.value)
         if id_type == SecurityIdentifier.ID:
@@ -677,14 +732,16 @@ class SecMasterAsset(Asset):
         # TODO: BCID and BBID are not exposed in Get Identifiers History.
         return identifiers
 
-    def get_data_series(self,
-                        measure: DataMeasure,
-                        dimensions: Optional[DataDimensions] = None,
-                        frequency: Optional[DataFrequency] = None,
-                        start: Optional[DateOrDatetime] = None,
-                        end: Optional[DateOrDatetime] = None,
-                        dates: List[dt.date] = None,
-                        operator: DataAggregationOperator = None) -> pd.Series:
+    def get_data_series(
+        self,
+        measure: DataMeasure,
+        dimensions: Optional[DataDimensions] = None,
+        frequency: Optional[DataFrequency] = None,
+        start: Optional[DateOrDatetime] = None,
+        end: Optional[DateOrDatetime] = None,
+        dates: List[dt.date] = None,
+        operator: DataAggregationOperator = None,
+    ) -> pd.Series:
         """
         Will be also called by Asset.get_close_prices(),  Asset.get_close_price_for_date().
         """
@@ -696,23 +753,28 @@ class SecMasterAsset(Asset):
 
         if self.__is_validate_range(start=range_start, end=range_end):
             with PricingContext(range_start):
-                return super(SecMasterAsset, self).get_data_series(measure=measure,
-                                                                   dimensions=dimensions,
-                                                                   frequency=frequency,
-                                                                   start=range_start,
-                                                                   end=range_end,
-                                                                   dates=dates,
-                                                                   operator=operator)
+                return super(SecMasterAsset, self).get_data_series(
+                    measure=measure,
+                    dimensions=dimensions,
+                    frequency=frequency,
+                    start=range_start,
+                    end=range_end,
+                    dates=dates,
+                    operator=operator,
+                )
 
-    def get_hloc_prices(self,
-                        start: dt.date = DateLimit.LOW_LIMIT.value,
-                        end: dt.date = dt.date.today(),
-                        interval_frequency: IntervalFrequency = IntervalFrequency.DAILY) -> pd.DataFrame:
+    def get_hloc_prices(
+        self,
+        start: dt.date = DateLimit.LOW_LIMIT.value,
+        end: dt.date = dt.date.today(),
+        interval_frequency: IntervalFrequency = IntervalFrequency.DAILY,
+    ) -> pd.DataFrame:
 
         if self.__is_validate_range(start=start, end=end):
             with PricingContext(start):
-                return super(SecMasterAsset, self).get_hloc_prices(start=start, end=end,
-                                                                   interval_frequency=interval_frequency)
+                return super(SecMasterAsset, self).get_hloc_prices(
+                    start=start, end=end, interval_frequency=interval_frequency
+                )
 
     def __is_validate_range(self, start: DateOrDatetime, end: DateOrDatetime = dt.date.today()) -> bool:
         """
@@ -748,7 +810,8 @@ class SecMasterAsset(Asset):
         if start_marquee_id is None or end_marquee_id is None or start_marquee_id != end_marquee_id:
             raise MqValueError(
                 f"Asset's Marquee Id is either none or different. start:[{start_date}->{start_marquee_id}] to "
-                f"end=[{end_date}->{end_marquee_id}].")
+                f"end=[{end_date}->{end_marquee_id}]."
+            )
 
         marquee_id_xref = self.__cached_identifiers.get(SecurityIdentifier.ASSET_ID.value)
         marquee_ids = set()
@@ -764,21 +827,24 @@ class SecMasterAsset(Asset):
 
             if range_start <= range_end:
                 marquee_ids.add(marquee_id)
-                overlap_ranges[marquee_id].append([range_start.strftime("%Y-%m-%d"),
-                                                   range_end.strftime("%Y-%m-%d")])
-                output_range_start = min(output_range_start,
-                                         range_start) if output_range_start is not None else output_range_start
-                output_range_end = max(output_range_end,
-                                       range_end) if output_range_end is not None else output_range_end
+                overlap_ranges[marquee_id].append([range_start.strftime("%Y-%m-%d"), range_end.strftime("%Y-%m-%d")])
+                output_range_start = (
+                    min(output_range_start, range_start) if output_range_start is not None else output_range_start
+                )
+                output_range_end = (
+                    max(output_range_end, range_end) if output_range_end is not None else output_range_end
+                )
 
         if len(marquee_ids) > 1:
             raise MqValueError(
                 f"Asset has multiple Marquee ids between [start,end]=[{start_date},{end_date}] due to corporate "
-                f"actions. Try limiting the range over a single Marquee id. Marquee Ids found: {overlap_ranges}.")
+                f"actions. Try limiting the range over a single Marquee id. Marquee Ids found: {overlap_ranges}."
+            )
         if len(marquee_ids) == 0:
             raise MqValueError(
                 f"Asset was not assigned Marquee Id over range [start,end]=[{start_date},{end_date}]. "
-                f"Perhaps asset did not exist at that range, or is a not an exchange-level asset.")
+                f"Perhaps asset did not exist at that range, or is a not an exchange-level asset."
+            )
         return True
 
     def __load_identifiers(self) -> None:
@@ -791,7 +857,7 @@ class SecMasterAsset(Asset):
                 xref_dict = {
                     "start_date": dt.datetime.strptime(temporal_xref['startDate'], "%Y-%m-%d").date(),
                     "update_date": temporal_xref['updateTime'],
-                    "value": temporal_xref['value']
+                    "value": temporal_xref['value'],
                 }
                 if temporal_xref['endDate'] == "9999-99-99":
                     xref_dict['end_date'] = dt.datetime.max.date()
@@ -809,12 +875,14 @@ class Stock(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 exchange: Optional[str] = None,
-                 currency: Optional[Currency] = None,
-                 entity: Optional[Dict] = None):
+    def __init__(
+        self,
+        id_: str,
+        name: str,
+        exchange: Optional[str] = None,
+        currency: Optional[Currency] = None,
+        entity: Optional[Dict] = None,
+    ):
         Asset.__init__(self, id_, AssetClass.Equity, name, exchange, currency, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -823,26 +891,28 @@ class Stock(Asset):
     def get_currency(self) -> Optional[Currency]:
         return self.currency
 
-    def get_thematic_beta(self,
-                          basket_identifier: str,
-                          start: dt.date = DateLimit.LOW_LIMIT.value,
-                          end: dt.date = dt.date.today()) -> pd.DataFrame:
+    def get_thematic_beta(
+        self, basket_identifier: str, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
+    ) -> pd.DataFrame:
 
-        response = GsAssetApi.resolve_assets(identifier=[basket_identifier],
-                                             fields=['id', 'type'], limit=1)[basket_identifier]
+        response = GsAssetApi.resolve_assets(identifier=[basket_identifier], fields=['id', 'type'], limit=1)[
+            basket_identifier
+        ]
         _id, _type = get(response, '0.id'), get(response, '0.type')
         if len(response) == 0 or _id is None:
             raise MqValueError(f'Basket could not be found using identifier {basket_identifier}.')
         if _type not in BasketType.to_list():
             raise MqValueError(f'Asset {basket_identifier} of type {_type} is not a Custom or Research Basket.')
 
-        query = DataQuery(where={'gsid': self.get_identifier(AssetIdentifier.GSID, end), 'basketId': _id},
-                          start_date=start, end_date=end)
+        query = DataQuery(
+            where={'gsid': self.get_identifier(AssetIdentifier.GSID, end), 'basketId': _id},
+            start_date=start,
+            end_date=end,
+        )
         response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.THEMATIC_FACTOR_BETAS_STANDARD.value)
         df = []
         for r in response:
-            df.append({'date': r['date'], 'gsid': r['gsid'], 'basketId': r['basketId'],
-                       'thematicBeta': r['beta']})
+            df.append({'date': r['date'], 'gsid': r['gsid'], 'basketId': r['basketId'], 'thematicBeta': r['beta']})
         df = pd.DataFrame(df)
         return df.set_index('date')
 
@@ -855,11 +925,13 @@ class Cross(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None,
-                 asset_class: Optional[Union[AssetClass, str]] = AssetClass.FX):
+    def __init__(
+        self,
+        id_: str,
+        name: str,
+        entity: Optional[Dict] = None,
+        asset_class: Optional[Union[AssetClass, str]] = AssetClass.FX,
+    ):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
         Asset.__init__(self, id_, asset_class, name, entity=entity)
@@ -876,12 +948,14 @@ class Future(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 asset_class: Union[AssetClass, str],
-                 name: str,
-                 currency: Optional[Currency] = None,
-                 entity: Optional[Dict] = None):
+    def __init__(
+        self,
+        id_: str,
+        asset_class: Union[AssetClass, str],
+        name: str,
+        currency: Optional[Currency] = None,
+        entity: Optional[Dict] = None,
+    ):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
@@ -902,10 +976,7 @@ class Currency(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Cash, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -920,10 +991,7 @@ class Rate(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Rates, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -938,10 +1006,7 @@ class Cash(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Cash, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -956,10 +1021,7 @@ class WeatherIndex(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -974,10 +1036,7 @@ class CommodityReferencePrice(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -991,10 +1050,7 @@ class CommodityNaturalGasHub(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1008,10 +1064,7 @@ class CommodityEUNaturalGasHub(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1025,11 +1078,7 @@ class Cryptocurrency(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 asset_class: Union[AssetClass, str],
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1043,10 +1092,7 @@ class CommodityPowerNode(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1060,10 +1106,7 @@ class CommodityPowerAggregatedNodes(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1077,10 +1120,7 @@ class Commodity(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1094,11 +1134,7 @@ class Bond(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 asset_class: AssetClass = AssetClass.Credit,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, asset_class: AssetClass = AssetClass.Credit, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1110,11 +1146,7 @@ class Fund(Asset):
     Represents a fund.
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 asset_class: AssetClass,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, asset_class: AssetClass, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1128,11 +1160,7 @@ class FutureMarket(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 asset_class: Union[AssetClass, str],
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
         Asset.__init__(self, id_, asset_class, name, entity=entity)
@@ -1148,11 +1176,7 @@ class FutureContract(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 asset_class: Union[AssetClass, str],
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
         Asset.__init__(self, id_, asset_class, name, entity=entity)
@@ -1168,11 +1192,7 @@ class Swap(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 asset_class: Union[AssetClass, str],
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
@@ -1189,11 +1209,7 @@ class Option(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 asset_class: Union[AssetClass, str],
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
@@ -1204,12 +1220,7 @@ class Option(Asset):
 
 
 class Forward(Asset):
-
-    def __init__(self,
-                 id_: str,
-                 asset_class: Union[AssetClass, str],
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
@@ -1225,13 +1236,15 @@ class ETF(Asset, PositionedEntity):
     ETF which tracks an evolving portfolio of securities, and can be traded on exchange
     """
 
-    def __init__(self,
-                 id_: str,
-                 asset_class: AssetClass,
-                 name: str,
-                 exchange: Optional[str] = None,
-                 currency: Optional[Currency] = None,
-                 entity: Optional[Dict] = None):
+    def __init__(
+        self,
+        id_: str,
+        asset_class: AssetClass,
+        name: str,
+        exchange: Optional[str] = None,
+        currency: Optional[Currency] = None,
+        entity: Optional[Dict] = None,
+    ):
         Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
         PositionedEntity.__init__(self, id_, EntityType.ASSET)
 
@@ -1249,10 +1262,7 @@ class Swaption(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Rates, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1264,11 +1274,7 @@ class Binary(Asset):
     Represents a binary.
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 asset_class: AssetClass,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, asset_class: AssetClass, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1282,10 +1288,7 @@ class DefaultSwap(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Credit, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1299,10 +1302,7 @@ class XccySwapMTM(Asset):
 
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, AssetClass.Rates, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1315,11 +1315,7 @@ class MutualFund(Asset):
     Represents a mutual fund asset.
     """
 
-    def __init__(self,
-                 id_: str,
-                 name: str,
-                 asset_class: AssetClass,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, asset_class: AssetClass, entity: Optional[Dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1364,7 +1360,8 @@ class SecurityMaster:
 
     :class:`Asset`
 
-     """
+    """
+
     _source = SecurityMasterSource.ASSET_SERVICE
     _page_size = 1000
 
@@ -1377,23 +1374,36 @@ class SecurityMaster:
             return Stock(gs_asset.id, gs_asset.name, gs_asset.exchange, gs_asset.currency, entity=asset_entity)
 
         if asset_type in (GsAssetType.ETF.value,):
-            return ETF(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange, gs_asset.currency,
-                       entity=asset_entity)
+            return ETF(
+                gs_asset.id,
+                gs_asset.assetClass,
+                gs_asset.name,
+                gs_asset.exchange,
+                gs_asset.currency,
+                entity=asset_entity,
+            )
 
         if asset_type in (
-                GsAssetType.Index.value,
-                GsAssetType.Access.value,
-                GsAssetType.Multi_Asset_Allocation.value,
-                GsAssetType.Risk_Premia.value,
-                GsAssetType.Systematic_Hedging.value):
+            GsAssetType.Index.value,
+            GsAssetType.Access.value,
+            GsAssetType.Multi_Asset_Allocation.value,
+            GsAssetType.Risk_Premia.value,
+            GsAssetType.Systematic_Hedging.value,
+        ):
             from gs_quant.markets.index import Index
-            return Index(gs_asset.id, gs_asset.assetClass, gs_asset.name, gs_asset.exchange, gs_asset.currency,
-                         entity=asset_entity)
 
-        if asset_type in (
-                GsAssetType.Custom_Basket.value,
-                GsAssetType.Research_Basket.value):
+            return Index(
+                gs_asset.id,
+                gs_asset.assetClass,
+                gs_asset.name,
+                gs_asset.exchange,
+                gs_asset.currency,
+                entity=asset_entity,
+            )
+
+        if asset_type in (GsAssetType.Custom_Basket.value, GsAssetType.Research_Basket.value):
             from gs_quant.markets.baskets import Basket
+
             return Basket(gs_asset=gs_asset)
 
         if asset_type in (GsAssetType.Future.value,):
@@ -1479,7 +1489,11 @@ class SecurityMaster:
         asset_map = {
             AssetType.STOCK: (GsAssetType.Single_Stock,),
             AssetType.INDEX: (
-                GsAssetType.Index, GsAssetType.Multi_Asset_Allocation, GsAssetType.Risk_Premia, GsAssetType.Access),
+                GsAssetType.Index,
+                GsAssetType.Multi_Asset_Allocation,
+                GsAssetType.Risk_Premia,
+                GsAssetType.Access,
+            ),
             AssetType.ETF: (GsAssetType.ETF, GsAssetType.ETN),
             AssetType.CUSTOM_BASKET: (GsAssetType.Custom_Basket,),
             AssetType.RESEARCH_BASKET: (GsAssetType.Research_Basket,),
@@ -1494,12 +1508,14 @@ class SecurityMaster:
         cls._source = source
 
     @classmethod
-    def get_asset_query(cls,
-                        id_value: Union[str, List[str]],
-                        id_type: Union[AssetIdentifier, SecurityIdentifier],
-                        as_of: Union[dt.date, dt.datetime] = None,
-                        exchange_code: ExchangeCode = None,
-                        asset_type: AssetType = None) -> Tuple[Dict, dt.datetime]:
+    def get_asset_query(
+        cls,
+        id_value: Union[str, List[str]],
+        id_type: Union[AssetIdentifier, SecurityIdentifier],
+        as_of: Union[dt.date, dt.datetime] = None,
+        exchange_code: ExchangeCode = None,
+        asset_type: AssetType = None,
+    ) -> Tuple[Dict, dt.datetime]:
         if not as_of:
             current = PricingContext.current
             if not current.is_entered:
@@ -1535,14 +1551,16 @@ class SecurityMaster:
         return []
 
     @classmethod
-    def get_asset(cls,
-                  id_value: str,
-                  id_type: Union[AssetIdentifier, SecurityIdentifier],
-                  as_of: Union[dt.date, dt.datetime] = None,
-                  exchange_code: ExchangeCode = None,
-                  asset_type: AssetType = None,
-                  sort_by_rank: bool = True,
-                  fields: Optional[List[str]] = None) -> Asset:
+    def get_asset(
+        cls,
+        id_value: str,
+        id_type: Union[AssetIdentifier, SecurityIdentifier],
+        as_of: Union[dt.date, dt.datetime] = None,
+        exchange_code: ExchangeCode = None,
+        asset_type: AssetType = None,
+        sort_by_rank: bool = True,
+        fields: Optional[List[str]] = None,
+    ) -> Asset:
         """
         Get an asset by identifier and identifier type
 
@@ -1600,14 +1618,16 @@ class SecurityMaster:
             return cls._get_asset_results(results, sort_by_rank)
 
     @classmethod
-    async def get_asset_async(cls,
-                              id_value: str,
-                              id_type: Union[AssetIdentifier, SecurityIdentifier],
-                              as_of: Union[dt.date, dt.datetime] = None,
-                              exchange_code: ExchangeCode = None,
-                              asset_type: AssetType = None,
-                              sort_by_rank: bool = True,
-                              fields: Optional[List[str]] = None) -> Asset:
+    async def get_asset_async(
+        cls,
+        id_value: str,
+        id_type: Union[AssetIdentifier, SecurityIdentifier],
+        as_of: Union[dt.date, dt.datetime] = None,
+        exchange_code: ExchangeCode = None,
+        asset_type: AssetType = None,
+        sort_by_rank: bool = True,
+        fields: Optional[List[str]] = None,
+    ) -> Asset:
         """
         Get an asset by identifier and identifier type
 
@@ -1665,13 +1685,15 @@ class SecurityMaster:
             return cls._get_asset_results(results, sort_by_rank)
 
     @classmethod
-    def get_many_assets(cls,
-                        id_values: List[str],
-                        id_type: AssetIdentifier,
-                        limit: int = 100,
-                        as_of: Union[dt.date, dt.datetime] = None,
-                        exchange_code: ExchangeCode = None,
-                        sort_by_rank: bool = True) -> List[Asset]:
+    def get_many_assets(
+        cls,
+        id_values: List[str],
+        id_type: AssetIdentifier,
+        limit: int = 100,
+        as_of: Union[dt.date, dt.datetime] = None,
+        exchange_code: ExchangeCode = None,
+        sort_by_rank: bool = True,
+    ) -> List[Asset]:
         """
         Get an asset by identifier and identifier type
 
@@ -1721,13 +1743,15 @@ class SecurityMaster:
             return cls._get_many_assets_results(results)
 
     @classmethod
-    async def get_many_assets_async(cls,
-                                    id_values: List[str],
-                                    id_type: AssetIdentifier,
-                                    limit: int = 100,
-                                    as_of: Union[dt.date, dt.datetime] = None,
-                                    exchange_code: ExchangeCode = None,
-                                    sort_by_rank: bool = True) -> List[Asset]:
+    async def get_many_assets_async(
+        cls,
+        id_values: List[str],
+        id_type: AssetIdentifier,
+        limit: int = 100,
+        as_of: Union[dt.date, dt.datetime] = None,
+        exchange_code: ExchangeCode = None,
+        sort_by_rank: bool = True,
+    ) -> List[Asset]:
         """
         Get an asset by identifier and identifier type
 
@@ -1779,26 +1803,21 @@ class SecurityMaster:
             return cls._get_many_assets_results(results)
 
     @classmethod
-    def _get_security_master_asset_params(cls,
-                                          id_value: str,
-                                          id_type: SecurityIdentifier,
-                                          as_of: Union[dt.date, dt.datetime] = None,
-                                          fields: Optional[List[str]] = None) -> dict:
+    def _get_security_master_asset_params(
+        cls,
+        id_value: str,
+        id_type: SecurityIdentifier,
+        as_of: Union[dt.date, dt.datetime] = None,
+        fields: Optional[List[str]] = None,
+    ) -> dict:
         as_of = as_of or dt.datetime(2100, 1, 1)
         type_ = id_type.value
         params = {
             type_: id_value,
-            'asOfDate': as_of.strftime('%Y-%m-%d')  # TODO: update endpoint to take times
+            'asOfDate': as_of.strftime('%Y-%m-%d'),  # TODO: update endpoint to take times
         }
         if fields is not None:
-            request_fields = {
-                'identifiers',
-                'assetClass',
-                'type',
-                'currency',
-                'exchange',
-                'id'
-            }
+            request_fields = {'identifiers', 'assetClass', 'type', 'currency', 'exchange', 'id'}
             request_fields.update(fields)
             params['fields'] = request_fields
         return params
@@ -1816,40 +1835,53 @@ class SecurityMaster:
         try:
             asset_type = AssetType(asset_dict['type'])
             asset_class = AssetClass(asset_dict['assetClass'])
-            return SecMasterAsset(id_=asset_id,
-                                  asset_type=asset_type,
-                                  asset_class=asset_class,
-                                  name=asset_name,
-                                  exchange=asset_exchange,
-                                  currency=asset_currency,
-                                  entity=asset_dict)
+            return SecMasterAsset(
+                id_=asset_id,
+                asset_type=asset_type,
+                asset_class=asset_class,
+                name=asset_name,
+                exchange=asset_exchange,
+                currency=asset_currency,
+                entity=asset_dict,
+            )
         except ValueError:
-            raise NotImplementedError(f"Not yet implemented for AssetType={asset_dict['type']}, "
-                                      f"AssetClass={asset_dict['assetClass']}.")
+            raise NotImplementedError(
+                f"Not yet implemented for AssetType={asset_dict['type']}, AssetClass={asset_dict['assetClass']}."
+            )
 
     @classmethod
-    def _get_security_master_asset(cls,
-                                   id_value: str,
-                                   id_type: SecurityIdentifier,
-                                   as_of: Union[dt.date, dt.datetime] = None,
-                                   fields: Optional[List[str]] = None) -> SecMasterAsset:
+    def _get_security_master_asset(
+        cls,
+        id_value: str,
+        id_type: SecurityIdentifier,
+        as_of: Union[dt.date, dt.datetime] = None,
+        fields: Optional[List[str]] = None,
+    ) -> SecMasterAsset:
         params = cls._get_security_master_asset_params(id_value, id_type, as_of, fields)
         response = GsSession.current._get('/markets/securities', payload=params)
         return cls._get_security_master_asset_response(response)
 
     @classmethod
-    async def _get_security_master_asset_async(cls,
-                                               id_value: str,
-                                               id_type: SecurityIdentifier,
-                                               as_of: Union[dt.date, dt.datetime] = None,
-                                               fields: Optional[List[str]] = None) -> SecMasterAsset:
+    async def _get_security_master_asset_async(
+        cls,
+        id_value: str,
+        id_type: SecurityIdentifier,
+        as_of: Union[dt.date, dt.datetime] = None,
+        fields: Optional[List[str]] = None,
+    ) -> SecMasterAsset:
         params = cls._get_security_master_asset_params(id_value, id_type, as_of, fields)
         response = await GsSession.current._get_async('/markets/securities', payload=params)
         return cls._get_security_master_asset_response(response)
 
     @classmethod
-    def get_identifiers(cls, id_values: List[str], id_type: SecurityIdentifier, as_of: dt.datetime = None,
-                        start: dt.datetime = None, end: dt.datetime = None) -> dict:
+    def get_identifiers(
+        cls,
+        id_values: List[str],
+        id_type: SecurityIdentifier,
+        as_of: dt.datetime = None,
+        start: dt.datetime = None,
+        end: dt.datetime = None,
+    ) -> dict:
         """
         Get identifiers for given assets.
 
@@ -1871,7 +1903,7 @@ class SecurityMaster:
         params = {
             type_: id_values,
             'fields': ['id', 'identifiers'],
-            'asOfDate': as_of.strftime('%Y-%m-%d')  # TODO: update endpoint to take times
+            'asOfDate': as_of.strftime('%Y-%m-%d'),  # TODO: update endpoint to take times
         }
 
         r = GsSession.current._get('/markets/securities', payload=params)
@@ -1906,9 +1938,16 @@ class SecurityMaster:
         return asset_type.value
 
     @classmethod
-    def get_all_identifiers_gen(cls, class_: AssetClass = None, types: Optional[List[AssetType]] = None,
-                                as_of: dt.datetime = None, *, id_type: SecurityIdentifier = SecurityIdentifier.ID,
-                                use_offset_key=True, sleep=0.5) -> Generator[dict, None, None]:
+    def get_all_identifiers_gen(
+        cls,
+        class_: AssetClass = None,
+        types: Optional[List[AssetType]] = None,
+        as_of: dt.datetime = None,
+        *,
+        id_type: SecurityIdentifier = SecurityIdentifier.ID,
+        use_offset_key=True,
+        sleep=0.5,
+    ) -> Generator[dict, None, None]:
         """
         Get identifiers for all matching assets. Returns a generator iterator so that the caller can load each page of
         results using next().
@@ -1933,7 +1972,7 @@ class SecurityMaster:
             'fields': ['id', 'identifiers', 'assetClass', 'type'],
             'asOfDate': as_of.date(),
             'limit': cls._page_size,
-            'type': types
+            'type': types,
         }
 
         while True:
@@ -1967,9 +2006,16 @@ class SecurityMaster:
             time.sleep(sleep)
 
     @classmethod
-    def get_all_identifiers(cls, class_: AssetClass = None, types: Optional[List[AssetType]] = None,
-                            as_of: dt.datetime = None, *, id_type: SecurityIdentifier = SecurityIdentifier.ID,
-                            use_offset_key=True, sleep=0.5) -> Dict[str, dict]:
+    def get_all_identifiers(
+        cls,
+        class_: AssetClass = None,
+        types: Optional[List[AssetType]] = None,
+        as_of: dt.datetime = None,
+        *,
+        id_type: SecurityIdentifier = SecurityIdentifier.ID,
+        use_offset_key=True,
+        sleep=0.5,
+    ) -> Dict[str, dict]:
         """
         Get identifiers for all matching assets.
 
@@ -1981,8 +2027,9 @@ class SecurityMaster:
         :param sleep: seconds to sleep between API calls (to avoid server-side throttling)
         :return: dict from id (of the id_type) to available identifiers
         """
-        gen = cls.get_all_identifiers_gen(class_, types, as_of, id_type=id_type, use_offset_key=use_offset_key,
-                                          sleep=sleep)
+        gen = cls.get_all_identifiers_gen(
+            class_, types, as_of, id_type=id_type, use_offset_key=use_offset_key, sleep=sleep
+        )
         accumulator = dict()
         while True:
             try:
@@ -1992,13 +2039,13 @@ class SecurityMaster:
 
     @classmethod
     def map_identifiers(
-            cls,
-            input_type: SecurityIdentifier,
-            ids: Iterable[str],
-            output_types: Iterable[SecurityIdentifier] = frozenset([SecurityIdentifier.GSID]),
-            start_date: dt.date = None,
-            end_date: dt.date = None,
-            as_of_date: dt.date = None
+        cls,
+        input_type: SecurityIdentifier,
+        ids: Iterable[str],
+        output_types: Iterable[SecurityIdentifier] = frozenset([SecurityIdentifier.GSID]),
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        as_of_date: dt.date = None,
     ) -> Dict[dt.date, dict]:
         """
         Map to other identifier types, from given IDs.
@@ -2040,8 +2087,7 @@ class SecurityMaster:
 
             input_type = get_asset_id_type(input_type)
             output_type = get_asset_id_type(output_types[0])
-            as_of = None if as_of_date is None else dt.datetime.combine(as_of_date,
-                                                                        dt.time(tzinfo=dt.timezone.utc))
+            as_of = None if as_of_date is None else dt.datetime.combine(as_of_date, dt.time(tzinfo=dt.timezone.utc))
             result = GsAssetApi.map_identifiers(input_type, output_type, list(ids), as_of=as_of, multimap=True)
             if len(result) == 0:
                 return result
@@ -2052,7 +2098,7 @@ class SecurityMaster:
         params = {
             input_type.value: list(ids),
             'toIdentifiers': [identifier.value for identifier in output_types],
-            'compact': True
+            'compact': True,
         }
         if as_of_date is not None:
             if (start_date or end_date) is not None:

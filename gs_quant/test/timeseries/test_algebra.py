@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import math
 
 import pytest
@@ -22,8 +23,21 @@ import datetime as dt
 from pandas.testing import assert_series_equal
 
 from gs_quant.errors import MqValueError, MqError
-from gs_quant.timeseries import algebra, Interpolate, filter_, FilterOperator, smooth_spikes, ThresholdType, \
-    repeat, and_, or_, not_, if_, weighted_sum, geometrically_aggregate
+from gs_quant.timeseries import (
+    algebra,
+    Interpolate,
+    filter_,
+    FilterOperator,
+    smooth_spikes,
+    ThresholdType,
+    repeat,
+    and_,
+    or_,
+    not_,
+    if_,
+    weighted_sum,
+    geometrically_aggregate,
+)
 
 
 def test_add():
@@ -397,12 +411,7 @@ def test_ceil():
 
 
 def test_filter():
-    dates1 = [
-        dt.date(2019, 1, 1),
-        dt.date(2019, 1, 2),
-        dt.date(2019, 1, 3),
-        dt.date(2019, 1, 4)
-    ]
+    dates1 = [dt.date(2019, 1, 1), dt.date(2019, 1, 2), dt.date(2019, 1, 3), dt.date(2019, 1, 4)]
 
     all_pos = pd.Series([1.0, 1.0, 1.0, 1.0], index=dates1)
     with_null = pd.Series([1.0, np.nan, 1.0, 1.0], index=dates1)
@@ -417,15 +426,11 @@ def test_filter():
     assert_series_equal(result, expected, obj="zap: remove 0s when no 0s are in TS")
 
     result = filter_(with_null)
-    expected = pd.Series([1.0, 1.0, 1.0],
-                         index=[dt.date(2019, 1, 1),
-                                dt.date(2019, 1, 3), dt.date(2019, 1, 4)])
+    expected = pd.Series([1.0, 1.0, 1.0], index=[dt.date(2019, 1, 1), dt.date(2019, 1, 3), dt.date(2019, 1, 4)])
     assert_series_equal(result, expected, obj="zap: remove nulls in TS")
 
     result = filter_(zero_neg_pos, FilterOperator.EQUALS, 0)
-    expected = pd.Series([-1.0, 10.0, 1.0],
-                         index=[dt.date(2019, 1, 1),
-                                dt.date(2019, 1, 3), dt.date(2019, 1, 4)])
+    expected = pd.Series([-1.0, 10.0, 1.0], index=[dt.date(2019, 1, 1), dt.date(2019, 1, 3), dt.date(2019, 1, 4)])
     assert_series_equal(result, expected, obj="zap: remove 0s in TS")
 
     result = filter_(zero_neg_pos, FilterOperator.GREATER, 0)
@@ -455,12 +460,7 @@ def test_filter():
 
 
 def test_filter_dates():
-    dates = [
-        dt.date(2019, 1, 1),
-        dt.date(2019, 1, 2),
-        dt.date(2019, 1, 3),
-        dt.date(2019, 1, 4)
-    ]
+    dates = [dt.date(2019, 1, 1), dt.date(2019, 1, 2), dt.date(2019, 1, 3), dt.date(2019, 1, 4)]
 
     all_pos = pd.Series([1.0, 1.0, 1.0, 1.0], index=dates)
     with_null = pd.Series([1.0, np.nan, 1.0, 1.0], index=dates)
@@ -470,20 +470,15 @@ def test_filter_dates():
     assert_series_equal(result, expected, obj="zap: remove nulls when no nulls are in TS")
 
     result = algebra.filter_dates(with_null)
-    expected = pd.Series([1.0, 1.0, 1.0],
-                         index=[dt.date(2019, 1, 1),
-                                dt.date(2019, 1, 3), dt.date(2019, 1, 4)])
+    expected = pd.Series([1.0, 1.0, 1.0], index=[dt.date(2019, 1, 1), dt.date(2019, 1, 3), dt.date(2019, 1, 4)])
     assert_series_equal(result, expected, obj="zap: remove nulls in TS")
 
     result = algebra.filter_dates(all_pos, FilterOperator.EQUALS, dt.date(2019, 1, 2))
-    expected = pd.Series([1.0, 1.0, 1.0],
-                         index=[dt.date(2019, 1, 1),
-                                dt.date(2019, 1, 3), dt.date(2019, 1, 4)])
+    expected = pd.Series([1.0, 1.0, 1.0], index=[dt.date(2019, 1, 1), dt.date(2019, 1, 3), dt.date(2019, 1, 4)])
     assert_series_equal(result, expected, obj="zap: remove date in TS")
 
     result = algebra.filter_dates(all_pos, FilterOperator.EQUALS, [dt.date(2019, 1, 2), dt.date(2019, 1, 4)])
-    expected = pd.Series([1.0, 1.0],
-                         index=[dt.date(2019, 1, 1), dt.date(2019, 1, 3)])
+    expected = pd.Series([1.0, 1.0], index=[dt.date(2019, 1, 1), dt.date(2019, 1, 3)])
     assert_series_equal(result, expected, obj="zap: remove dates in TS")
 
     result = algebra.filter_dates(all_pos, FilterOperator.GREATER, dt.date(2019, 1, 2))
@@ -629,22 +624,21 @@ def test_if():
 
     assert_series_equal(if_(flags, 2, 3), pd.Series([3, 2]))
     assert_series_equal(if_(flags, truths, pd.Series([3, 3])), pd.Series([3, 2]))
-    assert_series_equal(if_(flags, truths, pd.Series([3], index=[100])),
-                        pd.Series([np.nan, 2]), check_dtype=False)
+    assert_series_equal(if_(flags, truths, pd.Series([3], index=[100])), pd.Series([np.nan, 2]), check_dtype=False)
 
 
 def test_weighted_average():
     empty = pd.Series(dtype=float)
     with pytest.raises(MqError):
-        weighted_sum([empty, 3], [.4, .6])
+        weighted_sum([empty, 3], [0.4, 0.6])
     with pytest.raises(MqError):
-        weighted_sum([empty, empty], [.4, '.6'])
+        weighted_sum([empty, empty], [0.4, '.6'])
     with pytest.raises(MqError):
-        weighted_sum([empty, empty], [.4])
+        weighted_sum([empty, empty], [0.4])
 
     a = pd.Series([1, 2, 3, 4], index=pd.date_range('2020-01-01', periods=4, freq='D'))
     b = pd.Series([24, 27, 30], index=(pd.date_range('2020-01-01', periods=3, freq='D')))
-    actual = weighted_sum([a, b], [.3, .6])
+    actual = weighted_sum([a, b], [0.3, 0.6])
     expected = pd.Series([16.333333, 18.666666, 21], index=pd.date_range('2020-01-01', periods=3))
     expected.index.freq = None
     assert_series_equal(actual, expected)

@@ -143,7 +143,6 @@ class FakeSession:
 
 
 class TestDataApiCache:
-
     def setup_method(self, test_method):
         self.cache = InMemoryApiRequestCache()
         GsDataApi.set_api_request_cache(self.cache)
@@ -155,9 +154,7 @@ class TestDataApiCache:
         ds = Dataset("FXSPOT_STANDARD")
         with patch.object(GsDataApi, "get_session", return_value=FakeSession()):
             df = ds.get_data_last(as_of=dt.date(2023, 10, 25), bbid="USDJPY")
-        with patch.object(
-            GsDataApi, "get_session", return_value=NotExpectedToBeCalledSession()
-        ):
+        with patch.object(GsDataApi, "get_session", return_value=NotExpectedToBeCalledSession()):
             df2 = ds.get_data_last(dt.date(2023, 10, 25), bbid="USDJPY")
         assert not df.empty
         assert_frame_equal(df, df2)
@@ -171,15 +168,9 @@ class TestDataApiCache:
     def test_query_data(self):
         ds = Dataset("FXSPOT_STANDARD")
         with patch.object(GsDataApi, "get_session", return_value=FakeSession()):
-            df = ds.get_data(
-                dt.date(2023, 10, 26), dt.date(2023, 10, 26), bbid="USDJPY"
-            )
-        with patch.object(
-            GsDataApi, "get_session", return_value=NotExpectedToBeCalledSession()
-        ):
-            df2 = ds.get_data(
-                dt.date(2023, 10, 26), dt.date(2023, 10, 26), bbid="USDJPY"
-            )
+            df = ds.get_data(dt.date(2023, 10, 26), dt.date(2023, 10, 26), bbid="USDJPY")
+        with patch.object(GsDataApi, "get_session", return_value=NotExpectedToBeCalledSession()):
+            df2 = ds.get_data(dt.date(2023, 10, 26), dt.date(2023, 10, 26), bbid="USDJPY")
 
         assert_frame_equal(df, df2)
         cache_events = self.cache.get_events()
@@ -194,9 +185,7 @@ class TestDataApiCache:
         with DataContext(dt.date(2023, 4, 11), dt.date(2023, 4, 11)):
             q = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT)
 
-        with patch.object(
-            GsDataApi, "get_session", return_value=MarketDataErrorSession()
-        ):
+        with patch.object(GsDataApi, "get_session", return_value=MarketDataErrorSession()):
             try:
                 df = GsDataApi.get_market_data(q)
             except Exception:
@@ -205,9 +194,7 @@ class TestDataApiCache:
         assert len(cache_events) == 0
         with patch.object(GsDataApi, "get_session", return_value=FakeSession()):
             df = GsDataApi.get_market_data(q)
-        with patch.object(
-            GsDataApi, "get_session", return_value=NotExpectedToBeCalledSession()
-        ):
+        with patch.object(GsDataApi, "get_session", return_value=NotExpectedToBeCalledSession()):
             df2 = GsDataApi.get_market_data(q)
 
         assert_frame_equal(df, df2)

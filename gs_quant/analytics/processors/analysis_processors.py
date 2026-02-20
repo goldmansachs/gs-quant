@@ -22,26 +22,28 @@ from gs_quant.timeseries import diff
 
 
 class DiffProcessor(BaseProcessor):
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 *,
-                 obs: int = 1,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 **kwargs):
-        """ DiffProcessor
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        *,
+        obs: int = 1,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        **kwargs,
+    ):
+        """DiffProcessor
 
-        :param a: DataCoordinate or BaseProcessor for the series
-        :param obs: number of observations to lag
-        :param start: start date or time used in the underlying data query
-        :param end: end date or time used in the underlying data query
-       **Usage**
+         :param a: DataCoordinate or BaseProcessor for the series
+         :param obs: number of observations to lag
+         :param start: start date or time used in the underlying data query
+         :param end: end date or time used in the underlying data query
+        **Usage**
 
-        Compute the difference in series values over a given lag:
+         Compute the difference in series values over a given lag:
 
-        :math:`R_t = X_t - X_{t-obs}`
+         :math:`R_t = X_t - X_{t-obs}`
 
-        where :math:`obs` is the number of observations to lag series in diff function
+         where :math:`obs` is the number of observations to lag series in diff function
 
         """
         super().__init__(**kwargs)

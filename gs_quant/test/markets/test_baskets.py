@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from typing import Dict
 from unittest import mock
@@ -23,8 +24,15 @@ from gs_quant.api.gs.assets import GsAsset, GsAssetApi
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.users import GsUsersApi
-from gs_quant.common import AssetClass, AssetType, Entitlements as TargetEntitlements, \
-    PositionSet as TargetPositionSet, Position as TargetPosition, ReportParameters, XRef
+from gs_quant.common import (
+    AssetClass,
+    AssetType,
+    Entitlements as TargetEntitlements,
+    PositionSet as TargetPositionSet,
+    Position as TargetPosition,
+    ReportParameters,
+    XRef,
+)
 from gs_quant.entities.entitlements import User
 from gs_quant.errors import MqError
 from gs_quant.markets.baskets import Basket, ErrorMessage
@@ -38,25 +46,31 @@ from gs_quant.target.reports import Report, User as TargetUser
 asset_1 = {'name': 'asset 1', 'id': 'id1', 'bbid': 'bbid1'}
 asset_2 = {'name': 'asset 2', 'id': 'id2', 'bbid': 'bbid2'}
 assets_data = [asset_1, asset_2]
-base_user = {'name': 'First Last',
-             'email': 'ex@email.com',
-             'city': 'City A',
-             'company': 'Company A',
-             'country': 'Country A',
-             'region': 'Region A'}
+base_user = {
+    'name': 'First Last',
+    'email': 'ex@email.com',
+    'city': 'City A',
+    'company': 'Company A',
+    'country': 'Country A',
+    'region': 'Region A',
+}
 cb_response = CustomBasketsResponse('done', 'R1234567890', 'MA1234567890')
-gs_asset = GsAsset(asset_class=AssetClass.Equity,
-                   type_=AssetType.Custom_Basket,
-                   name='Test Basket',
-                   id_='MA1234567890',
-                   entitlements=TargetEntitlements(admin=['guid:user_abc']),
-                   xref=XRef(ticker='GSMBXXXX'))
+gs_asset = GsAsset(
+    asset_class=AssetClass.Equity,
+    type_=AssetType.Custom_Basket,
+    name='Test Basket',
+    id_='MA1234567890',
+    entitlements=TargetEntitlements(admin=['guid:user_abc']),
+    xref=XRef(ticker='GSMBXXXX'),
+)
 initial_price = {'price': 100}
 mqid = 'MA1234567890'
 name = 'Test Basket'
 positions = [Position('bbid1', asset_id='id1', quantity=100), Position('bbid2', asset_id='id2', quantity=200)]
-positions_weighted = positions = [Position('bbid1', asset_id='id1', weight=0.4),
-                                  Position('bbid2', asset_id='id2', weight=0.6)]
+positions_weighted = positions = [
+    Position('bbid1', asset_id='id1', weight=0.4),
+    Position('bbid2', asset_id='id2', weight=0.6),
+]
 position_set = PositionSet(positions, divisor=1000)
 report = Report(mqid, 'asset', 'Basket Create', ReportParameters(), status='done')
 resolved_asset = {'GSMBXXXX': [{'id': mqid}]}
@@ -70,18 +84,18 @@ user_ia = {**base_user, 'id': 'user_abc', 'tokens': ['internal', 'guid:user_abc'
 
 @mock.patch.object(GsSession.__class__, 'default_value')
 def mock_session(mocker):
-    """ Mock GsSession helper """
+    """Mock GsSession helper"""
     mocker.return_value = GsSession.get(Environment.QA, 'client_id', 'secret')
 
 
 def mock_response(mocker, mock_object, mock_fn, mock_response):
-    """ Mock patch helper """
+    """Mock patch helper"""
     if mock_response is not None:
         mocker.patch.object(mock_object, mock_fn, return_value=mock_response)
 
 
 def mock_basket_init(mocker, user: Dict, existing: bool = True):
-    """ Mock basket initialization helper """
+    """Mock basket initialization helper"""
     if existing:
         mock_response(mocker, GsAssetApi, 'resolve_assets', resolved_asset)
         mock_response(mocker, GsAssetApi, 'get_asset', gs_asset)

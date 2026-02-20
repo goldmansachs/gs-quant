@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 from typing import Optional, Union
@@ -31,8 +32,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.AUM])
-def aum(portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None, *,
-        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def aum(
+    portfolio_id: str,
+    start_date: dt.date = None,
+    end_date: dt.date = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Returns the Custom AUM uploaded for the portfolio
     :param portfolio_id: id of portfolio
@@ -50,9 +58,17 @@ def aum(portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None,
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.FACTOR_EXPOSURE])
-def portfolio_factor_exposure(portfolio_id: str, risk_model_id: str, factor_name: str, unit: str = 'Notional',
-                              benchmark_id: str = None, *, source: str = None,
-                              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_factor_exposure(
+    portfolio_id: str,
+    risk_model_id: str,
+    factor_name: str,
+    unit: str = 'Notional',
+    benchmark_id: str = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Factor exposure data associated with a factor in a factor risk report
 
@@ -72,9 +88,17 @@ def portfolio_factor_exposure(portfolio_id: str, risk_model_id: str, factor_name
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.FACTOR_PNL])
-def portfolio_factor_pnl(portfolio_id: str, risk_model_id: str, factor_name: str, unit: str = 'Notional',
-                         benchmark_id: str = None, *, source: str = None,
-                         real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_factor_pnl(
+    portfolio_id: str,
+    risk_model_id: str,
+    factor_name: str,
+    unit: str = 'Notional',
+    benchmark_id: str = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Factor PnL data associated with a factor in a factor risk report
 
@@ -94,9 +118,16 @@ def portfolio_factor_pnl(portfolio_id: str, risk_model_id: str, factor_name: str
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.FACTOR_PROPORTION_OF_RISK])
-def portfolio_factor_proportion_of_risk(portfolio_id: str, risk_model_id: str, factor_name: str,
-                                        benchmark_id: str = None, *, source: str = None,
-                                        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_factor_proportion_of_risk(
+    portfolio_id: str,
+    risk_model_id: str,
+    factor_name: str,
+    benchmark_id: str = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Factor proportion of risk data associated with a factor in a factor risk report
 
@@ -115,9 +146,16 @@ def portfolio_factor_proportion_of_risk(portfolio_id: str, risk_model_id: str, f
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.DAILY_RISK])
-def portfolio_daily_risk(portfolio_id: str, risk_model_id: str, factor_name: str = 'Total',
-                         benchmark_id: str = None, *, source: str = None,
-                         real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_daily_risk(
+    portfolio_id: str,
+    risk_model_id: str,
+    factor_name: str = 'Total',
+    benchmark_id: str = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Daily risk data associated with a factor in a factor risk report
 
@@ -136,9 +174,16 @@ def portfolio_daily_risk(portfolio_id: str, risk_model_id: str, factor_name: str
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.ANNUAL_RISK])
-def portfolio_annual_risk(portfolio_id: str, risk_model_id: str, factor_name: str = 'Total',
-                          benchmark_id: str = None, *, source: str = None,
-                          real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_annual_risk(
+    portfolio_id: str,
+    risk_model_id: str,
+    factor_name: str = 'Total',
+    benchmark_id: str = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Annual risk data associated with a factor in a factor risk report
 
@@ -157,8 +202,14 @@ def portfolio_annual_risk(portfolio_id: str, risk_model_id: str, factor_name: st
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.THEMATIC_EXPOSURE])
-def portfolio_thematic_exposure(portfolio_id: str, basket_ticker: str, *, source: str = None,
-                                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_thematic_exposure(
+    portfolio_id: str,
+    basket_ticker: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Thematic exposure of a portfolio to a requested GS thematic flagship basket
 
@@ -175,8 +226,14 @@ def portfolio_thematic_exposure(portfolio_id: str, basket_ticker: str, *, source
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.PNL])
-def portfolio_pnl(portfolio_id: str, unit: str = 'Notional', *, source: str = None,
-                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_pnl(
+    portfolio_id: str,
+    unit: str = 'Notional',
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     PNL from all holdings, if unit is Percent, geometrically aggregate over time frame
 
@@ -193,8 +250,14 @@ def portfolio_pnl(portfolio_id: str, unit: str = 'Notional', *, source: str = No
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.HIT_RATE])
-def portfolio_hit_rate(portfolio_id: str, rolling_window: Union[int, str], *, source: str = None,
-                       real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_hit_rate(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Create a time series of the hit rate of a portfolio over a given rolling period
 
@@ -211,8 +274,14 @@ def portfolio_hit_rate(portfolio_id: str, rolling_window: Union[int, str], *, so
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.MAX_DRAWDOWN])
-def portfolio_max_drawdown(portfolio_id: str, rolling_window: int, *, source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_max_drawdown(
+    portfolio_id: str,
+    rolling_window: int,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Create a time series of the max drawdown of a portfolio over a given rolling period
 
@@ -229,8 +298,14 @@ def portfolio_max_drawdown(portfolio_id: str, rolling_window: int, *, source: st
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.MAX_DRAWDOWN])
-def portfolio_drawdown_length(portfolio_id: str, rolling_window: Union[int, str], *, source: str = None,
-                              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_drawdown_length(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The length in days between the peak and the trough of the maximum drawdown
 
@@ -247,8 +322,14 @@ def portfolio_drawdown_length(portfolio_id: str, rolling_window: Union[int, str]
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.MAX_DRAWDOWN])
-def portfolio_max_recovery_period(portfolio_id: str, rolling_window: Union[int, str], *, source: str = None,
-                                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_max_recovery_period(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The maximum number of days used to reach a previously broken price level over the stated timeframe.
 
@@ -265,8 +346,14 @@ def portfolio_max_recovery_period(portfolio_id: str, rolling_window: Union[int, 
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.STANDARD_DEVIATION])
-def portfolio_standard_deviation(portfolio_id: str, rolling_window: Union[int, str], *, source: str = None,
-                                 real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_standard_deviation(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of the total return over the stated time frame.
 
@@ -283,8 +370,14 @@ def portfolio_standard_deviation(portfolio_id: str, rolling_window: Union[int, s
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.DOWNSIDE_RISK])
-def portfolio_downside_risk(portfolio_id: str, rolling_window: Union[int, str], *, source: str = None,
-                            real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_downside_risk(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of the periodic returns that are lower than the mean return over the stated time frame.
     Standard deviation is calculated using all returns, downside risk is calculated using only the returns
@@ -303,8 +396,14 @@ def portfolio_downside_risk(portfolio_id: str, rolling_window: Union[int, str], 
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.DOWNSIDE_RISK])
-def portfolio_semi_variance(portfolio_id: str, rolling_window: Union[int, str], *, source: str = None,
-                            real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_semi_variance(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of the periodic returns that are lower than the mean return over the stated time frame.
     Standard deviation is calculated using all returns, semi variance is calculated using only the returns
@@ -323,8 +422,14 @@ def portfolio_semi_variance(portfolio_id: str, rolling_window: Union[int, str], 
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.KURTOSIS])
-def portfolio_kurtosis(portfolio_id: str, rolling_window: Union[int, str], *, source: str = None,
-                       real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_kurtosis(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Kurtosis measure the peakedness or flatness of the return distribution over the state time frame.
     In a flat distribution the average value is more likely to occur.
@@ -342,8 +447,14 @@ def portfolio_kurtosis(portfolio_id: str, rolling_window: Union[int, str], *, so
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.SKEWNESS])
-def portfolio_skewness(portfolio_id: str, rolling_window: Union[int, str], *, source: str = None,
-                       real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_skewness(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Skewness measures the degree of symmetry of the return distribution over the stated time frame.
     If the left tail is more pronounced than the right tail, it is said the return have negative skewness.
@@ -361,9 +472,15 @@ def portfolio_skewness(portfolio_id: str, rolling_window: Union[int, str], *, so
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.REALIZED_VAR])
-def portfolio_realized_var(portfolio_id: str, rolling_window: Union[int, str], confidence_interval: float = .95,
-                           *, source: str = None, real_time: bool = False,
-                           request_id: Optional[str] = None) -> pd.Series:
+def portfolio_realized_var(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    confidence_interval: float = 0.95,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The maximum expected loss of the portfolios, calculated using
     the natural distribution of returns over a stated time frame and is based on a confidence level.
@@ -383,9 +500,15 @@ def portfolio_realized_var(portfolio_id: str, rolling_window: Union[int, str], c
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.TRACKING_ERROR])
-def portfolio_tracking_error(portfolio_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                             source: str = None,
-                             real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_tracking_error(
+    portfolio_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The standard deviation of the excess return relative to the benchmark over the state time frame.
 
@@ -414,9 +537,15 @@ def portfolio_tracking_error(portfolio_id: str, benchmark_id: str, rolling_windo
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.TRACKING_ERROR_BEAR])
-def portfolio_tracking_error_bear(portfolio_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                                  source: str = None,
-                                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_tracking_error_bear(
+    portfolio_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The standard deviation of the excess return relative to the benchmark over the state time frame,
     only counting the periods when benchmark returns were negative.
@@ -446,9 +575,15 @@ def portfolio_tracking_error_bear(portfolio_id: str, benchmark_id: str, rolling_
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.TRACKING_ERROR_BULL])
-def portfolio_tracking_error_bull(portfolio_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                                  source: str = None,
-                                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_tracking_error_bull(
+    portfolio_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The standard deviation of the excess return relative to the benchmark over the state time frame,
     only counting the periods when benchmark returns were positive.
@@ -478,9 +613,15 @@ def portfolio_tracking_error_bull(portfolio_id: str, benchmark_id: str, rolling_
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.SHARPE_RATIO])
-def portfolio_sharpe_ratio(portfolio_id: str, risk_free_id: str, rolling_window: Union[int, str], *,
-                           source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_sharpe_ratio(
+    portfolio_id: str,
+    risk_free_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the risk free rate per unit of volatility
 
@@ -509,9 +650,14 @@ def portfolio_sharpe_ratio(portfolio_id: str, risk_free_id: str, rolling_window:
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.CALMAR_RATIO])
-def portfolio_calmar_ratio(portfolio_id: str, rolling_window: Union[int, str], *,
-                           source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_calmar_ratio(
+    portfolio_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted performance metric that divides an investment strategy’s
     annualized rate of return by its maximum drawdown, focusing specifically
@@ -533,9 +679,15 @@ def portfolio_calmar_ratio(portfolio_id: str, rolling_window: Union[int, str], *
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.SORTINO_RATIO])
-def portfolio_sortino_ratio(portfolio_id: str, comparison_id: str, rolling_window: Union[int, str], *,
-                            source: str = None,
-                            real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_sortino_ratio(
+    portfolio_id: str,
+    comparison_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the benchmark per unit of semi-variance
 
@@ -564,9 +716,14 @@ def portfolio_sortino_ratio(portfolio_id: str, comparison_id: str, rolling_windo
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.INFORMATION_RATIO])
-def portfolio_information_ratio(portfolio_id: str, benchmark_id: str, *,
-                                source: str = None,
-                                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_information_ratio(
+    portfolio_id: str,
+    benchmark_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the benchmark,
     per unit of tracking error volatility. It measures the consistency with
@@ -596,9 +753,14 @@ def portfolio_information_ratio(portfolio_id: str, benchmark_id: str, *,
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.INFORMATION_RATIO])
-def portfolio_information_ratio_bull(portfolio_id: str, benchmark_id: str, *,
-                                     source: str = None,
-                                     real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_information_ratio_bull(
+    portfolio_id: str,
+    benchmark_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the benchmark,
     per unit of tracking error volatility, counting only the periods when the benchmark return was positive.
@@ -627,9 +789,14 @@ def portfolio_information_ratio_bull(portfolio_id: str, benchmark_id: str, *,
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.INFORMATION_RATIO])
-def portfolio_information_ratio_bear(portfolio_id: str, benchmark_id: str, *,
-                                     source: str = None,
-                                     real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_information_ratio_bear(
+    portfolio_id: str,
+    benchmark_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the benchmark,
     per unit of tracking error volatility, counting only the periods when the benchmark return was negative
@@ -660,10 +827,16 @@ def portfolio_information_ratio_bear(portfolio_id: str, benchmark_id: str, *,
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.MODIGLIANI_RATIO])
-def portfolio_modigliani_ratio(portfolio_id: str, benchmark_id: str, risk_free_id: str,
-                               rolling_window: Union[int, str], *,
-                               source: str = None,
-                               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_modigliani_ratio(
+    portfolio_id: str,
+    benchmark_id: str,
+    risk_free_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Modigliani RAP measures how much the portfolio would have returns if it had had
     the same risk as the benchmark. It is a linear transformation of the Sharpe Ratio,
@@ -695,9 +868,15 @@ def portfolio_modigliani_ratio(portfolio_id: str, benchmark_id: str, risk_free_i
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.TREYNOR_RATIO])
-def portfolio_treynor_measure(portfolio_id: str, risk_free_id: str, benchmark_id: str, *,
-                              source: str = None,
-                              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_treynor_measure(
+    portfolio_id: str,
+    risk_free_id: str,
+    benchmark_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the risk free rate
     per unit of beta relative to the benchmark. This is useful for assessing the excess
@@ -727,9 +906,15 @@ def portfolio_treynor_measure(portfolio_id: str, risk_free_id: str, benchmark_id
     return ReportMeasures.treynor_measure(performance_report.id, risk_free_id, benchmark_id)
 
 
-def portfolio_jensen_alpha(portfolio_id: str, benchmark_id: str, risk_free_id: str, *,
-                           source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_jensen_alpha(
+    portfolio_id: str,
+    benchmark_id: str,
+    risk_free_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-Adjusted measure that calculates the actual return of the portfolio
     over and above the return predicted by the CAPM, given the portfolios beta
@@ -761,9 +946,15 @@ def portfolio_jensen_alpha(portfolio_id: str, benchmark_id: str, risk_free_id: s
     return ReportMeasures.jensen_alpha(performance_report.id, benchmark_id, risk_free_id)
 
 
-def portfolio_jensen_alpha_bear(portfolio_id: str, benchmark_id: str, risk_free_id: str, *,
-                                source: str = None,
-                                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_jensen_alpha_bear(
+    portfolio_id: str,
+    benchmark_id: str,
+    risk_free_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-Adjusted measure that calculates the actual return of the portfolio
     over and above the return predicted by the CAPM, given the portfolios beta
@@ -795,9 +986,15 @@ def portfolio_jensen_alpha_bear(portfolio_id: str, benchmark_id: str, risk_free_
     return ReportMeasures.jensen_alpha_bear(performance_report.id, benchmark_id, risk_free_id)
 
 
-def portfolio_jensen_alpha_bull(portfolio_id: str, benchmark_id: str, risk_free_id: str, *,
-                                source: str = None,
-                                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_jensen_alpha_bull(
+    portfolio_id: str,
+    benchmark_id: str,
+    risk_free_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-Adjusted measure that calculates the actual return of the portfolio
     over and above the return predicted by the CAPM, given the portfolios beta
@@ -830,9 +1027,15 @@ def portfolio_jensen_alpha_bull(portfolio_id: str, benchmark_id: str, risk_free_
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.ALPHA])
-def portfolio_alpha(portfolio_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                    source: str = None,
-                    real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_alpha(
+    portfolio_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     This is the intercept from a regression analysis, where the portfolio's returns are regressed
     against the benchmark's returns. It represents the portion of the portfolio's return that is
@@ -853,9 +1056,15 @@ def portfolio_alpha(portfolio_id: str, benchmark_id: str, rolling_window: Union[
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.BETA])
-def portfolio_beta(portfolio_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                   source: str = None,
-                   real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_beta(
+    portfolio_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Beta defined as the slope of the regression between report pnl and benchmark pnl
 
@@ -874,9 +1083,15 @@ def portfolio_beta(portfolio_id: str, benchmark_id: str, rolling_window: Union[i
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.CORRELATION])
-def portfolio_correlation(portfolio_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                          source: str = None,
-                          real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_correlation(
+    portfolio_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Correlation coefficient between the portfolio and the benchmark returns over the stated time frame
 
@@ -895,9 +1110,15 @@ def portfolio_correlation(portfolio_id: str, benchmark_id: str, rolling_window: 
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.R_SQUARED])
-def portfolio_r_squared(portfolio_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                        source: str = None,
-                        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_r_squared(
+    portfolio_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     A measure of how well the portfolio's performance correlates with the performance of the benchmark,
     and thus a measure of what portion of its performance may be explained by the performance of the benchmark.
@@ -917,9 +1138,15 @@ def portfolio_r_squared(portfolio_id: str, benchmark_id: str, rolling_window: Un
 
 
 @plot_measure_entity(EntityType.PORTFOLIO, [QueryType.CAPTURE_RATIO])
-def portfolio_capture_ratio(portfolio_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                            source: str = None,
-                            real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def portfolio_capture_ratio(
+    portfolio_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     A measure of how well portfolio is doing relative to the benchmark,
     defined as the ratio of the portfolio return to the benchmark return calculated

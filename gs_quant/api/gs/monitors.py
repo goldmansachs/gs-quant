@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import logging
 from typing import Tuple
 from urllib.parse import urlencode
@@ -27,17 +28,32 @@ class GsMonitorsApi:
     """GS Monitor API client implementation"""
 
     @classmethod
-    def get_monitors(cls,
-                     limit: int = 100,
-                     monitor_id: str = None,
-                     owner_id: str = None,
-                     name: str = None,
-                     folder_name: str = None,
-                     monitor_type: str = None,
-                     tags: str = None) -> Tuple[Monitor, ...]:
-        query_string = urlencode(dict(filter(lambda item: item[1] is not None,
-                                             dict(id=monitor_id, ownerId=owner_id, name=name, folderName=folder_name,
-                                                  type=monitor_type, tags=tags, limit=limit).items())))
+    def get_monitors(
+        cls,
+        limit: int = 100,
+        monitor_id: str = None,
+        owner_id: str = None,
+        name: str = None,
+        folder_name: str = None,
+        monitor_type: str = None,
+        tags: str = None,
+    ) -> Tuple[Monitor, ...]:
+        query_string = urlencode(
+            dict(
+                filter(
+                    lambda item: item[1] is not None,
+                    dict(
+                        id=monitor_id,
+                        ownerId=owner_id,
+                        name=name,
+                        folderName=folder_name,
+                        type=monitor_type,
+                        tags=tags,
+                        limit=limit,
+                    ).items(),
+                )
+            )
+        )
         return GsSession.current._get('/monitors?{query}'.format(query=query_string), cls=Monitor)['results']
 
     @classmethod
@@ -52,8 +68,9 @@ class GsMonitorsApi:
     @classmethod
     def update_monitor(cls, monitor: Monitor):
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._put('/monitors/{id}'.format(id=monitor.id), monitor, request_headers=request_headers,
-                                      cls=Monitor)
+        return GsSession.current._put(
+            '/monitors/{id}'.format(id=monitor.id), monitor, request_headers=request_headers, cls=Monitor
+        )
 
     @classmethod
     def delete_monitor(cls, monitor_id: str) -> dict:

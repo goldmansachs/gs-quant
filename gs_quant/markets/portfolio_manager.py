@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 import traceback
@@ -31,8 +32,12 @@ from gs_quant.entities.entity import PositionedEntity, EntityType, ScenarioCalcu
 from gs_quant.errors import MqError
 from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
-from gs_quant.markets.portfolio_manager_utils import build_exposure_df, build_portfolio_constituents_df, \
-    build_sensitivity_df, get_batched_dates
+from gs_quant.markets.portfolio_manager_utils import (
+    build_exposure_df,
+    build_portfolio_constituents_df,
+    build_sensitivity_df,
+    get_batched_dates,
+)
 from gs_quant.markets.report import PerformanceReport, ReportJobFuture
 from gs_quant.markets.scenario import FactorScenario
 from gs_quant.models.risk_model import MacroRiskModel, ReturnFormat, FactorType, FactorRiskModel
@@ -42,9 +47,10 @@ from gs_quant.target.risk_models import RiskModelDataAssetsRequest, RiskModelUni
 _logger = logging.getLogger(__name__)
 
 
-@deprecation.deprecated(deprecated_in='1.0.10',
-                        details='portfolio_manager.CustomAUMDataPoint is now deprecated, please use '
-                                'report.CustomAUMDataPoint instead.')
+@deprecation.deprecated(
+    deprecated_in='1.0.10',
+    details='portfolio_manager.CustomAUMDataPoint is now deprecated, please use report.CustomAUMDataPoint instead.',
+)
 class CustomAUMDataPoint:
     """
 
@@ -52,9 +58,7 @@ class CustomAUMDataPoint:
 
     """
 
-    def __init__(self,
-                 date: dt.date,
-                 aum: float):
+    def __init__(self, date: dt.date, aum: float):
         self.__date = date
         self.__aum = aum
 
@@ -80,8 +84,7 @@ class PortfolioManager(PositionedEntity):
     Portfolio Manager is used to manage Marquee portfolios (setting entitlements, running and retrieving reports, etc)
     """
 
-    def __init__(self,
-                 portfolio_id: str):
+    def __init__(self, portfolio_id: str):
         """
         Initialize a Portfolio Manager
 
@@ -107,12 +110,14 @@ class PortfolioManager(PositionedEntity):
 
         :return: returns the PerformanceReport associated with portfolio if one exists
         """
-        reports = GsReportApi.get_reports(limit=500,
-                                          position_source_type='Portfolio',
-                                          position_source_id=self.id,
-                                          report_type='Portfolio Performance Analytics',
-                                          tags=tags,
-                                          scroll='1m')
+        reports = GsReportApi.get_reports(
+            limit=500,
+            position_source_type='Portfolio',
+            position_source_id=self.id,
+            report_type='Portfolio Performance Analytics',
+            tags=tags,
+            scroll='1m',
+        )
 
         # If tags is set to None, it returns all PPA reports for the portfolio,
         # and returning reports[0] can return any one PPA, so specifically if tags is None it means we are
@@ -123,11 +128,9 @@ class PortfolioManager(PositionedEntity):
             raise MqError('No performance report found.')
         return PerformanceReport.from_target(reports[0])
 
-    def schedule_reports(self,
-                         start_date: dt.date = None,
-                         end_date: dt.date = None,
-                         backcast: bool = False,
-                         months_per_batch: int = None):
+    def schedule_reports(
+        self, start_date: dt.date = None, end_date: dt.date = None, backcast: bool = False, months_per_batch: int = None
+    ):
         """
         Schedule all reports associated with a portfolio. If months_per_batch is passed and reports are historical, then
         schedule them in batches of bathc_period months. Backcasted reported can't be batched.
@@ -150,8 +153,10 @@ class PortfolioManager(PositionedEntity):
         """
         if months_per_batch is None or backcast:
             if backcast:
-                print('Batching of schedule reports is only supported for historical reports. '
-                      'Backcasted reports will be scheduled for the full date range')
+                print(
+                    'Batching of schedule reports is only supported for historical reports. '
+                    'Backcasted reports will be scheduled for the full date range'
+                )
             GsPortfolioApi.schedule_reports(self.__portfolio_id, start_date, end_date, backcast=backcast)
         else:
             # Process input
@@ -175,8 +180,10 @@ class PortfolioManager(PositionedEntity):
 
             if start_date not in position_dates:
                 # There should be positions on the start date for historical reports
-                raise MqError('Cannot schedule historical report because the first set of positions within the '
-                              f'scheduling date range need to be on this date {start_date}')
+                raise MqError(
+                    'Cannot schedule historical report because the first set of positions within the '
+                    f'scheduling date range need to be on this date {start_date}'
+                )
             else:
                 # preparation for the first batch
                 position_dates.remove(start_date)
@@ -202,19 +209,20 @@ class PortfolioManager(PositionedEntity):
 
             for i in range(len(batch_boundaries) - 1):
                 print(f'Scheduling for {batch_boundaries[i]} to {batch_boundaries[i + 1]}')
-                GsPortfolioApi.schedule_reports(self.__portfolio_id,
-                                                batch_boundaries[i],
-                                                batch_boundaries[i + 1],
-                                                backcast=backcast)
+                GsPortfolioApi.schedule_reports(
+                    self.__portfolio_id, batch_boundaries[i], batch_boundaries[i + 1], backcast=backcast
+                )
                 if i > 0 and i % 10 == 0:
                     sleep(6)
 
-    def run_reports(self,
-                    start_date: dt.date = None,
-                    end_date: dt.date = None,
-                    backcast: bool = False,
-                    is_async: bool = True,
-                    months_per_batch: int = None) -> List[Union[pd.DataFrame, ReportJobFuture]]:
+    def run_reports(
+        self,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        backcast: bool = False,
+        is_async: bool = True,
+        months_per_batch: int = None,
+    ) -> List[Union[pd.DataFrame, ReportJobFuture]]:
         """
         Run all reports associated with a portfolio
 
@@ -247,12 +255,13 @@ class PortfolioManager(PositionedEntity):
             if False not in is_done:
                 return [job_future.result() for job_future in report_futures]
             sleep(6)
-        raise MqValueError(f'Your reports for Portfolio {self.__portfolio_id} are taking longer than expected '
-                           f'to finish. Please contact the Marquee Analytics team at '
-                           f'gs-marquee-analytics-support@gs.com')
+        raise MqValueError(
+            f'Your reports for Portfolio {self.__portfolio_id} are taking longer than expected '
+            f'to finish. Please contact the Marquee Analytics team at '
+            f'gs-marquee-analytics-support@gs.com'
+        )
 
-    def set_entitlements(self,
-                         entitlements: Entitlements):
+    def set_entitlements(self, entitlements: Entitlements):
         """
         Set the entitlements of a portfolio
 
@@ -363,8 +372,7 @@ class PortfolioManager(PositionedEntity):
         tag_dicts.sort(key=lambda dictionary: len(dictionary.keys()))
         return tag_dicts
 
-    def get_schedule_dates(self,
-                           backcast: bool = False) -> List[dt.date]:
+    def get_schedule_dates(self, backcast: bool = False) -> List[dt.date]:
         """
         Get recommended start and end dates for a portfolio report scheduling job
 
@@ -373,9 +381,11 @@ class PortfolioManager(PositionedEntity):
         """
         return GsPortfolioApi.get_schedule_dates(self.id, backcast)
 
-    @deprecation.deprecated(deprecated_in='1.0.10',
-                            details='PortfolioManager.get_aum_source is now deprecated, please use '
-                                    'PerformanceReport.get_aum_source instead.')
+    @deprecation.deprecated(
+        deprecated_in='1.0.10',
+        details='PortfolioManager.get_aum_source is now deprecated, please use '
+        'PerformanceReport.get_aum_source instead.',
+    )
     def get_aum_source(self) -> RiskAumSource:
         """
         Get portfolio AUM Source
@@ -385,11 +395,12 @@ class PortfolioManager(PositionedEntity):
         portfolio = GsPortfolioApi.get_portfolio(self.portfolio_id)
         return portfolio.aum_source if portfolio.aum_source is not None else RiskAumSource.Long
 
-    @deprecation.deprecated(deprecated_in='1.0.10',
-                            details='PortfolioManager.set_aum_source is now deprecated, please use '
-                                    'PerformanceReport.set_aum_source instead.')
-    def set_aum_source(self,
-                       aum_source: RiskAumSource):
+    @deprecation.deprecated(
+        deprecated_in='1.0.10',
+        details='PortfolioManager.set_aum_source is now deprecated, please use '
+        'PerformanceReport.set_aum_source instead.',
+    )
+    def set_aum_source(self, aum_source: RiskAumSource):
         """
         Set portfolio AUM Source
 
@@ -400,12 +411,12 @@ class PortfolioManager(PositionedEntity):
         portfolio.aum_source = aum_source
         GsPortfolioApi.update_portfolio(portfolio)
 
-    @deprecation.deprecated(deprecated_in='1.0.10',
-                            details='PortfolioManager.get_custom_aum is now deprecated, please use '
-                                    'PerformanceReport.get_custom_aum instead.')
-    def get_custom_aum(self,
-                       start_date: dt.date = None,
-                       end_date: dt.date = None) -> List[CustomAUMDataPoint]:
+    @deprecation.deprecated(
+        deprecated_in='1.0.10',
+        details='PortfolioManager.get_custom_aum is now deprecated, please use '
+        'PerformanceReport.get_custom_aum instead.',
+    )
+    def get_custom_aum(self, start_date: dt.date = None, end_date: dt.date = None) -> List[CustomAUMDataPoint]:
         """
         Get AUM data for portfolio
 
@@ -414,15 +425,16 @@ class PortfolioManager(PositionedEntity):
         :return: list of AUM data between the specified range
         """
         aum_data = GsPortfolioApi.get_custom_aum(self.portfolio_id, start_date, end_date)
-        return [CustomAUMDataPoint(date=dt.datetime.strptime(data['date'], '%Y-%m-%d'),
-                                   aum=data['aum']) for data in aum_data]
+        return [
+            CustomAUMDataPoint(date=dt.datetime.strptime(data['date'], '%Y-%m-%d'), aum=data['aum'])
+            for data in aum_data
+        ]
 
-    @deprecation.deprecated(deprecated_in='1.0.10',
-                            details='PortfolioManager.get_aum is now deprecated, please use '
-                                    'PerformanceReport.get_aum instead.')
-    def get_aum(self,
-                start_date: dt.date,
-                end_date: dt.date):
+    @deprecation.deprecated(
+        deprecated_in='1.0.10',
+        details='PortfolioManager.get_aum is now deprecated, please use PerformanceReport.get_aum instead.',
+    )
+    def get_aum(self, start_date: dt.date, end_date: dt.date):
         """
         Get AUM data for portfolio
 
@@ -447,12 +459,12 @@ class PortfolioManager(PositionedEntity):
             aum = self.get_performance_report().get_net_exposure(start_date=start_date, end_date=end_date)
             return {row['date']: row['netExposure'] for index, row in aum.iterrows()}
 
-    @deprecation.deprecated(deprecated_in='1.0.10',
-                            details='PortfolioManager.upload_custom_aum is now deprecated, please use '
-                                    'PerformanceReport.upload_custom_aum instead.')
-    def upload_custom_aum(self,
-                          aum_data: List[CustomAUMDataPoint],
-                          clear_existing_data: bool = None):
+    @deprecation.deprecated(
+        deprecated_in='1.0.10',
+        details='PortfolioManager.upload_custom_aum is now deprecated, please use '
+        'PerformanceReport.upload_custom_aum instead.',
+    )
+    def upload_custom_aum(self, aum_data: List[CustomAUMDataPoint], clear_existing_data: bool = None):
         """
         Add AUM data for portfolio
 
@@ -462,14 +474,14 @@ class PortfolioManager(PositionedEntity):
         formatted_aum_data = [{'date': data.date.strftime('%Y-%m-%d'), 'aum': data.aum} for data in aum_data]
         GsPortfolioApi.upload_custom_aum(self.portfolio_id, formatted_aum_data, clear_existing_data)
 
-    @deprecation.deprecated(deprecated_in="0.9.110",
-                            details="Please use the get_pnl_contribution on your portfolio's performance report using"
-                                    "the PerformanceReport class")
-    def get_pnl_contribution(self,
-                             start_date: dt.date = None,
-                             end_date: dt.date = None,
-                             currency: Currency = None,
-                             tags: Dict = None) -> pd.DataFrame:
+    @deprecation.deprecated(
+        deprecated_in="0.9.110",
+        details="Please use the get_pnl_contribution on your portfolio's performance report using"
+        "the PerformanceReport class",
+    )
+    def get_pnl_contribution(
+        self, start_date: dt.date = None, end_date: dt.date = None, currency: Currency = None, tags: Dict = None
+    ) -> pd.DataFrame:
         """
         Get PnL Contribution of your portfolio broken down by constituents
 
@@ -481,18 +493,20 @@ class PortfolioManager(PositionedEntity):
         :return: a Pandas DataFrame of results
         """
         performance_report_id = None if tags is None else self.get_performance_report(tags).id
-        return pd.DataFrame(GsPortfolioApi.get_attribution(self.portfolio_id, start_date, end_date,
-                                                           currency, performance_report_id))
+        return pd.DataFrame(
+            GsPortfolioApi.get_attribution(self.portfolio_id, start_date, end_date, currency, performance_report_id)
+        )
 
-    def get_macro_exposure(self,
-                           model: MacroRiskModel,
-                           date: dt.date,
-                           factor_type: FactorType,
-                           factor_categories: List[Factor] = [],
-                           get_factors_by_name: bool = True,
-                           tags: Dict = None,
-                           return_format: ReturnFormat = ReturnFormat.DATA_FRAME
-                           ) -> Union[Dict, pd.DataFrame]:
+    def get_macro_exposure(
+        self,
+        model: MacroRiskModel,
+        date: dt.date,
+        factor_type: FactorType,
+        factor_categories: List[Factor] = [],
+        get_factors_by_name: bool = True,
+        tags: Dict = None,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+    ) -> Union[Dict, pd.DataFrame]:
         """
         Get portfolio and asset exposure to macro factors or macro factor categories
 
@@ -526,8 +540,9 @@ class PortfolioManager(PositionedEntity):
         performance_report = self.get_performance_report(tags)
 
         # Get portfolio constituents
-        constituents_and_notional_df = build_portfolio_constituents_df(performance_report, date). \
-            rename(columns={"name": "Asset Name", "netExposure": "Notional"})
+        constituents_and_notional_df = build_portfolio_constituents_df(performance_report, date).rename(
+            columns={"name": "Asset Name", "netExposure": "Notional"}
+        )
 
         # Query universe sensitivity
         universe = constituents_and_notional_df.index.dropna().tolist()
@@ -541,73 +556,79 @@ class PortfolioManager(PositionedEntity):
 
         constituents_and_notional_df = constituents_and_notional_df.loc[assets_with_exposure]
 
-        factor_data = model.get_factor_data(date, date, factor_type=FactorType.Factor) \
-            if factor_type == FactorType.Factor else pd.DataFrame()
-        exposure_df = build_exposure_df(constituents_and_notional_df, universe_sensitivities_df,
-                                        factor_categories, factor_data, get_factors_by_name)
+        factor_data = (
+            model.get_factor_data(date, date, factor_type=FactorType.Factor)
+            if factor_type == FactorType.Factor
+            else pd.DataFrame()
+        )
+        exposure_df = build_exposure_df(
+            constituents_and_notional_df, universe_sensitivities_df, factor_categories, factor_data, get_factors_by_name
+        )
 
         if return_format == ReturnFormat.JSON:
             return exposure_df.to_dict()
 
         return exposure_df
 
-    def get_factor_scenario_analytics(self,
-                                      scenarios: List[FactorScenario],
-                                      date: dt.date,
-                                      measures: List[ScenarioCalculationMeasure],
-                                      risk_model: str = None,
-                                      return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> \
-            Union[Dict, Union[Dict, pd.DataFrame]]:
+    def get_factor_scenario_analytics(
+        self,
+        scenarios: List[FactorScenario],
+        date: dt.date,
+        measures: List[ScenarioCalculationMeasure],
+        risk_model: str = None,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+    ) -> Union[Dict, Union[Dict, pd.DataFrame]]:
         """Given a list of factor scenarios (historical simulation and/or custom shocks), return the estimated pnl
-         of the given positioned entity.
-         :param scenarios: List of factor-based scenarios
-         :param date: date to run scenarios.
-         :param measures: which metrics to return
-         :param risk_model: valid risk model ID
-         :param return_format: whether to return data formatted in a dataframe or as a dict
+        of the given positioned entity.
+        :param scenarios: List of factor-based scenarios
+        :param date: date to run scenarios.
+        :param measures: which metrics to return
+        :param risk_model: valid risk model ID
+        :param return_format: whether to return data formatted in a dataframe or as a dict
 
-          **Examples**
+         **Examples**
 
-            >>> from gs_quant.session import GsSession, Environment
-            >>> from gs_quant.markets.portfolio_manager import PortfolioManager, ReturnFormat
-            >>> from gs_quant.entities.entity import ScenarioCalculationMeasure, PositionedEntity
-            >>> from gs_quant.markets.scenario import Scenario
+           >>> from gs_quant.session import GsSession, Environment
+           >>> from gs_quant.markets.portfolio_manager import PortfolioManager, ReturnFormat
+           >>> from gs_quant.entities.entity import ScenarioCalculationMeasure, PositionedEntity
+           >>> from gs_quant.markets.scenario import Scenario
 
-          Get scenarios
-            >>> covid_19_omicron = Scenario.get_by_name("Covid 19 Omicron (v2)") # historical simulation
-            >>> custom_shock = Scenario.get_by_name("Shocking factor by x% (Propagated)") # custom shock
-            >>> risk_model = "RISK_MODEL_ID" # valid risk model ID
+         Get scenarios
+           >>> covid_19_omicron = Scenario.get_by_name("Covid 19 Omicron (v2)") # historical simulation
+           >>> custom_shock = Scenario.get_by_name("Shocking factor by x% (Propagated)") # custom shock
+           >>> risk_model = "RISK_MODEL_ID" # valid risk model ID
 
-          Instantiate your positionedEntity. Here, we are using one of its subclasses, PortfolioManager
+         Instantiate your positionedEntity. Here, we are using one of its subclasses, PortfolioManager
 
-            >>> pm = PortfolioManager(portfolio_id="PORTFOLIO_ID")
+           >>> pm = PortfolioManager(portfolio_id="PORTFOLIO_ID")
 
-          Set the date you wish to run your scenario on
+         Set the date you wish to run your scenario on
 
-           >>> date = dt.date(2023, 3, 7)
+          >>> date = dt.date(2023, 3, 7)
 
-          Run scenario and get estimated impact on your positioned entity
+         Run scenario and get estimated impact on your positioned entity
 
-          >>> scenario_analytics = pm.get_factor_scenario_analytics(
-          ...     scenarios=[covid_19_omicron, beta_propagated],
-          ...     date=date,
-          ...     measures=[ScenarioCalculationMeasure.SUMMARY,
-          ...               ScenarioCalculationMeasure.ESTIMATED_FACTOR_PNL,
-          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_SECTOR,
-          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_REGION,
-          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_DIRECTION,
-          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_ASSET],
-          ...     risk_model=risk_model)
+         >>> scenario_analytics = pm.get_factor_scenario_analytics(
+         ...     scenarios=[covid_19_omicron, beta_propagated],
+         ...     date=date,
+         ...     measures=[ScenarioCalculationMeasure.SUMMARY,
+         ...               ScenarioCalculationMeasure.ESTIMATED_FACTOR_PNL,
+         ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_SECTOR,
+         ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_REGION,
+         ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_DIRECTION,
+         ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_ASSET],
+         ...     risk_model=risk_model)
 
-          By default, the result will be returned in a dict with keys as the measures/metrics requested and values as
-          the scenario calculation results formatted in a dataframe. To get the results in a dict, specify the return
-          format as JSON
-         """
+         By default, the result will be returned in a dict with keys as the measures/metrics requested and values as
+         the scenario calculation results formatted in a dataframe. To get the results in a dict, specify the return
+         format as JSON
+        """
 
         return super().get_factor_scenario_analytics(scenarios, date, measures, risk_model, return_format)
 
-    def get_risk_model_predicted_beta(self, start_date: dt.date, end_date: dt.date, risk_model_id: str,
-                                      default_beta_value: int = 1, tags: Dict = None) -> pd.DataFrame:
+    def get_risk_model_predicted_beta(
+        self, start_date: dt.date, end_date: dt.date, risk_model_id: str, default_beta_value: int = 1, tags: Dict = None
+    ) -> pd.DataFrame:
         """
         Get the predicted beta of a portfolio as estimated by the provided risk model.
         The beta is calculated using the factor risk model data. The function retrieves the factor risk report
@@ -645,35 +666,44 @@ class PortfolioManager(PositionedEntity):
         for batch in batched_dates:
             start_date, end_date = batch[0], batch[-1]
             try:
-                date_wise_net_weight = performance_report.get_position_net_weights(start_date=start_date,
-                                                                                   end_date=end_date,
-                                                                                   asset_metadata_fields=["gsid"],
-                                                                                   include_all_business_days=True,
-                                                                                   position_type=PositionType.CLOSE)
-                date_wise_net_weight = date_wise_net_weight.dropna().pivot_table(index='positionDate', columns='gsid',
-                                                                                 values='netWeight', aggfunc='sum')
+                date_wise_net_weight = performance_report.get_position_net_weights(
+                    start_date=start_date,
+                    end_date=end_date,
+                    asset_metadata_fields=["gsid"],
+                    include_all_business_days=True,
+                    position_type=PositionType.CLOSE,
+                )
+                date_wise_net_weight = date_wise_net_weight.dropna().pivot_table(
+                    index='positionDate', columns='gsid', values='netWeight', aggfunc='sum'
+                )
                 portfolio_position_gsids = [gsid for gsid in date_wise_net_weight.columns.tolist() if gsid is not None]
-                asset_level_betas_batch = (risk_model
-                                           .get_predicted_beta(start_date=start_date, end_date=end_date,
-                                                               assets=RiskModelDataAssetsRequest(
-                                                                   identifier=RiskModelUniverseIdentifierRequest.gsid,
-                                                                   universe=tuple(portfolio_position_gsids))))
+                asset_level_betas_batch = risk_model.get_predicted_beta(
+                    start_date=start_date,
+                    end_date=end_date,
+                    assets=RiskModelDataAssetsRequest(
+                        identifier=RiskModelUniverseIdentifierRequest.gsid, universe=tuple(portfolio_position_gsids)
+                    ),
+                )
                 if asset_level_betas_batch.isna().all().all():
                     logging.warning(
-                        f"Risk model predicted beta not available for risk model {risk_model_id} for dates: {batch}")
+                        f"Risk model predicted beta not available for risk model {risk_model_id} for dates: {batch}"
+                    )
                     continue
                 else:
                     asset_level_betas = pd.concat([asset_level_betas, asset_level_betas_batch], axis=0)
-                    portfolio_position_net_weights = pd.concat([portfolio_position_net_weights,
-                                                                date_wise_net_weight], axis=0)
+                    portfolio_position_net_weights = pd.concat(
+                        [portfolio_position_net_weights, date_wise_net_weight], axis=0
+                    )
             except Exception as ex:
                 raise MqError(
                     f"Risk model predicted beta cannot be calculated for risk model {risk_model_id} "
-                    f"from {start_date} to {end_date} because of exception: {ex}, traceback: {traceback.format_exc()}")
+                    f"from {start_date} to {end_date} because of exception: {ex}, traceback: {traceback.format_exc()}"
+                )
         if asset_level_betas.empty:
             return pd.DataFrame()
         asset_level_betas = asset_level_betas.fillna(default_beta_value)
         risk_model_predicted_beta_timeseries = asset_level_betas * portfolio_position_net_weights
-        risk_model_predicted_beta_timeseries = (risk_model_predicted_beta_timeseries.sum(axis=1).rename('beta').
-                                                replace({0: np.nan}).ffill())
+        risk_model_predicted_beta_timeseries = (
+            risk_model_predicted_beta_timeseries.sum(axis=1).rename('beta').replace({0: np.nan}).ffill()
+        )
         return risk_model_predicted_beta_timeseries.reset_index().rename(columns={'index': 'date', 0: 'beta'})

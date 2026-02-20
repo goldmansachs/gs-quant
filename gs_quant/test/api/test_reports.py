@@ -25,28 +25,51 @@ def test_get_reports(mocker):
     id_1 = 'RX1'
     id_2 = 'RX2'
 
-    mock_response = {'results': (
-        Report.from_dict({'id': id_1, 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                          'type': 'Portfolio Performance Analytics', 'parameters': {'transactionCostModel': 'FIXED'}}),
-        Report.from_dict({'id': id_2, 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP2',
-                          'type': 'Portfolio Performance Analytics', 'parameters': {'transactionCostModel': 'FIXED'}})
-    ), 'totalResults': 2}
+    mock_response = {
+        'results': (
+            Report.from_dict(
+                {
+                    'id': id_1,
+                    'positionSourceType': 'Portfolio',
+                    'positionSourceId': 'MP1',
+                    'type': 'Portfolio Performance Analytics',
+                    'parameters': {'transactionCostModel': 'FIXED'},
+                }
+            ),
+            Report.from_dict(
+                {
+                    'id': id_2,
+                    'positionSourceType': 'Portfolio',
+                    'positionSourceId': 'MP2',
+                    'type': 'Portfolio Performance Analytics',
+                    'parameters': {'transactionCostModel': 'FIXED'},
+                }
+            ),
+        ),
+        'totalResults': 2,
+    }
 
     expected_response = (
-        Report(id=id_1, positionSourceType='Portfolio', positionSourceId='MP1', type='Portfolio Performance Analytics',
-               parameters=ReportParameters(transactionCostModel='FIXED')),
-        Report(id=id_2, positionSourceType='Portfolio', positionSourceId='MP2', type='Portfolio Performance Analytics',
-               parameters=ReportParameters(transactionCostModel='FIXED'))
+        Report(
+            id=id_1,
+            positionSourceType='Portfolio',
+            positionSourceId='MP1',
+            type='Portfolio Performance Analytics',
+            parameters=ReportParameters(transactionCostModel='FIXED'),
+        ),
+        Report(
+            id=id_2,
+            positionSourceType='Portfolio',
+            positionSourceId='MP2',
+            type='Portfolio Performance Analytics',
+            parameters=ReportParameters(transactionCostModel='FIXED'),
+        ),
     )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -57,18 +80,20 @@ def test_get_reports(mocker):
 
 def test_get_report(mocker):
     id_1 = 'MP1'
-    mock_response = Report.from_dict({'id': id_1, 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                                      'type': 'Portfolio Performance Analytics',
-                                      'parameters': {'transactionCostModel': 'FIXED'}})
+    mock_response = Report.from_dict(
+        {
+            'id': id_1,
+            'positionSourceType': 'Portfolio',
+            'positionSourceId': 'MP1',
+            'type': 'Portfolio Performance Analytics',
+            'parameters': {'transactionCostModel': 'FIXED'},
+        }
+    )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -80,18 +105,20 @@ def test_get_report(mocker):
 def test_create_report(mocker):
     id_1 = 'RX1'
 
-    report = Report.from_dict({'id': id_1, 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                               'type': 'Portfolio Performance Analytics',
-                               'parameters': {'transactionCostModel': 'FIXED'}})
+    report = Report.from_dict(
+        {
+            'id': id_1,
+            'positionSourceType': 'Portfolio',
+            'positionSourceId': 'MP1',
+            'type': 'Portfolio Performance Analytics',
+            'parameters': {'transactionCostModel': 'FIXED'},
+        }
+    )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_post', return_value=report)
 
     # run test
@@ -103,18 +130,20 @@ def test_create_report(mocker):
 def test_update_report(mocker):
     id_1 = 'RX1'
 
-    report = Report.from_dict({'id': id_1, 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP25',
-                               'type': 'Portfolio Performance Analytics',
-                               'parameters': {'transactionCostModel': 'FIXED'}})
+    report = Report.from_dict(
+        {
+            'id': id_1,
+            'positionSourceType': 'Portfolio',
+            'positionSourceId': 'MP25',
+            'type': 'Portfolio Performance Analytics',
+            'parameters': {'transactionCostModel': 'FIXED'},
+        }
+    )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_put', return_value=report)
 
     # run test
@@ -130,12 +159,8 @@ def test_delete_portfolio(mocker):
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
 
     # run test
@@ -153,19 +178,16 @@ def test_schedule_report(mocker):
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
 
     # run test
     response = GsReportApi.schedule_report(id_1, start_date, end_date)
 
     GsSession.current._post.assert_called_with(
-        '/reports/{id}/schedule'.format(id=id_1), {'endDate': '2019-02-19', 'startDate': '2019-02-18'})
+        '/reports/{id}/schedule'.format(id=id_1), {'endDate': '2019-02-19', 'startDate': '2019-02-18'}
+    )
 
     assert response == mock_response
 
@@ -173,17 +195,15 @@ def test_schedule_report(mocker):
 def test_get_report_status(mocker):
     id_1 = 'RJW55950MF0S0HKN'
 
-    mock_response = ({'reportJobId': id_1, 'startDate': dt.date(2018, 12, 12), 'endDate': dt.date(2018, 12, 18)},
-                     {'reportJobId': id_1, 'startDate': dt.date(2017, 12, 12), 'endDate': dt.date(2017, 12, 16)})
+    mock_response = (
+        {'reportJobId': id_1, 'startDate': dt.date(2018, 12, 12), 'endDate': dt.date(2018, 12, 18)},
+        {'reportJobId': id_1, 'startDate': dt.date(2017, 12, 12), 'endDate': dt.date(2017, 12, 16)},
+    )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -195,28 +215,47 @@ def test_get_report_status(mocker):
 def test_get_report_jobs(mocker):
     id_1 = 'RJW55950MF0S0HKN'
 
-    mock_response = {'results': (
-        ReportJob.from_dict({'id': id_1, 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                             'parameters': {'transactionCostModel': 'FIXED'}}),
-        ReportJob.from_dict({'id': id_1, 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP2',
-                             'parameters': {'transactionCostModel': 'FIXED'}})
-    ), 'totalResults': 2}
+    mock_response = {
+        'results': (
+            ReportJob.from_dict(
+                {
+                    'id': id_1,
+                    'positionSourceType': 'Portfolio',
+                    'positionSourceId': 'MP1',
+                    'parameters': {'transactionCostModel': 'FIXED'},
+                }
+            ),
+            ReportJob.from_dict(
+                {
+                    'id': id_1,
+                    'positionSourceType': 'Portfolio',
+                    'positionSourceId': 'MP2',
+                    'parameters': {'transactionCostModel': 'FIXED'},
+                }
+            ),
+        ),
+        'totalResults': 2,
+    }
 
     expected_response = (
-        ReportJob(id=id_1, positionSourceType='Portfolio', positionSourceId='MP1',
-                  parameters=ReportParameters(transactionCostModel='FIXED')),
-        ReportJob(id=id_1, positionSourceType='Portfolio', positionSourceId='MP2',
-                  parameters=ReportParameters(transactionCostModel='FIXED'))
+        ReportJob(
+            id=id_1,
+            positionSourceType='Portfolio',
+            positionSourceId='MP1',
+            parameters=ReportParameters(transactionCostModel='FIXED'),
+        ),
+        ReportJob(
+            id=id_1,
+            positionSourceType='Portfolio',
+            positionSourceId='MP2',
+            parameters=ReportParameters(transactionCostModel='FIXED'),
+        ),
     )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -227,17 +266,17 @@ def test_get_report_jobs(mocker):
 
 def test_report_job(mocker):
     id_1 = 'RX1'
-    mock_response = ReportJob(id=id_1, positionSourceType='Portfolio', positionSourceId='MP1',
-                              parameters=ReportParameters(transactionCostModel='FIXED'))
+    mock_response = ReportJob(
+        id=id_1,
+        positionSourceType='Portfolio',
+        positionSourceId='MP1',
+        parameters=ReportParameters(transactionCostModel='FIXED'),
+    )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -253,12 +292,8 @@ def test_cancel_report_job(mocker):
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
 
     # run test
@@ -274,19 +309,13 @@ def test_update_report_job(mocker):
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
 
     # run test
     response = GsReportApi.update_report_job(id_1, status)
-    status_body = {
-        "status": 'done'
-    }
+    status_body = {"status": 'done'}
     GsSession.current._post.assert_called_with('/reports/jobs/{id}/update'.format(id=id_1), status_body)
     assert response == mock_response
 
@@ -300,7 +329,7 @@ def test_get_factor_risk_report_results(mocker):
             "pnl": 0.002877605406002121,
             "exposure": 12.105457414400002,
             "sensitivity": 0.026861678358408886,
-            "proportionOfRisk": 0.0038230454885067183
+            "proportionOfRisk": 0.0038230454885067183,
         },
         {
             "date": "2003-01-06",
@@ -309,17 +338,13 @@ def test_get_factor_risk_report_results(mocker):
             "pnl": 0,
             "exposure": 12.1028697664,
             "sensitivity": 0.02668134999120776,
-            "proportionOfRisk": 0.0036290846167489335
-        }
+            "proportionOfRisk": 0.0036290846167489335,
+        },
     ]
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -340,17 +365,13 @@ def test_get_factor_risk_report_view(mocker):
             "shortExposure": 0,
             "factorProportionOfRisk": 70.28206437467601,
             "specificProportionOfRisk": 29.71793562532398,
-            "date": "2021-08-12"
+            "date": "2021-08-12",
         }
     }
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test

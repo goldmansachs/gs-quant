@@ -49,18 +49,20 @@ class FredDataApi(DataApi):
         if api_key is not None:
             self.api_key = api_key
         else:
-            raise ValueError(textwrap.dedent("""
+            raise ValueError(
+                textwrap.dedent("""
                     Please pass a string with your API key. You can sign up for a free api key on the Fred website at
-                    http://research.stlouisfed.org/fred2/"""))
+                    http://research.stlouisfed.org/fred2/""")
+            )
 
     def build_query(
-            self,
-            start: Optional[Union[dt.date, dt.datetime]] = None,
-            end: Optional[Union[dt.date, dt.datetime]] = None,
-            as_of: Optional[dt.datetime] = None,
-            since: Optional[dt.datetime] = None,
-            fields: Optional[Iterable[str]] = None,
-            **kwargs
+        self,
+        start: Optional[Union[dt.date, dt.datetime]] = None,
+        end: Optional[Union[dt.date, dt.datetime]] = None,
+        as_of: Optional[dt.datetime] = None,
+        since: Optional[dt.datetime] = None,
+        fields: Optional[Iterable[str]] = None,
+        **kwargs,
     ) -> FredQuery:
         """
         Builds a FRED URL to query.
@@ -130,8 +132,9 @@ class FredDataApi(DataApi):
         data = data.sort_index()
         return data
 
-    def construct_dataframe_with_types(self, dataset_id: str, data: pd.Series, schema_varies=False,
-                                       standard_fields=False) -> pd.DataFrame:
+    def construct_dataframe_with_types(
+        self, dataset_id: str, data: pd.Series, schema_varies=False, standard_fields=False
+    ) -> pd.DataFrame:
         """
         Constructs a dataframe with correct date types.
 

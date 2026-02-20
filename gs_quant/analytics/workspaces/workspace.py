@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import logging
 import webbrowser
 from collections import deque
@@ -20,8 +21,15 @@ from typing import List, Tuple, Union, Dict
 
 from pydash import get
 
-from gs_quant.analytics.workspaces.components import Component, TYPE_TO_COMPONENT, RelatedLink, DataGridComponent, \
-    MonitorComponent, PlotComponent, DataScreenerComponent
+from gs_quant.analytics.workspaces.components import (
+    Component,
+    TYPE_TO_COMPONENT,
+    RelatedLink,
+    DataGridComponent,
+    MonitorComponent,
+    PlotComponent,
+    DataScreenerComponent,
+)
 from gs_quant.common import Entitlements as Entitlements_
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqValueError, MqRequestError
@@ -34,12 +42,7 @@ HEADERS = {'Content-Type': 'application/json;charset=utf-8'}
 
 
 class WorkspaceCallToAction:
-
-    def __init__(
-            self,
-            actions: List[RelatedLink],
-            text: str,
-            name: str = None):
+    def __init__(self, actions: List[RelatedLink], text: str, name: str = None):
         """
         Call to action displayed on the top right of the page.
         :param actions: link to external/internal pages, embed a mail to link, anchor links within page or notifications
@@ -74,9 +77,7 @@ class WorkspaceCallToAction:
 
 
 class WorkspaceTab:
-    def __init__(self,
-                 id_: str,
-                 name: str):
+    def __init__(self, id_: str, name: str):
         """
         Workspace Tab to connect other workspaces.
         :param id_: alias of the workspace to create a tab
@@ -86,10 +87,7 @@ class WorkspaceTab:
         self.name = name
 
     def as_dict(self):
-        return {
-            'id': self.id_,
-            'name': self.name
-        }
+        return {'id': self.id_, 'name': self.name}
 
     @classmethod
     def from_dict(cls, obj):
@@ -97,9 +95,7 @@ class WorkspaceTab:
 
 
 class WorkspaceColumn:
-    def __init__(self,
-                 components: List[Union[Component, 'WorkspaceRow']],
-                 width: int = None):
+    def __init__(self, components: List[Union[Component, 'WorkspaceRow']], width: int = None):
         """
         :param components: List of components in the same row
         """
@@ -129,7 +125,8 @@ class WorkspaceColumn:
         if width_sum + without_width_count > 12:
             raise MqValueError(
                 f'Cannot fit all components in column due to given total width of {width_sum} '
-                f'and {without_width_count} components without a width.')
+                f'and {without_width_count} components without a width.'
+            )
         self.__components = value
 
     @property
@@ -157,12 +154,14 @@ class WorkspaceColumn:
                     layout += sub_layout
                 elif isinstance(component, WorkspaceColumn):
                     sub_layout, count = component.get_layout(count)
-                    layout += f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}' \
-                              f'({sub_layout})'
+                    layout += (
+                        f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}({sub_layout})'
+                    )
                 else:
                     # Case: Component
-                    layout += f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}' \
-                              f'(${count})'
+                    layout += (
+                        f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}(${count})'
+                    )
                     count += 1
         else:
             used_sum = 0
@@ -197,8 +196,7 @@ class WorkspaceRow:
     Wrapper on a list of components in the same row.
     """
 
-    def __init__(self,
-                 components: List[Union[Component, WorkspaceColumn]]):
+    def __init__(self, components: List[Union[Component, WorkspaceColumn]]):
         """
         :param components: List of components in the same row
         """
@@ -227,7 +225,8 @@ class WorkspaceRow:
         if width_sum + without_width_count > 12:
             raise MqValueError(
                 f'Cannot fit all components in row due to given total width of {width_sum} '
-                f'and {without_width_count} components without a width.')
+                f'and {without_width_count} components without a width.'
+            )
         self.__components = value
 
     def get_layout(self, count: int) -> Tuple[str, int]:
@@ -244,20 +243,25 @@ class WorkspaceRow:
             for i, component in enumerate(self.__components):
                 if isinstance(component, WorkspaceColumn):
                     sub_layout, count = component.get_layout(count)
-                    layout += f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}' \
-                              f'({sub_layout})'
+                    layout += (
+                        f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}({sub_layout})'
+                    )
                 else:
                     # Case: Component
-                    layout += f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}' \
-                              f'(${count})'
+                    layout += (
+                        f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}(${count})'
+                    )
                     count += 1
         else:
             used_sum = 0
             if width_sum == 12:
                 default_width = 0
             else:
-                default_width = self.components[0].width if len(self.components) == 1 else \
-                    int(12 - width_sum / sum(1 for component in self.components if component.width is None))
+                default_width = (
+                    self.components[0].width
+                    if len(self.components) == 1
+                    else int(12 - width_sum / sum(1 for component in self.components if component.width is None))
+                )
             for i, component in enumerate(self.components):
                 if i == components_length - 1 and not component.width:
                     if isinstance(component, WorkspaceColumn):
@@ -303,18 +307,20 @@ class Workspace:
         DataScreenerComponent: '/data/screens',
     }
 
-    def __init__(self,
-                 name: str,
-                 rows: List[WorkspaceRow] = None,
-                 alias: str = None,
-                 description: str = None,
-                 entitlements: Union[Entitlements, Entitlements_] = None,
-                 tabs: List[WorkspaceTab] = None,
-                 selector_components: List[Component] = None,
-                 disclaimer: str = None,
-                 maintainers: List[str] = None,
-                 call_to_action: Union[WorkspaceCallToAction, Dict] = None,
-                 tags: List[str] = None):
+    def __init__(
+        self,
+        name: str,
+        rows: List[WorkspaceRow] = None,
+        alias: str = None,
+        description: str = None,
+        entitlements: Union[Entitlements, Entitlements_] = None,
+        tabs: List[WorkspaceTab] = None,
+        selector_components: List[Component] = None,
+        disclaimer: str = None,
+        maintainers: List[str] = None,
+        call_to_action: Union[WorkspaceCallToAction, Dict] = None,
+        tags: List[str] = None,
+    ):
         self.__id = None
         self.__name = name
         self.__rows = rows or []
@@ -489,7 +495,7 @@ class Workspace:
                 stack.pop()
                 if len(stack) == 0:
                     if current_str.startswith('c'):
-                        is_component = current_str[current_str.index('(') + 1:].startswith('$')
+                        is_component = current_str[current_str.index('(') + 1 :].startswith('$')
                         if is_component:
                             # Component Case
                             scale, id_ = current_str.split('($')
@@ -501,13 +507,13 @@ class Workspace:
                             outside_components.append(component)
                         else:
                             # Column Case
-                            column_layout = current_str[current_str.index('(') + 1:-1]
+                            column_layout = current_str[current_str.index('(') + 1 : -1]
                             components = Workspace._parse(column_layout, workspace_components)
-                            width = int(current_str[1:current_str.index('(')])
+                            width = int(current_str[1 : current_str.index('(')])
                             outside_components.append(WorkspaceColumn(components, width))
                     elif current_str.startswith('r'):
                         # Row Case
-                        row_layout = current_str[current_str.index('(') + 1:-1]
+                        row_layout = current_str[current_str.index('(') + 1 : -1]
                         components = Workspace._parse(row_layout, workspace_components)
                         outside_components.append(WorkspaceRow(components))
                     current_str = ''
@@ -527,12 +533,13 @@ class Workspace:
             elif c == ')':
                 stack.pop()
                 if len(stack) == 0:
-                    row_layouts.append(row_layout[row_layout.index('c'):])
+                    row_layouts.append(row_layout[row_layout.index('c') :])
                     row_layout = ''
             row_layout += c
 
-        workspace_rows = [WorkspaceRow(components=Workspace._parse(row_layout, workspace_components))
-                          for row_layout in row_layouts]
+        workspace_rows = [
+            WorkspaceRow(components=Workspace._parse(row_layout, workspace_components)) for row_layout in row_layouts
+        ]
 
         component_count = 0
         # The rest of the components not in the layout should be selector components
@@ -544,11 +551,17 @@ class Workspace:
 
         params = obj['parameters']
         tabs = [WorkspaceTab.from_dict(tab) for tab in params.get('tabs', [])]
-        return Workspace(name=obj['name'], rows=workspace_rows, selector_components=selector_components,
-                         alias=obj.get('alias'), tabs=tabs,
-                         entitlements=Entitlements.from_dict(obj.get('entitlements', {})),
-                         description=obj.get('description'),
-                         disclaimer=params.get('disclaimer'), maintainers=params.get('maintainers'))
+        return Workspace(
+            name=obj['name'],
+            rows=workspace_rows,
+            selector_components=selector_components,
+            alias=obj.get('alias'),
+            tabs=tabs,
+            entitlements=Entitlements.from_dict(obj.get('entitlements', {})),
+            description=obj.get('description'),
+            disclaimer=params.get('disclaimer'),
+            maintainers=params.get('maintainers'),
+        )
 
     def as_dict(self):
         components, count, layout = [], 0, ''
@@ -564,10 +577,7 @@ class Workspace:
         # Add the hidden components at the end
         components.extend([component.as_dict() for component in self.__selector_components])
 
-        parameters = {
-            'layout': layout,
-            'components': components
-        }
+        parameters = {'layout': layout, 'components': components}
 
         if len(self.__maintainers):
             parameters['maintainers'] = self.__maintainers
@@ -581,10 +591,7 @@ class Workspace:
         if self.__disclaimer:
             parameters['disclaimer'] = self.__disclaimer
 
-        dict_ = {
-            'name': self.__name,
-            'parameters': parameters
-        }
+        dict_ = {'name': self.__name, 'parameters': parameters}
 
         if self.__alias:
             dict_['alias'] = self.__alias
@@ -614,7 +621,8 @@ class Workspace:
                         GsSession.current._delete(f'{cls.PERSISTED_COMPONENTS[type_]}/{component.id_}')
                     except MqRequestError as ex:
                         _logger.warning(
-                            f'Failed to delete {type_.__name__} with id {component.id_} due to {ex.message}')
+                            f'Failed to delete {type_.__name__} with id {component.id_} due to {ex.message}'
+                        )
 
 
 def __get_layout(components, count):
@@ -631,12 +639,14 @@ def __get_layout(components, count):
         for i, component in enumerate(components):
             if isinstance(component, WorkspaceRow):
                 sub_layout, count = __get_layout(component.components, count)
-                layout += f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}' \
-                          f'({sub_layout})'
+                layout += (
+                    f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}({sub_layout})'
+                )
             elif isinstance(component, WorkspaceColumn):
                 sub_layout, count = __get_layout(component.components, count)
-                layout += f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}' \
-                          f'({sub_layout})'
+                layout += (
+                    f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}({sub_layout})'
+                )
             else:
                 # Case: Component
                 layout += f'c{size + last_size if i == components_length - 1 and last_size != 0 else size}(${count})'

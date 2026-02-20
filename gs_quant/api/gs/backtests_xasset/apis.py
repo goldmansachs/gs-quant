@@ -25,16 +25,22 @@ class GsBacktestXassetApi:
 
     @classmethod
     def calculate_risk(cls, risk_request: RiskRequest) -> RiskResponse:
-        response = GsSession.current._post('/backtests/xasset/risk', risk_request.to_json(),
-                                           request_headers=cls.HEADERS, timeout=cls.TIMEOUT)
+        response = GsSession.current._post(
+            '/backtests/xasset/risk', risk_request.to_json(), request_headers=cls.HEADERS, timeout=cls.TIMEOUT
+        )
         result = RiskResponse.from_dict(response)
         return result
 
     @classmethod
-    def calculate_basic_backtest(cls, backtest_request: BasicBacktestRequest, decode_instruments: bool = True) -> \
-            BasicBacktestResponse:
-        response = GsSession.current._post('/backtests/xasset/strategy/basic', backtest_request.to_json(),
-                                           request_headers=cls.HEADERS, timeout=cls.TIMEOUT)
+    def calculate_basic_backtest(
+        cls, backtest_request: BasicBacktestRequest, decode_instruments: bool = True
+    ) -> BasicBacktestResponse:
+        response = GsSession.current._post(
+            '/backtests/xasset/strategy/basic',
+            backtest_request.to_json(),
+            request_headers=cls.HEADERS,
+            timeout=cls.TIMEOUT,
+        )
         result = BasicBacktestResponse.from_dict_custom(response, decode_instruments)
         return result
 
@@ -42,15 +48,21 @@ class GsBacktestXassetApi:
 class GsBacktestXassetApiAsync(GsBacktestXassetApi):
     @classmethod
     async def calculate_risk(cls, risk_request: RiskRequest) -> RiskResponse:
-        response = await GsSession.current._post_async('/backtests/xasset/risk', risk_request.to_json(),
-                                                       request_headers=cls.HEADERS, timeout=cls.TIMEOUT)
+        response = await GsSession.current._post_async(
+            '/backtests/xasset/risk', risk_request.to_json(), request_headers=cls.HEADERS, timeout=cls.TIMEOUT
+        )
         result = RiskResponse.from_dict(response)
         return result
 
     @classmethod
-    async def calculate_basic_backtest(cls, backtest_request: BasicBacktestRequest, decode_instruments: bool = True) \
-            -> BasicBacktestResponse:
-        response = await GsSession.current._post_async('/backtests/xasset/strategy/basic', backtest_request.to_json(),
-                                                       request_headers=cls.HEADERS, timeout=cls.TIMEOUT)
+    async def calculate_basic_backtest(
+        cls, backtest_request: BasicBacktestRequest, decode_instruments: bool = True
+    ) -> BasicBacktestResponse:
+        response = await GsSession.current._post_async(
+            '/backtests/xasset/strategy/basic',
+            backtest_request.to_json(),
+            request_headers=cls.HEADERS,
+            timeout=cls.TIMEOUT,
+        )
         result = BasicBacktestResponse.from_dict_custom(response, decode_instruments)
         return result

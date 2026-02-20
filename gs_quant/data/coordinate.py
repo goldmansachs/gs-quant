@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import json
 import uuid
@@ -35,16 +36,15 @@ class BaseDataCoordinate(metaclass=ABCMeta):
 
     __slots__ = ['__measure', '__dimensions']
 
-    def __init__(self,
-                 measure: Union[DataMeasure, str],
-                 dimensions: Optional[DataDimensions] = None):
+    def __init__(self, measure: Union[DataMeasure, str], dimensions: Optional[DataDimensions] = None):
         self.__measure = measure
         # Sorted so different dimension orders doesn't matter
         if dimensions is None:
             self.__dimensions = tuple()
         else:
             self.__dimensions = tuple(
-                sorted({k.value if isinstance(k, Enum) else k: v for k, v in dimensions.items()}.items()))
+                sorted({k.value if isinstance(k, Enum) else k: v for k, v in dimensions.items()}.items())
+            )
 
     @property
     def measure(self) -> DataMeasure:
@@ -54,9 +54,7 @@ class BaseDataCoordinate(metaclass=ABCMeta):
     def dimensions(self) -> Dict:
         return dict(self.__dimensions)
 
-    def get_series(self,
-                   start: Optional[DateOrDatetime] = None,
-                   end: Optional[DateOrDatetime] = None):
+    def get_series(self, start: Optional[DateOrDatetime] = None, end: Optional[DateOrDatetime] = None):
         pass
 
     def set_dimensions(self, dimensions: DataDimensions):
@@ -79,11 +77,13 @@ class DataCoordinate(BaseDataCoordinate):
 
     __slots__ = ['__dataset_id', '__frequency', '__id']
 
-    def __init__(self,
-                 measure: Union[DataMeasure, str],
-                 dataset_id: Optional[str] = None,
-                 dimensions: Optional[DataDimensions] = None,
-                 frequency: Optional[DataFrequency] = None):
+    def __init__(
+        self,
+        measure: Union[DataMeasure, str],
+        dataset_id: Optional[str] = None,
+        dimensions: Optional[DataDimensions] = None,
+        frequency: Optional[DataFrequency] = None,
+    ):
         """Initialize data coordinate
 
         :param dataset_id: Unique identifier for dataset
@@ -143,28 +143,38 @@ class DataCoordinate(BaseDataCoordinate):
         return hash((self.dataset_id, self.measure, tuple(self.dimensions)))
 
     def __str__(self):
-        return f'Dataset Id: ({self.dataset_id}) ' \
-               f'Measure: ({self.measure if isinstance(self.measure, str) else self.measure.value}) ' \
-               f'Dimensions: ({json.dumps(self.dimensions)})'
+        return (
+            f'Dataset Id: ({self.dataset_id}) '
+            f'Measure: ({self.measure if isinstance(self.measure, str) else self.measure.value}) '
+            f'Dimensions: ({json.dumps(self.dimensions)})'
+        )
 
-    def get_range(self,
-                  start: Optional[DateOrDatetime] = None,
-                  end: Optional[DateOrDatetime] = None) -> Tuple[Optional[DateOrDatetime], Optional[DateOrDatetime]]:
+    def get_range(
+        self, start: Optional[DateOrDatetime] = None, end: Optional[DateOrDatetime] = None
+    ) -> Tuple[Optional[DateOrDatetime], Optional[DateOrDatetime]]:
         if start is None:
-            start = DataContext.current.start_time if self.frequency is DataFrequency.REAL_TIME \
+            start = (
+                DataContext.current.start_time
+                if self.frequency is DataFrequency.REAL_TIME
                 else DataContext.current.start_date
+            )
 
         if end is None:
-            end = DataContext.current.end_time if self.frequency is DataFrequency.REAL_TIME \
+            end = (
+                DataContext.current.end_time
+                if self.frequency is DataFrequency.REAL_TIME
                 else DataContext.current.end_date
+            )
 
         return start, end
 
-    def get_series(self,
-                   start: Optional[DateOrDatetime] = None,
-                   end: Optional[DateOrDatetime] = None,
-                   dates: List[dt.date] = None,
-                   operator: DataAggregationOperator = None) -> Union[pd.Series, None]:
+    def get_series(
+        self,
+        start: Optional[DateOrDatetime] = None,
+        end: Optional[DateOrDatetime] = None,
+        dates: List[dt.date] = None,
+        operator: DataAggregationOperator = None,
+    ) -> Union[pd.Series, None]:
         """Get timeseries of coordinate"""
 
         if not self.dataset_id:
@@ -179,12 +189,11 @@ class DataCoordinate(BaseDataCoordinate):
 
         return dataset.get_data_series(measure, start=start, end=end, dates=dates, **self.dimensions)
 
-    def last_value(self,
-                   before: Optional[DateOrDatetime] = None) -> Union[float, None]:
+    def last_value(self, before: Optional[DateOrDatetime] = None) -> Union[float, None]:
         """Return the last available value
 
-         Returns the last value prior to to the specified date / time. If `before` argument is not provided, will
-         return the last value prior to the end date / time of the current data context
+        Returns the last value prior to to the specified date / time. If `before` argument is not provided, will
+        return the last value prior to the end date / time of the current data context
 
         """
         if not self.dataset_id:
@@ -207,7 +216,7 @@ class DataCoordinate(BaseDataCoordinate):
         coordinate = {
             'measure': self.measure.value if isinstance(self.measure, Enum) else self.measure,
             'frequency': self.frequency.value,
-            'id': self.id
+            'id': self.id,
         }
 
         if self.dataset_id:
@@ -235,11 +244,13 @@ class DataCoordinate(BaseDataCoordinate):
             else:
                 parsed_dimensions[key] = value
 
-        coordinate = DataCoordinate(dataset_id=dataset_id,
-                                    measure=measure,
-                                    dimensions=parsed_dimensions,
-                                    frequency=DataFrequency(frequency)) if dataset_id else \
-            DataCoordinate(measure=measure, dimensions=parsed_dimensions, frequency=DataFrequency(frequency))
+        coordinate = (
+            DataCoordinate(
+                dataset_id=dataset_id, measure=measure, dimensions=parsed_dimensions, frequency=DataFrequency(frequency)
+            )
+            if dataset_id
+            else DataCoordinate(measure=measure, dimensions=parsed_dimensions, frequency=DataFrequency(frequency))
+        )
         if id_:
             coordinate.id = id_
 

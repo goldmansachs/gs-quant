@@ -19,8 +19,12 @@ import numpy as np
 import pandas as pd
 from pandas._testing import assert_series_equal, assert_frame_equal  # noqa
 
-from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import \
-    encode_series_result, encode_dataframe_result, decode_series_result, decode_dataframe_result
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import (
+    encode_series_result,
+    encode_dataframe_result,
+    decode_series_result,
+    decode_dataframe_result,
+)
 
 
 def test_encode_series_result():
@@ -39,15 +43,27 @@ def test_encode_dataframe_result():
 def test_decode_series_result():
     enc = {'index': ('2024-06-12', '2024-06-13', '2024-06-14'), 'name': 'test', 'values': (1, 2, 3)}
     s = decode_series_result(enc)
-    assert_series_equal(s, pd.Series(data=[1, 2, 3],
-                                     index=[dt.date(2024, 6, 12), dt.date(2024, 6, 13), dt.date(2024, 6, 14)],
-                                     name='test'))
+    assert_series_equal(
+        s,
+        pd.Series(
+            data=[1, 2, 3], index=[dt.date(2024, 6, 12), dt.date(2024, 6, 13), dt.date(2024, 6, 14)], name='test'
+        ),
+    )
 
 
 def test_decode_dataframe_result():
-    enc = {'index': ('2024-06-12', '2024-06-13', '2024-06-14'), 'columns': ('a', 'b', 'c'),
-           'values': ((1, 2, 3), (4, 5, 6), (7, 8, 9))}
+    enc = {
+        'index': ('2024-06-12', '2024-06-13', '2024-06-14'),
+        'columns': ('a', 'b', 'c'),
+        'values': ((1, 2, 3), (4, 5, 6), (7, 8, 9)),
+    }
     df = decode_dataframe_result(enc)
-    assert_frame_equal(df, pd.DataFrame(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), columns=['a', 'b', 'c'],
-                                        index=[dt.date(2024, 6, 12), dt.date(2024, 6, 13), dt.date(2024, 6, 14)],
-                                        dtype=np.int64))
+    assert_frame_equal(
+        df,
+        pd.DataFrame(
+            np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),
+            columns=['a', 'b', 'c'],
+            index=[dt.date(2024, 6, 12), dt.date(2024, 6, 13), dt.date(2024, 6, 14)],
+            dtype=np.int64,
+        ),
+    )

@@ -1,0 +1,15 @@
+# run pip install .[develop] to install dependencies
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-lint
+        name: Run ruff lint
+        language: system
+        types: [python]
+        files: 'gs_quant/.*py$'
+        entry: ruff check --fix
+      - id: ruff-format
+        name: Run ruff format
+        language: system
+        files: 'gs_quant/.*py$'
+        entry: ruff format

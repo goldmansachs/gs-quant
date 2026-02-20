@@ -52,8 +52,9 @@ class GsWorkspacesMarketsApi:
 
     @classmethod
     def update_workspace(cls, workspace: Workspace):
-        return GsSession.current._put(f'{API}/{workspace.id}', workspace, cls=Workspace,
-                                      request_headers=WORKSPACES_MARKETS_HEADERS)
+        return GsSession.current._put(
+            f'{API}/{workspace.id}', workspace, cls=Workspace, request_headers=WORKSPACES_MARKETS_HEADERS
+        )
 
     @classmethod
     def delete_workspace(cls, workspace_id: str) -> Dict:

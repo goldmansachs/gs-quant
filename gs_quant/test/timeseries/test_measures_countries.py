@@ -30,23 +30,7 @@ def test_fci():
     with pytest.raises(NotImplementedError):
         mc.fci('IN', real_time=True)
 
-    data = {
-        'fci': [
-            101,
-            102,
-            103
-        ],
-        'realFCI': [
-            100,
-            99,
-            98
-        ],
-        'realTWIContribution': [
-            100,
-            100,
-            98
-        ]
-    }
+    data = {'fci': [101, 102, 103], 'realFCI': [100, 99, 98], 'realTWIContribution': [100, 100, 98]}
     idx = pd.date_range('2020-01-01', freq='D', periods=3)
     df = MarketDataResponseFrame(data=data, index=idx)
     df.dataset_ids = ('FCI',)

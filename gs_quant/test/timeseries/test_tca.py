@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from unittest.mock import Mock
 
 import pandas as pd
@@ -28,13 +29,16 @@ def test_covariance():
     mock_spx_2 = Index('MA890', AssetClass.Equity, 'SPX', entity={'type': 'Index', 'underlying_asset_ids': []})
 
     replace = Replacer()
-    mock_data = pd.DataFrame(data={"assetId": ["MA00S9PEKCD2NQBD"],
-                                   "bucketStart": ["19:30:00"],
-                                   "bucketEnd": ["20:00:00"],
-                                   "asset2Id": ["MAZYGB8GAYB9ZFQ1"],
-                                   "covariance": [5.0717E-6]
-                                   },
-                             index=[pd.Timestamp('2021-12-20'), pd.Timestamp('2021-12-20')])
+    mock_data = pd.DataFrame(
+        data={
+            "assetId": ["MA00S9PEKCD2NQBD"],
+            "bucketStart": ["19:30:00"],
+            "bucketEnd": ["20:00:00"],
+            "asset2Id": ["MAZYGB8GAYB9ZFQ1"],
+            "covariance": [5.0717e-6],
+        },
+        index=[pd.Timestamp('2021-12-20'), pd.Timestamp('2021-12-20')],
+    )
     mock_request = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
     mock_request.return_value = mock_data
 

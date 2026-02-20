@@ -38,9 +38,8 @@ ROW_SEPARATOR = 'rowSeparator'
 class Override(ABC):
     """Base class for a DataGrid row override"""
 
-    def __init__(self,
-                 column_names: List[str]):
-        """ Abstract Row Override
+    def __init__(self, column_names: List[str]):
+        """Abstract Row Override
 
         :param column_names: column names to override with the specified dimensions
         """
@@ -48,9 +47,7 @@ class Override(ABC):
         super().__init__()
 
     def as_dict(self) -> Dict:
-        return {
-            'columnNames': self.column_names
-        }
+        return {'columnNames': self.column_names}
 
     @classmethod
     def from_dict(cls, obj, reference_list):
@@ -80,12 +77,10 @@ class ValueOverride(Override):
 
 
 class DimensionsOverride(Override):
-    def __init__(self,
-                 column_names: List[str],
-                 dimensions: DataDimensions,
-                 coordinate: DataCoordinate,
-                 coordinate_id: str = None):
-        """ Override dimensions for the given coordinate
+    def __init__(
+        self, column_names: List[str], dimensions: DataDimensions, coordinate: DataCoordinate, coordinate_id: str = None
+    ):
+        """Override dimensions for the given coordinate
 
         :param column_names: column names to override with the specified dimensions
         :param dimensions: dict of dimensions to override columns when fetching data
@@ -117,17 +112,17 @@ class DimensionsOverride(Override):
                 parsed_dimensions[DataDimension(key)] = value
             else:
                 parsed_dimensions[key] = value
-        return DimensionsOverride(column_names=obj.get('columnNames', []),
-                                  dimensions=parsed_dimensions,
-                                  coordinate=DataCoordinate.from_dict(obj.get('coordinate', {})),
-                                  coordinate_id=obj.get('coordinateId'))
+        return DimensionsOverride(
+            column_names=obj.get('columnNames', []),
+            dimensions=parsed_dimensions,
+            coordinate=DataCoordinate.from_dict(obj.get('coordinate', {})),
+            coordinate_id=obj.get('coordinateId'),
+        )
 
 
 class ProcessorOverride(Override):
-    def __init__(self,
-                 column_names: List[str],
-                 processor: BaseProcessor):
-        """ Abstract Row Override
+    def __init__(self, column_names: List[str], processor: BaseProcessor):
+        """Abstract Row Override
 
         :param column_names: column names to override with the specified dimensions
         :param processor: processor to override
@@ -148,23 +143,22 @@ class ProcessorOverride(Override):
 
     @classmethod
     def from_dict(cls, obj, reference_list):
-        return ProcessorOverride(column_names=obj.get('columnNames', []),
-                                 processor=BaseProcessor.from_dict(obj.get('processor', {}), reference_list))
+        return ProcessorOverride(
+            column_names=obj.get('columnNames', []),
+            processor=BaseProcessor.from_dict(obj.get('processor', {}), reference_list),
+        )
 
 
 class RowSeparator:
     def __init__(self, name: str):
-        """ Row Separator
+        """Row Separator
 
         :param name: name of the row separator
         """
         self.name = name
 
     def as_dict(self):
-        return {
-            'type': ROW_SEPARATOR,
-            'name': self.name
-        }
+        return {'type': ROW_SEPARATOR, 'name': self.name}
 
     @classmethod
     def from_dict(cls, obj):
@@ -174,10 +168,8 @@ class RowSeparator:
 class DataRow:
     """Row object for DataGrid"""
 
-    def __init__(self,
-                 entity: Entity,
-                 overrides: Optional[List[Override]] = None):
-        """ Data row
+    def __init__(self, entity: Entity, overrides: Optional[List[Override]] = None):
+        """Data row
 
         :param entity: Specified entity for the DataRow
         :param overrides: Optional List of DataRowOverride's for retrieving data
@@ -189,7 +181,7 @@ class DataRow:
         data_row = {
             'type': DATA_ROW,
             'entityId': self.entity.get_marquee_id() if isinstance(self.entity, Entity) else self.entity,
-            'entityType': self.entity.entity_type().value if isinstance(self.entity, Entity) else ''
+            'entityType': self.entity.entity_type().value if isinstance(self.entity, Entity) else '',
         }
         if len(self.overrides):
             data_row['overrides'] = [override.as_dict() for override in self.overrides]
@@ -210,11 +202,13 @@ class DataRow:
 
         data_row = DataRow(entity=None, overrides=overrides)  # Entity gets resolved later
 
-        reference_list.append({
-            'type': DATA_ROW,
-            'entityId': obj.get('entityId', ''),
-            'entityType': obj.get('entityType', ''),
-            'reference': data_row
-        })
+        reference_list.append(
+            {
+                'type': DATA_ROW,
+                'entityId': obj.get('entityId', ''),
+                'entityType': obj.get('entityType', ''),
+                'reference': data_row,
+            }
+        )
 
         return data_row

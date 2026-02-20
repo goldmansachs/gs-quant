@@ -20,7 +20,6 @@ from gs_quant.data.utilities import SecmasterXrefFormatter
 
 
 class TestSecmasterXrefFormatter(unittest.TestCase):
-
     def setUp(self):
         """Set up test fixtures before each test method."""
         self.formatter = SecmasterXrefFormatter()
@@ -30,13 +29,13 @@ class TestSecmasterXrefFormatter(unittest.TestCase):
         start_event = SecmasterXrefFormatter.Event(
             date="2023-01-01",
             event_type=SecmasterXrefFormatter.EventType.START,
-            record={"type": "CUSIP", "value": "12345", "startDate": "2023-01-01", "endDate": "2023-12-31"}
+            record={"type": "CUSIP", "value": "12345", "startDate": "2023-01-01", "endDate": "2023-12-31"},
         )
 
         end_event = SecmasterXrefFormatter.Event(
             date="2023-01-01",
             event_type=SecmasterXrefFormatter.EventType.END,
-            record={"type": "ISIN", "value": "US12345", "startDate": "2023-01-01", "endDate": "2023-12-31"}
+            record={"type": "ISIN", "value": "US12345", "startDate": "2023-01-01", "endDate": "2023-12-31"},
         )
 
         self.assertEqual(start_event.priority, 0)
@@ -101,18 +100,13 @@ class TestSecmasterXrefFormatter(unittest.TestCase):
     def test_create_events(self):
         """Test event creation from records."""
         records = [
-            {
-                "type": "CUSIP",
-                "value": "12345",
-                "startDate": "2023-01-01",
-                "endDate": "2023-06-30"
-            },
+            {"type": "CUSIP", "value": "12345", "startDate": "2023-01-01", "endDate": "2023-06-30"},
             {
                 "type": "ISIN",
                 "value": "US12345",
                 "startDate": "2023-07-01",
-                "endDate": SecmasterXrefFormatter.INFINITY_DATE
-            }
+                "endDate": SecmasterXrefFormatter.INFINITY_DATE,
+            },
         ]
 
         events = SecmasterXrefFormatter._create_events(records)
@@ -139,27 +133,12 @@ class TestSecmasterXrefFormatter(unittest.TestCase):
 
     def test_convert_simple_case(self):
         """Test conversion with a simple single identifier case."""
-        data = {
-            "entity1": [
-                {
-                    "type": "CUSIP",
-                    "value": "12345",
-                    "startDate": "2023-01-01",
-                    "endDate": "2023-12-31"
-                }
-            ]
-        }
+        data = {"entity1": [{"type": "CUSIP", "value": "12345", "startDate": "2023-01-01", "endDate": "2023-12-31"}]}
 
         result = SecmasterXrefFormatter.convert(data)
         expected = {
             "entity1": {
-                "xrefs": [
-                    {
-                        "startDate": "2023-01-01",
-                        "endDate": "2023-12-31",
-                        "identifiers": {"CUSIP": "12345"}
-                    }
-                ]
+                "xrefs": [{"startDate": "2023-01-01", "endDate": "2023-12-31", "identifiers": {"CUSIP": "12345"}}]
             }
         }
 
@@ -173,7 +152,7 @@ class TestSecmasterXrefFormatter(unittest.TestCase):
                     "type": "CUSIP",
                     "value": "12345",
                     "startDate": "2023-01-01",
-                    "endDate": SecmasterXrefFormatter.INFINITY_MARKER
+                    "endDate": SecmasterXrefFormatter.INFINITY_MARKER,
                 }
             ]
         }
@@ -185,7 +164,7 @@ class TestSecmasterXrefFormatter(unittest.TestCase):
                     {
                         "startDate": "2023-01-01",
                         "endDate": SecmasterXrefFormatter.INFINITY_DATE,
-                        "identifiers": {"CUSIP": "12345"}
+                        "identifiers": {"CUSIP": "12345"},
                     }
                 ]
             }
@@ -197,18 +176,8 @@ class TestSecmasterXrefFormatter(unittest.TestCase):
         """Test conversion with overlapping identifier periods."""
         data = {
             "entity1": [
-                {
-                    "type": "CUSIP",
-                    "value": "12345",
-                    "startDate": "2023-01-01",
-                    "endDate": "2023-06-30"
-                },
-                {
-                    "type": "ISIN",
-                    "value": "US12345",
-                    "startDate": "2023-03-01",
-                    "endDate": "2023-09-30"
-                }
+                {"type": "CUSIP", "value": "12345", "startDate": "2023-01-01", "endDate": "2023-06-30"},
+                {"type": "ISIN", "value": "US12345", "startDate": "2023-03-01", "endDate": "2023-09-30"},
             ]
         }
 
@@ -237,18 +206,8 @@ class TestSecmasterXrefFormatter(unittest.TestCase):
         """Test conversion with adjacent periods (no gaps)."""
         data = {
             "entity1": [
-                {
-                    "type": "CUSIP",
-                    "value": "12345",
-                    "startDate": "2023-01-01",
-                    "endDate": "2023-06-30"
-                },
-                {
-                    "type": "CUSIP",
-                    "value": "67890",
-                    "startDate": "2023-07-01",
-                    "endDate": "2023-12-31"
-                }
+                {"type": "CUSIP", "value": "12345", "startDate": "2023-01-01", "endDate": "2023-06-30"},
+                {"type": "CUSIP", "value": "67890", "startDate": "2023-07-01", "endDate": "2023-12-31"},
             ]
         }
 
@@ -270,18 +229,8 @@ class TestSecmasterXrefFormatter(unittest.TestCase):
         """Test conversion when identifiers start and end on the same date."""
         data = {
             "entity1": [
-                {
-                    "type": "CUSIP",
-                    "value": "12345",
-                    "startDate": "2023-01-01",
-                    "endDate": "2023-06-30"
-                },
-                {
-                    "type": "ISIN",
-                    "value": "US12345",
-                    "startDate": "2023-06-30",
-                    "endDate": "2023-12-31"
-                }
+                {"type": "CUSIP", "value": "12345", "startDate": "2023-01-01", "endDate": "2023-06-30"},
+                {"type": "ISIN", "value": "US12345", "startDate": "2023-06-30", "endDate": "2023-12-31"},
             ]
         }
 
@@ -294,22 +243,8 @@ class TestSecmasterXrefFormatter(unittest.TestCase):
     def test_convert_multiple_entities(self):
         """Test conversion with multiple entities."""
         data = {
-            "entity1": [
-                {
-                    "type": "CUSIP",
-                    "value": "12345",
-                    "startDate": "2023-01-01",
-                    "endDate": "2023-12-31"
-                }
-            ],
-            "entity2": [
-                {
-                    "type": "ISIN",
-                    "value": "US67890",
-                    "startDate": "2023-01-01",
-                    "endDate": "2023-12-31"
-                }
-            ]
+            "entity1": [{"type": "CUSIP", "value": "12345", "startDate": "2023-01-01", "endDate": "2023-12-31"}],
+            "entity2": [{"type": "ISIN", "value": "US67890", "startDate": "2023-01-01", "endDate": "2023-12-31"}],
         }
 
         result = SecmasterXrefFormatter.convert(data)

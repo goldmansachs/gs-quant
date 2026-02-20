@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import functools
 import re
@@ -29,12 +30,13 @@ ConstPoints = {
     "CASHSTUB": 1.1,
     "DEFAULT": 0,
     "IN": 0.1,
-    "OUT": 0.2
+    "OUT": 0.2,
 }
 
 # Regular expression for different types of market data coordinate points
-EuroOrFraReg = \
+EuroOrFraReg = (
     r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)+([0-9][0-9])$"
+)
 NumberReg = r"^([0-9]*)$"
 MMMYYYYReg = r"^([a-zA-Z]{3}[0-9]{4})$"
 DDMMMYYYYReg = r"^([1-3]*[0-9]{1}[a-zA-Z]{3}[0-9]{4})$"
@@ -52,8 +54,9 @@ MMMReg = r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$"
 MMMYYReg = r"^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC) ([0-9]{2})"
 DatePairReg = r"^([0-9]{8})/([0-9]{8})$"
 DatePairReg2 = r"^([0-9]{8}) ([0-9]{8})$"
-FXVolAddonParmsReg = \
+FXVolAddonParmsReg = (
     r"(Spread Addon|Spread Init|Spread Final|Rho Addon|Rho Init|Rho Final|Vol Addon|Vol Init|Vol Final|HL|Addon HL)"
+)
 CopulaReg = r"(Rho$|Rho Rate|Rho Vol|RR|BF|Alpha|Beta|KO$|K0=L|K0=S)"
 BondCoordReg = r"^[0-9]* ([0-9.]*) ([0-9]{2}/[0-9]{2}/[0-9]{4})$"
 BondFutReg = r"^[A-Z]{3}([FGHJKMNQUVXZ])([0-9])$"
@@ -88,7 +91,7 @@ DictDayRule = {
     'm': 30,
     'M': 30,
     'y': 365,
-    'Y': 365
+    'Y': 365,
 }
 
 

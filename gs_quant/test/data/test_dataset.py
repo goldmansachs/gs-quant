@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import copy
 import datetime as dt
 
@@ -43,7 +44,7 @@ test_types = {
     'lowPrice': 'number',
     'adjustedHighPrice': 'number',
     'adjustedLowPrice': 'number',
-    'updateTime': 'date-time'
+    'updateTime': 'date-time',
 }
 test_data = [
     {
@@ -61,7 +62,7 @@ test_data = [
         'lowPrice': 2467.47,
         'adjustedHighPrice': 2519.49,
         'adjustedLowPrice': 2467.47,
-        'updateTime': dt.datetime.strptime('2019-01-03T00:53:00Z', '%Y-%m-%dT%H:%M:%SZ')
+        'updateTime': dt.datetime.strptime('2019-01-03T00:53:00Z', '%Y-%m-%dT%H:%M:%SZ'),
     },
     {
         'date': dt.date(2019, 1, 3),
@@ -78,7 +79,7 @@ test_data = [
         'lowPrice': 2443.96,
         'adjustedHighPrice': 2493.14,
         'adjustedLowPrice': 2443.96,
-        'updateTime': dt.datetime.strptime('2019-01-04T00:14:00Z', '%Y-%m-%dT%H:%M:%SZ')
+        'updateTime': dt.datetime.strptime('2019-01-04T00:14:00Z', '%Y-%m-%dT%H:%M:%SZ'),
     },
     {
         'date': dt.date(2019, 1, 4),
@@ -95,7 +96,7 @@ test_data = [
         'lowPrice': 2474.33,
         'adjustedHighPrice': 2538.07,
         'adjustedLowPrice': 2474.33,
-        'updateTime': dt.datetime.strptime('2019-01-08T00:31:00Z', '%Y-%m-%dT%H:%M:%SZ')
+        'updateTime': dt.datetime.strptime('2019-01-08T00:31:00Z', '%Y-%m-%dT%H:%M:%SZ'),
     },
     {
         'date': dt.date(2019, 1, 7),
@@ -112,7 +113,7 @@ test_data = [
         'lowPrice': 2524.56,
         'adjustedHighPrice': 2566.16,
         'adjustedLowPrice': 2524.56,
-        'updateTime': dt.datetime.strptime('2019-01-08T00:31:00Z', '%Y-%m-%dT%H:%M:%SZ')
+        'updateTime': dt.datetime.strptime('2019-01-08T00:31:00Z', '%Y-%m-%dT%H:%M:%SZ'),
     },
     {
         'date': dt.date(2019, 1, 8),
@@ -129,7 +130,7 @@ test_data = [
         'lowPrice': 2547.56,
         'adjustedHighPrice': 2579.82,
         'adjustedLowPrice': 2547.56,
-        'updateTime': dt.datetime.strptime('2019-01-09T00:50:00Z', '%Y-%m-%dT%H:%M:%SZ')
+        'updateTime': dt.datetime.strptime('2019-01-09T00:50:00Z', '%Y-%m-%dT%H:%M:%SZ'),
     },
     {
         'date': dt.date(2019, 1, 9),
@@ -146,8 +147,8 @@ test_data = [
         'lowPrice': 2568.89,
         'adjustedHighPrice': 2595.32,
         'adjustedLowPrice': 2568.89,
-        'updateTime': dt.datetime.strptime('2019-01-10T00:44:00Z', '%Y-%m-%dT%H:%M:%SZ')
-    }
+        'updateTime': dt.datetime.strptime('2019-01-10T00:44:00Z', '%Y-%m-%dT%H:%M:%SZ'),
+    },
 ]
 
 tr_types = {
@@ -164,7 +165,7 @@ tr_types = {
     'highPrice': 'number',
     'adjustedLowPrice': 'number',
     'lowPrice': 'number',
-    'adjustedHighPrice': 'number'
+    'adjustedHighPrice': 'number',
 }
 tr_data = [
     {
@@ -181,7 +182,7 @@ tr_data = [
         'highPrice': 2519.49,
         'lowPrice': 2467.47,
         'adjustedHighPrice': 2519.49,
-        'adjustedLowPrice': 2467.47
+        'adjustedLowPrice': 2467.47,
     },
     {
         'time': dt.datetime(2023, 5, 31, 15),
@@ -197,12 +198,9 @@ tr_data = [
         'highPrice': 2493.14,
         'lowPrice': 2443.96,
         'adjustedHighPrice': 2493.14,
-        'adjustedLowPrice': 2443.96
+        'adjustedLowPrice': 2443.96,
     },
-    {
-        'time': dt.datetime(2023, 5, 31, 16),
-        'assetId': 'MA4B66MW5E27U8P32SB'
-    },
+    {'time': dt.datetime(2023, 5, 31, 16), 'assetId': 'MA4B66MW5E27U8P32SB'},
     {
         'time': dt.datetime(2023, 5, 31, 17),
         'assetId': 'MA4B66MW5E27U8P32SB',
@@ -217,8 +215,8 @@ tr_data = [
         'highPrice': 2538.07,
         'lowPrice': 2474.33,
         'adjustedHighPrice': 2538.07,
-        'adjustedLowPrice': 2474.33
-    }
+        'adjustedLowPrice': 2474.33,
+    },
 ]
 
 test_coverage_data = {'results': [{'gsid': 'gsid1'}]}
@@ -241,8 +239,13 @@ def test_query_data_intervals(mocker):
     mock = mocker.patch("gs_quant.api.gs.data.GsDataApi.query_data", return_value=tr_data)
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=tr_types)
     dataset = Dataset(Dataset.TR.TREOD)
-    data = dataset.get_data(dt.datetime(2023, 5, 31, 13), dt.datetime(2023, 5, 31, 17), assetId='MA4B66MW5E27U8P32SB',
-                            intervals=4, empty_intervals=True)
+    data = dataset.get_data(
+        dt.datetime(2023, 5, 31, 13),
+        dt.datetime(2023, 5, 31, 17),
+        assetId='MA4B66MW5E27U8P32SB',
+        intervals=4,
+        empty_intervals=True,
+    )
     assert data.equals(GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TR), tr_data))
 
     assert mock.call_count == 1
@@ -274,8 +277,9 @@ def test_get_data_series(mocker):
     mocker.patch.object(GsDataApi, 'symbol_dimensions', return_value=('assetId',))
 
     dataset = Dataset(Dataset.TR.TREOD)
-    series = dataset.get_data_series('tradePrice', dt.date(2019, 1, 2), dt.date(2019, 1, 9),
-                                     assetId='MA4B66MW5E27U8P32SB')
+    series = dataset.get_data_series(
+        'tradePrice', dt.date(2019, 1, 2), dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB'
+    )
 
     df = pd.DataFrame(test_data)
     index = pd.to_datetime(df.loc[:, 'date'].values)
@@ -321,9 +325,9 @@ def test_construct_dataframe_var_schema(mocker):
 def test_dataframe_with_mixed_date_type(mocker):
     mocker.patch.object(GsDataApi, 'get_types', return_value={'updateTime': 'date-time'})
 
-    df = GsDataApi.construct_dataframe_with_types('BBG_PER_SECURITY',
-                                                  [{'updateTime': '2022-02-24T19:25:28Z'},
-                                                   {'updateTime': '2022-11-10T17:18:23.021494Z'}])
+    df = GsDataApi.construct_dataframe_with_types(
+        'BBG_PER_SECURITY', [{'updateTime': '2022-02-24T19:25:28Z'}, {'updateTime': '2022-11-10T17:18:23.021494Z'}]
+    )
 
     assert df.empty is False
 
@@ -337,12 +341,10 @@ def test_data_series_format(mocker):
     expected = expected.rename_axis('date')
 
     # mock GsSession and data response
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
-    mock_response = {
-        'requestId': 'qwerty',
-        'data': test_data
-    }
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
+    mock_response = {'requestId': 'qwerty', 'data': test_data}
     mocker.patch.object(GsSession.current, '_post', side_effect=lambda *args, **kwargs: mock_response)
     mocker.patch.object(GsSession.current, '_get', return_value={"id": "TREOD"})
     mocker.patch.object(GsDataApi, 'symbol_dimensions', return_value=('assetId',))
@@ -357,8 +359,9 @@ def test_data_series_format(mocker):
     assert args[0] == '/data/TREOD/query'
 
     GsSession.current._post.reset_mock()
-    actual = Dataset('TREOD').get_data_series(field='tradePrice', start=start, end=end, assetId='MA4B66MW5E27U8P32SB',
-                                              format=Format.Json)
+    actual = Dataset('TREOD').get_data_series(
+        field='tradePrice', start=start, end=end, assetId='MA4B66MW5E27U8P32SB', format=Format.Json
+    )
     pd.testing.assert_series_equal(actual, expected)
     assert len(GsSession.current._post.mock_calls) == 1
     name, args, kwargs = GsSession.current._post.mock_calls[0]
@@ -376,8 +379,9 @@ def test_get_data_bulk(mocker):
         'clusterClass': {pd.Timestamp('20230302'): '13'},
         'assetId': {pd.Timestamp('20230302'): 'MA4B66MW5E27U8P4ZFX'},
         'clusterDescription': {pd.Timestamp('20230302'): 'Small Trd Count, Hard to Complete'},
-        'updateTime': {pd.Timestamp('20230302'): dt.datetime.strptime('2023-03-05T00:40:54.000Z',
-                                                                      '%Y-%m-%dT%H:%M:%S.%fZ')}
+        'updateTime': {
+            pd.Timestamp('20230302'): dt.datetime.strptime('2023-03-05T00:40:54.000Z', '%Y-%m-%dT%H:%M:%S.%fZ')
+        },
     }
 
     df = pd.DataFrame(test_df)
@@ -392,8 +396,9 @@ def test_get_data_bulk(mocker):
     dataset_definition.dimensions.time_field = 'date'
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
 
     # mock fetch_data function in utilities.py
     mock = mocker.patch("gs_quant.data.utilities.Utilities.fetch_data", return_value=df)
@@ -413,8 +418,13 @@ def test_get_data_bulk(mocker):
     original_start = dt.datetime(2023, 3, 2, 0, 0, 0)
     final_end = dt.datetime(2023, 3, 2, 0, 0, 0)
     c = Dataset(dataset_id)
-    c.get_data_bulk(original_start=original_start, final_end=final_end, request_batch_size=4,
-                    identifier="clusterRegion", handler=handler)
+    c.get_data_bulk(
+        original_start=original_start,
+        final_end=final_end,
+        request_batch_size=4,
+        identifier="clusterRegion",
+        handler=handler,
+    )
 
     assert mock.call_count == 1
     assert df.equals(df2)

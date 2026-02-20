@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import asyncio
 import inspect
 import itertools
@@ -75,8 +76,9 @@ class CustomHttpAdapter(requests.adapters.HTTPAdapter):
         return cls.__ssl_ctx
 
     def init_poolmanager(self, connections, maxsize=100, block=False):
-        self.poolmanager = urllib3.poolmanager.PoolManager(num_pools=connections, maxsize=maxsize, block=block,
-                                                           ssl_context=self.ssl_context())
+        self.poolmanager = urllib3.poolmanager.PoolManager(
+            num_pools=connections, maxsize=maxsize, block=block, ssl_context=self.ssl_context()
+        )
 
 
 class Domain:
@@ -106,13 +108,21 @@ class GsSession(ContextBase):
                 cls.READ_CONTENT.value,
                 cls.READ_PRODUCT_DATA.value,
                 cls.READ_FINANCIAL_DATA.value,
-                cls.READ_USER_PROFILE.value
+                cls.READ_USER_PROFILE.value,
             )
 
-    def __init__(self, domain: str, environment: str = None, api_version: str = API_VERSION,
-                 application: str = DEFAULT_APPLICATION, verify=True,
-                 http_adapter: requests.adapters.HTTPAdapter = None, application_version=APP_VERSION,
-                 proxies=None, redirect_to_mds=False):
+    def __init__(
+        self,
+        domain: str,
+        environment: str = None,
+        api_version: str = API_VERSION,
+        application: str = DEFAULT_APPLICATION,
+        verify=True,
+        http_adapter: requests.adapters.HTTPAdapter = None,
+        application_version=APP_VERSION,
+        proxies=None,
+        redirect_to_mds=False,
+    ):
         super().__init__()
         self._session = None
         self._session_async = None
@@ -139,12 +149,10 @@ class GsSession(ContextBase):
         self.mounts = {key: httpx.HTTPTransport(proxy=val) for key, val in proxies} if proxies else None
         self.redirect_to_mds = redirect_to_mds
 
-    @backoff.on_exception(lambda: backoff.expo(factor=2),
-                          (requests.exceptions.HTTPError, requests.exceptions.Timeout),
-                          max_tries=5)
-    @backoff.on_predicate(lambda: backoff.expo(factor=2),
-                          lambda x: x.status_code in (500, 502, 503, 504),
-                          max_tries=5)
+    @backoff.on_exception(
+        lambda: backoff.expo(factor=2), (requests.exceptions.HTTPError, requests.exceptions.Timeout), max_tries=5
+    )
+    @backoff.on_predicate(lambda: backoff.expo(factor=2), lambda x: x.status_code in (500, 502, 503, 504), max_tries=5)
     @abstractmethod
     def _authenticate(self):
         raise NotImplementedError("Must implement _authenticate")
@@ -174,8 +182,9 @@ class GsSession(ContextBase):
 
     def _init_async(self):
         if not self._has_async_session():
-            self._session_async = httpx.AsyncClient(follow_redirects=True, verify=CustomHttpAdapter.ssl_context(),
-                                                    mounts=self.mounts)
+            self._session_async = httpx.AsyncClient(
+                follow_redirects=True, verify=CustomHttpAdapter.ssl_context(), mounts=self.mounts
+            )
             self._session_async.headers.update({'X-Application': self.application})
             self._session_async.headers.update({'X-Version': self.application_version})
             self._authenticate_async()
@@ -251,23 +260,21 @@ class GsSession(ContextBase):
         return url
 
     def _build_request_params(
-            self,
-            method: str,
-            path: str,
-            url: str,
-            payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]],
-            request_headers: Optional[dict],
-            timeout: Optional[int],
-            use_body: bool,
-            data_key: str,
-            tracing_scope: Optional[TracingScope]
+        self,
+        method: str,
+        path: str,
+        url: str,
+        payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]],
+        request_headers: Optional[dict],
+        timeout: Optional[int],
+        use_body: bool,
+        data_key: str,
+        tracing_scope: Optional[TracingScope],
     ) -> dict:
         is_dataframe = isinstance(payload, pd.DataFrame)
         if not is_dataframe:
             payload = payload or {}
-        kwargs = {
-            'timeout': timeout
-        }
+        kwargs = {'timeout': timeout}
 
         if tracing_scope:
             tracing_scope.span.set_tag('path', path)
@@ -306,15 +313,20 @@ class GsSession(ContextBase):
             kwargs['headers'] = headers
 
             if is_dataframe or payload:
-                kwargs[data_key] = (payload if isinstance(payload, (str, bytes)) else
-                                    msgpack.dumps(payload, default=encode_default) if use_msgpack else
-                                    json.dumps(payload, cls=JSONEncoder))
+                kwargs[data_key] = (
+                    payload
+                    if isinstance(payload, (str, bytes))
+                    else msgpack.dumps(payload, default=encode_default)
+                    if use_msgpack
+                    else json.dumps(payload, cls=JSONEncoder)
+                )
         else:
             raise MqError('not implemented')
         return kwargs
 
-    def _parse_response(self, request_id, response, method: str, url: str,
-                        cls: Optional[type], return_request_id: Optional[bool]):
+    def _parse_response(
+        self, request_id, response, method: str, url: str, cls: Optional[type], return_request_id: Optional[bool]
+    ):
         if not 199 < response.status_code < 300:
             reason = response.reason if hasattr(response, 'reason') else response.reason_phrase
             err_msg = reason if response.headers.get('Content-Type') == 'text/html' else f'{reason}: {response.text}'
@@ -339,25 +351,26 @@ class GsSession(ContextBase):
             return ret
 
     def __request(
-            self,
-            method: str,
-            path: str,
-            payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]] = None,
-            request_headers: Optional[dict] = None,
-            cls: Optional[type] = None,
-            try_auth: Optional[bool] = True,
-            include_version: Optional[bool] = True,
-            timeout: Optional[int] = DEFAULT_TIMEOUT,
-            return_request_id: Optional[bool] = False,
-            use_body: bool = False,
-            domain: Optional[str] = None
+        self,
+        method: str,
+        path: str,
+        payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        try_auth: Optional[bool] = True,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        use_body: bool = False,
+        domain: Optional[str] = None,
     ) -> Union[Base, tuple, dict]:
         span = Tracer.active_span()
         url = self._build_url(domain, path, include_version)
         tracer = Tracer(url) if span and span.is_recording() else nullcontext()
         with tracer as scope:
-            kwargs = self._build_request_params(method, path, url, payload, request_headers, timeout, use_body, "data",
-                                                scope)
+            kwargs = self._build_request_params(
+                method, path, url, payload, request_headers, timeout, use_body, "data", scope
+            )
             response = self._session.request(method, url, **kwargs)
             request_id = response.headers.get('x-dash-requestid')
             logger.debug('Handling response for [Request ID]: %s [Method]: %s [URL]: %s', request_id, method, url)
@@ -372,32 +385,43 @@ class GsSession(ContextBase):
             if not try_auth:
                 raise MqRequestError(response.status_code, response.text, context=f'{request_id}: {method} {url}')
             self._authenticate()
-            return self.__request(method, path, payload=payload, request_headers=request_headers, cls=cls,
-                                  try_auth=False, include_version=include_version, timeout=timeout,
-                                  return_request_id=return_request_id, use_body=use_body, domain=domain)
+            return self.__request(
+                method,
+                path,
+                payload=payload,
+                request_headers=request_headers,
+                cls=cls,
+                try_auth=False,
+                include_version=include_version,
+                timeout=timeout,
+                return_request_id=return_request_id,
+                use_body=use_body,
+                domain=domain,
+            )
         return self._parse_response(request_id, response, method, url, cls, return_request_id)
 
     async def __request_async(
-            self,
-            method: str,
-            path: str,
-            payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]] = None,
-            request_headers: Optional[dict] = None,
-            cls: Optional[type] = None,
-            try_auth: Optional[bool] = True,
-            include_version: Optional[bool] = True,
-            timeout: Optional[int] = DEFAULT_TIMEOUT,
-            return_request_id: Optional[bool] = False,
-            use_body: bool = False,
-            domain: Optional[str] = None
+        self,
+        method: str,
+        path: str,
+        payload: Optional[Union[dict, str, bytes, Base, pd.DataFrame]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        try_auth: Optional[bool] = True,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        use_body: bool = False,
+        domain: Optional[str] = None,
     ) -> Union[Base, tuple, dict]:
         self._init_async()
         span = Tracer.active_span()
         url = self._build_url(domain, path, include_version)
         tracer = Tracer(f'http:/{path}') if span and span.is_recording() else nullcontext()
         with tracer as scope:
-            kwargs = self._build_request_params(method, path, url, payload, request_headers, timeout, use_body,
-                                                "content", scope)
+            kwargs = self._build_request_params(
+                method, path, url, payload, request_headers, timeout, use_body, "content", scope
+            )
             response = await self._session_async.request(method, url, **kwargs)
             request_id = response.headers.get('x-dash-requestid')
             if scope:
@@ -411,86 +435,215 @@ class GsSession(ContextBase):
             if not try_auth:
                 raise MqRequestError(response.status_code, response.text, context=f'{request_id}: {method} {url}')
             self._authenticate_all_sessions()
-            res = await self.__request_async(method, path, payload=payload, request_headers=request_headers,
-                                             cls=cls, try_auth=False, include_version=include_version, timeout=timeout,
-                                             return_request_id=return_request_id, use_body=use_body, domain=domain)
+            res = await self.__request_async(
+                method,
+                path,
+                payload=payload,
+                request_headers=request_headers,
+                cls=cls,
+                try_auth=False,
+                include_version=include_version,
+                timeout=timeout,
+                return_request_id=return_request_id,
+                use_body=use_body,
+                domain=domain,
+            )
             return res
         return self._parse_response(request_id, response, method, url, cls, return_request_id)
 
-    def _get(self, path: str, payload: Optional[Union[dict, Base]] = None, request_headers: Optional[dict] = None,
-             cls: Optional[type] = None, include_version: Optional[bool] = True,
-             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False,
-             domain: Optional[str] = None) -> Union[Base, tuple, dict]:
-        return self.__request('GET', path, payload=payload, request_headers=request_headers, cls=cls,
-                              include_version=include_version, timeout=timeout, return_request_id=return_request_id,
-                              domain=domain)
+    def _get(
+        self,
+        path: str,
+        payload: Optional[Union[dict, Base]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union[Base, tuple, dict]:
+        return self.__request(
+            'GET',
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
 
-    async def _get_async(self, path: str, payload: Optional[Union[dict, Base]] = None,
-                         request_headers: Optional[dict] = None, cls: Optional[type] = None,
-                         include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-                         return_request_id: Optional[bool] = False, domain: Optional[str] = None) \
-            -> Union[Base, tuple, dict]:
-        ret = await self.__request_async('GET', path, payload=payload, request_headers=request_headers, cls=cls,
-                                         include_version=include_version, timeout=timeout,
-                                         return_request_id=return_request_id, domain=domain)
+    async def _get_async(
+        self,
+        path: str,
+        payload: Optional[Union[dict, Base]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union[Base, tuple, dict]:
+        ret = await self.__request_async(
+            'GET',
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
         return ret
 
-    def _post(self, path: str, payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
-              request_headers: Optional[dict] = None, cls: Optional[type] = None,
-              include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-              return_request_id: Optional[bool] = False, domain: Optional[str] = None) -> Union[Base, tuple, dict]:
-        return self.__request('POST', path, payload=payload, request_headers=request_headers, cls=cls,
-                              include_version=include_version, timeout=timeout, return_request_id=return_request_id,
-                              domain=domain)
+    def _post(
+        self,
+        path: str,
+        payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union[Base, tuple, dict]:
+        return self.__request(
+            'POST',
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
 
-    async def _post_async(self, path: str, payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
-                          request_headers: Optional[dict] = None, cls: Optional[type] = None,
-                          include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-                          return_request_id: Optional[bool] = False,
-                          domain: Optional[str] = None) -> Union[Base, tuple, dict]:
-        ret = await self.__request_async('POST', path, payload=payload, request_headers=request_headers, cls=cls,
-                                         include_version=include_version, timeout=timeout,
-                                         return_request_id=return_request_id, domain=domain)
+    async def _post_async(
+        self,
+        path: str,
+        payload: Optional[Union[dict, bytes, Base, pd.DataFrame]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union[Base, tuple, dict]:
+        ret = await self.__request_async(
+            'POST',
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
         return ret
 
-    def _delete(self, path: str, payload: Optional[Union[dict, Base]] = None,
-                request_headers: Optional[dict] = None, cls: Optional[type] = None,
-                include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-                return_request_id: Optional[bool] = False, use_body: Optional[bool] = False) \
-            -> Union[Base, tuple, dict]:
-        return self.__request('DELETE', path, payload=payload, request_headers=request_headers, cls=cls,
-                              include_version=include_version, timeout=timeout, return_request_id=return_request_id,
-                              use_body=use_body)
+    def _delete(
+        self,
+        path: str,
+        payload: Optional[Union[dict, Base]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        use_body: Optional[bool] = False,
+    ) -> Union[Base, tuple, dict]:
+        return self.__request(
+            'DELETE',
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            use_body=use_body,
+        )
 
-    async def _delete_async(self, path: str, payload: Optional[Union[dict, Base]] = None,
-                            request_headers: Optional[dict] = None, cls: Optional[type] = None,
-                            include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-                            return_request_id: Optional[bool] = False, use_body: Optional[bool] = False) \
-            -> Union[Base, tuple, dict]:
-        ret = await self.__request_async('DELETE', path, payload=payload, request_headers=request_headers, cls=cls,
-                                         include_version=include_version, timeout=timeout,
-                                         return_request_id=return_request_id, use_body=use_body)
+    async def _delete_async(
+        self,
+        path: str,
+        payload: Optional[Union[dict, Base]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        use_body: Optional[bool] = False,
+    ) -> Union[Base, tuple, dict]:
+        ret = await self.__request_async(
+            'DELETE',
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            use_body=use_body,
+        )
         return ret
 
-    def _put(self, path: str, payload: Optional[Union[dict, Base]] = None,
-             request_headers: Optional[dict] = None, cls: Optional[type] = None, include_version: Optional[bool] = True,
-             timeout: Optional[int] = DEFAULT_TIMEOUT, return_request_id: Optional[bool] = False) \
-            -> Union[Base, tuple, dict]:
-        return self.__request('PUT', path, payload=payload, request_headers=request_headers, cls=cls,
-                              include_version=include_version, timeout=timeout, return_request_id=return_request_id)
+    def _put(
+        self,
+        path: str,
+        payload: Optional[Union[dict, Base]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+    ) -> Union[Base, tuple, dict]:
+        return self.__request(
+            'PUT',
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+        )
 
-    async def _put_async(self, path: str, payload: Optional[Union[dict, Base]] = None,
-                         request_headers: Optional[dict] = None, cls: Optional[type] = None,
-                         include_version: Optional[bool] = True, timeout: Optional[int] = DEFAULT_TIMEOUT,
-                         return_request_id: Optional[bool] = False) -> Union[Base, tuple, dict]:
-        ret = await self.__request_async('PUT', path, payload=payload, request_headers=request_headers, cls=cls,
-                                         include_version=include_version, timeout=timeout,
-                                         return_request_id=return_request_id)
+    async def _put_async(
+        self,
+        path: str,
+        payload: Optional[Union[dict, Base]] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+    ) -> Union[Base, tuple, dict]:
+        ret = await self.__request_async(
+            'PUT',
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+        )
         return ret
 
     @asynccontextmanager
-    async def _connect_websocket(self, path: str, headers: Optional[dict] = None, include_version=True,
-                                 domain: Optional[str] = None, **kwargs: Any):
+    async def _connect_websocket(
+        self,
+        path: str,
+        headers: Optional[dict] = None,
+        include_version=True,
+        domain: Optional[str] = None,
+        **kwargs: Any,
+    ):
         span = Tracer.active_span()
         trace = Tracer(f'wss:/{path}') if span and span.is_recording() else nullcontext()
         with trace as scope:
@@ -505,9 +658,16 @@ class GsSession(ContextBase):
                         scope.span.set_tag('wss.host', websocket.request.headers.get('host'))
                 yield websocket
 
-    def _connect_websocket_raw(self, path: str, headers: Optional[dict] = None, include_version=True,
-                               domain: Optional[str] = None, **kwargs: Any):
+    def _connect_websocket_raw(
+        self,
+        path: str,
+        headers: Optional[dict] = None,
+        include_version=True,
+        domain: Optional[str] = None,
+        **kwargs: Any,
+    ):
         import websockets
+
         _WEBSOCKETS_VERSION = tuple(int(x) for x in websockets.__version__.split("."))
 
         version_path = '/' + self.api_version if include_version else ''
@@ -517,15 +677,14 @@ class GsSession(ContextBase):
         if _WEBSOCKETS_VERSION >= (14, 0):
             ws_library_headers = {"additional_headers": extra_headers}
         else:
-            ws_library_headers = {
-                "extra_headers": extra_headers,
-                "read_limit": 2 ** 32
-            }
-        return websockets.connect(url,
-                                  max_size=2 ** 32,
-                                  ssl=CustomHttpAdapter.ssl_context() if url.startswith('wss') else None,
-                                  **ws_library_headers,
-                                  **kwargs)
+            ws_library_headers = {"extra_headers": extra_headers, "read_limit": 2**32}
+        return websockets.connect(
+            url,
+            max_size=2**32,
+            ssl=CustomHttpAdapter.ssl_context() if url.startswith('wss') else None,
+            **ws_library_headers,
+            **kwargs,
+        )
 
     def _headers(self):
         return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]
@@ -559,19 +718,20 @@ class GsSession(ContextBase):
 
     @classmethod
     def use(
-            cls,
-            environment_or_domain: Union[Environment, str] = Environment.PROD,
-            client_id: Optional[str] = None,
-            client_secret: Optional[str] = None,
-            scopes: Optional[Union[Iterable[Union[Scopes, str]], str]] = (),
-            api_version: str = API_VERSION,
-            application: str = DEFAULT_APPLICATION,
-            http_adapter: requests.adapters.HTTPAdapter = None,
-            use_mds: bool = False,
-            domain: Domain = Domain.APP
+        cls,
+        environment_or_domain: Union[Environment, str] = Environment.PROD,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        scopes: Optional[Union[Iterable[Union[Scopes, str]], str]] = (),
+        api_version: str = API_VERSION,
+        application: str = DEFAULT_APPLICATION,
+        http_adapter: requests.adapters.HTTPAdapter = None,
+        use_mds: bool = False,
+        domain: Domain = Domain.APP,
     ) -> None:
-        environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain,
-                                                                         Environment) else environment_or_domain
+        environment_or_domain = (
+            environment_or_domain.name if isinstance(environment_or_domain, Environment) else environment_or_domain
+        )
         if domain is None:
             raise MqError("None is not a valid domain.")
         domain = Domain.MDS_US_EAST if use_mds else domain
@@ -583,46 +743,56 @@ class GsSession(ContextBase):
             api_version=api_version,
             application=application,
             http_adapter=http_adapter,
-            domain=domain
+            domain=domain,
         )
 
         session.init()
         cls.current = session
 
     def post_to_activity_service(self):
-        params = {'featureApplication': self.application,
-                  'gsQuantVersion': self.application_version,
-                  'pythonVersion': f'{sys.version_info.major}.{sys.version_info.minor}'}
+        params = {
+            'featureApplication': self.application,
+            'gsQuantVersion': self.application_version,
+            'pythonVersion': f'{sys.version_info.major}.{sys.version_info.minor}',
+        }
         try:
-            self._session.post(f'{self.domain}/{self.api_version}/activities',
-                               verify=self.verify,
-                               headers={'Content-Type': 'application/json; charset=utf-8'},
-                               data=json.dumps({'action': 'Initiated', 'kpis': [{'id': 'gsqInitiated', 'value': 1}],
-                                                'resource': 'GSQuant',
-                                                'parameters': params}))
+            self._session.post(
+                f'{self.domain}/{self.api_version}/activities',
+                verify=self.verify,
+                headers={'Content-Type': 'application/json; charset=utf-8'},
+                data=json.dumps(
+                    {
+                        'action': 'Initiated',
+                        'kpis': [{'id': 'gsqInitiated', 'value': 1}],
+                        'resource': 'GSQuant',
+                        'parameters': params,
+                    }
+                ),
+            )
         except Exception:
             pass
 
     @classmethod
     def get(
-            cls,
-            environment_or_domain: Union[Environment, str] = Environment.PROD,
-            client_id: Optional[str] = None,
-            client_secret: Optional[str] = None,
-            scopes: Optional[Union[Iterable[Union[Scopes, str]], str]] = (),
-            token: str = '',
-            is_gssso: bool = False,
-            is_marquee_login: bool = False,
-            api_version: str = API_VERSION,
-            application: str = DEFAULT_APPLICATION,
-            http_adapter: requests.adapters.HTTPAdapter = None,
-            application_version: str = APP_VERSION,
-            domain: Domain = Domain.APP
+        cls,
+        environment_or_domain: Union[Environment, str] = Environment.PROD,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        scopes: Optional[Union[Iterable[Union[Scopes, str]], str]] = (),
+        token: str = '',
+        is_gssso: bool = False,
+        is_marquee_login: bool = False,
+        api_version: str = API_VERSION,
+        application: str = DEFAULT_APPLICATION,
+        http_adapter: requests.adapters.HTTPAdapter = None,
+        application_version: str = APP_VERSION,
+        domain: Domain = Domain.APP,
     ) -> 'GsSession':
-        """ Return an instance of the appropriate session type for the given credentials"""
+        """Return an instance of the appropriate session type for the given credentials"""
 
-        environment_or_domain = environment_or_domain.name if isinstance(environment_or_domain,
-                                                                         Environment) else environment_or_domain
+        environment_or_domain = (
+            environment_or_domain.name if isinstance(environment_or_domain, Environment) else environment_or_domain
+        )
 
         if client_id is not None:
             if isinstance(scopes, str):
@@ -631,39 +801,79 @@ class GsSession(ContextBase):
             scopes = (scope if isinstance(scope, str) else scope.value for scope in scopes)
             scopes = tuple(set(itertools.chain(scopes, cls.Scopes.get_default())))
 
-            return OAuth2Session(environment_or_domain, client_id, client_secret, scopes, api_version=api_version,
-                                 application=application, http_adapter=http_adapter, domain=domain)
+            return OAuth2Session(
+                environment_or_domain,
+                client_id,
+                client_secret,
+                scopes,
+                api_version=api_version,
+                application=application,
+                http_adapter=http_adapter,
+                domain=domain,
+            )
         elif token:
             if is_gssso:
                 try:
-                    return PassThroughGSSSOSession(environment_or_domain, token, api_version=api_version,
-                                                   application=application, http_adapter=http_adapter)
+                    return PassThroughGSSSOSession(
+                        environment_or_domain,
+                        token,
+                        api_version=api_version,
+                        application=application,
+                        http_adapter=http_adapter,
+                    )
                 except NameError:
                     raise MqUninitialisedError('This option requires gs_quant_auth to be installed')
             elif is_marquee_login:
-                return MQLoginSession(environment_or_domain, domain=domain, api_version=api_version,
-                                      http_adapter=http_adapter, application_version=application_version,
-                                      application=application, mq_login_token=token)
+                return MQLoginSession(
+                    environment_or_domain,
+                    domain=domain,
+                    api_version=api_version,
+                    http_adapter=http_adapter,
+                    application_version=application_version,
+                    application=application,
+                    mq_login_token=token,
+                )
             else:
-                return PassThroughSession(environment_or_domain, token, api_version=api_version,
-                                          application=application, http_adapter=http_adapter, domain=domain)
+                return PassThroughSession(
+                    environment_or_domain,
+                    token,
+                    api_version=api_version,
+                    application=application,
+                    http_adapter=http_adapter,
+                    domain=domain,
+                )
         else:
             try:
-                return MQLoginSession(environment_or_domain, domain=domain, api_version=api_version,
-                                      http_adapter=http_adapter, application_version=application_version,
-                                      application=application, mq_login_token=token)
+                return MQLoginSession(
+                    environment_or_domain,
+                    domain=domain,
+                    api_version=api_version,
+                    http_adapter=http_adapter,
+                    application_version=application_version,
+                    application=application,
+                    mq_login_token=token,
+                )
             except NameError:
-                raise MqUninitialisedError('Unable to obtain MarqueeLogin token. '
-                                           'Please use client_id and client_secret to make the query')
+                raise MqUninitialisedError(
+                    'Unable to obtain MarqueeLogin token. Please use client_id and client_secret to make the query'
+                )
 
     def is_internal(self) -> bool:
         return False
 
 
 class OAuth2Session(GsSession):
-
-    def __init__(self, environment, client_id, client_secret, scopes, api_version=API_VERSION,
-                 application=DEFAULT_APPLICATION, http_adapter=None, domain=Domain.APP):
+    def __init__(
+        self,
+        environment,
+        client_id,
+        client_secret,
+        scopes,
+        api_version=API_VERSION,
+        application=DEFAULT_APPLICATION,
+        http_adapter=None,
+        domain=Domain.APP,
+    ):
 
         if environment not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
             env_config = self._config_for_environment(Environment.DEV.name)
@@ -681,6 +891,7 @@ class OAuth2Session(GsSession):
 
         if environment == Environment.DEV.name or (url != env_config['AppDomain'] and not domain == Domain.MDS_US_EAST):
             import urllib3
+
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             self.verify = False
 
@@ -689,7 +900,7 @@ class OAuth2Session(GsSession):
             'grant_type': 'client_credentials',
             'client_id': self.client_id,
             'client_secret': self.client_secret,
-            'scope': ' '.join(self.scopes)
+            'scope': ' '.join(self.scopes),
         }
         reply = self._session.post(self.auth_url, data=auth_data, verify=self.verify)
         if reply.status_code != 200:
@@ -719,13 +930,26 @@ class PassThroughSession(GsSession):
             domain = environment_or_domain
         return domain, verify
 
-    def __init__(self, environment: str, token, api_version=API_VERSION,
-                 application=DEFAULT_APPLICATION, http_adapter=None, domain=None):
+    def __init__(
+        self,
+        environment: str,
+        token,
+        api_version=API_VERSION,
+        application=DEFAULT_APPLICATION,
+        http_adapter=None,
+        domain=None,
+    ):
         domain = domain if domain is not None else 'AppDomain'
         domain, verify = self.domain_and_verify(environment, domain)
 
-        super().__init__(domain, environment, api_version=api_version,
-                         application=application, verify=verify, http_adapter=http_adapter)
+        super().__init__(
+            domain,
+            environment,
+            api_version=api_version,
+            application=application,
+            verify=verify,
+            http_adapter=http_adapter,
+        )
         self._orig_domain = domain
         self.token = token
 
@@ -740,20 +964,46 @@ try:
     from gs_quant_auth.kerberos.session_kerberos import KerberosSessionMixin
 
     class KerberosSession(KerberosSessionMixin, GsSession):
-
-        def __init__(self, environment_or_domain: str, api_version: str = API_VERSION,
-                     application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None,
-                     application_version: str = APP_VERSION):
+        def __init__(
+            self,
+            environment_or_domain: str,
+            api_version: str = API_VERSION,
+            application: str = DEFAULT_APPLICATION,
+            http_adapter: requests.adapters.HTTPAdapter = None,
+            application_version: str = APP_VERSION,
+        ):
             domain, verify = self.domain_and_verify(environment_or_domain)
-            GsSession.__init__(self, domain, environment_or_domain, api_version=api_version, application=application,
-                               verify=verify, http_adapter=http_adapter, application_version=application_version)
+            GsSession.__init__(
+                self,
+                domain,
+                environment_or_domain,
+                api_version=api_version,
+                application=application,
+                verify=verify,
+                http_adapter=http_adapter,
+                application_version=application_version,
+            )
 
     class PassThroughGSSSOSession(KerberosSessionMixin, GsSession):
-        def __init__(self, environment: str, token, api_version=API_VERSION,
-                     application=DEFAULT_APPLICATION, http_adapter=None, csrf_token=None):
+        def __init__(
+            self,
+            environment: str,
+            token,
+            api_version=API_VERSION,
+            application=DEFAULT_APPLICATION,
+            http_adapter=None,
+            csrf_token=None,
+        ):
             domain, verify = self.domain_and_verify(environment)
-            GsSession.__init__(self, domain, environment, api_version=api_version, application=application,
-                               verify=verify, http_adapter=http_adapter)
+            GsSession.__init__(
+                self,
+                domain,
+                environment,
+                api_version=api_version,
+                application=application,
+                verify=verify,
+                http_adapter=http_adapter,
+            )
 
             self.token = token
             self.csrf_token = csrf_token
@@ -766,8 +1016,9 @@ try:
             cookie = requests.cookies.create_cookie(domain='.gs.com', name='GSSSO', value=self.token)
             self._session.cookies.set_cookie(cookie)
             if self.csrf_token:
-                cookie = requests.cookies.create_cookie(domain='.gs.com', name='MARQUEE-CSRF-TOKEN',
-                                                        value=self.csrf_token)
+                cookie = requests.cookies.create_cookie(
+                    domain='.gs.com', name='MARQUEE-CSRF-TOKEN', value=self.csrf_token
+                )
                 self._session.cookies.set_cookie(cookie)
                 self._session.headers.update({'X-MARQUEE-CSRF-TOKEN': self.csrf_token})
 
@@ -778,17 +1029,31 @@ try:
     from gs_quant_auth.kerberos.session_kerberos import MQLoginMixin
 
     class MQLoginSession(MQLoginMixin, GsSession):
-        def __init__(self, environment_or_domain: str, domain: str = Domain.APP, api_version: str = API_VERSION,
-                     application: str = DEFAULT_APPLICATION, http_adapter: requests.adapters.HTTPAdapter = None,
-                     application_version: str = APP_VERSION, mq_login_token=None):
+        def __init__(
+            self,
+            environment_or_domain: str,
+            domain: str = Domain.APP,
+            api_version: str = API_VERSION,
+            application: str = DEFAULT_APPLICATION,
+            http_adapter: requests.adapters.HTTPAdapter = None,
+            application_version: str = APP_VERSION,
+            mq_login_token=None,
+        ):
             selected_domain, verify = self.domain_and_verify(environment_or_domain)
             if domain == Domain.MDS_WEB:
                 env_config = self._config_for_environment(environment_or_domain)
                 selected_domain = env_config[domain]
             self.mq_login_token = mq_login_token
-            GsSession.__init__(self, selected_domain, environment_or_domain, api_version=api_version,
-                               application=application, verify=verify, http_adapter=http_adapter,
-                               application_version=application_version)
+            GsSession.__init__(
+                self,
+                selected_domain,
+                environment_or_domain,
+                api_version=api_version,
+                application=application,
+                verify=verify,
+                http_adapter=http_adapter,
+                application_version=application_version,
+            )
             self._orig_domain = domain
 
 

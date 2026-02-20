@@ -36,11 +36,9 @@ class GsScenarioApi:
         return GsSession.current._get(f'/risk/scenarios/{scenario_id}', cls=Scenario)
 
     @classmethod
-    def get_many_scenarios(cls,
-                           ids: List[str] = None,
-                           names: List[str] = None,
-                           limit: int = 100,
-                           **kwargs) -> Tuple[Scenario, ...]:
+    def get_many_scenarios(
+        cls, ids: List[str] = None, names: List[str] = None, limit: int = 100, **kwargs
+    ) -> Tuple[Scenario, ...]:
         url = f'/risk/scenarios?limit={limit}'
         if ids:
             url += f'&id={"&id=".join(ids)}'
@@ -83,17 +81,19 @@ class GsFactorScenarioApi(GsScenarioApi):
         super().__init__()
 
     @classmethod
-    def get_many_scenarios(cls,
-                           ids: List[str] = None,
-                           names: List[str] = None,
-                           limit: int = 100,
-                           type: str = None,
-                           risk_model: str = None,
-                           shocked_factors: List[str] = None,
-                           shocked_factor_categories: List[str] = None,
-                           start_date: dt.date = None,
-                           end_date: dt.date = None,
-                           tags: List[str] = None) -> Tuple[Scenario, ...]:
+    def get_many_scenarios(
+        cls,
+        ids: List[str] = None,
+        names: List[str] = None,
+        limit: int = 100,
+        type: str = None,
+        risk_model: str = None,
+        shocked_factors: List[str] = None,
+        shocked_factor_categories: List[str] = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        tags: List[str] = None,
+    ) -> Tuple[Scenario, ...]:
         factor_scenario_args = {}
         if risk_model:
             factor_scenario_args['riskModel'] = risk_model

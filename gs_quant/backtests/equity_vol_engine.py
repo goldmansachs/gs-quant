@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import copy
 import re
 import warnings
@@ -22,12 +23,23 @@ from typing import Union
 import datetime as dt
 import pandas as pd
 
-from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import TransactionCostConfig, \
-    TradingCosts, FixedCostModel, ScaledCostModel, TransactionCostScalingType, AggregateCostModel, CostAggregationType
+from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
+    TransactionCostConfig,
+    TradingCosts,
+    FixedCostModel,
+    ScaledCostModel,
+    TransactionCostScalingType,
+    AggregateCostModel,
+    CostAggregationType,
+)
 from gs_quant.backtests import actions as a
 from gs_quant.backtests import triggers as t
-from gs_quant.backtests.backtest_objects import TransactionModel, ConstantTransactionModel, ScaledTransactionModel, \
-    AggregateTransactionModel
+from gs_quant.backtests.backtest_objects import (
+    TransactionModel,
+    ConstantTransactionModel,
+    ScaledTransactionModel,
+    AggregateTransactionModel,
+)
 
 from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
 from gs_quant.base import get_enum_value
@@ -35,8 +47,12 @@ from gs_quant.common import OptionType, BuySell
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import EqDelta, EqSpot, EqGamma, EqVega
-from gs_quant.target.backtests import BacktestSignalSeriesItem, BacktestTradingQuantityType, EquityMarketModel, \
-    FlowVolBacktestMeasure
+from gs_quant.target.backtests import (
+    BacktestSignalSeriesItem,
+    BacktestTradingQuantityType,
+    EquityMarketModel,
+    FlowVolBacktestMeasure,
+)
 from gs_quant.common import TradeAs
 
 
@@ -64,12 +80,15 @@ def is_synthetic_forward(priceable):
             has_two_eq_options = isinstance(priceable[0], EqOption) and isinstance(priceable[1], EqOption)
             is_syn_fwd &= has_two_eq_options
             if has_two_eq_options:
-                is_syn_fwd &= (priceable[0].underlier == priceable[1].underlier) and \
-                              (priceable[0].expiration_date == priceable[1].expiration_date) and \
-                              (priceable[0].strike_price == priceable[1].strike_price)
+                is_syn_fwd &= (
+                    (priceable[0].underlier == priceable[1].underlier)
+                    and (priceable[0].expiration_date == priceable[1].expiration_date)
+                    and (priceable[0].strike_price == priceable[1].strike_price)
+                )
                 is_syn_fwd &= (OptionType.Call, BuySell.Buy) and (OptionType.Put, BuySell.Sell) in {
-                              (priceable[0].option_type, priceable[0].buy_sell),
-                              (priceable[1].option_type, priceable[1].buy_sell)}
+                    (priceable[0].option_type, priceable[0].buy_sell),
+                    (priceable[1].option_type, priceable[1].buy_sell),
+                }
 
     return is_syn_fwd
 
@@ -90,8 +109,12 @@ class BacktestResult:
     def get_portfolio_history(self):
         data = []
         for item in self._results.portfolio:
-            positions = list(map(lambda x: dict({'date': item['date'], 'quantity': x['quantity']}, **x['instrument']),
-                                 item['positions']))
+            positions = list(
+                map(
+                    lambda x: dict({'date': item['date'], 'quantity': x['quantity']}, **x['instrument']),
+                    item['positions'],
+                )
+            )
             data = data + positions
 
         return pd.DataFrame(data)
@@ -100,17 +123,27 @@ class BacktestResult:
         data = []
         for item in self._results.portfolio:
             for transaction in item['transactions']:
-                trades = list(map(lambda x: dict(
-                    {'date': item['date'], 'quantity': x['quantity'], 'transactionType': transaction['type'],
-                     'price': x['price'], 'cost': transaction.get('cost') if len(transaction['trades']) == 1 else None},
-                    **x['instrument']), transaction['trades']))
+                trades = list(
+                    map(
+                        lambda x: dict(
+                            {
+                                'date': item['date'],
+                                'quantity': x['quantity'],
+                                'transactionType': transaction['type'],
+                                'price': x['price'],
+                                'cost': transaction.get('cost') if len(transaction['trades']) == 1 else None,
+                            },
+                            **x['instrument'],
+                        ),
+                        transaction['trades'],
+                    )
+                )
                 data = data + trades
 
         return pd.DataFrame(data)
 
 
 class EquityVolEngine(object):
-
     @classmethod
     def check_strategy(cls, strategy):
         check_results = []
@@ -132,15 +165,15 @@ class EquityVolEngine(object):
                 check_results.append('Error: AggregateTrigger must be composed of 2 triggers')
             if not len([x for x in at.trigger_requirements.triggers if isinstance(x, t.DateTriggerRequirements)]) == 1:
                 check_results.append('Error: AggregateTrigger must be contain 1 DateTrigger')
-            portfolio_triggers = [x for x in at.trigger_requirements.triggers
-                                  if isinstance(x, t.PortfolioTriggerRequirements)]
+            portfolio_triggers = [
+                x for x in at.trigger_requirements.triggers if isinstance(x, t.PortfolioTriggerRequirements)
+            ]
             if not len(portfolio_triggers) == 1:
                 check_results.append('Error: AggregateTrigger must be contain 1 PortfolioTrigger')
-            if not (portfolio_triggers[0].data_source == 'len' and
-                    portfolio_triggers[0].trigger_level == 0):
+            if not (portfolio_triggers[0].data_source == 'len' and portfolio_triggers[0].trigger_level == 0):
                 check_results.append(
-                    'Error: PortfolioTrigger.trigger_requirements must have data_source = \'len\' '
-                    'and trigger_level = 0')
+                    'Error: PortfolioTrigger.trigger_requirements must have data_source = \'len\' and trigger_level = 0'
+                )
 
         # Validate Actions
 
@@ -149,21 +182,43 @@ class EquityVolEngine(object):
         if any(isinstance(x, a.ExitPositionAction) for x in all_actions):
             warnings.warn('ExitPositionAction will be deprecated soon, use ExitTradeAction.', DeprecationWarning, 2)
         if any(isinstance(x, a.EnterPositionQuantityScaledAction) for x in all_actions):
-            warnings.warn('EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.',
-                          DeprecationWarning, 2)
+            warnings.warn(
+                'EnterPositionQuantityScaledAction will be deprecated soon, use AddScaledTradeAction.',
+                DeprecationWarning,
+                2,
+            )
 
-        if not all(isinstance(x, (a.EnterPositionQuantityScaledAction, a.HedgeAction, a.ExitPositionAction,
-                                  a.ExitTradeAction, a.AddTradeAction, a.AddScaledTradeAction)) for x in all_actions):
+        if not all(
+            isinstance(
+                x,
+                (
+                    a.EnterPositionQuantityScaledAction,
+                    a.HedgeAction,
+                    a.ExitPositionAction,
+                    a.ExitTradeAction,
+                    a.AddTradeAction,
+                    a.AddScaledTradeAction,
+                ),
+            )
+            for x in all_actions
+        ):
             check_results.append(
                 'Error: actions must be one of EnterPositionQuantityScaledAction, HedgeAction, ExitPositionAction, '
-                'ExitTradeAction, AddTradeAction, AddScaledTradeAction')
+                'ExitTradeAction, AddTradeAction, AddScaledTradeAction'
+            )
 
         # no duplicate actions
         if not len(set(map(lambda x: type(x), all_actions))) == len(all_actions):
             check_results.append('Error: There are multiple actions of the same type')
 
-        all_child_triggers = reduce(lambda acc, x: acc + x, map(lambda x: x.trigger_requirements.triggers if isinstance(
-            x, t.AggregateTriggerRequirements) else [x], strategy.triggers), [])
+        all_child_triggers = reduce(
+            lambda acc, x: acc + x,
+            map(
+                lambda x: x.trigger_requirements.triggers if isinstance(x, t.AggregateTriggerRequirements) else [x],
+                strategy.triggers,
+            ),
+            [],
+        )
 
         for trigger in all_child_triggers:
             if isinstance(trigger, t.PortfolioTrigger):
@@ -175,33 +230,37 @@ class EquityVolEngine(object):
 
             for action in trigger.actions:
                 if isinstance(action, (a.EnterPositionQuantityScaledAction, a.AddTradeAction, a.AddScaledTradeAction)):
-                    if isinstance(trigger, t.PeriodicTrigger) and \
-                            not trigger.trigger_requirements.frequency == action.trade_duration:
+                    if (
+                        isinstance(trigger, t.PeriodicTrigger)
+                        and not trigger.trigger_requirements.frequency == action.trade_duration
+                    ):
                         check_results.append(
                             f'Error: {type(action).__name__}: PeriodicTrigger frequency must be the same '
-                            'as trade_duration')
-                    if not all((isinstance(p, (EqOption, EqVarianceSwap)))
-                               for p in action.priceables):
+                            'as trade_duration'
+                        )
+                    if not all((isinstance(p, (EqOption, EqVarianceSwap))) for p in action.priceables):
                         check_results.append(
-                            f'Error: {type(action).__name__}: Only EqOption or EqVarianceSwap supported')
+                            f'Error: {type(action).__name__}: Only EqOption or EqVarianceSwap supported'
+                        )
                     if isinstance(action, a.EnterPositionQuantityScaledAction):
                         if action.trade_quantity is None or action.trade_quantity_type is None:
-                            check_results.append('Error: EnterPositionQuantityScaledAction trade_quantity or '
-                                                 'trade_quantity_type is None')
+                            check_results.append(
+                                'Error: EnterPositionQuantityScaledAction trade_quantity or trade_quantity_type is None'
+                            )
                     if isinstance(action, a.AddScaledTradeAction):
                         if action.scaling_level is None or action.scaling_type is None:
                             check_results.append('Error: AddScaledTradeAction scaling_level or scaling_type is None')
-                    expiry_date_modes = map(lambda x: TenorParser(x.expirationDate).get_mode(),
-                                            action.priceables)
+                    expiry_date_modes = map(lambda x: TenorParser(x.expirationDate).get_mode(), action.priceables)
                     expiry_date_modes = list(set(expiry_date_modes))
                     if len(expiry_date_modes) > 1:
                         check_results.append(
                             f'Error: {type(action).__name__} all priceable expiration_date modifiers must '
-                            'be the same. Found [' + ', '.join([str(edm) for edm in expiry_date_modes]) + ']')
+                            'be the same. Found [' + ', '.join([str(edm) for edm in expiry_date_modes]) + ']'
+                        )
                     if expiry_date_modes[0] is not None and expiry_date_modes[0] not in ['otc', 'listed']:
                         check_results.append(
-                            f'Error: {type(action).__name__} invalid expiration_date '
-                            'modifier ' + expiry_date_modes[0])
+                            f'Error: {type(action).__name__} invalid expiration_date modifier ' + expiry_date_modes[0]
+                        )
 
                     size_fields = ('quantity', 'number_of_options', 'multiplier')
                     priceable_size_values = [[getattr(p, sf, 1) or 1 for sf in size_fields] for p in action.priceables]
@@ -217,10 +276,12 @@ class EquityVolEngine(object):
                         check_results.append(
                             'Error: HedgeAction: Hedge instrument must be a synthetic forward - a portfolio of two '
                             'equity options (long call and short put) with the same underlier, strike price and '
-                            'expiration date')
+                            'expiration date'
+                        )
                     if not trigger.trigger_requirements.frequency == action.trade_duration:
                         check_results.append(
-                            'Error: HedgeAction: PeriodicTrigger frequency must be the same as trade_duration')
+                            'Error: HedgeAction: PeriodicTrigger frequency must be the same as trade_duration'
+                        )
                     if not action.risk == EqDelta:
                         check_results.append('Error: HedgeAction: risk type must be EqDelta')
                 elif isinstance(action, (a.ExitPositionAction, a.ExitTradeAction)):
@@ -258,12 +319,10 @@ class EquityVolEngine(object):
                 child_triggers = trigger.trigger_requirements.triggers
 
                 date_trigger = [x for x in child_triggers if isinstance(x, t.DateTriggerRequirements)][0]
-                date_signal = list(map(lambda x: BacktestSignalSeriesItem(x, True),
-                                       date_trigger.dates))
+                date_signal = list(map(lambda x: BacktestSignalSeriesItem(x, True), date_trigger.dates))
 
                 portfolio_trigger = [x for x in child_triggers if isinstance(x, t.PortfolioTriggerRequirements)][0]
-                if portfolio_trigger.direction == t.TriggerDirection.EQUAL and \
-                        portfolio_trigger.trigger_level == 0:
+                if portfolio_trigger.direction == t.TriggerDirection.EQUAL and portfolio_trigger.trigger_level == 0:
                     is_trade_in = True
                 else:
                     is_trade_in = False
@@ -282,8 +341,9 @@ class EquityVolEngine(object):
                 trade_quantity = action.trade_quantity
                 trade_quantity_type = action.trade_quantity_type
                 expiry_date_mode = TenorParser(action.priceables[0].expiration_date).get_mode()
-                transaction_cost.trade_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
-                                                                 cls.__map_tc_model(action.transaction_cost_exit))
+                transaction_cost.trade_cost_model = TradingCosts(
+                    cls.__map_tc_model(action.transaction_cost), cls.__map_tc_model(action.transaction_cost_exit)
+                )
             elif isinstance(action, a.AddTradeAction):
                 underlier_list = cls.__get_underlier_list(action.priceables)
                 tp = TenorParser(action.trade_duration)
@@ -292,8 +352,9 @@ class EquityVolEngine(object):
                 trade_quantity = 1
                 trade_quantity_type = BacktestTradingQuantityType.quantity
                 expiry_date_mode = TenorParser(action.priceables[0].expiration_date).get_mode()
-                transaction_cost.trade_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
-                                                                 cls.__map_tc_model(action.transaction_cost_exit))
+                transaction_cost.trade_cost_model = TradingCosts(
+                    cls.__map_tc_model(action.transaction_cost), cls.__map_tc_model(action.transaction_cost_exit)
+                )
             elif isinstance(action, a.AddScaledTradeAction):
                 underlier_list = cls.__get_underlier_list(action.priceables)
                 tp = TenorParser(action.trade_duration)
@@ -302,34 +363,39 @@ class EquityVolEngine(object):
                 trade_quantity = action.scaling_level
                 trade_quantity_type = get_backtest_trading_quantity_type(action.scaling_type, action.scaling_risk)
                 expiry_date_mode = TenorParser(action.priceables[0].expiration_date).get_mode()
-                transaction_cost.trade_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
-                                                                 cls.__map_tc_model(action.transaction_cost_exit))
+                transaction_cost.trade_cost_model = TradingCosts(
+                    cls.__map_tc_model(action.transaction_cost), cls.__map_tc_model(action.transaction_cost_exit)
+                )
             elif isinstance(action, a.HedgeAction):
-                hedge = DeltaHedgeParameters(frequency=trigger.trigger_requirements.frequency,
-                                             notional=action.risk_percentage)
-                transaction_cost.hedge_cost_model = TradingCosts(cls.__map_tc_model(action.transaction_cost),
-                                                                 cls.__map_tc_model(action.transaction_cost_exit))
+                hedge = DeltaHedgeParameters(
+                    frequency=trigger.trigger_requirements.frequency, notional=action.risk_percentage
+                )
+                transaction_cost.hedge_cost_model = TradingCosts(
+                    cls.__map_tc_model(action.transaction_cost), cls.__map_tc_model(action.transaction_cost_exit)
+                )
 
-        transaction_cost_config = transaction_cost \
-            if (transaction_cost.trade_cost_model or transaction_cost.hedge_cost_model) else None
+        transaction_cost_config = (
+            transaction_cost if (transaction_cost.trade_cost_model or transaction_cost.hedge_cost_model) else None
+        )
 
-        strategy = StrategySystematic(name="Flow Vol Backtest",
-                                      underliers=underlier_list,
-                                      index_initial_value=0,
-                                      delta_hedge=hedge,
-                                      quantity=trade_quantity,
-                                      quantity_type=trade_quantity_type,
-                                      trade_in_method=TradeInMethod.FixedRoll,
-                                      roll_frequency=roll_frequency,
-                                      trade_in_signals=trade_in_signals,
-                                      trade_out_signals=trade_out_signals,
-                                      market_model=market_model,
-                                      expiry_date_mode=expiry_date_mode,
-                                      roll_date_mode=roll_date_mode,
-                                      cash_accrual=cash_accrual,
-                                      transaction_cost_config=transaction_cost_config,
-                                      use_xasset_backtesting_service=True
-                                      )
+        strategy = StrategySystematic(
+            name="Flow Vol Backtest",
+            underliers=underlier_list,
+            index_initial_value=0,
+            delta_hedge=hedge,
+            quantity=trade_quantity,
+            quantity_type=trade_quantity_type,
+            trade_in_method=TradeInMethod.FixedRoll,
+            roll_frequency=roll_frequency,
+            trade_in_signals=trade_in_signals,
+            trade_out_signals=trade_out_signals,
+            market_model=market_model,
+            expiry_date_mode=expiry_date_mode,
+            roll_date_mode=roll_date_mode,
+            cash_accrual=cash_accrual,
+            transaction_cost_config=transaction_cost_config,
+            use_xasset_backtesting_service=True,
+        )
 
         result = strategy.backtest(start, end)
         return BacktestResult(result)
@@ -342,8 +408,9 @@ class EquityVolEngine(object):
             priceable.expiration_date = edp.get_date()
             if hasattr(priceable, 'trade_as'):
                 expiry_date_mode = get_enum_value(TradeAs, edp.get_mode())
-                priceable.trade_as = priceable.trade_as or expiry_date_mode \
-                    if isinstance(expiry_date_mode, TradeAs) else None
+                priceable.trade_as = (
+                    priceable.trade_as or expiry_date_mode if isinstance(expiry_date_mode, TradeAs) else None
+                )
                 print(priceable.trade_as)
         return priceables_copy
 
@@ -360,13 +427,14 @@ class EquityVolEngine(object):
                     raise RuntimeError(f'unsupported scaled transaction quantity type "{model.scaling_type}"')
             return ScaledCostModel(scaling_quantity_type=scaling_quantity_type, scaling_level=model.scaling_level)
         elif isinstance(model, AggregateTransactionModel):
-            return AggregateCostModel(models=[cls.__map_tc_model(m) for m in model.transaction_models],
-                                      aggregation_type=CostAggregationType(model.aggregate_type.value))
+            return AggregateCostModel(
+                models=[cls.__map_tc_model(m) for m in model.transaction_models],
+                aggregation_type=CostAggregationType(model.aggregate_type.value),
+            )
         return None
 
 
 class TenorParser(object):
-
     # match expiration dates expressed as 3m@listed
     expiry_regex = '(.*)@(.*)'
 

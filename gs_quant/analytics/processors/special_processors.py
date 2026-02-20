@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from enum import Enum
 from typing import Union
 
@@ -26,7 +27,7 @@ from gs_quant.entities.entity import Entity
 
 class EntityProcessor(BaseProcessor):
     def __init__(self, field: str):
-        """ EntityProcessor gets a value off an entity object
+        """EntityProcessor gets a value off an entity object
 
         :param field: The entity property to be returned. If a nested field, separate each level with ".",
             i.e. 'xref.bbid'
@@ -35,7 +36,7 @@ class EntityProcessor(BaseProcessor):
         self.field = field
 
     def process(self, entity: Entity) -> ProcessorResult:
-        """ Fetch the entity and resolve the field """
+        """Fetch the entity and resolve the field"""
         if isinstance(entity, str):  # If we were unable to fetch entity (404/403)
             return ProcessorResult(False, f"Unable to resolve Entity {entity}")
         try:
@@ -51,26 +52,25 @@ class EntityProcessor(BaseProcessor):
                 return ProcessorResult(True, identifier['value'])
 
             # Return a failed processor result if no field was found on the object or it's identifiers
-            return ProcessorResult(False,
-                                   f'Unable to find {self.field} in identifiers for entity {entity.get_marquee_id()}')
+            return ProcessorResult(
+                False, f'Unable to find {self.field} in identifiers for entity {entity.get_marquee_id()}'
+            )
 
         except ValueError:
             return ProcessorResult(False, "Could not get field on entity")
 
     def update(self, attribute: str, result: ProcessorResult) -> None:
-        """ This method does not apply for entity processor """
+        """This method does not apply for entity processor"""
         pass
 
     def get_plot_expression(self):
-        """ This method does not apply for entity processor """
+        """This method does not apply for entity processor"""
         pass
 
 
 class CoordinateProcessor(BaseProcessor):
-    def __init__(self,
-                 a: DataCoordinate,
-                 dimension: Union[DataDimension, str]):
-        """ Returns a field from a coordinate
+    def __init__(self, a: DataCoordinate, dimension: Union[DataDimension, str]):
+        """Returns a field from a coordinate
 
         :param a: coordinate to get the field
         :param dimension: dimension to get from the coordinate

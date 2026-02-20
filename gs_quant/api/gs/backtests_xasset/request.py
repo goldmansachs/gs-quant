@@ -22,8 +22,13 @@ from typing import Optional, Union, Tuple
 from dataclasses_json import dataclass_json, LetterCase, config
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs_encoder, legs_decoder
-from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, Configuration, \
-    TransactionCostConfig, StrategyHedge
+from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
+    DateConfig,
+    Trade,
+    Configuration,
+    TransactionCostConfig,
+    StrategyHedge,
+)
 from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import Strategy
 from gs_quant.common import RiskMeasure
 from gs_quant.json_convertors import decode_optional_date, decode_date_tuple, encode_date_tuple
@@ -37,13 +42,15 @@ from gs_quant.target.backtests import FlowVolBacktestMeasure
 class RiskRequest:
     start_date: Optional[dt.date] = field(default=None, metadata=config(decoder=decode_optional_date))
     end_date: Optional[dt.date] = field(default=None, metadata=config(decoder=decode_optional_date))
-    additional_dates: Optional[Tuple[dt.date, ...]] = field(default=None, metadata=config(encoder=encode_date_tuple,
-                                                                                          decoder=decode_date_tuple))
-    legs: Optional[Tuple[PriceableImpl, ...]] = field(default=None, metadata=config(encoder=legs_encoder,
-                                                                                    decoder=legs_decoder))
-    measures: Optional[Tuple[RiskMeasure, ...]] = field(default=None,
-                                                        metadata=config(encoder=encode_risk_measure_tuple,
-                                                                        decoder=decode_risk_measure_tuple))
+    additional_dates: Optional[Tuple[dt.date, ...]] = field(
+        default=None, metadata=config(encoder=encode_date_tuple, decoder=decode_date_tuple)
+    )
+    legs: Optional[Tuple[PriceableImpl, ...]] = field(
+        default=None, metadata=config(encoder=legs_encoder, decoder=legs_decoder)
+    )
+    measures: Optional[Tuple[RiskMeasure, ...]] = field(
+        default=None, metadata=config(encoder=encode_risk_measure_tuple, decoder=decode_risk_measure_tuple)
+    )
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

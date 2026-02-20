@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 
 import asyncio
@@ -41,20 +42,22 @@ def aggregate_queries(query_infos):
         dataset_mappings = mappings[dataset_id]
         query_key = query.get_range_string()
         if dataset_id is None:
-            series: ProcessorResult = ProcessorResult(False,
-                                                      f'No dataset resolved for '
-                                                      f'measure={coordinate.measure} with '
-                                                      f'dimensions={coordinate.dimensions}')
+            series: ProcessorResult = ProcessorResult(
+                False, f'No dataset resolved for measure={coordinate.measure} with dimensions={coordinate.dimensions}'
+            )
             asyncio.get_event_loop().run_until_complete(query_info.processor.calculate(query_info.attr, series, None))
             continue
-        dataset_mappings.setdefault(query_key, {
-            'datasetId': dataset_id,
-            'parameters': {},
-            'queries': defaultdict(list),
-            'range': {},
-            'realTime': True if coordinate.frequency == DataFrequency.REAL_TIME else False,
-            'measures': set()
-        })
+        dataset_mappings.setdefault(
+            query_key,
+            {
+                'datasetId': dataset_id,
+                'parameters': {},
+                'queries': defaultdict(list),
+                'range': {},
+                'realTime': True if coordinate.frequency == DataFrequency.REAL_TIME else False,
+                'measures': set(),
+            },
+        )
         query_map = dataset_mappings[query_key]
         if not query_map['range']:
             if isinstance(query.start, dt.date):
@@ -88,12 +91,7 @@ def fetch_query(query_info: Dict):
                 where[key] = value_list[0]
             continue  # Skip adding as both True/False must be there
         where[key] = list(value)
-    query = {
-        'where': where,
-        **query_info['range'],
-        'useFieldAlias': True,
-        'remapSchemaToAlias': True
-    }
+    query = {'where': where, **query_info['range'], 'useFieldAlias': True, 'remapSchemaToAlias': True}
     try:
         if query_info['realTime'] and not query_info['range']:
             response = GsSession.current._post(f'/data/{query_info["datasetId"]}/last/query', payload=query)

@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 
 import calendar
@@ -66,10 +67,20 @@ class RDateRule(ABC):
                 return self.holiday_calendar
             return list(set().union(self.holiday_calendar, self.usd_calendar))
         try:
-            currencies = [] if self.currencies is None else [self.currencies] if isinstance(self.currencies,
-                                                                                            str) else self.currencies
-            exchanges = [] if self.exchanges is None else [self.exchanges] if isinstance(self.exchanges,
-                                                                                         str) else self.exchanges
+            currencies = (
+                []
+                if self.currencies is None
+                else [self.currencies]
+                if isinstance(self.currencies, str)
+                else self.currencies
+            )
+            exchanges = (
+                []
+                if self.exchanges is None
+                else [self.exchanges]
+                if isinstance(self.exchanges, str)
+                else self.exchanges
+            )
             cal = GsCalendar(exchanges + currencies)
             return cal.holidays
         except Exception as e:
@@ -81,8 +92,9 @@ class RDateRule(ABC):
             offset_to_use = offset
         else:
             offset_to_use = self.number if self.number else 0
-        return pd.to_datetime(np.busday_offset(self.result, offset_to_use, roll,
-                                               holidays=holidays, weekmask=self.week_mask)).date()
+        return pd.to_datetime(
+            np.busday_offset(self.result, offset_to_use, roll, holidays=holidays, weekmask=self.week_mask)
+        ).date()
 
     def _get_nth_day_of_month(self, calendar_day):
         temp = self.result.replace(day=1)
@@ -92,7 +104,7 @@ class RDateRule(ABC):
         return temp
 
     def add_years(self, holidays: List[dt.date]):
-        self.result = (self.result + relativedelta(years=self.number))
+        self.result = self.result + relativedelta(years=self.number)
         if self.result.isoweekday() in {6, 7}:
             self.result += dt.timedelta(days=self.result.isoweekday() % 5)
         return self._apply_business_days_logic(holidays, offset=0)

@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-
 from gs_quant.backtests.order import OrderBase
 
 
@@ -33,17 +32,13 @@ class ValuationEvent(Event):
 
 
 class OrderEvent(Event):
-    def __init__(self,
-                 order: OrderBase):
+    def __init__(self, order: OrderBase):
         self.type = 'Order'
         self.order = order
 
 
 class FillEvent(Event):
-    def __init__(self,
-                 order: OrderBase,
-                 filled_units: float,
-                 filled_price: float):
+    def __init__(self, order: OrderBase, filled_units: float, filled_price: float):
         self.type = 'Fill'
         self.order = order
         self.filled_units = filled_units

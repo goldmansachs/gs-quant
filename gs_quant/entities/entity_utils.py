@@ -19,15 +19,14 @@ from typing import Union
 import pandas as pd
 
 
-def _explode_data(data: pd.Series,
-                  parent_label: str) -> Union[pd.DataFrame, pd.Series]:
+def _explode_data(data: pd.Series, parent_label: str) -> Union[pd.DataFrame, pd.Series]:
     parent_to_child_map = {
         "factorCategories": "factors",
         "factors": "byAsset",
         "sectors": "industries",
         "industries": None,
         "countries": None,
-        "direction": None
+        "direction": None,
     }
 
     labels_to_ignore_map = {
@@ -37,7 +36,7 @@ def _explode_data(data: pd.Series,
         "industries": [],
         "countries": [],
         "direction": [],
-        "byAsset": []
+        "byAsset": [],
     }
 
     data = data.rename({'name': parent_label}) if parent_label in parent_to_child_map.keys() else data

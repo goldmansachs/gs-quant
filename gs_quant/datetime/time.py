@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 
@@ -40,7 +41,6 @@ SECS_IN_YEAR = SECS_IN_MIN * MINS_IN_HOUR * HOURS_IN_DAY * DAYS_IN_YEAR
 
 
 class Timer:
-
     def __init__(self, print_on_exit: bool = True, label: str = 'Execution', threshold: int = None):
         self.__print_on_exit = print_on_exit
         self.__label = label
@@ -55,17 +55,15 @@ class Timer:
         if self.__print_on_exit:
             if self.__threshold is None or self.__elapsed.seconds > self.__threshold:
                 _logger.warning(
-                    f'{self.__label} took {self.__elapsed.seconds + self.__elapsed.microseconds / 1000000} seconds')
+                    f'{self.__label} took {self.__elapsed.seconds + self.__elapsed.microseconds / 1000000} seconds'
+                )
 
 
 def to_zulu_string(time: dt.datetime):
     return time.isoformat()[:-3] + 'Z'
 
 
-def time_difference_as_string(
-        time_delta: np.timedelta64,
-        resolution: str = 'Second'
-) -> str:
+def time_difference_as_string(time_delta: np.timedelta64, resolution: str = 'Second') -> str:
     times = [SECS_IN_YEAR, SECS_IN_WEEK, SECS_IN_DAY, SECS_IN_HOUR, SECS_IN_MIN, 1]
     time_strings = ['Year', 'Week', 'Day', 'Hour', 'Minute', 'Second']
 

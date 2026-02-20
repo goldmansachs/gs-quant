@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 import traceback
@@ -25,8 +26,14 @@ from opentelemetry import trace, context
 from opentelemetry.context import Context
 from opentelemetry.propagate import extract, inject, set_global_textmap
 from opentelemetry.propagators.textmap import TextMapPropagator
-from opentelemetry.sdk.trace import TracerProvider, SynchronousMultiSpanProcessor, ReadableSpan, Span, Event, \
-    SpanProcessor
+from opentelemetry.sdk.trace import (
+    TracerProvider,
+    SynchronousMultiSpanProcessor,
+    ReadableSpan,
+    Span,
+    Event,
+    SpanProcessor,
+)
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
 from opentelemetry.trace import Tracer as OtelTracer, SpanContext, INVALID_SPAN
 from opentelemetry.trace import format_trace_id, format_span_id
@@ -77,7 +84,6 @@ class TracingContext:
 
 
 class TracingEvent:
-
     def __init__(self, ot_event: Event):
         self._event = ot_event
 
@@ -105,7 +111,6 @@ class TracingEvent:
 
 
 class TracingScope:
-
     def __init__(self, token, span: Optional[Span], finish_on_close: bool = True):
         self._token = token
         self._span = TracingSpan(span) if span else NonRecordingTracingSpan(INVALID_SPAN)
@@ -221,8 +226,9 @@ class TracingSpan:
         self._span.set_attribute(key, value)
         return self
 
-    def add_event(self, name: str, attributes: Optional[Mapping[str, any]] = None,
-                  timestamp: Optional[float] = None) -> 'TracingSpan':
+    def add_event(
+        self, name: str, attributes: Optional[Mapping[str, any]] = None, timestamp: Optional[float] = None
+    ) -> 'TracingSpan':
         converted_timestamp = int(timestamp * 1e9) if timestamp else None
         self._span.add_event(name, attributes, converted_timestamp)
         return self
@@ -349,8 +355,9 @@ class TransportableSpan(TracingSpan):
     def set_tag(self, key: Union[Enum, str], value: Union[bool, str, bytes, int, float, dt.date]) -> 'TracingSpan':
         return self
 
-    def add_event(self, name: str, attributes: Optional[Mapping[str, any]] = None,
-                  timestamp: Optional[float] = None) -> 'TracingSpan':
+    def add_event(
+        self, name: str, attributes: Optional[Mapping[str, any]] = None, timestamp: Optional[float] = None
+    ) -> 'TracingSpan':
         return self
 
     def log_kv(self, key_values: Mapping[str, any], timestamp=None) -> 'TracingSpan':
@@ -358,7 +365,6 @@ class TransportableSpan(TracingSpan):
 
 
 class TransportableTracingEvent(TracingEvent):
-
     def __init__(self, event: TracingEvent):
         super().__init__(None)
         self._name = event.name
@@ -417,8 +423,14 @@ class TracerFactory:
 class Tracer(ContextDecorator):
     __factory = TracerFactory()
 
-    def __init__(self, label: str = 'Execution', print_on_exit: bool = False, threshold: int = None,
-                 wrap_exceptions=False, parent_span: Optional[Union[TracingSpan, TracingContext]] = None):
+    def __init__(
+        self,
+        label: str = 'Execution',
+        print_on_exit: bool = False,
+        threshold: int = None,
+        wrap_exceptions=False,
+        parent_span: Optional[Union[TracingSpan, TracingContext]] = None,
+    ):
         self.__print_on_exit = print_on_exit
         self.__label = label
         self.__threshold = threshold
@@ -490,8 +502,12 @@ class Tracer(ContextDecorator):
         return TracingScope(token, span.unwrap(), finish_on_close=finish_on_close)
 
     @staticmethod
-    def start_active_span(operation_name: str, child_of: Optional[TracingContext] = None,
-                          ignore_active_span: bool = False, finish_on_close: bool = True) -> TracingScope:
+    def start_active_span(
+        operation_name: str,
+        child_of: Optional[TracingContext] = None,
+        ignore_active_span: bool = False,
+        finish_on_close: bool = True,
+    ) -> TracingScope:
         ctx = Context() if ignore_active_span else child_of._context if child_of else None
         span = Tracer.get_instance().start_span(operation_name, context=ctx)
         # Set as the implicit current context
@@ -506,13 +522,15 @@ class Tracer(ContextDecorator):
         if span is not None:
             try:
                 span.set_tag('error', True)
-                span.log_kv({
-                    'event': 'error',
-                    'message': str(e),
-                    'error.object': str(e),
-                    'error.kind': type(e).__name__,
-                    'stack': Tracer.__format_traceback(type(e), e, exc_tb),
-                })
+                span.log_kv(
+                    {
+                        'event': 'error',
+                        'message': str(e),
+                        'error.object': str(e),
+                        'error.kind': type(e).__name__,
+                        'stack': Tracer.__format_traceback(type(e), e, exc_tb),
+                    }
+                )
             except Exception:
                 pass
 
@@ -544,15 +562,23 @@ class Tracer(ContextDecorator):
         color_list = ('#2b76f7', '#5a8efb', '#79aaff', '#89bbff', '#cdddff')
         error_color = 'rgb(244, 127, 114)'
         ordered_spans, _ = Tracer.gather_data(False)
-        span_df = pd.DataFrame.from_records([(
-            f'#{i}',
-            f'{s.operation_name} {int(s.duration):,.0f}ms',
-            dt.datetime.fromtimestamp(s.start_time / 1e9),
-            dt.datetime.fromtimestamp(s.end_time / 1e9),
-            '\n '.join([f'{k}={v}' for k, v in s.tags.items()]) if s.tags else '',
-        ) for i, (depth, s) in enumerate(ordered_spans)], columns=['id', 'operation', 'start', 'end', 'tags'])
-        color_map = {f'#{i}': error_color if 'error' in s.tags else color_list[depth % len(color_list)] for
-                     i, (depth, s) in enumerate(ordered_spans)}
+        span_df = pd.DataFrame.from_records(
+            [
+                (
+                    f'#{i}',
+                    f'{s.operation_name} {int(s.duration):,.0f}ms',
+                    dt.datetime.fromtimestamp(s.start_time / 1e9),
+                    dt.datetime.fromtimestamp(s.end_time / 1e9),
+                    '\n '.join([f'{k}={v}' for k, v in s.tags.items()]) if s.tags else '',
+                )
+                for i, (depth, s) in enumerate(ordered_spans)
+            ],
+            columns=['id', 'operation', 'start', 'end', 'tags'],
+        )
+        color_map = {
+            f'#{i}': error_color if 'error' in s.tags else color_list[depth % len(color_list)]
+            for i, (depth, s) in enumerate(ordered_spans)
+        }
         fig = px.timeline(
             data_frame=span_df,
             width=1000,
@@ -563,7 +589,7 @@ class Tracer(ContextDecorator):
             hover_data='tags',
             text='operation',
             color='id',
-            color_discrete_map=color_map
+            color_discrete_map=color_map,
         )
         fig.update_layout(
             showlegend=False,
@@ -571,7 +597,7 @@ class Tracer(ContextDecorator):
             yaxis_showticklabels=False,
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            margin={'l': 0, 't': 0, 'b': 0, 'r': 0}
+            margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
         )
         if reset:
             Tracer.reset()
@@ -643,6 +669,7 @@ class Tracer(ContextDecorator):
             span_ctx = Tracer.extract(span_carrier)
             with Tracer(operation_name, parent_span=span_ctx):
                 return func(*args, **kwargs)
+
         return wrapper
 
 

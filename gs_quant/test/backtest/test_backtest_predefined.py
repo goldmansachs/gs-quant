@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import zoneinfo
 
 import gs_quant.backtests.predefined_asset_engine
@@ -40,12 +41,15 @@ class ExampleTestTrigger(OrdersGeneratorTrigger):
     def generate_orders(self, time: dt.datetime, backtest: PredefinedAssetBacktest = None) -> list:
         date = time.date()
         if date == dt.date(2021, 1, 5):
-            return [OrderMarketOnClose(instrument=IRBondFuture(currency='EUR', name='TestRic'),
-                                       quantity=1,
-                                       generation_time=time,
-                                       execution_date=date,
-                                       source='Test')
-                    ]
+            return [
+                OrderMarketOnClose(
+                    instrument=IRBondFuture(currency='EUR', name='TestRic'),
+                    quantity=1,
+                    generation_time=time,
+                    execution_date=date,
+                    source='Test',
+                )
+            ]
         else:
             return []
 
@@ -58,7 +62,7 @@ class FuturesExample(OrdersGeneratorTrigger):
         super().__init__()
 
     def get_trigger_times(self):
-        """ generate orders at 9:30am every day """
+        """generate orders at 9:30am every day"""
         return [dt.time(9, 30)]
 
     def generate_orders(self, state: dt.datetime, backtest: PredefinedAssetBacktest = None) -> list:
@@ -71,20 +75,28 @@ class FuturesExample(OrdersGeneratorTrigger):
         """ enter trade is a TWAP order between 10 and 10:30 """
         exec_start = dt.datetime.combine(date, dt.time(10))
         exec_end = dt.datetime.combine(date, dt.time(10, 30))
-        orders.append(OrderTWAP(instrument=contract,
-                                quantity=units_to_trade,
-                                generation_time=state,
-                                window=TimeWindow(start=exec_start, end=exec_end),
-                                source=str(self.__class__)))
+        orders.append(
+            OrderTWAP(
+                instrument=contract,
+                quantity=units_to_trade,
+                generation_time=state,
+                window=TimeWindow(start=exec_start, end=exec_end),
+                source=str(self.__class__),
+            )
+        )
 
         """ exit the intraday quantity at TWAP between 14 and 14:30 """
         twap_start = dt.datetime.combine(date, dt.time(14))
         twap_end = dt.datetime.combine(date, dt.time(14, 30))
-        orders.append(OrderTWAP(instrument=contract,
-                                quantity=units_to_trade * -1,
-                                generation_time=state,
-                                window=TimeWindow(start=twap_start, end=twap_end),
-                                source=str(self.__class__)))
+        orders.append(
+            OrderTWAP(
+                instrument=contract,
+                quantity=units_to_trade * -1,
+                generation_time=state,
+                window=TimeWindow(start=twap_start, end=twap_end),
+                source=str(self.__class__),
+            )
+        )
         return orders
 
 
@@ -93,8 +105,9 @@ def test_backtest_predefined_timezone_aware():
     start_dt = '2021-01-01T08:00'
     end_dt = '2021-12-31T17:00'
 
-    states = pd.bdate_range(start_dt, end_dt, freq='1h', tz=tz).to_series().between_time('08:00',
-                                                                                         '17:00').index.tolist()
+    states = (
+        pd.bdate_range(start_dt, end_dt, freq='1h', tz=tz).to_series().between_time('08:00', '17:00').index.tolist()
+    )
     trigger_dates = pd.bdate_range(start_dt, end_dt, freq='1h', tz=tz).to_series().at_time('17:00').index.tolist()
     data = np.random.default_rng().standard_normal(len(states))
     s_rt = pd.Series(index=states, data=data)
@@ -108,10 +121,10 @@ def test_backtest_predefined_timezone_aware():
     simple_date_trigger = DateTrigger(trigger_requirements=simple_date_trigger_requirement, actions=[add_trade_action])
 
     data_manager = DataManager()
-    data_manager.add_data_source(pd.Series(index=states, data=data), DataFrequency.REAL_TIME, generic_bond_future,
-                                 ValuationFixingType.PRICE)
-    data_manager.add_data_source(s_eod, DataFrequency.DAILY, generic_bond_future,
-                                 ValuationFixingType.PRICE)
+    data_manager.add_data_source(
+        pd.Series(index=states, data=data), DataFrequency.REAL_TIME, generic_bond_future, ValuationFixingType.PRICE
+    )
+    data_manager.add_data_source(s_eod, DataFrequency.DAILY, generic_bond_future, ValuationFixingType.PRICE)
 
     # instantiate a new strategy
     strategy = Strategy(None, triggers=simple_date_trigger)
@@ -166,10 +179,12 @@ def test_backtest_predefined():
     twap_entry_end = 30
     twap_exit_end = 40
 
-    data_twap = {dt.datetime.combine(mid, dt.time(10, 30)): twap_entry_mid,
-                 dt.datetime.combine(mid, dt.time(14, 30)): twap_exit_mid,
-                 dt.datetime.combine(end, dt.time(10, 30)): twap_entry_end,
-                 dt.datetime.combine(end, dt.time(14, 30)): twap_exit_end}
+    data_twap = {
+        dt.datetime.combine(mid, dt.time(10, 30)): twap_entry_mid,
+        dt.datetime.combine(mid, dt.time(14, 30)): twap_exit_mid,
+        dt.datetime.combine(end, dt.time(10, 30)): twap_entry_end,
+        dt.datetime.combine(end, dt.time(14, 30)): twap_exit_end,
+    }
 
     data_mgr.add_data_source(pd.Series(data_twap), DataFrequency.REAL_TIME, underlying, ValuationFixingType.PRICE)
     trigger = FuturesExample()

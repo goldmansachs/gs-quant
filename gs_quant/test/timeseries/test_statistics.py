@@ -26,11 +26,33 @@ from scipy.integrate import odeint
 from gs_quant.data import DataContext
 from gs_quant.errors import MqTypeError, MqValueError, MqError
 from gs_quant.timeseries import normalize_window, Window, Returns, returns
-from gs_quant.timeseries.statistics import (Direction, IntradayDirection, generate_series, generate_series_intraday,
-                                            LinearRegression, RollingLinearRegression,
-                                            min_, max_, range_, mean, median, mode, sum_, product, std, exponential_std,
-                                            var, cov, zscores, winsorize, percentiles, percentile, SIRModel, SEIRModel,
-                                            MeanType)
+from gs_quant.timeseries.statistics import (
+    Direction,
+    IntradayDirection,
+    generate_series,
+    generate_series_intraday,
+    LinearRegression,
+    RollingLinearRegression,
+    min_,
+    max_,
+    range_,
+    mean,
+    median,
+    mode,
+    sum_,
+    product,
+    std,
+    exponential_std,
+    var,
+    cov,
+    zscores,
+    winsorize,
+    percentiles,
+    percentile,
+    SIRModel,
+    SEIRModel,
+    MeanType,
+)
 
 
 def _random_series(days=365, nans=10):
@@ -56,14 +78,14 @@ def _rolling_1m_test(fn, pandas_fn: str):
 def test_generate_series():
     x = generate_series(100)
 
-    assert (len(x) == 100)
-    assert (x.index[0] == dt.date.today())
-    assert (x.iloc[0] == 100)
+    assert len(x) == 100
+    assert x.index[0] == dt.date.today()
+    assert x.iloc[0] == 100
 
     x = generate_series(100, Direction.END_TODAY)
-    assert (len(x) == 100)
-    assert (x.index[-1] == dt.date.today())
-    assert (x.iloc[0] == 100)
+    assert len(x) == 100
+    assert x.index[-1] == dt.date.today()
+    assert x.iloc[0] == 100
 
 
 def test_generate_series_intraday():
@@ -281,14 +303,17 @@ def test_quadratic_mean():
     x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
 
     result = mean(x, mean_type=MeanType.QUADRATIC)
-    expected = pd.Series([
-        np.sqrt(9.0),
-        np.sqrt((9.0 + 4.0) / 2),
-        np.sqrt((9.0 + 4.0 + 9.0) / 3),
-        np.sqrt((9.0 + 4.0 + 9.0 + 1.0) / 4),
-        np.sqrt((9.0 + 4.0 + 9.0 + 1.0 + 9.0) / 5),
-        np.sqrt((9.0 + 4.0 + 9.0 + 1.0 + 9.0 + 36.0) / 6)
-    ], index=dates)
+    expected = pd.Series(
+        [
+            np.sqrt(9.0),
+            np.sqrt((9.0 + 4.0) / 2),
+            np.sqrt((9.0 + 4.0 + 9.0) / 3),
+            np.sqrt((9.0 + 4.0 + 9.0 + 1.0) / 4),
+            np.sqrt((9.0 + 4.0 + 9.0 + 1.0 + 9.0) / 5),
+            np.sqrt((9.0 + 4.0 + 9.0 + 1.0 + 9.0 + 36.0) / 6),
+        ],
+        index=dates,
+    )
     assert_series_equal(result, expected, obj="Quadratic mean")
 
     result = mean(x, Window(1, 0), mean_type=MeanType.QUADRATIC)
@@ -296,68 +321,79 @@ def test_quadratic_mean():
     assert_series_equal(result, expected, obj="Quadratic mean window 1")
 
     result = mean(x, Window(2, 0), mean_type=MeanType.QUADRATIC)
-    expected = pd.Series([
-        np.sqrt(9.0),
-        np.sqrt((9.0 + 4.0) / 2),
-        np.sqrt((4.0 + 9.0) / 2),
-        np.sqrt((9.0 + 1.0) / 2),
-        np.sqrt((1.0 + 9.0) / 2),
-        np.sqrt((9.0 + 36.0) / 2)
-    ], index=dates)
+    expected = pd.Series(
+        [
+            np.sqrt(9.0),
+            np.sqrt((9.0 + 4.0) / 2),
+            np.sqrt((4.0 + 9.0) / 2),
+            np.sqrt((9.0 + 1.0) / 2),
+            np.sqrt((1.0 + 9.0) / 2),
+            np.sqrt((9.0 + 36.0) / 2),
+        ],
+        index=dates,
+    )
     assert_series_equal(result, expected, obj="Quadratic mean window 2")
 
     result = mean(x, Window('1w', 0), mean_type=MeanType.QUADRATIC)
-    expected = pd.Series([
-        np.sqrt(9.0),
-        np.sqrt((9.0 + 4.0) / 2),
-        np.sqrt((9.0 + 4.0 + 9.0) / 3),
-        np.sqrt((9.0 + 4.0 + 9.0 + 1.0) / 4),
-        np.sqrt((9.0 + 4.0 + 9.0 + 1.0 + 9.0) / 5),
-        np.sqrt((4.0 + 9.0 + 1.0 + 9.0 + 36.0) / 5)
-    ], index=dates)
+    expected = pd.Series(
+        [
+            np.sqrt(9.0),
+            np.sqrt((9.0 + 4.0) / 2),
+            np.sqrt((9.0 + 4.0 + 9.0) / 3),
+            np.sqrt((9.0 + 4.0 + 9.0 + 1.0) / 4),
+            np.sqrt((9.0 + 4.0 + 9.0 + 1.0 + 9.0) / 5),
+            np.sqrt((4.0 + 9.0 + 1.0 + 9.0 + 36.0) / 5),
+        ],
+        index=dates,
+    )
     assert_series_equal(result, expected, obj="Quadratic mean window 1w")
 
     y = pd.Series([4.0, np.nan, 4.0, 2.0, 2.0, 5.0], index=dates)
     result = mean([x, y], Window(2, 0), mean_type=MeanType.QUADRATIC)
-    expected = pd.Series([
-        np.sqrt((9.0 + 16.0) / 2),
-        np.sqrt((9.0 + 4.0 + 16.0) / 3),
-        np.sqrt((4.0 + 9.0 + 16.0) / 3),
-        np.sqrt((9.0 + 1.0 + 16.0 + 4.0) / 4),
-        np.sqrt((1.0 + 9.0 + 4.0 + 4.0) / 4),
-        np.sqrt((9.0 + 36.0 + 4.0 + 25.0) / 4)
-    ], index=dates)
+    expected = pd.Series(
+        [
+            np.sqrt((9.0 + 16.0) / 2),
+            np.sqrt((9.0 + 4.0 + 16.0) / 3),
+            np.sqrt((4.0 + 9.0 + 16.0) / 3),
+            np.sqrt((9.0 + 1.0 + 16.0 + 4.0) / 4),
+            np.sqrt((1.0 + 9.0 + 4.0 + 4.0) / 4),
+            np.sqrt((9.0 + 36.0 + 4.0 + 25.0) / 4),
+        ],
+        index=dates,
+    )
     assert_series_equal(result, expected, obj="Quadratic mean of multiple series")
 
     result = mean([x, y], Window('2d', 0), mean_type=MeanType.QUADRATIC)
-    expected = pd.Series([
-        np.sqrt((9.0 + 16.0) / 2),
-        np.sqrt((9.0 + 4.0 + 16.0) / 3),
-        np.sqrt((4.0 + 9.0 + 16.0) / 3),
-        np.sqrt((9.0 + 1.0 + 16.0 + 4.0) / 4),
-        np.sqrt((9.0 + 4.0) / 2),
-        np.sqrt((9.0 + 36.0 + 4.0 + 25.0) / 4)
-    ], index=dates)
+    expected = pd.Series(
+        [
+            np.sqrt((9.0 + 16.0) / 2),
+            np.sqrt((9.0 + 4.0 + 16.0) / 3),
+            np.sqrt((4.0 + 9.0 + 16.0) / 3),
+            np.sqrt((9.0 + 1.0 + 16.0 + 4.0) / 4),
+            np.sqrt((9.0 + 4.0) / 2),
+            np.sqrt((9.0 + 36.0 + 4.0 + 25.0) / 4),
+        ],
+        index=dates,
+    )
     assert_series_equal(result, expected, obj="Quadratic mean of multiple series by date offset")
 
     result = mean(y, Window(2, 0), mean_type=MeanType.QUADRATIC)
-    expected = pd.Series([
-        np.sqrt(16.0),
-        np.sqrt(16.0),
-        np.sqrt(16.0),
-        np.sqrt((16.0 + 4.0) / 2),
-        np.sqrt((4.0 + 4.0) / 2),
-        np.sqrt((4.0 + 25.0) / 2)
-    ], index=dates)
+    expected = pd.Series(
+        [
+            np.sqrt(16.0),
+            np.sqrt(16.0),
+            np.sqrt(16.0),
+            np.sqrt((16.0 + 4.0) / 2),
+            np.sqrt((4.0 + 4.0) / 2),
+            np.sqrt((4.0 + 25.0) / 2),
+        ],
+        index=dates,
+    )
     assert_series_equal(result, expected, obj="Quadratic mean of single series with nan")
 
     z = pd.Series([-3.0, 4.0, -5.0], index=dates[:3])
     result = mean(z, Window(2, 0), mean_type=MeanType.QUADRATIC)
-    expected = pd.Series([
-        np.sqrt(9.0),
-        np.sqrt((9.0 + 16.0) / 2),
-        np.sqrt((16.0 + 25.0) / 2)
-    ], index=dates[:3])
+    expected = pd.Series([np.sqrt(9.0), np.sqrt((9.0 + 16.0) / 2), np.sqrt((16.0 + 25.0) / 2)], index=dates[:3])
     assert_series_equal(result, expected, obj="Quadratic mean with negative values")
 
 
@@ -521,10 +557,10 @@ def test_exponential_std():
         std = ts * 0
         for i in range(1, len(ts)):
             weights = (1 - alpha) * alpha ** np.arange(i, -1, -1)
-            weights[0] /= (1 - alpha)
-            x = ts.to_numpy()[:i + 1]
+            weights[0] /= 1 - alpha
+            x = ts.to_numpy()[: i + 1]
             ema = sum(weights * x) / sum(weights)
-            debias_fact = sum(weights) ** 2 / (sum(weights) ** 2 - sum(weights ** 2))
+            debias_fact = sum(weights) ** 2 / (sum(weights) ** 2 - sum(weights**2))
             var = debias_fact * sum(weights * (x - ema) ** 2) / sum(weights)
             std.iloc[i] = np.sqrt(var)
         std.iloc[0] = np.nan
@@ -663,13 +699,13 @@ def test_winsorize():
         b_upper = mu + sigma * limit * 1.001
         b_lower = mu - sigma * limit * 1.001
 
-        assert (True in r.ge(b_upper).values)
-        assert (True in r.le(b_lower).values)
+        assert True in r.ge(b_upper).values
+        assert True in r.le(b_lower).values
 
         wr = winsorize(r, limit)
 
-        assert (True not in wr.ge(b_upper).values)
-        assert (True not in wr.le(b_lower).values)
+        assert True not in wr.ge(b_upper).values
+        assert True not in wr.le(b_lower).values
 
 
 def test_percentiles():
@@ -777,8 +813,9 @@ def test_regression():
     assert_series_equal(regression.fitted_values(), expected)
 
     dates_predict = [dt.date(2019, 2, 1), dt.date(2019, 2, 2)]
-    predicted = regression.predict([pd.Series([2.0, 3.0], index=dates_predict),
-                                    pd.Series([6.0, 7.0], index=dates_predict)])
+    predicted = regression.predict(
+        [pd.Series([2.0, 3.0], index=dates_predict), pd.Series([6.0, 7.0], index=dates_predict)]
+    )
     expected = pd.Series([30.0, 34.0], index=dates_predict)
     assert_series_equal(predicted, expected)
 

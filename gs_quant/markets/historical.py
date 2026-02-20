@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from typing import Iterable, Optional, Tuple, Union, Type
 
@@ -32,22 +33,23 @@ class HistoricalPricingContext(PricingContext):
     """
 
     def __init__(
-            self,
-            start: Optional[Union[int, dt.date]] = None,
-            end: Optional[Union[int, dt.date]] = None,
-            calendars: Union[str, Tuple] = (),
-            dates: Optional[Iterable[dt.date]] = None,
-            is_async: bool = None,
-            is_batch: bool = None,
-            use_cache: bool = None,
-            visible_to_gs: bool = None,
-            request_priority: Optional[int] = None,
-            csa_term: str = None,
-            market_data_location: Optional[str] = None,
-            timeout: Optional[int] = None,
-            show_progress: Optional[bool] = None,
-            use_server_cache: Optional[bool] = None,
-            provider: Optional[Type[GenericRiskApi]] = None):
+        self,
+        start: Optional[Union[int, dt.date]] = None,
+        end: Optional[Union[int, dt.date]] = None,
+        calendars: Union[str, Tuple] = (),
+        dates: Optional[Iterable[dt.date]] = None,
+        is_async: bool = None,
+        is_batch: bool = None,
+        use_cache: bool = None,
+        visible_to_gs: bool = None,
+        request_priority: Optional[int] = None,
+        csa_term: str = None,
+        market_data_location: Optional[str] = None,
+        timeout: Optional[int] = None,
+        show_progress: Optional[bool] = None,
+        use_server_cache: Optional[bool] = None,
+        provider: Optional[Type[GenericRiskApi]] = None,
+    ):
         """
         A context for producing valuations over multiple dates
 
@@ -76,10 +78,20 @@ class HistoricalPricingContext(PricingContext):
         >>>
         >>> price_series = price_f.result()
         """
-        super().__init__(is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
-                         request_priority=request_priority, csa_term=csa_term,
-                         market_data_location=market_data_location, timeout=timeout, show_progress=show_progress,
-                         use_server_cache=use_server_cache, use_historical_diddles_only=True, provider=provider)
+        super().__init__(
+            is_async=is_async,
+            is_batch=is_batch,
+            use_cache=use_cache,
+            visible_to_gs=visible_to_gs,
+            request_priority=request_priority,
+            csa_term=csa_term,
+            market_data_location=market_data_location,
+            timeout=timeout,
+            show_progress=show_progress,
+            use_server_cache=use_server_cache,
+            use_historical_diddles_only=True,
+            provider=provider,
+        )
 
         if start is not None:
             if dates is not None:
@@ -122,22 +134,23 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
     """
 
     def __init__(
-            self,
-            start: Optional[Union[int, dt.date]] = None,
-            end: Optional[Union[int, dt.date]] = None,
-            calendars: Union[str, Tuple] = (),
-            dates: Optional[Iterable[dt.date]] = None,
-            roll_to_fwds: bool = True,
-            is_async: bool = None,
-            is_batch: bool = None,
-            use_cache: bool = None,
-            visible_to_gs: bool = None,
-            csa_term: str = None,
-            market_data_location: Optional[str] = None,
-            timeout: Optional[int] = None,
-            show_progress: Optional[bool] = None,
-            name: Optional[str] = None,
-            provider: Optional[Type[GenericRiskApi]] = None):
+        self,
+        start: Optional[Union[int, dt.date]] = None,
+        end: Optional[Union[int, dt.date]] = None,
+        calendars: Union[str, Tuple] = (),
+        dates: Optional[Iterable[dt.date]] = None,
+        roll_to_fwds: bool = True,
+        is_async: bool = None,
+        is_batch: bool = None,
+        use_cache: bool = None,
+        visible_to_gs: bool = None,
+        csa_term: str = None,
+        market_data_location: Optional[str] = None,
+        timeout: Optional[int] = None,
+        show_progress: Optional[bool] = None,
+        name: Optional[str] = None,
+        provider: Optional[Type[GenericRiskApi]] = None,
+    ):
         """
         A context for producing valuations over multiple dates
 
@@ -165,10 +178,21 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
         >>>
         >>> price_series = price_f.result()
         """
-        super().__init__(start=start, end=end, calendars=calendars, dates=dates,
-                         is_async=is_async, is_batch=is_batch, use_cache=use_cache, visible_to_gs=visible_to_gs,
-                         csa_term=csa_term, market_data_location=market_data_location,
-                         timeout=timeout, show_progress=show_progress, provider=provider)
+        super().__init__(
+            start=start,
+            end=end,
+            calendars=calendars,
+            dates=dates,
+            is_async=is_async,
+            is_batch=is_batch,
+            use_cache=use_cache,
+            visible_to_gs=visible_to_gs,
+            csa_term=csa_term,
+            market_data_location=market_data_location,
+            timeout=timeout,
+            show_progress=show_progress,
+            provider=provider,
+        )
         self._roll_to_fwds = roll_to_fwds
         self.name = name
         if start is not None:
@@ -199,8 +223,9 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
                 risk_key = RiskKey(provider, date, base_market, parameters, scenario, risk_measure)
                 futures.append(self._calc(instrument, risk_key))
             else:
-                risk_key = RiskKey(provider, date, self._market(date, location), parameters, base_scenario,
-                                   risk_measure)
+                risk_key = RiskKey(
+                    provider, date, self._market(date, location), parameters, base_scenario, risk_measure
+                )
                 futures.append(self._calc(instrument, risk_key))
 
         return HistoricalPricingFuture(futures)

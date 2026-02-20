@@ -13,13 +13,20 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from typing import Dict, Any, Iterable, Union
 
 from dataclasses_json.cfg import _GlobalConfig
 
 from gs_quant.base import CustomComments
-from gs_quant.workflow import VisualStructuringReport, BinaryImageComments, HyperLinkImageComments, \
-    CustomDeltaHedge, DeltaHedge, HedgeTypes
+from gs_quant.workflow import (
+    VisualStructuringReport,
+    BinaryImageComments,
+    HyperLinkImageComments,
+    CustomDeltaHedge,
+    DeltaHedge,
+    HedgeTypes,
+)
 
 global_config = _GlobalConfig()
 

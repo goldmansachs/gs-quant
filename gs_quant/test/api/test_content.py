@@ -27,46 +27,46 @@ from gs_quant.test.fixtures.content import ContentFixtures
 
 def set_session():
     from gs_quant.session import OAuth2Session
+
     OAuth2Session.init = mock.MagicMock(return_value=None)
     GsSession.use(Environment.QA, 'client_id', 'secret')
 
 
 @pytest.mark.parametrize(
     'description, channels, asset_ids, author_ids, tags, offset, limit, order_by, expected_uri, expected_exception',
-    [('Limit is too large, expect exception', set(),
-      set(),
-      set(),
-      set(),
-      0, 1001, None, None, ValueError),
-     ("Offset is too small, expect exception", set(),
-      set(),
-      set(),
-      set(),
-      -1, None, None, None, ValueError),
-     ('Default params (none specified)', None, None, None, None, None, None, None, '/content', None),
-     ('Normal case, multiple parameters', ('channel-1', 'channel-2'),
-      {'asset-id-1'},
-      {'author-id-1'},
-      {'tag-1'},
-      None, None, None,
-      '/content?channel=channel-1&channel=channel-2&asset_id=asset-id-1&author_id=author-id-1&tag=tag-1', None),
-     ("With offset, limit, and orderBy", set(),
-      set(),
-      set(),
-      set(),
-      2, 12, {'direction': OrderBy.ASC, 'field': 'some-field'},
-      '/content?offset=2&limit=12&order_by=<some-field', None)])
+    [
+        ('Limit is too large, expect exception', set(), set(), set(), set(), 0, 1001, None, None, ValueError),
+        ("Offset is too small, expect exception", set(), set(), set(), set(), -1, None, None, None, ValueError),
+        ('Default params (none specified)', None, None, None, None, None, None, None, '/content', None),
+        (
+            'Normal case, multiple parameters',
+            ('channel-1', 'channel-2'),
+            {'asset-id-1'},
+            {'author-id-1'},
+            {'tag-1'},
+            None,
+            None,
+            None,
+            '/content?channel=channel-1&channel=channel-2&asset_id=asset-id-1&author_id=author-id-1&tag=tag-1',
+            None,
+        ),
+        (
+            "With offset, limit, and orderBy",
+            set(),
+            set(),
+            set(),
+            set(),
+            2,
+            12,
+            {'direction': OrderBy.ASC, 'field': 'some-field'},
+            '/content?offset=2&limit=12&order_by=<some-field',
+            None,
+        ),
+    ],
+)
 def test_get_contents(
-        description,
-        channels,
-        asset_ids,
-        author_ids,
-        tags,
-        offset,
-        limit,
-        order_by,
-        expected_uri,
-        expected_exception):
+    description, channels, asset_ids, author_ids, tags, offset, limit, order_by, expected_uri, expected_exception
+):
 
     # Arrange
     set_session()
@@ -83,7 +83,8 @@ def test_get_contents(
                     tags=tags,
                     offset=offset,
                     limit=limit,
-                    order_by=order_by)
+                    order_by=order_by,
+                )
                 print(actual)
         else:
             actual = GsContentApi.get_contents(
@@ -93,7 +94,8 @@ def test_get_contents(
                 tags=tags,
                 offset=offset,
                 limit=limit,
-                order_by=order_by)
+                order_by=order_by,
+            )
             print(actual)
 
             # Assert

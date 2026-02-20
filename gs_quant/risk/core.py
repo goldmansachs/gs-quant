@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import itertools
 from abc import ABCMeta, abstractmethod
@@ -28,22 +29,17 @@ from gs_quant.base import RiskKey
 from gs_quant.config import DisplayOptions
 from gs_quant.datetime import point_sort_order
 
-__column_sort_fns = {
-    'label1': point_sort_order,
-    'mkt_point': point_sort_order,
-    'point': point_sort_order
-}
+__column_sort_fns = {'label1': point_sort_order, 'mkt_point': point_sort_order, 'point': point_sort_order}
 __risk_columns = ('date', 'time', 'mkt_type', 'mkt_asset', 'mkt_class', 'mkt_point')
 
 
 class ResultInfo(metaclass=ABCMeta):
-
     def __init__(
-            self,
-            risk_key: RiskKey,
-            unit: Optional[dict] = None,
-            error: Optional[Union[str, dict]] = None,
-            request_id: Optional[str] = None
+        self,
+        risk_key: RiskKey,
+        unit: Optional[dict] = None,
+        error: Optional[Union[str, dict]] = None,
+        request_id: Optional[str] = None,
     ):
         self.__risk_key = risk_key
         self.__unit = unit
@@ -52,8 +48,7 @@ class ResultInfo(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def raw_value(self):
-        ...
+    def raw_value(self): ...
 
     @property
     def risk_key(self) -> RiskKey:
@@ -106,7 +101,6 @@ class ResultInfo(metaclass=ABCMeta):
 
 
 class ErrorValue(ResultInfo):
-
     def __init__(self, risk_key: RiskKey, error: Union[str, dict], request_id: Optional[str] = None):
         super().__init__(risk_key, error=error, request_id=request_id)
 
@@ -126,7 +120,6 @@ class ErrorValue(ResultInfo):
 
 
 class UnsupportedValue(ResultInfo):
-
     def __init__(self, risk_key: RiskKey, request_id: Optional[str] = None):
         super().__init__(risk_key, request_id=request_id)
 
@@ -140,10 +133,9 @@ class UnsupportedValue(ResultInfo):
     @staticmethod
     def compose(components: Iterable):
         dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
-        return SeriesWithInfo(pd.Series(index=pd.DatetimeIndex(dates).date, data=values),
-                              risk_key=risk_key,
-                              unit=unit,
-                              error=errors)
+        return SeriesWithInfo(
+            pd.Series(index=pd.DatetimeIndex(dates).date, data=values), risk_key=risk_key, unit=unit, error=errors
+        )
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
         if display_options is not None and not isinstance(display_options, DisplayOptions):
@@ -156,13 +148,14 @@ class UnsupportedValue(ResultInfo):
 
 
 class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
-
-    def __init__(self,
-                 risk_key: RiskKey,
-                 value: Union[float, str, dict],
-                 unit: Optional[dict] = None,
-                 error: Optional[Union[str, dict]] = None,
-                 request_id: Optional[str] = None):
+    def __init__(
+        self,
+        risk_key: RiskKey,
+        value: Union[float, str, dict],
+        unit: Optional[dict] = None,
+        error: Optional[Union[str, dict]] = None,
+        request_id: Optional[str] = None,
+    ):
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
         float.__init__(value)
 
@@ -171,29 +164,28 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def raw_value(self):
-        ...
+    def raw_value(self): ...
 
     @staticmethod
     def compose(components: Iterable):
         dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
-        return SeriesWithInfo(pd.Series(index=pd.DatetimeIndex(dates).date, data=values),
-                              risk_key=risk_key,
-                              unit=unit,
-                              error=errors)
+        return SeriesWithInfo(
+            pd.Series(index=pd.DatetimeIndex(dates).date, data=values), risk_key=risk_key, unit=unit, error=errors
+        )
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
         return [{**extra_dict, 'value': self}]
 
 
 class FloatWithInfo(ScalarWithInfo, float):
-
-    def __new__(cls,
-                risk_key: RiskKey,
-                value: Union[float, str],
-                unit: dict = None,
-                error: Optional[str] = None,
-                request_id: Optional[str] = None):
+    def __new__(
+        cls,
+        risk_key: RiskKey,
+        value: Union[float, str],
+        unit: dict = None,
+        error: Optional[str] = None,
+        request_id: Optional[str] = None,
+    ):
         return float.__new__(cls, value)
 
     @property
@@ -240,16 +232,18 @@ class FloatWithInfo(ScalarWithInfo, float):
     def __add__(self, other):
         if isinstance(other, FloatWithInfo):
             if self.unit == other.unit:
-                return FloatWithInfo(combine_risk_key(self.risk_key, other.risk_key), self.raw_value + other.raw_value,
-                                     self.unit)
+                return FloatWithInfo(
+                    combine_risk_key(self.risk_key, other.risk_key), self.raw_value + other.raw_value, self.unit
+                )
             else:
                 raise ValueError('FloatWithInfo unit mismatch')
         return super(FloatWithInfo, self).__add__(other)
 
     def __mul__(self, other):
         if isinstance(other, FloatWithInfo):
-            return FloatWithInfo(combine_risk_key(self.risk_key, other.risk_key), self.raw_value * other.raw_value,
-                                 self.unit)
+            return FloatWithInfo(
+                combine_risk_key(self.risk_key, other.risk_key), self.raw_value * other.raw_value, self.unit
+            )
         else:
             return FloatWithInfo(self.risk_key, self.raw_value * other, self.unit)
 
@@ -258,13 +252,14 @@ class FloatWithInfo(ScalarWithInfo, float):
 
 
 class StringWithInfo(ScalarWithInfo, str):
-
-    def __new__(cls,
-                risk_key: RiskKey,
-                value: Union[float, str],
-                unit: Optional[dict] = None,
-                error: Optional[str] = None,
-                request_id: Optional[str] = None):
+    def __new__(
+        cls,
+        risk_key: RiskKey,
+        value: Union[float, str],
+        unit: Optional[dict] = None,
+        error: Optional[str] = None,
+        request_id: Optional[str] = None,
+    ):
         return str.__new__(cls, value)
 
     @property
@@ -276,21 +271,24 @@ class StringWithInfo(ScalarWithInfo, str):
 
 
 class DictWithInfo(ScalarWithInfo, dict):
-
-    def __new__(cls,
-                risk_key: RiskKey,
-                value: Union[float, str, dict],
-                unit: Optional[dict] = None,
-                error: Optional[str] = None,
-                request_id: Optional[str] = None):
+    def __new__(
+        cls,
+        risk_key: RiskKey,
+        value: Union[float, str, dict],
+        unit: Optional[dict] = None,
+        error: Optional[str] = None,
+        request_id: Optional[str] = None,
+    ):
         return dict.__new__(cls, value)
 
-    def __init__(self,
-                 risk_key: RiskKey,
-                 value: Union[float, str, dict],
-                 unit: Optional[dict] = None,
-                 error: Optional[Union[str, dict]] = None,
-                 request_id: Optional[str] = None):
+    def __init__(
+        self,
+        risk_key: RiskKey,
+        value: Union[float, str, dict],
+        unit: Optional[dict] = None,
+        error: Optional[Union[str, dict]] = None,
+        request_id: Optional[str] = None,
+    ):
         dict.__init__(self, value)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
 
@@ -303,18 +301,19 @@ class DictWithInfo(ScalarWithInfo, dict):
 
 
 class SeriesWithInfo(pd.Series, ResultInfo):
-    _internal_names = pd.DataFrame._internal_names + \
-                      ['_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
+    _internal_names = pd.DataFrame._internal_names + [
+        '_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)
+    ]
     _internal_names_set = set(_internal_names)
 
     def __init__(
-            self,
-            *args,
-            risk_key: Optional[RiskKey] = None,
-            unit: Optional[dict] = None,
-            error: Optional[Union[str, dict]] = None,
-            request_id: Optional[str] = None,
-            **kwargs
+        self,
+        *args,
+        risk_key: Optional[RiskKey] = None,
+        unit: Optional[dict] = None,
+        error: Optional[Union[str, dict]] = None,
+        request_id: Optional[str] = None,
+        **kwargs,
     ):
         pd.Series.__init__(self, *args, **kwargs)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
@@ -339,10 +338,9 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     @staticmethod
     def compose(components: Iterable):
         dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
-        return SeriesWithInfo(pd.Series(index=pd.DatetimeIndex(dates).date, data=values),
-                              risk_key=risk_key,
-                              unit=unit,
-                              error=errors)
+        return SeriesWithInfo(
+            pd.Series(index=pd.DatetimeIndex(dates).date, data=values), risk_key=risk_key, unit=unit, error=errors
+        )
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
         df = pd.DataFrame(self).reset_index()
@@ -353,28 +351,35 @@ class SeriesWithInfo(pd.Series, ResultInfo):
 
     def __mul__(self, other):
         new_result = pd.Series.__mul__(self, other)
-        ResultInfo.__init__(new_result, risk_key=self.risk_key, unit=self.unit, error=self.error,
-                            request_id=self.request_id)
+        ResultInfo.__init__(
+            new_result, risk_key=self.risk_key, unit=self.unit, error=self.error, request_id=self.request_id
+        )
         return new_result
 
     def copy_with_resultinfo(self, deep=True):
-        return SeriesWithInfo(self.raw_value.copy(deep=deep), risk_key=self.risk_key, unit=self.unit, error=self.error,
-                              request_id=self.request_id)
+        return SeriesWithInfo(
+            self.raw_value.copy(deep=deep),
+            risk_key=self.risk_key,
+            unit=self.unit,
+            error=self.error,
+            request_id=self.request_id,
+        )
 
 
 class DataFrameWithInfo(pd.DataFrame, ResultInfo):
-    _internal_names = pd.DataFrame._internal_names + \
-                      ['_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)]
+    _internal_names = pd.DataFrame._internal_names + [
+        '_ResultInfo__' + i for i in dir(ResultInfo) if isinstance(getattr(ResultInfo, i), property)
+    ]
     _internal_names_set = set(_internal_names)
 
     def __init__(
-            self,
-            *args,
-            risk_key: Optional[RiskKey] = None,
-            unit: Optional[dict] = None,
-            error: Optional[Union[str, dict]] = None,
-            request_id: Optional[str] = None,
-            **kwargs
+        self,
+        *args,
+        risk_key: Optional[RiskKey] = None,
+        unit: Optional[dict] = None,
+        error: Optional[Union[str, dict]] = None,
+        request_id: Optional[str] = None,
+        **kwargs,
     ):
         pd.DataFrame.__init__(self, *args, **kwargs)
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
@@ -426,11 +431,17 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
         return [dict(item, **{**extra_dict}) for item in self.raw_value.to_dict('records')]
 
     def copy_with_resultinfo(self, deep=True):
-        return DataFrameWithInfo(self.raw_value.copy(deep=deep), risk_key=self.risk_key, unit=self.unit,
-                                 error=self.error, request_id=self.request_id)
+        return DataFrameWithInfo(
+            self.raw_value.copy(deep=deep),
+            risk_key=self.risk_key,
+            unit=self.unit,
+            error=self.error,
+            request_id=self.request_id,
+        )
 
     def filter_by_coord(self, coordinate):
         from gs_quant.markets import MarketDataCoordinate
+
         df = self.copy_with_resultinfo()
         for att in [i.name for i in fields(MarketDataCoordinate)]:
             if getattr(coordinate, att) is not None:
@@ -468,12 +479,14 @@ class MQVSValidatorDefn:
 class MQVSValidatorDefnsWithInfo(ResultInfo):
     validators: Tuple[MQVSValidatorDefn, ...]
 
-    def __init__(self,
-                 risk_key: RiskKey,
-                 value: Union[MQVSValidatorDefn, Tuple[MQVSValidatorDefn, ...]],
-                 unit: Optional[dict] = None,
-                 error: Optional[Union[str, dict]] = None,
-                 request_id: Optional[str] = None):
+    def __init__(
+        self,
+        risk_key: RiskKey,
+        value: Union[MQVSValidatorDefn, Tuple[MQVSValidatorDefn, ...]],
+        unit: Optional[dict] = None,
+        error: Optional[Union[str, dict]] = None,
+        request_id: Optional[str] = None,
+    ):
         ResultInfo.__init__(self, risk_key, unit=unit, error=error, request_id=request_id)
         if value and isinstance(value, tuple):
             self.validators = value
@@ -485,10 +498,11 @@ class MQVSValidatorDefnsWithInfo(ResultInfo):
         return self.validators
 
 
-def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]],
-                   threshold: Optional[float] = None,
-                   allow_heterogeneous_types: bool = False) \
-        -> pd.DataFrame:
+def aggregate_risk(
+    results: Iterable[Union[DataFrameWithInfo, Future]],
+    threshold: Optional[float] = None,
+    allow_heterogeneous_types: bool = False,
+) -> pd.DataFrame:
     """
     Combine the results of multiple InstrumentBase.calc() calls, into a single result
 
@@ -538,8 +552,9 @@ def aggregate_risk(results: Iterable[Union[DataFrameWithInfo, Future]],
 ResultType = Union[None, dict, tuple, DataFrameWithInfo, FloatWithInfo, SeriesWithInfo]
 
 
-def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=False,
-                      allow_heterogeneous_types=False) -> ResultType:
+def aggregate_results(
+    results: Iterable[ResultType], allow_mismatch_risk_keys=False, allow_heterogeneous_types=False
+) -> ResultType:
     unit = None
     risk_key = None
     results = tuple(results)
@@ -563,7 +578,11 @@ def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=Fa
 
             unit = unit or result.unit
 
-        if not allow_mismatch_risk_keys and risk_key and risk_key.ex_historical_diddle != result.risk_key.ex_historical_diddle:
+        if (
+            not allow_mismatch_risk_keys
+            and risk_key
+            and risk_key.ex_historical_diddle != result.risk_key.ex_historical_diddle
+        ):
             raise ValueError('Cannot aggregate results with different pricing keys')
 
         risk_key = risk_key or result.risk_key
@@ -578,8 +597,9 @@ def aggregate_results(results: Iterable[ResultType], allow_mismatch_risk_keys=Fa
     elif isinstance(inst, SeriesWithInfo):
         return SeriesWithInfo(sum(results), risk_key=risk_key, unit=unit)
     elif isinstance(inst, DataFrameWithInfo):
-        return DataFrameWithInfo(aggregate_risk(results, allow_heterogeneous_types=allow_heterogeneous_types),
-                                 risk_key=risk_key, unit=unit)
+        return DataFrameWithInfo(
+            aggregate_risk(results, allow_heterogeneous_types=allow_heterogeneous_types), risk_key=risk_key, unit=unit
+        )
 
 
 def subtract_risk(left: DataFrameWithInfo, right: DataFrameWithInfo) -> pd.DataFrame:
@@ -604,8 +624,8 @@ def subtract_risk(left: DataFrameWithInfo, right: DataFrameWithInfo) -> pd.DataF
     >>>
     >>> delta_diff = subtract_risk(delta_today, delta_yday_f.result())
     """
-    assert (left.columns.names == right.columns.names)
-    assert ('value' in left.columns.names)
+    assert left.columns.names == right.columns.names
+    assert 'value' in left.columns.names
 
     right_negated = copy(right)
     right_negated.value *= -1
@@ -656,5 +676,11 @@ def combine_risk_key(key_1: RiskKey, key_2: RiskKey) -> RiskKey:
     def get_field_value(field_name: str):
         return getattr(key_1, field_name) if getattr(key_1, field_name) == getattr(key_2, field_name) else None
 
-    return RiskKey(get_field_value("provider"), get_field_value("date"), get_field_value("market"),
-                   get_field_value("params"), get_field_value("scenario"), get_field_value("risk_measure"))
+    return RiskKey(
+        get_field_value("provider"),
+        get_field_value("date"),
+        get_field_value("market"),
+        get_field_value("params"),
+        get_field_value("scenario"),
+        get_field_value("risk_measure"),
+    )

@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import asyncio
 import base64
 import datetime as dt
@@ -68,12 +69,14 @@ class GsRiskApi(RiskApi):
         headers = {'Content-Type': 'application/x-msgpack'} if use_msgpack else {}
         risk_session = cls.get_session()
         version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
-        result, request_id = risk_session._post(f'/{version}' + cls.__url(request),
-                                                request,
-                                                include_version=False,
-                                                request_headers=headers,
-                                                timeout=181,
-                                                return_request_id=True)
+        result, request_id = risk_session._post(
+            f'/{version}' + cls.__url(request),
+            request,
+            include_version=False,
+            request_headers=headers,
+            timeout=181,
+            return_request_id=True,
+        )
 
         for sub_request in request:
             sub_request._id = request_id
@@ -86,8 +89,13 @@ class GsRiskApi(RiskApi):
         return '/risk/calculate{}'.format('/bulk' if is_bulk else '')
 
     @classmethod
-    async def get_results(cls, responses: asyncio.Queue, results: asyncio.Queue,
-                          timeout: Optional[int] = None, span: Optional[TracingSpan] = None) -> Optional[str]:
+    async def get_results(
+        cls,
+        responses: asyncio.Queue,
+        results: asyncio.Queue,
+        timeout: Optional[int] = None,
+        span: Optional[TracingSpan] = None,
+    ) -> Optional[str]:
         if cls.POLL_FOR_BATCH_RESULTS:
             return await cls.__get_results_poll(responses, results, timeout=timeout)
         else:
@@ -126,8 +134,9 @@ class GsRiskApi(RiskApi):
             try:
                 risk_session = cls.get_session()
                 version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
-                calc_results = risk_session._post(f'/{version}/risk/calculate/results/bulk',
-                                                  list(pending_requests.keys()), include_version=False)
+                calc_results = risk_session._post(
+                    f'/{version}/risk/calculate/results/bulk', list(pending_requests.keys()), include_version=False
+                )
 
                 # ... enqueue the request and result for the listener to handle ...
                 for result in calc_results:
@@ -156,8 +165,9 @@ class GsRiskApi(RiskApi):
                 while pending_requests or not all_requests_dispatched:
                     # Continue while we have pending or un-dispatched requests
                     _logger.debug(f'waiting for {", ".join(pending_requests.keys())}')
-                    request_listener = asyncio.ensure_future(cls.drain_queue_async(responses)) \
-                        if not all_requests_dispatched else None
+                    request_listener = (
+                        asyncio.ensure_future(cls.drain_queue_async(responses)) if not all_requests_dispatched else None
+                    )
                     result_listener = asyncio.ensure_future(ws.recv())
                     listeners = tuple(filter(None, (request_listener, result_listener)))
 
@@ -213,9 +223,13 @@ class GsRiskApi(RiskApi):
                         else:
                             # Unpack the result
                             try:
-                                result = msgpack.unpackb(risk_data) if status == 'B' else msgpack.unpackb(
-                                    base64.b64decode(risk_data), raw=False) if status == 'M' else json.loads(
-                                    risk_data)
+                                result = (
+                                    msgpack.unpackb(risk_data)
+                                    if status == 'B'
+                                    else msgpack.unpackb(base64.b64decode(risk_data), raw=False)
+                                    if status == 'M'
+                                    else json.loads(risk_data)
+                                )
                             except Exception as ee:
                                 result = ee
                         if request_id is None:
@@ -288,16 +302,16 @@ class GsRiskApi(RiskApi):
                 # to acknowledge the close and close the underlying TCP stream. We have seen delays of up to 1000ms here
                 ws_close_timeout = 0.05
                 async with risk_session._connect_websocket(
-                        ws_url,
-                        include_version=False,
-                        subprotocols=subprotocols,
-                        close_timeout=ws_close_timeout) as ws:
+                    ws_url, include_version=False, subprotocols=subprotocols, close_timeout=ws_close_timeout
+                ) as ws:
                     error = await handle_websocket()
 
                 attempts = max_attempts
             except ConnectionClosed as cce:
-                error = (f'Unexpected Connection Closed ({len(pending_requests)}/{len(dispatched)} '
-                         f'request(s) still pending): {cce}')
+                error = (
+                    f'Unexpected Connection Closed ({len(pending_requests)}/{len(dispatched)} '
+                    f'request(s) still pending): {cce}'
+                )
                 attempts += 1
             except asyncio.TimeoutError:
                 error = 'Timed out'
@@ -359,15 +373,17 @@ class GsRiskApi(RiskApi):
             return results
 
     @classmethod
-    def get_liquidity_and_factor_analysis(cls,
-                                          positions: list,
-                                          risk_model: str,
-                                          date: dt.date,
-                                          currency: str = 'USD',
-                                          participation_rate: float = 0.1,
-                                          measures: Optional[list] = None,
-                                          notional: Optional[float] = None,
-                                          time_series_benchmark_ids: Optional[list] = None):
+    def get_liquidity_and_factor_analysis(
+        cls,
+        positions: list,
+        risk_model: str,
+        date: dt.date,
+        currency: str = 'USD',
+        participation_rate: float = 0.1,
+        measures: Optional[list] = None,
+        notional: Optional[float] = None,
+        time_series_benchmark_ids: Optional[list] = None,
+    ):
         """
         Get liquidity and factor analysis for a portfolio using the /risk/liquidity endpoint.
 
@@ -387,7 +403,7 @@ class GsRiskApi(RiskApi):
                 "Risk Buckets",
                 "Factor Risk Buckets",
                 "Factor Exposure Buckets",
-                "Exposure Buckets"
+                "Exposure Buckets",
             ]
 
         payload = {
@@ -397,7 +413,7 @@ class GsRiskApi(RiskApi):
             "participationRate": participation_rate,
             "riskModel": risk_model,
             "timeSeriesBenchmarkIds": time_series_benchmark_ids or [],
-            "measures": measures
+            "measures": measures,
         }
 
         if notional is not None:
@@ -409,23 +425,28 @@ class GsRiskApi(RiskApi):
             if isinstance(response, dict) and 'errorMessage' in response:
                 error_msg = response['errorMessage']
 
-                asset_ids_pattern = (r'Assets with the following ids are missing in marquee:'
-                                     r'\s*\[\s*([^\]]+)\s*\]')
+                asset_ids_pattern = (
+                    r'Assets with the following ids are missing in marquee:'
+                    r'\s*\[\s*([^\]]+)\s*\]'
+                )
                 asset_ids_match = re.search(asset_ids_pattern, error_msg, re.IGNORECASE)
                 if asset_ids_match:
-                    clean_error_pattern = (r'(Assets with the following ids are missing in '
-                                           r'marquee:\s*\[[^\]]+\])')
+                    clean_error_pattern = (
+                        r'(Assets with the following ids are missing in '
+                        r'marquee:\s*\[[^\]]+\])'
+                    )
                     clean_error_line = re.search(clean_error_pattern, error_msg, re.IGNORECASE)
                     if clean_error_line:
-                        clean_message = (f"ERROR: liquidity analysis failed\n"
-                                         f"{clean_error_line.group(1)}")
+                        clean_message = f"ERROR: liquidity analysis failed\n{clean_error_line.group(1)}"
                         _logger.error(clean_message)
                         raise MqValueError(clean_message)
                     else:
                         missing_assets = asset_ids_match.group(1).strip()
-                        clean_message = (f"ERROR: liquidity analysis failed\n"
-                                         f"Assets with the following ids are missing in marquee: "
-                                         f"[ {missing_assets} ]")
+                        clean_message = (
+                            f"ERROR: liquidity analysis failed\n"
+                            f"Assets with the following ids are missing in marquee: "
+                            f"[ {missing_assets} ]"
+                        )
                         _logger.error(clean_message)
                         raise MqValueError(clean_message)
                 else:

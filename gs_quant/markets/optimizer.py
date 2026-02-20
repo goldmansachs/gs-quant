@@ -1307,9 +1307,9 @@ class OptimizerSettings:
             )
 
         if (
-            self.__min_weight_per_constituent is not None and
-            self.__max_weight_per_constituent is not None and
-            self.__min_weight_per_constituent > self.__max_weight_per_constituent
+            self.__min_weight_per_constituent is not None
+            and self.__max_weight_per_constituent is not None
+            and self.__min_weight_per_constituent > self.__max_weight_per_constituent
         ):
             raise MqValueError(
                 f"min_weight_per_constituent ({self.__min_weight_per_constituent}) cannot be greater than "
@@ -1333,9 +1333,9 @@ class OptimizerSettings:
             # Unidirectional hedger mode validation
             # Prevent setting long/short parameters in unidirectional mode
             if (
-                self.__gross_notional is not None and
-                self.__net_notional is not None and
-                self.__gross_notional != self.__net_notional
+                self.__gross_notional is not None
+                and self.__net_notional is not None
+                and self.__gross_notional != self.__net_notional
             ):
                 raise MqValueError(
                     "Cannot set gross_notional != net_notional when allow_long_short=False. "
@@ -1546,9 +1546,9 @@ def _ensure_completed(func):
 class OptimizerStrategy:
     VERBOSE_ERROR_MSG: Final = {
         'Missing asset xref': lambda e: f"We noticed some underlying asset meta data error: {e}",
-        'ERROR: Could not find solution.': lambda e: f"Potential infeasible inputs. {e}. "
-        f"Please relax your constraint or "
-        f"contact Marquee team for assistance.",
+        'ERROR: Could not find solution.': lambda e: (
+            f"Potential infeasible inputs. {e}. Please relax your constraint or contact Marquee team for assistance."
+        ),
     }
 
     def __init__(
@@ -2124,8 +2124,8 @@ class OptimizerStrategy:
                     hedged_target.get("systematicExposure"),
                     (
                         hedged_target.get("systematicExposure") - target.get("systematicExposure")
-                        if hedged_target.get("systematicExposure") is not None and
-                        target.get("systematicExposure") is not None
+                        if hedged_target.get("systematicExposure") is not None
+                        and target.get("systematicExposure") is not None
                         else None
                     ),
                 ],

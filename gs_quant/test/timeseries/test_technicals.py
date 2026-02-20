@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import numpy as np
 import pandas as pd
@@ -20,9 +21,21 @@ import pytest
 from pandas.testing import assert_series_equal
 
 from gs_quant.errors import MqValueError
-from gs_quant.timeseries import moving_average, Window, smoothed_moving_average, macd, bollinger_bands, \
-    relative_strength_index, exponential_moving_average, exponential_volatility, exponential_spread_volatility, trend, \
-    SeasonalModel, Frequency, seasonally_adjusted
+from gs_quant.timeseries import (
+    moving_average,
+    Window,
+    smoothed_moving_average,
+    macd,
+    bollinger_bands,
+    relative_strength_index,
+    exponential_moving_average,
+    exponential_volatility,
+    exponential_spread_volatility,
+    trend,
+    SeasonalModel,
+    Frequency,
+    seasonally_adjusted,
+)
 
 
 def test_moving_average():
@@ -134,63 +147,61 @@ def test_bollinger_bands():
 
 
 def test_relative_strength_index():
-    dates = [dt.date(2020, 1, 2),
-             dt.date(2020, 1, 3),
-             dt.date(2020, 1, 6),
-             dt.date(2020, 1, 7),
-             dt.date(2020, 1, 8),
-             dt.date(2020, 1, 9),
-             dt.date(2020, 1, 10),
-             dt.date(2020, 1, 13),
-             dt.date(2020, 1, 14),
-             dt.date(2020, 1, 15),
-             dt.date(2020, 1, 16),
-             dt.date(2020, 1, 17),
-             dt.date(2020, 1, 21),
-             dt.date(2020, 1, 22),
-             dt.date(2020, 1, 23),
-             dt.date(2020, 1, 24),
-             dt.date(2020, 1, 27),
-             dt.date(2020, 1, 28),
-             dt.date(2020, 1, 29),
-             dt.date(2020, 1, 30),
-             dt.date(2020, 1, 31),
-             dt.date(2020, 2, 3)]
+    dates = [
+        dt.date(2020, 1, 2),
+        dt.date(2020, 1, 3),
+        dt.date(2020, 1, 6),
+        dt.date(2020, 1, 7),
+        dt.date(2020, 1, 8),
+        dt.date(2020, 1, 9),
+        dt.date(2020, 1, 10),
+        dt.date(2020, 1, 13),
+        dt.date(2020, 1, 14),
+        dt.date(2020, 1, 15),
+        dt.date(2020, 1, 16),
+        dt.date(2020, 1, 17),
+        dt.date(2020, 1, 21),
+        dt.date(2020, 1, 22),
+        dt.date(2020, 1, 23),
+        dt.date(2020, 1, 24),
+        dt.date(2020, 1, 27),
+        dt.date(2020, 1, 28),
+        dt.date(2020, 1, 29),
+        dt.date(2020, 1, 30),
+        dt.date(2020, 1, 31),
+        dt.date(2020, 2, 3),
+    ]
 
-    SPX_values = [3257.8501,
-                  3234.8501,
-                  3246.28,
-                  3237.1799,
-                  3253.05,
-                  3274.7,
-                  3265.3501,
-                  3288.1299,
-                  3283.1499,
-                  3289.29,
-                  3316.8101,
-                  3329.6201,
-                  3320.79,
-                  3321.75,
-                  3325.54,
-                  3295.47,
-                  3243.6299,
-                  3276.24,
-                  3273.3999,
-                  3283.6599,
-                  3225.52,
-                  3248.9199]
+    SPX_values = [
+        3257.8501,
+        3234.8501,
+        3246.28,
+        3237.1799,
+        3253.05,
+        3274.7,
+        3265.3501,
+        3288.1299,
+        3283.1499,
+        3289.29,
+        3316.8101,
+        3329.6201,
+        3320.79,
+        3321.75,
+        3325.54,
+        3295.47,
+        3243.6299,
+        3276.24,
+        3273.3999,
+        3283.6599,
+        3225.52,
+        3248.9199,
+    ]
 
-    target_vals = [66.35899,
-                   50.99377,
-                   57.63855,
-                   56.91475,
-                   58.92162,
-                   45.88014,
-                   50.61763]
+    target_vals = [66.35899, 50.99377, 57.63855, 56.91475, 58.92162, 45.88014, 50.61763]
 
     w = 14
     SPX = pd.Series(data=SPX_values, index=dates)
-    expected = pd.Series(data=target_vals, index=dates[w + 1:])
+    expected = pd.Series(data=target_vals, index=dates[w + 1 :])
     result = relative_strength_index(SPX, w)
     assert_series_equal(result, expected, check_names=False, obj="Relative Strength Index")
 

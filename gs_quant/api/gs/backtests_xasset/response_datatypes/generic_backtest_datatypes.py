@@ -24,4 +24,5 @@ class Strategy(object):
     """
     A strategy object on which one may run a backtest
     """
+
     pass

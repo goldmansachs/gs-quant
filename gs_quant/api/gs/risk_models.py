@@ -23,14 +23,23 @@ import backoff
 
 from gs_quant.errors import MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.session import GsSession
-from gs_quant.target.risk_models import RiskModel, RiskModelCalendar, Factor, RiskModelData, \
-    RiskModelDataAssetsRequest, RiskModelDataMeasure, RiskModelEventType, RiskModelTerm
+from gs_quant.target.risk_models import (
+    RiskModel,
+    RiskModelCalendar,
+    Factor,
+    RiskModelData,
+    RiskModelDataAssetsRequest,
+    RiskModelDataMeasure,
+    RiskModelEventType,
+    RiskModelTerm,
+)
 
 _logger = logging.getLogger(__name__)
 
 
 class IntradayFactorDataSource(Enum):
     """Data source for intraday factor data"""
+
     GS_FMP = "GS_FMP"
     GS_REGRESSION = "GS_Regression"
     BARRA = "BARRA"
@@ -47,26 +56,24 @@ class GsRiskModelApi:
         return GsSession.current._post('/risk/models', model, cls=RiskModel)
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
     def get_risk_model(cls, model_id: str) -> RiskModel:
         return GsSession.current._get(f'/risk/models/{model_id}', cls=RiskModel)
 
     @classmethod
-    def get_risk_models(cls,
-                        ids: List[str] = None,
-                        limit: int = None,
-                        offset: int = None,
-                        terms: List[str] = None,
-                        versions: List[str] = None,
-                        vendors: List[str] = None,
-                        names: List[str] = None,
-                        types: List[str] = None,
-                        coverages: List[str] = None) -> Tuple[RiskModel, ...]:
+    def get_risk_models(
+        cls,
+        ids: List[str] = None,
+        limit: int = None,
+        offset: int = None,
+        terms: List[str] = None,
+        versions: List[str] = None,
+        vendors: List[str] = None,
+        names: List[str] = None,
+        types: List[str] = None,
+        coverages: List[str] = None,
+    ) -> Tuple[RiskModel, ...]:
         url = '/risk/models?'
         if limit:
             url += f'&limit={limit}'
@@ -97,12 +104,8 @@ class GsRiskModelApi:
         return GsSession.current._delete(f'/risk/models/{model_id}')
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
     def get_risk_model_calendar(cls, model_id: str) -> RiskModelCalendar:
         return GsSession.current._get(f'/risk/models/{model_id}/calendar', cls=RiskModelCalendar)
 
@@ -111,17 +114,11 @@ class GsRiskModelApi:
         return GsSession.current._put(f'/risk/models/{model_id}/calendar', model_calendar, cls=RiskModelCalendar)
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
-    def get_risk_model_dates(cls,
-                             model_id: str,
-                             start_date: dt.date = None,
-                             end_date: dt.date = None,
-                             event_type: RiskModelEventType = None) -> List:
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    def get_risk_model_dates(
+        cls, model_id: str, start_date: dt.date = None, end_date: dt.date = None, event_type: RiskModelEventType = None
+    ) -> List:
         url = f'/risk/models/{model_id}/dates?'
         if start_date is not None:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
@@ -133,9 +130,7 @@ class GsRiskModelApi:
 
 
 class GsFactorRiskModelApi(GsRiskModelApi):
-    def __init__(
-            self
-    ):
+    def __init__(self):
         super().__init__()
 
     @classmethod
@@ -160,20 +155,18 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         return GsSession.current._delete(f'/risk/models/{model_id}/factors/{factor_id}')
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
-    def get_risk_model_factor_data(cls,
-                                   model_id: str,
-                                   start_date: dt.date = None,
-                                   end_date: dt.date = None,
-                                   identifiers: List[str] = None,
-                                   include_performance_curve: bool = False,
-                                   factor_categories: List[str] = None,
-                                   names: List[str] = None) -> List[Dict]:
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    def get_risk_model_factor_data(
+        cls,
+        model_id: str,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        identifiers: List[str] = None,
+        include_performance_curve: bool = False,
+        factor_categories: List[str] = None,
+        names: List[str] = None,
+    ) -> List[Dict]:
         url = f'/risk/models/{model_id}/factors/data?'
         if start_date is not None:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
@@ -186,25 +179,24 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         if names:
             url += '&name={names}'.format(names='&name='.join(names))
         if factor_categories:
-            url += '&factorCategory={factor_categories}' \
-                .format(factor_categories='&factorCategory='.join(factor_categories))
+            url += '&factorCategory={factor_categories}'.format(
+                factor_categories='&factorCategory='.join(factor_categories)
+            )
         return GsSession.current._get(url)['results']
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
-    def get_risk_model_factor_data_intraday(cls,
-                                            model_id: str,
-                                            start_time: dt.datetime = None,
-                                            end_time: dt.datetime = None,
-                                            factor_ids: List[str] = None,
-                                            factor_categories: List[str] = None,
-                                            factors: List[str] = None,
-                                            data_source: Union[IntradayFactorDataSource, str] = None) -> List[Dict]:
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    def get_risk_model_factor_data_intraday(
+        cls,
+        model_id: str,
+        start_time: dt.datetime = None,
+        end_time: dt.datetime = None,
+        factor_ids: List[str] = None,
+        factor_categories: List[str] = None,
+        factors: List[str] = None,
+        data_source: Union[IntradayFactorDataSource, str] = None,
+    ) -> List[Dict]:
         url = f'/risk/models/{model_id}/factors/data/intraday?'
         if start_time is not None:
             url += f'&startTime={start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}'
@@ -217,15 +209,15 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         if factors:
             url += '&factor={names}'.format(names='&factor='.join(factors))
         if factor_categories:
-            url += '&factorCategory={factor_categories}' \
-                .format(factor_categories='&factorCategory='.join(factor_categories))
+            url += '&factorCategory={factor_categories}'.format(
+                factor_categories='&factorCategory='.join(factor_categories)
+            )
         return GsSession.current._get(url)['results']
 
     @classmethod
-    def get_risk_model_coverage(cls,
-                                asset_ids: List[str] = None,
-                                as_of_date: dt.datetime = None,
-                                sort_by_term: RiskModelTerm = None) -> List[Dict]:
+    def get_risk_model_coverage(
+        cls, asset_ids: List[str] = None, as_of_date: dt.datetime = None, sort_by_term: RiskModelTerm = None
+    ) -> List[Dict]:
         query = {}
         if asset_ids is not None:
             query['assetIds'] = asset_ids
@@ -236,13 +228,15 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         return GsSession.current._post('/risk/models/coverage', query, timeout=200)['results']
 
     @classmethod
-    def upload_risk_model_data(cls,
-                               model_id: str,
-                               model_data: Union[Dict, RiskModelData],
-                               partial_upload: bool = False,
-                               target_universe_size: float = None,
-                               final_upload: bool = None,
-                               aws_upload: bool = False) -> str:
+    def upload_risk_model_data(
+        cls,
+        model_id: str,
+        model_data: Union[Dict, RiskModelData],
+        partial_upload: bool = False,
+        target_universe_size: float = None,
+        final_upload: bool = None,
+        aws_upload: bool = False,
+    ) -> str:
         url = f'/risk/models/data/{model_id}'
         if partial_upload:
             url += '?partialUpload=true'
@@ -259,20 +253,20 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         return GsSession.current._post(url, model_data, timeout=200)
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
-    def get_risk_model_data(cls, model_id: str, start_date: dt.date, end_date: dt.date = None,
-                            assets: RiskModelDataAssetsRequest = None, measures: List[RiskModelDataMeasure] = None,
-                            factors: list = None, limit_factors: bool = None) -> Dict:
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    def get_risk_model_data(
+        cls,
+        model_id: str,
+        start_date: dt.date,
+        end_date: dt.date = None,
+        assets: RiskModelDataAssetsRequest = None,
+        measures: List[RiskModelDataMeasure] = None,
+        factors: list = None,
+        limit_factors: bool = None,
+    ) -> Dict:
         end_date = cls.get_risk_model_dates(model_id)[-1] if not end_date else end_date.strftime('%Y-%m-%d')
-        query = {
-            'startDate': start_date.strftime('%Y-%m-%d'),
-            'endDate': end_date
-        }
+        query = {'startDate': start_date.strftime('%Y-%m-%d'), 'endDate': end_date}
         if assets is not None:
             query['assets'] = assets
         if measures is not None:

@@ -13,23 +13,28 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from typing import Mapping, Optional
 
 import pandas as pd
 
-from gs_quant.target.risk import MarketDataPattern, MarketDataShock, \
-    MarketDataPatternAndShock, MarketDataShockBasedScenario as __MarketDataShockBasedScenario, \
-    MarketDataVolShockScenario as __MarketDataVolShockScenario, MarketDataVolSlice, MarketDataShockType
+from gs_quant.target.risk import (
+    MarketDataPattern,
+    MarketDataShock,
+    MarketDataPatternAndShock,
+    MarketDataShockBasedScenario as __MarketDataShockBasedScenario,
+    MarketDataVolShockScenario as __MarketDataVolShockScenario,
+    MarketDataVolSlice,
+    MarketDataShockType,
+)
 
 
 class MarketDataShockBasedScenario(__MarketDataShockBasedScenario):
-
     def __init__(self, shocks: Mapping[MarketDataPattern, MarketDataShock], name: Optional[str] = None):
         super().__init__(tuple(MarketDataPatternAndShock(p, s) for p, s in shocks.items()), name=name)
 
 
 class MarketDataVolShockScenario(__MarketDataVolShockScenario):
-
     @classmethod
     def from_dataframe(cls, asset_ric: str, df: pd.DataFrame, ref_spot: float = None, name=None):
         """
@@ -54,6 +59,7 @@ class MarketDataVolShockScenario(__MarketDataVolShockScenario):
             vol_slice = MarketDataVolSlice(key.date(), strikes, levels)
             vol_slices.append(vol_slice)
 
-        scenario = MarketDataVolShockScenario(MarketDataPattern('Eq Vol', asset_ric),
-                                              MarketDataShockType.Override, vol_slices, ref_spot, name=name)
+        scenario = MarketDataVolShockScenario(
+            MarketDataPattern('Eq Vol', asset_ric), MarketDataShockType.Override, vol_slices, ref_spot, name=name
+        )
         return scenario

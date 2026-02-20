@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 from enum import Enum, EnumMeta
@@ -96,7 +97,8 @@ class GsCalendar:
             if item not in coverage:
                 if self._skip_valid_check:
                     _logger.warning(
-                        f'Ignoring invalid calendar {item}. This will throw in future versions of gs-quant.')
+                        f'Ignoring invalid calendar {item}. This will throw in future versions of gs-quant.'
+                    )
                 else:
                     raise ValueError(f'Invalid calendar {item}')
         try:
@@ -117,6 +119,10 @@ class GsCalendar:
         return holidays
 
     def business_day_calendar(self, week_mask: str = None) -> np.busdaycalendar:
-        return self.__business_day_calendars.setdefault(week_mask, np.busdaycalendar(
-            weekmask=week_mask or self.DEFAULT_WEEK_MASK, holidays=tuple([np.datetime64(d.isoformat())
-                                                                          for d in self.holidays])))
+        return self.__business_day_calendars.setdefault(
+            week_mask,
+            np.busdaycalendar(
+                weekmask=week_mask or self.DEFAULT_WEEK_MASK,
+                holidays=tuple([np.datetime64(d.isoformat()) for d in self.holidays]),
+            ),
+        )

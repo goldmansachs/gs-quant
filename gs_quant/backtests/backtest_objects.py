@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
@@ -218,16 +219,20 @@ class BackTest(BaseBacktest):
         if len(cash_summary) > 1:
             raise RuntimeError('Cannot aggregate cash in multiple currencies')
         elif len(cash_summary) == 1:
-            cash = pd.concat([pd.Series(cash_dict, name=self.CUMULATIVE_CASH_COLUMN)
-                              for name, cash_dict in cash_summary.items()], axis=1, sort=True)
+            cash = pd.concat(
+                [pd.Series(cash_dict, name=self.CUMULATIVE_CASH_COLUMN) for name, cash_dict in cash_summary.items()],
+                axis=1,
+                sort=True,
+            )
         else:
             cash = pd.DataFrame(columns=[self.CUMULATIVE_CASH_COLUMN])
         transaction_costs = pd.Series(self.transaction_costs, name=self.TRANSACTION_COSTS_COLUMN)
         transaction_costs = transaction_costs.sort_index().cumsum()
         df = pd.concat([summary, cash, transaction_costs], axis=1, sort=True).ffill().fillna(0)
-        df[self.TOTAL_COLUMN] = df[self.price_measure] + df[self.CUMULATIVE_CASH_COLUMN] + \
-            df[self.TRANSACTION_COSTS_COLUMN]
-        return df[:self.states[-1]]
+        df[self.TOTAL_COLUMN] = (
+            df[self.price_measure] + df[self.CUMULATIVE_CASH_COLUMN] + df[self.TRANSACTION_COSTS_COLUMN]
+        )
+        return df[: self.states[-1]]
 
     @property
     def risk_summary(self):
@@ -246,13 +251,15 @@ class BackTest(BaseBacktest):
             cash_list = self.cash_payments[date]
             for cash in cash_list:
                 if cash.direction == 0:
-                    ledger[cash.trade.name] = {'Open': date,
-                                               'Close': date,
-                                               'Open Value': 0,
-                                               'Close Value': 0,
-                                               'Long Short': cash.direction,
-                                               'Status': 'closed',
-                                               'Trade PnL': 0}
+                    ledger[cash.trade.name] = {
+                        'Open': date,
+                        'Close': date,
+                        'Open Value': 0,
+                        'Close Value': 0,
+                        'Long Short': cash.direction,
+                        'Status': 'closed',
+                        'Trade PnL': 0,
+                    }
                 elif cash.trade.name in names:
                     if len(cash.cash_paid) > 0:
                         ledger[cash.trade.name]['Close'] = date
@@ -262,13 +269,15 @@ class BackTest(BaseBacktest):
                         ledger[cash.trade.name]['Status'] = 'closed'
                 else:
                     names.append(cash.trade.name)
-                    ledger[cash.trade.name] = {'Open': date,
-                                               'Close': None,
-                                               'Open Value': sum(cash.cash_paid.values()),
-                                               'Close Value': 0,
-                                               'Long Short': cash.direction,
-                                               'Status': 'open',
-                                               'Trade PnL': None}
+                    ledger[cash.trade.name] = {
+                        'Open': date,
+                        'Close': None,
+                        'Open Value': sum(cash.cash_paid.values()),
+                        'Close Value': 0,
+                        'Long Short': cash.direction,
+                        'Status': 'open',
+                        'Trade PnL': None,
+                    }
         return pd.DataFrame(ledger).T.sort_index()
 
     def strategy_as_time_series(self):
@@ -278,30 +287,30 @@ class BackTest(BaseBacktest):
         """
         # Construct a table of cash payments for each date and concat them in a single table of all cash payments
         cp_table = pd.concat(
-            [pd.concat([cp.to_frame() for cp in date_payments])
-             for _, date_payments in self.cash_payments.items()]
+            [pd.concat([cp.to_frame() for cp in date_payments]) for _, date_payments in self.cash_payments.items()]
         )
         cp_table = cp_table.set_index(['Pricing Date', 'Instrument Name']).sort_index()
         cp_table.columns = pd.MultiIndex.from_product([['Cash Payments'], cp_table.columns])
 
-        risk_measure_dict = {date: risk_res
-                             .to_frame(values='value', index='instrument_name', columns='risk_measure')
-                             .assign(pricing_date=[date] * len(risk_res))
-                             for date, risk_res in self.results.items()}
+        risk_measure_dict = {
+            date: risk_res.to_frame(values='value', index='instrument_name', columns='risk_measure').assign(
+                pricing_date=[date] * len(risk_res)
+            )
+            for date, risk_res in self.results.items()
+        }
         risk_measure_table = pd.concat(risk_measure_dict.values())
         risk_measure_table = risk_measure_table.reset_index()
-        risk_measure_table = risk_measure_table.rename(columns={'pricing_date': 'Pricing Date',
-                                                       'instrument_name': 'Instrument Name'})
+        risk_measure_table = risk_measure_table.rename(
+            columns={'pricing_date': 'Pricing Date', 'instrument_name': 'Instrument Name'}
+        )
         risk_measure_table = risk_measure_table.set_index(['Pricing Date', 'Instrument Name'])
         risk_measure_table.columns = pd.MultiIndex.from_product(
-            [['Risk Measures'], [str(col) for col in risk_measure_table.columns]])
+            [['Risk Measures'], [str(col) for col in risk_measure_table.columns]]
+        )
 
         risk_and_cp_joined = risk_measure_table.join(cp_table, how='outer')
 
-        static_inst_info = pd.concat(
-            [info.portfolio.to_frame()
-             for info in self.results.values()]
-        )
+        static_inst_info = pd.concat([info.portfolio.to_frame() for info in self.results.values()])
         static_inst_info = static_inst_info.rename(columns={'name': 'Instrument Name'})
         static_inst_info = static_inst_info.set_index(['Instrument Name'])
         static_inst_info = static_inst_info[~static_inst_info.index.duplicated(keep='first')]
@@ -344,12 +353,17 @@ class BackTest(BaseBacktest):
                     else:
                         cur_date_mkt_data = exit_risk_results[cur_date][prev_date_inst][attribute.market_data_metric]
                     if attribute.second_order:
-                        metric_pnl += (0.5 * attribute.scaling_factor * prev_date_risk *
-                                       (cur_date_mkt_data - prev_date_mkt_data) *
-                                       (cur_date_mkt_data - prev_date_mkt_data))
+                        metric_pnl += (
+                            0.5
+                            * attribute.scaling_factor
+                            * prev_date_risk
+                            * (cur_date_mkt_data - prev_date_mkt_data)
+                            * (cur_date_mkt_data - prev_date_mkt_data)
+                        )
                     else:
-                        metric_pnl += (attribute.scaling_factor * prev_date_risk *
-                                       (cur_date_mkt_data - prev_date_mkt_data))
+                        metric_pnl += (
+                            attribute.scaling_factor * prev_date_risk * (cur_date_mkt_data - prev_date_mkt_data)
+                        )
                 cum_total += metric_pnl
                 result[cur_date] = cum_total
             pnl_explain_results[attribute.attribute_name] = result
@@ -357,8 +371,9 @@ class BackTest(BaseBacktest):
 
 
 class ScalingPortfolio:
-    def __init__(self, trade, dates, risk, csa_term=None,
-                 risk_transformation: Transformer = None, risk_percentage: float = 100):
+    def __init__(
+        self, trade, dates, risk, csa_term=None, risk_transformation: Transformer = None, risk_percentage: float = 100
+    ):
         self.trade = trade
         self.dates = dates
         self.risk = risk
@@ -426,9 +441,9 @@ class AggregateTransactionModel(TransactionModel):
 
 class TransactionCostEntry:
     """
-        Stateful wrapper around TransactionModel used in the Generic Engine.
-        Used to link costs to CashPayments, which can be scaled throughout the backtest (e.g. hedges), and
-        to resolve risk-based costs under the same PricingContext for efficiency.
+    Stateful wrapper around TransactionModel used in the Generic Engine.
+    Used to link costs to CashPayments, which can be scaled throughout the backtest (e.g. hedges), and
+    to resolve risk-based costs under the same PricingContext for efficiency.
     """
 
     def __init__(self, date: dt.date, instrument: Instrument, transaction_model: TransactionModel):
@@ -444,8 +459,11 @@ class TransactionCostEntry:
 
     @property
     def all_transaction_models(self):
-        return self._transaction_model.transaction_models if \
-            isinstance(self._transaction_model, AggregateTransactionModel) else (self._transaction_model,)
+        return (
+            self._transaction_model.transaction_models
+            if isinstance(self._transaction_model, AggregateTransactionModel)
+            else (self._transaction_model,)
+        )
 
     @property
     def cost_aggregation_func(self) -> Callable:
@@ -476,8 +494,13 @@ class TransactionCostEntry:
 
     @property
     def no_of_risk_calcs(self) -> int:
-        return len([m for m in self.all_transaction_models if isinstance(m, ScaledTransactionModel) and
-                    isinstance(m.scaling_type, RiskMeasure)])
+        return len(
+            [
+                m
+                for m in self.all_transaction_models
+                if isinstance(m, ScaledTransactionModel) and isinstance(m.scaling_type, RiskMeasure)
+            ]
+        )
 
     def calculate_unit_cost(self):
         for m in self.all_transaction_models:
@@ -534,8 +557,9 @@ class TransactionCostEntry:
 
 
 class CashPayment:
-    def __init__(self, trade, effective_date=None, direction=1,
-                 transaction_cost_entry: Optional[TransactionCostEntry] = None):
+    def __init__(
+        self, trade, effective_date=None, direction=1, transaction_cost_entry: Optional[TransactionCostEntry] = None
+    ):
         self.trade = trade
         self.effective_date = effective_date
         self.direction = direction
@@ -550,10 +574,9 @@ class CashPayment:
 
 
 class Hedge:
-    def __init__(self,
-                 scaling_portfolio: ScalingPortfolio,
-                 entry_payment: CashPayment,
-                 exit_payment: Optional[CashPayment]):
+    def __init__(
+        self, scaling_portfolio: ScalingPortfolio, entry_payment: CashPayment, exit_payment: Optional[CashPayment]
+    ):
         self.scaling_portfolio = scaling_portfolio
         self.entry_payment = entry_payment
         self.exit_payment = exit_payment
@@ -604,8 +627,9 @@ class PredefinedAssetBacktest(BaseBacktest):
             open_close_order_pairs = []
             while not longs.empty() and not shorts.empty():
                 long, short = longs.get(), shorts.get()
-                open_order, close_order = (long, short) if long.execution_end_time() < short.execution_end_time() \
-                    else (short, long)
+                open_order, close_order = (
+                    (long, short) if long.execution_end_time() < short.execution_end_time() else (short, long)
+                )
                 open_close_order_pairs.append((open_order, close_order))
 
             # handle unmatched longs or shorts i.e. positions currently open
@@ -627,10 +651,20 @@ class PredefinedAssetBacktest(BaseBacktest):
                     status = 'open'
                 start_dt, open_value = open_order.execution_end_time(), open_order.executed_price
                 long_or_short = np.sign(open_order.quantity)
-                trade_df.append((inst, start_dt, end_dt, open_value, end_value, status,
-                                 (end_value - open_value) * long_or_short if status == 'closed' else None))
-        return pd.DataFrame(trade_df, columns=['Instrument', 'Open', 'Close', 'Open Value', 'Close Value',
-                                               'Status', 'Trade PnL'])
+                trade_df.append(
+                    (
+                        inst,
+                        start_dt,
+                        end_dt,
+                        open_value,
+                        end_value,
+                        status,
+                        (end_value - open_value) * long_or_short if status == 'closed' else None,
+                    )
+                )
+        return pd.DataFrame(
+            trade_df, columns=['Instrument', 'Open', 'Close', 'Open Value', 'Close Value', 'Status', 'Trade PnL']
+        )
 
     def mark_to_market(self, state: dt.datetime, valuation_method: ValuationMethod):
         epsilon = 1e-12
@@ -675,8 +709,9 @@ class PredefinedAssetBacktest(BaseBacktest):
         return pd.Series(costs)
 
     def get_orders_for_date(self, date: dt.date) -> pd.DataFrame():
-        return pd.DataFrame([order.to_dict(self.data_handler) for order in self.orders
-                             if order.execution_end_time().date() == date])
+        return pd.DataFrame(
+            [order.to_dict(self.data_handler) for order in self.orders if order.execution_end_time().date() == date]
+        )
 
 
 @dataclass_json
@@ -708,8 +743,9 @@ class ConstantCashAccrualModel(CashAccrualModel):
 @dataclass_json
 @dataclass
 class DataCashAccrualModel(CashAccrualModel):
-    data_source: DataSource = field(default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(),
-                                                                                    allow_missing=True)))
+    data_source: DataSource = field(
+        default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(), allow_missing=True))
+    )
     annual: bool = True
     class_type: str = static_field('cash_accrual_model')
 
@@ -736,20 +772,27 @@ class OisFixingCashAccrualModel(CashAccrualModel):
     def get_accrued_value(self, current_value, to_state) -> dict:
         for currency in current_value[0].keys():
             if currency not in ois_fixings:
-                start_date = self.start_date if isinstance(self.start_date, dt.date) else RelativeDate(
-                    self.start_date).apply_rule()
-                start_date = (start_date - dt.timedelta(days=7))
-                swap = IRSwap(notional_currency=currency,
-                              floating_rate_frequency='1b',
-                              effective_date=start_date,
-                              termination_date=self.end_date if isinstance(self.end_date, dt.date) else RelativeDate(
-                                  self.end_date).apply_rule(),
-                              floating_rate_option='OIS')
+                start_date = (
+                    self.start_date
+                    if isinstance(self.start_date, dt.date)
+                    else RelativeDate(self.start_date).apply_rule()
+                )
+                start_date = start_date - dt.timedelta(days=7)
+                swap = IRSwap(
+                    notional_currency=currency,
+                    floating_rate_frequency='1b',
+                    effective_date=start_date,
+                    termination_date=self.end_date
+                    if isinstance(self.end_date, dt.date)
+                    else RelativeDate(self.end_date).apply_rule(),
+                    floating_rate_option='OIS',
+                )
                 with PricingContext():
                     result = swap.calc(Cashflows)
 
                 ois_fixings[currency] = GenericDataSource(
                     result.result()[result.result()['payment_type'] == 'Flt'].set_index(['accrual_start_date'])['rate'],
-                    MissingDataStrategy.fill_forward)
+                    MissingDataStrategy.fill_forward,
+                )
             ds_accrual_model = DataCashAccrualModel(ois_fixings[currency], True)
             return ds_accrual_model.get_accrued_value(current_value, to_state)

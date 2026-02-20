@@ -56,29 +56,18 @@ def test_currencypair_to_tdapi_fxfwd_asset():
 
 def test_currencypair_to_tdapi_fxo_asset(mocker):
     replace = Replacer()
-    mocker.patch.object(GsSession.__class__, 'current',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock())
 
     with PricingContext(dt.date.today()):
         cur = [
-            {
-                "currency_assetId": "MAK1FHKH5P5GJSHH",
-                "currency": "USDJPY",
-                "id": "MAQ7YRZ4P94M9N9C"
-            },
-            {
-                "currency_assetId": "MA66CZBQJST05XKG",
-                "currency": "GBPUSD",
-                "id": "MAEHA6WVHJ2S3JY9"
-            },
-            {
-                "currency_assetId": "MAJNQPFGN1EBDHAE",
-                "currency": "EURUSD",
-                "id": "MAT1J37C9ZPMANFP"
-            },
+            {"currency_assetId": "MAK1FHKH5P5GJSHH", "currency": "USDJPY", "id": "MAQ7YRZ4P94M9N9C"},
+            {"currency_assetId": "MA66CZBQJST05XKG", "currency": "GBPUSD", "id": "MAEHA6WVHJ2S3JY9"},
+            {"currency_assetId": "MAJNQPFGN1EBDHAE", "currency": "EURUSD", "id": "MAT1J37C9ZPMANFP"},
         ]
         for c in cur:
             print(c)
@@ -93,28 +82,23 @@ def test_currencypair_to_tdapi_fxo_asset(mocker):
 
 
 def test_get_fxo_defaults():
-    result_dict = dict(under="AUD", over="JPY",
-                       expirationTime="NYC", premiumPaymentDate="Fwd Settle")
+    result_dict = dict(under="AUD", over="JPY", expirationTime="NYC", premiumPaymentDate="Fwd Settle")
     defaults = tm_fxo._get_fxo_defaults("AUDJPY")
     assert result_dict == defaults
 
-    result_dict = dict(under="CAD", over="JPY",
-                       expirationTime="NYC", premiumPaymentDate="Fwd Settle")
+    result_dict = dict(under="CAD", over="JPY", expirationTime="NYC", premiumPaymentDate="Fwd Settle")
     defaults = tm_fxo._get_fxo_defaults("CADJPY")
     assert result_dict == defaults
 
-    result_dict = dict(under="EUR", over="NOK",
-                       expirationTime="NYC", premiumPaymentDate="Fwd Settle")
+    result_dict = dict(under="EUR", over="NOK", expirationTime="NYC", premiumPaymentDate="Fwd Settle")
     defaults = tm_fxo._get_fxo_defaults("EURNOK")
     assert result_dict == defaults
 
-    result_dict = dict(under="GBP", over="USD",
-                       expirationTime="NYC", premiumPaymentDate="Fwd Settle")
+    result_dict = dict(under="GBP", over="USD", expirationTime="NYC", premiumPaymentDate="Fwd Settle")
     defaults = tm_fxo._get_fxo_defaults("GBPUSD")
     assert result_dict == defaults
 
-    result_dict = dict(under="EUR", over="NZD",
-                       expirationTime="NYC", premiumPaymentDate="Fwd Settle")
+    result_dict = dict(under="EUR", over="NZD", expirationTime="NYC", premiumPaymentDate="Fwd Settle")
     defaults = tm_fxo._get_fxo_defaults("EURNZD")
     assert result_dict == defaults
 
@@ -166,16 +150,21 @@ def test_get_tdapi_fxo_assets():
     replace = Replacer()
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1]
-    kwargs = dict(asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD',
-                  asset_parameters_put_currency='EUR')
+    kwargs = dict(
+        asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD', asset_parameters_put_currency='EUR'
+    )
     assert 'MAW8SAXPSKYA94E2' == tm_fxo._get_tdapi_fxo_assets(**kwargs)
     replace.restore()
 
     # Test case: Multiple assets, one with name starting with "FX Forward"
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1, mock_asset_2]
-    kwargs = dict(asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD',
-                  asset_parameters_put_currency='EUR', name_prefix='FX Forward')
+    kwargs = dict(
+        asset_parameters_expiration_date='5y',
+        asset_parameters_call_currency='USD',
+        asset_parameters_put_currency='EUR',
+        name_prefix='FX Forward',
+    )
     assert 'MAW8SAXPSKYA94E2' == tm_fxo._get_tdapi_fxo_assets(**kwargs)
     replace.restore()
 
@@ -183,16 +172,18 @@ def test_get_tdapi_fxo_assets():
     mock_asset_1.name = "Test_asset_1"
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1, mock_asset_2]
-    kwargs = dict(asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD',
-                  asset_parameters_put_currency='EUR')
+    kwargs = dict(
+        asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD', asset_parameters_put_currency='EUR'
+    )
     with pytest.raises(MqValueError):
         tm_fxo._get_tdapi_fxo_assets(**kwargs)
     replace.restore()
 
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = []
-    kwargs = dict(asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD',
-                  asset_parameters_put_currency='EUR')
+    kwargs = dict(
+        asset_parameters_expiration_date='5y', asset_parameters_call_currency='USD', asset_parameters_put_currency='EUR'
+    )
     with pytest.raises(MqValueError):
         tm_fxo._get_tdapi_fxo_assets(**kwargs)
     replace.restore()
@@ -204,16 +195,18 @@ def test_get_tdapi_fxo_assets():
     replace.restore()
 
     #   test case will test matching sofr maturity with libor leg and flipping legs to get right asset
-    kwargs = dict(Asset_class='FX',
-                  type='Option',
-                  asset_parameters_call_currency='USD',
-                  asset_parameters_put_currency='EUR',
-                  asset_parameters_expiration_date='1m',
-                  asset_parameters_expiration_time='NYC',
-                  asset_parameters_option_type='Put',
-                  asset_parameters_premium_payment_date='Fwd Settle',
-                  asset_parameters_strike_price_relative='10d',
-                  pricing_location='NYC')
+    kwargs = dict(
+        Asset_class='FX',
+        type='Option',
+        asset_parameters_call_currency='USD',
+        asset_parameters_put_currency='EUR',
+        asset_parameters_expiration_date='1m',
+        asset_parameters_expiration_time='NYC',
+        asset_parameters_option_type='Put',
+        asset_parameters_premium_payment_date='Fwd Settle',
+        asset_parameters_strike_price_relative='10d',
+        pricing_location='NYC',
+    )
 
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1]
@@ -222,11 +215,7 @@ def test_get_tdapi_fxo_assets():
 
 
 def mock_curr(_cls, _q):
-    d = {
-        'impliedVolatility': [1, 2, 3],
-        'fwdPoints': [4, 5, 6],
-        'forwardPoint': [7, 8, 9]
-    }
+    d = {'impliedVolatility': [1, 2, 3], 'fwdPoints': [4, 5, 6], 'forwardPoint': [7, 8, 9]}
     df = MarketDataResponseFrame(data=d, index=_index * 3)
     df.dataset_ids = _test_datasets
     return df
@@ -234,13 +223,15 @@ def mock_curr(_cls, _q):
 
 def mock_fx_spot_carry_3m(*args, **kwargs):
     """Mock Dataset.get_data for 3m tenor with fwdPoints column"""
-    d = pd.DataFrame({
-        'spot': [1.18250, 1.18566, 1.18511],
-        'fwdPoints': [0.00234, 0.00234, 0.00235],
-        'tenor': ['3m', '3m', '3m'],
-        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
-        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
-    })
+    d = pd.DataFrame(
+        {
+            'spot': [1.18250, 1.18566, 1.18511],
+            'fwdPoints': [0.00234, 0.00234, 0.00235],
+            'tenor': ['3m', '3m', '3m'],
+            'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
+            'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')],
+        }
+    )
     d = d.set_index('date')
     df = MarketDataResponseFrame(d)
     df.dataset_ids = _test_datasets
@@ -249,13 +240,15 @@ def mock_fx_spot_carry_3m(*args, **kwargs):
 
 def mock_fx_spot_carry_2y(*args, **kwargs):
     """Mock Dataset.get_data for 2y tenor with fwdPoints column"""
-    d = pd.DataFrame({
-        'spot': [1.18250, 1.18566, 1.18511],
-        'fwdPoints': [0.02009, 0.02015, 0.02064],
-        'tenor': ['2y', '2y', '2y'],
-        'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
-        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
-    })
+    d = pd.DataFrame(
+        {
+            'spot': [1.18250, 1.18566, 1.18511],
+            'fwdPoints': [0.02009, 0.02015, 0.02064],
+            'tenor': ['2y', '2y', '2y'],
+            'date': [pd.Timestamp(2020, 9, 2), pd.Timestamp(2020, 9, 3), pd.Timestamp(2020, 9, 4)],
+            'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')],
+        }
+    )
     d = d.set_index('date')
     df = MarketDataResponseFrame(d)
     df.dataset_ids = _test_datasets
@@ -264,9 +257,14 @@ def mock_fx_spot_carry_2y(*args, **kwargs):
 
 def test_fx_vol_measure(mocker):
     replace = Replacer()
-    args = dict(expiry_tenor='1m', strike='ATMF', option_type='Put',
-                expiration_location=None,
-                location=None, premium_payment_date=None, )
+    args = dict(
+        expiry_tenor='1m',
+        strike='ATMF',
+        option_type='Put',
+        expiration_location=None,
+        location=None,
+        premium_payment_date=None,
+    )
 
     mock_gbp = Cross('MA26QSMPX9990G66', 'GBPUSD')
     args['asset'] = mock_gbp
@@ -449,11 +447,13 @@ def test_vol_swap_strike_matches_no_assets_when_expiry_tenor_is_not_none():
         xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
         xrefs.return_value = 'EURUSD'
 
-        mock_asset_1 = GsAsset(asset_class='FX', id='MA123', type_='VolatilitySwap', name='Test_asset',
-                               parameters={"lastFixingDate": "1y"})
+        mock_asset_1 = GsAsset(
+            asset_class='FX', id='MA123', type_='VolatilitySwap', name='Test_asset', parameters={"lastFixingDate": "1y"}
+        )
 
-        mock_asset_2 = GsAsset(asset_class='FX', id='MA123', type_='VolatilitySwap', name='Test_asset',
-                               parameters={"lastFixingDate": "1y"})
+        mock_asset_2 = GsAsset(
+            asset_class='FX', id='MA123', type_='VolatilitySwap', name='Test_asset', parameters={"lastFixingDate": "1y"}
+        )
 
         assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
         assets.return_value = [mock_asset_1, mock_asset_2]
@@ -479,10 +479,12 @@ def test_vol_swap_strike():
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'EURUSD'
 
-    mock_asset_1 = GsAsset(asset_class='FX', id='MA123', type_='VolatilitySwap', name='Test_asset',
-                           parameters={"lastFixingDate": "1y"})
-    mock_asset_2 = GsAsset(asset_class='FX', id='MA123', type_='VolatilitySwap', name='Test_asset',
-                           parameters={"lastFixingDate": "2y"})
+    mock_asset_1 = GsAsset(
+        asset_class='FX', id='MA123', type_='VolatilitySwap', name='Test_asset', parameters={"lastFixingDate": "1y"}
+    )
+    mock_asset_2 = GsAsset(
+        asset_class='FX', id='MA123', type_='VolatilitySwap', name='Test_asset', parameters={"lastFixingDate": "2y"}
+    )
 
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1, mock_asset_2]
@@ -592,17 +594,18 @@ def test_spot_carry(mocker):
 
     mock_tdapi_asset_func = replace('gs_quant.timeseries.measures_fx_vol._currencypair_to_tdapi_fxfwd_asset', Mock())
     mock_tdapi_asset_func.return_value = mock.get_marquee_id()
-    df = pd.DataFrame({
-        '3m': [-0.001978858350951374, -0.0019735843327766817, -0.00198293829264794],
-        '2y': [-0.016989429175475686, -0.016994753976688093, -0.017416104834150414],
-        '3m_ann': [-0.007660096842392416, -0.007400941247912555, -0.0075142924774027195],
-        'date': [pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-03'), pd.Timestamp('2020-09-04')],
-        'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')]
-    })
+    df = pd.DataFrame(
+        {
+            '3m': [-0.001978858350951374, -0.0019735843327766817, -0.00198293829264794],
+            '2y': [-0.016989429175475686, -0.016994753976688093, -0.017416104834150414],
+            '3m_ann': [-0.007660096842392416, -0.007400941247912555, -0.0075142924774027195],
+            'date': [pd.Timestamp('2020-09-02'), pd.Timestamp('2020-09-03'), pd.Timestamp('2020-09-04')],
+            'settlementDate': [pd.Timestamp('2020-12-04'), pd.Timestamp('2020-12-08'), pd.Timestamp('2020-12-08')],
+        }
+    )
     df = df.set_index('date')
 
     with DataContext(dt.date(2020, 9, 2), dt.date(2020, 9, 4)):
-
         replace('gs_quant.data.dataset.Dataset.get_data', mock_fx_spot_carry_3m)
         actual_3m = gs_quant.timeseries.measures_fx_vol.spot_carry(mock, '3m')
         assert_series_equal(df['3m'], pd.Series(actual_3m, name='3m'))

@@ -51,8 +51,7 @@ class DataSource:
     def get_data(self, state, **kwargs):
         raise RuntimeError("Implemented by subclass")
 
-    def get_data_range(self, start: Union[dt.date, dt.datetime],
-                       end: Union[dt.date, dt.datetime, int], **kwargs):
+    def get_data_range(self, start: Union[dt.date, dt.datetime], end: Union[dt.date, dt.datetime, int], **kwargs):
         raise RuntimeError("Implemented by subclass")
 
 
@@ -104,8 +103,10 @@ class GenericDataSource(DataSource):
                                   effect if using get_data, get_data_range has no expectations of the number of
                                   expected data points.
     """
-    data_set: pd.Series = field(default=None, metadata=config(decoder=decode_pandas_series,
-                                                              encoder=encode_pandas_series))
+
+    data_set: pd.Series = field(
+        default=None, metadata=config(decoder=decode_pandas_series, encoder=encode_pandas_series)
+    )
 
     missing_data_strategy: MissingDataStrategy = field(default=MissingDataStrategy.fail, metadata=field_metadata)
     class_type: str = static_field('generic_data_source')
@@ -150,11 +151,13 @@ class GenericDataSource(DataSource):
                 self.data_set = self.data_set.ffill()
             else:
                 raise RuntimeError(f'unrecognised missing data strategy: {str(self.missing_data_strategy)}')
-            return self.data_set[pd.to_datetime(state)] if isinstance(self.data_set.index,
-                                                                      pd.DatetimeIndex) else self.data_set[state]
+            return (
+                self.data_set[pd.to_datetime(state)]
+                if isinstance(self.data_set.index, pd.DatetimeIndex)
+                else self.data_set[state]
+            )
 
-    def get_data_range(self, start: Union[dt.date, dt.datetime],
-                       end: Union[dt.date, dt.datetime, int]):
+    def get_data_range(self, start: Union[dt.date, dt.datetime], end: Union[dt.date, dt.datetime, int]):
         """
         get a range of values from the dataset.
         :param start: a date or datetime
@@ -174,25 +177,42 @@ class DataManager:
     def __post_init__(self):
         self._data_sources = {}
 
-    def add_data_source(self, series: Union[pd.Series, DataSource], data_freq: DataFrequency,
-                        instrument: Instrument, valuation_type: ValuationFixingType):
+    def add_data_source(
+        self,
+        series: Union[pd.Series, DataSource],
+        data_freq: DataFrequency,
+        instrument: Instrument,
+        valuation_type: ValuationFixingType,
+    ):
         if not isinstance(series, DataSource) and not len(series):
             return
         if instrument.name is None:
             raise RuntimeError('Please add a name identify your instrument')
         key = (data_freq, instrument.name, valuation_type)
         if key in self._data_sources:
-            raise RuntimeError('A dataset with this frequency instrument name and valuation type already added to '
-                               'Data Manager')
+            raise RuntimeError(
+                'A dataset with this frequency instrument name and valuation type already added to Data Manager'
+            )
         self._data_sources[key] = GenericDataSource(series) if isinstance(series, pd.Series) else series
 
     def get_data(self, state: Union[dt.date, dt.datetime], instrument: Instrument, valuation_type: ValuationFixingType):
-        key = (DataFrequency.REAL_TIME if isinstance(state, dt.datetime) else DataFrequency.DAILY,
-               instrument.name.split('_')[-1], valuation_type)
+        key = (
+            DataFrequency.REAL_TIME if isinstance(state, dt.datetime) else DataFrequency.DAILY,
+            instrument.name.split('_')[-1],
+            valuation_type,
+        )
         return self._data_sources[key].get_data(state)
 
-    def get_data_range(self, start: Union[dt.date, dt.datetime],
-                       end: Union[dt.date, dt.datetime], instrument: Instrument, valuation_type: ValuationFixingType):
-        key = (DataFrequency.REAL_TIME if isinstance(start, dt.datetime) else DataFrequency.DAILY,
-               instrument.name.split('_')[-1], valuation_type)
+    def get_data_range(
+        self,
+        start: Union[dt.date, dt.datetime],
+        end: Union[dt.date, dt.datetime],
+        instrument: Instrument,
+        valuation_type: ValuationFixingType,
+    ):
+        key = (
+            DataFrequency.REAL_TIME if isinstance(start, dt.datetime) else DataFrequency.DAILY,
+            instrument.name.split('_')[-1],
+            valuation_type,
+        )
         return self._data_sources[key].get_data_range(start, end)

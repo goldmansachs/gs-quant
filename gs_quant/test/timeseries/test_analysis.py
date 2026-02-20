@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 
 import numpy as np
@@ -164,7 +165,7 @@ def test_diff():
 
     empty = pd.Series(dtype=float)
     result = diff(empty)
-    assert (len(result) == 0)
+    assert len(result) == 0
 
 
 def test_lag():
@@ -192,18 +193,21 @@ def test_lag():
     assert_series_equal(result, expected, obj="Lag 2")
 
     result = lag(x, 2, LagMode.EXTEND)
-    expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0],
-                         index=_normalize_index(pd.date_range("2019-01-01", periods=6, freq="D")))
+    expected = pd.Series(
+        [np.nan, np.nan, 1.0, 2.0, 3.0, 4.0], index=_normalize_index(pd.date_range("2019-01-01", periods=6, freq="D"))
+    )
     assert_series_equal(result, expected, obj="Lag 2 Extend")
 
     result = lag(x, -2, LagMode.EXTEND)
-    expected = pd.Series([1.0, 2.0, 3.0, 4.0, np.nan, np.nan],
-                         index=_normalize_index(pd.date_range("2018-12-30", periods=6, freq="D")))
+    expected = pd.Series(
+        [1.0, 2.0, 3.0, 4.0, np.nan, np.nan], index=_normalize_index(pd.date_range("2018-12-30", periods=6, freq="D"))
+    )
     assert_series_equal(result, expected, obj="Lag Negative 2 Extend")
 
     result = lag(x, 2)
-    expected = pd.Series([np.nan, np.nan, 1.0, 2.0, 3.0, 4.0],
-                         index=_normalize_index(pd.date_range("2019-01-01", periods=6, freq="D")))
+    expected = pd.Series(
+        [np.nan, np.nan, 1.0, 2.0, 3.0, 4.0], index=_normalize_index(pd.date_range("2019-01-01", periods=6, freq="D"))
+    )
     assert_series_equal(result, expected, obj="Lag 2 Default")
 
     y = pd.Series([0] * 4, index=pd.date_range('2020-01-01T00:00:00Z', periods=4, freq=FREQ_SECOND))

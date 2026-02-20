@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import copy
 import datetime as dt
 import math
@@ -35,30 +36,42 @@ from gs_quant.target.portfolios import RiskAumSource
 from gs_quant.target.reports import Report, PositionSourceType, ReportType
 from gs_quant.target.risk_models import RiskModel, RiskModelCoverage, RiskModelTerm, RiskModelUniverseIdentifier
 
-risk_model = RiskModel(coverage=RiskModelCoverage.Country, id_='model_id', name='Fake Risk Model',
-                       term=RiskModelTerm.Long, universe_identifier=RiskModelUniverseIdentifier.gsid, vendor='GS',
-                       version=1.0)
+risk_model = RiskModel(
+    coverage=RiskModelCoverage.Country,
+    id_='model_id',
+    name='Fake Risk Model',
+    term=RiskModelTerm.Long,
+    universe_identifier=RiskModelUniverseIdentifier.gsid,
+    vendor='GS',
+    version=1.0,
+)
 
-factor_risk_report = Report(position_source_id='position source id',
-                            position_source_type=PositionSourceType.Portfolio,
-                            type_=ReportType.Portfolio_Factor_Risk,
-                            id_='report_id',
-                            parameters=ReportParameters(risk_model='risk_model_id'),
-                            status='new')
+factor_risk_report = Report(
+    position_source_id='position source id',
+    position_source_type=PositionSourceType.Portfolio,
+    type_=ReportType.Portfolio_Factor_Risk,
+    id_='report_id',
+    parameters=ReportParameters(risk_model='risk_model_id'),
+    status='new',
+)
 
-asset_factor_risk_report = Report(position_source_id='position source id',
-                                  position_source_type=PositionSourceType.Asset,
-                                  type_=ReportType.Portfolio_Factor_Risk,
-                                  id_='report_id',
-                                  parameters=ReportParameters(risk_model='risk_model_id'),
-                                  status='new')
+asset_factor_risk_report = Report(
+    position_source_id='position source id',
+    position_source_type=PositionSourceType.Asset,
+    type_=ReportType.Portfolio_Factor_Risk,
+    id_='report_id',
+    parameters=ReportParameters(risk_model='risk_model_id'),
+    status='new',
+)
 
-ppa_report = PerformanceReport(position_source_id='position source id',
-                               position_source_type=PositionSourceType.Portfolio,
-                               type_=ReportType.Portfolio_Performance_Analytics,
-                               id_='report_id',
-                               parameters=ReportParameters(risk_model='risk_model_id'),
-                               status='new')
+ppa_report = PerformanceReport(
+    position_source_id='position source id',
+    position_source_type=PositionSourceType.Portfolio,
+    type_=ReportType.Portfolio_Performance_Analytics,
+    id_='report_id',
+    parameters=ReportParameters(risk_model='risk_model_id'),
+    status='new',
+)
 
 factor_data = [
     {
@@ -68,7 +81,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 11.23,
         'exposure': -11.23,
-        'proportionOfRisk': 1
+        'proportionOfRisk': 1,
     },
     {
         'date': '2020-11-24',
@@ -77,7 +90,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 11.24,
         'exposure': -11.24,
-        'proportionOfRisk': 2
+        'proportionOfRisk': 2,
     },
     {
         'date': '2020-11-25',
@@ -86,7 +99,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 11.25,
         'exposure': -11.25,
-        'proportionOfRisk': 3
+        'proportionOfRisk': 3,
     },
     {
         'date': '2020-11-23',
@@ -95,7 +108,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 19.23,
         'exposure': -11.23,
-        'proportionOfRisk': 1
+        'proportionOfRisk': 1,
     },
     {
         'date': '2020-11-24',
@@ -104,7 +117,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 14.24,
         'exposure': -11.24,
-        'proportionOfRisk': 2
+        'proportionOfRisk': 2,
     },
     {
         'date': '2020-11-25',
@@ -113,8 +126,8 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 21.25,
         'exposure': -11.25,
-        'proportionOfRisk': 3
-    }
+        'proportionOfRisk': 3,
+    },
 ]
 
 
@@ -126,7 +139,7 @@ factor_exposure_data = [
         'factorCategory': 'Style',
         'pnl': 19.23,
         'exposure': 100,
-        'proportionOfRisk': 1
+        'proportionOfRisk': 1,
     },
     {
         'date': '2024-03-14',
@@ -135,7 +148,7 @@ factor_exposure_data = [
         'factorCategory': 'Style',
         'pnl': 14.24,
         'exposure': 100,
-        'proportionOfRisk': 2
+        'proportionOfRisk': 2,
     },
     {
         'date': '2024-03-14',
@@ -144,42 +157,18 @@ factor_exposure_data = [
         'factorCategory': 'Style',
         'pnl': 21.25,
         'exposure': 100,
-        'proportionOfRisk': 3
-    }
+        'proportionOfRisk': 3,
+    },
 ]
 
 
 factor_return_data = [
-    {
-        "date": "2024-03-13",
-        "factor": "Factor_1",
-        "return": 2
-    },
-    {
-        "date": "2024-03-13",
-        "factor": "Factor_2",
-        "return": 3
-    },
-    {
-        "date": "2024-03-13",
-        "factor": "Factor_3",
-        "return": 2
-    },
-    {
-        "date": "2024-03-14",
-        "factor": "Factor_1",
-        "return": 2
-    },
-    {
-        "date": "2024-03-14",
-        "factor": "Factor_2",
-        "return": 3
-    },
-    {
-        "date": "2024-03-14",
-        "factor": "Factor_3",
-        "return": 2
-    },
+    {"date": "2024-03-13", "factor": "Factor_1", "return": 2},
+    {"date": "2024-03-13", "factor": "Factor_2", "return": 3},
+    {"date": "2024-03-13", "factor": "Factor_3", "return": 2},
+    {"date": "2024-03-14", "factor": "Factor_1", "return": 2},
+    {"date": "2024-03-14", "factor": "Factor_2", "return": 3},
+    {"date": "2024-03-14", "factor": "Factor_3", "return": 2},
 ]
 
 aggregate_factor_data = [
@@ -192,7 +181,7 @@ aggregate_factor_data = [
         'exposure': -11.23,
         'proportionOfRisk': 1,
         'dailyRisk': 1,
-        'annualRisk': 1
+        'annualRisk': 1,
     },
     {
         'date': '2020-11-24',
@@ -203,7 +192,7 @@ aggregate_factor_data = [
         'exposure': -11.24,
         'proportionOfRisk': 2,
         'dailyRisk': 2,
-        'annualRisk': 2
+        'annualRisk': 2,
     },
     {
         'date': '2020-11-25',
@@ -214,82 +203,21 @@ aggregate_factor_data = [
         'exposure': -11.25,
         'proportionOfRisk': 3,
         'dailyRisk': 3,
-        'annualRisk': 3
-    }
+        'annualRisk': 3,
+    },
 ]
 
 constituents_data_l_s = {
-    'assetId': [
-        "MA1",
-        "MA1",
-        "MA1",
-        "MA2",
-        "MA2",
-        "MA2"
-    ],
-    'quantity': [
-        -1.,
-        -2.,
-        -3.,
-        1.,
-        2.,
-        3.
-    ],
-    'netExposure': [
-        -1.,
-        -2.,
-        -3.,
-        1.,
-        2.,
-        3.
-    ],
-    'pnl': [
-        0.,
-        -1.,
-        -1.,
-        0.,
-        1.,
-        1.
-    ],
-    'date': [
-        '2020-01-02',
-        '2020-01-03',
-        '2020-01-04',
-        '2020-01-02',
-        '2020-01-03',
-        '2020-01-04'
-    ]
+    'assetId': ["MA1", "MA1", "MA1", "MA2", "MA2", "MA2"],
+    'quantity': [-1.0, -2.0, -3.0, 1.0, 2.0, 3.0],
+    'netExposure': [-1.0, -2.0, -3.0, 1.0, 2.0, 3.0],
+    'pnl': [0.0, -1.0, -1.0, 0.0, 1.0, 1.0],
+    'date': ['2020-01-02', '2020-01-03', '2020-01-04', '2020-01-02', '2020-01-03', '2020-01-04'],
 }
 
 pnl_data_l_s = {
-    'quantity': [
-        -1.,
-        -2.,
-        -3.,
-        -1.,
-        -2.,
-        -3.,
-        1.,
-        2.,
-        3.,
-        1.,
-        2.,
-        3.
-    ],
-    'pnl': [
-        0.,
-        -1.,
-        -1.,
-        0.,
-        -1.,
-        -1.,
-        0.,
-        1.,
-        1.,
-        0.,
-        1.,
-        1.
-    ],
+    'quantity': [-1.0, -2.0, -3.0, -1.0, -2.0, -3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0],
+    'pnl': [0.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0],
     'date': [
         '2020-01-02',
         '2020-01-03',
@@ -302,64 +230,24 @@ pnl_data_l_s = {
         '2020-01-04',
         '2020-01-02',
         '2020-01-03',
-        '2020-01-04'
-    ]
+        '2020-01-04',
+    ],
 }
 
 constituents_data = {
-    'netExposure': [
-        1.,
-        2.,
-        3.
-    ],
-    'assetId': [
-        "MA",
-        "MA",
-        "MA"
-    ],
-    'quantity': [
-        1.,
-        1.,
-        1.
-    ],
-    'pnl': [
-        0.,
-        1.,
-        1.
-    ],
-    'date': [
-        '2020-01-02',
-        '2020-01-03',
-        '2020-01-04'
-    ]
+    'netExposure': [1.0, 2.0, 3.0],
+    'assetId': ["MA", "MA", "MA"],
+    'quantity': [1.0, 1.0, 1.0],
+    'pnl': [0.0, 1.0, 1.0],
+    'date': ['2020-01-02', '2020-01-03', '2020-01-04'],
 }
 
 constituents_data_s = {
-    'netExposure': [
-        -1.,
-        -2.,
-        -3.
-    ],
-    'assetId': [
-        "MA",
-        "MA",
-        "MA"
-    ],
-    'quantity': [
-        -1.,
-        -1.,
-        -1.
-    ],
-    'pnl': [
-        0.,
-        1.,
-        1.
-    ],
-    'date': [
-        '2020-01-02',
-        '2020-01-03',
-        '2020-01-04'
-    ]
+    'netExposure': [-1.0, -2.0, -3.0],
+    'assetId': ["MA", "MA", "MA"],
+    'quantity': [-1.0, -1.0, -1.0],
+    'pnl': [0.0, 1.0, 1.0],
+    'date': ['2020-01-02', '2020-01-03', '2020-01-04'],
 }
 
 thematic_data = [
@@ -368,41 +256,41 @@ thematic_data = [
         "reportId": "PTAID",
         "basketId": "MA01GPR89HZF1FZ5",
         "region": "Asia",
-        "grossExposure": 3.448370345015856E8,
+        "grossExposure": 3.448370345015856e8,
         "thematicExposure": 2,
         "thematicBeta": 1,
-        "updateTime": "2021-07-20T23:43:38Z"
+        "updateTime": "2021-07-20T23:43:38Z",
     },
     {
         "date": "2021-07-13",
         "reportId": "PTAID",
         "basketId": "MA01GPR89HZF1FZ5",
         "region": "Asia",
-        "grossExposure": 3.375772519907556E8,
+        "grossExposure": 3.375772519907556e8,
         "thematicExposure": 2,
         "thematicBeta": 1,
-        "updateTime": "2021-07-20T23:43:38Z"
+        "updateTime": "2021-07-20T23:43:38Z",
     },
     {
         "date": "2021-07-14",
         "reportId": "PTAID",
         "basketId": "MA01GPR89HZF1FZ5",
         "region": "Asia",
-        "grossExposure": 3.321189950666118E8,
+        "grossExposure": 3.321189950666118e8,
         "thematicExposure": 2,
         "thematicBeta": 1,
-        "updateTime": "2021-07-20T23:43:38Z"
+        "updateTime": "2021-07-20T23:43:38Z",
     },
     {
         "date": "2021-07-15",
         "reportId": "PTAID",
         "basketId": "MA01GPR89HZF1FZ5",
         "region": "Asia",
-        "grossExposure": 3.274071805135091E8,
+        "grossExposure": 3.274071805135091e8,
         "thematicExposure": 2,
         "thematicBeta": 1,
-        "updateTime": "2021-07-20T23:43:38Z"
-    }
+        "updateTime": "2021-07-20T23:43:38Z",
+    },
 ]
 
 
@@ -419,9 +307,15 @@ def compute_geometric_aggregation_calculations(aum: dict, pnl: dict, dates: list
 
 
 def mock_risk_model():
-    risk_model = RiskModel(coverage=RiskModelCoverage.Country, id_='model_id', name='Fake Risk Model',
-                           term=RiskModelTerm.Long, universe_identifier=RiskModelUniverseIdentifier.gsid, vendor='GS',
-                           version=1.0)
+    risk_model = RiskModel(
+        coverage=RiskModelCoverage.Country,
+        id_='model_id',
+        name='Fake Risk Model',
+        term=RiskModelTerm.Long,
+        universe_identifier=RiskModelUniverseIdentifier.gsid,
+        vendor='GS',
+        version=1.0,
+    )
 
     replace = Replacer()
 
@@ -454,22 +348,13 @@ def test_factor_exposure():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mr.factor_exposure('report_id', 'Factor Name')
@@ -500,22 +385,13 @@ def test_factor_exposure_percent():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     # mock getting performance report
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
@@ -528,17 +404,21 @@ def test_factor_exposure_percent():
     with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         # mock getting aum
         mock = replace('gs_quant.markets.report.PerformanceReport.get_custom_aum', Mock())
-        mock.return_value = [CustomAUMDataPoint(date=dt.date(2020, 11, 23), aum=2),
-                             CustomAUMDataPoint(date=dt.date(2020, 11, 24), aum=2),
-                             CustomAUMDataPoint(date=dt.date(2020, 11, 25), aum=2)]
+        mock.return_value = [
+            CustomAUMDataPoint(date=dt.date(2020, 11, 23), aum=2),
+            CustomAUMDataPoint(date=dt.date(2020, 11, 24), aum=2),
+            CustomAUMDataPoint(date=dt.date(2020, 11, 25), aum=2),
+        ]
         actual = mr.factor_exposure('report_id', 'Factor Name', 'Percent')
         assert all(actual.values == [-11.23 * 50, -11.24 * 50, -11.25 * 50])
 
     with pytest.raises(MqValueError):
         # mock getting aum with missing data
         mock = replace('gs_quant.markets.report.PerformanceReport.get_custom_aum', Mock())
-        mock.return_value = [CustomAUMDataPoint(date=dt.date(2020, 11, 23), aum=2),
-                             CustomAUMDataPoint(date=dt.date(2020, 11, 25), aum=2)]
+        mock.return_value = [
+            CustomAUMDataPoint(date=dt.date(2020, 11, 23), aum=2),
+            CustomAUMDataPoint(date=dt.date(2020, 11, 25), aum=2),
+        ]
         mr.factor_exposure('report_id', 'Factor Name', 'Percent')
 
     replace.restore()
@@ -560,22 +440,13 @@ def test_factor_pnl():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         # mock getting report factor data
@@ -588,15 +459,18 @@ def test_factor_pnl():
     with DataContext(dt.date(2020, 11, 22), dt.date(2020, 11, 25)):
         # mock getting report factor data with first day set to 0
         factor_data_copy = copy.copy(factor_data)
-        factor_data_copy.insert(0, {
-            'date': '2020-11-22',
-            'reportId': 'report_id',
-            'factor': 'Factor Name',
-            'factorCategory': 'CNT',
-            'pnl': 0,
-            'exposure': -11.23,
-            'proportionOfRisk': 1
-        })
+        factor_data_copy.insert(
+            0,
+            {
+                'date': '2020-11-22',
+                'reportId': 'report_id',
+                'factor': 'Factor Name',
+                'factorCategory': 'CNT',
+                'pnl': 0,
+                'exposure': -11.23,
+                'proportionOfRisk': 1,
+            },
+        )
         mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
         mock.return_value = factor_data_copy
 
@@ -630,22 +504,13 @@ def test_factor_pnl_percent():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum
@@ -736,22 +601,13 @@ def test_asset_factor_pnl_percent():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     with pytest.raises(MqValueError):
         mr.factor_pnl('report_id', 'Factor Name', 'Percent')
@@ -779,22 +635,13 @@ def test_factor_proportion_of_risk():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mr.factor_proportion_of_risk('report_id', 'Factor Name')
@@ -836,22 +683,13 @@ def test_aggregate_factor_support():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mr.factor_proportion_of_risk('report_id', 'Factor')
@@ -876,27 +714,36 @@ def test_aggregate_factor_support():
 def test_normalized_performance():
     idx = pd.date_range('2020-01-02', freq='D', periods=3)
     replace = Replacer()
-    expected = {None: pd.Series(data=[1, 2, 3], index=idx,
-                                name='normalizedPerformance', dtype='float64'),
-                "Long": pd.Series(data=[1, 2, 3], index=idx,
-                                  name='normalizedPerformance', dtype='float64')}
+    expected = {
+        None: pd.Series(data=[1, 2, 3], index=idx, name='normalizedPerformance', dtype='float64'),
+        "Long": pd.Series(data=[1, 2, 3], index=idx, name='normalizedPerformance', dtype='float64'),
+    }
 
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
     mock.return_value = [
-        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                          'type': 'Portfolio Performance Analytics',
-                          'parameters': {'transactionCostModel': 'FIXED'}})]
+        Report.from_dict(
+            {
+                'id': 'RP1',
+                'positionSourceType': 'Portfolio',
+                'positionSourceId': 'MP1',
+                'type': 'Portfolio Performance Analytics',
+                'parameters': {'transactionCostModel': 'FIXED'},
+            }
+        )
+    ]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
     mock.return_value = MarketDataResponseFrame(data=constituents_data)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+    mock.return_value = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     for k, v in expected.items():
         with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
@@ -908,29 +755,39 @@ def test_normalized_performance():
 def test_normalized_performance_short():
     idx = pd.date_range('2020-01-02', freq='D', periods=3)
     replace = Replacer()
-    expected = {"Short": pd.Series(data=[1, 1 / 2, 1 / 3], index=idx,
-                                   name='normalizedPerformance', dtype='float64'),
-                "Long": pd.Series(data=[1, 2, 3], index=idx,
-                                  name='normalizedPerformance', dtype='float64'),
-                None: pd.Series(data=[1, (2 + 1 / 2) / 2, (3 + 1 / 3) / 2], index=idx,
-                                name='normalizedPerformance', dtype='float64')}
+    expected = {
+        "Short": pd.Series(data=[1, 1 / 2, 1 / 3], index=idx, name='normalizedPerformance', dtype='float64'),
+        "Long": pd.Series(data=[1, 2, 3], index=idx, name='normalizedPerformance', dtype='float64'),
+        None: pd.Series(
+            data=[1, (2 + 1 / 2) / 2, (3 + 1 / 3) / 2], index=idx, name='normalizedPerformance', dtype='float64'
+        ),
+    }
 
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
     mock.return_value = [
-        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                          'type': 'Portfolio Performance Analytics',
-                          'parameters': {'transactionCostModel': 'FIXED'}})]
+        Report.from_dict(
+            {
+                'id': 'RP1',
+                'positionSourceType': 'Portfolio',
+                'positionSourceId': 'MP1',
+                'type': 'Portfolio Performance Analytics',
+                'parameters': {'transactionCostModel': 'FIXED'},
+            }
+        )
+    ]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
     mock.return_value = MarketDataResponseFrame(data=constituents_data_l_s)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+    mock.return_value = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     for k, v in expected.items():
         with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
@@ -946,20 +803,29 @@ def test_get_long_pnl():
 
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
     mock.return_value = [
-        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                          'type': 'Portfolio Performance Analytics',
-                          'parameters': {'transactionCostModel': 'FIXED'}})]
+        Report.from_dict(
+            {
+                'id': 'RP1',
+                'positionSourceType': 'Portfolio',
+                'positionSourceId': 'MP1',
+                'type': 'Portfolio Performance Analytics',
+                'parameters': {'transactionCostModel': 'FIXED'},
+            }
+        )
+    ]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
     mock.return_value = MarketDataResponseFrame(data=pnl_data_l_s)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+    mock.return_value = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
         actual = mr.long_pnl('MP1')
@@ -974,20 +840,29 @@ def test_get_short_pnl():
 
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
     mock.return_value = [
-        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                          'type': 'Portfolio Performance Analytics',
-                          'parameters': {'transactionCostModel': 'FIXED'}})]
+        Report.from_dict(
+            {
+                'id': 'RP1',
+                'positionSourceType': 'Portfolio',
+                'positionSourceId': 'MP1',
+                'type': 'Portfolio Performance Analytics',
+                'parameters': {'transactionCostModel': 'FIXED'},
+            }
+        )
+    ]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
     mock.return_value = MarketDataResponseFrame(data=pnl_data_l_s)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+    mock.return_value = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
         actual = mr.short_pnl('MP1')
@@ -1001,20 +876,29 @@ def test_get_short_pnl_empty():
 
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
     mock.return_value = [
-        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                          'type': 'Portfolio Performance Analytics',
-                          'parameters': {'transactionCostModel': 'FIXED'}})]
+        Report.from_dict(
+            {
+                'id': 'RP1',
+                'positionSourceType': 'Portfolio',
+                'positionSourceId': 'MP1',
+                'type': 'Portfolio Performance Analytics',
+                'parameters': {'transactionCostModel': 'FIXED'},
+            }
+        )
+    ]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
     mock.return_value = MarketDataResponseFrame(data=constituents_data)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+    mock.return_value = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
         actual = mr.short_pnl('MP1')
@@ -1028,20 +912,29 @@ def test_get_long_pnl_empty():
 
     mock = replace('gs_quant.api.gs.portfolios.GsPortfolioApi.get_reports', Mock())
     mock.return_value = [
-        Report.from_dict({'id': 'RP1', 'positionSourceType': 'Portfolio', 'positionSourceId': 'MP1',
-                          'type': 'Portfolio Performance Analytics',
-                          'parameters': {'transactionCostModel': 'FIXED'}})]
+        Report.from_dict(
+            {
+                'id': 'RP1',
+                'positionSourceType': 'Portfolio',
+                'positionSourceId': 'MP1',
+                'type': 'Portfolio Performance Analytics',
+                'parameters': {'transactionCostModel': 'FIXED'},
+            }
+        )
+    ]
     # mock PerformanceReport.get_portfolio_constituents()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
     mock.return_value = MarketDataResponseFrame(data=constituents_data_s)
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+    mock.return_value = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     with DataContext(dt.date(2020, 1, 1), dt.date(2019, 1, 3)):
         actual = mr.long_pnl('MP1')
@@ -1064,9 +957,13 @@ def test_thematic_exposure():
     mock = Stock('MAA0NE9QX2ABETG6', 'Test Asset')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [
-        GsTemporalXRef(dt.date(2019, 1, 1),
-                       dt.date(2952, 12, 31),
-                       XRef(ticker='basket_ticker', ))
+        GsTemporalXRef(
+            dt.date(2019, 1, 1),
+            dt.date(2952, 12, 31),
+            XRef(
+                ticker='basket_ticker',
+            ),
+        )
     ]
     replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
@@ -1092,9 +989,13 @@ def test_thematic_beta():
     mock = Stock('MAA0NE9QX2ABETG6', 'Test Asset')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [
-        GsTemporalXRef(dt.date(2019, 1, 1),
-                       dt.date(2952, 12, 31),
-                       XRef(ticker='basket_ticker', ))
+        GsTemporalXRef(
+            dt.date(2019, 1, 1),
+            dt.date(2952, 12, 31),
+            XRef(
+                ticker='basket_ticker',
+            ),
+        )
     ]
     replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
@@ -1110,18 +1011,17 @@ def test_aum():
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+    mock.return_value = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
-    mock.return_value = {
-        '2022-07-01': 100,
-        '2022-07-02': 200
-    }
+    mock.return_value = {'2022-07-01': 100, '2022-07-02': 200}
 
     with DataContext(dt.date(2022, 7, 1), dt.date(2022, 7, 3)):
         actual = mr.aum('RP1')
@@ -1135,16 +1035,19 @@ def test_pnl():
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+    mock.return_value = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     # mock PerformanceReport.get_pnl()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
     mock.return_value = pd.DataFrame.from_dict(
-        {'date': ['2022-07-01', '2022-07-02', '2022-07-03'], 'pnl': [200, 400, 600]})
+        {'date': ['2022-07-01', '2022-07-02', '2022-07-03'], 'pnl': [200, 400, 600]}
+    )
 
     with DataContext(dt.date(2022, 7, 1), dt.date(2022, 7, 3)):
         actual = mr.pnl('RP1')
@@ -1158,11 +1061,13 @@ def test_pnl_percent():
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
-    mock.return_value = PerformanceReport(report_id='RP1',
-                                          position_source_type='Portfolio',
-                                          position_source_id='MP1',
-                                          report_type='Portfolio Performance Analytics',
-                                          parameters=ReportParameters(transaction_cost_model='FIXED'))
+    mock.return_value = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     pnl = {'2022-07-01': 200, '2022-07-02': 400, '2022-07-03': 600}
     aum = {'2022-06-30': 2000, '2022-07-01': 3000, '2022-07-02': 3000, '2022-07-03': 4000}

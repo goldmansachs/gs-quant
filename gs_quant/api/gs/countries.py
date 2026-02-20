@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from typing import Tuple
 
 from gs_quant.session import GsSession
@@ -54,8 +55,9 @@ class GsCountryApi:
 
     @classmethod
     def get_many_subdivisions(cls, limit: int = 100) -> Tuple[Subdivision, ...]:
-        return GsSession.current._get('/countries/subdivisions?limit={limit}'.format(limit=limit),
-                                      cls=Subdivision)['results']
+        return GsSession.current._get('/countries/subdivisions?limit={limit}'.format(limit=limit), cls=Subdivision)[
+            'results'
+        ]
 
     @classmethod
     def get_subdivision(cls, subdivision_id: str) -> Subdivision:
@@ -67,8 +69,9 @@ class GsCountryApi:
 
     @classmethod
     def update_subdivision(cls, subdivision: Subdivision):
-        return GsSession.current._put('/countries/subdivisions/{id}'.format(id=subdivision.id), subdivision,
-                                      cls=Subdivision)
+        return GsSession.current._put(
+            '/countries/subdivisions/{id}'.format(id=subdivision.id), subdivision, cls=Subdivision
+        )
 
     @classmethod
     def delete_subdivision(cls, subdivision_id: str) -> dict:

@@ -39,9 +39,7 @@ def test_currency_params(mocker):
 def test_finite_difference_params(mocker):
     nok_delta = risk.IRDelta(currency="NOK")
     local_ccy_delta = risk.IRDelta(currency="local")
-    local_aggregated_delta = risk.IRDelta(
-        currency="local", aggregation_level=AggregationLevel.Type
-    )
+    local_aggregated_delta = risk.IRDelta(currency="local", aggregation_level=AggregationLevel.Type)
 
     with MockCalc(mocker):
         res3 = swap_1.calc(risk.IRDelta)

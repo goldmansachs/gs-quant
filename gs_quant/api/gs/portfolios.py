@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 
 import backoff
@@ -42,11 +43,9 @@ class GsPortfolioApi(ApiWithCustomSession):
     To pass additional query parameters, use kwargs."""
 
     @classmethod
-    def get_portfolios(cls,
-                       portfolio_ids: List[str] = None,
-                       portfolio_names: List[str] = None,
-                       limit: int = 100,
-                       **kwargs) -> Tuple[Portfolio, ...]:
+    def get_portfolios(
+        cls, portfolio_ids: List[str] = None, portfolio_names: List[str] = None, limit: int = 100, **kwargs
+    ) -> Tuple[Portfolio, ...]:
         url = '/portfolios?'
         if portfolio_ids:
             url += f'&id={"&id=".join(portfolio_ids)}'
@@ -97,14 +96,11 @@ class GsPortfolioApi(ApiWithCustomSession):
         return res
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
-    def get_positions(cls, portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None,
-                      position_type: str = 'close') -> Tuple[PositionSet, ...]:
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    def get_positions(
+        cls, portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None, position_type: str = 'close'
+    ) -> Tuple[PositionSet, ...]:
         url = '/portfolios/{id}/positions?type={positionType}'.format(id=portfolio_id, positionType=position_type)
         if start_date is not None:
             url += '&startDate={sd}'.format(sd=start_date.isoformat())
@@ -115,16 +111,19 @@ class GsPortfolioApi(ApiWithCustomSession):
         return tuple(PositionSet.from_dict(v) for v in res.get('positionSets', ()))
 
     @classmethod
-    def get_positions_for_date(cls, portfolio_id: str, position_date: dt.date,
-                               position_type: str = 'close') -> PositionSet:
+    def get_positions_for_date(
+        cls, portfolio_id: str, position_date: dt.date, position_type: str = 'close'
+    ) -> PositionSet:
         url = '/portfolios/{id}/positions/{date}?type={ptype}'.format(
-            id=portfolio_id, date=position_date.isoformat(), ptype=position_type)
+            id=portfolio_id, date=position_date.isoformat(), ptype=position_type
+        )
         position_sets = GsSession.current._get(url, cls=PositionSet)['results']
         return position_sets[0] if len(position_sets) > 0 else None
 
     @classmethod
-    def get_position_set_by_position_type(cls, positions_type: str, positions_id: str,
-                                          activity_type: str = 'position') -> Tuple[PositionSet, ...]:
+    def get_position_set_by_position_type(
+        cls, positions_type: str, positions_id: str, activity_type: str = 'position'
+    ) -> Tuple[PositionSet, ...]:
         root = 'deals' if positions_type == 'ETI' else 'books/' + positions_type
         if activity_type != 'position':
             url = '/risk-internal/{}/{}/positions?activityType={}'.format(root, positions_id, activity_type)
@@ -144,21 +143,24 @@ class GsPortfolioApi(ApiWithCustomSession):
         return position_set
 
     @classmethod
-    def get_instruments_by_position_type(cls, positions_type: str,
-                                         positions_id: str,
-                                         activity_type: str) -> Tuple[Instrument, ...]:
-        position_sets = cls.get_position_set_by_position_type(positions_type=positions_type,
-                                                              positions_id=positions_id,
-                                                              activity_type=activity_type)
+    def get_instruments_by_position_type(
+        cls, positions_type: str, positions_id: str, activity_type: str
+    ) -> Tuple[Instrument, ...]:
+        position_sets = cls.get_position_set_by_position_type(
+            positions_type=positions_type, positions_id=positions_id, activity_type=activity_type
+        )
 
         instruments = []
         for position_set in position_sets:
             for positions in position_set.positions:
                 instrument = positions.instrument
                 instrument.metadata = {
-                    'trade_date': position_set.position_date, 'tags': positions.tags,
+                    'trade_date': position_set.position_date,
+                    'tags': positions.tags,
                     'external_ids': {id_['idType']: id_['idValue'] for id_ in positions.external_ids},
-                    'party_from': positions.party_from, 'party_to': positions.party_to}
+                    'party_from': positions.party_from,
+                    'party_to': positions.party_to,
+                }
                 instruments.append(instrument)
 
         return tuple(instruments)
@@ -176,8 +178,9 @@ class GsPortfolioApi(ApiWithCustomSession):
         return PositionSet.from_dict(results)
 
     @classmethod
-    def get_instruments_by_workflow_id(cls, workflow_id: str,
-                                       prefer_instruments: bool = False) -> Tuple[Instrument, ...]:
+    def get_instruments_by_workflow_id(
+        cls, workflow_id: str, prefer_instruments: bool = False
+    ) -> Tuple[Instrument, ...]:
         root = 'quote'
         url = '/risk{}/{}/{}'.format('-internal' if not prefer_instruments else '', root, workflow_id)
         results = cls.get_session()._get(url, timeout=181)
@@ -201,34 +204,25 @@ class GsPortfolioApi(ApiWithCustomSession):
         return tuple(dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates)
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
-    def update_positions(cls,
-                         portfolio_id: str,
-                         position_sets: List[PositionSet],
-                         net_positions: bool = True) -> float:
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    def update_positions(cls, portfolio_id: str, position_sets: List[PositionSet], net_positions: bool = True) -> float:
         url = f'/portfolios/{portfolio_id}/positions?netPositions={str(net_positions).lower()}'
         return GsSession.current._put(url, position_sets)
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
-    def get_positions_data(cls,
-                           portfolio_id: str,
-                           start_date: dt.date,
-                           end_date: dt.date,
-                           fields: List[str] = None,
-                           performance_report_id: str = None,
-                           position_type: PositionType = None,
-                           include_all_business_days: bool = False) -> List[dict]:
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    def get_positions_data(
+        cls,
+        portfolio_id: str,
+        start_date: dt.date,
+        end_date: dt.date,
+        fields: List[str] = None,
+        performance_report_id: str = None,
+        position_type: PositionType = None,
+        include_all_business_days: bool = False,
+    ) -> List[dict]:
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
         url = f'/portfolios/{portfolio_id}/positions/data?startDate={start_date_str}&endDate={end_date_str}'
@@ -254,20 +248,23 @@ class GsPortfolioApi(ApiWithCustomSession):
     @classmethod
     def update_workflow_quote(cls, quote_id: str, request: SaveQuoteRequest):
         headers = {'Content-Type': 'application/x-msgpack'}
-        return cls.get_session()._put('/risk-internal/quote/workflow/save/{id}'.format(id=quote_id), tuple([request]),
-                                      request_headers=headers)['results']
+        return cls.get_session()._put(
+            '/risk-internal/quote/workflow/save/{id}'.format(id=quote_id), tuple([request]), request_headers=headers
+        )['results']
 
     @classmethod
     def save_workflow_quote(cls, request: SaveQuoteRequest) -> str:
         headers = {'Content-Type': 'application/x-msgpack'}
-        return cls.get_session()._post('/risk-internal/quote/workflow/save', tuple([request]),
-                                       request_headers=headers)['results']
+        return cls.get_session()._post('/risk-internal/quote/workflow/save', tuple([request]), request_headers=headers)[
+            'results'
+        ]
 
     @classmethod
     def share_workflow_quote(cls, request: SaveQuoteRequest) -> str:
         headers = {'Content-Type': 'application/x-msgpack'}
-        return cls.get_session()._post('/risk-internal/quote/workflow/share', tuple([request]),
-                                       request_headers=headers)['results']
+        return cls.get_session()._post(
+            '/risk-internal/quote/workflow/share', tuple([request]), request_headers=headers
+        )['results']
 
     @classmethod
     def get_workflow_quote(cls, workflow_id: str) -> Tuple[WorkflowPosition, ...]:
@@ -298,12 +295,8 @@ class GsPortfolioApi(ApiWithCustomSession):
         return cls.get_session()._get(f'/portfolios/{portfolio_id}/models?sortByTerm={term.value}')['results']
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
     def get_reports(cls, portfolio_id: str, tags: Dict) -> Tuple[Report, ...]:
         results = cls.get_session()._get('/portfolios/{id}/reports'.format(id=portfolio_id), cls=Report)['results']
         if tags is not None:
@@ -312,17 +305,11 @@ class GsPortfolioApi(ApiWithCustomSession):
         return results
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
-    def schedule_reports(cls,
-                         portfolio_id: str,
-                         start_date: dt.date = None,
-                         end_date: dt.date = None,
-                         backcast: bool = False) -> dict:
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    def schedule_reports(
+        cls, portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None, backcast: bool = False
+    ) -> dict:
         payload = {'parameters': {'backcast': backcast}}
         if start_date is not None:
             payload['startDate'] = start_date.isoformat()
@@ -343,27 +330,21 @@ class GsPortfolioApi(ApiWithCustomSession):
                     count -= 1
 
     @classmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
-    def get_schedule_dates(cls,
-                           portfolio_id: str,
-                           backcast: bool = False) -> List[dt.date]:
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    def get_schedule_dates(cls, portfolio_id: str, backcast: bool = False) -> List[dt.date]:
         results = cls.get_session()._get(f'/portfolios/{portfolio_id}/schedule/dates?backcast={str(backcast).lower()}')
-        return [dt.datetime.strptime(results['startDate'], '%Y-%m-%d').date(),
-                dt.datetime.strptime(results['endDate'], '%Y-%m-%d').date()]
+        return [
+            dt.datetime.strptime(results['startDate'], '%Y-%m-%d').date(),
+            dt.datetime.strptime(results['endDate'], '%Y-%m-%d').date(),
+        ]
 
     @classmethod
-    @deprecation.deprecated(deprecated_in='1.0.10',
-                            details='GsPortfolioApi.get_custom_aum is now deprecated, please use '
-                                    'GsReportApi.get_custom_aum instead.')
-    def get_custom_aum(cls,
-                       portfolio_id: str,
-                       start_date: dt.date = None,
-                       end_date: dt.date = None) -> dict:
+    @deprecation.deprecated(
+        deprecated_in='1.0.10',
+        details='GsPortfolioApi.get_custom_aum is now deprecated, please use GsReportApi.get_custom_aum instead.',
+    )
+    def get_custom_aum(cls, portfolio_id: str, start_date: dt.date = None, end_date: dt.date = None) -> dict:
         url = f'/portfolios/{portfolio_id}/aum?'
         if start_date:
             url += f"&startDate={start_date.strftime('%Y-%m-%d')}"
@@ -372,13 +353,11 @@ class GsPortfolioApi(ApiWithCustomSession):
         return GsSession.current._get(url)['data']
 
     @classmethod
-    @deprecation.deprecated(deprecated_in='1.0.10',
-                            details='GsPortfolioApi.upload_custom_aum is now deprecated, please use '
-                                    'GsReportApi.upload_custom_aum instead.')
-    def upload_custom_aum(cls,
-                          portfolio_id: str,
-                          aum_data: List[Dict],
-                          clear_existing_data: bool = None) -> dict:
+    @deprecation.deprecated(
+        deprecated_in='1.0.10',
+        details='GsPortfolioApi.upload_custom_aum is now deprecated, please use GsReportApi.upload_custom_aum instead.',
+    )
+    def upload_custom_aum(cls, portfolio_id: str, aum_data: List[Dict], clear_existing_data: bool = None) -> dict:
         url = f'/portfolios/{portfolio_id}/aum'
         payload = {'data': aum_data}
         if clear_existing_data:
@@ -394,12 +373,14 @@ class GsPortfolioApi(ApiWithCustomSession):
         return GsSession.current._get(f'/portfolios/{portfolio_id}/tree', cls=PortfolioTree)
 
     @classmethod
-    def get_attribution(cls,
-                        portfolio_id: str,
-                        start_date: dt.date = None,
-                        end_date: dt.date = None,
-                        currency: Currency = None,
-                        performance_report_id: str = None) -> Dict:
+    def get_attribution(
+        cls,
+        portfolio_id: str,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        currency: Currency = None,
+        performance_report_id: str = None,
+    ) -> Dict:
         url = f'/attribution/{portfolio_id}?'
         if start_date:
             url += f"&startDate={start_date.strftime('%Y-%m-%d')}"

@@ -35,6 +35,7 @@ def handle_proxy(url, params):
     if internal or socket.getfqdn().split('.')[-2:] == ['gs', 'com']:
         try:
             import gs_quant_auth
+
             proxies = gs_quant_auth.__proxies__
             response = requests.get(url, params=params, proxies=proxies)
         except ModuleNotFoundError:
@@ -58,11 +59,9 @@ class ThreadPoolManager:
 
         tasks_to_idx = {}
         for i, task in enumerate(tasks):
-            tasks_to_idx[cls.__executor.submit(cls.__run,
-                                               GsSession.current,
-                                               DataContext.current,
-                                               Tracer.active_span(),
-                                               task)] = i
+            tasks_to_idx[
+                cls.__executor.submit(cls.__run, GsSession.current, DataContext.current, Tracer.active_span(), task)
+            ] = i
         results = [None] * len(tasks_to_idx)
         for task in concurrent.futures.as_completed(tasks_to_idx):
             idx = tasks_to_idx[task]

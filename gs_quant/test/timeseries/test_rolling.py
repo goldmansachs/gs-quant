@@ -36,7 +36,7 @@ class Timer:
 
 @pytest.mark.parametrize(
     "frequency,count,unit",
-    [('D', 22, 'days'), ('D', 4, 'weeks'), ('D', 3, 'months'), ('D', 1, 'years'), ('s', 12, 'hours')]
+    [('D', 22, 'days'), ('D', 4, 'weeks'), ('D', 3, 'months'), ('D', 1, 'years'), ('s', 12, 'hours')],
 )
 def test_rolling_date_offset(frequency, count, unit):
     length = 1000
@@ -47,8 +47,9 @@ def test_rolling_date_offset(frequency, count, unit):
 
     print(f'\nseries frequency: {frequency}, offset: {count}{unit}')
     with Timer('simple rolling'):
-        expected = pd.Series([np.nanmean(s.loc[(s.index > idx - offset) & (s.index <= idx)]) for idx in s.index],
-                             index=s.index)
+        expected = pd.Series(
+            [np.nanmean(s.loc[(s.index > idx - offset) & (s.index <= idx)]) for idx in s.index], index=s.index
+        )
 
     with Timer('rolling with method name'):
         a1 = rolling_offset(s, offset, np.nanmean, 'mean')

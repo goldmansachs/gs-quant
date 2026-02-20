@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from enum import Enum
 from typing import Dict, Optional, Union
 
@@ -27,8 +28,11 @@ from gs_quant.entities.entity import EntityType
 from gs_quant.markets.factor import ReturnFormat
 from gs_quant.markets.securities import Asset, AssetIdentifier
 from gs_quant.models.risk_model import FactorRiskModel, MarqueeRiskModel
-from gs_quant.target.risk_models import RiskModelDataMeasure, RiskModelDataAssetsRequest, \
-    RiskModelUniverseIdentifierRequest
+from gs_quant.target.risk_models import (
+    RiskModelDataMeasure,
+    RiskModelDataAssetsRequest,
+    RiskModelUniverseIdentifierRequest,
+)
 from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
 from .statistics import percentile
 from gs_quant.timeseries.measures import _extract_series_from_df
@@ -69,7 +73,8 @@ ModelMeasureStr = {
     'Composite Capitalization': RiskModelDataMeasure.Capitalization,
     'Composite Currency': RiskModelDataMeasure.Currency,
     'Composite Unadjusted Specific Risk': RiskModelDataMeasure.Unadjusted_Specific_Risk,
-    'Dividend Yield': RiskModelDataMeasure.Dividend_Yield}
+    'Dividend Yield': RiskModelDataMeasure.Dividend_Yield,
+}
 
 
 class ModelMeasureString(Enum):
@@ -111,9 +116,15 @@ class ModelMeasureString(Enum):
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
-def risk_model_measure(asset: Asset, risk_model_id: str,
-                       risk_model_measure_selected: ModelMeasureString = ModelMeasureString.HISTORICAL_BETA, *,
-                       source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def risk_model_measure(
+    asset: Asset,
+    risk_model_id: str,
+    risk_model_measure_selected: ModelMeasureString = ModelMeasureString.HISTORICAL_BETA,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Retrieve risk model measures for a given asset.
 
@@ -130,12 +141,11 @@ def risk_model_measure(asset: Asset, risk_model_id: str,
     risk_model_measure_selected = ModelMeasureStr[risk_model_measure_selected.value]
 
     query_results = model.get_data(
-        measures=[risk_model_measure_selected,
-                  RiskModelDataMeasure.Asset_Universe],
+        measures=[risk_model_measure_selected, RiskModelDataMeasure.Asset_Universe],
         start_date=DataContext.current.start_time,
         end_date=DataContext.current.end_time,
         assets=RiskModelDataAssetsRequest(identifier=RiskModelUniverseIdentifierRequest.gsid, universe=[gsid]),
-        limit_factors=False
+        limit_factors=False,
     ).get('results', [])
 
     measures = {}
@@ -150,8 +160,15 @@ def risk_model_measure(asset: Asset, risk_model_id: str,
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
-def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
-                  source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_zscore(
+    asset: Asset,
+    risk_model_id: str,
+    factor_name: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Asset factor exposure (in the form of z-scores) for a factor using specified risk model
 
@@ -169,13 +186,15 @@ def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
 
     # Query risk model data
     query_results = model.get_data(
-        measures=[RiskModelDataMeasure.Factor_Name,
-                  RiskModelDataMeasure.Universe_Factor_Exposure,
-                  RiskModelDataMeasure.Asset_Universe],
+        measures=[
+            RiskModelDataMeasure.Factor_Name,
+            RiskModelDataMeasure.Universe_Factor_Exposure,
+            RiskModelDataMeasure.Asset_Universe,
+        ],
         start_date=DataContext.current.start_time,
         end_date=DataContext.current.end_time,
         assets=RiskModelDataAssetsRequest(identifier=RiskModelUniverseIdentifierRequest.gsid, universe=[gsid]),
-        factors=[factor]
+        factors=[factor],
     ).get('results', [])
 
     # Get the factor data from query results
@@ -189,8 +208,15 @@ def factor_zscore(asset: Asset, risk_model_id: str, factor_name: str, *,
 
 
 @plot_measure_entity(EntityType.RISK_MODEL, [QueryType.FACTOR_RETURN])
-def factor_covariance(risk_model_id: str, factor_name_1: str, factor_name_2: str, *, source: str = None,
-                      real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_covariance(
+    risk_model_id: str,
+    factor_name_1: str,
+    factor_name_2: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Covariance time-series between two factors in a risk model
 
@@ -206,16 +232,21 @@ def factor_covariance(risk_model_id: str, factor_name_1: str, factor_name_2: str
     model = FactorRiskModel.get(risk_model_id)
     factor_1 = model.get_factor(factor_name_1)
     factor_2 = model.get_factor(factor_name_2)
-    covariance_curve = factor_1.covariance(factor_2,
-                                           DataContext.current.start_date,
-                                           DataContext.current.end_date,
-                                           ReturnFormat.JSON)
+    covariance_curve = factor_1.covariance(
+        factor_2, DataContext.current.start_date, DataContext.current.end_date, ReturnFormat.JSON
+    )
     return __format_plot_measure_results(covariance_curve, QueryType.COVARIANCE)
 
 
 @plot_measure_entity(EntityType.RISK_MODEL, [QueryType.FACTOR_RETURN])
-def factor_volatility(risk_model_id: str, factor_name: str, *, source: str = None,
-                      real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_volatility(
+    risk_model_id: str,
+    factor_name: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility timeseries for a factor in a risk model
 
@@ -228,15 +259,20 @@ def factor_volatility(risk_model_id: str, factor_name: str, *, source: str = Non
     """
     model = FactorRiskModel.get(risk_model_id)
     factor = model.get_factor(factor_name)
-    volatility = factor.volatility(DataContext.current.start_date,
-                                   DataContext.current.end_date,
-                                   ReturnFormat.JSON)
+    volatility = factor.volatility(DataContext.current.start_date, DataContext.current.end_date, ReturnFormat.JSON)
     return __format_plot_measure_results(volatility, QueryType.VOLATILITY, multiplier=100)
 
 
 @plot_measure_entity(EntityType.RISK_MODEL, [QueryType.FACTOR_RETURN])
-def factor_correlation(risk_model_id: str, factor_name_1: str, factor_name_2: str, *, source: str = None,
-                       real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_correlation(
+    risk_model_id: str,
+    factor_name_1: str,
+    factor_name_2: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Correlation time-series between two factors in a risk model
 
@@ -251,16 +287,21 @@ def factor_correlation(risk_model_id: str, factor_name_1: str, factor_name_2: st
     model = FactorRiskModel.get(risk_model_id)
     factor_1 = model.get_factor(factor_name_1)
     factor_2 = model.get_factor(factor_name_2)
-    correlation = factor_1.correlation(factor_2,
-                                       DataContext.current.start_date,
-                                       DataContext.current.end_date,
-                                       ReturnFormat.JSON)
+    correlation = factor_1.correlation(
+        factor_2, DataContext.current.start_date, DataContext.current.end_date, ReturnFormat.JSON
+    )
     return __format_plot_measure_results(correlation, QueryType.CORRELATION)
 
 
 @plot_measure_entity(EntityType.RISK_MODEL, [QueryType.FACTOR_RETURN])
-def factor_performance(risk_model_id: str, factor_name: str, *, source: str = None,
-                       real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_performance(
+    risk_model_id: str,
+    factor_name: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Factor returns as a price time-series for a factor in a risk model
 
@@ -280,9 +321,15 @@ def factor_performance(risk_model_id: str, factor_name: str, *, source: str = No
 
 
 @plot_measure_entity(EntityType.RISK_MODEL, [])
-def factor_returns_intraday(risk_model_id: str, factor_name: str,
-                            data_source: Union[IntradayFactorDataSource, str] = None, *, source: str = None,
-                            real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_returns_intraday(
+    risk_model_id: str,
+    factor_name: str,
+    data_source: Union[IntradayFactorDataSource, str] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Factor returns as a time-series for a factor in a risk model
 
@@ -297,16 +344,23 @@ def factor_returns_intraday(risk_model_id: str, factor_name: str,
 
     model = FactorRiskModel.get(risk_model_id)
     factor = model.get_factor(factor_name)
-    factor_returns_df = factor.intraday_returns(DataContext.current.start_time, DataContext.current.end_time,
-                                                data_source)
+    factor_returns_df = factor.intraday_returns(
+        DataContext.current.start_time, DataContext.current.end_time, data_source
+    )
     return factor_returns_df.squeeze()
 
 
 @plot_measure_entity(EntityType.RISK_MODEL, [])
-def factor_returns_percentile(risk_model_id: str, factor_name: str,
-                              lookback_days: int = 10,
-                              n_percentile: float = 90.0, *, source: str = None,
-                              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_returns_percentile(
+    risk_model_id: str,
+    factor_name: str,
+    lookback_days: int = 10,
+    n_percentile: float = 90.0,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Percentile of factor returns over a lookback period for a factor in a risk model
     """
@@ -318,14 +372,14 @@ def factor_returns_percentile(risk_model_id: str, factor_name: str,
     factor_returns_df = factor.returns(start_date=start_date, end_date=end_date, format=ReturnFormat.DATA_FRAME)
     percentile_value = percentile(factor_returns_df.squeeze(), n_percentile)
     # Return the percentile value as pandas series for the entire time range from start_time to end_time
-    return pd.Series(percentile_value,
-                     index=pd.date_range(start=DataContext.current.start_time,
-                                         end=DataContext.current.end_time,
-                                         freq='2h'))
+    return pd.Series(
+        percentile_value,
+        index=pd.date_range(start=DataContext.current.start_time, end=DataContext.current.end_time, freq='2h'),
+    )
 
 
 def __format_plot_measure_results(time_series: Dict, query_type: QueryType, multiplier=1, handle_missing_column=False):
-    """ Create and return panda series expected for a plot measure """
+    """Create and return panda series expected for a plot measure"""
     col_name = query_type.value.replace(' ', '')
     col_name = decapitalize(col_name)
     time_series_list = [{'date': k, col_name: v * multiplier} for k, v in time_series.items()]

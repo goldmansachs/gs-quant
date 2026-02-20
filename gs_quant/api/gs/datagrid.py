@@ -32,7 +32,9 @@ class GsDataGridApi:
     def get_datagrids(cls, limit: int = 10, **kwargs) -> List[DataGrid]:
         raw_datagrids = get(
             GsSession.current._get(f'{API}?limit={limit}&orderBy=>lastUpdatedTime&{urllib.parse.urlencode(kwargs)}'),
-            'results', [])
+            'results',
+            [],
+        )
         return [DataGrid.from_dict(raw_datagrid) for raw_datagrid in raw_datagrids]
 
     @classmethod
@@ -40,8 +42,11 @@ class GsDataGridApi:
         user_id = GsSession.current._get('/users/self')['id']
         raw_datagrids = get(
             GsSession.current._get(
-                f'{API}?limit={limit}&ownerId={user_id}&orderBy=>lastUpdatedTime&{urllib.parse.urlencode(kwargs)}'),
-            'results', [])
+                f'{API}?limit={limit}&ownerId={user_id}&orderBy=>lastUpdatedTime&{urllib.parse.urlencode(kwargs)}'
+            ),
+            'results',
+            [],
+        )
         return [DataGrid.from_dict(raw_datagrid) for raw_datagrid in raw_datagrids]
 
     @classmethod

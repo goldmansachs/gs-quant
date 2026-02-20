@@ -29,7 +29,7 @@ class AssetTreeNode:
     def __init__(self, id, depth: Optional[int] = 0, date: Optional[dt.date] = None, asset: Optional[GsAsset] = None):
 
         self.id = id
-        self.date = date    # date for which the Tree is constructed. If None, it is set to the latest available date.
+        self.date = date  # date for which the Tree is constructed. If None, it is set to the latest available date.
         self.depth = depth  # depth of the node with respect to the root node
         self.asset = asset
         self.name = get(self.asset, 'name')
@@ -47,8 +47,12 @@ class AssetTreeNode:
         if len(self.constituents_df) > 0:
             return self.constituents_df
         else:
-            self.constituents_df = self.__build_constituents_df(pd.DataFrame()).drop_duplicates().\
-                sort_values(by='depth').reset_index(drop=True)
+            self.constituents_df = (
+                self.__build_constituents_df(pd.DataFrame())
+                .drop_duplicates()
+                .sort_values(by='depth')
+                .reset_index(drop=True)
+            )
             return self.constituents_df
 
     def populate_values(self, dataset, value_column, underlier_column):
@@ -96,9 +100,16 @@ class AssetTreeNode:
     def __build_constituents_df(self, constituents_df) -> pd.DataFrame:
 
         for node in self.direct_underlier_assets_as_nodes:
-            data = {'date': self.date, 'assetName': self.name, 'assetId': self.id, 'assetBbid': self.bbid,
-                    'underlyingAssetName': node.name, 'underlyingAssetId': node.id, 'underlyingAssetBbid': node.bbid,
-                    'depth': node.depth}
+            data = {
+                'date': self.date,
+                'assetName': self.name,
+                'assetId': self.id,
+                'assetBbid': self.bbid,
+                'underlyingAssetName': node.name,
+                'underlyingAssetId': node.id,
+                'underlyingAssetBbid': node.bbid,
+                'depth': node.depth,
+            }
 
             for key, value in node.data.items():
                 data[key] = value
@@ -110,12 +121,13 @@ class AssetTreeNode:
 
 
 class TreeHelper:
-
-    def __init__(self,
-                 id,
-                 date: Optional[dt.date] = None,
-                 tree_underlier_dataset: Optional[str] = None,
-                 underlier_column: Optional[str] = 'underlyingAssetId'):
+    def __init__(
+        self,
+        id,
+        date: Optional[dt.date] = None,
+        tree_underlier_dataset: Optional[str] = None,
+        underlier_column: Optional[str] = 'underlyingAssetId',
+    ):
 
         self.id = id
         self.root = AssetTreeNode(self.id, 0, date, GsAssetApi.get_asset(asset_id=self.id))
@@ -126,9 +138,7 @@ class TreeHelper:
         self.__tree_underlier_dataset = tree_underlier_dataset
         self.__underlier_column = underlier_column
 
-    def populate_weights(self,
-                         dataset,
-                         weight_column: Optional[str] = 'weight'):
+    def populate_weights(self, dataset, weight_column: Optional[str] = 'weight'):
 
         if not self.tree_built:
             self.build_tree()
@@ -136,9 +146,7 @@ class TreeHelper:
         self.root.data['weight'] = 1
         self.root.populate_values(dataset, weight_column, self.__underlier_column)
 
-    def populate_attribution(self,
-                             dataset,
-                             attribution_column: Optional[str] = 'absoluteAttribution'):
+    def populate_attribution(self, dataset, attribution_column: Optional[str] = 'absoluteAttribution'):
 
         if not self.tree_built:
             self.build_tree()
@@ -213,7 +221,7 @@ class TreeHelper:
                 node_name = getattr(node, visualise_by)
                 if str(node_name) == 'None':
                     node_name = f'NA ({node.id})'
-                if (prefix == ''):
+                if prefix == '':
                     tree_vis.create_node(node_name, node_id)
                 else:
                     tree_vis.create_node(node_name, node_id, parent=prefix)

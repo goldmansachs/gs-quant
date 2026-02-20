@@ -45,8 +45,9 @@ class ResultWithInfoAggregator(Transformer[Iterable[ResultType], FloatWithInfo])
     risk_col: str = 'value'
     filter_coord: Optional[object] = None
 
-    def apply(self, results: Iterable[Union[float, FloatWithInfo, SeriesWithInfo, DataFrameWithInfo]],
-              *args, **kwargs) -> Iterable[Union[float, FloatWithInfo]]:
+    def apply(
+        self, results: Iterable[Union[float, FloatWithInfo, SeriesWithInfo, DataFrameWithInfo]], *args, **kwargs
+    ) -> Iterable[Union[float, FloatWithInfo]]:
         flattened_results = []
 
         for result in results:

@@ -30,11 +30,7 @@ _logger = logging.getLogger(__name__)
 
 
 class User:
-    def __init__(self,
-                 user_id: str,
-                 name: str = None,
-                 email: str = None,
-                 company: str = None):
+    def __init__(self, user_id: str, name: str = None, email: str = None, company: str = None):
         self.__id = user_id
         self.__email = email
         self.__name = name
@@ -63,10 +59,7 @@ class User:
         return self.__company
 
     @classmethod
-    def get(cls,
-            user_id: str = None,
-            name: str = None,
-            email: str = None):
+    def get(cls, user_id: str = None, name: str = None, email: str = None):
         """
         Resolve a user ID, name, email, and/or company into a single User object
 
@@ -78,24 +71,21 @@ class User:
         if all(arg is None for arg in [user_id, name, email]):
             raise MqValueError('Please specify a user id, name, or email address')
         user_id = user_id[5:] if user_id and user_id.startswith('guid:') else user_id
-        results = GsUsersApi.get_users(user_ids=[user_id] if user_id else None,
-                                       user_names=[name] if name else None,
-                                       user_emails=[email] if email else None)
+        results = GsUsersApi.get_users(
+            user_ids=[user_id] if user_id else None,
+            user_names=[name] if name else None,
+            user_emails=[email] if email else None,
+        )
         if len(results) > 1:
             raise MqValueError('Error: This request resolves to more than one user in Marquee')
         if len(results) == 0:
             raise MqValueError('Error: No user found')
-        return User(user_id=results[0].id,
-                    name=results[0].name,
-                    email=results[0].email,
-                    company=results[0].company)
+        return User(user_id=results[0].id, name=results[0].name, email=results[0].email, company=results[0].company)
 
     @classmethod
-    def get_many(cls,
-                 user_ids: List[str] = None,
-                 names: List[str] = None,
-                 emails: List[str] = None,
-                 companies: List[str] = None):
+    def get_many(
+        cls, user_ids: List[str] = None, names: List[str] = None, emails: List[str] = None, companies: List[str] = None
+    ):
         """
         Resolve requested parameters into a list of User objects
 
@@ -113,17 +103,13 @@ class User:
         if not user_ids + names + emails + companies:
             return []
         user_ids = [id_[5:] if id_.startswith('guid:') else id_ for id_ in user_ids]
-        results = GsUsersApi.get_users(user_ids=user_ids,
-                                       user_names=names,
-                                       user_emails=emails,
-                                       user_companies=companies)
+        results = GsUsersApi.get_users(
+            user_ids=user_ids, user_names=names, user_emails=emails, user_companies=companies
+        )
 
         all_users = []
         for user in results:
-            all_users.append(User(user_id=user.id,
-                                  name=user.name,
-                                  email=user.email,
-                                  company=user.company))
+            all_users.append(User(user_id=user.id, name=user.name, email=user.email, company=user.company))
         return all_users
 
     def save(self):
@@ -131,12 +117,7 @@ class User:
 
 
 class Group:
-    def __init__(self,
-                 group_id: str,
-                 name: str,
-                 entitlements=None,
-                 description: str = None,
-                 tags: List = None):
+    def __init__(self, group_id: str, name: str, entitlements=None, description: str = None, tags: List = None):
         self.__id = group_id
         self.__name = name
         self.__entitlements = entitlements
@@ -186,8 +167,7 @@ class Group:
         self.__tags = value
 
     @classmethod
-    def get(cls,
-            group_id: str):
+    def get(cls, group_id: str):
         """
         Resolve a group ID into a single Group object
 
@@ -196,17 +176,20 @@ class Group:
         """
         group_id = group_id[6:] if group_id and group_id.startswith('group:') else group_id
         result = GsGroupsApi.get_group(group_id=group_id)
-        return Group(group_id=result.id,
-                     name=result.name,
-                     entitlements=Entitlements.from_target(result.entitlements) if result.entitlements else None
-                     if result.entitlements else None,
-                     description=result.description,
-                     tags=result.tags)
+        return Group(
+            group_id=result.id,
+            name=result.name,
+            entitlements=Entitlements.from_target(result.entitlements)
+            if result.entitlements
+            else None
+            if result.entitlements
+            else None,
+            description=result.description,
+            tags=result.tags,
+        )
 
     @classmethod
-    def get_many(cls,
-                 group_ids: List[str] = None,
-                 names: List[str] = None):
+    def get_many(cls, group_ids: List[str] = None, names: List[str] = None):
         """
         Resolve requested parameters into a list of Group objects
 
@@ -219,17 +202,18 @@ class Group:
         if not group_ids + names:
             return []
         group_ids = [id_[6:] if id_.startswith('group:') else id_ for id_ in group_ids]
-        results = GsGroupsApi.get_groups(ids=group_ids,
-                                         names=names)
+        results = GsGroupsApi.get_groups(ids=group_ids, names=names)
         all_groups = []
         for group in results:
-            all_groups.append(Group(group_id=group.id,
-                                    name=group.name,
-                                    entitlements=Entitlements.from_target(group.entitlements)
-                                    if group.entitlements else None,
-                                    description=group.description,
-                                    tags=group.tags)
-                              )
+            all_groups.append(
+                Group(
+                    group_id=group.id,
+                    name=group.name,
+                    entitlements=Entitlements.from_target(group.entitlements) if group.entitlements else None,
+                    description=group.description,
+                    tags=group.tags,
+                )
+            )
         return all_groups
 
     def save(self):
@@ -242,12 +226,17 @@ class Group:
         else:
             _logger.info(f'Creating group "{self.id}"')
             result = GsGroupsApi.create_group(group=self.to_target())
-        return Group(group_id=result.id,
-                     name=result.name,
-                     entitlements=Entitlements.from_target(result.entitlements) if result.entitlements else None
-                     if result.entitlements else None,
-                     description=result.description,
-                     tags=result.tags)
+        return Group(
+            group_id=result.id,
+            name=result.name,
+            entitlements=Entitlements.from_target(result.entitlements)
+            if result.entitlements
+            else None
+            if result.entitlements
+            else None,
+            description=result.description,
+            tags=result.tags,
+        )
 
     def _group_exists(self):
         try:
@@ -271,31 +260,27 @@ class Group:
         Get a list of all users in this group
         """
         users = GsGroupsApi.get_users_in_group(self.id)
-        return [User(user_id=user.get('id'),
-                     name=user.get('name'),
-                     email=user.get('email'),
-                     company=user.get('company')) for user in users]
+        return [
+            User(user_id=user.get('id'), name=user.get('name'), email=user.get('email'), company=user.get('company'))
+            for user in users
+        ]
 
-    def add_users(self,
-                  users: List[User]):
+    def add_users(self, users: List[User]):
         """
         Add a list of users to a group
         :param users: List of User objects
         """
         user_ids = [user.id for user in users]
-        GsGroupsApi.add_users_to_group(group_id=self.id,
-                                       user_ids=user_ids)
+        GsGroupsApi.add_users_to_group(group_id=self.id, user_ids=user_ids)
         _logger.info(f'Users added to "{self.name}".')
 
-    def delete_users(self,
-                     users: List[User]):
+    def delete_users(self, users: List[User]):
         """
         Remove a list of users to a group
         :param users: List of User objects
         """
         user_ids = [user.id for user in users]
-        GsGroupsApi.delete_users_from_group(group_id=self.id,
-                                            user_ids=user_ids)
+        GsGroupsApi.delete_users_from_group(group_id=self.id, user_ids=user_ids)
         _logger.info(f'Users removed from "{self.name}".')
 
     def to_dict(self):
@@ -307,27 +292,30 @@ class Group:
             'id': self.id,
             'description': self.description,
             'entitlements': self.entitlements.to_dict() if self.entitlements else None,
-            'tags': self.tags
+            'tags': self.tags,
         }
 
     def to_target(self):
         """
         Return a Group object as a target object
         """
-        return TargetGroup(name=self.name,
-                           id=self.id,
-                           description=self.description,
-                           entitlements=self.entitlements.to_target() if self.entitlements else None,
-                           tags=self.tags)
+        return TargetGroup(
+            name=self.name,
+            id=self.id,
+            description=self.description,
+            entitlements=self.entitlements.to_target() if self.entitlements else None,
+            tags=self.tags,
+        )
 
 
 class EntitlementBlock:
-    def __init__(self,
-                 users: List[User] = None,
-                 groups: List[Group] = None,
-                 roles: List[str] = None,
-                 unconverted_tokens: List[str] = None,
-                 ):
+    def __init__(
+        self,
+        users: List[User] = None,
+        groups: List[Group] = None,
+        roles: List[str] = None,
+        unconverted_tokens: List[str] = None,
+    ):
         self.__users = list(set(users)) if users else []
         self.__groups = list(set(groups)) if groups else []
         self.__roles = list(set(roles)) if roles else []
@@ -385,24 +373,29 @@ class EntitlementBlock:
             return all_entitled
         else:
             unconverted_tokens = self.unconverted_tokens or [] if include_all_tokens else []
-            return [f'guid:{user.id}' for user in self.users] + \
-                   [f'group:{group.id}' for group in self.groups] + \
-                   [f'role:{role}' for role in self.roles] + unconverted_tokens
+            return (
+                [f'guid:{user.id}' for user in self.users]
+                + [f'group:{group.id}' for group in self.groups]
+                + [f'role:{role}' for role in self.roles]
+                + unconverted_tokens
+            )
 
 
 class Entitlements:
-    def __init__(self,
-                 admin: EntitlementBlock = None,
-                 delete: EntitlementBlock = None,
-                 display: EntitlementBlock = None,
-                 upload: EntitlementBlock = None,
-                 edit: EntitlementBlock = None,
-                 execute: EntitlementBlock = None,
-                 plot: EntitlementBlock = None,
-                 query: EntitlementBlock = None,
-                 rebalance: EntitlementBlock = None,
-                 trade: EntitlementBlock = None,
-                 view: EntitlementBlock = None):
+    def __init__(
+        self,
+        admin: EntitlementBlock = None,
+        delete: EntitlementBlock = None,
+        display: EntitlementBlock = None,
+        upload: EntitlementBlock = None,
+        edit: EntitlementBlock = None,
+        execute: EntitlementBlock = None,
+        plot: EntitlementBlock = None,
+        query: EntitlementBlock = None,
+        rebalance: EntitlementBlock = None,
+        trade: EntitlementBlock = None,
+        view: EntitlementBlock = None,
+    ):
         self.__admin = admin if admin else EntitlementBlock()
         self.__delete = delete if delete else EntitlementBlock()
         self.__display = display if display else EntitlementBlock()
@@ -418,8 +411,19 @@ class Entitlements:
     def __eq__(self, other) -> bool:
         if not isinstance(other, Entitlements):
             return False
-        for prop in ['admin', 'delete', 'display', 'upload', 'edit', 'execute', 'plot', 'query',
-                     'rebalance', 'view', 'trade']:
+        for prop in [
+            'admin',
+            'delete',
+            'display',
+            'upload',
+            'edit',
+            'execute',
+            'plot',
+            'query',
+            'rebalance',
+            'view',
+            'trade',
+        ]:
             slf, oth = get(self, prop), get(other, prop)
             if not (slf is None and oth is None) and not slf == oth:
                 return False
@@ -612,6 +616,7 @@ class Entitlements:
                     unconverted_tokens.append(t)
             unconverted_tokens = unconverted_tokens if len(unconverted_tokens) else None
             if users or groups or roles or unconverted_tokens:
-                entitlement_kwargs[action] = EntitlementBlock(users=users, groups=groups, roles=roles,
-                                                              unconverted_tokens=unconverted_tokens)
+                entitlement_kwargs[action] = EntitlementBlock(
+                    users=users, groups=groups, roles=roles, unconverted_tokens=unconverted_tokens
+                )
         return Entitlements(**entitlement_kwargs)

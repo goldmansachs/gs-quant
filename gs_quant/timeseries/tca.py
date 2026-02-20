@@ -27,14 +27,16 @@ from gs_quant.timeseries.measures import _extract_series_from_df
 
 
 @plot_measure((AssetClass.Equity,), None, [])
-def covariance(asset: Asset,
-               asset_2: Asset,
-               bucket_start: str = '"08:00:00"',
-               bucket_end: str = '"08:30:00"',
-               *,
-               source: str = None,
-               real_time: bool = False,
-               request_id: Optional[str] = None) -> pd.Series:
+def covariance(
+    asset: Asset,
+    asset_2: Asset,
+    bucket_start: str = '"08:00:00"',
+    bucket_end: str = '"08:30:00"',
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Provides an estimates of the covariances between stocks in the three major equity markets - US, EMEA and Japan -
     using an advanced machine learning technique.
@@ -50,8 +52,12 @@ def covariance(asset: Asset,
     """
     start, end = DataContext.current.start_date, DataContext.current.end_date
     ds = Dataset(Dataset.GS.QES_INTRADAY_COVARIANCE)
-    where = dict(assetId=asset.get_marquee_id(), asset2Id=asset_2.get_marquee_id(), bucketStart=bucket_start,
-                 bucketEnd=bucket_end)
+    where = dict(
+        assetId=asset.get_marquee_id(),
+        asset2Id=asset_2.get_marquee_id(),
+        bucketStart=bucket_start,
+        bucketEnd=bucket_end,
+    )
 
     data = ds.get_data(start=start, end=end, where=where)
     series = _extract_series_from_df(data, QueryType.COVARIANCE)

@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import logging
 from typing import Tuple, Dict
 from gs_quant.session import GsSession
@@ -22,7 +23,6 @@ _logger = logging.getLogger(__name__)
 
 
 class GsDataScreenApi:
-
     @classmethod
     def get_screens(cls) -> Tuple[AnalyticsScreen, ...]:
         """
@@ -54,8 +54,7 @@ class GsDataScreenApi:
         :return: dict, a dictionary where each key identifies a column and each value identifies properties of that
         column.
         """
-        return GsSession.current._get(
-            '/data/screens/{id}/filters'.format(id=screen_id))['aggregations']
+        return GsSession.current._get('/data/screens/{id}/filters'.format(id=screen_id))['aggregations']
 
     @classmethod
     def delete_screen(cls, screen_id: str) -> None:
@@ -98,8 +97,12 @@ class GsDataScreenApi:
         :return: Tuple of DataRow objects, each DataRow in the tuple is a row of filtered data from this screen.
         """
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._post('/data/screens/{id}/filter'.format(id=screen_id), filter_request,
-                                       request_headers=request_headers, cls=DataRow)['results']
+        return GsSession.current._post(
+            '/data/screens/{id}/filter'.format(id=screen_id),
+            filter_request,
+            request_headers=request_headers,
+            cls=DataRow,
+        )['results']
 
     @classmethod
     def update_screen(cls, screen_id: str, screen: AnalyticsScreen) -> AnalyticsScreen:
@@ -120,5 +123,6 @@ class GsDataScreenApi:
         assert screen_id == screen.id_
 
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._put('/data/screens/{id}'.format(id=screen_id), screen,
-                                      request_headers=request_headers, cls=AnalyticsScreen)
+        return GsSession.current._put(
+            '/data/screens/{id}'.format(id=screen_id), screen, request_headers=request_headers, cls=AnalyticsScreen
+        )

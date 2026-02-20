@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from enum import Enum
 from numbers import Real
 
@@ -45,7 +46,10 @@ def preprocess_implied_vol_strikes_eq(strike_reference: VolReference = None, rel
         relative_strike = abs(100 - relative_strike)
     relative_strike = relative_strike if strike_reference == VolReference.NORMALIZED else relative_strike / 100
 
-    ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL, VolReference.DELTA_PUT,
-                                                 VolReference.DELTA_NEUTRAL) else strike_reference.value
+    ref_string = (
+        "delta"
+        if strike_reference in (VolReference.DELTA_CALL, VolReference.DELTA_PUT, VolReference.DELTA_NEUTRAL)
+        else strike_reference.value
+    )
 
     return ref_string, relative_strike

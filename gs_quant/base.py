@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import builtins
 import copy
 import datetime as dt
@@ -32,9 +33,22 @@ from dataclasses_json.core import _decode_generic, _is_supported_generic
 from inflection import camelize, underscore
 
 from gs_quant.context_base import ContextBase, ContextMeta
-from gs_quant.json_convertors import encode_date_or_str, decode_date_or_str, decode_optional_date, encode_datetime, \
-    decode_datetime, decode_float_or_str, decode_instrument, encode_dictable, decode_quote_report, decode_quote_reports, \
-    decode_custom_comment, decode_custom_comments, decode_optional_time, encode_optional_time
+from gs_quant.json_convertors import (
+    encode_date_or_str,
+    decode_date_or_str,
+    decode_optional_date,
+    encode_datetime,
+    decode_datetime,
+    decode_float_or_str,
+    decode_instrument,
+    encode_dictable,
+    decode_quote_report,
+    decode_quote_reports,
+    decode_custom_comment,
+    decode_custom_comments,
+    decode_optional_time,
+    encode_optional_time,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -111,22 +125,31 @@ name_metadata = config(exclude=exclude_always)
 
 
 class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'scenario', 'risk_measure'))):
-
     @property
     def ex_measure(self):
         from gs_quant.target.common import RiskRequestParameters  # noqa
-        return RiskKey(self.provider, self.date, self.market,
-                       RiskRequestParameters(self.params.csa_term, self.params.raw_results, False,
-                                             self.params.market_behaviour),
-                       self.scenario, None)
+
+        return RiskKey(
+            self.provider,
+            self.date,
+            self.market,
+            RiskRequestParameters(self.params.csa_term, self.params.raw_results, False, self.params.market_behaviour),
+            self.scenario,
+            None,
+        )
 
     @property
     def ex_historical_diddle(self):
         from gs_quant.target.common import RiskRequestParameters  # noqa
-        return RiskKey(self.provider, self.date, self.market,
-                       RiskRequestParameters(self.params.csa_term, self.params.raw_results, False,
-                                             self.params.market_behaviour),
-                       self.scenario, self.risk_measure)
+
+        return RiskKey(
+            self.provider,
+            self.date,
+            self.market,
+            RiskRequestParameters(self.params.csa_term, self.params.raw_results, False, self.params.market_behaviour),
+            self.scenario,
+            self.risk_measure,
+        )
 
     @property
     def fields(self):
@@ -134,7 +157,6 @@ class RiskKey(namedtuple('RiskKey', ('provider', 'date', 'market', 'params', 'sc
 
 
 class EnumBase:
-
     @classmethod
     def _missing_(cls: EnumMeta, key):
         if not isinstance(key, str):
@@ -155,7 +177,6 @@ class EnumBase:
 
 
 class HashableDict(dict):
-
     @staticmethod
     def hashables(in_dict) -> Tuple:
         hashables = []
@@ -179,8 +200,9 @@ class DictBase(HashableDict):
             if invalid_arg is not None:
                 raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{invalid_arg}'")
 
-        super().__init__(*args, **{camelize(k, uppercase_first_letter=False): v for k, v in kwargs.items()
-                                   if v is not None})
+        super().__init__(
+            *args, **{camelize(k, uppercase_first_letter=False): v for k, v in kwargs.items() if v is not None}
+        )
 
     def __getitem__(self, item):
         return super().__getitem__(camelize(item, uppercase_first_letter=False))
@@ -258,9 +280,11 @@ class Base(ABC):
     def __is_type_match(cls, tp, val):
         if sys.version_info >= (3, 9):
             from types import GenericAlias
+
             is_generic_alias = isinstance(tp, (typing._GenericAlias, GenericAlias))
             if sys.version_info >= (3, 10) and not is_generic_alias:
                 from types import UnionType
+
                 if isinstance(tp, UnionType):
                     return any(cls.__is_type_match(arg, val) for arg in tp.__args__)
         else:
@@ -333,18 +357,18 @@ class Base(ABC):
 
     def clone(self, **kwargs):
         """
-            Clone this object, overriding specified values
+        Clone this object, overriding specified values
 
-            :param kwargs: property names and values, e.g. swap.clone(fixed_rate=0.01)
+        :param kwargs: property names and values, e.g. swap.clone(fixed_rate=0.01)
 
-            **Examples**
+        **Examples**
 
-            To change the market data location of the default context:
+        To change the market data location of the default context:
 
-            >>> from gs_quant.instrument import IRCap
-            >>> cap = IRCap('5y', 'GBP')
-            >>>
-            >>> new_cap = cap.clone(cap_rate=0.01)
+        >>> from gs_quant.instrument import IRCap
+        >>> cap = IRCap('5y', 'GBP')
+        >>>
+        >>> new_cap = cap.clone(cap_rate=0.01)
         """
         return replace(self, **kwargs)
 
@@ -404,7 +428,6 @@ class Base(ABC):
 @dataclass_json
 @dataclass
 class Priceable(Base):
-
     def resolve(self, in_place: bool = True):
         """
         Resolve non-supplied properties of an instrument
@@ -533,7 +556,8 @@ class Scenario(Base, ContextBase, ABC, metaclass=__ScenarioMeta):
             params = self.as_dict()
             sorted_keys = sorted(params.keys(), key=lambda x: x.lower())
             params = ', '.join(
-                [f'{k}:{params[k].__repr__ if isinstance(params[k], Base) else params[k]}' for k in sorted_keys])
+                [f'{k}:{params[k].__repr__ if isinstance(params[k], Base) else params[k]}' for k in sorted_keys]
+            )
             return self.scenario_type + '(' + params + ')'
 
 
@@ -544,10 +568,7 @@ class RiskMeasureParameter(Base, ABC):
         params.pop("parameter_type", None)
         sorted_keys = sorted(params.keys(), key=lambda x: x.lower())
         params = ", ".join(
-            [
-                f"{k}:{params[k].value if isinstance(params[k], EnumBase) else params[k]}"
-                for k in sorted_keys
-            ]
+            [f"{k}:{params[k].value if isinstance(params[k], EnumBase) else params[k]}" for k in sorted_keys]
         )
         return f"{self.parameter_type}({params})"
 
@@ -558,8 +579,7 @@ class InstrumentBase(Base, ABC):
 
     @property
     @abstractmethod
-    def provider(self):
-        ...
+    def provider(self): ...
 
     @property
     def instrument_quantity(self) -> float:
@@ -615,7 +635,6 @@ class InstrumentBase(Base, ABC):
 
 @dataclass
 class Market(ABC):
-
     def __hash__(self):
         return hash(self.market or self.location)
 
@@ -627,20 +646,17 @@ class Market(ABC):
 
     @property
     @abstractmethod
-    def market(self):
-        ...
+    def market(self): ...
 
     @property
     @abstractmethod
-    def location(self):
-        ...
+    def location(self): ...
 
     def to_dict(self):
         return self.market.to_dict()
 
 
 class Sentinel:
-
     def __init__(self, name: str):
         self.__name = name
 

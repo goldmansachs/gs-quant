@@ -27,18 +27,10 @@ class ContentFixtures:
         'version': 'some-version',
         'name': 'some-name',
         'entitlements': {
-            'view': [
-                'some-view-entitlement'
-            ],
-            'edit': [
-                'some-edit-entitlement'
-            ],
-            'delete': [
-                'some-delete-token'
-            ],
-            'admin': [
-                'some-admin-token'
-            ]
+            'view': ['some-view-entitlement'],
+            'edit': ['some-edit-entitlement'],
+            'delete': ['some-delete-token'],
+            'admin': ['some-admin-token'],
         },
         'createdById': 'some-created-by-id',
         'createdTime': dt.datetime(2019, 5, 13),
@@ -48,18 +40,12 @@ class ContentFixtures:
                 'firstName': 'some-author-first-name',
                 'lastName': 'some-author-last-name',
                 'id': 'some-author-id',
-                'division': 'some-author-division'
+                'division': 'some-author-division',
             }
         ],
         'lastUpdatedTime': dt.datetime(2019, 5, 14),
-        'content': {
-            'body': b64encode(b'Hello world!'),
-            'mimeType': 'text/plain',
-            'encoding': 'UTF-8'
-        },
-        'channels': [
-            'some-channel'
-        ]
+        'content': {'body': b64encode(b'Hello world!'), 'mimeType': 'text/plain', 'encoding': 'UTF-8'},
+        'channels': ['some-channel'],
     }
 
     @classmethod
@@ -72,17 +58,15 @@ class ContentFixtures:
                 cls._data['entitlements']['view'],
                 cls._data['entitlements']['edit'],
                 cls._data['entitlements']['admin'],
-                cls._data['entitlements']['delete']
+                cls._data['entitlements']['delete'],
             ),
             created_by_id=cls._data['createdById'],
             created_time=cls._data['createdTime'],
             last_updated_time=cls._data['lastUpdatedTime'],
             channels=cls._data['channels'],
             content=Content(
-                cls._data['content']['body'],
-                cls._data['content']['mimeType'],
-                cls._data['content']['encoding']
-            )
+                cls._data['content']['body'], cls._data['content']['mimeType'], cls._data['content']['encoding']
+            ),
         )
 
     @classmethod

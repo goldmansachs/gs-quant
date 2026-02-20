@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import numpy as np
 
 from gs_quant.datetime import time_difference_as_string, SECS_IN_YEAR
@@ -23,7 +24,7 @@ def test_time_difference_as_string():
         '4 Seconds': np.timedelta64(4, 's'),
         '1 Minute 5 Seconds': np.timedelta64(65, 's'),
         '1 Year': np.timedelta64(int(SECS_IN_YEAR), 's'),
-        '1 Day 1 Minute 5 Seconds': np.timedelta64(86465, 's')
+        '1 Day 1 Minute 5 Seconds': np.timedelta64(86465, 's'),
     }
 
     for expected, input in check_map.items():

@@ -21,8 +21,7 @@ from typing import List
 from pandas.tseries.offsets import BDay
 
 
-def _get_ppaa_batches(asset_count: pd.DataFrame, max_row_limit: int) \
-        -> List[List[dt.date]]:
+def _get_ppaa_batches(asset_count: pd.DataFrame, max_row_limit: int) -> List[List[dt.date]]:
     start_row = asset_count.iloc[0]
     end_row = asset_count.iloc[-1]
     avg_positions = start_row['assetCount'] + end_row['assetCount'] / 2

@@ -20,11 +20,7 @@ from gs_quant.data import Dataset, DataCoordinate, DataMeasure, DataDimension
 
 
 def test_immutability():
-    dimensions = {
-        DataDimension.TENOR: '1m',
-        DataDimension.STRIKE_REFERENCE: 'Delta',
-        DataDimension.RELATIVE_STRIKE: 50
-    }
+    dimensions = {DataDimension.TENOR: '1m', DataDimension.STRIKE_REFERENCE: 'Delta', DataDimension.RELATIVE_STRIKE: 50}
 
     coord1 = DataCoordinate(Dataset.GS.EDRVOL_PERCENT_STANDARD, DataMeasure.IMPLIED_VOLATILITY, dimensions)
     coord2 = DataCoordinate(Dataset.GS.EDRVOL_PERCENT_STANDARD, DataMeasure.IMPLIED_VOLATILITY, dimensions)
@@ -53,23 +49,23 @@ def test_equals():
     dimensions_a = {
         DataDimension.TENOR: '1m',
         DataDimension.STRIKE_REFERENCE: 'spot',
-        DataDimension.RELATIVE_STRIKE: .8
+        DataDimension.RELATIVE_STRIKE: 0.8,
     }
 
     # Same dimensions but different order
     dimensions_b = {
-        DataDimension.RELATIVE_STRIKE: .8,
+        DataDimension.RELATIVE_STRIKE: 0.8,
         DataDimension.STRIKE_REFERENCE: 'spot',
-        DataDimension.TENOR: '1m'
+        DataDimension.TENOR: '1m',
     }
 
-    coord_a = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD',
-                             measure=DataMeasure.IMPLIED_VOLATILITY,
-                             dimensions=dimensions_a)
+    coord_a = DataCoordinate(
+        dataset_id='EDRVOL_PERCENT_STOCK_STANDARD', measure=DataMeasure.IMPLIED_VOLATILITY, dimensions=dimensions_a
+    )
 
-    coord_b = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD',
-                             measure=DataMeasure.IMPLIED_VOLATILITY,
-                             dimensions=dimensions_b)
+    coord_b = DataCoordinate(
+        dataset_id='EDRVOL_PERCENT_STOCK_STANDARD', measure=DataMeasure.IMPLIED_VOLATILITY, dimensions=dimensions_b
+    )
 
     assert coord_a == coord_b
     assert coord_a == coord_b
@@ -77,11 +73,9 @@ def test_equals():
 
 
 def test_equals_measure_str():
-    coord_a = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD',
-                             measure=DataMeasure.IMPLIED_VOLATILITY)
+    coord_a = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD', measure=DataMeasure.IMPLIED_VOLATILITY)
 
-    coord_b = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD',
-                             measure='impliedVolatility')
+    coord_b = DataCoordinate(dataset_id='EDRVOL_PERCENT_STOCK_STANDARD', measure='impliedVolatility')
     assert coord_a == coord_b
 
 

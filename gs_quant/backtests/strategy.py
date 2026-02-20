@@ -30,6 +30,7 @@ def _backtest_engines():
     from gs_quant.backtests.equity_vol_engine import EquityVolEngine
     from gs_quant.backtests.generic_engine import GenericEngine
     from gs_quant.backtests.predefined_asset_engine import PredefinedAssetEngine
+
     return [GenericEngine(), PredefinedAssetEngine(), EquityVolEngine()]
 
 
@@ -39,12 +40,13 @@ class Strategy:
     """
     A strategy object on which one may run a backtest
     """
-    initial_portfolio: Optional[Union[Tuple[Priceable, ...], dict]] = field(default=None, metadata=config(
-        decoder=decode_named_instrument,
-        encoder=encode_named_instrument))
-    triggers: Union[Trigger, Iterable[Trigger]] = field(default=None,
-                                                        metadata=config(decoder=dc_decode(*Trigger.sub_classes(),
-                                                                                          allow_missing=True)))
+
+    initial_portfolio: Optional[Union[Tuple[Priceable, ...], dict]] = field(
+        default=None, metadata=config(decoder=decode_named_instrument, encoder=encode_named_instrument)
+    )
+    triggers: Union[Trigger, Iterable[Trigger]] = field(
+        default=None, metadata=config(decoder=dc_decode(*Trigger.sub_classes(), allow_missing=True))
+    )
     cash_accrual: CashAccrualModel = None
     risks = None
 

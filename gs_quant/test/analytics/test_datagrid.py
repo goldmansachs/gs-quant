@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 
 import pytest
@@ -31,9 +32,7 @@ def test_simple_datagrid():
     rows = [
         DataRow(spx),
     ]
-    columns = [
-        DataColumn(name="Name", processor=EntityProcessor(field="short_name"))
-    ]
+    columns = [DataColumn(name="Name", processor=EntityProcessor(field="short_name"))]
 
     datagrid = DataGrid(name=name, rows=rows, columns=columns)
 
@@ -49,8 +48,9 @@ def test_simple_datagrid():
 
 
 def test_rdate_datagrid(mocker):
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     name = 'Testing'
     SPX = get_test_entity('MA4B66MW5E27U8P32SB')
     close = DataCoordinate(
@@ -66,10 +66,12 @@ def test_rdate_datagrid(mocker):
         DataRow(SPX),
     ]
     columns = [
-        DataColumn(name="1d Chg (RT)",
-                   processor=ChangeProcessor(AppendProcessor(close, last_trade_price,
-                                                             start=RelativeDate("-1d",
-                                                                                base_date=dt.date(2021, 1, 22)))))
+        DataColumn(
+            name="1d Chg (RT)",
+            processor=ChangeProcessor(
+                AppendProcessor(close, last_trade_price, start=RelativeDate("-1d", base_date=dt.date(2021, 1, 22)))
+            ),
+        )
     ]
 
     datagrid = DataGrid(name=name, rows=rows, columns=columns)
@@ -88,9 +90,10 @@ def test_rdate_datagrid(mocker):
 
     # Check that base_date is not persisted when not passed in.
     columns = [
-        DataColumn(name="1d Chg (RT)",
-                   processor=ChangeProcessor(AppendProcessor(close, last_trade_price,
-                                                             start=RelativeDate("-1d"))))
+        DataColumn(
+            name="1d Chg (RT)",
+            processor=ChangeProcessor(AppendProcessor(close, last_trade_price, start=RelativeDate("-1d"))),
+        )
     ]
     datagrid = DataGrid(name=name, rows=rows, columns=columns)
     as_dict = datagrid.as_dict()

@@ -60,5 +60,6 @@ def test_day_count_fraction():
     assert day_count_fraction(start, end, DayCountConvention.ACTUAL_365L) == approx(2.093150684932)
 
     # Feb 29 is within range, so should use 366
-    assert day_count_fraction(start, end, DayCountConvention.ACTUAL_365L, PaymentFrequency.ANNUALLY) == \
-           approx(2.087431693989)
+    assert day_count_fraction(start, end, DayCountConvention.ACTUAL_365L, PaymentFrequency.ANNUALLY) == approx(
+        2.087431693989
+    )

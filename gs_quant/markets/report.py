@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from enum import Enum, auto
 import numpy as np
@@ -40,6 +41,7 @@ from gs_quant.target.portfolios import RiskAumSource
 
 class ReturnFormat(Enum):
     """Alternative format for data to be returned from get_data functions"""
+
     JSON = auto()
     DATA_FRAME = auto()
 
@@ -92,9 +94,7 @@ class CustomAUMDataPoint:
 
     """
 
-    def __init__(self,
-                 date: dt.date,
-                 aum: float):
+    def __init__(self, date: dt.date, aum: float):
         self.__date = date
         self.__aum = aum
 
@@ -118,12 +118,7 @@ class CustomAUMDataPoint:
 class ReportJobFuture:
     """Report job future that monitors report status and results"""
 
-    def __init__(self,
-                 report_id: str,
-                 job_id: str,
-                 report_type: ReportType,
-                 start_date: dt.date,
-                 end_date: dt.date):
+    def __init__(self, report_id: str, job_id: str, report_type: ReportType, start_date: dt.date, end_date: dt.date):
         self.__report_id = report_id
         self.__job_id = job_id
         self.__report_type = report_type
@@ -164,14 +159,14 @@ class ReportJobFuture:
         if status != ReportStatus.done:
             raise MqValueError('This report job is not done. Cannot retrieve results.')
         if self.__report_type in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
-            results = GsReportApi.get_factor_risk_report_results(risk_report_id=self.__report_id,
-                                                                 start_date=self.__start_date,
-                                                                 end_date=self.__end_date)
+            results = GsReportApi.get_factor_risk_report_results(
+                risk_report_id=self.__report_id, start_date=self.__start_date, end_date=self.__end_date
+            )
             return pd.DataFrame(results)
         if self.__report_type == ReportType.Portfolio_Performance_Analytics:
-            query = DataQuery(where={'reportId': self.__report_id},
-                              start_date=self.__start_date,
-                              end_date=self.__end_date)
+            query = DataQuery(
+                where={'reportId': self.__report_id}, start_date=self.__start_date, end_date=self.__end_date
+            )
             results = GsDataApi.query_data(query=query, dataset_id=ReportDataset.PPA_DATASET.value)
             return pd.DataFrame(results)
         return None
@@ -185,9 +180,11 @@ class ReportJobFuture:
             retries += 1
         if retries == max_retries:
             if error_on_timeout:
-                raise MqValueError(f'Report job {self.__job_id} is taking longer than expected to finish. '
-                                   f'Please contact the Marquee Analytics team at gs-marquee-analytics-support@gs.com '
-                                   'if the issue persists.')
+                raise MqValueError(
+                    f'Report job {self.__job_id} is taking longer than expected to finish. '
+                    f'Please contact the Marquee Analytics team at gs-marquee-analytics-support@gs.com '
+                    'if the issue persists.'
+                )
             else:
                 print(f'Report job {self.__job_id} is taking longer than expected to finish.')
                 return False
@@ -200,26 +197,31 @@ class ReportJobFuture:
 class Report:
     """General report class"""
 
-    def __init__(self,
-                 report_id: str = None,
-                 name: str = None,
-                 position_source_id: str = None,
-                 position_source_type: Union[str, PositionSourceType] = None,
-                 report_type: Union[str, ReportType] = None,
-                 parameters: ReportParameters = None,
-                 earliest_start_date: dt.date = None,
-                 latest_end_date: dt.date = None,
-                 latest_execution_time: dt.datetime = None,
-                 status: Union[str, ReportStatus] = ReportStatus.new,
-                 percentage_complete: float = None):
+    def __init__(
+        self,
+        report_id: str = None,
+        name: str = None,
+        position_source_id: str = None,
+        position_source_type: Union[str, PositionSourceType] = None,
+        report_type: Union[str, ReportType] = None,
+        parameters: ReportParameters = None,
+        earliest_start_date: dt.date = None,
+        latest_end_date: dt.date = None,
+        latest_execution_time: dt.datetime = None,
+        status: Union[str, ReportStatus] = ReportStatus.new,
+        percentage_complete: float = None,
+    ):
         self.__id = report_id
         self.__name = name
         self.__position_source_id = position_source_id
-        self.__position_source_type = position_source_type \
-            if isinstance(position_source_type, PositionSourceType) or position_source_type is None \
+        self.__position_source_type = (
+            position_source_type
+            if isinstance(position_source_type, PositionSourceType) or position_source_type is None
             else PositionSourceType(position_source_type)
-        self.__type = report_type if isinstance(report_type, ReportType) or report_type is None \
-            else ReportType(report_type)
+        )
+        self.__type = (
+            report_type if isinstance(report_type, ReportType) or report_type is None else ReportType(report_type)
+        )
         self.__parameters = parameters
         self.__earliest_start_date = earliest_start_date
         self.__latest_end_date = latest_end_date
@@ -288,33 +290,34 @@ class Report:
         return self.__percentage_complete
 
     @classmethod
-    def get(cls,
-            report_id: str,
-            acceptable_types: List[ReportType] = None):
+    def get(cls, report_id: str, acceptable_types: List[ReportType] = None):
         return cls.from_target(GsReportApi.get_report(report_id))
 
     @classmethod
-    def from_target(cls,
-                    report: TargetReport):
-        return Report(report_id=report.id,
-                      name=report.name,
-                      position_source_id=report.position_source_id,
-                      position_source_type=report.position_source_type,
-                      report_type=report.type,
-                      parameters=report.parameters,
-                      earliest_start_date=report.earliest_start_date,
-                      latest_end_date=report.latest_end_date,
-                      latest_execution_time=report.latest_execution_time,
-                      status=report.status,
-                      percentage_complete=report.percentage_complete)
+    def from_target(cls, report: TargetReport):
+        return Report(
+            report_id=report.id,
+            name=report.name,
+            position_source_id=report.position_source_id,
+            position_source_type=report.position_source_type,
+            report_type=report.type,
+            parameters=report.parameters,
+            earliest_start_date=report.earliest_start_date,
+            latest_end_date=report.latest_end_date,
+            latest_execution_time=report.latest_execution_time,
+            status=report.status,
+            percentage_complete=report.percentage_complete,
+        )
 
     def save(self):
-        """ Create a report in Marquee if it doesn't exist. Update the report if it does. """
-        target_report = TargetReport(name=self.name,
-                                     position_source_id=self.position_source_id,
-                                     position_source_type=self.position_source_type,
-                                     type_=self.type,
-                                     parameters=self.parameters if self.parameters else ReportParameters())
+        """Create a report in Marquee if it doesn't exist. Update the report if it does."""
+        target_report = TargetReport(
+            name=self.name,
+            position_source_id=self.position_source_id,
+            position_source_type=self.position_source_type,
+            type_=self.type,
+            parameters=self.parameters if self.parameters else ReportParameters(),
+        )
         if self.id:
             target_report.id = self.id
             GsReportApi.update_report(target_report)
@@ -323,11 +326,11 @@ class Report:
             self.__id = report.id
 
     def delete(self):
-        """ Delete a report from Marquee"""
+        """Delete a report from Marquee"""
         GsReportApi.delete_report(self.id)
 
     def set_position_source(self, entity_id: str):
-        """ Set position source type and position source ID """
+        """Set position source type and position source ID"""
         is_portfolio = entity_id.startswith('MP')
         self.position_source_type = 'Portfolio' if is_portfolio else 'Asset'
         self.position_source_id = entity_id
@@ -337,21 +340,18 @@ class Report:
             self.type = ReportType.Portfolio_Thematic_Analytics if is_portfolio else ReportType.Asset_Thematic_Analytics
 
     def get_most_recent_job(self):
-        """ Retrieve the most current report job """
+        """Retrieve the most current report job"""
         jobs = GsReportApi.get_report_jobs(self.id)
         most_current_job = sorted(jobs, key=lambda i: i['createdTime'], reverse=True)[0]
-        return ReportJobFuture(report_id=self.id,
-                               job_id=most_current_job.get('id'),
-                               report_type=ReportType(most_current_job.get('reportType')),
-                               start_date=dt.datetime.strptime(most_current_job.get('startDate'),
-                                                               "%Y-%m-%d").date(),
-                               end_date=dt.datetime.strptime(most_current_job.get('endDate'),
-                                                             "%Y-%m-%d").date())
+        return ReportJobFuture(
+            report_id=self.id,
+            job_id=most_current_job.get('id'),
+            report_type=ReportType(most_current_job.get('reportType')),
+            start_date=dt.datetime.strptime(most_current_job.get('startDate'), "%Y-%m-%d").date(),
+            end_date=dt.datetime.strptime(most_current_job.get('endDate'), "%Y-%m-%d").date(),
+        )
 
-    def schedule(self,
-                 start_date: dt.date = None,
-                 end_date: dt.date = None,
-                 backcast: bool = None):
+    def schedule(self, start_date: dt.date = None, end_date: dt.date = None, backcast: bool = None):
         """
         Schedule a report with the given date range
 
@@ -368,20 +368,16 @@ class Report:
             if len(position_dates) == 0:
                 raise MqValueError('Cannot schedule reports for a portfolio with no positions.')
             if start_date is None:
-                start_date = business_day_offset(min(position_dates) - relativedelta(years=1), -1, roll='forward') \
-                    if backcast else min(position_dates)
+                start_date = (
+                    business_day_offset(min(position_dates) - relativedelta(years=1), -1, roll='forward')
+                    if backcast
+                    else min(position_dates)
+                )
             if end_date is None:
                 end_date = min(position_dates) if backcast else business_day_offset(dt.date.today(), -1, roll='forward')
-        GsReportApi.schedule_report(report_id=self.id,
-                                    start_date=start_date,
-                                    end_date=end_date,
-                                    backcast=backcast)
+        GsReportApi.schedule_report(report_id=self.id, start_date=start_date, end_date=end_date, backcast=backcast)
 
-    def run(self,
-            start_date: dt.date = None,
-            end_date: dt.date = None,
-            backcast: bool = False,
-            is_async: bool = True):
+    def run(self, start_date: dt.date = None, end_date: dt.date = None, backcast: bool = False, is_async: bool = True):
         """
         Run a report with the given date range
 
@@ -404,16 +400,20 @@ class Report:
                     sleep(6)
                 raise MqValueError(
                     f'Your report {self.id} is taking longer than expected to finish. Please contact the '
-                    'Marquee Analytics team at gs-marquee-analytics-support@gs.com')
+                    'Marquee Analytics team at gs-marquee-analytics-support@gs.com'
+                )
             except IndexError:
                 counter -= 1
         status = Report.get(self.id).status
         if status == ReportStatus.waiting:
-            raise MqValueError(f'Your report {self.id} is stuck in "waiting" status and therefore cannot be run at '
-                               'this time.')
-        raise MqValueError(f'Your report {self.id} is taking longer to run than expected. '
-                           'Please reach out to the Marquee Analytics team at gs-marquee-analytics-support@gs.com '
-                           'for assistance.')
+            raise MqValueError(
+                f'Your report {self.id} is stuck in "waiting" status and therefore cannot be run at this time.'
+            )
+        raise MqValueError(
+            f'Your report {self.id} is taking longer to run than expected. '
+            'Please reach out to the Marquee Analytics team at gs-marquee-analytics-support@gs.com '
+            'for assistance.'
+        )
 
 
 class PerformanceReport(Report):
@@ -421,18 +421,20 @@ class PerformanceReport(Report):
     Historical analyses on measures like PnL and exposure of a position source over a date range
     """
 
-    def __init__(self,
-                 report_id: str = None,
-                 name: str = None,
-                 position_source_id: str = None,
-                 position_source_type: Union[str, PositionSourceType] = None,
-                 parameters: ReportParameters = None,
-                 earliest_start_date: dt.date = None,
-                 latest_end_date: dt.date = None,
-                 latest_execution_time: dt.datetime = None,
-                 status: Union[str, ReportStatus] = ReportStatus.new,
-                 percentage_complete: float = None,
-                 **kwargs):
+    def __init__(
+        self,
+        report_id: str = None,
+        name: str = None,
+        position_source_id: str = None,
+        position_source_type: Union[str, PositionSourceType] = None,
+        parameters: ReportParameters = None,
+        earliest_start_date: dt.date = None,
+        latest_end_date: dt.date = None,
+        latest_execution_time: dt.datetime = None,
+        status: Union[str, ReportStatus] = ReportStatus.new,
+        percentage_complete: float = None,
+        **kwargs,
+    ):
         """
         Historical analyses on measures like PnL and exposure of a portfolio over a date range
 
@@ -454,14 +456,22 @@ class PerformanceReport(Report):
         >>>     position_source_id='PORTFOLIOID'
         >>> )
         """
-        super().__init__(report_id, name, position_source_id, position_source_type,
-                         ReportType.Portfolio_Performance_Analytics, parameters, earliest_start_date, latest_end_date,
-                         latest_execution_time, status, percentage_complete)
+        super().__init__(
+            report_id,
+            name,
+            position_source_id,
+            position_source_type,
+            ReportType.Portfolio_Performance_Analytics,
+            parameters,
+            earliest_start_date,
+            latest_end_date,
+            latest_execution_time,
+            status,
+            percentage_complete,
+        )
 
     @classmethod
-    def get(cls,
-            report_id: str,
-            **kwargs):
+    def get(cls, report_id: str, **kwargs):
         """
         Get a performance report from the unique report identifier
 
@@ -471,26 +481,26 @@ class PerformanceReport(Report):
         return cls.from_target(GsReportApi.get_report(report_id))
 
     @classmethod
-    def from_target(cls,
-                    report: TargetReport):
+    def from_target(cls, report: TargetReport):
         if report.type != ReportType.Portfolio_Performance_Analytics:
             raise MqValueError('This report is not a performance report.')
-        return PerformanceReport(report_id=report.id,
-                                 name=report.name,
-                                 position_source_id=report.position_source_id,
-                                 position_source_type=report.position_source_type,
-                                 report_type=report.type,
-                                 parameters=report.parameters,
-                                 earliest_start_date=report.earliest_start_date,
-                                 latest_end_date=report.latest_end_date,
-                                 latest_execution_time=report.latest_execution_time,
-                                 status=report.status,
-                                 percentage_complete=report.percentage_complete)
+        return PerformanceReport(
+            report_id=report.id,
+            name=report.name,
+            position_source_id=report.position_source_id,
+            position_source_type=report.position_source_type,
+            report_type=report.type,
+            parameters=report.parameters,
+            earliest_start_date=report.earliest_start_date,
+            latest_end_date=report.latest_end_date,
+            latest_execution_time=report.latest_execution_time,
+            status=report.status,
+            percentage_complete=report.percentage_complete,
+        )
 
-    def get_pnl(self,
-                start_date: dt.date = None,
-                end_date: dt.date = None,
-                unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
+    def get_pnl(
+        self, start_date: dt.date = None, end_date: dt.date = None, unit: FactorRiskUnit = FactorRiskUnit.Notional
+    ) -> pd.DataFrame:
         """
         Get historical portfolio PnL
 
@@ -501,9 +511,7 @@ class PerformanceReport(Report):
         """
         return self.get_pnl_measure("pnl", unit, start_date, end_date)
 
-    def get_long_exposure(self,
-                          start_date: dt.date = None,
-                          end_date: dt.date = None) -> pd.DataFrame:
+    def get_long_exposure(self, start_date: dt.date = None, end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio long exposure
 
@@ -513,9 +521,7 @@ class PerformanceReport(Report):
         """
         return self.get_measure("longExposure", start_date, end_date)
 
-    def get_short_exposure(self,
-                           start_date: dt.date = None,
-                           end_date: dt.date = None) -> pd.DataFrame:
+    def get_short_exposure(self, start_date: dt.date = None, end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio short exposure
 
@@ -525,9 +531,7 @@ class PerformanceReport(Report):
         """
         return self.get_measure("shortExposure", start_date, end_date)
 
-    def get_asset_count(self,
-                        start_date: dt.date = None,
-                        end_date: dt.date = None) -> pd.DataFrame:
+    def get_asset_count(self, start_date: dt.date = None, end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio asset count
 
@@ -537,9 +541,7 @@ class PerformanceReport(Report):
         """
         return self.get_measure("assetCount", start_date, end_date)
 
-    def get_turnover(self,
-                     start_date: dt.date = None,
-                     end_date: dt.date = None) -> pd.DataFrame:
+    def get_turnover(self, start_date: dt.date = None, end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio turnover
 
@@ -549,9 +551,7 @@ class PerformanceReport(Report):
         """
         return self.get_measure("turnover", start_date, end_date)
 
-    def get_asset_count_long(self,
-                             start_date: dt.date = None,
-                             end_date: dt.date = None) -> pd.DataFrame:
+    def get_asset_count_long(self, start_date: dt.date = None, end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio long asset count
 
@@ -561,10 +561,9 @@ class PerformanceReport(Report):
         """
         return self.get_measure("assetCountLong", start_date, end_date)
 
-    def get_asset_count_short(self,
-                              start_date: dt.date = None,
-                              end_date: dt.date = None) \
-            -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
+    def get_asset_count_short(
+        self, start_date: dt.date = None, end_date: dt.date = None
+    ) -> Union[MDAPIDataBatchResponse, DataQueryResponse, tuple, list]:
         """
         Get historical portfolio short asset count
 
@@ -574,9 +573,7 @@ class PerformanceReport(Report):
         """
         return self.get_measure("assetCountShort", start_date, end_date)
 
-    def get_net_exposure(self,
-                         start_date: dt.date = None,
-                         end_date: dt.date = None) -> pd.DataFrame:
+    def get_net_exposure(self, start_date: dt.date = None, end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio net exposure
 
@@ -586,9 +583,7 @@ class PerformanceReport(Report):
         """
         return self.get_measure("netExposure", start_date, end_date)
 
-    def get_gross_exposure(self,
-                           start_date: dt.date = None,
-                           end_date: dt.date = None) -> pd.DataFrame:
+    def get_gross_exposure(self, start_date: dt.date = None, end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio gross exposure
 
@@ -598,10 +593,14 @@ class PerformanceReport(Report):
         """
         return self.get_measure("grossExposure", start_date, end_date)
 
-    def get_position_net_weights(self, start_date: dt.date, end_date: dt.date,
-                                 asset_metadata_fields: List[str] = ["id", "name", "ticker"],
-                                 include_all_business_days: bool = True, position_type: PositionType = None) -> (
-            pd.DataFrame):
+    def get_position_net_weights(
+        self,
+        start_date: dt.date,
+        end_date: dt.date,
+        asset_metadata_fields: List[str] = ["id", "name", "ticker"],
+        include_all_business_days: bool = True,
+        position_type: PositionType = None,
+    ) -> pd.DataFrame:
         """
         Get the net weight of each position in the portfolio for the given date range.
         :param start_date: start date from which to retrieve the net weight data
@@ -616,16 +615,21 @@ class PerformanceReport(Report):
         """
         asset_metadata_fields.append("netWeight")
         try:
-            return pd.DataFrame(self.get_positions_data(start=start_date, end=end_date, fields=asset_metadata_fields,
-                                                        include_all_business_days=include_all_business_days,
-                                                        position_type=position_type))
+            return pd.DataFrame(
+                self.get_positions_data(
+                    start=start_date,
+                    end=end_date,
+                    fields=asset_metadata_fields,
+                    include_all_business_days=include_all_business_days,
+                    position_type=position_type,
+                )
+            )
         except Exception as e:
             raise MqValueError(f"Error retrieving net weight data: {e}")
 
-    def get_trading_pnl(self,
-                        start_date: dt.date = None,
-                        end_date: dt.date = None,
-                        unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
+    def get_trading_pnl(
+        self, start_date: dt.date = None, end_date: dt.date = None, unit: FactorRiskUnit = FactorRiskUnit.Notional
+    ) -> pd.DataFrame:
         """
         Get historical portfolio trading PnL
 
@@ -636,10 +640,9 @@ class PerformanceReport(Report):
         """
         return self.get_pnl_measure("tradingPnl", unit, start_date, end_date)
 
-    def get_trading_cost_pnl(self,
-                             start_date: dt.date = None,
-                             end_date: dt.date = None,
-                             unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
+    def get_trading_cost_pnl(
+        self, start_date: dt.date = None, end_date: dt.date = None, unit: FactorRiskUnit = FactorRiskUnit.Notional
+    ) -> pd.DataFrame:
         """
         Get historical portfolio trading cost PnL
 
@@ -650,10 +653,9 @@ class PerformanceReport(Report):
         """
         return self.get_pnl_measure("tradingCostPnl", unit, start_date, end_date)
 
-    def get_servicing_cost_long_pnl(self,
-                                    start_date: dt.date = None,
-                                    end_date: dt.date = None,
-                                    unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
+    def get_servicing_cost_long_pnl(
+        self, start_date: dt.date = None, end_date: dt.date = None, unit: FactorRiskUnit = FactorRiskUnit.Notional
+    ) -> pd.DataFrame:
         """
         Get historical portfolio servicing cost long PnL
 
@@ -664,10 +666,9 @@ class PerformanceReport(Report):
         """
         return self.get_pnl_measure("servicingCostLongPnl", unit, start_date, end_date)
 
-    def get_servicing_cost_short_pnl(self,
-                                     start_date: dt.date = None,
-                                     end_date: dt.date = None,
-                                     unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
+    def get_servicing_cost_short_pnl(
+        self, start_date: dt.date = None, end_date: dt.date = None, unit: FactorRiskUnit = FactorRiskUnit.Notional
+    ) -> pd.DataFrame:
         """
         Get historical portfolio servicing cost short PnL
 
@@ -678,9 +679,7 @@ class PerformanceReport(Report):
         """
         return self.get_pnl_measure("servicingCostShortPnl", unit, start_date, end_date)
 
-    def get_asset_count_priced(self,
-                               start_date: dt.date = None,
-                               end_date: dt.date = None) -> pd.DataFrame:
+    def get_asset_count_priced(self, start_date: dt.date = None, end_date: dt.date = None) -> pd.DataFrame:
         """
         Get historical portfolio asset count priced
 
@@ -690,11 +689,13 @@ class PerformanceReport(Report):
         """
         return self.get_measure("assetCountPriced", start_date, end_date)
 
-    def get_measure(self,
-                    field: str,
-                    start_date: dt.date = None,
-                    end_date: dt.date = None,
-                    return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+    def get_measure(
+        self,
+        field: str,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+    ) -> Union[Dict, pd.DataFrame]:
         """
         Get historical portfolio metrics
 
@@ -715,14 +716,17 @@ class PerformanceReport(Report):
             return measure
         else:
             aggregated_pnl = get_pnl_percent(self, measure, field, start_date, end_date)
-            return pd.merge(measure.drop(columns=[field]), aggregated_pnl, left_on='date', right_index=True) \
-                .rename(columns={'return': field})
+            return pd.merge(measure.drop(columns=[field]), aggregated_pnl, left_on='date', right_index=True).rename(
+                columns={'return': field}
+            )
 
-    def get_many_measures(self,
-                          measures: Tuple[str, ...] = None,
-                          start_date: dt.date = None,
-                          end_date: dt.date = None,
-                          return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+    def get_many_measures(
+        self,
+        measures: Tuple[str, ...] = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+    ) -> Union[Dict, pd.DataFrame]:
         """
         Get many historical portfolio metrics
 
@@ -748,8 +752,7 @@ class PerformanceReport(Report):
         portfolio = GsPortfolioApi.get_portfolio(self.position_source_id)
         return portfolio.aum_source if portfolio.aum_source is not None else RiskAumSource.Long
 
-    def set_aum_source(self,
-                       aum_source: RiskAumSource):
+    def set_aum_source(self, aum_source: RiskAumSource):
         """
         Set AUM Source for the portfolio associated with the performance report
 
@@ -760,9 +763,7 @@ class PerformanceReport(Report):
         portfolio.aum_source = aum_source
         GsPortfolioApi.update_portfolio(portfolio)
 
-    def get_custom_aum(self,
-                       start_date: dt.date = None,
-                       end_date: dt.date = None) -> List[CustomAUMDataPoint]:
+    def get_custom_aum(self, start_date: dt.date = None, end_date: dt.date = None) -> List[CustomAUMDataPoint]:
         """
         Get AUM data for performance report
 
@@ -771,12 +772,12 @@ class PerformanceReport(Report):
         :return: list of AUM data between the specified range
         """
         aum_data = GsReportApi.get_custom_aum(self.id, start_date, end_date)
-        return [CustomAUMDataPoint(date=dt.datetime.strptime(data['date'], '%Y-%m-%d'),
-                                   aum=data['aum']) for data in aum_data]
+        return [
+            CustomAUMDataPoint(date=dt.datetime.strptime(data['date'], '%Y-%m-%d'), aum=data['aum'])
+            for data in aum_data
+        ]
 
-    def get_aum(self,
-                start_date: dt.date,
-                end_date: dt.date):
+    def get_aum(self, start_date: dt.date, end_date: dt.date):
         """
         Get AUM data for performance report
 
@@ -801,9 +802,7 @@ class PerformanceReport(Report):
             aum = self.get_net_exposure(start_date=start_date, end_date=end_date)
             return {row['date']: row['netExposure'] for index, row in aum.iterrows()}
 
-    def upload_custom_aum(self,
-                          aum_data: List[CustomAUMDataPoint],
-                          clear_existing_data: bool = None):
+    def upload_custom_aum(self, aum_data: List[CustomAUMDataPoint], clear_existing_data: bool = None):
         """
         Add AUM data for portfolio corresponding to the performance report
 
@@ -813,27 +812,33 @@ class PerformanceReport(Report):
         formatted_aum_data = [{'date': data.date.strftime('%Y-%m-%d'), 'aum': data.aum} for data in aum_data]
         GsReportApi.upload_custom_aum(self.id, formatted_aum_data, clear_existing_data)
 
-    def get_positions_data(self,
-                           start: dt.date = None,
-                           end: dt.date = dt.date.today(),
-                           fields: [str] = None,
-                           include_all_business_days: bool = False,
-                           position_type: PositionType = None) -> List[Dict]:
-        return GsPortfolioApi.get_positions_data(self.position_source_id,
-                                                 start,
-                                                 end,
-                                                 fields,
-                                                 performance_report_id=self.id,
-                                                 include_all_business_days=include_all_business_days,
-                                                 position_type=position_type)
+    def get_positions_data(
+        self,
+        start: dt.date = None,
+        end: dt.date = dt.date.today(),
+        fields: [str] = None,
+        include_all_business_days: bool = False,
+        position_type: PositionType = None,
+    ) -> List[Dict]:
+        return GsPortfolioApi.get_positions_data(
+            self.position_source_id,
+            start,
+            end,
+            fields,
+            performance_report_id=self.id,
+            include_all_business_days=include_all_business_days,
+            position_type=position_type,
+        )
         raise NotImplementedError
 
-    def get_portfolio_constituents(self,
-                                   fields: List[str] = None,
-                                   start_date: dt.date = None,
-                                   end_date: dt.date = None,
-                                   prefer_rebalance_positions: bool = False,
-                                   return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+    def get_portfolio_constituents(
+        self,
+        fields: List[str] = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        prefer_rebalance_positions: bool = False,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+    ) -> Union[Dict, pd.DataFrame]:
         """
         Get historical portfolio constituents
 
@@ -850,10 +855,14 @@ class PerformanceReport(Report):
         if asset_count.empty:
             return pd.DataFrame() if return_format == ReturnFormat.DATA_FRAME else {}
         date_batches = _get_ppaa_batches(asset_count, 3000000)
-        queries = [DataQuery(where=where, fields=fields, start_date=dates_batch[0], end_date=dates_batch[1]) for
-                   dates_batch in date_batches]
-        results = [GsDataApi.query_data(query=query, dataset_id=ReportDataset.PORTFOLIO_CONSTITUENTS.value)
-                   for query in queries]
+        queries = [
+            DataQuery(where=where, fields=fields, start_date=dates_batch[0], end_date=dates_batch[1])
+            for dates_batch in date_batches
+        ]
+        results = [
+            GsDataApi.query_data(query=query, dataset_id=ReportDataset.PORTFOLIO_CONSTITUENTS.value)
+            for query in queries
+        ]
         results = sum(results, [])
         if prefer_rebalance_positions:
             rebalance_dates = set()
@@ -862,15 +871,15 @@ class PerformanceReport(Report):
                     rebalance_dates.add(result['date'])
 
             results = [
-                result for result in results
+                result
+                for result in results
                 if result['date'] not in rebalance_dates or result['entryType'] == 'Rebalance'
             ]
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
-    def get_pnl_contribution(self,
-                             start_date: dt.date = None,
-                             end_date: dt.date = None,
-                             currency: Currency = None) -> pd.DataFrame:
+    def get_pnl_contribution(
+        self, start_date: dt.date = None, end_date: dt.date = None, currency: Currency = None
+    ) -> pd.DataFrame:
         """
         Get PnL Contribution broken down by constituents
 
@@ -879,18 +888,21 @@ class PerformanceReport(Report):
         :param currency: optional currency; defaults to your portfolio's currency
         :return: a Pandas DataFrame of results
         """
-        return pd.DataFrame(GsPortfolioApi.get_attribution(self.position_source_id, start_date, end_date,
-                                                           currency, self.id))
+        return pd.DataFrame(
+            GsPortfolioApi.get_attribution(self.position_source_id, start_date, end_date, currency, self.id)
+        )
 
-    def get_brinson_attribution(self,
-                                benchmark: str = None,
-                                currency: Currency = None,
-                                include_interaction: bool = False,
-                                aggregation_type: AttributionAggregationType = AttributionAggregationType.Arithmetic,
-                                aggregation_category: AggregationCategoryType = None,
-                                start_date: dt.date = None,
-                                end_date: dt.date = None,
-                                return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+    def get_brinson_attribution(
+        self,
+        benchmark: str = None,
+        currency: Currency = None,
+        include_interaction: bool = False,
+        aggregation_type: AttributionAggregationType = AttributionAggregationType.Arithmetic,
+        aggregation_category: AggregationCategoryType = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+    ) -> Union[Dict, pd.DataFrame]:
         """
         Get PnL analytics called Brinson Attribution
 
@@ -915,15 +927,16 @@ class PerformanceReport(Report):
         >>> )
         >>> display(pd.DataFrame(brinson_attribution_results))
         """
-        results = GsReportApi.get_brinson_attribution_results(portfolio_id=self.position_source_id,
-                                                              benchmark=benchmark,
-                                                              currency=currency,
-                                                              include_interaction=include_interaction,
-                                                              aggregation_type=aggregation_type.value,
-                                                              aggregation_category=aggregation_category.value
-                                                              if aggregation_category else None,
-                                                              start_date=start_date,
-                                                              end_date=end_date)
+        results = GsReportApi.get_brinson_attribution_results(
+            portfolio_id=self.position_source_id,
+            benchmark=benchmark,
+            currency=currency,
+            include_interaction=include_interaction,
+            aggregation_type=aggregation_type.value,
+            aggregation_category=aggregation_category.value if aggregation_category else None,
+            start_date=start_date,
+            end_date=end_date,
+        )
         if return_format == ReturnFormat.DATA_FRAME:
             rows = results.get('results')
             rows_data_frame = pd.DataFrame(rows)
@@ -938,22 +951,24 @@ class FactorRiskReport(Report):
     specified risk model
     """
 
-    def __init__(self,
-                 risk_model_id: str = None,
-                 fx_hedged: bool = True,
-                 benchmark_id: str = None,
-                 report_id: str = None,
-                 name: str = None,
-                 position_source_id: str = None,
-                 position_source_type: Union[str, PositionSourceType] = None,
-                 report_type: Union[str, ReportType] = None,
-                 earliest_start_date: dt.date = None,
-                 latest_end_date: dt.date = None,
-                 latest_execution_time: dt.datetime = None,
-                 status: Union[str, ReportStatus] = ReportStatus.new,
-                 percentage_complete: float = None,
-                 tags: Tuple[PositionTag, ...] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        risk_model_id: str = None,
+        fx_hedged: bool = True,
+        benchmark_id: str = None,
+        report_id: str = None,
+        name: str = None,
+        position_source_id: str = None,
+        position_source_type: Union[str, PositionSourceType] = None,
+        report_type: Union[str, ReportType] = None,
+        earliest_start_date: dt.date = None,
+        latest_end_date: dt.date = None,
+        latest_execution_time: dt.datetime = None,
+        status: Union[str, ReportStatus] = ReportStatus.new,
+        percentage_complete: float = None,
+        tags: Tuple[PositionTag, ...] = None,
+        **kwargs,
+    ):
         """
         Historical analyses on both the risk and attribution of a portfolio or asset to various factors determined by
         the specified risk model
@@ -984,22 +999,33 @@ class FactorRiskReport(Report):
         >>> )
         """
         if position_source_id and not position_source_type:
-            position_source_type = PositionSourceType.Portfolio if position_source_id.startswith('MP') else \
-                PositionSourceType.Asset
+            position_source_type = (
+                PositionSourceType.Portfolio if position_source_id.startswith('MP') else PositionSourceType.Asset
+            )
 
         if position_source_type and not report_type:
-            report_type = ReportType.Portfolio_Factor_Risk if position_source_type is PositionSourceType.Portfolio \
+            report_type = (
+                ReportType.Portfolio_Factor_Risk
+                if position_source_type is PositionSourceType.Portfolio
                 else ReportType.Asset_Factor_Risk
+            )
 
-        super().__init__(report_id, name, position_source_id, position_source_type, report_type,
-                         ReportParameters(risk_model=risk_model_id, fx_hedged=fx_hedged, benchmark=benchmark_id,
-                                          tags=tags),
-                         earliest_start_date, latest_end_date, latest_execution_time, status, percentage_complete)
+        super().__init__(
+            report_id,
+            name,
+            position_source_id,
+            position_source_type,
+            report_type,
+            ReportParameters(risk_model=risk_model_id, fx_hedged=fx_hedged, benchmark=benchmark_id, tags=tags),
+            earliest_start_date,
+            latest_end_date,
+            latest_execution_time,
+            status,
+            percentage_complete,
+        )
 
     @classmethod
-    def get(cls,
-            report_id: str,
-            **kwargs):
+    def get(cls, report_id: str, **kwargs):
         """
         Get a factor risk report from the unique report identifier
 
@@ -1009,22 +1035,23 @@ class FactorRiskReport(Report):
         return cls.from_target(GsReportApi.get_report(report_id))
 
     @classmethod
-    def from_target(cls,
-                    report: TargetReport):
+    def from_target(cls, report: TargetReport):
         if report.type not in [ReportType.Portfolio_Factor_Risk, ReportType.Asset_Factor_Risk]:
             raise MqValueError('This report is not a factor risk report.')
-        return FactorRiskReport(risk_model_id=report.parameters.risk_model,
-                                fx_hedged=report.parameters.fx_hedged,
-                                benchmark_id=report.parameters.benchmark,
-                                report_id=report.id,
-                                position_source_id=report.position_source_id,
-                                position_source_type=report.position_source_type,
-                                report_type=report.type,
-                                earliest_start_date=report.earliest_start_date,
-                                latest_end_date=report.latest_end_date,
-                                status=report.status,
-                                percentage_complete=report.percentage_complete,
-                                tags=report.parameters.tags)
+        return FactorRiskReport(
+            risk_model_id=report.parameters.risk_model,
+            fx_hedged=report.parameters.fx_hedged,
+            benchmark_id=report.parameters.benchmark,
+            report_id=report.id,
+            position_source_id=report.position_source_id,
+            position_source_type=report.position_source_type,
+            report_type=report.type,
+            earliest_start_date=report.earliest_start_date,
+            latest_end_date=report.latest_end_date,
+            status=report.status,
+            percentage_complete=report.percentage_complete,
+            tags=report.parameters.tags,
+        )
 
     def get_risk_model_id(self) -> str:
         """
@@ -1038,15 +1065,17 @@ class FactorRiskReport(Report):
         """
         return self.parameters.benchmark
 
-    def get_results(self,
-                    mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
-                    factors: List[str] = None,
-                    factor_categories: List[str] = None,
-                    start_date: dt.date = None,
-                    end_date: dt.date = None,
-                    currency: Currency = None,
-                    return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-                    unit: FactorRiskUnit = FactorRiskUnit.Notional) -> Union[Dict, pd.DataFrame]:
+    def get_results(
+        self,
+        mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
+        factors: List[str] = None,
+        factor_categories: List[str] = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        currency: Currency = None,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+        unit: FactorRiskUnit = FactorRiskUnit.Notional,
+    ) -> Union[Dict, pd.DataFrame]:
         """
         Get the raw results associated with the factor risk report
 
@@ -1070,23 +1099,27 @@ class FactorRiskReport(Report):
         >>> )
         >>> print(factor_and_total_results)
         """
-        results = GsReportApi.get_factor_risk_report_results(risk_report_id=self.id,
-                                                             view=mode.value,
-                                                             factors=factors,
-                                                             factor_categories=factor_categories,
-                                                             currency=currency,
-                                                             start_date=start_date,
-                                                             end_date=end_date,
-                                                             unit=unit.value)
+        results = GsReportApi.get_factor_risk_report_results(
+            risk_report_id=self.id,
+            view=mode.value,
+            factors=factors,
+            factor_categories=factor_categories,
+            currency=currency,
+            start_date=start_date,
+            end_date=end_date,
+            unit=unit.value,
+        )
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
-    def get_view(self,
-                 factor: str = None,
-                 factor_category: str = None,
-                 start_date: dt.date = None,
-                 end_date: dt.date = None,
-                 currency: Currency = None,
-                 unit: FactorRiskUnit = FactorRiskUnit.Notional) -> Dict:
+    def get_view(
+        self,
+        factor: str = None,
+        factor_category: str = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        currency: Currency = None,
+        unit: FactorRiskUnit = FactorRiskUnit.Notional,
+    ) -> Dict:
         """
         Get the results associated with the factor risk report as seen on the Marquee user interface
 
@@ -1124,19 +1157,21 @@ class FactorRiskReport(Report):
             currency=currency,
             start_date=start_date,
             end_date=end_date,
-            unit=unit.value
+            unit=unit.value,
         )
 
-    def get_table(self,
-                  mode: FactorRiskTableMode,
-                  factors: List[str] = None,
-                  factor_categories: List[str] = None,
-                  date: dt.date = None,
-                  start_date: dt.date = None,
-                  end_date: dt.date = None,
-                  unit: FactorRiskUnit = None,
-                  currency: Currency = None,
-                  return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+    def get_table(
+        self,
+        mode: FactorRiskTableMode,
+        factors: List[str] = None,
+        factor_categories: List[str] = None,
+        date: dt.date = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        unit: FactorRiskUnit = None,
+        currency: Currency = None,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+    ) -> Union[Dict, pd.DataFrame]:
         """
         Get the results associated with the factor risk report formatted for the asset level table on the interface
 
@@ -1161,21 +1196,26 @@ class FactorRiskReport(Report):
         """
         # setting default values to start_date and end_date if they are None
         if start_date is None and end_date is None:
-            start_date = self.latest_end_date - relativedelta(
-                months=1) if mode == FactorRiskTableMode.Pnl else self.latest_end_date
+            start_date = (
+                self.latest_end_date - relativedelta(months=1)
+                if mode == FactorRiskTableMode.Pnl
+                else self.latest_end_date
+            )
             end_date = self.latest_end_date
         elif start_date is None:
             start_date = end_date - relativedelta(months=1) if mode == FactorRiskTableMode.Pnl else end_date
         elif end_date is None:
             end_date = start_date if mode != FactorRiskTableMode.Pnl else self.latest_end_date
 
-        table = GsReportApi.get_factor_risk_report_table(risk_report_id=self.id,
-                                                         mode=mode,
-                                                         unit=unit.value if unit else None,
-                                                         currency=currency,
-                                                         date=date,
-                                                         start_date=start_date,
-                                                         end_date=end_date)
+        table = GsReportApi.get_factor_risk_report_table(
+            risk_report_id=self.id,
+            mode=mode,
+            unit=unit.value if unit else None,
+            currency=currency,
+            date=date,
+            start_date=start_date,
+            end_date=end_date,
+        )
         if 'table' not in table and 'warning' in table:
             raise MqValueError(table.get('warning'))
         if return_format == ReturnFormat.DATA_FRAME:
@@ -1190,14 +1230,16 @@ class FactorRiskReport(Report):
             return rows_data_frame
         return table
 
-    def get_factor_pnl(self,
-                       mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
-                       factor_names: List[str] = None,
-                       factor_categories: List[str] = None,
-                       start_date: dt.date = None,
-                       end_date: dt.date = None,
-                       currency: Currency = None,
-                       unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
+    def get_factor_pnl(
+        self,
+        mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
+        factor_names: List[str] = None,
+        factor_categories: List[str] = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        currency: Currency = None,
+        unit: FactorRiskUnit = FactorRiskUnit.Notional,
+    ) -> pd.DataFrame:
         """
         Get historical factor PnL
 
@@ -1215,15 +1257,16 @@ class FactorRiskReport(Report):
         if unit == FactorRiskUnit.Percent and factor_names_to_query is not None:
             factor_names_to_query.append('Total')
 
-        factor_data = self.get_results(mode=mode,
-                                       factors=factor_names_to_query,
-                                       factor_categories=factor_categories,
-                                       start_date=start_date,
-                                       end_date=end_date,
-                                       currency=currency,
-                                       return_format=ReturnFormat.JSON,
-                                       unit=unit if self.position_source_type != PositionSourceType.Portfolio
-                                       else FactorRiskUnit.Notional)
+        factor_data = self.get_results(
+            mode=mode,
+            factors=factor_names_to_query,
+            factor_categories=factor_categories,
+            start_date=start_date,
+            end_date=end_date,
+            currency=currency,
+            return_format=ReturnFormat.JSON,
+            unit=unit if self.position_source_type != PositionSourceType.Portfolio else FactorRiskUnit.Notional,
+        )
 
         if unit == FactorRiskUnit.Notional or self.position_source_type != PositionSourceType.Portfolio:
             return _format_multiple_factor_table(factor_data, 'pnl')
@@ -1232,40 +1275,48 @@ class FactorRiskReport(Report):
                 factor_names = list(set([x.get('factor') for x in factor_data]))
 
             all_reports = GsPortfolioApi.get_reports(self.position_source_id, None)
-            performance_reports = [PerformanceReport.get(r.id) for r in all_reports if r.type_ ==
-                                   ReportType.Portfolio_Performance_Analytics]
+            performance_reports = [
+                PerformanceReport.get(r.id)
+                for r in all_reports
+                if r.type_ == ReportType.Portfolio_Performance_Analytics
+            ]
             performance_report = [r for r in performance_reports if r.parameters.tags == self.parameters.tags][0]
             aum_df = format_aum_for_return_calculation(performance_report, start_date, end_date)
 
             total_data = [d for d in factor_data if d.get('factor') == 'Total']
             # Total pnl must be retieved when using smoothening to calculate Pnl %
             if len(total_data) == 0:
-                total_data = self.get_results(mode=mode,
-                                              factors=['Total'],
-                                              start_date=start_date,
-                                              end_date=end_date,
-                                              currency=currency,
-                                              return_format=ReturnFormat.JSON,
-                                              unit=FactorRiskUnit.Notional)
+                total_data = self.get_results(
+                    mode=mode,
+                    factors=['Total'],
+                    start_date=start_date,
+                    end_date=end_date,
+                    currency=currency,
+                    return_format=ReturnFormat.JSON,
+                    unit=FactorRiskUnit.Notional,
+                )
 
             smoothened_factor_data = {}
             for factor_name in factor_names:
                 selected_factor_data = [d for d in factor_data if d.get('factor') == factor_name]
                 start_date = dt.datetime.strptime(min([d['date'] for d in selected_factor_data]), '%Y-%m-%d').date()
-                smoothened_factor_data[factor_name] = \
-                    get_factor_pnl_percent_for_single_factor(selected_factor_data, total_data, aum_df, start_date)
+                smoothened_factor_data[factor_name] = get_factor_pnl_percent_for_single_factor(
+                    selected_factor_data, total_data, aum_df, start_date
+                )
 
             result = pd.DataFrame(smoothened_factor_data).reset_index().rename(columns={'date': 'Date'})
             return result.loc[result['Date'] >= start_date.strftime("%Y-%m-&d")]
 
-    def get_factor_exposure(self,
-                            mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
-                            factor_names: List[str] = None,
-                            factor_categories: List[str] = None,
-                            start_date: dt.date = None,
-                            end_date: dt.date = None,
-                            currency: Currency = None,
-                            unit: FactorRiskUnit = FactorRiskUnit.Notional) -> pd.DataFrame:
+    def get_factor_exposure(
+        self,
+        mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
+        factor_names: List[str] = None,
+        factor_categories: List[str] = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        currency: Currency = None,
+        unit: FactorRiskUnit = FactorRiskUnit.Notional,
+    ) -> pd.DataFrame:
         """
         Get historical factor exposure
 
@@ -1278,22 +1329,26 @@ class FactorRiskReport(Report):
         :param: unit: return the results in terms of notional or percent (defaults to notional)
         :return: a Pandas DataFrame with the results
         """
-        factor_data = self.get_results(mode=mode,
-                                       factors=factor_names,
-                                       factor_categories=factor_categories,
-                                       start_date=start_date,
-                                       end_date=end_date,
-                                       currency=currency,
-                                       return_format=ReturnFormat.JSON,
-                                       unit=unit)
+        factor_data = self.get_results(
+            mode=mode,
+            factors=factor_names,
+            factor_categories=factor_categories,
+            start_date=start_date,
+            end_date=end_date,
+            currency=currency,
+            return_format=ReturnFormat.JSON,
+            unit=unit,
+        )
         return _format_multiple_factor_table(factor_data, 'exposure')
 
-    def get_factor_proportion_of_risk(self,
-                                      factor_names: List[str] = None,
-                                      factor_categories: List[str] = None,
-                                      start_date: dt.date = None,
-                                      end_date: dt.date = None,
-                                      currency: Currency = None) -> pd.DataFrame:
+    def get_factor_proportion_of_risk(
+        self,
+        factor_names: List[str] = None,
+        factor_categories: List[str] = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        currency: Currency = None,
+    ) -> pd.DataFrame:
         """
         Get historical factor proportion of risk
 
@@ -1304,19 +1359,23 @@ class FactorRiskReport(Report):
         :param currency: currency
         :return: a Pandas DataFrame with the results
         """
-        factor_data = self.get_results(factors=factor_names,
-                                       factor_categories=factor_categories,
-                                       start_date=start_date,
-                                       end_date=end_date,
-                                       currency=currency,
-                                       return_format=ReturnFormat.JSON)
+        factor_data = self.get_results(
+            factors=factor_names,
+            factor_categories=factor_categories,
+            start_date=start_date,
+            end_date=end_date,
+            currency=currency,
+            return_format=ReturnFormat.JSON,
+        )
         return _format_multiple_factor_table(factor_data, 'proportionOfRisk')
 
-    def get_annual_risk(self,
-                        factor_names: List[str] = None,
-                        start_date: dt.date = None,
-                        end_date: dt.date = None,
-                        currency: Currency = None) -> pd.DataFrame:
+    def get_annual_risk(
+        self,
+        factor_names: List[str] = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        currency: Currency = None,
+    ) -> pd.DataFrame:
         """
         Get historical annual risk
 
@@ -1326,18 +1385,22 @@ class FactorRiskReport(Report):
         :param currency: currency
         :return: a Pandas DataFrame with the results
         """
-        factor_data = self.get_results(factors=factor_names,
-                                       start_date=start_date,
-                                       end_date=end_date,
-                                       currency=currency,
-                                       return_format=ReturnFormat.JSON)
+        factor_data = self.get_results(
+            factors=factor_names,
+            start_date=start_date,
+            end_date=end_date,
+            currency=currency,
+            return_format=ReturnFormat.JSON,
+        )
         return _format_multiple_factor_table(factor_data, 'annualRisk')
 
-    def get_daily_risk(self,
-                       factor_names: List[str] = None,
-                       start_date: dt.date = None,
-                       end_date: dt.date = None,
-                       currency: Currency = None) -> pd.DataFrame:
+    def get_daily_risk(
+        self,
+        factor_names: List[str] = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        currency: Currency = None,
+    ) -> pd.DataFrame:
         """
         Get historical daily risk
 
@@ -1347,18 +1410,22 @@ class FactorRiskReport(Report):
         :param currency: currency
         :return: a Pandas DataFrame with the results
         """
-        factor_data = self.get_results(factors=factor_names,
-                                       start_date=start_date,
-                                       end_date=end_date,
-                                       currency=currency,
-                                       return_format=ReturnFormat.JSON)
+        factor_data = self.get_results(
+            factors=factor_names,
+            start_date=start_date,
+            end_date=end_date,
+            currency=currency,
+            return_format=ReturnFormat.JSON,
+        )
         return _format_multiple_factor_table(factor_data, 'dailyRisk')
 
-    def get_ex_ante_var(self,
-                        confidence_interval: float = 95.0,
-                        start_date: dt.date = None,
-                        end_date: dt.date = None,
-                        currency: Currency = None) -> pd.DataFrame:
+    def get_ex_ante_var(
+        self,
+        confidence_interval: float = 95.0,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        currency: Currency = None,
+    ) -> pd.DataFrame:
         """
         Get ex-ante Value at Risk as defined by the risk model
 
@@ -1368,29 +1435,27 @@ class FactorRiskReport(Report):
         :param currency: currency
         :return: a Pandas DataFrame with the results
         """
-        factor_data = self.get_results(factors=['Total'],
-                                       start_date=start_date,
-                                       end_date=end_date,
-                                       currency=currency,
-                                       return_format=ReturnFormat.JSON)
+        factor_data = self.get_results(
+            factors=['Total'],
+            start_date=start_date,
+            end_date=end_date,
+            currency=currency,
+            return_format=ReturnFormat.JSON,
+        )
         z_score = st.norm.ppf(confidence_interval / 100)
         for data in factor_data:
             data['var'] = data['dailyRisk'] * z_score
         return _format_multiple_factor_table(factor_data, 'var')
 
 
-def _format_multiple_factor_table(factor_data: List[Dict],
-                                  key: str) -> pd.DataFrame:
+def _format_multiple_factor_table(factor_data: List[Dict], key: str) -> pd.DataFrame:
     formatted_data = {}
     for data in factor_data:
         date = data['date']
         if date in formatted_data:
             formatted_data[date][data['factor']] = data[key]
         else:
-            formatted_data[date] = {
-                'Date': date,
-                data['factor']: data[key]
-            }
+            formatted_data[date] = {'Date': date, data['factor']: data[key]}
 
     return pd.DataFrame(formatted_data.values())
 
@@ -1400,19 +1465,21 @@ class ThematicReport(Report):
     Historical analyses on the exposure of a portfolio to various GS Flagship Thematic baskets over a date range
     """
 
-    def __init__(self,
-                 report_id: str = None,
-                 name: str = None,
-                 position_source_id: str = None,
-                 parameters: ReportParameters = None,
-                 position_source_type: Union[str, PositionSourceType] = None,
-                 report_type: Union[str, ReportType] = None,
-                 earliest_start_date: dt.date = None,
-                 latest_end_date: dt.date = None,
-                 latest_execution_time: dt.datetime = None,
-                 status: Union[str, ReportStatus] = ReportStatus.new,
-                 percentage_complete: float = None,
-                 **kwargs):
+    def __init__(
+        self,
+        report_id: str = None,
+        name: str = None,
+        position_source_id: str = None,
+        parameters: ReportParameters = None,
+        position_source_type: Union[str, PositionSourceType] = None,
+        report_type: Union[str, ReportType] = None,
+        earliest_start_date: dt.date = None,
+        latest_end_date: dt.date = None,
+        latest_execution_time: dt.datetime = None,
+        status: Union[str, ReportStatus] = ReportStatus.new,
+        percentage_complete: float = None,
+        **kwargs,
+    ):
         """
         Historical analyses on the exposure of a portfolio to various GS Flagship Thematic baskets over a date range
 
@@ -1438,22 +1505,33 @@ class ThematicReport(Report):
         >>> )
         """
         if position_source_id and not position_source_type:
-            position_source_type = PositionSourceType.Portfolio if position_source_id.startswith('MP') else \
-                PositionSourceType.Asset
+            position_source_type = (
+                PositionSourceType.Portfolio if position_source_id.startswith('MP') else PositionSourceType.Asset
+            )
 
         if position_source_type and not report_type:
-            report_type = ReportType.Portfolio_Thematic_Analytics if (position_source_type is PositionSourceType.
-                                                                      Portfolio) else (ReportType.
-                                                                                       Asset_Thematic_Analytics)
+            report_type = (
+                ReportType.Portfolio_Thematic_Analytics
+                if (position_source_type is PositionSourceType.Portfolio)
+                else (ReportType.Asset_Thematic_Analytics)
+            )
 
-        super().__init__(report_id, name, position_source_id, position_source_type,
-                         report_type, parameters, earliest_start_date, latest_end_date,
-                         latest_execution_time, status, percentage_complete)
+        super().__init__(
+            report_id,
+            name,
+            position_source_id,
+            position_source_type,
+            report_type,
+            parameters,
+            earliest_start_date,
+            latest_end_date,
+            latest_execution_time,
+            status,
+            percentage_complete,
+        )
 
     @classmethod
-    def get(cls,
-            report_id: str,
-            **kwargs):
+    def get(cls, report_id: str, **kwargs):
         """
         Get a thematic report from the unique report identifier
 
@@ -1463,26 +1541,26 @@ class ThematicReport(Report):
         return cls.from_target(GsReportApi.get_report(report_id))
 
     @classmethod
-    def from_target(cls,
-                    report: TargetReport):
+    def from_target(cls, report: TargetReport):
         if report.type not in [ReportType.Portfolio_Thematic_Analytics, ReportType.Asset_Thematic_Analytics]:
             raise MqValueError('This report is not a thematic report.')
-        return ThematicReport(report_id=report.id,
-                              name=report.name,
-                              position_source_id=report.position_source_id,
-                              parameters=report.parameters,
-                              position_source_type=report.position_source_type,
-                              report_type=report.type,
-                              earliest_start_date=report.earliest_start_date,
-                              latest_end_date=report.latest_end_date,
-                              latest_execution_time=report.latest_execution_time,
-                              status=report.status,
-                              percentage_complete=report.percentage_complete)
+        return ThematicReport(
+            report_id=report.id,
+            name=report.name,
+            position_source_id=report.position_source_id,
+            parameters=report.parameters,
+            position_source_type=report.position_source_type,
+            report_type=report.type,
+            earliest_start_date=report.earliest_start_date,
+            latest_end_date=report.latest_end_date,
+            latest_execution_time=report.latest_execution_time,
+            status=report.status,
+            percentage_complete=report.percentage_complete,
+        )
 
-    def get_thematic_data(self,
-                          start_date: dt.date = None,
-                          end_date: dt.date = None,
-                          basket_ids: List[str] = None) -> pd.DataFrame:
+    def get_thematic_data(
+        self, start_date: dt.date = None, end_date: dt.date = None, basket_ids: List[str] = None
+    ) -> pd.DataFrame:
         """
         Get all results from the thematic report for a date range
 
@@ -1492,16 +1570,16 @@ class ThematicReport(Report):
         :return: a Pandas DataFrame with results
         """
 
-        results = self._get_measures(["thematicExposure", "grossExposure"], start_date, end_date, basket_ids,
-                                     ReturnFormat.JSON)
+        results = self._get_measures(
+            ["thematicExposure", "grossExposure"], start_date, end_date, basket_ids, ReturnFormat.JSON
+        )
         for result in results:
             result['thematicBeta'] = result['thematicExposure'] / result['grossExposure']
         return pd.DataFrame(results).filter(items=['date', 'thematicExposure', 'thematicBeta'])
 
-    def get_thematic_exposure(self,
-                              start_date: dt.date = None,
-                              end_date: dt.date = None,
-                              basket_ids: List[str] = None) -> pd.DataFrame:
+    def get_thematic_exposure(
+        self, start_date: dt.date = None, end_date: dt.date = None, basket_ids: List[str] = None
+    ) -> pd.DataFrame:
         """
         Get portfolio historical exposure to GS Flagship Thematic baskets
 
@@ -1512,10 +1590,9 @@ class ThematicReport(Report):
         """
         return self._get_measures(["thematicExposure"], start_date, end_date, basket_ids)
 
-    def get_thematic_betas(self,
-                           start_date: dt.date = None,
-                           end_date: dt.date = None,
-                           basket_ids: List[str] = None) -> pd.DataFrame:
+    def get_thematic_betas(
+        self, start_date: dt.date = None, end_date: dt.date = None, basket_ids: List[str] = None
+    ) -> pd.DataFrame:
         """
         Get portfolio historical beta to GS Flagship Thematic baskets
 
@@ -1524,34 +1601,42 @@ class ThematicReport(Report):
         :param basket_ids: optional list of thematic basket IDs to include; defaults to all of them
         :return: a Pandas DataFrame with results
         """
-        results = self._get_measures(["thematicExposure", "grossExposure"], start_date, end_date, basket_ids,
-                                     ReturnFormat.JSON)
+        results = self._get_measures(
+            ["thematicExposure", "grossExposure"], start_date, end_date, basket_ids, ReturnFormat.JSON
+        )
         for result in results:
             result['thematicBeta'] = result['thematicExposure'] / result['grossExposure']
             result.pop('thematicExposure')
             result.pop('grossExposure')
         return pd.DataFrame(results)
 
-    def _get_measures(self,
-                      fields: List,
-                      start_date: dt.date = None,
-                      end_date: dt.date = None,
-                      basket_ids: List[str] = None,
-                      return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> Union[Dict, pd.DataFrame]:
+    def _get_measures(
+        self,
+        fields: List,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        basket_ids: List[str] = None,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+    ) -> Union[Dict, pd.DataFrame]:
         where = {'reportId': self.id}
         if basket_ids:
             where['basketId'] = basket_ids
-        dataset = ReportDataset.PTA_DATASET.value if self.position_source_type == PositionSourceType.Portfolio \
+        dataset = (
+            ReportDataset.PTA_DATASET.value
+            if self.position_source_type == PositionSourceType.Portfolio
             else ReportDataset.ATA_DATASET.value
+        )
         query = DataQuery(where=where, fields=fields, start_date=start_date, end_date=end_date)
         results = GsDataApi.query_data(query=query, dataset_id=dataset)
         return pd.DataFrame(results) if return_format == ReturnFormat.DATA_FRAME else results
 
-    def get_all_thematic_exposures(self,
-                                   start_date: dt.date = None,
-                                   end_date: dt.date = None,
-                                   basket_ids: List[str] = None,
-                                   regions: List[Region] = None) -> pd.DataFrame:
+    def get_all_thematic_exposures(
+        self,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        basket_ids: List[str] = None,
+        regions: List[Region] = None,
+    ) -> pd.DataFrame:
         """
         Get all portfolio thematic analytics for GS Flagshop Thematic baskets
 
@@ -1561,19 +1646,23 @@ class ThematicReport(Report):
         :param regions: regions by which to filter flagship thematic baskets; defaults to all regions
         :return: a Pandas DataFrame with results
         """
-        results = GsThematicApi.get_thematics(entity_id=self.position_source_id,
-                                              start_date=start_date,
-                                              end_date=end_date,
-                                              basket_ids=basket_ids,
-                                              regions=regions,
-                                              measures=[ThematicMeasure.ALL_THEMATIC_EXPOSURES])
+        results = GsThematicApi.get_thematics(
+            entity_id=self.position_source_id,
+            start_date=start_date,
+            end_date=end_date,
+            basket_ids=basket_ids,
+            regions=regions,
+            measures=[ThematicMeasure.ALL_THEMATIC_EXPOSURES],
+        )
         return flatten_results_into_df(results)
 
-    def get_top_five_thematic_exposures(self,
-                                        start_date: dt.date = None,
-                                        end_date: dt.date = None,
-                                        basket_ids: List[str] = None,
-                                        regions: List[Region] = None) -> pd.DataFrame:
+    def get_top_five_thematic_exposures(
+        self,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        basket_ids: List[str] = None,
+        regions: List[Region] = None,
+    ) -> pd.DataFrame:
         """
         Get portfolio thematic analytics for the five GS Flagship Thematic baskets with the highest thematic exposures
 
@@ -1583,19 +1672,23 @@ class ThematicReport(Report):
         :param regions: regions by which to filter flagship thematic baskets; defaults to all regions
         :return: a Pandas DataFrame with the top 5 results
         """
-        results = GsThematicApi.get_thematics(entity_id=self.position_source_id,
-                                              start_date=start_date,
-                                              end_date=end_date,
-                                              basket_ids=basket_ids,
-                                              regions=regions,
-                                              measures=[ThematicMeasure.TOP_FIVE_THEMATIC_EXPOSURES])
+        results = GsThematicApi.get_thematics(
+            entity_id=self.position_source_id,
+            start_date=start_date,
+            end_date=end_date,
+            basket_ids=basket_ids,
+            regions=regions,
+            measures=[ThematicMeasure.TOP_FIVE_THEMATIC_EXPOSURES],
+        )
         return flatten_results_into_df(results)
 
-    def get_bottom_five_thematic_exposures(self,
-                                           start_date: dt.date = None,
-                                           end_date: dt.date = None,
-                                           basket_ids: List[str] = None,
-                                           regions: List[Region] = None) -> pd.DataFrame:
+    def get_bottom_five_thematic_exposures(
+        self,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        basket_ids: List[str] = None,
+        regions: List[Region] = None,
+    ) -> pd.DataFrame:
         """
         Get portfolio thematic analytics for the five GS Flagship Thematic baskets with the lowest thematic exposures
 
@@ -1605,17 +1698,17 @@ class ThematicReport(Report):
         :param regions: regions by which to filter flagship thematic baskets; defaults to all regions
         :return: a Pandas DataFrame with the bottom 5 results
         """
-        results = GsThematicApi.get_thematics(entity_id=self.position_source_id,
-                                              start_date=start_date,
-                                              end_date=end_date,
-                                              basket_ids=basket_ids,
-                                              regions=regions,
-                                              measures=[ThematicMeasure.BOTTOM_FIVE_THEMATIC_EXPOSURES])
+        results = GsThematicApi.get_thematics(
+            entity_id=self.position_source_id,
+            start_date=start_date,
+            end_date=end_date,
+            basket_ids=basket_ids,
+            regions=regions,
+            measures=[ThematicMeasure.BOTTOM_FIVE_THEMATIC_EXPOSURES],
+        )
         return flatten_results_into_df(results)
 
-    def get_thematic_breakdown(self,
-                               date: dt.date,
-                               basket_id: str) -> pd.DataFrame:
+    def get_thematic_breakdown(self, date: dt.date, basket_id: str) -> pd.DataFrame:
         """
         Get a by-asset breakdown of a portfolio or basket's thematic exposure to a particular flagship basket on a
         particular date
@@ -1627,9 +1720,7 @@ class ThematicReport(Report):
         return get_thematic_breakdown_as_df(entity_id=self.position_source_id, date=date, basket_id=basket_id)
 
 
-def get_thematic_breakdown_as_df(entity_id: str,
-                                 date: dt.date,
-                                 basket_id: str) -> pd.DataFrame:
+def get_thematic_breakdown_as_df(entity_id: str, date: dt.date, basket_id: str) -> pd.DataFrame:
     """
     Get a by-asset breakdown of a portfolio or basket's thematic exposure to a particular flagship basket on a
     particular data and return as a Pandas DataFrame
@@ -1639,14 +1730,17 @@ def get_thematic_breakdown_as_df(entity_id: str,
     :param basket_id: GS flagship basket's unique Marquee ID
     :return: a Pandas DataFrame with results
     """
-    results = GsThematicApi.get_thematics(entity_id=entity_id,
-                                          start_date=date,
-                                          end_date=date,
-                                          basket_ids=[basket_id],
-                                          measures=[ThematicMeasure.THEMATIC_BREAKDOWN_BY_ASSET])
-    breakdown = results[0].get(
-        ThematicMeasure.THEMATIC_BREAKDOWN_BY_ASSET.value, [{}])[0].get(
-        ThematicMeasure.THEMATIC_BREAKDOWN_BY_ASSET.value, []
+    results = GsThematicApi.get_thematics(
+        entity_id=entity_id,
+        start_date=date,
+        end_date=date,
+        basket_ids=[basket_id],
+        measures=[ThematicMeasure.THEMATIC_BREAKDOWN_BY_ASSET],
+    )
+    breakdown = (
+        results[0]
+        .get(ThematicMeasure.THEMATIC_BREAKDOWN_BY_ASSET.value, [{}])[0]
+        .get(ThematicMeasure.THEMATIC_BREAKDOWN_BY_ASSET.value, [])
     )
     formatted_breakdown = []
     for data in breakdown:
@@ -1668,16 +1762,18 @@ def flatten_results_into_df(results: List):
         for key in result:
             if isinstance(result[key], list):
                 for thematic_data in result[key]:
-                    all_results.append({
-                        'Date': date,
-                        **{titleize(k): thematic_data[k] for k in thematic_data}
-                    })
+                    all_results.append({'Date': date, **{titleize(k): thematic_data[k] for k in thematic_data}})
     all_results = pd.DataFrame(all_results).rename(columns={'Basket': 'Basket Id'})
     return pd.DataFrame(all_results)
 
 
-def get_pnl_percent(performance_report: PerformanceReport, pnl_df: pd.DataFrame, field: str,
-                    start_date: dt.datetime.date, end_date: dt.datetime.date):
+def get_pnl_percent(
+    performance_report: PerformanceReport,
+    pnl_df: pd.DataFrame,
+    field: str,
+    start_date: dt.datetime.date,
+    end_date: dt.datetime.date,
+):
     aum_df = format_aum_for_return_calculation(performance_report, start_date, end_date)
     is_first_data_point_on_start_date = pnl_df['date'].iloc[[0]].values[0] == start_date.strftime('%Y-%m-%d')
     return_series = generate_daily_returns(aum_df, pnl_df, 'aum', field, is_first_data_point_on_start_date)
@@ -1698,15 +1794,17 @@ def format_factor_pnl_for_return_calculation(factor_data: list, total_data: list
     return pnl_df
 
 
-def format_aum_for_return_calculation(performance_report: PerformanceReport, start_date: dt.datetime.date,
-                                      end_date: dt.datetime.date):
+def format_aum_for_return_calculation(
+    performance_report: PerformanceReport, start_date: dt.datetime.date, end_date: dt.datetime.date
+):
     aum_as_dict = performance_report.get_aum(start_date=prev_business_date(start_date), end_date=end_date)
     aum_df = pd.DataFrame(aum_as_dict.items(), columns=['date', 'aum'])
     return aum_df
 
 
-def generate_daily_returns(aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_key: str, pnl_col_key: str,
-                           is_start_date_first_data_point: bool):
+def generate_daily_returns(
+    aum_df: pd.DataFrame, pnl_df: pd.DataFrame, aum_col_key: str, pnl_col_key: str, is_start_date_first_data_point: bool
+):
     # Returns are defined as Pnl today divided by AUM yesterday.
     if is_start_date_first_data_point:
         pnl_df.loc[0, pnl_col_key] = 0
@@ -1761,7 +1859,8 @@ def _filter_table_by_factor_and_category(column_info: Dict, factors: List, facto
         if factors is not None:
             sorted_columns = sorted_columns + factors
         if factor_categories is not None:
-            for column_group in [column_group for column_group in column_info
-                                 if column_group.get('columnGroup') in factor_categories]:
+            for column_group in [
+                column_group for column_group in column_info if column_group.get('columnGroup') in factor_categories
+            ]:
                 sorted_columns = sorted_columns + column_group.get('columns')
     return sorted_columns

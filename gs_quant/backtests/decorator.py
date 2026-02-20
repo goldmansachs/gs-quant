@@ -19,6 +19,7 @@ def plot_backtest():
     """
     Indicates that class should be exported to plottool as a member function / pseudo-measure (of the backtest).
     """
+
     def decorator(obj):
         obj._plot_backtest = True
         return obj

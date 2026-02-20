@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from enum import IntEnum
 from unittest import mock
@@ -29,14 +30,28 @@ from gs_quant.data import Dataset
 from gs_quant.errors import MqError, MqRequestError
 from gs_quant.session import GsSession
 from gs_quant.test.api.test_thread_manager import NullContextManager
-from gs_quant.timeseries.helper import _create_int_enum, _tenor_to_month, _month_to_tenor, plot_function, \
-    plot_measure, plot_method, normalize_window, Window, apply_ramp, check_forward_looking, get_df_with_retries, \
-    get_dataset_data_with_retries, _split_where_conditions, get_dataset_with_many_assets
+from gs_quant.timeseries.helper import (
+    _create_int_enum,
+    _tenor_to_month,
+    _month_to_tenor,
+    plot_function,
+    plot_measure,
+    plot_method,
+    normalize_window,
+    Window,
+    apply_ramp,
+    check_forward_looking,
+    get_df_with_retries,
+    get_dataset_data_with_retries,
+    _split_where_conditions,
+    get_dataset_with_many_assets,
+)
 
 # TODO test the instance of IntEnum when we have any.
 
-WeekDay = _create_int_enum('WeekDay', {'SUNDAY': 1, 'Monday': 2, 'TUESDAY': 3,
-                                       'WEDNESDAY': 4, 'THURSDAY': 5, 'Friday': 6, 'SATURDAY': 7})
+WeekDay = _create_int_enum(
+    'WeekDay', {'SUNDAY': 1, 'Monday': 2, 'TUESDAY': 3, 'WEDNESDAY': 4, 'THURSDAY': 5, 'Friday': 6, 'SATURDAY': 7}
+)
 
 
 def test_int_enum():
@@ -84,7 +99,7 @@ def test_get_dataset_with_many_assets():
     # Call the function and inspect the result
     with (
         mock.patch("gs_quant.api.utils.DataContext", MagicMock(spec=DataContext)) as mock_data_context,
-        mock.patch("gs_quant.api.utils.GsSession", MagicMock(spec=GsSession)) as mock_gs_session
+        mock.patch("gs_quant.api.utils.GsSession", MagicMock(spec=GsSession)) as mock_gs_session,
     ):
         mock_data_context.current = mock_data_context
         mock_gs_session.current = mock_gs_session
@@ -289,20 +304,23 @@ def test_get_dataset_data_with_retries():
     mock.side_effect = [
         MqRequestError(400, message='Some other error'),
         MqRequestError(400, message='Some other error'),
-        MqRequestError(400, message='Some other error')
+        MqRequestError(400, message='Some other error'),
     ]
     dataset = Dataset(Dataset.TR.TREOD)
     with pytest.raises(MqRequestError):
-        get_dataset_data_with_retries(dataset, start=dt.date(2000, 1, 2), end=dt.date(2019, 1, 9),
-                                      assetId='MA4B66MW5E27U8P32SB', max_retries=0)
+        get_dataset_data_with_retries(
+            dataset, start=dt.date(2000, 1, 2), end=dt.date(2019, 1, 9), assetId='MA4B66MW5E27U8P32SB', max_retries=0
+        )
 
     replace.restore()
 
 
 def test_split_where_conditions():
     where = dict(tenor=['1m', '2m'], strikeReference='delta_call', relativeStrike=25)
-    expected = [dict(tenor=['1m'], strikeReference='delta_call', relativeStrike=25),
-                dict(tenor=['2m'], strikeReference='delta_call', relativeStrike=25)]
+    expected = [
+        dict(tenor=['1m'], strikeReference='delta_call', relativeStrike=25),
+        dict(tenor=['2m'], strikeReference='delta_call', relativeStrike=25),
+    ]
     actual = _split_where_conditions(where)
     assert actual == expected
 
@@ -317,11 +335,12 @@ def test_split_where_conditions():
     assert actual == expected
 
     where = dict(tenor=['1m', '2m'], strikeReference='delta_call', relativeStrike=[25, 50])
-    expected = [dict(tenor=['1m'], strikeReference='delta_call', relativeStrike=[25]),
-                dict(tenor=['1m'], strikeReference='delta_call', relativeStrike=[50]),
-                dict(tenor=['2m'], strikeReference='delta_call', relativeStrike=[25]),
-                dict(tenor=['2m'], strikeReference='delta_call', relativeStrike=[50])
-                ]
+    expected = [
+        dict(tenor=['1m'], strikeReference='delta_call', relativeStrike=[25]),
+        dict(tenor=['1m'], strikeReference='delta_call', relativeStrike=[50]),
+        dict(tenor=['2m'], strikeReference='delta_call', relativeStrike=[25]),
+        dict(tenor=['2m'], strikeReference='delta_call', relativeStrike=[50]),
+    ]
     actual = _split_where_conditions(where)
     assert actual == expected
 
@@ -332,11 +351,13 @@ if __name__ == "__main__":
 
 def test_get_dataset_data_with_retries_recursive_split():
     dataset = Mock()
-    dataset.get_data = Mock(side_effect=[
-        MqRequestError(400, message="Some error occurred"),
-        pd.DataFrame({"data": [1, 2]}),
-        pd.DataFrame({"data": [3, 4]})
-    ])
+    dataset.get_data = Mock(
+        side_effect=[
+            MqRequestError(400, message="Some error occurred"),
+            pd.DataFrame({"data": [1, 2]}),
+            pd.DataFrame({"data": [3, 4]}),
+        ]
+    )
 
     start = dt.date(2023, 1, 1)
     end = dt.date(2023, 1, 10)

@@ -42,7 +42,7 @@ _type_to_datatype_map = {
     'vector': VectorWithData,
     'matrix': MatrixWithData,
     'defn': DefnValuesWithData,
-    'dict': DictsWithData
+    'dict': DictsWithData,
 }
 
 

@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from time import sleep
 from unittest.mock import patch, ANY
@@ -56,8 +57,9 @@ def test_pricing_context(mocker):
         with PricingContext(market=CloseMarket(date=future_date)):
             _ = swap1.calc(risk.Price)
 
-        with PricingContext(market=OverlayMarket(base_market=CloseMarket(date=future_date, location='NYC'),
-                                                 market_data=market.result())):
+        with PricingContext(
+            market=OverlayMarket(base_market=CloseMarket(date=future_date, location='NYC'), market_data=market.result())
+        ):
             _ = swap1.calc(risk.Price)
 
 
@@ -83,12 +85,26 @@ def test_weekend_dates():
 
 def test_market_data_object():
     coord_val_pair = [
-        {'coordinate': {
-            'mkt_type': 'IR', 'mkt_asset': 'USD', 'mkt_class': 'Swap', 'mkt_point': ('5y',),
-            'mkt_quoting_style': 'ATMRate'}, 'value': 0.9973194889},
-        {'coordinate': {
-            'mkt_type': 'IR', 'mkt_asset': 'USD', 'mkt_class': 'Swap', 'mkt_point': ('40y',),
-            'mkt_quoting_style': 'ATMRate'}, 'value': 'redacted'},
+        {
+            'coordinate': {
+                'mkt_type': 'IR',
+                'mkt_asset': 'USD',
+                'mkt_class': 'Swap',
+                'mkt_point': ('5y',),
+                'mkt_quoting_style': 'ATMRate',
+            },
+            'value': 0.9973194889,
+        },
+        {
+            'coordinate': {
+                'mkt_type': 'IR',
+                'mkt_asset': 'USD',
+                'mkt_class': 'Swap',
+                'mkt_point': ('40y',),
+                'mkt_quoting_style': 'ATMRate',
+            },
+            'value': 'redacted',
+        },
     ]
     coordinates = {MarketDataCoordinate.from_dict(dic['coordinate']): dic['value'] for dic in coord_val_pair}
     overlay_market = OverlayMarket(base_market=CloseMarket(), market_data=coordinates)
@@ -260,8 +276,11 @@ def test_market_props():
     PricingContext.current = PricingContext()  # Reset
     # market_data_location cannot conflict with market.location
     with pytest.raises(ValueError):
-        PricingContext(market=CloseMarket(date=dt.date(2022, 4, 6), location='NYC'),
-                       pricing_date=dt.date(2022, 7, 4), market_data_location='TKO')
+        PricingContext(
+            market=CloseMarket(date=dt.date(2022, 4, 6), location='NYC'),
+            pricing_date=dt.date(2022, 7, 4),
+            market_data_location='TKO',
+        )
 
     # Default pricing date and market location are today and LDN, respectively
     pc = PricingContext()
@@ -270,8 +289,7 @@ def test_market_props():
         assert pc.pricing_date == business_day_offset(today(PricingLocation.LDN), 0, roll='preceding')
 
     # pricing_date and market.date can be different
-    pc = PricingContext(market=CloseMarket(date=dt.date(2022, 4, 6), location='NYC'),
-                        pricing_date=dt.date(2022, 7, 4))
+    pc = PricingContext(market=CloseMarket(date=dt.date(2022, 4, 6), location='NYC'), pricing_date=dt.date(2022, 7, 4))
 
     with pc:
         assert pc.pricing_date == dt.date(2022, 7, 4)
@@ -284,8 +302,7 @@ def test_market_props():
     assert pc.market.location == cm.location
 
     # market is not inherited
-    pc = PricingContext(market=CloseMarket(date=dt.date(2022, 4, 6), location='NYC'),
-                        pricing_date=dt.date(2022, 7, 4))
+    pc = PricingContext(market=CloseMarket(date=dt.date(2022, 4, 6), location='NYC'), pricing_date=dt.date(2022, 7, 4))
     with pc:
         # pc gets market_data_location from its market
         assert pc.market_data_location == PricingLocation.NYC

@@ -26,8 +26,17 @@ from gs_quant.common import Currency
 from gs_quant.markets.securities import Asset
 from .analysis import LagMode, lag
 from .datetime import align, interpolate
-from .helper import CurveType, Interpolate, Window, normalize_window, apply_ramp, plot_session_function, \
-    plot_function, Returns, SeriesType
+from .helper import (
+    CurveType,
+    Interpolate,
+    Window,
+    normalize_window,
+    apply_ramp,
+    plot_session_function,
+    plot_function,
+    Returns,
+    SeriesType,
+)
 from .statistics import std, product, sum_, mean, MeanType
 from ..data import DataContext
 from ..datetime import DayCountConvention, day_count_fraction
@@ -68,8 +77,12 @@ def excess_returns_pure(price_series: pd.Series, spot_curve: pd.Series) -> pd.Se
     return pd.Series(e_returns, index=curve.index)
 
 
-def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Currency, float], *,
-                   day_count_convention=DayCountConvention.ACTUAL_360) -> pd.Series:
+def excess_returns(
+    price_series: pd.Series,
+    benchmark_or_rate: Union[Asset, Currency, float],
+    *,
+    day_count_convention=DayCountConvention.ACTUAL_360,
+) -> pd.Series:
     if isinstance(benchmark_or_rate, float):
         er = [price_series.iloc[0]]
         for j in range(1, len(price_series)):
@@ -95,31 +108,42 @@ def excess_returns(price_series: pd.Series, benchmark_or_rate: Union[Asset, Curr
     return excess_returns_pure(price_series, df['spot'])
 
 
-def _annualized_return(levels: pd.Series, rolling: Union[int, pd.DateOffset],
-                       interpolation_method: Interpolate = Interpolate.NAN) -> pd.Series:
+def _annualized_return(
+    levels: pd.Series, rolling: Union[int, pd.DateOffset], interpolation_method: Interpolate = Interpolate.NAN
+) -> pd.Series:
     if isinstance(rolling, pd.DateOffset):
         starting = [tstamp - rolling for tstamp in levels.index]
         levels = interpolate(levels, method=interpolation_method)
         points = list(
-            map(lambda d, v, i: pow(v / levels.get(i, np.nan),
-                                    365.25 / (d - i).days) - 1,
+            map(
+                lambda d, v, i: pow(v / levels.get(i, np.nan), 365.25 / (d - i).days) - 1,
                 levels.index[1:],
-                levels.values[1:], starting[1:]))
+                levels.values[1:],
+                starting[1:],
+            )
+        )
     else:
         if interpolation_method is not Interpolate.NAN:
-            raise MqValueError(f'If w is not a relative date, method must be nan. You specified method: '
-                               f'{interpolation_method.value}.')
+            raise MqValueError(
+                f'If w is not a relative date, method must be nan. You specified method: {interpolation_method.value}.'
+            )
         starting = [0] * rolling
         starting.extend([a for a in range(1, len(levels) - rolling + 1)])
         points = list(
-            map(lambda d, v, i: pow(v / levels.iloc[i], 365.25 / (d - levels.index[i]).days) - 1, levels.index[1:],
-                levels.values[1:], starting[1:]))
+            map(
+                lambda d, v, i: pow(v / levels.iloc[i], 365.25 / (d - levels.index[i]).days) - 1,
+                levels.index[1:],
+                levels.values[1:],
+                starting[1:],
+            )
+        )
     points.insert(0, 0)
     return pd.Series(points, index=levels.index)
 
 
-def get_ratio_pure(er: pd.Series, w: Union[Window, int, str],
-                   interpolation_method: Interpolate = Interpolate.NAN) -> pd.Series:
+def get_ratio_pure(
+    er: pd.Series, w: Union[Window, int, str], interpolation_method: Interpolate = Interpolate.NAN
+) -> pd.Series:
     w = normalize_window(er, w or None)  # continue to support 0 as an input for window
     ann_return = _annualized_return(er, w.w, interpolation_method=interpolation_method)
     long_enough = (er.index[-1] - w.w) >= er.index[0] if isinstance(w.w, pd.DateOffset) else w.w < len(er)
@@ -128,9 +152,15 @@ def get_ratio_pure(er: pd.Series, w: Union[Window, int, str],
     return apply_ramp(result, w)
 
 
-def _get_ratio(input_series: pd.Series, benchmark_or_rate: Union[Asset, float, str], w: Union[Window, int, str], *,
-               day_count_convention: DayCountConvention, curve_type: CurveType = CurveType.PRICES,
-               interpolation_method: Interpolate = Interpolate.NAN) -> pd.Series:
+def _get_ratio(
+    input_series: pd.Series,
+    benchmark_or_rate: Union[Asset, float, str],
+    w: Union[Window, int, str],
+    *,
+    day_count_convention: DayCountConvention,
+    curve_type: CurveType = CurveType.PRICES,
+    interpolation_method: Interpolate = Interpolate.NAN,
+) -> pd.Series:
     if curve_type == CurveType.PRICES:
         er = excess_returns(input_series, benchmark_or_rate, day_count_convention=day_count_convention)
     else:
@@ -184,9 +214,13 @@ def excess_returns_(price_series: pd.Series, currency: RiskFreeRateCurrency = Ri
 
 
 @plot_session_function
-def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRateCurrency.USD,
-                 w: Union[Window, int, str] = None, curve_type: CurveType = CurveType.PRICES,
-                 method: Interpolate = Interpolate.NAN) -> pd.Series:
+def sharpe_ratio(
+    series: pd.Series,
+    currency: RiskFreeRateCurrency = RiskFreeRateCurrency.USD,
+    w: Union[Window, int, str] = None,
+    curve_type: CurveType = CurveType.PRICES,
+    method: Interpolate = Interpolate.NAN,
+) -> pd.Series:
     """
     Calculate Sharpe ratio
 
@@ -224,8 +258,14 @@ def sharpe_ratio(series: pd.Series, currency: RiskFreeRateCurrency = RiskFreeRat
 
     :func:`volatility`
     """
-    return _get_ratio(series, Currency(currency.value), w, day_count_convention=DayCountConvention.ACTUAL_360,
-                      curve_type=curve_type, interpolation_method=method)
+    return _get_ratio(
+        series,
+        Currency(currency.value),
+        w,
+        day_count_convention=DayCountConvention.ACTUAL_360,
+        curve_type=curve_type,
+        interpolation_method=method,
+    )
 
 
 @plot_function
@@ -409,8 +449,9 @@ def index(x: pd.Series, initial: int = 1) -> pd.Series:
     """
     i = x.first_valid_index()
     if not x[i]:
-        raise MqValueError('Divide by zero error. Ensure that the first value of series passed to index(...) '
-                           'is non-zero')
+        raise MqValueError(
+            'Divide by zero error. Ensure that the first value of series passed to index(...) is non-zero'
+        )
     return pd.Series(dtype=float) if i is None else initial * x / x[i]
 
 
@@ -519,9 +560,13 @@ def annualize(x: pd.Series) -> pd.Series:
 
 
 @plot_function
-def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
-               returns_type: Optional[Returns] = Returns.SIMPLE, annualization_factor: Optional[int] = None,
-               assume_zero_mean: bool = False) -> pd.Series:
+def volatility(
+    x: pd.Series,
+    w: Union[Window, int, str] = Window(None, 0),
+    returns_type: Optional[Returns] = Returns.SIMPLE,
+    annualization_factor: Optional[int] = None,
+    assume_zero_mean: bool = False,
+) -> pd.Series:
     """
     Realized volatility of price or return series
 
@@ -645,8 +690,9 @@ def volatility(x: pd.Series, w: Union[Window, int, str] = Window(None, 0),
 
 
 @plot_function
-def vol_swap_volatility(prices: pd.Series, n_days: Union[int, Window] = None, annualization_factor: int = 252,
-                        assume_zero_mean: bool = True) -> pd.Series:
+def vol_swap_volatility(
+    prices: pd.Series, n_days: Union[int, Window] = None, annualization_factor: int = 252, assume_zero_mean: bool = True
+) -> pd.Series:
     """
     Rolling volatility of a price series for volatility swap pricing
 
@@ -717,9 +763,14 @@ def vol_swap_volatility(prices: pd.Series, n_days: Union[int, Window] = None, an
 
 
 @plot_function
-def correlation(x: pd.Series, y: pd.Series,
-                w: Union[Window, int, str] = Window(None, 0), type_: SeriesType = SeriesType.PRICES,
-                returns_type: Returns = Returns.SIMPLE, assume_zero_mean: bool = False) -> pd.Series:
+def correlation(
+    x: pd.Series,
+    y: pd.Series,
+    w: Union[Window, int, str] = Window(None, 0),
+    type_: SeriesType = SeriesType.PRICES,
+    returns_type: Returns = Returns.SIMPLE,
+    assume_zero_mean: bool = False,
+) -> pd.Series:
     """
     Rolling correlation of two price series
 
@@ -800,11 +851,13 @@ def correlation(x: pd.Series, y: pd.Series,
     clean_ret2 = aligned['r2']
 
     if assume_zero_mean:
+
         def daily_vols(returns):
             vols = volatility(returns, w, returns_type=None, assume_zero_mean=True)
             annualization_factor = _get_annualization_factor(returns)
             result = vols.div(math.sqrt(annualization_factor) * 100)
             return result
+
         zero_mean_cov = mean(clean_ret1 * clean_ret2, w)
         vols_1 = daily_vols(clean_ret1)
         vols_2 = daily_vols(clean_ret2)
@@ -812,12 +865,15 @@ def correlation(x: pd.Series, y: pd.Series,
     else:
         if isinstance(w.w, pd.DateOffset):
             if isinstance(clean_ret1.index, pd.DatetimeIndex):
-                values = [clean_ret1.loc[(clean_ret1.index > idx - w.w) & (clean_ret1.index <= idx)].corr(clean_ret2)
-                          for idx in clean_ret1.index]
+                values = [
+                    clean_ret1.loc[(clean_ret1.index > idx - w.w) & (clean_ret1.index <= idx)].corr(clean_ret2)
+                    for idx in clean_ret1.index
+                ]
             else:
-                values = [clean_ret1.loc[(clean_ret1.index > (idx - w.w).date()) &
-                                         (clean_ret1.index <= idx)].corr(clean_ret2)
-                          for idx in clean_ret1.index]
+                values = [
+                    clean_ret1.loc[(clean_ret1.index > (idx - w.w).date()) & (clean_ret1.index <= idx)].corr(clean_ret2)
+                    for idx in clean_ret1.index
+                ]
             corr = pd.Series(values, index=clean_ret1.index)
         else:
             corr = clean_ret1.rolling(w.w, 0).corr(clean_ret2)
@@ -826,8 +882,9 @@ def correlation(x: pd.Series, y: pd.Series,
 
 
 @plot_function
-def corr_swap_correlation(x: pd.Series, y: pd.Series, n_days: Union[int, Window] = None,
-                          assume_zero_mean: bool = True) -> pd.Series:
+def corr_swap_correlation(
+    x: pd.Series, y: pd.Series, n_days: Union[int, Window] = None, assume_zero_mean: bool = True
+) -> pd.Series:
     """
     Rolling correlation of two price series for correlation swap pricing
 
@@ -979,9 +1036,9 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0
                     start = idx
                     break
 
-            sub_benchmark_values = benchmark_values[start:i + 1]
+            sub_benchmark_values = benchmark_values[start : i + 1]
             var_results[i] = np.var(sub_benchmark_values, ddof=1)
-            cov_results[i] = np.cov(ret_values[start:i + 1], sub_benchmark_values, ddof=1)[0][1]
+            cov_results[i] = np.cov(ret_values[start : i + 1], sub_benchmark_values, ddof=1)[0][1]
 
         result = pd.Series(cov_results / var_results, index=series_index, dtype=np.double)
     else:
@@ -1021,10 +1078,13 @@ def max_drawdown(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> 
     w = normalize_window(x, w)
     if isinstance(w.w, pd.DateOffset):
         if pd.api.types.is_datetime64_dtype(x.index):
-            scores = pd.Series([x[idx] / x.loc[(x.index > (idx - w.w)) & (x.index <= idx)].max() - 1
-                                for idx in x.index], index=x.index)
-            result = pd.Series([scores.loc[(scores.index > (idx - w.w)) & (scores.index <= idx)].min()
-                                for idx in scores.index], index=scores.index)
+            scores = pd.Series(
+                [x[idx] / x.loc[(x.index > (idx - w.w)) & (x.index <= idx)].max() - 1 for idx in x.index], index=x.index
+            )
+            result = pd.Series(
+                [scores.loc[(scores.index > (idx - w.w)) & (scores.index <= idx)].min() for idx in scores.index],
+                index=scores.index,
+            )
         else:
             raise TypeError('Please pass in list of dates as index')
     else:

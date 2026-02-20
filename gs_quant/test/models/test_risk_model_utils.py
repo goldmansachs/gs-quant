@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from unittest.mock import ANY
 
 import pytest
@@ -27,12 +28,20 @@ from gs_quant.models.risk_model_utils import _upload_factor_data_if_present
 def test__upload_factor_data_if_present(mocker, total_factors: int):
 
     from gs_quant.session import OAuth2Session
+
     OAuth2Session.init = mock.MagicMock(return_value=None)
     GsSession.use(Environment.QA, 'client_id', 'secret')
 
     date = "2024-03-28"
-    factor_data = [{'factorCategory': '1', 'factorName': f'Factor {i + 1}', 'factorCategoryId': 'z',
-                    'factorReturn': 0.001 * (i + 1)} for i in range(total_factors)]
+    factor_data = [
+        {
+            'factorCategory': '1',
+            'factorName': f'Factor {i + 1}',
+            'factorCategoryId': 'z',
+            'factorReturn': 0.001 * (i + 1),
+        }
+        for i in range(total_factors)
+    ]
 
     covariance_matrix = [[0 for i in range(total_factors)] for j in range(total_factors)]
     pre_vra_covariance_matrix = [[0 for i in range(total_factors)] for j in range(total_factors)]
@@ -64,5 +73,6 @@ def test__upload_factor_data_if_present(mocker, total_factors: int):
     GsSession.current._post.assert_called_with('/risk/models/data/TEST_RISK_MODEL?partialUpload=true', ANY, timeout=200)
 
     _upload_factor_data_if_present('TEST_RISK_MODEL', risk_model_data, date, aws_upload=True)
-    GsSession.current._post.assert_called_with('/risk/models/data/TEST_RISK_MODEL?partialUpload=true&awsUpload=true',
-                                               ANY, timeout=200)
+    GsSession.current._post.assert_called_with(
+        '/risk/models/data/TEST_RISK_MODEL?partialUpload=true&awsUpload=true', ANY, timeout=200
+    )

@@ -37,30 +37,42 @@ from gs_quant.common import ReportParameters, XRef
 from gs_quant.target.reports import Report, PositionSourceType, ReportType
 from gs_quant.target.risk_models import RiskModel, RiskModelCoverage, RiskModelTerm, RiskModelUniverseIdentifier
 
-risk_model = RiskModel(coverage=RiskModelCoverage.Country, id_='model_id', name='Fake Risk Model',
-                       term=RiskModelTerm.Long, universe_identifier=RiskModelUniverseIdentifier.gsid, vendor='GS',
-                       version=1.0)
+risk_model = RiskModel(
+    coverage=RiskModelCoverage.Country,
+    id_='model_id',
+    name='Fake Risk Model',
+    term=RiskModelTerm.Long,
+    universe_identifier=RiskModelUniverseIdentifier.gsid,
+    vendor='GS',
+    version=1.0,
+)
 
-factor_risk_report = Report(position_source_id='position source id',
-                            position_source_type=PositionSourceType.Portfolio,
-                            type_=ReportType.Portfolio_Factor_Risk,
-                            id_='report_id',
-                            parameters=ReportParameters(risk_model='risk_model_id'),
-                            status='new')
+factor_risk_report = Report(
+    position_source_id='position source id',
+    position_source_type=PositionSourceType.Portfolio,
+    type_=ReportType.Portfolio_Factor_Risk,
+    id_='report_id',
+    parameters=ReportParameters(risk_model='risk_model_id'),
+    status='new',
+)
 
-asset_factor_risk_report = Report(position_source_id='position source id',
-                                  position_source_type=PositionSourceType.Asset,
-                                  type_=ReportType.Portfolio_Factor_Risk,
-                                  id_='report_id',
-                                  parameters=ReportParameters(risk_model='risk_model_id'),
-                                  status='new')
+asset_factor_risk_report = Report(
+    position_source_id='position source id',
+    position_source_type=PositionSourceType.Asset,
+    type_=ReportType.Portfolio_Factor_Risk,
+    id_='report_id',
+    parameters=ReportParameters(risk_model='risk_model_id'),
+    status='new',
+)
 
-ppa_report = PerformanceReport(position_source_id='position source id',
-                               position_source_type=PositionSourceType.Portfolio,
-                               type_=ReportType.Portfolio_Performance_Analytics,
-                               id_='report_id',
-                               parameters=ReportParameters(risk_model='risk_model_id'),
-                               status='new')
+ppa_report = PerformanceReport(
+    position_source_id='position source id',
+    position_source_type=PositionSourceType.Portfolio,
+    type_=ReportType.Portfolio_Performance_Analytics,
+    id_='report_id',
+    parameters=ReportParameters(risk_model='risk_model_id'),
+    status='new',
+)
 
 factor_data = [
     {
@@ -70,7 +82,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 11.23,
         'exposure': -11.23,
-        'proportionOfRisk': 1
+        'proportionOfRisk': 1,
     },
     {
         'date': '2020-11-24',
@@ -79,7 +91,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 11.24,
         'exposure': -11.24,
-        'proportionOfRisk': 2
+        'proportionOfRisk': 2,
     },
     {
         'date': '2020-11-25',
@@ -88,7 +100,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 11.25,
         'exposure': -11.25,
-        'proportionOfRisk': 3
+        'proportionOfRisk': 3,
     },
     {
         'date': '2020-11-23',
@@ -97,7 +109,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 19.23,
         'exposure': -11.23,
-        'proportionOfRisk': 1
+        'proportionOfRisk': 1,
     },
     {
         'date': '2020-11-24',
@@ -106,7 +118,7 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 14.24,
         'exposure': -11.24,
-        'proportionOfRisk': 2
+        'proportionOfRisk': 2,
     },
     {
         'date': '2020-11-25',
@@ -115,25 +127,18 @@ factor_data = [
         'factorCategory': 'CNT',
         'pnl': 21.25,
         'exposure': -11.25,
-        'proportionOfRisk': 3
-    }
+        'proportionOfRisk': 3,
+    },
 ]
 
-aum_data = {
-    '2020-01-01': 1,
-    '2020-01-02': 2,
-    '2020-01-03': 1,
-    '2020-01-04': 1,
-    '2020-01-05': 1,
-    '2020-01-06': 3
-}
+aum_data = {'2020-01-01': 1, '2020-01-02': 2, '2020-01-03': 1, '2020-01-04': 1, '2020-01-05': 1, '2020-01-06': 3}
 
 yield_data = {
-    pd.Timestamp('2020-01-01'): .01,
-    pd.Timestamp('2020-01-02'): .02,
-    pd.Timestamp('2020-01-03'): .025,
-    pd.Timestamp('2020-01-04'): .03,
-    pd.Timestamp('2020-01-05'): .04,
+    pd.Timestamp('2020-01-01'): 0.01,
+    pd.Timestamp('2020-01-02'): 0.02,
+    pd.Timestamp('2020-01-03'): 0.025,
+    pd.Timestamp('2020-01-04'): 0.03,
+    pd.Timestamp('2020-01-05'): 0.04,
 }
 
 thematic_data = [
@@ -142,41 +147,41 @@ thematic_data = [
         "reportId": "PTAID",
         "basketId": "MA01GPR89HZF1FZ5",
         "region": "Asia",
-        "grossExposure": 3.448370345015856E8,
+        "grossExposure": 3.448370345015856e8,
         "thematicExposure": 2,
         "thematicBeta": 1,
-        "updateTime": "2021-07-20T23:43:38Z"
+        "updateTime": "2021-07-20T23:43:38Z",
     },
     {
         "date": "2021-07-13",
         "reportId": "PTAID",
         "basketId": "MA01GPR89HZF1FZ5",
         "region": "Asia",
-        "grossExposure": 3.375772519907556E8,
+        "grossExposure": 3.375772519907556e8,
         "thematicExposure": 2,
         "thematicBeta": 1,
-        "updateTime": "2021-07-20T23:43:38Z"
+        "updateTime": "2021-07-20T23:43:38Z",
     },
     {
         "date": "2021-07-14",
         "reportId": "PTAID",
         "basketId": "MA01GPR89HZF1FZ5",
         "region": "Asia",
-        "grossExposure": 3.321189950666118E8,
+        "grossExposure": 3.321189950666118e8,
         "thematicExposure": 2,
         "thematicBeta": 1,
-        "updateTime": "2021-07-20T23:43:38Z"
+        "updateTime": "2021-07-20T23:43:38Z",
     },
     {
         "date": "2021-07-15",
         "reportId": "PTAID",
         "basketId": "MA01GPR89HZF1FZ5",
         "region": "Asia",
-        "grossExposure": 3.274071805135091E8,
+        "grossExposure": 3.274071805135091e8,
         "thematicExposure": 2,
         "thematicBeta": 1,
-        "updateTime": "2021-07-20T23:43:38Z"
-    }
+        "updateTime": "2021-07-20T23:43:38Z",
+    },
 ]
 
 aggregate_factor_data = [
@@ -189,7 +194,7 @@ aggregate_factor_data = [
         'exposure': -11.23,
         'proportionOfRisk': 1,
         'dailyRisk': 1,
-        'annualRisk': 1
+        'annualRisk': 1,
     },
     {
         'date': '2020-11-24',
@@ -200,7 +205,7 @@ aggregate_factor_data = [
         'exposure': -11.24,
         'proportionOfRisk': 2,
         'dailyRisk': 2,
-        'annualRisk': 2
+        'annualRisk': 2,
     },
     {
         'date': '2020-11-25',
@@ -211,15 +216,21 @@ aggregate_factor_data = [
         'exposure': -11.25,
         'proportionOfRisk': 3,
         'dailyRisk': 3,
-        'annualRisk': 3
-    }
+        'annualRisk': 3,
+    },
 ]
 
 
 def mock_risk_model():
-    risk_model = RiskModel(coverage=RiskModelCoverage.Country, id_='model_id', name='Fake Risk Model',
-                           term=RiskModelTerm.Long, universe_identifier=RiskModelUniverseIdentifier.gsid, vendor='GS',
-                           version=1.0)
+    risk_model = RiskModel(
+        coverage=RiskModelCoverage.Country,
+        id_='model_id',
+        name='Fake Risk Model',
+        term=RiskModelTerm.Long,
+        universe_identifier=RiskModelUniverseIdentifier.gsid,
+        vendor='GS',
+        version=1.0,
+    )
 
     replace = Replacer()
 
@@ -255,22 +266,13 @@ def test_portfolio_factor_exposure():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mp.portfolio_factor_exposure('report_id', 'risk_model_id', 'Factor Name')
@@ -300,22 +302,13 @@ def test_portfolio_factor_pnl():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         # mock getting report factor data
@@ -328,15 +321,18 @@ def test_portfolio_factor_pnl():
     with DataContext(dt.date(2020, 11, 22), dt.date(2020, 11, 25)):
         # mock getting report factor data with first day set to 0
         factor_data_copy = copy.copy(factor_data)
-        factor_data_copy.insert(0, {
-            'date': '2020-11-22',
-            'reportId': 'report_id',
-            'factor': 'Factor Name',
-            'factorCategory': 'CNT',
-            'pnl': 0,
-            'exposure': -11.23,
-            'proportionOfRisk': 1
-        })
+        factor_data_copy.insert(
+            0,
+            {
+                'date': '2020-11-22',
+                'reportId': 'report_id',
+                'factor': 'Factor Name',
+                'factorCategory': 'CNT',
+                'pnl': 0,
+                'exposure': -11.23,
+                'proportionOfRisk': 1,
+            },
+        )
         mock = replace('gs_quant.api.gs.reports.GsReportApi.get_factor_risk_report_results', Mock())
         mock.return_value = factor_data_copy
 
@@ -371,22 +367,13 @@ def test_portfolio_factor_proportion_of_risk():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mp.portfolio_factor_proportion_of_risk('report_id', 'risk_model_id', 'Factor Name')
@@ -415,9 +402,13 @@ def test_portfolio_thematic_exposure():
     mock = Stock('MAA0NE9QX2ABETG6', 'Test Asset')
     xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
     xrefs.return_value = [
-        GsTemporalXRef(dt.date(2019, 1, 1),
-                       dt.date(2952, 12, 31),
-                       XRef(ticker='basket_ticker', ))
+        GsTemporalXRef(
+            dt.date(2019, 1, 1),
+            dt.date(2952, 12, 31),
+            XRef(
+                ticker='basket_ticker',
+            ),
+        )
     ]
     replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock()).return_value = mock
 
@@ -431,11 +422,13 @@ def test_portfolio_thematic_exposure():
 def test_portfolio_pnl():
     replace = Replacer()
 
-    performance_report = PerformanceReport(report_id='RP1',
-                                           position_source_type='Portfolio',
-                                           position_source_id='MP1',
-                                           report_type='Portfolio Performance Analytics',
-                                           parameters=ReportParameters(transaction_cost_model='FIXED'))
+    performance_report = PerformanceReport(
+        report_id='RP1',
+        position_source_type='Portfolio',
+        position_source_id='MP1',
+        report_type='Portfolio Performance Analytics',
+        parameters=ReportParameters(transaction_cost_model='FIXED'),
+    )
 
     # mock PerformanceReport.get()
     mock = replace('gs_quant.markets.report.PerformanceReport.get', Mock())
@@ -447,7 +440,8 @@ def test_portfolio_pnl():
     # mock PerformanceReport.get_pnl()
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
     mock.return_value = pd.DataFrame.from_dict(
-        {'date': ['2022-07-01', '2022-07-02', '2022-07-03'], 'pnl': [200, 400, 600]})
+        {'date': ['2022-07-01', '2022-07-02', '2022-07-03'], 'pnl': [200, 400, 600]}
+    )
 
     with DataContext(dt.date(2022, 7, 1), dt.date(2022, 7, 3)):
         actual = mp.portfolio_pnl('RP1')
@@ -479,22 +473,13 @@ def test_aggregate_factor_support():
 
     # mock getting risk model factor category
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
-    mock.return_value = {
-        'results': [{
-            'factorData': [{
-                'factorId': 'factor_id',
-                'factorCategory': 'Factor Name'
-            }]}
-        ]}
+    mock.return_value = {'results': [{'factorData': [{'factorId': 'factor_id', 'factorCategory': 'Factor Name'}]}]}
 
     # mock getting risk model factor entity
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_factor_data', Mock())
-    mock.return_value = [{
-        'identifier': 'factor_id',
-        'type': 'Factor',
-        'name': 'Factor Name',
-        'factorCategory': 'Factor Name'
-    }]
+    mock.return_value = [
+        {'identifier': 'factor_id', 'type': 'Factor', 'name': 'Factor Name', 'factorCategory': 'Factor Name'}
+    ]
 
     with DataContext(dt.date(2020, 11, 23), dt.date(2020, 11, 25)):
         actual = mp.portfolio_factor_proportion_of_risk('portfolio_id', 'report_id', 'Factor')
@@ -519,35 +504,13 @@ def test_aggregate_factor_support():
 def test_hit_rate():
     replace = Replacer()
     data = {
-        'pnl': [
-            .2,
-            0,
-            1,
-            -.97
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-02'
-        ],
-        'entryType': [
-            'Holding',
-            'Holding',
-            'Holding',
-            'Holding'
-        ],
-        'assetId': [
-            'asset1',
-            'asset2',
-            'asset1',
-            'asset2'
-        ]
+        'pnl': [0.2, 0, 1, -0.97],
+        'date': ['2020-01-01', '2020-01-01', '2020-01-02', '2020-01-02'],
+        'entryType': ['Holding', 'Holding', 'Holding', 'Holding'],
+        'assetId': ['asset1', 'asset2', 'asset1', 'asset2'],
     }
 
-    timeseries = {
-        '2020-01-02': .5
-    }
+    timeseries = {'2020-01-02': 0.5}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_portfolio_constituents', Mock())
     mock.return_value = pd.DataFrame(data)
@@ -565,18 +528,13 @@ def test_hit_rate():
 
 def test_max_drawdown():
     replace = Replacer()
-    data = {
-        '2020-01-01': 1,
-        '2020-01-02': 2,
-        '2020-01-03': 1,
-        '2020-01-04': 0
-    }
+    data = {'2020-01-01': 1, '2020-01-02': 2, '2020-01-03': 1, '2020-01-04': 0}
 
     timeseries = {
         pd.Timestamp('2020-01-01 00:00:00'): np.nan,
         pd.Timestamp('2020-01-02 00:00:00'): np.nan,
         pd.Timestamp('2020-01-03 00:00:00'): np.nan,
-        pd.Timestamp('2020-01-04 00:00:00'): -1
+        pd.Timestamp('2020-01-04 00:00:00'): -1,
     }
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
@@ -602,7 +560,7 @@ def test_max_recovery_period():
         pd.Timestamp('2020-01-03 00:00:00'): np.nan,
         pd.Timestamp('2020-01-04 00:00:00'): np.nan,
         pd.Timestamp('2020-01-05 00:00:00'): np.nan,
-        pd.Timestamp('2020-01-06 00:00:00'): 3
+        pd.Timestamp('2020-01-06 00:00:00'): 3,
     }
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
@@ -628,7 +586,7 @@ def test_drawdown_length():
         pd.Timestamp('2020-01-03 00:00:00'): np.nan,
         pd.Timestamp('2020-01-04 00:00:00'): np.nan,
         pd.Timestamp('2020-01-05 00:00:00'): np.nan,
-        pd.Timestamp('2020-01-06 00:00:00'): 3
+        pd.Timestamp('2020-01-06 00:00:00'): 3,
     }
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
@@ -647,24 +605,9 @@ def test_drawdown_length():
 
 def test_standard_deviation():
     replace = Replacer()
-    data = {
-        'pnl': [
-            4,
-            5,
-            6
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03'
-        ]
-    }
+    data = {'pnl': [4, 5, 6], 'date': ['2020-01-01', '2020-01-02', '2020-01-03']}
 
-    timeseries = {
-        '2020-01-01': np.nan,
-        '2020-01-02': np.nan,
-        '2020-01-03': 1.41421
-    }
+    timeseries = {'2020-01-01': np.nan, '2020-01-02': np.nan, '2020-01-03': 1.41421}
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
@@ -683,24 +626,9 @@ def test_standard_deviation():
 
 def test_downside_risk():
     replace = Replacer()
-    data = {
-        'pnl': [
-            4,
-            -7,
-            6
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03'
-        ]
-    }
+    data = {'pnl': [4, -7, 6], 'date': ['2020-01-01', '2020-01-02', '2020-01-03']}
 
-    timeseries = {
-        '2020-01-01': np.nan,
-        '2020-01-02': np.nan,
-        '2020-01-03': 5
-    }
+    timeseries = {'2020-01-01': np.nan, '2020-01-02': np.nan, '2020-01-03': 5}
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
@@ -719,26 +647,9 @@ def test_downside_risk():
 
 def test_semi_variance():
     replace = Replacer()
-    data = {
-        'pnl': [
-            4,
-            -7,
-            6,
-            7
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04'
-        ]
-    }
+    data = {'pnl': [4, -7, 6, 7], 'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04']}
 
-    timeseries = {
-        '2020-01-01': np.nan,
-        '2020-01-02': np.nan,
-        '2020-01-04': 8
-    }
+    timeseries = {'2020-01-01': np.nan, '2020-01-02': np.nan, '2020-01-04': 8}
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
@@ -762,20 +673,11 @@ def test_kurtosis():
             -1,
             0,
             1,
-
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03'],
     }
 
-    timeseries = {
-        '2020-01-01': np.nan,
-        '2020-01-02': np.nan,
-        '2020-01-03': -2
-    }
+    timeseries = {'2020-01-01': np.nan, '2020-01-02': np.nan, '2020-01-03': -2}
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
@@ -799,20 +701,11 @@ def test_skewness():
             -1,
             0,
             2,
-
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03'],
     }
 
-    timeseries = {
-        '2020-01-01': np.nan,
-        '2020-01-02': np.nan,
-        '2020-01-03': 0
-    }
+    timeseries = {'2020-01-01': np.nan, '2020-01-02': np.nan, '2020-01-03': 0}
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
@@ -836,20 +729,11 @@ def test_realized_var():
             1,
             1,
             1,
-
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03'],
     }
 
-    timeseries = {
-        '2020-01-01': np.nan,
-        '2020-01-02': np.nan,
-        '2020-01-03': -0.52500
-    }
+    timeseries = {'2020-01-01': np.nan, '2020-01-02': np.nan, '2020-01-03': -0.52500}
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
     mock = replace('gs_quant.markets.report.PerformanceReport.get_pnl', Mock())
@@ -873,13 +757,8 @@ def test_bad_date():
             1,
             1,
             1,
-
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03'],
     }
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -905,21 +784,8 @@ def test_tracking_error():
     replace = Replacer()
 
     data = {
-        'pnl': [
-            0,
-            .02,
-            .01,
-            .01,
-            .02
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0, 0.02, 0.01, 0.01, 0.02],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     benchmark_data = {
@@ -927,7 +793,7 @@ def test_tracking_error():
         pd.Timestamp('2020-01-02'): 1.02,
         pd.Timestamp('2020-01-03'): 1.03,
         pd.Timestamp('2020-01-04'): 1.04,
-        pd.Timestamp('2020-01-05'): 1.045
+        pd.Timestamp('2020-01-05'): 1.045,
     }
 
     timeseries = {
@@ -935,7 +801,7 @@ def test_tracking_error():
         pd.Timestamp('2020-01-02'): np.nan,
         pd.Timestamp('2020-01-03'): 0.00340,
         pd.Timestamp('2020-01-04'): 0.003603,
-        pd.Timestamp('2020-01-05'): 0.010537
+        pd.Timestamp('2020-01-05'): 0.010537,
     }
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
@@ -965,21 +831,8 @@ def test_tracking_error():
 def test_tracking_error_bull():
     replace = Replacer()
     data = {
-        'pnl': [
-            0,
-            .02,
-            .01,
-            .01,
-            .02
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0, 0.02, 0.01, 0.01, 0.02],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     benchmark_data = {
@@ -987,7 +840,7 @@ def test_tracking_error_bull():
         pd.Timestamp('2020-01-02'): 1.02,
         pd.Timestamp('2020-01-03'): 1.03,
         pd.Timestamp('2020-01-04'): 1.04,
-        pd.Timestamp('2020-01-05'): 1.045
+        pd.Timestamp('2020-01-05'): 1.045,
     }
 
     timeseries = {
@@ -995,7 +848,7 @@ def test_tracking_error_bull():
         pd.Timestamp('2020-01-02'): np.nan,
         pd.Timestamp('2020-01-03'): 0.71771,
         pd.Timestamp('2020-01-04'): 0.70357,
-        pd.Timestamp('2020-01-05'): 0.34648
+        pd.Timestamp('2020-01-05'): 0.34648,
     }
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
@@ -1025,21 +878,8 @@ def test_tracking_error_bull():
 def test_tracking_error_bear():
     replace = Replacer()
     data = {
-        'pnl': [
-            0,
-            .02,
-            .01,
-            .01,
-            .02
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0, 0.02, 0.01, 0.01, 0.02],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     benchmark_data = {
@@ -1047,7 +887,7 @@ def test_tracking_error_bear():
         pd.Timestamp('2020-01-02'): 1.02,
         pd.Timestamp('2020-01-03'): 1.03,
         pd.Timestamp('2020-01-04'): 1.04,
-        pd.Timestamp('2020-01-05'): 1.045
+        pd.Timestamp('2020-01-05'): 1.045,
     }
 
     timeseries = {
@@ -1083,29 +923,16 @@ def test_tracking_error_bear():
 def test_sharpe_ratio():
     replace = Replacer()
     data = {
-        'pnl': [
-            0,
-            .02,
-            .02,
-            .01,
-            .02
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0, 0.02, 0.02, 0.01, 0.02],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     benchmark_data = {
-        pd.Timestamp('2020-01-01'): .02,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .03,
-        pd.Timestamp('2020-01-04'): .04,
-        pd.Timestamp('2020-01-05'): .045
+        pd.Timestamp('2020-01-01'): 0.02,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.03,
+        pd.Timestamp('2020-01-04'): 0.04,
+        pd.Timestamp('2020-01-05'): 0.045,
     }
 
     timeseries = {
@@ -1115,13 +942,7 @@ def test_sharpe_ratio():
         pd.Timestamp('2020-01-04'): 32.60231,
         pd.Timestamp('2020-01-05'): 33.77863,
     }
-    aum_data = {
-        '2020-01-01': 1.00,
-        '2020-01-02': 1.035,
-        '2020-01-03': 1.05,
-        '2020-01-04': 1.06,
-        '2020-01-05': 1.065
-    }
+    aum_data = {'2020-01-01': 1.00, '2020-01-02': 1.035, '2020-01-03': 1.05, '2020-01-04': 1.06, '2020-01-05': 1.065}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1150,43 +971,21 @@ def test_sharpe_ratio():
 def test_calmar_ratio():
     replace = Replacer()
     data = {
-        'pnl': [
-            0,
-            .02,
-            .01,
-            .04,
-            .03
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0, 0.02, 0.01, 0.04, 0.03],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .03,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .03
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.03,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.03,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-04 00:00:00'): 16.20658,
-        pd.Timestamp('2020-01-05 00:00:00'): 30.31192
-    }
+    timeseries = {pd.Timestamp('2020-01-04 00:00:00'): 16.20658, pd.Timestamp('2020-01-05 00:00:00'): 30.31192}
 
-    aum_data = {
-        '2020-01-01': 1.00,
-        '2020-01-02': .95,
-        '2020-01-03': 1.05,
-        '2020-01-04': 1.03,
-        '2020-01-05': 1.065
-    }
+    aum_data = {'2020-01-01': 1.00, '2020-01-02': 0.95, '2020-01-03': 1.05, '2020-01-04': 1.03, '2020-01-05': 1.065}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1196,7 +995,10 @@ def test_calmar_ratio():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
     mock = replace('gs_quant.data.coordinate.DataCoordinate.get_series', Mock())
@@ -1215,29 +1017,16 @@ def test_calmar_ratio():
 def test_sortino_ratio():
     replace = Replacer()
     data = {
-        'pnl': [
-            .02,
-            .02,
-            -.01,
-            .02,
-            .01
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0.02, 0.02, -0.01, 0.02, 0.01],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .001,
-        pd.Timestamp('2020-01-02'): .07,
-        pd.Timestamp('2020-01-03'): .08,
-        pd.Timestamp('2020-01-04'): .075,
-        pd.Timestamp('2020-01-05'): .02
+        pd.Timestamp('2020-01-01'): 0.001,
+        pd.Timestamp('2020-01-02'): 0.07,
+        pd.Timestamp('2020-01-03'): 0.08,
+        pd.Timestamp('2020-01-04'): 0.075,
+        pd.Timestamp('2020-01-05'): 0.02,
     }
 
     timeseries = {
@@ -1245,13 +1034,7 @@ def test_sortino_ratio():
         pd.Timestamp('2020-01-05 00:00:00'): 10.128712,
     }
 
-    aum_data = {
-        '2020-01-01': 1.00,
-        '2020-01-02': .95,
-        '2020-01-03': .9,
-        '2020-01-04': 1.03,
-        '2020-01-05': 1.065
-    }
+    aum_data = {'2020-01-01': 1.00, '2020-01-02': 0.95, '2020-01-03': 0.9, '2020-01-04': 1.03, '2020-01-05': 1.065}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1261,7 +1044,10 @@ def test_sortino_ratio():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
     mock = replace('gs_quant.data.coordinate.DataCoordinate.get_series', Mock())
@@ -1280,42 +1066,21 @@ def test_sortino_ratio():
 def test_sortino_ratio_index():
     replace = Replacer()
     data = {
-        'pnl': [
-            .02,
-            .02,
-            -.01,
-            .02,
-            .01
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0.02, 0.02, -0.01, 0.02, 0.01],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     pricing_data = {
-        pd.Timestamp('2020-01-01'): .001,
-        pd.Timestamp('2020-01-02'): .07,
-        pd.Timestamp('2020-01-03'): .07,
-        pd.Timestamp('2020-01-04'): .001,
-        pd.Timestamp('2020-01-05'): .02
+        pd.Timestamp('2020-01-01'): 0.001,
+        pd.Timestamp('2020-01-02'): 0.07,
+        pd.Timestamp('2020-01-03'): 0.07,
+        pd.Timestamp('2020-01-04'): 0.001,
+        pd.Timestamp('2020-01-05'): 0.02,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-05 00:00:00'): -8.355985
-    }
+    timeseries = {pd.Timestamp('2020-01-05 00:00:00'): -8.355985}
 
-    aum_data = {
-        '2020-01-01': 1.00,
-        '2020-01-02': .95,
-        '2020-01-03': .9,
-        '2020-01-04': 1.03,
-        '2020-01-05': 1.065
-    }
+    aum_data = {'2020-01-01': 1.00, '2020-01-02': 0.95, '2020-01-03': 0.9, '2020-01-04': 1.03, '2020-01-05': 1.065}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1344,35 +1109,19 @@ def test_sortino_ratio_index():
 def test_jensen_alpha():
     replace = Replacer()
     data = {
-        'pnl': [
-            .02,
-            .02,
-            .01,
-            .02,
-            .01
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0.02, 0.02, 0.01, 0.02, 0.01],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .04,
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.04,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-04 00:00:00'): 0.01814,
-        pd.Timestamp('2020-01-05 00:00:00'): 0.00661
-    }
+    timeseries = {pd.Timestamp('2020-01-04 00:00:00'): 0.01814, pd.Timestamp('2020-01-05 00:00:00'): 0.00661}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1382,7 +1131,10 @@ def test_jensen_alpha():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
     mock = replace('gs_quant.data.coordinate.DataCoordinate.get_series', Mock())
@@ -1406,38 +1158,23 @@ def test_jensen_bull():
         pd.Timestamp('2020-01-02'): 5,
         pd.Timestamp('2020-01-03'): 7,
         pd.Timestamp('2020-01-04'): 9,
-        pd.Timestamp('2020-01-08'): 10
+        pd.Timestamp('2020-01-08'): 10,
     }
 
     data = {
-        'pnl': [
-            .02,
-            .02,
-            .01,
-            .02,
-            .01
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0.02, 0.02, 0.01, 0.02, 0.01],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .04,
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.04,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-04 00:00:00'): 0.02530
-    }
+    timeseries = {pd.Timestamp('2020-01-04 00:00:00'): 0.02530}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1447,11 +1184,16 @@ def test_jensen_bull():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series',
-            Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -1471,38 +1213,23 @@ def test_jensen_alpha_bear():
         pd.Timestamp('2020-01-02'): 5,
         pd.Timestamp('2020-01-03'): 7,
         pd.Timestamp('2020-01-04'): 9,
-        pd.Timestamp('2020-01-08'): 10
+        pd.Timestamp('2020-01-08'): 10,
     }
 
     data = {
-        'pnl': [
-            .02,
-            -.02,
-            -.01,
-            -.02,
-            -.01
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05'
-        ]
+        'pnl': [0.02, -0.02, -0.01, -0.02, -0.01],
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .04,
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.04,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-04 00:00:00'): -0.88850
-    }
+    timeseries = {pd.Timestamp('2020-01-04 00:00:00'): -0.88850}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1513,11 +1240,16 @@ def test_jensen_alpha_bear():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series',
-            Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -1535,36 +1267,22 @@ def test_information_ratio():
         pd.Timestamp('2020-01-01'): 6,
         pd.Timestamp('2020-01-02'): 5,
         pd.Timestamp('2020-01-03'): 7,
-        pd.Timestamp('2020-01-04'): 9
+        pd.Timestamp('2020-01-04'): 9,
     }
 
-    data = {
-        'pnl': [
-            .02,
-            .02,
-            .01,
-            .02
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04'
-        ]
-    }
+    data = {'pnl': [0.02, 0.02, 0.01, 0.02], 'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04']}
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
     }
 
     timeseries = {
         pd.Timestamp('2020-01-02 00:00:00'): 0.748532,
         pd.Timestamp('2020-01-03 00:00:00'): -1.583948,
-        pd.Timestamp('2020-01-04 00:00:00'): -1.065513
+        pd.Timestamp('2020-01-04 00:00:00'): -1.065513,
     }
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
@@ -1575,11 +1293,16 @@ def test_information_ratio():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series',
-            Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -1597,36 +1320,19 @@ def test_information_ratio_bull():
         pd.Timestamp('2020-01-01'): 6,
         pd.Timestamp('2020-01-02'): 5,
         pd.Timestamp('2020-01-03'): 7,
-        pd.Timestamp('2020-01-04'): 9
+        pd.Timestamp('2020-01-04'): 9,
     }
 
-    data = {
-        'pnl': [
-            .02,
-            .02,
-            .01,
-            .02
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04'
-        ]
-    }
+    data = {'pnl': [0.02, 0.02, 0.01, 0.02], 'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04']}
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-03 00:00:00'): -6.11050,
-        pd.Timestamp('2020-01-04 00:00:00'): -4.11050
-    }
+    timeseries = {pd.Timestamp('2020-01-03 00:00:00'): -6.11050, pd.Timestamp('2020-01-04 00:00:00'): -4.11050}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1636,11 +1342,16 @@ def test_information_ratio_bull():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series',
-            Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -1658,36 +1369,19 @@ def test_information_ratio_bear():
         pd.Timestamp('2020-01-01'): 6,
         pd.Timestamp('2020-01-02'): 5,
         pd.Timestamp('2020-01-03'): 4,
-        pd.Timestamp('2020-01-04'): 9
+        pd.Timestamp('2020-01-04'): 9,
     }
 
-    data = {
-        'pnl': [
-            .02,
-            .02,
-            .01,
-            .02
-
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04'
-        ]
-    }
+    data = {'pnl': [0.02, 0.02, 0.01, 0.02], 'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04']}
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-02 00:00:00'): 20.36364,
-        pd.Timestamp('2020-01-03 00:00:00'): 22.36364
-    }
+    timeseries = {pd.Timestamp('2020-01-02 00:00:00'): 20.36364, pd.Timestamp('2020-01-03 00:00:00'): 22.36364}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1697,11 +1391,16 @@ def test_information_ratio_bear():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series',
-            Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -1719,48 +1418,36 @@ def test_modigliani_ratio():
         pd.Timestamp('2020-01-01'): 1,
         pd.Timestamp('2020-01-02'): 1.03,
         pd.Timestamp('2020-01-03'): 1.04,
-        pd.Timestamp('2020-01-04'): .96,
+        pd.Timestamp('2020-01-04'): 0.96,
         pd.Timestamp('2020-01-05'): 1.01,
         pd.Timestamp('2020-01-06'): 1.06,
-        pd.Timestamp('2020-01-07'): 1.04
+        pd.Timestamp('2020-01-07'): 1.04,
     }
 
     data = {
         'pnl': [
-            .02,
-            .02,
-            -.01,
-            -.002,
-            .003,
-            .01,
-            .002,
-
+            0.02,
+            0.02,
+            -0.01,
+            -0.002,
+            0.003,
+            0.01,
+            0.002,
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05',
-            '2020-01-06',
-            '2020-01-07'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05', '2020-01-06', '2020-01-07'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .028,
-        pd.Timestamp('2020-01-06'): .031,
-        pd.Timestamp('2020-01-07'): .032
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.028,
+        pd.Timestamp('2020-01-06'): 0.031,
+        pd.Timestamp('2020-01-07'): 0.032,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-05 00:00:00'): 0.31288,
-        pd.Timestamp('2020-01-06 00:00:00'): 0.20278
-    }
+    timeseries = {pd.Timestamp('2020-01-05 00:00:00'): 0.31288, pd.Timestamp('2020-01-06 00:00:00'): 0.20278}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -1770,14 +1457,24 @@ def test_modigliani_ratio():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    mock = replace('gs_quant.data.coordinate.DataCoordinate.get_series', Mock(side_effect=[pd.Series(benchmark_data),
-                                                                                           pd.Series(yield_data),
-                                                                                           pd.Series(yield_data),
-                                                                                           pd.Series(yield_data),
-                                                                                           pd.Series(yield_data)]))
+    mock = replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(
+            side_effect=[
+                pd.Series(benchmark_data),
+                pd.Series(yield_data),
+                pd.Series(yield_data),
+                pd.Series(yield_data),
+                pd.Series(yield_data),
+            ]
+        ),
+    )
     mock.return_value = pd.Series(benchmark_data)
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
@@ -1794,34 +1491,25 @@ def test_treynor_measure():
     replace = Replacer()
     data = {
         'pnl': [
-            .02,
-            .02,
-            .01,
-            .002,
-            .003,
-            .01,
-            .002,
-
+            0.02,
+            0.02,
+            0.01,
+            0.002,
+            0.003,
+            0.01,
+            0.002,
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05',
-            '2020-01-06',
-            '2020-01-07'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05', '2020-01-06', '2020-01-07'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .028,
-        pd.Timestamp('2020-01-06'): .031,
-        pd.Timestamp('2020-01-07'): .032
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.028,
+        pd.Timestamp('2020-01-06'): 0.031,
+        pd.Timestamp('2020-01-07'): 0.032,
     }
 
     timeseries = {
@@ -1832,7 +1520,7 @@ def test_treynor_measure():
         pd.Timestamp('2020-01-01'): 6,
         pd.Timestamp('2020-01-02'): 5,
         pd.Timestamp('2020-01-03'): 4,
-        pd.Timestamp('2020-01-04'): 9
+        pd.Timestamp('2020-01-04'): 9,
     }
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
@@ -1844,11 +1532,16 @@ def test_treynor_measure():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series',
-            Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -1866,58 +1559,49 @@ def test_alpha():
         pd.Timestamp('2020-01-01'): 1,
         pd.Timestamp('2020-01-02'): 1.03,
         pd.Timestamp('2020-01-03'): 1.04,
-        pd.Timestamp('2020-01-04'): .96,
+        pd.Timestamp('2020-01-04'): 0.96,
         pd.Timestamp('2020-01-05'): 1.01,
         pd.Timestamp('2020-01-06'): 1.06,
-        pd.Timestamp('2020-01-07'): 1.04
+        pd.Timestamp('2020-01-07'): 1.04,
     }
 
     data = {
         'pnl': [
-            .02,
-            .02,
-            .01,
-            .002,
-            .003,
-            .01,
-            .002,
-
+            0.02,
+            0.02,
+            0.01,
+            0.002,
+            0.003,
+            0.01,
+            0.002,
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05',
-            '2020-01-06',
-            '2020-01-07'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05', '2020-01-06', '2020-01-07'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .028,
-        pd.Timestamp('2020-01-06'): .031,
-        pd.Timestamp('2020-01-07'): .032
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.028,
+        pd.Timestamp('2020-01-06'): 0.031,
+        pd.Timestamp('2020-01-07'): 0.032,
     }
 
     timeseries = {
         pd.Timestamp('2020-01-05 00:00:00'): -1.61319,
         pd.Timestamp('2020-01-06 00:00:00'): -3.73679,
-        pd.Timestamp('2020-01-07 00:00:00'): -1.38878
+        pd.Timestamp('2020-01-07 00:00:00'): -1.38878,
     }
 
     aum_data = {
         '2020-01-01': 1.00,
-        '2020-01-02': .95,
-        '2020-01-03': .9,
+        '2020-01-02': 0.95,
+        '2020-01-03': 0.9,
         '2020-01-04': 1.03,
         '2020-01-05': 1.065,
         '2020-01-06': 1.08,
-        '2020-01-07': 1.072
+        '2020-01-07': 1.072,
     }
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
@@ -1928,11 +1612,16 @@ def test_alpha():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series', Mock(side_effect=[pd.Series(benchmark_data),
-                                                                                    pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -1950,48 +1639,39 @@ def test_beta():
         pd.Timestamp('2020-01-01'): 1,
         pd.Timestamp('2020-01-02'): 1.03,
         pd.Timestamp('2020-01-03'): 1.04,
-        pd.Timestamp('2020-01-04'): .96,
+        pd.Timestamp('2020-01-04'): 0.96,
         pd.Timestamp('2020-01-05'): 1.01,
         pd.Timestamp('2020-01-06'): 1.06,
-        pd.Timestamp('2020-01-07'): 1.04
+        pd.Timestamp('2020-01-07'): 1.04,
     }
 
     data = {
         'pnl': [
-            .02,
-            .02,
-            .01,
-            .002,
-            .003,
-            .01,
-            .002,
-
+            0.02,
+            0.02,
+            0.01,
+            0.002,
+            0.003,
+            0.01,
+            0.002,
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05',
-            '2020-01-06',
-            '2020-01-07'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05', '2020-01-06', '2020-01-07'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .028,
-        pd.Timestamp('2020-01-06'): .031,
-        pd.Timestamp('2020-01-07'): .032
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.028,
+        pd.Timestamp('2020-01-06'): 0.031,
+        pd.Timestamp('2020-01-07'): 0.032,
     }
 
     timeseries = {
         pd.Timestamp('2020-01-05 00:00:00'): 0.00118,
         pd.Timestamp('2020-01-06 00:00:00'): 0.00070,
-        pd.Timestamp('2020-01-07 00:00:00'): 0.00106
+        pd.Timestamp('2020-01-07 00:00:00'): 0.00106,
     }
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
@@ -2002,11 +1682,16 @@ def test_beta():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series', Mock(side_effect=[pd.Series(benchmark_data),
-                                                                                    pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -2024,48 +1709,36 @@ def test_correlation():
         pd.Timestamp('2020-01-01'): 1,
         pd.Timestamp('2020-01-02'): 1.03,
         pd.Timestamp('2020-01-03'): 1.04,
-        pd.Timestamp('2020-01-04'): .96,
+        pd.Timestamp('2020-01-04'): 0.96,
         pd.Timestamp('2020-01-05'): 1.01,
         pd.Timestamp('2020-01-06'): 1.06,
-        pd.Timestamp('2020-01-07'): 1.04
+        pd.Timestamp('2020-01-07'): 1.04,
     }
 
     data = {
         'pnl': [
-            .02,
-            .02,
-            .01,
-            .002,
-            .003,
-            .01,
-            .002,
-
+            0.02,
+            0.02,
+            0.01,
+            0.002,
+            0.003,
+            0.01,
+            0.002,
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05',
-            '2020-01-06',
-            '2020-01-07'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05', '2020-01-06', '2020-01-07'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .028,
-        pd.Timestamp('2020-01-06'): .031,
-        pd.Timestamp('2020-01-07'): .032
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.028,
+        pd.Timestamp('2020-01-06'): 0.031,
+        pd.Timestamp('2020-01-07'): 0.032,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-06 00:00:00'): 0.21846,
-        pd.Timestamp('2020-01-07 00:00:00'): 0.40573
-    }
+    timeseries = {pd.Timestamp('2020-01-06 00:00:00'): 0.21846, pd.Timestamp('2020-01-07 00:00:00'): 0.40573}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -2075,11 +1748,16 @@ def test_correlation():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series', Mock(side_effect=[pd.Series(benchmark_data),
-                                                                                    pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -2097,48 +1775,36 @@ def test_r_squared():
         pd.Timestamp('2020-01-01'): 1,
         pd.Timestamp('2020-01-02'): 1.03,
         pd.Timestamp('2020-01-03'): 1.04,
-        pd.Timestamp('2020-01-04'): .96,
+        pd.Timestamp('2020-01-04'): 0.96,
         pd.Timestamp('2020-01-05'): 1.01,
         pd.Timestamp('2020-01-06'): 1.06,
-        pd.Timestamp('2020-01-07'): 1.04
+        pd.Timestamp('2020-01-07'): 1.04,
     }
 
     data = {
         'pnl': [
-            .02,
-            .02,
-            .01,
-            .002,
-            .003,
-            .01,
-            .002,
-
+            0.02,
+            0.02,
+            0.01,
+            0.002,
+            0.003,
+            0.01,
+            0.002,
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05',
-            '2020-01-06',
-            '2020-01-07'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05', '2020-01-06', '2020-01-07'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .028,
-        pd.Timestamp('2020-01-06'): .031,
-        pd.Timestamp('2020-01-07'): .032
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.028,
+        pd.Timestamp('2020-01-06'): 0.031,
+        pd.Timestamp('2020-01-07'): 0.032,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-05 00:00:00'): 0.04772,
-        pd.Timestamp('2020-01-06 00:00:00'): 0.16462
-    }
+    timeseries = {pd.Timestamp('2020-01-05 00:00:00'): 0.04772, pd.Timestamp('2020-01-06 00:00:00'): 0.16462}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -2148,11 +1814,16 @@ def test_r_squared():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series', Mock(side_effect=[pd.Series(benchmark_data),
-                                                                                    pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -2173,45 +1844,33 @@ def test_capture_ratio():
         pd.Timestamp('2020-01-04'): 1.06,
         pd.Timestamp('2020-01-05'): 1.06,
         pd.Timestamp('2020-01-06'): 1.06,
-        pd.Timestamp('2020-01-07'): 1.04
+        pd.Timestamp('2020-01-07'): 1.04,
     }
 
     data = {
         'pnl': [
-            .02,
-            .02,
-            .01,
-            .002,
-            .003,
-            .01,
-            .002,
-
+            0.02,
+            0.02,
+            0.01,
+            0.002,
+            0.003,
+            0.01,
+            0.002,
         ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03',
-            '2020-01-04',
-            '2020-01-05',
-            '2020-01-06',
-            '2020-01-07'
-        ]
+        'date': ['2020-01-01', '2020-01-02', '2020-01-03', '2020-01-04', '2020-01-05', '2020-01-06', '2020-01-07'],
     }
 
     yield_data = {
-        pd.Timestamp('2020-01-01'): .01,
-        pd.Timestamp('2020-01-02'): .02,
-        pd.Timestamp('2020-01-03'): .025,
-        pd.Timestamp('2020-01-04'): .03,
-        pd.Timestamp('2020-01-05'): .028,
-        pd.Timestamp('2020-01-06'): .031,
-        pd.Timestamp('2020-01-07'): .032
+        pd.Timestamp('2020-01-01'): 0.01,
+        pd.Timestamp('2020-01-02'): 0.02,
+        pd.Timestamp('2020-01-03'): 0.025,
+        pd.Timestamp('2020-01-04'): 0.03,
+        pd.Timestamp('2020-01-05'): 0.028,
+        pd.Timestamp('2020-01-06'): 0.031,
+        pd.Timestamp('2020-01-07'): 0.032,
     }
 
-    timeseries = {
-        pd.Timestamp('2020-01-05 00:00:00'): 0.50900,
-        pd.Timestamp('2020-01-06 00:00:00'): 0.69110
-    }
+    timeseries = {pd.Timestamp('2020-01-05 00:00:00'): 0.50900, pd.Timestamp('2020-01-06 00:00:00'): 0.69110}
 
     mock = replace('gs_quant.markets.report.PerformanceReport.get_aum', Mock())
     mock.return_value = aum_data
@@ -2221,11 +1880,16 @@ def test_capture_ratio():
     mock.return_value = PerformanceReport()
 
     mock = replace('gs_quant.markets.securities.SecurityMaster.get_asset', Mock())
-    mock.return_value = Bond("test", 'test', )
+    mock.return_value = Bond(
+        "test",
+        'test',
+    )
     mock = replace('gs_quant.entities.entity.Entity.get_data_coordinate', Mock())
     mock.return_value = DataCoordinate("test")
-    replace('gs_quant.data.coordinate.DataCoordinate.get_series', Mock(side_effect=[pd.Series(benchmark_data),
-                                                                                    pd.Series(yield_data)]))
+    replace(
+        'gs_quant.data.coordinate.DataCoordinate.get_series',
+        Mock(side_effect=[pd.Series(benchmark_data), pd.Series(yield_data)]),
+    )
 
     mock = replace('gs_quant.markets.portfolio_manager.PortfolioManager.get_performance_report', Mock())
     mock.return_value = PerformanceReport()
@@ -2238,18 +1902,7 @@ def test_capture_ratio():
 
 
 def test_custom_aum():
-    data = {
-        'aum': [
-            101,
-            102,
-            103
-        ],
-        'date': [
-            '2020-01-01',
-            '2020-01-02',
-            '2020-01-03'
-        ]
-    }
+    data = {'aum': [101, 102, 103], 'date': ['2020-01-01', '2020-01-02', '2020-01-03']}
     idx = pd.date_range('2020-01-01', freq='D', periods=3)
     df = MarketDataResponseFrame(data=data, index=idx)
     df.dataset_ids = ('AUM',)

@@ -1025,13 +1025,15 @@ fundamental_basic_derived_dict = {item.name: item.value for item in FundamentalB
 fundamental_advanced_dict = {item.name: item.value for item in FundamentalAdvancedItem}
 fundamental_advanced_derived_dict = {item.name: item.value for item in FundamentalAdvancedDerivedItem}
 
-FundamentalMetric = Enum('FundamentalMetric',
-                         {**fundamental_basic_dict,
-                          **fundamental_basic_derived_dict,
-                          **fundamental_advanced_dict,
-                          **fundamental_advanced_derived_dict
-                          }
-                         )
+FundamentalMetric = Enum(
+    'FundamentalMetric',
+    {
+        **fundamental_basic_dict,
+        **fundamental_basic_derived_dict,
+        **fundamental_advanced_dict,
+        **fundamental_advanced_derived_dict,
+    },
+)
 
 
 class FundamentalFormat(Enum):
@@ -1075,50 +1077,47 @@ class FiscalPeriod:
         self.p = p
 
     def as_dict(self):
-        return {
-            'y': self.y,
-            'p': self.p
-        }
+        return {'y': self.y, 'p': self.p}
 
     @classmethod
     def from_dict(cls, obj):
         return FiscalPeriod(y=obj.get('y'), p=obj.get('p'))
 
 
-BASIC_MEASURES = [EstimateItem.EPS,
-                  EstimateItem.EPS_C,
-                  EstimateItem.EPS_P,
-                  EstimateItem.SALES,
-                  EstimateItem.SALES_C,
-                  EstimateItem.SALES_P,
-                  EstimateItem.DPS,
-                  EstimateItem.CFPS,
-                  EstimateItem.PRICE_TGT,
-                  EstimateItem.EPS_LTG]
+BASIC_MEASURES = [
+    EstimateItem.EPS,
+    EstimateItem.EPS_C,
+    EstimateItem.EPS_P,
+    EstimateItem.SALES,
+    EstimateItem.SALES_C,
+    EstimateItem.SALES_P,
+    EstimateItem.DPS,
+    EstimateItem.CFPS,
+    EstimateItem.PRICE_TGT,
+    EstimateItem.EPS_LTG,
+]
 
 LT_MEASURES = [EstimateItem.PRICE_TGT, EstimateItem.EPS_LTG]
 
-BASIS_TO_DATASET = {EstimateBasis.ANN: 'AF',
-                    EstimateBasis.QTR: 'QF',
-                    EstimateBasis.SEMI: 'SAF',
-                    EstimateBasis.NTM: 'NTM',
-                    EstimateBasis.STM: 'NTM'}
+BASIS_TO_DATASET = {
+    EstimateBasis.ANN: 'AF',
+    EstimateBasis.QTR: 'QF',
+    EstimateBasis.SEMI: 'SAF',
+    EstimateBasis.NTM: 'NTM',
+    EstimateBasis.STM: 'NTM',
+}
 
 BASIS_TO_FIELD = {
     EstimateBasis.ANN: 'Af',
     EstimateBasis.QTR: 'Qf',
     EstimateBasis.SEMI: 'Saf',
     EstimateBasis.NTM: 'Ntm',
-    EstimateBasis.STM: 'Stm'
+    EstimateBasis.STM: 'Stm',
 }
 
-FF_BASIS_TO_DATASET = {FundamentalBasis.ANN: 'AF',
-                       FundamentalBasis.QTR: 'QF',
-                       FundamentalBasis.SEMI: 'SAF'}
+FF_BASIS_TO_DATASET = {FundamentalBasis.ANN: 'AF', FundamentalBasis.QTR: 'QF', FundamentalBasis.SEMI: 'SAF'}
 
-FF_BASIS_TO_FIELD = {FundamentalBasis.ANN: 'Af',
-                     FundamentalBasis.QTR: 'Qf',
-                     FundamentalBasis.SEMI: 'Saf'}
+FF_BASIS_TO_FIELD = {FundamentalBasis.ANN: 'Af', FundamentalBasis.QTR: 'Qf', FundamentalBasis.SEMI: 'Saf'}
 
 RATING_TO_FIELD = {
     RatingType.BUY: 'feBuy',
@@ -1128,15 +1127,22 @@ RATING_TO_FIELD = {
     RatingType.SELL: 'feSell',
     RatingType.NONE: 'feNoRec',
     RatingType.TOTAL: 'feTotal',
-    RatingType.SCORE: 'feMark'}
+    RatingType.SCORE: 'feMark',
+}
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))  # TO DO add query type
-def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
-                      statistic: EstimateStatistic = EstimateStatistic.MEAN,
-                      report_basis: EstimateBasis = EstimateBasis.ANN,
-                      period: Union[int, FiscalPeriod, None] = 1,
-                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factset_estimates(
+    asset: Asset,
+    metric: EstimateItem = EstimateItem.EPS,
+    statistic: EstimateStatistic = EstimateStatistic.MEAN,
+    report_basis: EstimateBasis = EstimateBasis.ANN,
+    period: Union[int, FiscalPeriod, None] = 1,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     FactSet estimates for single stocks.
 
@@ -1168,8 +1174,7 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
     ds = Dataset(ds_id)
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     try:
-        df = ds.get_data(bbid=bbid, start=start_new, end=end,
-                         feItem=metric.name)
+        df = ds.get_data(bbid=bbid, start=start_new, end=end, feItem=metric.name)
     except Exception as e:
         raise MqValueError(f'Could not query dataset {ds_id} because of {e}')
     if df.empty:
@@ -1201,7 +1206,8 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
                 elif period.p is None:
                     raise MqValueError(
                         'Please specify the period as an integer between 1 and 4 like FiscalPeriod(2022, 4) '
-                        'for 2022Q4 estimate')
+                        'for 2022Q4 estimate'
+                    )
                 fiscal_period_start = dt.datetime(period.y, (period.p - 1) * 3 + 1, 1)
                 fiscal_period_end = fiscal_period_start + pd.DateOffset(months=3) - pd.DateOffset(days=1)
                 fiscal_period_end = pd.to_datetime(fiscal_period_end)
@@ -1210,7 +1216,8 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
                     raise MqValueError('Period number has to be 1 or 2 for semi-annual basis')
                 elif period.p is None:
                     raise MqValueError(
-                        'Please specify the period as 1 or 2 like FiscalPeriod(2022, 2) for 2022H2 estimate')
+                        'Please specify the period as 1 or 2 like FiscalPeriod(2022, 2) for 2022H2 estimate'
+                    )
                 fiscal_period_start = dt.datetime(period.y, (period.p - 1) * 6 + 1, 1)
                 fiscal_period_end = fiscal_period_start + pd.DateOffset(months=6) - pd.DateOffset(days=1)
                 fiscal_period_end = pd.to_datetime(fiscal_period_end)
@@ -1221,8 +1228,7 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
 
         df = df.fillna({'consEndDate': end})
         df['date_range'] = df.apply(lambda row: pd.date_range(row['date'], row['consEndDate']), axis=1)
-        df = df.explode('date_range').drop(columns=['date', 'consEndDate']).rename(
-            columns={'date_range': 'date'})
+        df = df.explode('date_range').drop(columns=['date', 'consEndDate']).rename(columns={'date_range': 'date'})
         column = f'fe{column_prefix}{statistic.value}{basis_cl}'
     else:
         df['date'] = pd.to_datetime(df['date'])
@@ -1239,11 +1245,16 @@ def factset_estimates(asset: Asset, metric: EstimateItem = EstimateItem.EPS,
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))  # TO DO add query type
-def factset_fundamentals(asset: Asset,
-                         metric: FundamentalMetric = FundamentalMetric.EPS_BASIC,
-                         report_basis: FundamentalBasis = FundamentalBasis.ANN,
-                         report_format: FundamentalFormat = FundamentalFormat.NON_RESTATED,
-                         *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factset_fundamentals(
+    asset: Asset,
+    metric: FundamentalMetric = FundamentalMetric.EPS_BASIC,
+    report_basis: FundamentalBasis = FundamentalBasis.ANN,
+    report_format: FundamentalFormat = FundamentalFormat.NON_RESTATED,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     FactSet fundamentals for single stocks.
 
@@ -1289,9 +1300,14 @@ def factset_fundamentals(asset: Asset,
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))  # TO DO add query type
-def factset_ratings(asset: Asset,
-                    rating_type: RatingType = RatingType.BUY,
-                    *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factset_ratings(
+    asset: Asset,
+    rating_type: RatingType = RatingType.BUY,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     FactSet consensus ratings for single stocks, shows number of brokers for the rating type
     or a standardized numeric value representing the consensus of broker recommendations.
@@ -1311,8 +1327,7 @@ def factset_ratings(asset: Asset,
     df = ds.get_data(bbid=asset.get_identifier(AssetIdentifier.BLOOMBERG_ID), start=start_new, end=end)
     df = df.reset_index().fillna({'consEndDate': end})
     df['date_range'] = df.apply(lambda row: pd.date_range(row['date'], row['consEndDate']), axis=1)
-    df = df.explode('date_range').drop(columns=['date', 'consEndDate']).rename(
-        columns={'date_range': 'date'})
+    df = df.explode('date_range').drop(columns=['date', 'consEndDate']).rename(columns={'date_range': 'date'})
     df = df[df['date'] >= pd.to_datetime(start)].sort_values(by='date', ascending=True).set_index('date')
     series = ExtendedSeries(df[RATING_TO_FIELD[rating_type]], name=rating_type.value)
     _idx = pd.DatetimeIndex(series.index)

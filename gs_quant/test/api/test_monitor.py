@@ -13,25 +13,24 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from gs_quant.api.gs.monitors import GsMonitorsApi
 from gs_quant.session import Environment, GsSession
 from gs_quant.target.monitor import Monitor, MonitorResponseData
 
 
 def test_get_many_monitors(mocker):
-    mock_response = {'results': (
-        Monitor(id='abc', name='test', type='assets'),
-        Monitor(id='bde', name='test2', type='assets')
-    ), 'totalResults': 2}
+    mock_response = {
+        'results': (Monitor(id='abc', name='test', type='assets'), Monitor(id='bde', name='test2', type='assets')),
+        'totalResults': 2,
+    }
 
-    expected_response = (
-        Monitor(id='abc', name='test', type='assets'),
-        Monitor(id='bde', name='test2', type='assets')
-    )
+    expected_response = (Monitor(id='abc', name='test', type='assets'), Monitor(id='bde', name='test2', type='assets'))
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -57,8 +56,9 @@ def test_get_monitor(mocker):
     mock_response = Monitor(id=monitor_id, name='test', type='assets')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
@@ -73,15 +73,16 @@ def test_create_monitor(mocker):
     monitor = Monitor(id=monitor_id, name='test', type='assets')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_post', return_value=monitor)
 
     # run test
     response = GsMonitorsApi.create_monitor(monitor)
-    GsSession.current._post.assert_called_with('/monitors', monitor,
-                                               request_headers={'Content-Type': 'application/json;charset=utf-8'},
-                                               cls=Monitor)
+    GsSession.current._post.assert_called_with(
+        '/monitors', monitor, request_headers={'Content-Type': 'application/json;charset=utf-8'}, cls=Monitor
+    )
     assert response == monitor
 
 
@@ -91,15 +92,19 @@ def test_update_monitor(mocker):
     monitor = Monitor(id=monitor_id, name='test', type='assets')
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_put', return_value=monitor)
 
     # run test
     response = GsMonitorsApi.update_monitor(monitor)
-    GsSession.current._put.assert_called_with('/monitors/{id}'.format(id=monitor_id), monitor,
-                                              request_headers={'Content-Type': 'application/json;charset=utf-8'},
-                                              cls=Monitor)
+    GsSession.current._put.assert_called_with(
+        '/monitors/{id}'.format(id=monitor_id),
+        monitor,
+        request_headers={'Content-Type': 'application/json;charset=utf-8'},
+        cls=Monitor,
+    )
     assert response == monitor
 
 
@@ -109,8 +114,9 @@ def test_delete_monitor(mocker):
     mock_response = True
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
 
     # run test
@@ -123,35 +129,18 @@ def test_calculate_monitor(mocker):
     monitor_id = 'abc'
 
     calc_data = {
-        'Name': {
-            'value': "Multiline Retail 4",
-            'metadata': {
-                'tooltip': "GSS4MRET"
-            }
-        },
-        'Last': {
-            'timestamp': "2019-06-03T20:57:31.407999992Z",
-            'value': 119.21,
-            'formattedValue': "119.21"
-        }
+        'Name': {'value': "Multiline Retail 4", 'metadata': {'tooltip': "GSS4MRET"}},
+        'Last': {'timestamp': "2019-06-03T20:57:31.407999992Z", 'value': 119.21, 'formattedValue': "119.21"},
     }
 
     mock_response = MonitorResponseData(
-        id=monitor_id,
-        result={
-            'groupName': 'some name',
-            'rows': [
-                {
-                    'entityId': 'id',
-                    'data': calc_data
-                }
-            ]
-        }
+        id=monitor_id, result={'groupName': 'some name', 'rows': [{'entityId': 'id', 'data': calc_data}]}
     )
 
     # mock GsSession
-    mocker.patch.object(GsSession.__class__, 'default_value',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test

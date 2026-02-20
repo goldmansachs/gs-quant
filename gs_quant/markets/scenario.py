@@ -33,11 +33,9 @@ class ScenarioCalculationType(Enum):
 
 
 class FactorShock:
-    """ Marquee Factor Shock """
+    """Marquee Factor Shock"""
 
-    def __init__(self,
-                 factor: Union[str, Factor],
-                 shock: float):
+    def __init__(self, factor: Union[str, Factor], shock: float):
         self.__factor = factor
         self.__shock = shock
 
@@ -51,18 +49,16 @@ class FactorShock:
         return factor_name == other_factor_name and self.shock == other.shock
 
     def __repr__(self):
-        return '%r(factor=%r, shock=%r)' % (self.__class__.__name__,
-                                            self.factor,
-                                            self.shock)
+        return '%r(factor=%r, shock=%r)' % (self.__class__.__name__, self.factor, self.shock)
 
     @property
     def factor(self) -> Union[str, Factor]:
-        """ Get factor being shocked"""
+        """Get factor being shocked"""
         return self.__factor
 
     @property
     def shock(self) -> float:
-        """ Get factor being shocked"""
+        """Get factor being shocked"""
         return self.__shock
 
     @shock.setter
@@ -70,10 +66,7 @@ class FactorShock:
         self.__shock = shock
 
     def to_dict(self):
-        return {
-            "factor": self.factor.name if isinstance(self.factor, Factor) else self.factor,
-            "shock": self.shock
-        }
+        return {"factor": self.factor.name if isinstance(self.factor, Factor) else self.factor, "shock": self.shock}
 
     @classmethod
     def from_dict(cls, obj):
@@ -81,10 +74,7 @@ class FactorShock:
 
 
 class FactorShockParameters:
-    def __init__(self,
-                 factor_shocks: List[FactorShock] = None,
-                 propagate_shocks: bool = None,
-                 risk_model: str = None):
+    def __init__(self, factor_shocks: List[FactorShock] = None, propagate_shocks: bool = None, risk_model: str = None):
         self.__factor_shocks = factor_shocks
         self.__propagate_shocks = propagate_shocks
         self.__risk_model = risk_model
@@ -93,15 +83,19 @@ class FactorShockParameters:
         if not isinstance(other, FactorShockParameters):
             return False
 
-        return \
-            self.factor_shocks == other.factor_shocks \
-            and self.propagate_shocks == other.propagate_shocks and self.risk_model == other.risk_model
+        return (
+            self.factor_shocks == other.factor_shocks
+            and self.propagate_shocks == other.propagate_shocks
+            and self.risk_model == other.risk_model
+        )
 
     def __repr__(self):
-        return '%r(risk_model=%r, propagate_shocks=%r, factor_shocks=%r)' % (self.__class__.__name__,
-                                                                             self.risk_model,
-                                                                             self.propagate_shocks,
-                                                                             self.factor_shocks)
+        return '%r(risk_model=%r, propagate_shocks=%r, factor_shocks=%r)' % (
+            self.__class__.__name__,
+            self.risk_model,
+            self.propagate_shocks,
+            self.factor_shocks,
+        )
 
     @property
     def factor_shocks(self) -> List[FactorShock]:
@@ -111,8 +105,10 @@ class FactorShockParameters:
     def factor_shocks(self, factor_shocks: Union[List[FactorShock], Dict, pd.DataFrame]):
         if isinstance(factor_shocks, pd.DataFrame):
             factor_shocks_as_dict = factor_shocks.to_dict(orient='split')
-            self.__factor_shocks = [FactorShock(factor=f, shock=s) for f, s in
-                                    zip(factor_shocks_as_dict.get('columns'), factor_shocks_as_dict.get('data'))]
+            self.__factor_shocks = [
+                FactorShock(factor=f, shock=s)
+                for f, s in zip(factor_shocks_as_dict.get('columns'), factor_shocks_as_dict.get('data'))
+            ]
         elif isinstance(factor_shocks, Dict):
             self.__factor_shocks = [FactorShock(factor=k, shock=v) for k, v in factor_shocks.items()]
         else:
@@ -132,22 +128,22 @@ class FactorShockParameters:
 
     @classmethod
     def from_dict(cls, obj: Dict) -> 'FactorShockParameters':
-        return cls(factor_shocks=[FactorShock.from_dict(f_shock) for f_shock in obj.get('factorShocks')],
-                   risk_model=obj.get("riskModel"),
-                   propagate_shocks=obj.get("propagateShocks"))
+        return cls(
+            factor_shocks=[FactorShock.from_dict(f_shock) for f_shock in obj.get('factorShocks')],
+            risk_model=obj.get("riskModel"),
+            propagate_shocks=obj.get("propagateShocks"),
+        )
 
     def to_dict(self) -> Dict:
         return {
             "riskModel": self.risk_model,
             "propagateShocks": self.propagate_shocks,
-            "factorShocks": [f_shock.to_dict() for f_shock in self.factor_shocks]
+            "factorShocks": [f_shock.to_dict() for f_shock in self.factor_shocks],
         }
 
 
 class HistoricalSimulationParameters:
-    def __init__(self,
-                 start_date: dt.date = None,
-                 end_date: dt.date = None):
+    def __init__(self, start_date: dt.date = None, end_date: dt.date = None):
         self.__start_date = start_date
         self.__end_date = end_date
 
@@ -178,8 +174,10 @@ class HistoricalSimulationParameters:
 
     @classmethod
     def from_dict(cls, obj: Dict) -> 'HistoricalSimulationParameters':
-        return cls(start_date=dt.datetime.strptime(obj.get('startDate'), "%Y-%m-%d").date(),
-                   end_date=dt.datetime.strptime(obj.get('endDate'), "%Y-%m-%d").date())
+        return cls(
+            start_date=dt.datetime.strptime(obj.get('startDate'), "%Y-%m-%d").date(),
+            end_date=dt.datetime.strptime(obj.get('endDate'), "%Y-%m-%d").date(),
+        )
 
     def to_dict(self) -> Dict:
         return {"startDate": self.start_date, "endDate": self.end_date}
@@ -189,25 +187,31 @@ ScenarioParameters = Union[FactorShockParameters, HistoricalSimulationParameters
 
 
 class FactorScenario:
-    """ Marquee Factor-based Scenario """
+    """Marquee Factor-based Scenario"""
 
-    def __init__(self,
-                 name: str,
-                 type: Union[str, FactorScenarioType],
-                 parameters: Union[Dict, HistoricalSimulationParameters, FactorShockParameters],
-                 entitlements: Union[Dict, Entitlements] = None,
-                 id_: str = None,
-                 description: str = None,
-                 tags: List[str] = None):
+    def __init__(
+        self,
+        name: str,
+        type: Union[str, FactorScenarioType],
+        parameters: Union[Dict, HistoricalSimulationParameters, FactorShockParameters],
+        entitlements: Union[Dict, Entitlements] = None,
+        id_: str = None,
+        description: str = None,
+        tags: List[str] = None,
+    ):
         self.__id = id_
         self.__name = name
         self.__type = type
         self.__description = description
-        self.__parameters = parameters \
-            if any([isinstance(parameters, FactorShockParameters),
-                    isinstance(parameters, HistoricalSimulationParameters)]) \
-            else FactorShockParameters.from_dict(parameters) if type == FactorScenarioType.Factor_Shock \
+        self.__parameters = (
+            parameters
+            if any(
+                [isinstance(parameters, FactorShockParameters), isinstance(parameters, HistoricalSimulationParameters)]
+            )
+            else FactorShockParameters.from_dict(parameters)
+            if type == FactorScenarioType.Factor_Shock
             else HistoricalSimulationParameters.from_dict(parameters)
+        )
         self.__entitlements = entitlements
         self.__tags = tags
 
@@ -220,17 +224,15 @@ class FactorScenario:
             self.type,
             self.parameters.__repr__(),
             self.entitlements.__repr__(),
-            self.tags)
+            self.tags,
+        )
 
         return instance_repr
 
     def __str__(self):
-        s = "{}('id={}', 'name={}', 'description={}', 'type={}', 'parameters={}'".format(self.__class__.__name__,
-                                                                                         self.id,
-                                                                                         self.name,
-                                                                                         self.description,
-                                                                                         self.type.value,
-                                                                                         self.parameters.__repr__())
+        s = "{}('id={}', 'name={}', 'description={}', 'type={}', 'parameters={}'".format(
+            self.__class__.__name__, self.id, self.name, self.description, self.type.value, self.parameters.__repr__()
+        )
 
         s += ")"
         return s
@@ -292,22 +294,26 @@ class FactorScenario:
             "type": scenario_as_dict.get('type'),
             "parameters": get(scenario_as_dict, 'parameters', None),
             "entitlements": get(scenario_as_dict, 'entitlements', None),
-            "tags": scenario_as_dict.get('tags')
+            "tags": scenario_as_dict.get('tags'),
         }
         return cls(**scenario_data)
 
     @classmethod
     def from_target(cls, target_scenario: TargetScenario):
-        parameters = FactorShockParameters.from_dict(target_scenario.parameters) \
-            if target_scenario.type == FactorScenarioType.Factor_Shock else \
-            HistoricalSimulationParameters.from_dict(target_scenario.parameters)
-        scenario = cls(id_=target_scenario.id,
-                       name=target_scenario.name,
-                       type=target_scenario.type,
-                       parameters=parameters,
-                       entitlements=Entitlements.from_target(target_scenario.entitlements),
-                       description=target_scenario.description,
-                       tags=target_scenario.tags)
+        parameters = (
+            FactorShockParameters.from_dict(target_scenario.parameters)
+            if target_scenario.type == FactorScenarioType.Factor_Shock
+            else HistoricalSimulationParameters.from_dict(target_scenario.parameters)
+        )
+        scenario = cls(
+            id_=target_scenario.id,
+            name=target_scenario.name,
+            type=target_scenario.type,
+            parameters=parameters,
+            entitlements=Entitlements.from_target(target_scenario.entitlements),
+            description=target_scenario.description,
+            tags=target_scenario.tags,
+        )
 
         return scenario
 
@@ -340,18 +346,20 @@ class FactorScenario:
         return cls.from_target(scenario)
 
     @classmethod
-    def get_many(cls,
-                 ids: List[str] = None,
-                 names: List[str] = None,
-                 type: Union[str, FactorScenarioType] = None,
-                 risk_model: str = None,
-                 shocked_factors: List[str] = None,
-                 shocked_factor_categories: List[str] = None,
-                 propagated_shocks: bool = None,
-                 start_date: dt.date = None,
-                 end_date: dt.date = None,
-                 tags: List[str] = None,
-                 limit: int = 100) -> List['FactorScenario']:
+    def get_many(
+        cls,
+        ids: List[str] = None,
+        names: List[str] = None,
+        type: Union[str, FactorScenarioType] = None,
+        risk_model: str = None,
+        shocked_factors: List[str] = None,
+        shocked_factor_categories: List[str] = None,
+        propagated_shocks: bool = None,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        tags: List[str] = None,
+        limit: int = 100,
+    ) -> List['FactorScenario']:
         """
         Get many factor scenarios from Marquee
 
@@ -400,25 +408,31 @@ class FactorScenario:
             start_date=start_date,
             end_date=end_date,
             tags=tags,
-            limit=limit)
+            limit=limit,
+        )
 
         all_scenarios = [cls.from_target(scenario_as_target) for scenario_as_target in many_scenarios_as_dict]
 
         if propagated_shocks is not None:
-            return [scenario for scenario in all_scenarios if
-                    (scenario.parameters.propagate_shocks == propagated_shocks) or
-                    scenario.type != FactorScenarioType.Factor_Shock]
+            return [
+                scenario
+                for scenario in all_scenarios
+                if (scenario.parameters.propagate_shocks == propagated_shocks)
+                or scenario.type != FactorScenarioType.Factor_Shock
+            ]
 
         return all_scenarios
 
     def save(self):
-        """ Update factor scenario or Create it if it does not exist"""
-        target_scenario = TargetScenario(name=self.name,
-                                         type_=self.type,
-                                         description=self.description if self.description else None,
-                                         parameters=self.parameters.to_dict(),
-                                         entitlements=self.entitlements.to_target() if self.entitlements else None,
-                                         tags=tuple(self.tags) if self.tags else ())
+        """Update factor scenario or Create it if it does not exist"""
+        target_scenario = TargetScenario(
+            name=self.name,
+            type_=self.type,
+            description=self.description if self.description else None,
+            parameters=self.parameters.to_dict(),
+            entitlements=self.entitlements.to_target() if self.entitlements else None,
+            tags=tuple(self.tags) if self.tags else (),
+        )
 
         if self.id:
             target_scenario.id_ = self.id
@@ -455,8 +469,9 @@ class FactorScenario:
         """
         parameters = deepcopy(self.parameters)
 
-        return FactorScenario(name=f"{self.name} copy", description=self.description,
-                              type=self.type, parameters=parameters)
+        return FactorScenario(
+            name=f"{self.name} copy", description=self.description, type=self.type, parameters=parameters
+        )
 
 
 Scenario = Union[FactorScenario]

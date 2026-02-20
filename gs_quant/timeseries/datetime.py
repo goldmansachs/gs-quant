@@ -22,8 +22,15 @@ from typing import Any, Union, List
 import numpy as np
 import pandas as pd
 
-from .helper import (_create_enum, Interpolate, plot_function, requires_session,
-                     FREQ_MONTH_END, FREQ_QUARTER_END, FREQ_YEAR_END)
+from .helper import (
+    _create_enum,
+    Interpolate,
+    plot_function,
+    requires_session,
+    FREQ_MONTH_END,
+    FREQ_QUARTER_END,
+    FREQ_YEAR_END,
+)
 from ..datetime import GsCalendar
 from ..datetime.date import DayCountConvention, PaymentFrequency, day_count_fraction
 from ..datetime.date import date_range as _date_range
@@ -35,8 +42,7 @@ interpolation operations. Includes sampling operations based on daif dates[0]te 
 """
 
 AggregateFunction: Union[Union[type, Enum], Any] = _create_enum(
-    'AggregateFunction',
-    ['max', 'min', 'mean', 'sum', 'first', 'last']
+    'AggregateFunction', ['max', 'min', 'mean', 'sum', 'first', 'last']
 )
 AggregatePeriod = _create_enum('AggregatePeriod', ['week', 'month', 'quarter', 'year'])
 
@@ -52,7 +58,10 @@ def __interpolate_step(x: pd.Series, dates: pd.Series = None) -> pd.Series:
 
     current = x[prev]
 
-    curve = x.align(dates, 'right', )[0]  # only need values from dates
+    curve = x.align(
+        dates,
+        'right',
+    )[0]  # only need values from dates
 
     for knot in curve.items():
         if np.isnan(knot[1]):
@@ -63,8 +72,9 @@ def __interpolate_step(x: pd.Series, dates: pd.Series = None) -> pd.Series:
 
 
 @plot_function
-def align(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.INTERSECT) -> \
-        Union[List[pd.Series], List[Real]]:
+def align(
+    x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.INTERSECT
+) -> Union[List[pd.Series], List[Real]]:
     """
     Align dates of two series or scalars
 
@@ -138,8 +148,11 @@ def align(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpol
 
 
 @plot_function
-def interpolate(x: pd.Series, dates: Union[List[dt.date], List[dt.time], pd.Series] = None,
-                method: Interpolate = Interpolate.INTERSECT) -> pd.Series:
+def interpolate(
+    x: pd.Series,
+    dates: Union[List[dt.date], List[dt.time], pd.Series] = None,
+    method: Interpolate = Interpolate.INTERSECT,
+) -> pd.Series:
     """
     Interpolate over specified dates or times
 
@@ -409,9 +422,9 @@ def weekday(x: pd.Series) -> pd.Series:
 
 @plot_function
 def day_count_fractions(
-        dates: Union[List[dt.date], pd.Series],
-        convention: DayCountConvention = DayCountConvention.ACTUAL_360,
-        frequency: PaymentFrequency = PaymentFrequency.MONTHLY
+    dates: Union[List[dt.date], pd.Series],
+    convention: DayCountConvention = DayCountConvention.ACTUAL_360,
+    frequency: PaymentFrequency = PaymentFrequency.MONTHLY,
 ) -> pd.Series:
     """
     Day count fractions between dates in series
@@ -457,15 +470,16 @@ def day_count_fractions(
         return pd.Series(dtype=float)
 
     start_dates = date_list[0:-1]
-    end_dates = date_list[1:len(date_list)]
+    end_dates = date_list[1 : len(date_list)]
 
     dcfs = map(lambda a, b: day_count_fraction(a, b, convention, frequency), start_dates, end_dates)
-    return pd.Series(data=[np.nan] + list(dcfs), index=date_list[0:len(date_list)])
+    return pd.Series(data=[np.nan] + list(dcfs), index=date_list[0 : len(date_list)])
 
 
 @plot_function
-def date_range(x: pd.Series, start_date: Union[dt.date, int], end_date: Union[dt.date, int],
-               weekdays_only: bool = False) -> pd.Series:
+def date_range(
+    x: pd.Series, start_date: Union[dt.date, int], end_date: Union[dt.date, int], weekdays_only: bool = False
+) -> pd.Series:
     """
     Create a time series from a (sub-)range of dates in an existing time series.
 
@@ -505,7 +519,7 @@ def date_range(x: pd.Series, start_date: Union[dt.date, int], end_date: Union[dt
     if isinstance(start_date, int):
         start_date = x.index[start_date]
     if isinstance(end_date, int):
-        end_date = x.index[- (1 + end_date)]
+        end_date = x.index[-(1 + end_date)]
 
     try:
         start_date = start_date.date()
@@ -772,5 +786,6 @@ def align_calendar(series: pd.Series, calendar: str) -> pd.Series:
     gs_calendar = GsCalendar.get(calendar)
     cbd = pd.tseries.offsets.CustomBusinessDay(calendar=gs_calendar.business_day_calendar())
     filtered_series = series[
-        series.index.isin(pd.date_range(start=series.first_valid_index(), end=series.last_valid_index(), freq=cbd))]
+        series.index.isin(pd.date_range(start=series.first_valid_index(), end=series.last_valid_index(), freq=cbd))
+    ]
     return filtered_series

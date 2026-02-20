@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import os
 from dataclasses import dataclass
 from enum import Enum
@@ -33,14 +34,14 @@ class Utilities:
 
         @classmethod
         def __create_query(
-                cls,
-                fields: Union[List, Tuple] = None,
-                as_of: dt.datetime = None,
-                limit: int = None,
-                scroll: str = None,
-                scroll_id: str = None,
-                order_by: List[str] = None,
-                **kwargs
+            cls,
+            fields: Union[List, Tuple] = None,
+            as_of: dt.datetime = None,
+            limit: int = None,
+            scroll: str = None,
+            scroll_id: str = None,
+            order_by: List[str] = None,
+            **kwargs,
         ) -> EntityQuery:
             keys = set(kwargs.keys())
             valid = keys.intersection(FieldFilterMap.properties())
@@ -57,16 +58,12 @@ class Utilities:
                 limit=limit,
                 scroll=scroll,
                 scroll_id=scroll_id,
-                order_by=order_by
+                order_by=order_by,
             )
 
         @classmethod
         def get_many_assets_data(
-                cls,
-                fields: IdList = None,
-                as_of: dt.datetime = None,
-                limit: int = None,
-                **kwargs
+            cls, fields: IdList = None, as_of: dt.datetime = None, limit: int = None, **kwargs
         ) -> dict:
             query = cls.__create_query(fields, as_of, limit, **kwargs)
             response = GsSession.current._post('/assets/data/query', payload=query)
@@ -115,9 +112,9 @@ class Utilities:
         if final_end is not None:
             if not isinstance(final_end, dt.datetime):
                 raise ValueError("End date must of datetime.datetime format. Existing program....")
-            elif (not isinstance(original_start, dt.datetime)):
+            elif not isinstance(original_start, dt.datetime):
                 raise ValueError("Start date must be of datetime.datetime format. Exiting program......")
-            elif (original_start > final_end):
+            elif original_start > final_end:
                 raise ValueError("Start date cannot be greater than end date. Exiting program......")
             elif (time_field == "time") and ((final_end - original_start).total_seconds() / 3600 > 5):
                 raise ValueError("For intraday datasets diff between start & end date should be <= 5 hrs")
@@ -129,7 +126,7 @@ class Utilities:
 
         iter_len = len(iterable)
         for ndx in range(0, iter_len, n):
-            yield iterable[ndx:min(ndx + n, iter_len)]
+            yield iterable[ndx : min(ndx + n, iter_len)]
 
     @staticmethod
     def fetch_data(dataset, symbols, start=dt.datetime.now(), end=dt.datetime.now(), dimension="assetId", auth=None):
@@ -144,24 +141,12 @@ class Utilities:
 
     @staticmethod
     def execute_parallel_query(
-            dataset,
-            coverage,
-            start,
-            end,
-            symbol_dimension,
-            parallel_factor,
-            batch_size,
-            authenticate,
-            retry=0
+        dataset, coverage, start, end, symbol_dimension, parallel_factor, batch_size, authenticate, retry=0
     ):
 
         bound_get_data = partial(
-            Utilities.fetch_data,
-            dataset,
-            start=start,
-            end=end,
-            dimension=symbol_dimension,
-            auth=authenticate)
+            Utilities.fetch_data, dataset, start=start, end=end, dimension=symbol_dimension, auth=authenticate
+        )
 
         print(f"{len(coverage)} symbols, will run in {math.ceil(len(coverage) / batch_size)} batches")
         with ThreadPoolExecutor(max_workers=parallel_factor) as e:
@@ -174,15 +159,9 @@ class Utilities:
                     raise Exception("retry failure")
 
                 retry += 1
-                df = Utilities.execute_parallel_query(dataset,
-                                                      coverage,
-                                                      start,
-                                                      end,
-                                                      symbol_dimension,
-                                                      parallel_factor,
-                                                      batch_size,
-                                                      authenticate,
-                                                      retry)
+                df = Utilities.execute_parallel_query(
+                    dataset, coverage, start, end, symbol_dimension, parallel_factor, batch_size, authenticate, retry
+                )
 
         return df
 
@@ -197,14 +176,9 @@ class Utilities:
         return [time_field, history_time, symbol_dimension, timedelta]
 
     @staticmethod
-    def write_consolidated_results(data_frame,
-                                   target_dir_result,
-                                   dataset,
-                                   batch_number,
-                                   handler,
-                                   write_to_csv,
-                                   coverage_length,
-                                   symbols_per_csv):
+    def write_consolidated_results(
+        data_frame, target_dir_result, dataset, batch_number, handler, write_to_csv, coverage_length, symbols_per_csv
+    ):
         if data_frame.shape[0] > 0:
             if write_to_csv:
                 data_frame.to_csv(f"{target_dir_result}\\{dataset.id}-batch {batch_number}.csv", ",")
@@ -214,23 +188,24 @@ class Utilities:
         print(f"Wrote batch {batch_number} file out of {math.ceil(coverage_length / symbols_per_csv)}")
 
     @staticmethod
-    def iterate_over_series(dataset,
-                            coverage_batch,
-                            original_start,
-                            original_end,
-                            datetime_delta_override,
-                            symbol_dimension,
-                            request_batch_size,
-                            authenticate,
-                            final_end,
-                            write_to_csv,
-                            target_dir_result,
-                            batch_number,
-                            coverage_length,
-                            symbols_per_csv,
-                            handler,
-                            parallel_factor=5
-                            ):
+    def iterate_over_series(
+        dataset,
+        coverage_batch,
+        original_start,
+        original_end,
+        datetime_delta_override,
+        symbol_dimension,
+        request_batch_size,
+        authenticate,
+        final_end,
+        write_to_csv,
+        target_dir_result,
+        batch_number,
+        coverage_length,
+        symbols_per_csv,
+        handler,
+        parallel_factor=5,
+    ):
 
         start = original_start
         end = original_end
@@ -238,14 +213,7 @@ class Utilities:
 
         while True:
             batch_frame = Utilities.execute_parallel_query(
-                dataset,
-                coverage_batch,
-                start,
-                end,
-                symbol_dimension,
-                parallel_factor,
-                request_batch_size,
-                authenticate
+                dataset, coverage_batch, start, end, symbol_dimension, parallel_factor, request_batch_size, authenticate
             )
 
             data_frame = pd.concat([data_frame, batch_frame], axis=0)
@@ -254,14 +222,16 @@ class Utilities:
             end += datetime_delta_override
 
             if end > final_end:
-                Utilities.write_consolidated_results(data_frame,
-                                                     target_dir_result,
-                                                     dataset,
-                                                     batch_number,
-                                                     handler,
-                                                     write_to_csv,
-                                                     coverage_length,
-                                                     symbols_per_csv)
+                Utilities.write_consolidated_results(
+                    data_frame,
+                    target_dir_result,
+                    dataset,
+                    batch_number,
+                    handler,
+                    write_to_csv,
+                    coverage_length,
+                    symbols_per_csv,
+                )
                 break
 
         del data_frame
@@ -279,20 +249,20 @@ class Utilities:
         asset_batches = Utilities.batch(ids, n=1000)
         all_assets = []
         for asset_batch in asset_batches:
-            assets = Utilities.AssetApi.get_many_assets_data(**{input_type: asset_batch},
-                                                             limit=min(5000, 5 * len(asset_batch)),
-                                                             as_of=as_of,
-                                                             fields=[input_type,
-                                                                     output_type,
-                                                                     "listed",
-                                                                     "assetClassificationsIsPrimary",
-                                                                     "rank"],
-                                                             asset_classifications_is_primary=[True])
+            assets = Utilities.AssetApi.get_many_assets_data(
+                **{input_type: asset_batch},
+                limit=min(5000, 5 * len(asset_batch)),
+                as_of=as_of,
+                fields=[input_type, output_type, "listed", "assetClassificationsIsPrimary", "rank"],
+                asset_classifications_is_primary=[True],
+            )
 
             assets = sorted(assets, key=lambda x: x[input_type])
             all_assets = all_assets + assets
-        return {inp_id: Utilities.extract_xref(grouped_assets, output_type)
-                for inp_id, grouped_assets in groupby(all_assets, key=lambda x: x[input_type])}
+        return {
+            inp_id: Utilities.extract_xref(grouped_assets, output_type)
+            for inp_id, grouped_assets in groupby(all_assets, key=lambda x: x[input_type])
+        }
 
     @staticmethod
     def get_dataset_coverage(identifier, symbol_dimension, dataset):
@@ -373,21 +343,21 @@ class SecmasterXrefFormatter:
 
         for record in records:
             # Create start event
-            events.append(SecmasterXrefFormatter.Event(
-                date=record['startDate'],
-                event_type=SecmasterXrefFormatter.EventType.START,
-                record=record
-            ))
+            events.append(
+                SecmasterXrefFormatter.Event(
+                    date=record['startDate'], event_type=SecmasterXrefFormatter.EventType.START, record=record
+                )
+            )
 
             # Create end event (day after the actual end date)
             if record['endDate'] != SecmasterXrefFormatter.INFINITY_DATE:
                 next_day = SecmasterXrefFormatter._add_one_day(record['endDate'])
                 if next_day:
-                    events.append(SecmasterXrefFormatter.Event(
-                        date=next_day,
-                        event_type=SecmasterXrefFormatter.EventType.END,
-                        record=record
-                    ))
+                    events.append(
+                        SecmasterXrefFormatter.Event(
+                            date=next_day, event_type=SecmasterXrefFormatter.EventType.END, record=record
+                        )
+                    )
 
         return events
 
@@ -413,12 +383,13 @@ class SecmasterXrefFormatter:
             # Close current period if we have active identifiers
             if active_identifiers and current_period_start is not None:
                 period_end = SecmasterXrefFormatter._subtract_one_day(current_date)
-                periods.append({
-                    "startDate": current_period_start,
-                    "endDate": period_end,
-                    "identifiers": {record['type']: record['value']
-                                    for record in active_identifiers.values()}
-                })
+                periods.append(
+                    {
+                        "startDate": current_period_start,
+                        "endDate": period_end,
+                        "identifiers": {record['type']: record['value'] for record in active_identifiers.values()},
+                    }
+                )
 
             # Process all events for this date
             # First process END events, then START events
@@ -444,8 +415,7 @@ class SecmasterXrefFormatter:
         if active_identifiers and current_period_start is not None:
             # Check if any active identifier has infinity end date
             has_infinity = any(
-                record['endDate'] == SecmasterXrefFormatter.INFINITY_DATE
-                for record in active_identifiers.values()
+                record['endDate'] == SecmasterXrefFormatter.INFINITY_DATE for record in active_identifiers.values()
             )
 
             if has_infinity:
@@ -455,12 +425,13 @@ class SecmasterXrefFormatter:
                 latest_end = max(record['endDate'] for record in active_identifiers.values())
                 period_end = latest_end
 
-            periods.append({
-                "startDate": current_period_start,
-                "endDate": period_end,
-                "identifiers": {record['type']: record['value']
-                                for record in active_identifiers.values()}
-            })
+            periods.append(
+                {
+                    "startDate": current_period_start,
+                    "endDate": period_end,
+                    "identifiers": {record['type']: record['value'] for record in active_identifiers.values()},
+                }
+            )
 
         return periods
 

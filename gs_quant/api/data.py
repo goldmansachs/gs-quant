@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 from abc import ABCMeta
@@ -48,27 +49,28 @@ class DataApi(ApiWithCustomSession, metaclass=ABCMeta):
         raise NotImplementedError('Must implement time_field')
 
     @classmethod
-    def construct_dataframe_with_types(cls, dataset_id: str, data: Union[Base, list, tuple, pd.Series],
-                                       schema_varies=False, standard_fields=False) -> pd.DataFrame:
+    def construct_dataframe_with_types(
+        cls, dataset_id: str, data: Union[Base, list, tuple, pd.Series], schema_varies=False, standard_fields=False
+    ) -> pd.DataFrame:
         raise NotImplementedError('Must implement time_field')
 
     @staticmethod
     def build_query(
-            start: Optional[Union[dt.date, dt.datetime]] = None,
-            end: Optional[Union[dt.date, dt.datetime]] = None,
-            as_of: Optional[dt.datetime] = None,
-            since: Optional[dt.datetime] = None,
-            restrict_fields: bool = False,
-            format: str = 'MessagePack',
-            dates: List[dt.date] = None,
-            empty_intervals: Optional[bool] = None,
-            **kwargs
+        start: Optional[Union[dt.date, dt.datetime]] = None,
+        end: Optional[Union[dt.date, dt.datetime]] = None,
+        as_of: Optional[dt.datetime] = None,
+        since: Optional[dt.datetime] = None,
+        restrict_fields: bool = False,
+        format: str = 'MessagePack',
+        dates: List[dt.date] = None,
+        empty_intervals: Optional[bool] = None,
+        **kwargs,
     ):
         end_is_time = isinstance(end, dt.datetime)
         start_is_time = isinstance(start, dt.datetime)
 
         if kwargs.get('market_data_coordinates'):
-            real_time = ((start is None or start_is_time) and (end is None or end_is_time))
+            real_time = (start is None or start_is_time) and (end is None or end_is_time)
             query = MDAPIDataQuery(
                 start_time=start if real_time else None,
                 end_time=end if real_time else None,
@@ -76,7 +78,7 @@ class DataApi(ApiWithCustomSession, metaclass=ABCMeta):
                 end_date=end if not real_time else None,
                 format=format,
                 real_time=real_time,
-                **kwargs
+                **kwargs,
             )
         else:
             if start_is_time and end is not None and not end_is_time:
@@ -94,7 +96,7 @@ class DataApi(ApiWithCustomSession, metaclass=ABCMeta):
                 since=since,
                 format=format,
                 dates=dates,
-                empty_intervals=empty_intervals
+                empty_intervals=empty_intervals,
             )
 
         query_properties = query.properties()

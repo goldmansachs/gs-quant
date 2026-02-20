@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from dataclasses import field, dataclass
 from enum import Enum
 from typing import Union, Tuple, Optional
@@ -62,8 +63,15 @@ def test_base_setter():
 
 def test_setter_coercion():
     base._is_supported_generic_cache = {}
-    obj = BaseSubclass(instance_attr='test', attr_1=None, attr_2=('test', 1.0, 1), attr_3='test',
-                       attr_4=(1,), attr_5=(3, 'test'), attr_6=TestEnum.Enum_1)
+    obj = BaseSubclass(
+        instance_attr='test',
+        attr_1=None,
+        attr_2=('test', 1.0, 1),
+        attr_3='test',
+        attr_4=(1,),
+        attr_5=(3, 'test'),
+        attr_6=TestEnum.Enum_1,
+    )
     obj.attr_1 = 'test'
     # str with type hint str is unchanged
     obj.attr_1 = 'Enum_1'
@@ -92,13 +100,8 @@ def test_security_from_dict():
         '$type': 'LegDefinition',
         'bbid': 'TYU5 Comdty',
         'calculationTime': 13379,
-        'properties': {
-            'buysell': 'Buy',
-            'identifier': 'TYU5 Comdty',
-            'identifiertype': 'BloombergID',
-            'quantity': 1.0
-        },
-        'queueingTime': 157
+        'properties': {'buysell': 'Buy', 'identifier': 'TYU5 Comdty', 'identifiertype': 'BloombergID', 'quantity': 1.0},
+        'queueingTime': 157,
     }
 
     # Construct Security object

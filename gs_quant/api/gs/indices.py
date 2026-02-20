@@ -23,13 +23,26 @@ from gs_quant.api.gs.assets import IdList
 from gs_quant.common import PositionType
 from gs_quant.errors import MqTimeoutError, MqInternalServerError, MqRateLimitedError
 from gs_quant.session import GsSession
-from gs_quant.target.indices import (CustomBasketsCreateInputs, CustomBasketsRebalanceInputs,
-                                     CustomBasketsRebalanceAction, CustomBasketsResponse, CustomBasketsEditInputs,
-                                     CustomBasketsBackcastInputs, CustomBasketsRiskScheduleInputs,
-                                     CustomBasketRiskParams, ISelectResponse, ISelectRequest, ISelectRebalance,
-                                     ISelectActionRequest, IndicesDynamicConstructInputs, IndicesRebalanceInputs,
-                                     IndicesEditInputs,
-                                     DynamicConstructionResponse, ApprovalCustomBasketResponse, IndicesBackcastInputs)
+from gs_quant.target.indices import (
+    CustomBasketsCreateInputs,
+    CustomBasketsRebalanceInputs,
+    CustomBasketsRebalanceAction,
+    CustomBasketsResponse,
+    CustomBasketsEditInputs,
+    CustomBasketsBackcastInputs,
+    CustomBasketsRiskScheduleInputs,
+    CustomBasketRiskParams,
+    ISelectResponse,
+    ISelectRequest,
+    ISelectRebalance,
+    ISelectActionRequest,
+    IndicesDynamicConstructInputs,
+    IndicesRebalanceInputs,
+    IndicesEditInputs,
+    DynamicConstructionResponse,
+    ApprovalCustomBasketResponse,
+    IndicesBackcastInputs,
+)
 
 # type aliases -- can add for edit/backcast/etc. if STS implements them in future
 CreateRequest = Union[CustomBasketsCreateInputs, IndicesDynamicConstructInputs]
@@ -43,6 +56,7 @@ ValidatedRequest = Union[CreateRequest, RebalanceRequest]
 
 class GsIndexApi:
     """GS Index API client implementation"""
+
     _response_cls = {
         CustomBasketsCreateInputs: CustomBasketsResponse,
         IndicesDynamicConstructInputs: DynamicConstructionResponse,
@@ -50,25 +64,25 @@ class GsIndexApi:
         ISelectRebalance: ISelectResponse,
         ISelectRequest: ISelectResponse,
         CustomBasketsRebalanceAction: Dict,
-        ISelectActionRequest: ISelectResponse
+        ISelectActionRequest: ISelectResponse,
     }
 
     @classmethod
     def create(cls, inputs: CreateRequest) -> CreateRepsonse:
-        """ Create new basket or iselect strategy """
+        """Create new basket or iselect strategy"""
         response_cls = cls._response_cls[type(inputs)]
         return GsSession.current._post('/indices', payload=inputs, cls=response_cls)
 
     @classmethod
     def edit(cls, id_: str, inputs: CustomBasketsEditInputs) -> CustomBasketsResponse:
-        """ Update basket metadata """
+        """Update basket metadata"""
         url = f'/indices/{id_}/edit'
         inputs = IndicesEditInputs(parameters=inputs)
         return GsSession.current._post(url, payload=inputs, cls=CustomBasketsResponse)
 
     @classmethod
     def rebalance(cls, id_: str, inputs: RebalanceRequest) -> RebalanceResponse:
-        """ Rebalance existing index with new composition """
+        """Rebalance existing index with new composition"""
         url = f'/indices/{id_}/rebalance'
         response_cls = cls._response_cls[type(inputs)]
         inputs = IndicesRebalanceInputs(parameters=inputs) if not isinstance(inputs, ISelectRequest) else inputs
@@ -76,68 +90,64 @@ class GsIndexApi:
 
     @classmethod
     def cancel_rebalance(cls, id_: str, inputs: RebalanceCancelRequest) -> RebalanceCancelResponse:
-        """ Cancel most recent rebalance submission if not yet approved """
+        """Cancel most recent rebalance submission if not yet approved"""
         url = f'/indices/{id_}/rebalance/cancel'
         response_cls = cls._response_cls[type(inputs)]
         return GsSession.current._post(url, payload=inputs, cls=response_cls)
 
     @classmethod
     def last_rebalance_data(cls, id_: str) -> Dict:
-        """ Get latest basket rebalance data """
+        """Get latest basket rebalance data"""
         url = f'/indices/{id_}/rebalance/data/last'
         return GsSession.current._get(url)
 
     @classmethod
     def last_rebalance_approval(cls, id_: str) -> ApprovalCustomBasketResponse:
-        """ Get latest basket rebalance approval info """
+        """Get latest basket rebalance approval info"""
         url = f'/indices/{id_}/rebalance/approvals/last'
         return GsSession.current._get(url, cls=ApprovalCustomBasketResponse)
 
     @classmethod
     def initial_price(cls, id_: str, date: dt.date) -> Dict:
-        """ Get initial basket price """
+        """Get initial basket price"""
         url = f'/indices/{id_}/rebalance/initialprice/{date.isoformat()}'
         return GsSession.current._get(url)
 
     @classmethod
     def validate_ticker(cls, ticker: str):
-        """ Validate basket ticker """
+        """Validate basket ticker"""
         url = '/indices/validate'
         GsSession.current._post(url, payload={'ticker': ticker})
 
     @classmethod
     def backcast(cls, _id: str, inputs: CustomBasketsBackcastInputs) -> CustomBasketsResponse:
-        """ Backcast basket composition history before live date """
+        """Backcast basket composition history before live date"""
         url = f'/indices/{_id}/backcast'
         inputs = IndicesBackcastInputs(parameters=inputs)
         return GsSession.current._post(url, payload=inputs, cls=CustomBasketsResponse, timeout=240)
 
     @classmethod
     def update_risk_reports(cls, _id: str, inputs: CustomBasketRiskParams):
-        """ Create, modify, or delete a custom basket factor risk report """
+        """Create, modify, or delete a custom basket factor risk report"""
         url = f'/indices/{_id}/risk/reports'
         inputs = CustomBasketsRiskScheduleInputs(risk_models=inputs)
         return GsSession.current._post(url, payload=inputs)
 
     @staticmethod
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
     def get_positions_data(
-            asset_id: str,
-            start_date: dt.date,
-            end_date: dt.date,
-            fields: IdList = None,
-            position_type: PositionType = None,
+        asset_id: str,
+        start_date: dt.date,
+        end_date: dt.date,
+        fields: IdList = None,
+        position_type: PositionType = None,
     ) -> List[dict]:
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
-        url = '/indices/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(id=asset_id,
-                                                                                              start_date=start_date_str,
-                                                                                              end_date=end_date_str)
+        url = '/indices/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(
+            id=asset_id, start_date=start_date_str, end_date=end_date_str
+        )
         if fields is not None:
             url += '&fields='.join([''] + fields)
 
@@ -149,9 +159,9 @@ class GsIndexApi:
 
     @staticmethod
     def get_last_positions_data(
-            asset_id: str,
-            fields: IdList = None,
-            position_type: PositionType = None,
+        asset_id: str,
+        fields: IdList = None,
+        position_type: PositionType = None,
     ) -> List[dict]:
         url = f'/indices/{asset_id}/positions/last/data'
         params = ''

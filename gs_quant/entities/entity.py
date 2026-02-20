@@ -27,9 +27,17 @@ import pandas as pd
 from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
-from gs_quant.api.gs.carbon import CarbonCard, GsCarbonApi, CarbonTargetCoverageCategory, CarbonScope, \
-    CarbonEmissionsAllocationCategory, CarbonEmissionsIntensityType, CarbonCoverageCategory, CarbonEntityType, \
-    CarbonAnalyticsView
+from gs_quant.api.gs.carbon import (
+    CarbonCard,
+    GsCarbonApi,
+    CarbonTargetCoverageCategory,
+    CarbonScope,
+    CarbonEmissionsAllocationCategory,
+    CarbonEmissionsIntensityType,
+    CarbonCoverageCategory,
+    CarbonEntityType,
+    CarbonAnalyticsView,
+)
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.esg import ESGMeasure, GsEsgApi, ESGCard
 from gs_quant.api.gs.indices import GsIndexApi
@@ -44,8 +52,15 @@ from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.markets.position_set import PositionSet
-from gs_quant.markets.report import PerformanceReport, FactorRiskReport, Report, ThematicReport, \
-    flatten_results_into_df, get_thematic_breakdown_as_df, ReturnFormat
+from gs_quant.markets.report import (
+    PerformanceReport,
+    FactorRiskReport,
+    Report,
+    ThematicReport,
+    flatten_results_into_df,
+    get_thematic_breakdown_as_df,
+    ReturnFormat,
+)
 from gs_quant.markets.scenario import Scenario
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
@@ -94,6 +109,7 @@ class ScenarioCalculationMeasure(Enum):
 
 class Entity(metaclass=ABCMeta):
     """Base class for any first-class entity"""
+
     _entity_to_endpoint = {
         EntityType.ASSET: 'assets',
         EntityType.COUNTRY: 'countries',
@@ -101,13 +117,10 @@ class Entity(metaclass=ABCMeta):
         EntityType.KPI: 'kpis',
         EntityType.PORTFOLIO: 'portfolios',
         EntityType.RISK_MODEL: 'risk/models',
-        EntityType.DATASET: 'data/datasets'
+        EntityType.DATASET: 'data/datasets',
     }
 
-    def __init__(self,
-                 id_: str,
-                 entity_type: EntityType,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity_type: EntityType, entity: Optional[Dict] = None):
         self.__id: str = id_
         self.__entity_type: EntityType = entity_type
         self.__entity: Dict = entity
@@ -123,10 +136,9 @@ class Entity(metaclass=ABCMeta):
         pass
 
     @classmethod
-    def get(cls,
-            id_value: str,
-            id_type: Union[EntityIdentifier, str],
-            entity_type: Optional[Union[EntityType, str]] = None):
+    def get(
+        cls, id_value: str, id_type: Union[EntityIdentifier, str], entity_type: Optional[Union[EntityType, str]] = None
+    ):
         id_type = id_type.value if isinstance(id_type, Enum) else id_type
 
         if entity_type is None:
@@ -138,6 +150,7 @@ class Entity(metaclass=ABCMeta):
 
         if entity_type == 'asset':
             from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
+
             return SecurityMaster.get_asset(id_value, AssetIdentifier.MARQUEE_ID)
 
         if id_type == 'MQID':
@@ -148,9 +161,7 @@ class Entity(metaclass=ABCMeta):
             return cls._get_entity_from_type(result, EntityType(entity_type))
 
     @classmethod
-    def _get_entity_from_type(cls,
-                              entity: Dict,
-                              entity_type: EntityType = None):
+    def _get_entity_from_type(cls, entity: Dict, entity_type: EntityType = None):
         id_ = entity.get('id')
         entity_type = entity_type or cls.entity_type()
         if entity_type == EntityType.COUNTRY:
@@ -171,11 +182,13 @@ class Entity(metaclass=ABCMeta):
     def get_unique_entity_key(self) -> EntityKey:
         return EntityKey(self.get_marquee_id(), self.__entity_type)
 
-    def get_data_coordinate(self,
-                            measure: Union[DataMeasure, str],
-                            dimensions: Optional[DataDimensions] = None,
-                            frequency: DataFrequency = DataFrequency.DAILY,
-                            availability=None) -> DataCoordinate:
+    def get_data_coordinate(
+        self,
+        measure: Union[DataMeasure, str],
+        dimensions: Optional[DataDimensions] = None,
+        frequency: DataFrequency = DataFrequency.DAILY,
+        availability=None,
+    ) -> DataCoordinate:
         id_ = self.get_marquee_id()
         dimensions = dimensions or {}
         dimensions[self.data_dimension] = id_
@@ -184,8 +197,9 @@ class Entity(metaclass=ABCMeta):
 
         if frequency == DataFrequency.DAILY:
             daily_dataset_id = available.get(DataFrequency.DAILY)
-            return DataCoordinate(dataset_id=daily_dataset_id, measure=measure, dimensions=dimensions,
-                                  frequency=frequency)
+            return DataCoordinate(
+                dataset_id=daily_dataset_id, measure=measure, dimensions=dimensions, frequency=frequency
+            )
         if frequency == DataFrequency.REAL_TIME:
             rt_dataset_id = available.get(DataFrequency.REAL_TIME)
             return DataCoordinate(dataset_id=rt_dataset_id, measure=measure, dimensions=dimensions, frequency=frequency)
@@ -202,9 +216,7 @@ class Country(Entity):
         MARQUEE_ID = 'MQID'
         NAME = 'name'
 
-    def __init__(self,
-                 id_: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity: Optional[Dict] = None):
         super().__init__(id_, EntityType.COUNTRY, entity)
 
     @property
@@ -216,9 +228,7 @@ class Country(Entity):
         return EntityType.COUNTRY
 
     @classmethod
-    def get_by_identifier(cls,
-                          id_value: str,
-                          id_type: Identifier) -> Optional['Entity']:
+    def get_by_identifier(cls, id_value: str, id_type: Identifier) -> Optional['Entity']:
         super().get(id_value, id_type)
 
     def get_name(self) -> Optional[str]:
@@ -254,9 +264,7 @@ class Subdivision(Entity):
         MARQUEE_ID = 'MQID'
         name = 'name'
 
-    def __init__(self,
-                 id_: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity: Optional[Dict] = None):
         super().__init__(id_, EntityType.SUBDIVISION, entity)
 
     @property
@@ -268,9 +276,7 @@ class Subdivision(Entity):
         return EntityType.SUBDIVISION
 
     @classmethod
-    def get_by_identifier(cls,
-                          id_value: str,
-                          id_type: Identifier) -> Optional['Entity']:
+    def get_by_identifier(cls, id_value: str, id_type: Identifier) -> Optional['Entity']:
         super().get(id_value, id_type)
 
     def get_name(self) -> Optional[str]:
@@ -282,9 +288,7 @@ class KPI(Entity):
         MARQUEE_ID = "MQID"
         name = 'name'
 
-    def __init__(self,
-                 id_: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity: Optional[Dict] = None):
         super().__init__(id_, EntityType.KPI, entity)
 
     @property
@@ -296,9 +300,7 @@ class KPI(Entity):
         return EntityType.KPI
 
     @classmethod
-    def get_by_identifier(cls,
-                          id_value: str,
-                          id_type: Identifier) -> Optional['Entity']:
+    def get_by_identifier(cls, id_value: str, id_type: Identifier) -> Optional['Entity']:
         super().get(id_value, id_type)
 
     def get_name(self) -> Optional[str]:
@@ -316,9 +318,7 @@ class RiskModelEntity(Entity):
         MARQUEE_ID = "MQID"
         name = 'name'
 
-    def __init__(self,
-                 id_: str,
-                 entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity: Optional[Dict] = None):
         super().__init__(id_, EntityType.RISK_MODEL, entity)
 
     @property
@@ -330,9 +330,7 @@ class RiskModelEntity(Entity):
         return EntityType.RISK_MODEL
 
     @classmethod
-    def get_by_identifier(cls,
-                          id_value: str,
-                          id_type: Identifier) -> Optional['Entity']:
+    def get_by_identifier(cls, id_value: str, id_type: Identifier) -> Optional['Entity']:
         super().get(id_value, id_type)
 
     def get_name(self) -> Optional[str]:
@@ -370,20 +368,16 @@ class PositionedEntity(metaclass=ABCMeta):
             raise NotImplementedError
         return Entitlements.from_target(response.entitlements)
 
-    def get_latest_position_set(self,
-                                position_type: PositionType = PositionType.CLOSE) -> PositionSet:
+    def get_latest_position_set(self, position_type: PositionType = PositionType.CLOSE) -> PositionSet:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_latest_positions(self.id, position_type)
             return PositionSet.from_target(response)
         if self.positioned_entity_type == EntityType.PORTFOLIO:
-            response = GsPortfolioApi.get_latest_positions(portfolio_id=self.id,
-                                                           position_type=position_type.value)
+            response = GsPortfolioApi.get_latest_positions(portfolio_id=self.id, position_type=position_type.value)
             return PositionSet.from_target(response)
         raise NotImplementedError
 
-    def get_position_set_for_date(self,
-                                  date: dt.date,
-                                  position_type: PositionType = PositionType.CLOSE) -> PositionSet:
+    def get_position_set_for_date(self, date: dt.date, position_type: PositionType = PositionType.CLOSE) -> PositionSet:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_date(self.id, date, position_type)
             if len(response) == 0:
@@ -391,16 +385,18 @@ class PositionedEntity(metaclass=ABCMeta):
                 return PositionSet([], date=date)
             return PositionSet.from_target(response[0])
         if self.positioned_entity_type == EntityType.PORTFOLIO:
-            response = GsPortfolioApi.get_positions_for_date(portfolio_id=self.id,
-                                                             position_date=date,
-                                                             position_type=position_type.value)
+            response = GsPortfolioApi.get_positions_for_date(
+                portfolio_id=self.id, position_date=date, position_type=position_type.value
+            )
             return PositionSet.from_target(response) if response else None
         raise NotImplementedError
 
-    def get_position_sets(self,
-                          start: dt.date = DateLimit.LOW_LIMIT.value,
-                          end: dt.date = dt.date.today(),
-                          position_type: PositionType = PositionType.CLOSE) -> List[PositionSet]:
+    def get_position_sets(
+        self,
+        start: dt.date = DateLimit.LOW_LIMIT.value,
+        end: dt.date = dt.date.today(),
+        position_type: PositionType = PositionType.CLOSE,
+    ) -> List[PositionSet]:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
             if len(response) == 0:
@@ -408,15 +404,11 @@ class PositionedEntity(metaclass=ABCMeta):
                 return []
             return [PositionSet.from_target(position_set) for position_set in response]
         if self.positioned_entity_type == EntityType.PORTFOLIO:
-            response = GsPortfolioApi.get_positions(portfolio_id=self.id,
-                                                    start_date=start,
-                                                    end_date=end)
+            response = GsPortfolioApi.get_positions(portfolio_id=self.id, start_date=start, end_date=end)
             return [PositionSet.from_target(position_set) for position_set in response]
         raise NotImplementedError
 
-    def update_positions(self,
-                         position_sets: List[PositionSet],
-                         net_positions: bool = True):
+    def update_positions(self, position_sets: List[PositionSet], net_positions: bool = True):
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             if not position_sets:
                 return
@@ -427,32 +419,39 @@ class PositionedEntity(metaclass=ABCMeta):
                 if positions_are_missing_quantities:
                     pos_set.price(currency)
                 new_sets.append(pos_set)
-            GsPortfolioApi.update_positions(portfolio_id=self.id, position_sets=[p.to_target() for p in new_sets],
-                                            net_positions=net_positions)
+            GsPortfolioApi.update_positions(
+                portfolio_id=self.id, position_sets=[p.to_target() for p in new_sets], net_positions=net_positions
+            )
             time.sleep(3)
         else:
             raise NotImplementedError
 
-    def get_positions_data(self,
-                           start: dt.date = DateLimit.LOW_LIMIT.value,
-                           end: dt.date = dt.date.today(),
-                           fields: [str] = None,
-                           position_type: PositionType = PositionType.CLOSE) -> List[Dict]:
+    def get_positions_data(
+        self,
+        start: dt.date = DateLimit.LOW_LIMIT.value,
+        end: dt.date = dt.date.today(),
+        fields: [str] = None,
+        position_type: PositionType = PositionType.CLOSE,
+    ) -> List[Dict]:
         if self.positioned_entity_type == EntityType.ASSET:
             return GsIndexApi.get_positions_data(self.id, start, end, fields, position_type)
         if self.positioned_entity_type == EntityType.PORTFOLIO:
-            raise MqError('Please use the get_positions_data function on the portfolio performance report using the '
-                          'PerformanceReport class')
+            raise MqError(
+                'Please use the get_positions_data function on the portfolio performance report using the '
+                'PerformanceReport class'
+            )
         raise NotImplementedError
 
-    def get_last_positions_data(self,
-                                fields: [str] = None,
-                                position_type: PositionType = PositionType.CLOSE) -> List[Dict]:
+    def get_last_positions_data(
+        self, fields: [str] = None, position_type: PositionType = PositionType.CLOSE
+    ) -> List[Dict]:
         if self.positioned_entity_type == EntityType.ASSET:
             return GsIndexApi.get_last_positions_data(self.id, fields, position_type)
         if self.positioned_entity_type == EntityType.PORTFOLIO:
-            raise MqError('Please use the get_positions_data function on the portfolio performance report using the '
-                          'PerformanceReport class')
+            raise MqError(
+                'Please use the get_positions_data function on the portfolio performance report using the '
+                'PerformanceReport class'
+            )
         raise NotImplementedError
 
     def get_position_dates(self) -> Tuple[dt.date, ...]:
@@ -489,7 +488,7 @@ class PositionedEntity(metaclass=ABCMeta):
             'Latest Execution Time': [r.latest_execution_time for r in reports],
             'Latest End Date': [r.latest_end_date for r in reports],
             "Status": [r.status for r in reports],
-            'Percentage Complete': [r.percentage_complete for r in reports]
+            'Percentage Complete': [r.percentage_complete for r in reports],
         }
 
         return pd.DataFrame.from_dict(reports_dict)
@@ -497,12 +496,14 @@ class PositionedEntity(metaclass=ABCMeta):
     def get_factor_risk_reports(self, fx_hedged: bool = None, tags: Dict = None) -> List[FactorRiskReport]:
         if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
             position_source_type = self.positioned_entity_type.value.capitalize()
-            reports = GsReportApi.get_reports(limit=100,
-                                              position_source_type=position_source_type,
-                                              position_source_id=self.id,
-                                              report_type=f'{position_source_type} Factor Risk',
-                                              tags=tags,
-                                              scroll='1m')
+            reports = GsReportApi.get_reports(
+                limit=100,
+                position_source_type=position_source_type,
+                position_source_id=self.id,
+                report_type=f'{position_source_type} Factor Risk',
+                tags=tags,
+                scroll='1m',
+            )
             if fx_hedged:
                 reports = [report for report in reports if report.parameters.fx_hedged == fx_hedged]
             if len(reports) == 0:
@@ -510,34 +511,38 @@ class PositionedEntity(metaclass=ABCMeta):
             return [FactorRiskReport.from_target(report) for report in reports]
         raise NotImplementedError
 
-    def get_factor_risk_report(self,
-                               risk_model_id: str = None,
-                               fx_hedged: bool = None,
-                               benchmark_id: str = None,
-                               tags: Dict = None) -> FactorRiskReport:
+    def get_factor_risk_report(
+        self, risk_model_id: str = None, fx_hedged: bool = None, benchmark_id: str = None, tags: Dict = None
+    ) -> FactorRiskReport:
         position_source_type = self.positioned_entity_type.value.capitalize()
         reports = self.get_factor_risk_reports(fx_hedged=fx_hedged, tags=tags)
         if risk_model_id:
             reports = [report for report in reports if report.parameters.risk_model == risk_model_id]
         reports = [report for report in reports if report.parameters.benchmark == benchmark_id]
         if len(reports) == 0:
-            raise MqError(f'This {position_source_type} has no factor risk reports that match '
-                          'your parameters. Please edit the risk model ID, fxHedged, and/or benchmark value in the '
-                          'function parameters.')
+            raise MqError(
+                f'This {position_source_type} has no factor risk reports that match '
+                'your parameters. Please edit the risk model ID, fxHedged, and/or benchmark value in the '
+                'function parameters.'
+            )
         if len(reports) > 1:
-            raise MqError(f'This {position_source_type} has more than one factor risk report that matches '
-                          'your parameters. Please specify the risk model ID, fxHedged, and/or benchmark value in the '
-                          'function parameters.')
+            raise MqError(
+                f'This {position_source_type} has more than one factor risk report that matches '
+                'your parameters. Please specify the risk model ID, fxHedged, and/or benchmark value in the '
+                'function parameters.'
+            )
         return reports[0]
 
     def get_thematic_report(self, tags: Dict = None) -> ThematicReport:
         if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
             position_source_type = self.positioned_entity_type.value.capitalize()
-            reports = GsReportApi.get_reports(limit=100,
-                                              position_source_type=position_source_type,
-                                              position_source_id=self.id,
-                                              report_type=f'{position_source_type} Thematic Analytics',
-                                              tags=tags)
+            reports = GsReportApi.get_reports(
+                limit=100,
+                position_source_type=position_source_type,
+                position_source_id=self.id,
+                report_type=f'{position_source_type} Thematic Analytics',
+                tags=tags,
+            )
             reports = [report for report in reports if report.parameters.tags == tags]
             if len(reports) == 0:
                 raise MqError(f'This {position_source_type} has no thematic analytics report.')
@@ -559,11 +564,15 @@ class PositionedEntity(metaclass=ABCMeta):
                 else:
                     poll = False
                     if status == ReportStatus.error:
-                        raise MqError(f'Report {report_id} has failed for {self.id}. \
-                                        Please reach out to the Marquee team for assistance.')
+                        raise MqError(
+                            f'Report {report_id} has failed for {self.id}. \
+                                        Please reach out to the Marquee team for assistance.'
+                        )
                     elif status == ReportStatus.cancelled:
-                        _logger.info(f'Report {report_id} has been cancelled. Please reach out to the \
-                                       Marquee team if you believe this is a mistake.')
+                        _logger.info(
+                            f'Report {report_id} has been cancelled. Please reach out to the \
+                                       Marquee team if you believe this is a mistake.'
+                        )
                         return status
                     else:
                         _logger.info(f'Report {report_id} is now complete')
@@ -571,14 +580,18 @@ class PositionedEntity(metaclass=ABCMeta):
             except Exception as err:
                 raise MqError(f'Could not fetch report status with error {err}')
 
-        raise MqError('The report is taking longer than expected to complete. \
-                       Please check again later or reach out to the Marquee team for assistance.')
+        raise MqError(
+            'The report is taking longer than expected to complete. \
+                       Please check again later or reach out to the Marquee team for assistance.'
+        )
 
-    def get_all_esg_data(self,
-                         measures: List[ESGMeasure] = None,
-                         cards: List[ESGCard] = None,
-                         pricing_date: dt.date = None,
-                         benchmark_id: str = None) -> Dict:
+    def get_all_esg_data(
+        self,
+        measures: List[ESGMeasure] = None,
+        cards: List[ESGCard] = None,
+        pricing_date: dt.date = None,
+        benchmark_id: str = None,
+    ) -> Dict:
         """
         Get all ESG Data
         :param measures: list of ESG Measures to include in results
@@ -587,38 +600,38 @@ class PositionedEntity(metaclass=ABCMeta):
         :param benchmark_id: optional benchmark asset ID to include in results
         :return: a dictionary of results
         """
-        return GsEsgApi.get_esg(entity_id=self.id,
-                                pricing_date=pricing_date,
-                                cards=cards if cards else [c for c in ESGCard],
-                                measures=measures if measures else [m for m in ESGMeasure],
-                                benchmark_id=benchmark_id)
+        return GsEsgApi.get_esg(
+            entity_id=self.id,
+            pricing_date=pricing_date,
+            cards=cards if cards else [c for c in ESGCard],
+            measures=measures if measures else [m for m in ESGMeasure],
+            benchmark_id=benchmark_id,
+        )
 
-    def get_esg_summary(self,
-                        pricing_date: dt.date = None) -> pd.DataFrame:
-        summary_data = GsEsgApi.get_esg(entity_id=self.id,
-                                        pricing_date=pricing_date,
-                                        cards=[ESGCard.SUMMARY]).get('summary')
+    def get_esg_summary(self, pricing_date: dt.date = None) -> pd.DataFrame:
+        summary_data = GsEsgApi.get_esg(entity_id=self.id, pricing_date=pricing_date, cards=[ESGCard.SUMMARY]).get(
+            'summary'
+        )
         return pd.DataFrame(summary_data)
 
-    def get_esg_quintiles(self,
-                          measure: ESGMeasure,
-                          pricing_date: dt.date = None) -> pd.DataFrame:
+    def get_esg_quintiles(self, measure: ESGMeasure, pricing_date: dt.date = None) -> pd.DataFrame:
         """
         Get breakdown of entity by weight in each percentile quintile for requested ESG measure
         :param measure: ESG Measure
         :param pricing_date: optional pricing date; defaults to last previous business day
         :return: a Pandas DataFrame with results
         """
-        quintile_data = GsEsgApi.get_esg(entity_id=self.id,
-                                         pricing_date=pricing_date,
-                                         cards=[ESGCard.QUINTILES],
-                                         measures=[measure]).get('quintiles')[0].get('results')
+        quintile_data = (
+            GsEsgApi.get_esg(
+                entity_id=self.id, pricing_date=pricing_date, cards=[ESGCard.QUINTILES], measures=[measure]
+            )
+            .get('quintiles')[0]
+            .get('results')
+        )
         df = pd.DataFrame(quintile_data)
         return df.filter(items=['description', 'gross', 'long', 'short'])
 
-    def get_esg_by_sector(self,
-                          measure: ESGMeasure,
-                          pricing_date: dt.date = None) -> pd.DataFrame:
+    def get_esg_by_sector(self, measure: ESGMeasure, pricing_date: dt.date = None) -> pd.DataFrame:
         """
         Get breakdown of entity by sector, along with the weighted average score of the compositions in each sector
         :param measure: ESG Measure
@@ -627,9 +640,7 @@ class PositionedEntity(metaclass=ABCMeta):
         """
         return self._get_esg_breakdown(ESGCard.MEASURES_BY_SECTOR, measure, pricing_date)
 
-    def get_esg_by_region(self,
-                          measure: ESGMeasure,
-                          pricing_date: dt.date = None) -> pd.DataFrame:
+    def get_esg_by_region(self, measure: ESGMeasure, pricing_date: dt.date = None) -> pd.DataFrame:
         """
         Get breakdown of entity by region, along with the weighted average score of the compositions in each region
         :param measure: ESG Measure
@@ -638,9 +649,7 @@ class PositionedEntity(metaclass=ABCMeta):
         """
         return self._get_esg_breakdown(ESGCard.MEASURES_BY_REGION, measure, pricing_date)
 
-    def get_esg_top_ten(self,
-                        measure: ESGMeasure,
-                        pricing_date: dt.date = None):
+    def get_esg_top_ten(self, measure: ESGMeasure, pricing_date: dt.date = None):
         """
         Get entity constituents with the ten highest ESG percentile values
         :param measure: ESG Measure
@@ -649,9 +658,7 @@ class PositionedEntity(metaclass=ABCMeta):
         """
         return self._get_esg_ranked_card(ESGCard.TOP_TEN_RANKED, measure, pricing_date)
 
-    def get_esg_bottom_ten(self,
-                           measure: ESGMeasure,
-                           pricing_date: dt.date = None) -> pd.DataFrame:
+    def get_esg_bottom_ten(self, measure: ESGMeasure, pricing_date: dt.date = None) -> pd.DataFrame:
         """
         Get entity constituents with the ten lowest ESG percentile values
         :param measure: ESG Measure
@@ -660,152 +667,192 @@ class PositionedEntity(metaclass=ABCMeta):
         """
         return self._get_esg_ranked_card(ESGCard.BOTTOM_TEN_RANKED, measure, pricing_date)
 
-    def _get_esg_ranked_card(self,
-                             card: ESGCard,
-                             measure: ESGMeasure,
-                             pricing_date: dt.date = None) -> pd.DataFrame:
-        data = GsEsgApi.get_esg(entity_id=self.id,
-                                pricing_date=pricing_date,
-                                cards=[card],
-                                measures=[measure]).get(card.value)[0].get('results')
+    def _get_esg_ranked_card(self, card: ESGCard, measure: ESGMeasure, pricing_date: dt.date = None) -> pd.DataFrame:
+        data = (
+            GsEsgApi.get_esg(entity_id=self.id, pricing_date=pricing_date, cards=[card], measures=[measure])
+            .get(card.value)[0]
+            .get('results')
+        )
         return pd.DataFrame(data)
 
-    def _get_esg_breakdown(self,
-                           card: ESGCard,
-                           measure: ESGMeasure,
-                           pricing_date: dt.date = None) -> pd.DataFrame:
-        sector_data = GsEsgApi.get_esg(entity_id=self.id,
-                                       pricing_date=pricing_date,
-                                       cards=[card],
-                                       measures=[measure]).get(card.value)[0].get('results')
+    def _get_esg_breakdown(self, card: ESGCard, measure: ESGMeasure, pricing_date: dt.date = None) -> pd.DataFrame:
+        sector_data = (
+            GsEsgApi.get_esg(entity_id=self.id, pricing_date=pricing_date, cards=[card], measures=[measure])
+            .get(card.value)[0]
+            .get('results')
+        )
         return pd.DataFrame(sector_data)
 
-    def get_carbon_analytics(self,
-                             benchmark_id: str = None,
-                             reporting_year: str = 'Latest',
-                             currency: Currency = None,
-                             include_estimates: bool = False,
-                             use_historical_data: bool = False,
-                             normalize_emissions: bool = False,
-                             cards: List[CarbonCard] = [c for c in CarbonCard],
-                             analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> Dict:
-        return GsCarbonApi.get_carbon_analytics(entity_id=self.id,
-                                                benchmark_id=benchmark_id,
-                                                reporting_year=reporting_year,
-                                                currency=currency,
-                                                include_estimates=include_estimates,
-                                                use_historical_data=use_historical_data,
-                                                normalize_emissions=normalize_emissions,
-                                                cards=cards,
-                                                analytics_view=analytics_view)
+    def get_carbon_analytics(
+        self,
+        benchmark_id: str = None,
+        reporting_year: str = 'Latest',
+        currency: Currency = None,
+        include_estimates: bool = False,
+        use_historical_data: bool = False,
+        normalize_emissions: bool = False,
+        cards: List[CarbonCard] = [c for c in CarbonCard],
+        analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG,
+    ) -> Dict:
+        return GsCarbonApi.get_carbon_analytics(
+            entity_id=self.id,
+            benchmark_id=benchmark_id,
+            reporting_year=reporting_year,
+            currency=currency,
+            include_estimates=include_estimates,
+            use_historical_data=use_historical_data,
+            normalize_emissions=normalize_emissions,
+            cards=cards,
+            analytics_view=analytics_view,
+        )
 
-    def get_carbon_coverage(self,
-                            reporting_year: str = 'Latest',
-                            include_estimates: bool = False,
-                            use_historical_data: bool = False,
-                            coverage_category: CarbonCoverageCategory = CarbonCoverageCategory.WEIGHTS,
-                            analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> pd.DataFrame:
-        coverage = self.get_carbon_analytics(reporting_year=reporting_year,
-                                             include_estimates=include_estimates,
-                                             use_historical_data=use_historical_data,
-                                             cards=[CarbonCard.COVERAGE],
-                                             analytics_view=analytics_view).get(CarbonCard.COVERAGE.value).get(
-            coverage_category.value, {}).get(CarbonEntityType.PORTFOLIO.value, {})
+    def get_carbon_coverage(
+        self,
+        reporting_year: str = 'Latest',
+        include_estimates: bool = False,
+        use_historical_data: bool = False,
+        coverage_category: CarbonCoverageCategory = CarbonCoverageCategory.WEIGHTS,
+        analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG,
+    ) -> pd.DataFrame:
+        coverage = (
+            self.get_carbon_analytics(
+                reporting_year=reporting_year,
+                include_estimates=include_estimates,
+                use_historical_data=use_historical_data,
+                cards=[CarbonCard.COVERAGE],
+                analytics_view=analytics_view,
+            )
+            .get(CarbonCard.COVERAGE.value)
+            .get(coverage_category.value, {})
+            .get(CarbonEntityType.PORTFOLIO.value, {})
+        )
         return pd.DataFrame(coverage)
 
-    def get_carbon_sbti_netzero_coverage(self,
-                                         reporting_year: str = 'Latest',
-                                         include_estimates: bool = False,
-                                         use_historical_data: bool = False,
-                                         target_coverage_category: CarbonTargetCoverageCategory =
-                                         CarbonTargetCoverageCategory.PORTFOLIO_EMISSIONS,
-                                         analytics_view: CarbonAnalyticsView =
-                                         CarbonAnalyticsView.LONG) -> pd.DataFrame:
-        coverage = self.get_carbon_analytics(reporting_year=reporting_year,
-                                             include_estimates=include_estimates,
-                                             use_historical_data=use_historical_data,
-                                             cards=[CarbonCard.SBTI_AND_NET_ZERO_TARGETS],
-                                             analytics_view=analytics_view).get(
-            CarbonCard.SBTI_AND_NET_ZERO_TARGETS.value).get(target_coverage_category.value, {})
-        coverage = {target: target_coverage.get(CarbonEntityType.PORTFOLIO.value, {}) for target, target_coverage in
-                    coverage.items()}
+    def get_carbon_sbti_netzero_coverage(
+        self,
+        reporting_year: str = 'Latest',
+        include_estimates: bool = False,
+        use_historical_data: bool = False,
+        target_coverage_category: CarbonTargetCoverageCategory = CarbonTargetCoverageCategory.PORTFOLIO_EMISSIONS,
+        analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG,
+    ) -> pd.DataFrame:
+        coverage = (
+            self.get_carbon_analytics(
+                reporting_year=reporting_year,
+                include_estimates=include_estimates,
+                use_historical_data=use_historical_data,
+                cards=[CarbonCard.SBTI_AND_NET_ZERO_TARGETS],
+                analytics_view=analytics_view,
+            )
+            .get(CarbonCard.SBTI_AND_NET_ZERO_TARGETS.value)
+            .get(target_coverage_category.value, {})
+        )
+        coverage = {
+            target: target_coverage.get(CarbonEntityType.PORTFOLIO.value, {})
+            for target, target_coverage in coverage.items()
+        }
         return pd.DataFrame(coverage)
 
-    def get_carbon_emissions(self,
-                             currency: Currency = None,
-                             include_estimates: bool = False,
-                             use_historical_data: bool = False,
-                             normalize_emissions: bool = False,
-                             scope: CarbonScope = CarbonScope.TOTAL_GHG,
-                             analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> pd.DataFrame:
-        emissions = self.get_carbon_analytics(currency=currency,
-                                              include_estimates=include_estimates,
-                                              use_historical_data=use_historical_data,
-                                              normalize_emissions=normalize_emissions,
-                                              cards=[CarbonCard.EMISSIONS],
-                                              analytics_view=analytics_view).get(CarbonCard.EMISSIONS.value).get(
-            scope.value, {}).get(CarbonEntityType.PORTFOLIO.value, [])
+    def get_carbon_emissions(
+        self,
+        currency: Currency = None,
+        include_estimates: bool = False,
+        use_historical_data: bool = False,
+        normalize_emissions: bool = False,
+        scope: CarbonScope = CarbonScope.TOTAL_GHG,
+        analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG,
+    ) -> pd.DataFrame:
+        emissions = (
+            self.get_carbon_analytics(
+                currency=currency,
+                include_estimates=include_estimates,
+                use_historical_data=use_historical_data,
+                normalize_emissions=normalize_emissions,
+                cards=[CarbonCard.EMISSIONS],
+                analytics_view=analytics_view,
+            )
+            .get(CarbonCard.EMISSIONS.value)
+            .get(scope.value, {})
+            .get(CarbonEntityType.PORTFOLIO.value, [])
+        )
         return pd.DataFrame(emissions)
 
-    def get_carbon_emissions_allocation(self,
-                                        reporting_year: str = 'Latest',
-                                        currency: Currency = None,
-                                        include_estimates: bool = False,
-                                        use_historical_data: bool = False,
-                                        normalize_emissions: bool = False,
-                                        scope: CarbonScope = CarbonScope.TOTAL_GHG,
-                                        classification: CarbonEmissionsAllocationCategory =
-                                        CarbonEmissionsAllocationCategory.GICS_SECTOR,
-                                        analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> pd.DataFrame:
-        allocation = self.get_carbon_analytics(reporting_year=reporting_year,
-                                               currency=currency,
-                                               include_estimates=include_estimates,
-                                               use_historical_data=use_historical_data,
-                                               normalize_emissions=normalize_emissions,
-                                               cards=[CarbonCard.ALLOCATIONS],
-                                               analytics_view=analytics_view).get(CarbonCard.ALLOCATIONS.value).get(
-            scope.value, {}).get(CarbonEntityType.PORTFOLIO.value, {}).get(classification.value)
+    def get_carbon_emissions_allocation(
+        self,
+        reporting_year: str = 'Latest',
+        currency: Currency = None,
+        include_estimates: bool = False,
+        use_historical_data: bool = False,
+        normalize_emissions: bool = False,
+        scope: CarbonScope = CarbonScope.TOTAL_GHG,
+        classification: CarbonEmissionsAllocationCategory = CarbonEmissionsAllocationCategory.GICS_SECTOR,
+        analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG,
+    ) -> pd.DataFrame:
+        allocation = (
+            self.get_carbon_analytics(
+                reporting_year=reporting_year,
+                currency=currency,
+                include_estimates=include_estimates,
+                use_historical_data=use_historical_data,
+                normalize_emissions=normalize_emissions,
+                cards=[CarbonCard.ALLOCATIONS],
+                analytics_view=analytics_view,
+            )
+            .get(CarbonCard.ALLOCATIONS.value)
+            .get(scope.value, {})
+            .get(CarbonEntityType.PORTFOLIO.value, {})
+            .get(classification.value)
+        )
         return pd.DataFrame(allocation).rename(columns={'name': classification.value})
 
-    def get_carbon_attribution_table(self,
-                                     benchmark_id: str,
-                                     reporting_year: str = 'Latest',
-                                     currency: Currency = None,
-                                     include_estimates: bool = False,
-                                     use_historical_data: bool = False,
-                                     scope: CarbonScope = CarbonScope.TOTAL_GHG,
-                                     intensity_metric: CarbonEmissionsIntensityType =
-                                     CarbonEmissionsIntensityType.EI_ENTERPRISE_VALUE,
-                                     analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG) -> pd.DataFrame:
-        attribution = self.get_carbon_analytics(benchmark_id=benchmark_id,
-                                                reporting_year=reporting_year,
-                                                currency=currency,
-                                                include_estimates=include_estimates,
-                                                use_historical_data=use_historical_data,
-                                                cards=[CarbonCard.ATTRIBUTION],
-                                                analytics_view=analytics_view).get(CarbonCard.ATTRIBUTION.value).get(
-            scope.value, [])
+    def get_carbon_attribution_table(
+        self,
+        benchmark_id: str,
+        reporting_year: str = 'Latest',
+        currency: Currency = None,
+        include_estimates: bool = False,
+        use_historical_data: bool = False,
+        scope: CarbonScope = CarbonScope.TOTAL_GHG,
+        intensity_metric: CarbonEmissionsIntensityType = CarbonEmissionsIntensityType.EI_ENTERPRISE_VALUE,
+        analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG,
+    ) -> pd.DataFrame:
+        attribution = (
+            self.get_carbon_analytics(
+                benchmark_id=benchmark_id,
+                reporting_year=reporting_year,
+                currency=currency,
+                include_estimates=include_estimates,
+                use_historical_data=use_historical_data,
+                cards=[CarbonCard.ATTRIBUTION],
+                analytics_view=analytics_view,
+            )
+            .get(CarbonCard.ATTRIBUTION.value)
+            .get(scope.value, [])
+        )
         attribution_table = []
         for entry in attribution:
             new_entry = {
                 'sector': entry.get('sector'),
                 'weightPortfolio': entry.get('weightPortfolio'),
                 'weightBenchmark': entry.get('weightBenchmark'),
-                'weightComparison': entry.get('weightComparison')
+                'weightComparison': entry.get('weightComparison'),
             }
             new_entry.update(entry.get(intensity_metric.value, {}))
             attribution_table.append(new_entry)
         return pd.DataFrame(attribution_table)
 
-    def get_thematic_exposure(self,
-                              basket_identifier: str,
-                              notional: int = 10000000,
-                              start: dt.date = DateLimit.LOW_LIMIT.value,
-                              end: dt.date = dt.date.today()) -> pd.DataFrame:
+    def get_thematic_exposure(
+        self,
+        basket_identifier: str,
+        notional: int = 10000000,
+        start: dt.date = DateLimit.LOW_LIMIT.value,
+        end: dt.date = dt.date.today(),
+    ) -> pd.DataFrame:
         if not self.positioned_entity_type == EntityType.ASSET:
             raise NotImplementedError
-        response = GsAssetApi.resolve_assets(identifier=[basket_identifier],
-                                             fields=['id', 'type'], limit=1)[basket_identifier]
+        response = GsAssetApi.resolve_assets(identifier=[basket_identifier], fields=['id', 'type'], limit=1)[
+            basket_identifier
+        ]
         _id, _type = get(response, '0.id'), get(response, '0.type')
         if len(response) == 0 or _id is None:
             raise MqValueError(f'Basket could not be found using identifier {basket_identifier}.')
@@ -815,19 +862,25 @@ class PositionedEntity(metaclass=ABCMeta):
         response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.COMPOSITE_THEMATIC_BETAS.value)
         df = []
         for r in response:
-            df.append({'date': r['date'], 'assetId': r['assetId'], 'basketId': r['basketId'],
-                       'thematicExposure': r['beta'] * notional})
+            df.append(
+                {
+                    'date': r['date'],
+                    'assetId': r['assetId'],
+                    'basketId': r['basketId'],
+                    'thematicExposure': r['beta'] * notional,
+                }
+            )
         df = pd.DataFrame(df)
         return df.set_index('date')
 
-    def get_thematic_beta(self,
-                          basket_identifier: str,
-                          start: dt.date = DateLimit.LOW_LIMIT.value,
-                          end: dt.date = dt.date.today()) -> pd.DataFrame:
+    def get_thematic_beta(
+        self, basket_identifier: str, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
+    ) -> pd.DataFrame:
         if not self.positioned_entity_type == EntityType.ASSET:
             raise NotImplementedError
-        response = GsAssetApi.resolve_assets(identifier=[basket_identifier],
-                                             fields=['id', 'type'], limit=1)[basket_identifier]
+        response = GsAssetApi.resolve_assets(identifier=[basket_identifier], fields=['id', 'type'], limit=1)[
+            basket_identifier
+        ]
         _id, _type = get(response, '0.id'), get(response, '0.type')
         if len(response) == 0 or _id is None:
             raise MqValueError(f'Basket could not be found using identifier {basket_identifier}.')
@@ -837,59 +890,73 @@ class PositionedEntity(metaclass=ABCMeta):
         response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.COMPOSITE_THEMATIC_BETAS.value)
         df = []
         for r in response:
-            df.append({'date': r['date'], 'assetId': r['assetId'], 'basketId': r['basketId'],
-                       'thematicBeta': r['beta']})
+            df.append(
+                {'date': r['date'], 'assetId': r['assetId'], 'basketId': r['basketId'], 'thematicBeta': r['beta']}
+            )
         df = pd.DataFrame(df)
         return df.set_index('date')
 
-    @deprecation.deprecated(deprecated_in="0.9.110",
-                            details="Please use the same function using the ThematicReport class")
-    def get_all_thematic_exposures(self,
-                                   start_date: dt.date = None,
-                                   end_date: dt.date = None,
-                                   basket_ids: List[str] = None,
-                                   regions: List[Region] = None) -> pd.DataFrame:
-        results = GsThematicApi.get_thematics(entity_id=self.id,
-                                              start_date=start_date,
-                                              end_date=end_date,
-                                              basket_ids=basket_ids,
-                                              regions=regions,
-                                              measures=[ThematicMeasure.ALL_THEMATIC_EXPOSURES])
+    @deprecation.deprecated(
+        deprecated_in="0.9.110", details="Please use the same function using the ThematicReport class"
+    )
+    def get_all_thematic_exposures(
+        self,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        basket_ids: List[str] = None,
+        regions: List[Region] = None,
+    ) -> pd.DataFrame:
+        results = GsThematicApi.get_thematics(
+            entity_id=self.id,
+            start_date=start_date,
+            end_date=end_date,
+            basket_ids=basket_ids,
+            regions=regions,
+            measures=[ThematicMeasure.ALL_THEMATIC_EXPOSURES],
+        )
         return flatten_results_into_df(results)
 
-    @deprecation.deprecated(deprecated_in="0.9.110",
-                            details="Please use the same function using the ThematicReport class")
-    def get_top_five_thematic_exposures(self,
-                                        start_date: dt.date = None,
-                                        end_date: dt.date = None,
-                                        basket_ids: List[str] = None,
-                                        regions: List[Region] = None) -> pd.DataFrame:
-        results = GsThematicApi.get_thematics(entity_id=self.id,
-                                              start_date=start_date,
-                                              end_date=end_date,
-                                              basket_ids=basket_ids,
-                                              regions=regions,
-                                              measures=[ThematicMeasure.TOP_FIVE_THEMATIC_EXPOSURES])
+    @deprecation.deprecated(
+        deprecated_in="0.9.110", details="Please use the same function using the ThematicReport class"
+    )
+    def get_top_five_thematic_exposures(
+        self,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        basket_ids: List[str] = None,
+        regions: List[Region] = None,
+    ) -> pd.DataFrame:
+        results = GsThematicApi.get_thematics(
+            entity_id=self.id,
+            start_date=start_date,
+            end_date=end_date,
+            basket_ids=basket_ids,
+            regions=regions,
+            measures=[ThematicMeasure.TOP_FIVE_THEMATIC_EXPOSURES],
+        )
         return flatten_results_into_df(results)
 
-    @deprecation.deprecated(deprecated_in="0.9.110",
-                            details="Please use the same function using the ThematicReport class")
-    def get_bottom_five_thematic_exposures(self,
-                                           start_date: dt.date = None,
-                                           end_date: dt.date = None,
-                                           basket_ids: List[str] = None,
-                                           regions: List[Region] = None) -> pd.DataFrame:
-        results = GsThematicApi.get_thematics(entity_id=self.id,
-                                              start_date=start_date,
-                                              end_date=end_date,
-                                              basket_ids=basket_ids,
-                                              regions=regions,
-                                              measures=[ThematicMeasure.BOTTOM_FIVE_THEMATIC_EXPOSURES])
+    @deprecation.deprecated(
+        deprecated_in="0.9.110", details="Please use the same function using the ThematicReport class"
+    )
+    def get_bottom_five_thematic_exposures(
+        self,
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        basket_ids: List[str] = None,
+        regions: List[Region] = None,
+    ) -> pd.DataFrame:
+        results = GsThematicApi.get_thematics(
+            entity_id=self.id,
+            start_date=start_date,
+            end_date=end_date,
+            basket_ids=basket_ids,
+            regions=regions,
+            measures=[ThematicMeasure.BOTTOM_FIVE_THEMATIC_EXPOSURES],
+        )
         return flatten_results_into_df(results)
 
-    def get_thematic_breakdown(self,
-                               date: dt.date,
-                               basket_id: str) -> pd.DataFrame:
+    def get_thematic_breakdown(self, date: dt.date, basket_id: str) -> pd.DataFrame:
         """
         Get a by-asset breakdown of a portfolio or basket's thematic exposure to a particular flagship basket on a
         particular date
@@ -899,59 +966,59 @@ class PositionedEntity(metaclass=ABCMeta):
         """
         return get_thematic_breakdown_as_df(entity_id=self.id, date=date, basket_id=basket_id)
 
-    def get_factor_scenario_analytics(self,
-                                      scenarios: List[Scenario],
-                                      date: dt.date,
-                                      measures: List[ScenarioCalculationMeasure],
-                                      risk_model: str = None,
-                                      return_format: ReturnFormat = ReturnFormat.DATA_FRAME) -> \
-            Union[Dict, Union[Dict, pd.DataFrame]]:
-
+    def get_factor_scenario_analytics(
+        self,
+        scenarios: List[Scenario],
+        date: dt.date,
+        measures: List[ScenarioCalculationMeasure],
+        risk_model: str = None,
+        return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
+    ) -> Union[Dict, Union[Dict, pd.DataFrame]]:
         """Given a list of factor scenarios (historical simulation and/or custom shocks), return the estimated pnl
-         of the given positioned entity.
-         :param scenarios: List of factor-based scenarios
-         :param date: date to run scenarios.
-         :param measures: which metrics to return
-         :param risk_model: valid risk model ID
-         :param return_format: whether to return data formatted in a dataframe or as a dict
+        of the given positioned entity.
+        :param scenarios: List of factor-based scenarios
+        :param date: date to run scenarios.
+        :param measures: which metrics to return
+        :param risk_model: valid risk model ID
+        :param return_format: whether to return data formatted in a dataframe or as a dict
 
-          **Examples**
+         **Examples**
 
-            >>> from gs_quant.session import GsSession, Environment
-            >>> from gs_quant.markets.portfolio_manager import PortfolioManager, ReturnFormat
-            >>> from gs_quant.entities.entity import ScenarioCalculationMeasure, PositionedEntity
-            >>> from gs_quant.markets.scenario import Scenario
+           >>> from gs_quant.session import GsSession, Environment
+           >>> from gs_quant.markets.portfolio_manager import PortfolioManager, ReturnFormat
+           >>> from gs_quant.entities.entity import ScenarioCalculationMeasure, PositionedEntity
+           >>> from gs_quant.markets.scenario import Scenario
 
-          Get scenarios
-            >>> covid_19_omicron = Scenario.get_by_name("Covid 19 Omicron (v2)") # historical simulation
-            >>> custom_shock = Scenario.get_by_name("Shocking factor by x% (Propagated)") # custom shock
-            >>> risk_model = "RISK_MODEL_ID" # valid risk model ID
+         Get scenarios
+           >>> covid_19_omicron = Scenario.get_by_name("Covid 19 Omicron (v2)") # historical simulation
+           >>> custom_shock = Scenario.get_by_name("Shocking factor by x% (Propagated)") # custom shock
+           >>> risk_model = "RISK_MODEL_ID" # valid risk model ID
 
-          Instantiate your positionedEntity. Here, we are using one of its subclasses, PortfolioManager
+         Instantiate your positionedEntity. Here, we are using one of its subclasses, PortfolioManager
 
-            >>> pm = PortfolioManager(portfolio_id="PORTFOLIO_ID")
+           >>> pm = PortfolioManager(portfolio_id="PORTFOLIO_ID")
 
-          Set the date you wish to run your scenario on
+         Set the date you wish to run your scenario on
 
-           >>> date = dt.date(2023, 3, 7)
+          >>> date = dt.date(2023, 3, 7)
 
-          Run scenario and get estimated impact on your positioned entity
+         Run scenario and get estimated impact on your positioned entity
 
-          >>> scenario_analytics = pm.get_factor_scenario_analytics(
-          ...     scenarios=[covid_19_omicron, beta_propagated],
-          ...     date=date,
-          ...     measures=[ScenarioCalculationMeasure.SUMMARY,
-          ...               ScenarioCalculationMeasure.ESTIMATED_FACTOR_PNL,
-          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_SECTOR,
-          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_REGION,
-          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_DIRECTION,
-          ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_ASSET],
-          ...     risk_model=risk_model)
+         >>> scenario_analytics = pm.get_factor_scenario_analytics(
+         ...     scenarios=[covid_19_omicron, beta_propagated],
+         ...     date=date,
+         ...     measures=[ScenarioCalculationMeasure.SUMMARY,
+         ...               ScenarioCalculationMeasure.ESTIMATED_FACTOR_PNL,
+         ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_SECTOR,
+         ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_REGION,
+         ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_DIRECTION,
+         ...               ScenarioCalculationMeasure.ESTIMATED_PNL_BY_ASSET],
+         ...     risk_model=risk_model)
 
-          By default, the result will be returned in a dict with keys as the measures/metrics requested and values as
-          the scenario calculation results formatted in a dataframe. To get the results in a dict, specify the return
-          format as JSON
-         """
+         By default, the result will be returned in a dict with keys as the measures/metrics requested and values as
+         the scenario calculation results formatted in a dataframe. To get the results in a dict, specify the return
+         format as JSON
+        """
         risk_report = self.get_factor_risk_report(risk_model_id=risk_model)
 
         id_to_scenario_map = {scenario.id: scenario for scenario in scenarios}
@@ -963,7 +1030,7 @@ class PositionedEntity(metaclass=ABCMeta):
             "reportId": risk_report.id,
             "measures": [m.value for m in measures],
             "riskModel": risk_model,
-            "type": "Factor Scenario"
+            "type": "Factor Scenario",
         }
 
         results = GsFactorScenarioApi.calculate_scenario(calculation_request)
@@ -977,16 +1044,32 @@ class PositionedEntity(metaclass=ABCMeta):
         result = {}
 
         all_data = {}
-        [all_data.update({result_type: []}) for result_type in ['summary', 'factorPnl', 'bySectorAggregations',
-                                                                'byRegionAggregations', 'byDirectionAggregations',
-                                                                'byAsset']]
+        [
+            all_data.update({result_type: []})
+            for result_type in [
+                'summary',
+                'factorPnl',
+                'bySectorAggregations',
+                'byRegionAggregations',
+                'byDirectionAggregations',
+                'byAsset',
+            ]
+        ]
 
         for i, calc_result in enumerate(calculation_results):
-            for result_type in ['summary', 'factorPnl', 'bySectorAggregations',
-                                'byRegionAggregations', 'byDirectionAggregations', 'byAsset']:
-                scenario_metadata_map = {"scenarioId": scenarios[i].id,
-                                         "scenarioName": scenarios[i].name,
-                                         "scenarioType": scenarios[i].type.value}
+            for result_type in [
+                'summary',
+                'factorPnl',
+                'bySectorAggregations',
+                'byRegionAggregations',
+                'byDirectionAggregations',
+                'byAsset',
+            ]:
+                scenario_metadata_map = {
+                    "scenarioId": scenarios[i].id,
+                    "scenarioName": scenarios[i].name,
+                    "scenarioType": scenarios[i].type.value,
+                }
                 if result_type == 'summary':
                     calc_result.get(result_type).update(scenario_metadata_map)
                     all_data.get(result_type).append(calc_result.get(result_type))
@@ -994,48 +1077,67 @@ class PositionedEntity(metaclass=ABCMeta):
                     [data_map.update(scenario_metadata_map) for data_map in calc_result.get(result_type, [])]
                     [all_data.get(result_type).append(element) for element in calc_result.get(result_type, [])]
 
-        for result_type, result_label in {"summary": "summary",
-                                          "factorPnl": "factorCategories",
-                                          "bySectorAggregations": "sectors",
-                                          "byRegionAggregations": "countries",
-                                          "byDirectionAggregations": "direction",
-                                          "byAsset": "byAsset"}.items():
+        for result_type, result_label in {
+            "summary": "summary",
+            "factorPnl": "factorCategories",
+            "bySectorAggregations": "sectors",
+            "byRegionAggregations": "countries",
+            "byDirectionAggregations": "direction",
+            "byAsset": "byAsset",
+        }.items():
             estimated_pnl_results_as_json = all_data.get(result_type)
             if estimated_pnl_results_as_json:
                 estimated_pnl_df = pd.DataFrame.from_dict(estimated_pnl_results_as_json)
-                estimated_pnl_df = estimated_pnl_df.apply(
-                    _explode_data, axis=1, parent_label=result_label)
+                estimated_pnl_df = estimated_pnl_df.apply(_explode_data, axis=1, parent_label=result_label)
                 if isinstance(estimated_pnl_df, pd.Series):
                     estimated_pnl_df = pd.concat(estimated_pnl_df.values, ignore_index=True)
 
-                estimated_pnl_df.columns = estimated_pnl_df.columns.map(lambda x: {
-                    "factorCategories": "Factor Category",
-                    "factors": "Factor",
-                    "sectors": "Sector",
-                    "countries": "Country",
-                    "industries": "Industry",
-                    "direction": "Direction",
-                    "scenarioId": "Scenario ID",
-                    "scenarioName": "Scenario Name",
-                    "scenarioType": "Scenario Type",
-                    "assetId": "Asset ID",
-                    "name": "Asset Name",
-                    "bbid": "BBID",
-                    "factorExposure": "Factor Exposure",
-                    "factorShock": "Factor Shock (%)",
-                    "exposure": "Exposure",
-                    "estimatedPnl": "Estimated Pnl",
-                    "estimatedPerformance": "Estimated Performance (%)",
-                    "stressedMarketValue": "Stressed Market Value"
-
-                }.get(x, x))
-                column_order = [col
-                                for col in ["Scenario ID", "Scenario Name", "Scenario Type", "Asset ID",
-                                            "BBID", "Asset Name", "Factor Category", "Factor", "Factor Exposure",
-                                            "Factor Shock (%)", "Sector", "Industry", "Country", "Direction",
-                                            "Exposure", "Estimated Pnl", "Estimated Performance (%)",
-                                            "Stressed Market Value"]
-                                if col in estimated_pnl_df.columns.tolist()]
+                estimated_pnl_df.columns = estimated_pnl_df.columns.map(
+                    lambda x: {
+                        "factorCategories": "Factor Category",
+                        "factors": "Factor",
+                        "sectors": "Sector",
+                        "countries": "Country",
+                        "industries": "Industry",
+                        "direction": "Direction",
+                        "scenarioId": "Scenario ID",
+                        "scenarioName": "Scenario Name",
+                        "scenarioType": "Scenario Type",
+                        "assetId": "Asset ID",
+                        "name": "Asset Name",
+                        "bbid": "BBID",
+                        "factorExposure": "Factor Exposure",
+                        "factorShock": "Factor Shock (%)",
+                        "exposure": "Exposure",
+                        "estimatedPnl": "Estimated Pnl",
+                        "estimatedPerformance": "Estimated Performance (%)",
+                        "stressedMarketValue": "Stressed Market Value",
+                    }.get(x, x)
+                )
+                column_order = [
+                    col
+                    for col in [
+                        "Scenario ID",
+                        "Scenario Name",
+                        "Scenario Type",
+                        "Asset ID",
+                        "BBID",
+                        "Asset Name",
+                        "Factor Category",
+                        "Factor",
+                        "Factor Exposure",
+                        "Factor Shock (%)",
+                        "Sector",
+                        "Industry",
+                        "Country",
+                        "Direction",
+                        "Exposure",
+                        "Estimated Pnl",
+                        "Estimated Performance (%)",
+                        "Stressed Market Value",
+                    ]
+                    if col in estimated_pnl_df.columns.tolist()
+                ]
                 estimated_pnl_df = estimated_pnl_df[column_order]
                 result[result_type] = estimated_pnl_df
 

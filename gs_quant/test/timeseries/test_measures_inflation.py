@@ -34,8 +34,11 @@ from gs_quant.markets.securities import Currency
 from gs_quant.session import GsSession, Environment
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import CurrencyEnum, SecurityMaster
-from gs_quant.timeseries.measures_inflation import _currency_to_tdapi_inflation_swap_rate_asset, \
-    INFLATION_RATES_DEFAULTS, TdapiInflationRatesDefaultsProvider
+from gs_quant.timeseries.measures_inflation import (
+    _currency_to_tdapi_inflation_swap_rate_asset,
+    INFLATION_RATES_DEFAULTS,
+    TdapiInflationRatesDefaultsProvider,
+)
 from gs_quant.timeseries.measures_rates import _ClearingHouse
 
 _index = [pd.Timestamp('2021-03-30')]
@@ -56,31 +59,19 @@ def test_get_floating_rate_option_for_benchmark_retuns_rate_usd():
 
 def test_currency_to_tdapi_inflation_swap_rate_asset(mocker):
     replace = Replacer()
-    mocker.patch.object(GsSession.__class__, 'current',
-                        return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
+    mocker.patch.object(
+        GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures_inflation.Asset.get_identifier', Mock())
 
     with PricingContext(dt.date.today()):
         cur = [
-            {
-                "currency_assetId": "MAK1FHKH5P5GJSHH",
-                "currency": "JPY",
-                "inflation_id": "MA1CENMCA88VXJ28"},
-            {
-                "currency_assetId": "MA66CZBQJST05XKG",
-                "currency": "GBP",
-                "inflation_id": "MAW75DV9777630QN"},
-            {
-                "currency_assetId": "MAJNQPFGN1EBDHAE",
-                "currency": "EUR",
-                "inflation_id": "MAJTD8XDA8EJZYRG"},
-            {
-                "currency_assetId": "MAZ7RWC904JYHYPS",
-                "currency": "USD",
-                "inflation_id": "MA4016GCT3MDRYVY"}
-
+            {"currency_assetId": "MAK1FHKH5P5GJSHH", "currency": "JPY", "inflation_id": "MA1CENMCA88VXJ28"},
+            {"currency_assetId": "MA66CZBQJST05XKG", "currency": "GBP", "inflation_id": "MAW75DV9777630QN"},
+            {"currency_assetId": "MAJNQPFGN1EBDHAE", "currency": "EUR", "inflation_id": "MAJTD8XDA8EJZYRG"},
+            {"currency_assetId": "MAZ7RWC904JYHYPS", "currency": "USD", "inflation_id": "MA4016GCT3MDRYVY"},
         ]
         for c in cur:
             print(c)
@@ -95,23 +86,19 @@ def test_currency_to_tdapi_inflation_swap_rate_asset(mocker):
 
 
 def test_get_inflation_swap_leg_defaults():
-    result_dict = dict(currency=CurrEnum.JPY, index_type='CPI-JCPNGENF',
-                       pricing_location=PricingLocation.TKO)
+    result_dict = dict(currency=CurrEnum.JPY, index_type='CPI-JCPNGENF', pricing_location=PricingLocation.TKO)
     defaults = tm._get_inflation_swap_leg_defaults(CurrEnum.JPY)
     assert result_dict == defaults
 
-    result_dict = dict(currency=CurrEnum.USD, index_type='CPI-CPURNSA',
-                       pricing_location=PricingLocation.NYC)
+    result_dict = dict(currency=CurrEnum.USD, index_type='CPI-CPURNSA', pricing_location=PricingLocation.NYC)
     defaults = tm._get_inflation_swap_leg_defaults(CurrEnum.USD)
     assert result_dict == defaults
 
-    result_dict = dict(currency=CurrEnum.EUR, index_type='CPI-CPXTEMU',
-                       pricing_location=PricingLocation.LDN)
+    result_dict = dict(currency=CurrEnum.EUR, index_type='CPI-CPXTEMU', pricing_location=PricingLocation.LDN)
     defaults = tm._get_inflation_swap_leg_defaults(CurrEnum.EUR)
     assert result_dict == defaults
 
-    result_dict = dict(currency=CurrEnum.GBP, index_type='CPI-UKRPI',
-                       pricing_location=PricingLocation.LDN)
+    result_dict = dict(currency=CurrEnum.GBP, index_type='CPI-UKRPI', pricing_location=PricingLocation.LDN)
     defaults = tm._get_inflation_swap_leg_defaults(CurrEnum.GBP)
     assert result_dict == defaults
 
@@ -152,8 +139,7 @@ def test_get_tdapi_inflation_rates_assets(mocker):
 
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = []
-    kwargs = dict(asset_parameters_clearing_house='NONE',
-                  pricing_location='LDN')
+    kwargs = dict(asset_parameters_clearing_house='NONE', pricing_location='LDN')
     with pytest.raises(MqValueError):
         tm._get_tdapi_inflation_rates_assets(**kwargs)
     replace.restore()
@@ -165,11 +151,15 @@ def test_get_tdapi_inflation_rates_assets(mocker):
     replace.restore()
 
     #   test case will test matching sofr maturity with libor leg and flipping legs to get right asset
-    kwargs = dict(type='InflationSwap', asset_parameters_termination_date='5y',
-                  asset_parameters_index=tm.InflationIndexType.UKRPI,
-                  asset_parameters_clearing_house='None', asset_parameters_effective_date='5y',
-                  asset_parameters_notional_currency='GBP',
-                  pricing_location='LDN')
+    kwargs = dict(
+        type='InflationSwap',
+        asset_parameters_termination_date='5y',
+        asset_parameters_index=tm.InflationIndexType.UKRPI,
+        asset_parameters_clearing_house='None',
+        asset_parameters_effective_date='5y',
+        asset_parameters_notional_currency='GBP',
+        pricing_location='LDN',
+    )
 
     assets = replace('gs_quant.timeseries.measures.GsAssetApi.get_many_assets', Mock())
     assets.return_value = [mock_asset_1]
@@ -253,12 +243,12 @@ def test_inflation_swap_rate(mocker):
 
 def test_inflation_swap_term(mocker):
     replace = Replacer()
-    args = dict(forward_tenor='1y', pricing_date='0d', clearing_house=_ClearingHouse.LCH,
-                real_time=False)
+    args = dict(forward_tenor='1y', pricing_date='0d', clearing_house=_ClearingHouse.LCH, real_time=False)
 
     class ObjectView(object):
         def __init__(self, d):
             self.__dict__ = d
+
     holidays = replace('gs_quant.datetime.GsCalendar.get', Mock(holidays=[]))
     holidays.return_value = ObjectView({'holidays': []})
 
@@ -289,8 +279,9 @@ def test_inflation_swap_term(mocker):
     args['forward_tenor'] = '1y'
 
     bd_mock = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
-    bd_mock.return_value = pd.DataFrame(data=dict(date="2020-04-10", exchange="NYC", description="Good Friday"),
-                                        index=[pd.Timestamp('2020-04-10')])
+    bd_mock.return_value = pd.DataFrame(
+        data=dict(date="2020-04-10", exchange="NYC", description="Good Friday"), index=[pd.Timestamp('2020-04-10')]
+    )
 
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'USD'
@@ -306,8 +297,9 @@ def test_inflation_swap_term(mocker):
     identifiers.return_value = [mock_asset]
 
     d = {
-        'terminationTenor': ['1y', '2y', '3y', '4y'], 'swapRate': [1, 2, 3, 4],
-        'assetId': ['MAEMPCXQG3T716EX', 'MAFRSWPAF5QPNTP2', 'MA88BXZ3TCTXTFW1', 'MAC4KAG9B9ZAZHFT']
+        'terminationTenor': ['1y', '2y', '3y', '4y'],
+        'swapRate': [1, 2, 3, 4],
+        'assetId': ['MAEMPCXQG3T716EX', 'MAFRSWPAF5QPNTP2', 'MA88BXZ3TCTXTFW1', 'MAC4KAG9B9ZAZHFT'],
     }
 
     bd_mock.return_value = pd.DataFrame()
@@ -319,15 +311,17 @@ def test_inflation_swap_term(mocker):
     assert actual.empty
 
     series_apply_mock = replace('gs_quant.timeseries.measures_inflation.pd.Series.apply', Mock())
-    series_apply_mock.return_value = pd.Series([dt.date(2022, 3, 30), dt.date(2023, 3, 30), dt.date(2024, 3, 30),
-                                               dt.date(2025, 3, 30)], index=df.index)
+    series_apply_mock.return_value = pd.Series(
+        [dt.date(2022, 3, 30), dt.date(2023, 3, 30), dt.date(2024, 3, 30), dt.date(2025, 3, 30)], index=df.index
+    )
 
     market_data_mock.return_value = df
     with DataContext('2019-01-01', '2026-01-01'):
         actual = tm.inflation_swap_term(**args)
     actual.dataset_ids = _test_datasets
-    expected = tm.ExtendedSeries([1, 2, 3, 4], index=[dt.date(2022, 3, 30), dt.date(2023, 3, 30), dt.date(2024, 3, 30),
-                                                      dt.date(2025, 3, 30)])
+    expected = tm.ExtendedSeries(
+        [1, 2, 3, 4], index=[dt.date(2022, 3, 30), dt.date(2023, 3, 30), dt.date(2024, 3, 30), dt.date(2025, 3, 30)]
+    )
     expected.dataset_ids = _test_datasets
     assert_series_equal(expected, actual, check_names=False)
     assert actual.dataset_ids == expected.dataset_ids

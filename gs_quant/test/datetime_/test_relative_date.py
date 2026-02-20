@@ -255,20 +255,17 @@ def mock_holiday_data(*args, **kwargs):
     return base_holidays
 
 
-test_types = {
-    'date': 'date',
-    'exchange': 'string',
-    'currency': 'string',
-    'description': 'string',
-    'updateTime': 'date'}
+test_types = {'date': 'date', 'exchange': 'string', 'currency': 'string', 'description': 'string', 'updateTime': 'date'}
 
 
 # test holiday calendar logic
 def test_currency_holiday_calendars(mocker):
     replace = Replacer()
     replace('gs_quant.api.gs.data.GsDataApi.query_data', Mock(side_effect=mock_holiday_data))
-    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_coverage",
-                 return_value=pd.DataFrame([['USD'], ['GBP']], columns=['currency']))
+    mocker.patch(
+        "gs_quant.api.gs.data.GsDataApi.get_coverage",
+        return_value=pd.DataFrame([['USD'], ['GBP']], columns=['currency']),
+    )
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
     rdate = RelativeDate('-1b', base_date=dt.date(2022, 4, 12))
     assert dt.date(2022, 4, 11) == rdate.apply_rule(currencies=[])

@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from testfixtures import Replacer
 from testfixtures.mock import Mock
 
@@ -21,12 +22,9 @@ from gs_quant.target.reports import User as TargetUser
 
 
 def test_get():
-    user = TargetUser.from_dict({
-        'id': 'userId',
-        'email': 'jane.doe@gs.com',
-        'name': 'Doe, Jane',
-        'company': 'Goldman Sachs Group'
-    })
+    user = TargetUser.from_dict(
+        {'id': 'userId', 'email': 'jane.doe@gs.com', 'name': 'Doe, Jane', 'company': 'Goldman Sachs Group'}
+    )
     replace = Replacer()
     mock = replace('gs_quant.api.gs.users.GsUsersApi.get_users', Mock())
     mock.return_value = [user]
@@ -35,18 +33,13 @@ def test_get():
 
 
 def test_get_many():
-    users = [TargetUser.from_dict({
-        'id': 'userId',
-        'email': 'jane.doe@gs.com',
-        'name': 'Doe, Jane',
-        'company': 'Goldman Sachs Group'
-    }),
-        TargetUser.from_dict({
-            'id': 'userId2',
-            'email': 'john.doe@gs.com',
-            'name': 'Doe, John',
-            'company': 'Goldman Sachs Group'
-        })
+    users = [
+        TargetUser.from_dict(
+            {'id': 'userId', 'email': 'jane.doe@gs.com', 'name': 'Doe, Jane', 'company': 'Goldman Sachs Group'}
+        ),
+        TargetUser.from_dict(
+            {'id': 'userId2', 'email': 'john.doe@gs.com', 'name': 'Doe, John', 'company': 'Goldman Sachs Group'}
+        ),
     ]
     replace = Replacer()
     mock = replace('gs_quant.api.gs.users.GsUsersApi.get_users', Mock())

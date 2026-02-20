@@ -20,8 +20,15 @@ import zoneinfo
 
 from gs_quant.json_convertors import decode_iso_date_or_datetime
 from gs_quant.json_encoder import JSONEncoder
-from gs_quant.workflow import BinaryImageComments, ImgType, Encoding, HyperLinkImageComments, \
-    VisualStructuringReport, ChartingParameters, OverlayType
+from gs_quant.workflow import (
+    BinaryImageComments,
+    ImgType,
+    Encoding,
+    HyperLinkImageComments,
+    VisualStructuringReport,
+    ChartingParameters,
+    OverlayType,
+)
 
 
 def test_datetime_serialisation():
@@ -68,10 +75,10 @@ def test_time():
 def test_custom_comments():
     bc = BinaryImageComments(data='blah', img_type=ImgType.JPEG, encoding=Encoding.Base64)
     hc = HyperLinkImageComments(url='blah')
-    report = VisualStructuringReport(comments=(bc, hc),
-                                     charting_parameters=ChartingParameters(overlay=OverlayType.Vega,
-                                                                            underlay=OverlayType.ProbabilityDistribution
-                                                                            ))
+    report = VisualStructuringReport(
+        comments=(bc, hc),
+        charting_parameters=ChartingParameters(overlay=OverlayType.Vega, underlay=OverlayType.ProbabilityDistribution),
+    )
     json_str = report.to_json()
     round_trip = VisualStructuringReport.from_json(json_str)
     assert round_trip == report

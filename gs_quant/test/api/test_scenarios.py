@@ -24,50 +24,48 @@ from gs_quant.base import DictBase
 def test_get_many_scenarios(mocker):
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value={})
 
     # run test
-    GsFactorScenarioApi.get_many_scenarios(ids=["scenario_1"],
-                                           names=["scenario_name"],
-                                           type="Factor Shock",
-                                           risk_model="MODEL_ID",
-                                           shocked_factors=["factor 1"],
-                                           shocked_factor_categories=["factor 2"],
-                                           start_date=dt.date(2024, 1, 1),
-                                           end_date=dt.date(2024, 1, 1))
+    GsFactorScenarioApi.get_many_scenarios(
+        ids=["scenario_1"],
+        names=["scenario_name"],
+        type="Factor Shock",
+        risk_model="MODEL_ID",
+        shocked_factors=["factor 1"],
+        shocked_factor_categories=["factor 2"],
+        start_date=dt.date(2024, 1, 1),
+        end_date=dt.date(2024, 1, 1),
+    )
 
-    GsSession.current._get.assert_called_with('/risk/scenarios?limit=100&'
-                                              'id=scenario_1&name=scenario_name&riskModel=MODEL_ID'
-                                              '&factorScenarioType=Factor Shock'
-                                              '&shockedFactor=factor 1&shockedFactorCategory=factor 2'
-                                              '&historicalSimulationStartDate=2024-01-01'
-                                              '&historicalSimulationEndDate=2024-01-01',
-                                              cls=Scenario)
+    GsSession.current._get.assert_called_with(
+        '/risk/scenarios?limit=100&'
+        'id=scenario_1&name=scenario_name&riskModel=MODEL_ID'
+        '&factorScenarioType=Factor Shock'
+        '&shockedFactor=factor 1&shockedFactorCategory=factor 2'
+        '&historicalSimulationStartDate=2024-01-01'
+        '&historicalSimulationEndDate=2024-01-01',
+        cls=Scenario,
+    )
 
 
 def test_get_scenario(mocker):
     scenario_id = 'SCENARIO_ID'
 
-    expected_response = Scenario(name="scenario name",
-                                 id_=scenario_id,
-                                 description="scenario_description",
-                                 type_=FactorScenarioType.Factor_Shock,
-                                 parameters=DictBase())
+    expected_response = Scenario(
+        name="scenario name",
+        id_=scenario_id,
+        description="scenario_description",
+        type_=FactorScenarioType.Factor_Shock,
+        parameters=DictBase(),
+    )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=expected_response)
 
     # run test
@@ -79,24 +77,24 @@ def test_get_scenario(mocker):
 def test_create_scenario(mocker):
     scenario_id = 'SCENARIO_ID'
 
-    scenario_without_id = Scenario(name="scenario name",
-                                   description="scenario_description",
-                                   type_=FactorScenarioType.Factor_Shock,
-                                   parameters=DictBase())
-    expected_response = Scenario(name="scenario name",
-                                 id_=scenario_id,
-                                 description="scenario_description",
-                                 type_=FactorScenarioType.Factor_Shock,
-                                 parameters=DictBase())
+    scenario_without_id = Scenario(
+        name="scenario name",
+        description="scenario_description",
+        type_=FactorScenarioType.Factor_Shock,
+        parameters=DictBase(),
+    )
+    expected_response = Scenario(
+        name="scenario name",
+        id_=scenario_id,
+        description="scenario_description",
+        type_=FactorScenarioType.Factor_Shock,
+        parameters=DictBase(),
+    )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
 
     mocker.patch.object(GsSession.current, '_post', return_value=expected_response)
 
@@ -109,20 +107,18 @@ def test_create_scenario(mocker):
 def test_update_scenario(mocker):
     scenario_id = 'SCENARIO_ID'
 
-    scenario = Scenario(name="scenario name",
-                        id_=scenario_id,
-                        description="scenario_description",
-                        type_=FactorScenarioType.Factor_Shock,
-                        parameters=DictBase())
+    scenario = Scenario(
+        name="scenario name",
+        id_=scenario_id,
+        description="scenario_description",
+        type_=FactorScenarioType.Factor_Shock,
+        parameters=DictBase(),
+    )
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
 
     mocker.patch.object(GsSession.current, '_put', return_value=scenario)
 
@@ -136,12 +132,8 @@ def test_delete_scenario(mocker):
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
 
     # run test
@@ -156,17 +148,13 @@ def test_scenario_calculate(mocker):
         "riskModel": "MODEL_ID",
         "measures": ["Summary", "Factor Pnl", "By Sector Pnl Aggregations", "By Asset"],
         "scenarios": ["scenario_1"],
-        "reportId": "REPORT_ID"
+        "reportId": "REPORT_ID",
     }
 
     # mock GsSession
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_post', return_value=dict())
 
     # run test

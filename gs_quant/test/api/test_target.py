@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import copy
 import inspect
 import pickle
@@ -38,9 +39,25 @@ def test_enum():
 
 
 def test_classes():
-    for module_name in ('assets', 'backtests', 'charts', 'common', 'content', 'coordinates', 'countries', 'data',
-                        'hedge', 'indices', 'instrument', 'monitor', 'portfolios', 'reports', 'risk', 'trades',
-                        'workspaces_markets'):
+    for module_name in (
+        'assets',
+        'backtests',
+        'charts',
+        'common',
+        'content',
+        'coordinates',
+        'countries',
+        'data',
+        'hedge',
+        'indices',
+        'instrument',
+        'monitor',
+        'portfolios',
+        'reports',
+        'risk',
+        'trades',
+        'workspaces_markets',
+    ):
         for typ in classes(module_name):
             if typ.__module__ != module_name:
                 continue

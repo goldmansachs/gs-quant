@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 import math
@@ -86,8 +87,9 @@ def build_factor_id_to_name_map(results: List) -> dict:
     return risk_model_factor_data
 
 
-def build_asset_data_map(results: List, requested_universe: tuple, requested_measure: Measure, factor_map: dict) \
-        -> dict:
+def build_asset_data_map(
+    results: List, requested_universe: tuple, requested_measure: Measure, factor_map: dict
+) -> dict:
     if not results:
         return {}
     data_field = _map_measure_to_field_name(requested_measure)
@@ -108,8 +110,9 @@ def build_asset_data_map(results: List, requested_universe: tuple, requested_mea
     return data_map
 
 
-def build_factor_data_map(results: List, identifier: str, risk_model_id: str, requested_measure: Measure,
-                          factors: List[str] = []) -> Union[dict, pd.DataFrame]:
+def build_factor_data_map(
+    results: List, identifier: str, risk_model_id: str, requested_measure: Measure, factors: List[str] = []
+) -> Union[dict, pd.DataFrame]:
     field_name = _map_measure_to_field_name(requested_measure)
     if not field_name:
         raise NotImplementedError(f"{requested_measure.value} is currently not yet supported")
@@ -120,10 +123,7 @@ def build_factor_data_map(results: List, identifier: str, risk_model_id: str, re
         factor_data = row.get('factorData')
         for factor_map in factor_data:
             data_list.append(
-                {"date": date,
-                 identifier: factor_map.get(identifier),
-                 field_name: factor_map.get(field_name)
-                 }
+                {"date": date, identifier: factor_map.get(identifier), field_name: factor_map.get(field_name)}
             )
 
     factor_data_df = pd.DataFrame(data_list)
@@ -133,17 +133,19 @@ def build_factor_data_map(results: List, identifier: str, risk_model_id: str, re
     if factors:
         missing_factors = set(factors) - set(factor_data_df.columns.tolist())
         if missing_factors:
-            raise ValueError(f'Factors(s) with {identifier}(s) {", ".join(missing_factors)} do not exist in '
-                             f'risk model {risk_model_id}. Make sure the factor {identifier}(s) are correct')
+            raise ValueError(
+                f'Factors(s) with {identifier}(s) {", ".join(missing_factors)} do not exist in '
+                f'risk model {risk_model_id}. Make sure the factor {identifier}(s) are correct'
+            )
 
         factor_data_df = factor_data_df[factors]
 
     return factor_data_df
 
 
-def build_pfp_data_dataframe(results: List,
-                             return_df: bool = True,
-                             get_factors_by_name: bool = True) -> Union[pd.DataFrame, list]:
+def build_pfp_data_dataframe(
+    results: List, return_df: bool = True, get_factors_by_name: bool = True
+) -> Union[pd.DataFrame, list]:
 
     factor_data_df = pd.DataFrame(results)[["date", "factorData"]]
     factor_data_df = factor_data_df.explode('factorData')
@@ -192,8 +194,9 @@ def get_optional_data_as_dataframe(results: List, optional_data_key: str) -> pd.
     return results
 
 
-def get_covariance_matrix_dataframe(results: List[dict], covariance_matrix_key: str = 'covarianceMatrix') \
-        -> pd.DataFrame:
+def get_covariance_matrix_dataframe(
+    results: List[dict], covariance_matrix_key: str = 'covarianceMatrix'
+) -> pd.DataFrame:
     cov_list = []
     date_list = []
     for row in results:
@@ -221,8 +224,10 @@ def build_factor_volatility_dataframe(results: List, group_by_name: bool, factor
     if factors:
         missing_factors = set(factors) - set(df.columns.tolist())
         if missing_factors:
-            raise ValueError(f'Factors(s): {", ".join(missing_factors)} do not exist in the risk model. '
-                             f'Make sure the factors are correct.')
+            raise ValueError(
+                f'Factors(s): {", ".join(missing_factors)} do not exist in the risk model. '
+                f'Make sure the factors are correct.'
+            )
         else:
             return df[factors]
     return df
@@ -242,11 +247,11 @@ def get_closest_date_index(date: dt.date, dates: List[str], direction: str) -> i
 
 def divide_request(data, n):
     for i in range(0, len(data), n):
-        yield data[i:i + n]
+        yield data[i : i + n]
 
 
 def batch_and_upload_partial_data_use_target_universe_size(model_id: str, data: dict, max_asset_size: int):
-    """ Takes in total risk model data for one day and batches requests according to
+    """Takes in total risk model data for one day and batches requests according to
     asset data size, returns a list of messages from resulting post calls"""
     date = data.get('date')
     _upload_factor_data_if_present(model_id, data, date)
@@ -257,9 +262,7 @@ def batch_and_upload_partial_data_use_target_universe_size(model_id: str, data: 
 def _upload_factor_data_if_present(model_id: str, data: dict, date: str, **kwargs):
     aws_upload = kwargs.get('aws_upload', None)
     if data.get('factorData'):
-        factor_data = {
-            'date': date,
-            'factorData': data.get('factorData')}
+        factor_data = {'date': date, 'factorData': data.get('factorData')}
         if data.get('covarianceMatrix'):
             factor_data['covarianceMatrix'] = data.get('covarianceMatrix')
         if data.get('unadjustedCovarianceMatrix') and aws_upload:
@@ -267,17 +270,26 @@ def _upload_factor_data_if_present(model_id: str, data: dict, date: str, **kwarg
         if data.get('preVRACovarianceMatrix') and aws_upload:
             factor_data['preVRACovarianceMatrix'] = data.get('preVRACovarianceMatrix')
         logging.info('Uploading factor data')
-        _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
-                                  model_data=factor_data, partial_upload=True, **kwargs)
+        _repeat_try_catch_request(
+            GsFactorRiskModelApi.upload_risk_model_data,
+            model_id=model_id,
+            model_data=factor_data,
+            partial_upload=True,
+            **kwargs,
+        )
 
 
 def _batch_data_if_present(model_id: str, data, max_asset_size, date):
     if data.get('assetData'):
         asset_data_list, target_size = _batch_input_data({'assetData': data.get('assetData')}, max_asset_size)
         for asset_data in asset_data_list:
-            _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
-                                      model_data={'assetData': asset_data, 'date': date}, partial_upload=True,
-                                      target_universe_size=target_size)
+            _repeat_try_catch_request(
+                GsFactorRiskModelApi.upload_risk_model_data,
+                model_id=model_id,
+                model_data={'assetData': asset_data, 'date': date},
+                partial_upload=True,
+                target_universe_size=target_size,
+            )
             sleep(random.uniform(3, 7))
 
     if 'issuerSpecificCovariance' in data.keys() or 'factorPortfolios' in data.keys():
@@ -287,9 +299,13 @@ def _batch_data_if_present(model_id: str, data, max_asset_size, date):
                 optional_data_list, target_size = _batch_input_data({optional_key: optional_data}, max_asset_size // 2)
                 logging.info(f'{optional_key} being uploaded for {date}...')
                 for optional_data in optional_data_list:
-                    _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
-                                              model_data={optional_key: optional_data, 'date': date},
-                                              partial_upload=True, target_universe_size=target_size)
+                    _repeat_try_catch_request(
+                        GsFactorRiskModelApi.upload_risk_model_data,
+                        model_id=model_id,
+                        model_data={optional_key: optional_data, 'date': date},
+                        partial_upload=True,
+                        target_universe_size=target_size,
+                    )
                     sleep(random.uniform(3, 7))
 
 
@@ -304,19 +320,31 @@ def only_factor_data_is_present(model_type: Type, data: dict) -> bool:
 
 
 def batch_and_upload_partial_data(model_id: str, data: dict, max_asset_size: int, **kwargs):
-    """ Takes in total risk model data for one day and batches requests according to
+    """Takes in total risk model data for one day and batches requests according to
     asset data size, returns a list of messages from resulting post calls"""
     date = data.get('date')
     _upload_factor_data_if_present(model_id, data, date, **kwargs)
     sleep(random.uniform(3, 7))
     if data.get('currencyRatesData'):
-        _repeat_try_catch_request(GsFactorRiskModelApi.upload_risk_model_data, model_id=model_id,
-                                  model_data={"currencyRatesData": data.get('currencyRatesData'), 'date': date},
-                                  partial_upload=True, final_upload=True, **kwargs)
+        _repeat_try_catch_request(
+            GsFactorRiskModelApi.upload_risk_model_data,
+            model_id=model_id,
+            model_data={"currencyRatesData": data.get('currencyRatesData'), 'date': date},
+            partial_upload=True,
+            final_upload=True,
+            **kwargs,
+        )
         sleep(random.uniform(3, 7))
     for risk_model_data_type in ["assetData", "issuerSpecificCovariance", "factorPortfolios"]:
-        _repeat_try_catch_request(_batch_data_v2, model_id=model_id, data=data.get(risk_model_data_type),
-                                  data_type=risk_model_data_type, max_asset_size=max_asset_size, date=date, **kwargs)
+        _repeat_try_catch_request(
+            _batch_data_v2,
+            model_id=model_id,
+            data=data.get(risk_model_data_type),
+            data_type=risk_model_data_type,
+            max_asset_size=max_asset_size,
+            date=date,
+            **kwargs,
+        )
         sleep(random.uniform(3, 7))
 
 
@@ -326,25 +354,30 @@ def _batch_data_v2(model_id: str, data: dict, data_type: str, max_asset_size: in
             max_asset_size //= 2
         data_list, _ = _batch_input_data({data_type: data}, max_asset_size)
         for i, data_chunk in enumerate(data_list):
-            final_upload = (i == len(data_list) - 1)
-            res = GsFactorRiskModelApi.upload_risk_model_data(model_id=model_id,
-                                                              model_data={data_type: data_chunk, 'date': date},
-                                                              partial_upload=True,
-                                                              final_upload=final_upload, **kwargs)
+            final_upload = i == len(data_list) - 1
+            res = GsFactorRiskModelApi.upload_risk_model_data(
+                model_id=model_id,
+                model_data={data_type: data_chunk, 'date': date},
+                partial_upload=True,
+                final_upload=final_upload,
+                **kwargs,
+            )
             logging.info(res)
 
 
 def batch_and_upload_coverage_data(date: dt.date, gsid_list: list, model_id: str, batch_size: int):
     update_time = dt.datetime.today().strftime("%Y-%m-%dT%H:%M:%SZ")
-    request_array = [{'date': date.strftime('%Y-%m-%d'),
-                      'gsid': gsid,
-                      'riskModel': model_id,
-                      'updateTime': update_time} for gsid in set(gsid_list)]
+    request_array = [
+        {'date': date.strftime('%Y-%m-%d'), 'gsid': gsid, 'riskModel': model_id, 'updateTime': update_time}
+        for gsid in set(gsid_list)
+    ]
     logging.info(f"Uploading {len(request_array)} gsids to asset coverage dataset")
     list_of_requests = list(divide_request(request_array, batch_size))
     logging.info(f"Uploading in {len(list_of_requests)} batches of {batch_size} gsids")
-    [_repeat_try_catch_request(GsDataApi.upload_data, data=data, dataset_id="RISK_MODEL_ASSET_COVERAGE") for data in
-     list_of_requests]
+    [
+        _repeat_try_catch_request(GsDataApi.upload_data, data=data, dataset_id="RISK_MODEL_ASSET_COVERAGE")
+        for data in list_of_requests
+    ]
 
 
 def upload_model_data(model_id: str, data: dict, **kwargs):
@@ -356,9 +389,9 @@ def risk_model_data_to_json(risk_model_data: RiskModelData) -> dict:
     risk_model_data['assetData'] = risk_model_data.get('assetData').to_json()
     if risk_model_data.get('factorPortfolios'):
         risk_model_data['factorPortfolios'] = risk_model_data.get('factorPortfolios').to_json()
-        risk_model_data['factorPortfolios']['portfolio'] = [portfolio.to_json() for portfolio in
-                                                            risk_model_data.get('factorPortfolios').get(
-                                                                'portfolio')]
+        risk_model_data['factorPortfolios']['portfolio'] = [
+            portfolio.to_json() for portfolio in risk_model_data.get('factorPortfolios').get('portfolio')
+        ]
     if risk_model_data.get('issuerSpecificCovariance'):
         risk_model_data['issuerSpecificCovariance'] = risk_model_data.get('issuerSpecificCovariance').to_json()
     return risk_model_data
@@ -382,47 +415,53 @@ def get_universe_size(data_to_split: dict) -> int:
 def _batch_input_data(input_data: dict, max_asset_size: int):
     data_key = list(input_data.keys())[0]
     target_universe_size = get_universe_size(input_data)
-    split_num = math.ceil(target_universe_size / max_asset_size) if math.ceil(
-        target_universe_size / max_asset_size) else 1
+    split_num = (
+        math.ceil(target_universe_size / max_asset_size) if math.ceil(target_universe_size / max_asset_size) else 1
+    )
     split_idx = math.ceil(target_universe_size / split_num)
     batched_data_list = []
     for i in range(split_num):
         if data_key == 'assetData':
-            data_batched = _batch_asset_input(input_data.get('assetData'), i, split_idx, split_num,
-                                              target_universe_size)
+            data_batched = _batch_asset_input(
+                input_data.get('assetData'), i, split_idx, split_num, target_universe_size
+            )
         elif data_key == 'factorPortfolios':
-            data_batched = _batch_pfp_input(input_data.get('factorPortfolios'), i, split_idx,
-                                            split_num, target_universe_size)
+            data_batched = _batch_pfp_input(
+                input_data.get('factorPortfolios'), i, split_idx, split_num, target_universe_size
+            )
         else:
-            data_batched = _batch_isc_input(input_data.get('issuerSpecificCovariance'), i, split_idx, split_num,
-                                            target_universe_size)
+            data_batched = _batch_isc_input(
+                input_data.get('issuerSpecificCovariance'), i, split_idx, split_num, target_universe_size
+            )
         batched_data_list.append(data_batched)
     return batched_data_list, target_universe_size
 
 
 def _batch_asset_input(input_data: dict, i: int, split_idx: int, split_num: int, target_universe_size: int) -> dict:
     end_idx = (i + 1) * split_idx if split_num != i + 1 else target_universe_size + 1
-    asset_data_subset = {'universe': input_data.get('universe')[i * split_idx:end_idx],
-                         'specificRisk': input_data.get('specificRisk')[i * split_idx:end_idx],
-                         'factorExposure': input_data.get('factorExposure')[i * split_idx:end_idx]}
+    asset_data_subset = {
+        'universe': input_data.get('universe')[i * split_idx : end_idx],
+        'specificRisk': input_data.get('specificRisk')[i * split_idx : end_idx],
+        'factorExposure': input_data.get('factorExposure')[i * split_idx : end_idx],
+    }
 
     optional_fields = list(input_data.keys())
     [optional_fields.remove(required_field) for required_field in ["universe", "specificRisk", "factorExposure"]]
     for optional_input in optional_fields:
         if input_data.get(optional_input):
-            asset_data_subset[optional_input] = input_data.get(optional_input)[i * split_idx:end_idx]
+            asset_data_subset[optional_input] = input_data.get(optional_input)[i * split_idx : end_idx]
     return asset_data_subset
 
 
 def _batch_pfp_input(input_data: dict, i: int, split_idx: int, split_num: int, target_universe_size: int) -> dict:
     end_idx = (i + 1) * split_idx if split_num != i + 1 else target_universe_size + 1
     pfp_data_subset = dict()
-    universe_slice = input_data.get('universe')[i * split_idx:end_idx]
+    universe_slice = input_data.get('universe')[i * split_idx : end_idx]
     pfp_data_subset['universe'] = universe_slice
     portfolio_slice = list()
     for portfolio in input_data.get('portfolio'):
         factor_id = portfolio.get('factorId')
-        weights_slice = portfolio.get('weights')[i * split_idx:end_idx]
+        weights_slice = portfolio.get('weights')[i * split_idx : end_idx]
         portfolio_slice.append({"factorId": factor_id, "weights": weights_slice})
     pfp_data_subset['portfolio'] = portfolio_slice
     return pfp_data_subset
@@ -430,15 +469,16 @@ def _batch_pfp_input(input_data: dict, i: int, split_idx: int, split_num: int, t
 
 def _batch_isc_input(input_data: dict, i: int, split_idx: int, split_num: int, target_universe_size: int) -> dict:
     end_idx = (i + 1) * split_idx if split_num != i + 1 else target_universe_size + 1
-    return {'universeId1': input_data.get('universeId1')[i * split_idx:end_idx],
-            'universeId2': input_data.get('universeId2')[i * split_idx:end_idx],
-            'covariance': input_data.get('covariance')[i * split_idx:end_idx]}
+    return {
+        'universeId1': input_data.get('universeId1')[i * split_idx : end_idx],
+        'universeId2': input_data.get('universeId2')[i * split_idx : end_idx],
+        'covariance': input_data.get('covariance')[i * split_idx : end_idx],
+    }
 
 
-def _repeat_try_catch_request(input_function, number_retries: int = 5,
-                              return_result: bool = False,
-                              verbose: bool = True,
-                              **kwargs):
+def _repeat_try_catch_request(
+    input_function, number_retries: int = 5, return_result: bool = False, verbose: bool = True, **kwargs
+):
     t = 3.0
     errors = []
     for i in range(number_retries):

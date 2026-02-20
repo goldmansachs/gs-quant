@@ -81,8 +81,9 @@ def get_final_date(inst, create_date, duration, holiday_calendar=None, trigger_i
             return trigger_info.next_schedule or dt.date.max
         raise RuntimeError('Next schedule not supported by action')
     if isinstance(duration, CustomDuration):
-        return duration.function(*(get_final_date(inst, create_date, d, holiday_calendar, trigger_info) for
-                                 d in duration.durations))
+        return duration.function(
+            *(get_final_date(inst, create_date, d, holiday_calendar, trigger_info) for d in duration.durations)
+        )
 
     final_date_cache[cache_key] = RelativeDate(duration, create_date).apply_rule(holiday_calendar=holiday_calendar)
     return final_date_cache[cache_key]
@@ -94,24 +95,26 @@ def scale_trade(inst: Instrument, ratio: float):
 
 
 def map_ccy_name_to_ccy(currency_name: Union[str, CurrencyName]):
-    map = {'United States Dollar': 'USD',
-           'Australian Dollar': 'AUD',
-           'Canadian Dollar': 'CAD',
-           'Swiss Franc': 'CHF',
-           'Yuan Renminbi (Hong Kong)': 'CNH',
-           'Czech Republic Koruna': 'CZK',
-           'Euro': 'EUR',
-           'Pound Sterling': 'GBP',
-           'Japanese Yen': 'JPY',
-           'South Korean Won': 'KRW',
-           'Malasyan Ringgit': 'MYR',
-           'Norwegian Krone': 'NOK',
-           'New Zealand Dollar': 'NZD',
-           'Polish Zloty': 'PLN',
-           'Russian Rouble': 'RUB',
-           'Swedish Krona': 'SEK',
-           'South African Rand': 'ZAR',
-           'Yuan Renminbi (Onshore)': 'CHY'}
+    map = {
+        'United States Dollar': 'USD',
+        'Australian Dollar': 'AUD',
+        'Canadian Dollar': 'CAD',
+        'Swiss Franc': 'CHF',
+        'Yuan Renminbi (Hong Kong)': 'CNH',
+        'Czech Republic Koruna': 'CZK',
+        'Euro': 'EUR',
+        'Pound Sterling': 'GBP',
+        'Japanese Yen': 'JPY',
+        'South Korean Won': 'KRW',
+        'Malasyan Ringgit': 'MYR',
+        'Norwegian Krone': 'NOK',
+        'New Zealand Dollar': 'NZD',
+        'Polish Zloty': 'PLN',
+        'Russian Rouble': 'RUB',
+        'Swedish Krona': 'SEK',
+        'South African Rand': 'ZAR',
+        'Yuan Renminbi (Onshore)': 'CHY',
+    }
 
     return map.get(currency_name.value if isinstance(currency_name, CurrencyName) else currency_name)
 

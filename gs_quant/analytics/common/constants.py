@@ -14,8 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-DATAGRID_HELP_MSG: str = '\nDatagrid is currently experimental. The API is likely to change. For' \
-                         ' questions contact gs-marquee-markets@gs.com\n'
+DATAGRID_HELP_MSG: str = (
+    '\nDatagrid is currently experimental. The API is likely to change. For'
+    ' questions contact gs-marquee-markets@gs.com\n'
+)
 
 DATA_CELL_NOT_CALCULATED: str = 'Cell has not been calculated'
 

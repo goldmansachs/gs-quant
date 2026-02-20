@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from abc import abstractmethod
 from typing import Union, Iterable, Any, TypeVar
@@ -22,11 +23,7 @@ from gs_quant.backtests.backtest_objects import TBaseBacktest
 
 
 class ActionHandler:
-
-    def __init__(
-            self,
-            action: TAction
-    ) -> None:
+    def __init__(self, action: TAction) -> None:
         self._action = action
 
     @property
@@ -35,10 +32,10 @@ class ActionHandler:
 
     @abstractmethod
     def apply_action(
-            self,
-            state: Union[dt.date, Iterable[dt.date]],
-            backtest: TBaseBacktest,
-            trigger_info: Any,
+        self,
+        state: Union[dt.date, Iterable[dt.date]],
+        backtest: TBaseBacktest,
+        trigger_info: Any,
     ) -> Any:
         pass
 
@@ -47,10 +44,6 @@ TActionHandler = TypeVar('TActionHandler', bound='ActionHandler')
 
 
 class ActionHandlerBaseFactory:
-
     @abstractmethod
-    def get_action_handler(
-            self,
-            action: TAction
-    ) -> TActionHandler:
+    def get_action_handler(self, action: TAction) -> TActionHandler:
         pass

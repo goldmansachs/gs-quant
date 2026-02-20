@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from enum import Enum
 import json
@@ -38,7 +39,6 @@ def encode_default(o):
 
 
 class JSONEncoder(json.JSONEncoder):
-
     def default(self, o):
         ret = encode_default(o)
         return super().default(o) if ret is None else ret

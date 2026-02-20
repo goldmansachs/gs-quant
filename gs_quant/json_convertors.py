@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import re
 from dataclasses import MISSING, fields
@@ -22,11 +23,13 @@ import pandas as pd
 from dataclasses_json import config
 from dateutil.parser import isoparse
 
-__valid_date_formats = ('%Y-%m-%d',  # '2020-07-28'
-                        '%d%b%y',  # '28Jul20'
-                        '%d%b%Y',  # '28Jul2020'
-                        '%d-%b-%y',  # '28-Jul-20'
-                        '%d/%m/%Y')  # '28/07/2020
+__valid_date_formats = (
+    '%Y-%m-%d',  # '2020-07-28'
+    '%d%b%y',  # '28Jul20'
+    '%d%b%Y',  # '28Jul2020'
+    '%d-%b-%y',  # '28-Jul-20'
+    '%d/%m/%Y',
+)  # '28/07/2020
 
 DateOrDateTime = Union[dt.date, dt.datetime]
 
@@ -68,8 +71,11 @@ def decode_date_tuple(blob: Tuple[str, ...]):
 
 
 def encode_date_tuple(values: Tuple[Optional[Union[str, dt.date]], ...]):
-    return tuple(encode_date_or_str(value) if isinstance(value, (str, dt.date)) else None for value in values) if \
-        values is not None else None
+    return (
+        tuple(encode_date_or_str(value) if isinstance(value, (str, dt.date)) else None for value in values)
+        if values is not None
+        else None
+    )
 
 
 def decode_iso_date_or_datetime(value: Any) -> Union[Tuple[DateOrDateTime, ...], DateOrDateTime]:
@@ -110,8 +116,14 @@ def decode_dict_date_key_or_float(value):
 
 
 def decode_dict_dict_date_key(value):
-    return {k: {dt.date.fromisoformat(d): v for d, v in val.items()} if val is not None else None
-            for k, val in value.items()} if value is not None else None
+    return (
+        {
+            k: {dt.date.fromisoformat(d): v for d, v in val.items()} if val is not None else None
+            for k, val in value.items()
+        }
+        if value is not None
+        else None
+    )
 
 
 def decode_dict_date_value(value):
@@ -198,11 +210,13 @@ def decode_float_or_str(value: Optional[Union[float, int, str]]) -> Optional[Uni
 
 def decode_instrument(value: Optional[Dict]):
     from gs_quant.instrument import Instrument
+
     return Instrument.from_dict(value) if value else None
 
 
 def decode_named_instrument(value: Optional[Union[Iterable[Dict], dict]]):
     from gs_quant.instrument import Instrument
+
     if isinstance(value, (list, tuple)):
         return tuple(decode_named_instrument(v) for v in value)
     elif isinstance(value, dict) and 'portfolio_name' in value.keys():
@@ -212,12 +226,13 @@ def decode_named_instrument(value: Optional[Union[Iterable[Dict], dict]]):
 
 def decode_named_portfolio(value):
     from gs_quant.markets.portfolio import Portfolio
-    return Portfolio([decode_named_instrument(v) for v in value['instruments']],
-                     name=value['portfolio_name'])
+
+    return Portfolio([decode_named_instrument(v) for v in value['instruments']], name=value['portfolio_name'])
 
 
 def encode_named_instrument(obj):
     from gs_quant.markets.portfolio import Portfolio
+
     if isinstance(obj, (list, tuple)):
         return tuple(encode_named_instrument(o) for o in obj)
     elif isinstance(obj, Portfolio):
@@ -226,8 +241,7 @@ def encode_named_instrument(obj):
 
 
 def encode_named_portfolio(obj):
-    return {'portfolio_name': obj.name,
-            'instruments': tuple(encode_named_instrument(o) for o in obj.all_instruments)}
+    return {'portfolio_name': obj.name, 'instruments': tuple(encode_named_instrument(o) for o in obj.all_instruments)}
 
 
 def encode_pandas_series(obj):
@@ -244,31 +258,37 @@ def decode_pandas_series(value: dict):
 
 def decode_quote_report(value: Optional[dict]):
     from gs_quant.quote_reports.core import quote_report_from_dict
+
     return quote_report_from_dict(value) if value else None
 
 
 def decode_quote_reports(value: Optional[Iterable[Dict]]):
     from gs_quant.quote_reports.core import quote_reports_from_dicts
+
     return quote_reports_from_dicts(value) if value else None
 
 
 def decode_custom_comment(value: Optional[dict]):
     from gs_quant.quote_reports.core import custom_comment_from_dict
+
     return custom_comment_from_dict(value) if value else None
 
 
 def decode_custom_comments(value: Optional[Iterable[Dict]]):
     from gs_quant.quote_reports.core import custom_comments_from_dicts
+
     return custom_comments_from_dicts(value) if value else None
 
 
 def decode_hedge_type(value: Optional[dict]):
     from gs_quant.quote_reports.core import hedge_type_from_dict
+
     return hedge_type_from_dict(value) if value else None
 
 
 def decode_hedge_types(value: Optional[Iterable[Dict]]):
     from gs_quant.quote_reports.core import hedge_type_from_dicts
+
     return hedge_type_from_dicts(value) if value else None
 
 

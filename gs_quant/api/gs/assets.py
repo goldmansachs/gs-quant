@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 import os
@@ -34,8 +35,14 @@ from gs_quant.context_base import nullcontext
 from gs_quant.errors import MqValueError, MqRateLimitedError, MqTimeoutError, MqInternalServerError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
-from gs_quant.target.assets import Asset as __Asset, AssetToInstrumentResponse, TemporalXRef, \
-    Position, EntityQuery, PositionSet
+from gs_quant.target.assets import (
+    Asset as __Asset,
+    AssetToInstrumentResponse,
+    TemporalXRef,
+    Position,
+    EntityQuery,
+    PositionSet,
+)
 from gs_quant.target.assets import FieldFilterMap
 from gs_quant.target.reports import Report
 from gs_quant.tracing import Tracer
@@ -79,9 +86,7 @@ def get_default_cache() -> AssetCache:
         k = cachetools.keys.hashkey(session, *args, **kwargs)
         return k
 
-    return AssetCache(cache=InMemoryApiRequestCache(1024, ttl),
-                      ttl=ttl,
-                      construct_key_fn=in_memory_key_fn)
+    return AssetCache(cache=InMemoryApiRequestCache(1024, ttl), ttl=ttl, construct_key_fn=in_memory_key_fn)
 
 
 def _cached(fn):
@@ -167,6 +172,7 @@ class GsIdType(Enum):
 
 class GsAsset(__Asset):
     """GS Asset API object model for an asset object"""
+
     pass
 
 
@@ -176,6 +182,7 @@ class GsTemporalXRef(TemporalXRef):
 
 class GsAssetApi:
     """GS Asset API client implementation"""
+
     _cache: Optional[AssetCache] = None
 
     @classmethod
@@ -188,14 +195,14 @@ class GsAssetApi:
 
     @classmethod
     def __create_query(
-            cls,
-            fields: Union[List, Tuple] = None,
-            as_of: dt.datetime = None,
-            limit: int = None,
-            scroll: str = None,
-            scroll_id: str = None,
-            order_by: List[str] = None,
-            **kwargs
+        cls,
+        fields: Union[List, Tuple] = None,
+        as_of: dt.datetime = None,
+        limit: int = None,
+        scroll: str = None,
+        scroll_id: str = None,
+        order_by: List[str] = None,
+        **kwargs,
     ) -> EntityQuery:
         keys = set(kwargs.keys())
         valid = keys.intersection(FieldFilterMap.properties())
@@ -212,7 +219,7 @@ class GsAssetApi:
             limit=limit,
             scroll=scroll,
             scroll_id=scroll_id,
-            order_by=order_by
+            order_by=order_by,
         )
 
     @staticmethod
@@ -230,13 +237,13 @@ class GsAssetApi:
     @classmethod
     @_cached
     def get_many_assets(
-            cls,
-            fields: IdList = None,
-            as_of: dt.datetime = None,
-            limit: int = 100,
-            return_type: Optional[type] = GsAsset,
-            order_by: List[str] = None,
-            **kwargs
+        cls,
+        fields: IdList = None,
+        as_of: dt.datetime = None,
+        limit: int = 100,
+        return_type: Optional[type] = GsAsset,
+        order_by: List[str] = None,
+        **kwargs,
     ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets') if span and span.is_recording() else nullcontext()
@@ -249,13 +256,13 @@ class GsAssetApi:
     @classmethod
     @_cached_async
     async def get_many_assets_async(
-            cls,
-            fields: IdList = None,
-            as_of: dt.datetime = None,
-            limit: int = 100,
-            return_type: Optional[type] = GsAsset,
-            order_by: List[str] = None,
-            **kwargs
+        cls,
+        fields: IdList = None,
+        as_of: dt.datetime = None,
+        limit: int = 100,
+        return_type: Optional[type] = GsAsset,
+        order_by: List[str] = None,
+        **kwargs,
     ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets_async') if span and span.is_recording() else nullcontext()
@@ -268,14 +275,14 @@ class GsAssetApi:
     @classmethod
     @_cached
     def get_many_assets_scroll(
-            cls,
-            scroll: str = '1m',
-            fields: IdList = None,
-            as_of: dt.datetime = None,
-            limit: int = 1000,
-            return_type: Optional[type] = GsAsset,
-            order_by: List[str] = None,
-            **kwargs
+        cls,
+        scroll: str = '1m',
+        fields: IdList = None,
+        as_of: dt.datetime = None,
+        limit: int = 1000,
+        return_type: Optional[type] = GsAsset,
+        order_by: List[str] = None,
+        **kwargs,
     ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets_scroll') if span and span.is_recording() else nullcontext()
@@ -284,7 +291,7 @@ class GsAssetApi:
             query = cls.__create_query(fields, as_of, limit, scroll, order_by=order_by, **kwargs)
             response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
             results = get(response, 'results')
-            while (has(response, 'scrollId') and len(get(response, 'results'))):
+            while has(response, 'scrollId') and len(get(response, 'results')):
                 query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
                 response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
                 results += get(response, 'results')
@@ -293,12 +300,7 @@ class GsAssetApi:
     @classmethod
     @_cached
     def get_many_assets_data(
-            cls,
-            fields: IdList = None,
-            as_of: dt.datetime = None,
-            limit: int = None,
-            source: Optional[str] = None,
-            **kwargs
+        cls, fields: IdList = None, as_of: dt.datetime = None, limit: int = None, source: Optional[str] = None, **kwargs
     ) -> dict:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets_data') if span and span.is_recording() else nullcontext()
@@ -312,11 +314,7 @@ class GsAssetApi:
     @classmethod
     @_cached
     async def get_many_assets_data_async(
-            cls,
-            fields: IdList = None,
-            as_of: dt.datetime = None,
-            limit: int = None,
-            **kwargs
+        cls, fields: IdList = None, as_of: dt.datetime = None, limit: int = None, **kwargs
     ) -> dict:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets_data_async') if span and span.is_recording() else nullcontext()
@@ -329,13 +327,13 @@ class GsAssetApi:
     @classmethod
     @_cached
     def get_many_assets_data_scroll(
-            cls,
-            scroll: str = '1m',
-            fields: IdList = None,
-            as_of: dt.datetime = None,
-            limit: int = None,
-            source: Optional[str] = None,
-            **kwargs
+        cls,
+        scroll: str = '1m',
+        fields: IdList = None,
+        as_of: dt.datetime = None,
+        limit: int = None,
+        source: Optional[str] = None,
+        **kwargs,
     ) -> dict:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets_data_scroll') if span and span.is_recording() else nullcontext()
@@ -345,7 +343,7 @@ class GsAssetApi:
             request_headers = {'X-Application': 'Studio'} if source == "Basket" else None
             response = GsSession.current._post('/assets/data/query', payload=query, request_headers=request_headers)
             results = get(response, 'results')
-            while (has(response, 'scrollId') and len(get(response, 'results'))):
+            while has(response, 'scrollId') and len(get(response, 'results')):
                 query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
                 response = GsSession.current._post('/assets/data/query', payload=query, request_headers=request_headers)
                 results += get(response, 'results')
@@ -353,19 +351,15 @@ class GsAssetApi:
 
     @classmethod
     @_cached
-    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2),
-                          (MqTimeoutError, MqInternalServerError),
-                          max_tries=5)
-    @backoff.on_exception(lambda: backoff.constant(90),
-                          MqRateLimitedError,
-                          max_tries=5)
+    @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
+    @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
     def resolve_assets(
-            cls,
-            identifier: [str],
-            fields: IdList = [],
-            limit: int = 100,
-            as_of: dt.datetime = dt.datetime.today(),
-            **kwargs
+        cls,
+        identifier: [str],
+        fields: IdList = [],
+        limit: int = 100,
+        as_of: dt.datetime = dt.datetime.today(),
+        **kwargs,
     ) -> Tuple[dict, ...]:
         where = dict(identifier=identifier, **kwargs)
         query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -373,12 +367,12 @@ class GsAssetApi:
 
     @classmethod
     def get_many_asset_xrefs(
-            cls,
-            identifier: [str],
-            fields: IdList = [],
-            limit: int = 100,
-            as_of: dt.datetime = dt.datetime.today(),
-            **kwargs
+        cls,
+        identifier: [str],
+        fields: IdList = [],
+        limit: int = 100,
+        as_of: dt.datetime = dt.datetime.today(),
+        **kwargs,
     ) -> Tuple[dict, ...]:
         where = dict(identifier=identifier, **kwargs)
         query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -387,10 +381,7 @@ class GsAssetApi:
 
     @classmethod
     @_cached
-    def get_asset_xrefs(
-            cls,
-            asset_id: str
-    ) -> Tuple[GsTemporalXRef, ...]:
+    def get_asset_xrefs(cls, asset_id: str) -> Tuple[GsTemporalXRef, ...]:
         response = GsSession.current._get('/assets/{id}/xrefs'.format(id=asset_id))
         return tuple(GsTemporalXRef.from_dict(x) for x in response.get('xrefs', ()))
 
@@ -401,16 +392,16 @@ class GsAssetApi:
     @classmethod
     @_cached
     def get_asset(
-            cls,
-            asset_id: str,
+        cls,
+        asset_id: str,
     ) -> GsAsset:
         return GsSession.current._get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
 
     @classmethod
     @_cached_async
     async def get_asset_async(
-            cls,
-            asset_id: str,
+        cls,
+        asset_id: str,
     ) -> GsAsset:
         return await GsSession.current._get_async('/assets/{id}'.format(id=asset_id), cls=GsAsset)
 
@@ -441,9 +432,9 @@ class GsAssetApi:
 
     @staticmethod
     def get_asset_positions_for_date(
-            asset_id: str,
-            position_date: dt.date,
-            position_type: PositionType = None,
+        asset_id: str,
+        position_date: dt.date,
+        position_type: PositionType = None,
     ) -> Tuple[PositionSet, ...]:
         position_date_str = position_date.isoformat()
         url = f'/assets/{asset_id}/positions/{position_date_str}'
@@ -456,10 +447,10 @@ class GsAssetApi:
 
     @staticmethod
     def get_asset_positions_for_dates(
-            asset_id: str,
-            start_date: dt.date,
-            end_date: dt.date,
-            position_type: PositionType = PositionType.CLOSE,
+        asset_id: str,
+        start_date: dt.date,
+        end_date: dt.date,
+        position_type: PositionType = PositionType.CLOSE,
     ) -> Tuple[PositionSet, ...]:
         position_type = position_type if isinstance(position_type, str) else position_type.value
         position_sets = []
@@ -490,7 +481,8 @@ class GsAssetApi:
         url = '/assets/{id}/positions/last'.format(id=asset_id)
         if position_type is not None and position_type is not PositionType.ANY:
             url += '?type={ptype}'.format(
-                ptype=position_type if isinstance(position_type, str) else position_type.value)
+                ptype=position_type if isinstance(position_type, str) else position_type.value
+            )
 
         results = GsSession.current._get(url)['results']
 
@@ -498,18 +490,18 @@ class GsAssetApi:
 
     @staticmethod
     def get_or_create_asset_from_instrument(instrument: Instrument) -> str:
-        asset = GsAsset(asset_class=instrument.asset_class,
-                        type_=instrument.type,
-                        name=instrument.name or '',
-                        parameters=instrument.as_dict(as_camel_case=True))
+        asset = GsAsset(
+            asset_class=instrument.asset_class,
+            type_=instrument.type,
+            name=instrument.name or '',
+            parameters=instrument.as_dict(as_camel_case=True),
+        )
 
         results = GsSession.current._post('/assets', asset)
         return results['id']
 
     @staticmethod
-    def get_instruments_for_asset_ids(
-            asset_ids: Tuple[str, ...]
-    ) -> Tuple[Optional[Union[Instrument, Security]]]:
+    def get_instruments_for_asset_ids(asset_ids: Tuple[str, ...]) -> Tuple[Optional[Union[Instrument, Security]]]:
         instrument_infos = GsSession.current._post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
         instrument_lookup = {i.assetId: i.instrument for i in instrument_infos if i}
         ret: Tuple[Optional[Union[Instrument, Security]], ...] = tuple(instrument_lookup.get(a) for a in asset_ids)
@@ -517,12 +509,13 @@ class GsAssetApi:
         return ret
 
     @staticmethod
-    def get_instruments_for_positions(
-            positions: Iterable[Position]
-    ) -> Tuple[Optional[Union[Instrument, Security]]]:
+    def get_instruments_for_positions(positions: Iterable[Position]) -> Tuple[Optional[Union[Instrument, Security]]]:
         asset_ids = tuple(filter(None, (p.asset_id for p in positions)))
-        instrument_infos = GsSession.current._post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse) \
-            if asset_ids else {}
+        instrument_infos = (
+            GsSession.current._post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
+            if asset_ids
+            else {}
+        )
 
         instrument_lookup = {i.assetId: (i.instrument, i.sizeField) for i in instrument_infos if i}
         ret = ()
@@ -536,8 +529,11 @@ class GsAssetApi:
                 instrument_info = instrument_lookup.get(position.assetId)
                 if instrument_info:
                     instrument, size_field = instrument_info
-                    if instrument is not None and size_field is not None and getattr(instrument, size_field,
-                                                                                     None) is None:
+                    if (
+                        instrument is not None
+                        and size_field is not None
+                        and getattr(instrument, size_field, None) is None
+                    ):
                         setattr(instrument, size_field, position.quantity)
 
             ret += (instrument,)
@@ -546,17 +542,17 @@ class GsAssetApi:
 
     @staticmethod
     def get_asset_positions_data(
-            asset_id: str,
-            start_date: dt.date,
-            end_date: dt.date,
-            fields: IdList = None,
-            position_type: PositionType = None,
+        asset_id: str,
+        start_date: dt.date,
+        end_date: dt.date,
+        fields: IdList = None,
+        position_type: PositionType = None,
     ) -> List[dict]:
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
-        url = '/assets/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(id=asset_id,
-                                                                                             start_date=start_date_str,
-                                                                                             end_date=end_date_str)
+        url = '/assets/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(
+            id=asset_id, start_date=start_date_str, end_date=end_date_str
+        )
         if fields is not None:
             url += '&fields='.join([''] + fields)
 
@@ -582,14 +578,14 @@ class GsAssetApi:
     @classmethod
     @_cached
     def map_identifiers(
-            cls,
-            input_type: Union[GsIdType, str],
-            output_type: Union[GsIdType, str],
-            ids: IdList,
-            as_of: dt.datetime = None,
-            multimap: bool = False,
-            limit: int = None,
-            **kwargs
+        cls,
+        input_type: Union[GsIdType, str],
+        output_type: Union[GsIdType, str],
+        ids: IdList,
+        as_of: dt.datetime = None,
+        multimap: bool = False,
+        limit: int = None,
+        **kwargs,
     ) -> dict:
         if isinstance(input_type, GsIdType):
             input_type = input_type.name

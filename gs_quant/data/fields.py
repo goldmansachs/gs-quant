@@ -27,6 +27,7 @@ class DataMeasure(Enum):
     be aggregated over a defined period of time. For example: tradePrice and volume are measures
 
     """
+
     ASK_PRICE = 'askPrice'
     BID_PRICE = 'bidPrice'
     HIGH_PRICE = 'highPrice'
@@ -87,22 +88,34 @@ class DataMeasure(Enum):
 
     @classmethod
     def list_fundamentals(cls):
-        return [metric.value for metric in [cls.DIVIDEND_YIELD, cls.EARNINGS_PER_SHARE, cls.EARNINGS_PER_SHARE_POSITIVE,
-                                            cls.NET_DEBT_TO_EBITDA, cls.PRICE_TO_BOOK, cls.PRICE_TO_CASH,
-                                            cls.PRICE_TO_EARNINGS, cls.PRICE_TO_EARNINGS_POSITIVE,
-                                            cls.PRICE_TO_EARNINGS_POSITIVE_EXCLUSIVE,
-                                            cls.PRICE_TO_SALES, cls.RETURN_ON_EQUITY, cls.SALES_PER_SHARE,
-                                            cls.CURRENT_CONSTITUENTS_DIVIDEND_YIELD,
-                                            cls.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE,
-                                            cls.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE_POSITIVE,
-                                            cls.CURRENT_CONSTITUENTS_NET_DEBT_TO_EBITDA,
-                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_BOOK,
-                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_CASH,
-                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS,
-                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS_POSITIVE,
-                                            cls.CURRENT_CONSTITUENTS_PRICE_TO_SALES,
-                                            cls.CURRENT_CONSTITUENTS_RETURN_ON_EQUITY,
-                                            cls.CURRENT_CONSTITUENTS_SALES_PER_SHARE]]
+        return [
+            metric.value
+            for metric in [
+                cls.DIVIDEND_YIELD,
+                cls.EARNINGS_PER_SHARE,
+                cls.EARNINGS_PER_SHARE_POSITIVE,
+                cls.NET_DEBT_TO_EBITDA,
+                cls.PRICE_TO_BOOK,
+                cls.PRICE_TO_CASH,
+                cls.PRICE_TO_EARNINGS,
+                cls.PRICE_TO_EARNINGS_POSITIVE,
+                cls.PRICE_TO_EARNINGS_POSITIVE_EXCLUSIVE,
+                cls.PRICE_TO_SALES,
+                cls.RETURN_ON_EQUITY,
+                cls.SALES_PER_SHARE,
+                cls.CURRENT_CONSTITUENTS_DIVIDEND_YIELD,
+                cls.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE,
+                cls.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE_POSITIVE,
+                cls.CURRENT_CONSTITUENTS_NET_DEBT_TO_EBITDA,
+                cls.CURRENT_CONSTITUENTS_PRICE_TO_BOOK,
+                cls.CURRENT_CONSTITUENTS_PRICE_TO_CASH,
+                cls.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS,
+                cls.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS_POSITIVE,
+                cls.CURRENT_CONSTITUENTS_PRICE_TO_SALES,
+                cls.CURRENT_CONSTITUENTS_RETURN_ON_EQUITY,
+                cls.CURRENT_CONSTITUENTS_SALES_PER_SHARE,
+            ]
+        ]
 
 
 class DataDimension(Enum):
@@ -112,6 +125,7 @@ class DataDimension(Enum):
     be used to select or group data. For example: ticker and exchange are dimensions
 
     """
+
     ASSET_ID = 'assetId'
     NAME = 'name'
     RIC = 'ric'
@@ -144,7 +158,7 @@ for enum in DataDimension:
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(frozen=True)
-class AssetMeasure():
+class AssetMeasure:
     dataset_field: str = field(default=None)
     frequency: str = field(default=None)
     type: str = field(default=None)

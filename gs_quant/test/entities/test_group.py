@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from testfixtures import Replacer
 from testfixtures.mock import Mock
 
@@ -21,11 +22,7 @@ from gs_quant.target.groups import Group as TargetGroup
 
 
 def test_get():
-    group = TargetGroup.from_dict({
-        'name': 'fakeGroup',
-        'id': 'groupId',
-        'tags': []
-    })
+    group = TargetGroup.from_dict({'name': 'fakeGroup', 'id': 'groupId', 'tags': []})
     replace = Replacer()
     mock = replace('gs_quant.api.gs.groups.GsGroupsApi.get_group', Mock())
     mock.return_value = group
@@ -35,16 +32,8 @@ def test_get():
 
 def test_get_many():
     groups = [
-        TargetGroup.from_dict({
-            'name': 'fakeGroup',
-            'id': 'groupId',
-            'tags': []
-        }),
-        TargetGroup.from_dict({
-            'name': 'fakeGroup2',
-            'id': 'groupId2',
-            'tags': []
-        })
+        TargetGroup.from_dict({'name': 'fakeGroup', 'id': 'groupId', 'tags': []}),
+        TargetGroup.from_dict({'name': 'fakeGroup2', 'id': 'groupId2', 'tags': []}),
     ]
     replace = Replacer()
     mock = replace('gs_quant.api.gs.groups.GsGroupsApi.get_groups', Mock())
@@ -54,11 +43,7 @@ def test_get_many():
 
 
 def test_save_update():
-    group = TargetGroup.from_dict({
-        'name': 'fakeGroup',
-        'id': 'groupId',
-        'tags': []
-    })
+    group = TargetGroup.from_dict({'name': 'fakeGroup', 'id': 'groupId', 'tags': []})
     replace = Replacer()
     mock = replace('gs_quant.api.gs.groups.GsGroupsApi.update_group', Mock())
     mock.return_value = group
@@ -70,11 +55,7 @@ def test_save_update():
 
 
 def test_save_create():
-    group = TargetGroup.from_dict({
-        'name': 'fakeGroup',
-        'id': 'groupId',
-        'tags': []
-    })
+    group = TargetGroup.from_dict({'name': 'fakeGroup', 'id': 'groupId', 'tags': []})
     replace = Replacer()
     mock = replace('gs_quant.api.gs.groups.GsGroupsApi.create_group', Mock())
     mock.return_value = group

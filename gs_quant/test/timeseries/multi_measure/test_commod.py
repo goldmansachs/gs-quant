@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import pandas as pd
 import pytest
@@ -43,7 +44,7 @@ def test_forward_price():
                 "F21",
                 "G21",
                 "H21",
-            ]
+            ],
         }
         df = MarketDataResponseFrame(data=d, index=pd.to_datetime([dt.date(2019, 1, 2)] * 3))
         df.dataset_ids = _test_datasets

@@ -21,10 +21,6 @@ from gs_quant.backtests.actions import TAction
 
 
 class BacktestBaseEngine:
-
     @abstractmethod
-    def get_action_handler(
-            self,
-            action: TAction
-    ) -> TActionHandler:
+    def get_action_handler(self, action: TAction) -> TActionHandler:
         pass

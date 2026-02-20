@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from unittest import mock
 
@@ -24,8 +25,12 @@ from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.common import PositionSet
 from gs_quant.datetime import business_day_offset
 from gs_quant.instrument import IRSwap, IRSwaption, CurveScenario
-from gs_quant.markets import HistoricalPricingContext, PricingContext, BackToTheFuturePricingContext, \
-    historical_risk_key
+from gs_quant.markets import (
+    HistoricalPricingContext,
+    PricingContext,
+    BackToTheFuturePricingContext,
+    historical_risk_key,
+)
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk.results import PortfolioPath, PortfolioRiskResult
 from gs_quant.session import Environment, GsSession
@@ -35,6 +40,7 @@ from gs_quant.test.utils.mock_calc import MockCalc
 
 def set_session():
     from gs_quant.session import OAuth2Session
+
     OAuth2Session.init = mock.MagicMock(return_value=None)
     GsSession.use(Environment.PROD, 'client_id', 'secret')
 
@@ -60,8 +66,9 @@ def test_portfolio(mocker):
         assert tuple(map(lambda x: round(x, 0), result[risk.DollarPrice])) == (6407334.0, 5423407.0, 4439480.0)
         assert round(result[risk.DollarPrice].aggregate(), 0) == 16270221.0
         assert round(result[risk.DollarPrice]['swap_10y@30bp'], 0) == 4439480.0
-        assert round(result[risk.DollarPrice]['swap_10y@30bp'], 0) == round(result['swap_10y@30bp'][risk.DollarPrice],
-                                                                            0)
+        assert round(result[risk.DollarPrice]['swap_10y@30bp'], 0) == round(
+            result['swap_10y@30bp'][risk.DollarPrice], 0
+        )
 
         assert round(result[risk.IRDelta].aggregate().value.sum(), 0) == 278984.0
 
@@ -76,9 +83,7 @@ def test_portfolio(mocker):
         assert extracted_swap == swap2
         assert len(portfolio.instruments) == 3
 
-        swap_dict = {'swap_5': swap1,
-                     'swap_6': swap2,
-                     'swap_7': swap3}
+        swap_dict = {'swap_5': swap1, 'swap_6': swap2, 'swap_7': swap3}
 
         portfolio = Portfolio(swap_dict)
         assert len(portfolio) == 3
@@ -127,24 +132,35 @@ def test_historical_pricing(mocker):
         expected = risk.SeriesWithInfo(
             pd.Series(
                 data=[-580315.9786130451, -580372.2014339305, -580808.9413858932],
-                index=[dt.date(2021, 2, 9), dt.date(2021, 2, 10), dt.date(2021, 2, 11)]
+                index=[dt.date(2021, 2, 9), dt.date(2021, 2, 10), dt.date(2021, 2, 11)],
             ),
-            risk_key=historical_risk_key(risk_key), )
+            risk_key=historical_risk_key(risk_key),
+        )
 
         assert results.dates == dates
         actual = results[risk.DollarPrice].aggregate()
         assert actual.equals(expected)
 
-        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results[risk.DollarPrice][dt.date(2021, 2, 9)]['10y@a+1'])
-        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results[risk.DollarPrice]['10y@a+1'][dt.date(2021, 2, 9)])
-        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results['10y@a+1'][risk.DollarPrice][dt.date(2021, 2, 9)])
-        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results['10y@a+1'][dt.date(2021, 2, 9)][risk.DollarPrice])
-        assert (results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1'] ==
-                results[dt.date(2021, 2, 9)]['10y@a+1'][risk.DollarPrice])
+        assert (
+            results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1']
+            == results[risk.DollarPrice][dt.date(2021, 2, 9)]['10y@a+1']
+        )
+        assert (
+            results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1']
+            == results[risk.DollarPrice]['10y@a+1'][dt.date(2021, 2, 9)]
+        )
+        assert (
+            results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1']
+            == results['10y@a+1'][risk.DollarPrice][dt.date(2021, 2, 9)]
+        )
+        assert (
+            results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1']
+            == results['10y@a+1'][dt.date(2021, 2, 9)][risk.DollarPrice]
+        )
+        assert (
+            results[dt.date(2021, 2, 9)][risk.DollarPrice]['10y@a+1']
+            == results[dt.date(2021, 2, 9)]['10y@a+1'][risk.DollarPrice]
+        )
 
 
 def test_backtothefuture_pricing(mocker):
@@ -156,17 +172,19 @@ def test_backtothefuture_pricing(mocker):
         portfolio = Portfolio((swap1, swap2, swap3))
         pricing_date = dt.date(2021, 2, 10)
         with PricingContext(pricing_date=pricing_date):
-            with BackToTheFuturePricingContext(dates=business_day_offset(pricing_date, [-1, 0, 1],
-                                                                         roll='forward'), name='btf') as hpc:
+            with BackToTheFuturePricingContext(
+                dates=business_day_offset(pricing_date, [-1, 0, 1], roll='forward'), name='btf'
+            ) as hpc:
                 risk_key = hpc._PricingContext__risk_key(risk.DollarPrice, swap1.provider)
                 results = portfolio.calc(risk.DollarPrice)
 
     expected = risk.SeriesWithInfo(
         pd.Series(
             data=[-22711963.80864744, -22655907.930484552, -21582551.58922608],
-            index=business_day_offset(pricing_date, [-1, 0, 1], roll='forward')
+            index=business_day_offset(pricing_date, [-1, 0, 1], roll='forward'),
         ),
-        risk_key=historical_risk_key(risk_key), )
+        risk_key=historical_risk_key(risk_key),
+    )
 
     actual = results[risk.DollarPrice].aggregate()
 
@@ -224,7 +242,6 @@ def test_single_instrument(mocker):
 
 def test_results_with_resolution(mocker):
     with MockCalc(mocker):
-
         swap1 = IRSwap('Pay', '10y', 'USD', name='swap1')
         swap2 = IRSwap('Pay', '10y', 'GBP', name='swap2')
         swap3 = IRSwap('Pay', '10y', 'EUR', name='swap3')
@@ -364,15 +381,19 @@ def test_single_instrument_new_mock(mocker):
 
 
 def test_get_instruments(mocker):
-    mocker.patch.object(GsPortfolioApi, 'get_position_dates', return_value=([dt.date(2021, 1, 2),
-                                                                             dt.date(2021, 5, 6),
-                                                                             dt.date(2021, 6, 1)]))
-    mocker.patch.object(GsPortfolioApi, 'get_positions_for_date', return_value=(PositionSet(
-        position_date=dt.date(2021, 6, 1),
-        positions=[])))
-    mocker.patch.object(GsPortfolioApi, 'get_portfolio', return_value=(MarqueePortfolio(id_='id',
-                                                                                        name='name',
-                                                                                        currency='USD')))
+    mocker.patch.object(
+        GsPortfolioApi,
+        'get_position_dates',
+        return_value=([dt.date(2021, 1, 2), dt.date(2021, 5, 6), dt.date(2021, 6, 1)]),
+    )
+    mocker.patch.object(
+        GsPortfolioApi,
+        'get_positions_for_date',
+        return_value=(PositionSet(position_date=dt.date(2021, 6, 1), positions=[])),
+    )
+    mocker.patch.object(
+        GsPortfolioApi, 'get_portfolio', return_value=(MarqueePortfolio(id_='id', name='name', currency='USD'))
+    )
     mocker.patch.object(GsAssetApi, 'get_instruments_for_positions', return_value=([]))
 
     port = Portfolio.get(portfolio_id='id')

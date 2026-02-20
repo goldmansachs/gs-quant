@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import json
 import math
@@ -88,11 +89,8 @@ class ExchangeId(Enum):
 
 
 class GsSecurityMasterApi:
-
     @classmethod
-    def get_security(cls, id_value: str,
-                     id_type: SecMasterIdentifiers,
-                     effective_date: dt.date = None):
+    def get_security(cls, id_value: str, id_type: SecMasterIdentifiers, effective_date: dt.date = None):
         """
         Get flatten asset reference data
 
@@ -108,13 +106,16 @@ class GsSecurityMasterApi:
         return results
 
     @classmethod
-    def get_many_securities(cls, type_: SecMasterAssetType = None,
-                            effective_date: dt.date = None,
-                            limit: int = 10, flatten=False,
-                            is_primary=None,
-                            offset_key: str = None,
-                            **query_params: Dict[SecMasterIdentifiers, Union[str, Iterable[str]]]) \
-            -> Optional[dict]:
+    def get_many_securities(
+        cls,
+        type_: SecMasterAssetType = None,
+        effective_date: dt.date = None,
+        limit: int = 10,
+        flatten=False,
+        is_primary=None,
+        offset_key: str = None,
+        **query_params: Dict[SecMasterIdentifiers, Union[str, Iterable[str]]],
+    ) -> Optional[dict]:
         """
         Get reference data for a single page of a given asset type. Use returned offsetKey to fetch next page.
 
@@ -130,9 +131,7 @@ class GsSecurityMasterApi:
         if (query_params is None or len(query_params) == 0) and type_ is None:
             raise ValueError("Neither '_type' nor 'query_params' are provided")
 
-        params = {
-            "limit": limit
-        }
+        params = {"limit": limit}
 
         cls.prepare_params(params, is_primary, offset_key, type_, effective_date)
 
@@ -148,10 +147,14 @@ class GsSecurityMasterApi:
         return r
 
     @classmethod
-    def get_all_securities(cls, type_: SecMasterAssetType = None,
-                           effective_date: dt.date = None,
-                           is_primary=None,
-                           flatten=False, **query_params) -> Optional[dict]:
+    def get_all_securities(
+        cls,
+        type_: SecMasterAssetType = None,
+        effective_date: dt.date = None,
+        is_primary=None,
+        flatten=False,
+        **query_params,
+    ) -> Optional[dict]:
         """
         Get all securities reference data matching the type, with respect of effective_date property.
         Function runs in batches fetching all securities.
@@ -168,9 +171,9 @@ class GsSecurityMasterApi:
         else:
             limit = DEFAULT_SCROLL_PAGE_SIZE
 
-        response = cls.get_many_securities(type_, effective_date, limit=limit, offset_key=None,
-                                           flatten=flatten, is_primary=is_primary,
-                                           **query_params)
+        response = cls.get_many_securities(
+            type_, effective_date, limit=limit, offset_key=None, flatten=flatten, is_primary=is_primary, **query_params
+        )
         if response is None or "offsetKey" not in response:
             return response
 
@@ -180,9 +183,14 @@ class GsSecurityMasterApi:
         results = response["results"]
         offset_key = response["offsetKey"]
 
-        fn = partial(cls.get_many_securities, type_=type_, effective_date=effective_date,
-                     limit=limit, flatten=flatten,
-                     **query_params)
+        fn = partial(
+            cls.get_many_securities,
+            type_=type_,
+            effective_date=effective_date,
+            limit=limit,
+            flatten=flatten,
+            **query_params,
+        )
         results.extend(cls.__fetch_all(fn, offset_key))
         response["totalResults"] = len(results)
         response["results"] = results
@@ -190,9 +198,9 @@ class GsSecurityMasterApi:
         return response
 
     @classmethod
-    def get_security_data(cls, id_value: str,
-                          id_type: SecMasterIdentifiers,
-                          effective_date: dt.date = None) -> Optional[dict]:
+    def get_security_data(
+        cls, id_value: str, id_type: SecMasterIdentifiers, effective_date: dt.date = None
+    ) -> Optional[dict]:
         """
         Get flatten asset reference data
 
@@ -223,83 +231,83 @@ class GsSecurityMasterApi:
     @classmethod
     def get_many_identifiers(cls, ids: Iterable[str], limit=100, xref_format=False) -> dict:
         """
-          Get identifiers for a list of secmaster ids. It runs in batches till all data is fetched.
+        Get identifiers for a list of secmaster ids. It runs in batches till all data is fetched.
 
-          This method retrieves identifier information for multiple securities.
-          The data can be returned in either standard format or transformed using the SecmasterXrefFormatter
-          for time-based cross-reference analysis.
+        This method retrieves identifier information for multiple securities.
+        The data can be returned in either standard format or transformed using the SecmasterXrefFormatter
+        for time-based cross-reference analysis.
 
-          Args:
-              ids (Iterable[str]): An iterable collection of secmaster identifiers to query.
-                                  Examples: ['GSPD111E123', 'GSPD222F456', 'GSPD333G789']
+        Args:
+            ids (Iterable[str]): An iterable collection of secmaster identifiers to query.
+                                Examples: ['GSPD111E123', 'GSPD222F456', 'GSPD333G789']
 
-              limit (int, optional): Maximum number of identifier records to return per secmaster id.
-                                    Defaults to 100. Used to control response size and prevent
-                                    memory issues with large datasets.
+            limit (int, optional): Maximum number of identifier records to return per secmaster id.
+                                  Defaults to 100. Used to control response size and prevent
+                                  memory issues with large datasets.
 
-              xref_format (bool, optional): Flag to control output format. Defaults to False.
-                                          - False: Returns raw identifier data in standard format
-                                          - True: Returns data transformed by SecmasterXrefFormatter,
-                                                 where identifiers are grouped by overlapping date
-                                                 ranges
+            xref_format (bool, optional): Flag to control output format. Defaults to False.
+                                        - False: Returns raw identifier data in standard format
+                                        - True: Returns data transformed by SecmasterXrefFormatter,
+                                               where identifiers are grouped by overlapping date
+                                               ranges
 
-          Returns:
-              dict: A dictionary containing identifier information for the requested secmaster ids.
+        Returns:
+            dict: A dictionary containing identifier information for the requested secmaster ids.
 
-                    Standard format (xref_format=False):
-                    {
-                        'secmaster_id_1': [
-                            {
-                                'type': 'ISIN',
-                                'value': 'US1234567890',
-                                'startDate': '2020-01-01',
-                                'endDate': '2023-12-31'
-                            },
-                            ...
-                        ],
-                        'secmaster_id_2': [...],
-                        ...
-                    }
+                  Standard format (xref_format=False):
+                  {
+                      'secmaster_id_1': [
+                          {
+                              'type': 'ISIN',
+                              'value': 'US1234567890',
+                              'startDate': '2020-01-01',
+                              'endDate': '2023-12-31'
+                          },
+                          ...
+                      ],
+                      'secmaster_id_2': [...],
+                      ...
+                  }
 
-                    Xref format (xref_format=True):
-                    {
-                        'secmaster_id_1': {
-                            'xrefs': [
-                                {
-                                    'startDate': '2020-01-01',
-                                    'endDate': '2023-12-31',
-                                    'identifiers': [
-                                        {'type': 'ISIN', 'value': 'US1234567890'},
-                                        {'type': 'CUSIP', 'value': '123456789'},
-                                        ...
-                                    ]
-                                },
-                                ...
-                            ]
-                        },
-                        'secmaster_id_2': {...},
-                        ...
-                    }
+                  Xref format (xref_format=True):
+                  {
+                      'secmaster_id_1': {
+                          'xrefs': [
+                              {
+                                  'startDate': '2020-01-01',
+                                  'endDate': '2023-12-31',
+                                  'identifiers': [
+                                      {'type': 'ISIN', 'value': 'US1234567890'},
+                                      {'type': 'CUSIP', 'value': '123456789'},
+                                      ...
+                                  ]
+                              },
+                              ...
+                          ]
+                      },
+                      'secmaster_id_2': {...},
+                      ...
+                  }
 
-          Raises:
-              ValueError: If ids parameter is empty or contains invalid secmaster identifiers
-              ConnectionError: If unable to connect to secmaster database
-              TimeoutError: If database query exceeds timeout limits
+        Raises:
+            ValueError: If ids parameter is empty or contains invalid secmaster identifiers
+            ConnectionError: If unable to connect to secmaster database
+            TimeoutError: If database query exceeds timeout limits
 
-          Note:
-              - The method processes requests in batches to handle large datasets efficiently
-              - Infinity dates ('9999-99-99') are normalized to '9999-12-31' in xref format
+        Note:
+            - The method processes requests in batches to handle large datasets efficiently
+            - Infinity dates ('9999-99-99') are normalized to '9999-12-31' in xref format
 
 
-          Example:
-              >>> # Standard format
-              >>> result = GsSecurityMasterApi.get_many_identifiers(['GSPD111E123'], limit=50, xref_format=False)
-              >>> print(result['GSPD111E123'][0]['type'])  # 'ISIN'
+        Example:
+            >>> # Standard format
+            >>> result = GsSecurityMasterApi.get_many_identifiers(['GSPD111E123'], limit=50, xref_format=False)
+            >>> print(result['GSPD111E123'][0]['type'])  # 'ISIN'
 
-              >>> # Xref format for time-based analysis
-              >>> xref_result = GsSecurityMasterApi.get_many_identifiers(['GSPD111E123'], xref_format=True)
-              >>> print(xref_result['GSPD111E123']['xrefs'][0]['startDate'])  # '2020-01-01'
-          """
+            >>> # Xref format for time-based analysis
+            >>> xref_result = GsSecurityMasterApi.get_many_identifiers(['GSPD111E123'], xref_format=True)
+            >>> print(xref_result['GSPD111E123']['xrefs'][0]['startDate'])  # '2020-01-01'
+        """
         if not isinstance(ids, Iterable):
             raise ValueError(f"secmaster_id must be an iterable, got {type(ids)}")
         if len(ids) == 0:
@@ -339,12 +347,15 @@ class GsSecurityMasterApi:
         return consolidated_results
 
     @classmethod
-    def map(cls, input_type: SecMasterIdentifiers,
-            ids: Iterable[str],
-            output_types: Iterable[SecMasterIdentifiers] = frozenset([SecMasterIdentifiers.GSID]),
-            start_date: dt.date = None,
-            end_date: dt.date = None,
-            effective_date: dt.date = None) -> Iterable[dict]:
+    def map(
+        cls,
+        input_type: SecMasterIdentifiers,
+        ids: Iterable[str],
+        output_types: Iterable[SecMasterIdentifiers] = frozenset([SecMasterIdentifiers.GSID]),
+        start_date: dt.date = None,
+        end_date: dt.date = None,
+        effective_date: dt.date = None,
+    ) -> Iterable[dict]:
         """
         Map to other identifier types, from given IDs.
 
@@ -359,7 +370,7 @@ class GsSecurityMasterApi:
         params = {
             input_type.value: list(ids),
             'toIdentifiers': [identifier.value for identifier in output_types],
-            'compact': True
+            'compact': True,
         }
         if effective_date is not None:
             if (start_date or end_date) is not None:
@@ -377,8 +388,14 @@ class GsSecurityMasterApi:
         return results
 
     @classmethod
-    def search(cls, q: str, limit: int = 10, type_: SecMasterAssetType = None, is_primary: bool = None,
-               active_listing: bool = None) -> Union[Iterable[dict], None]:
+    def search(
+        cls,
+        q: str,
+        limit: int = 10,
+        type_: SecMasterAssetType = None,
+        is_primary: bool = None,
+        active_listing: bool = None,
+    ) -> Union[Iterable[dict], None]:
         """
         Search securities by a query string. It does a full text search among names, identifiers, company
         @param q: query string
@@ -388,10 +405,7 @@ class GsSecurityMasterApi:
         @param active_listing: filter restricting the matches to active listings
         @return:
         """
-        params = {
-            "q": q,
-            "limit": limit
-        }
+        params = {"q": q, "limit": limit}
         if type_ is not None:
             params["type"] = type_.value
         if is_primary is not None:
@@ -412,8 +426,11 @@ class GsSecurityMasterApi:
     def __fetch_all(cls, fetch_fn, offset_key, total_batches=None, extract_results=True):
         accumulator = []
         offset = offset_key
-        progress_info = tqdm.tqdm(desc="Processing", unit=" batch") if total_batches is None else tqdm.tqdm(
-            range(total_batches), desc="Processing", unit=" batch", ascii=True)
+        progress_info = (
+            tqdm.tqdm(desc="Processing", unit=" batch")
+            if total_batches is None
+            else tqdm.tqdm(range(total_batches), desc="Processing", unit=" batch", ascii=True)
+        )
         while True:
             progress_info.update(1)
             data = fetch_fn(offset_key=offset)
@@ -429,8 +446,7 @@ class GsSecurityMasterApi:
         return accumulator
 
     @classmethod
-    def _get_corporate_actions(cls, id_value: str, id_type: SecMasterIdentifiers,
-                               effective_date: dt.date, offset_key):
+    def _get_corporate_actions(cls, id_value: str, id_type: SecMasterIdentifiers, effective_date: dt.date, offset_key):
 
         params = {
             id_type.value: id_value,
@@ -445,8 +461,9 @@ class GsSecurityMasterApi:
         return r
 
     @classmethod
-    def get_corporate_actions(cls, id_value: str, id_type: SecMasterIdentifiers = SecMasterIdentifiers.GSID,
-                              effective_date: dt.date = None) -> Iterable[dict]:
+    def get_corporate_actions(
+        cls, id_value: str, id_type: SecMasterIdentifiers = SecMasterIdentifiers.GSID, effective_date: dt.date = None
+    ) -> Iterable[dict]:
         """
         Get corporate actions from a given security.
         @param effective_date: parameter to query securities at a given date
@@ -457,17 +474,22 @@ class GsSecurityMasterApi:
         supported_identifiers = [SecMasterIdentifiers.GSID, SecMasterIdentifiers.ID]
         if id_type not in supported_identifiers:
             raise ValueError(
-                f"Unsupported identifier {id_type} for this endpoint. Use one of this {supported_identifiers}")
+                f"Unsupported identifier {id_type} for this endpoint. Use one of this {supported_identifiers}"
+            )
 
         fn = partial(cls._get_corporate_actions, id_value, id_type, effective_date)
         results = cls.__fetch_all(fn, None)
         return results
 
     @classmethod
-    def get_capital_structure(cls, id_value: Union[str, list],
-                              id_type: CapitalStructureIdentifiers,
-                              type_: SecMasterAssetType = None, is_primary: bool = None,
-                              effective_date: dt.date = None) -> dict:
+    def get_capital_structure(
+        cls,
+        id_value: Union[str, list],
+        id_type: CapitalStructureIdentifiers,
+        type_: SecMasterAssetType = None,
+        is_primary: bool = None,
+        effective_date: dt.date = None,
+    ) -> dict:
         """
         Get a capital structure of the given company by id_value of the security.
          It runs in batches till all data is  fetched
@@ -478,8 +500,14 @@ class GsSecurityMasterApi:
         @param id_type: identifier type
         @return: dict
         """
-        response = cls._get_capital_structure(id_value=id_value, id_type=id_type, type_=type_, is_primary=is_primary,
-                                              effective_date=effective_date, offset_key=None)
+        response = cls._get_capital_structure(
+            id_value=id_value,
+            id_type=id_type,
+            type_=type_,
+            is_primary=is_primary,
+            effective_date=effective_date,
+            offset_key=None,
+        )
         if "offsetKey" not in response:
             return response
 
@@ -508,19 +536,25 @@ class GsSecurityMasterApi:
             consolidated_types_obj = {key: [] for key in asset_types_total}
             for obj in group_by_issuer_id[issuer_id]:
                 aggregated_total_results += sum(len(e) for e in obj["types"].values())
-                [consolidated_types_obj.get(asset_type).extend(obj["types"].get(asset_type))
-                 for asset_type in obj["types"]]
+                [
+                    consolidated_types_obj.get(asset_type).extend(obj["types"].get(asset_type))
+                    for asset_type in obj["types"]
+                ]
                 issuer_id_data_instance["types"] = consolidated_types_obj
             aggregated_results.append(issuer_id_data_instance)
         return aggregated_results, aggregated_total_results
 
     @classmethod
-    def _get_capital_structure(cls, id_value: Union[str, list],
-                               id_type: Union[CapitalStructureIdentifiers, SecMasterIdentifiers],
-                               type_, is_primary, effective_date, offset_key: Union[str, None]):
-        params = {
-            id_type.value: id_value
-        }
+    def _get_capital_structure(
+        cls,
+        id_value: Union[str, list],
+        id_type: Union[CapitalStructureIdentifiers, SecMasterIdentifiers],
+        type_,
+        is_primary,
+        effective_date,
+        offset_key: Union[str, None],
+    ):
+        params = {id_type.value: id_value}
         cls.prepare_params(params, is_primary, offset_key, type_, effective_date)
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
         r = GsSession.current._get("/markets/capitalstructure", payload=payload)
@@ -538,9 +572,15 @@ class GsSecurityMasterApi:
             params["effectiveDate"] = effective_date
 
     @classmethod
-    def _get_deltas(cls, start_time: dt.datetime = None, end_time: dt.datetime = None, raw: bool = None,
-                    scope: list = None, limit: int = None, offset_key: str = None) -> \
-            Iterable[dict]:
+    def _get_deltas(
+        cls,
+        start_time: dt.datetime = None,
+        end_time: dt.datetime = None,
+        raw: bool = None,
+        scope: list = None,
+        limit: int = None,
+        offset_key: str = None,
+    ) -> Iterable[dict]:
 
         params = {}
         if raw is not None:
@@ -561,9 +601,16 @@ class GsSecurityMasterApi:
         return r
 
     @classmethod
-    def get_deltas(cls, start_time: dt.datetime = None, end_time: dt.datetime = None, raw: bool = None,
-                   scope: list = None, limit: int = None, offset_key: str = None, scroll_all_pages: bool = True) -> \
-            Union[dict, Iterable[dict]]:
+    def get_deltas(
+        cls,
+        start_time: dt.datetime = None,
+        end_time: dt.datetime = None,
+        raw: bool = None,
+        scope: list = None,
+        limit: int = None,
+        offset_key: str = None,
+        scroll_all_pages: bool = True,
+    ) -> Union[dict, Iterable[dict]]:
         """
         Get all identifier changes between two time stamps
         @param scroll_all_pages:
@@ -587,8 +634,7 @@ class GsSecurityMasterApi:
         return results
 
     @classmethod
-    def get_exchanges(cls, effective_date: dt.date = None,
-                      **query_params: Dict[str, Union[str, Iterable[str]]]):
+    def get_exchanges(cls, effective_date: dt.date = None, **query_params: Dict[str, Union[str, Iterable[str]]]):
         """
         Returns reference data for exchanges - e.g. MICs, exchange codes, name, listing country.
 
@@ -610,9 +656,9 @@ class GsSecurityMasterApi:
         return response
 
     @classmethod
-    def _get_exchanges(cls, effective_date: dt.date = None, limit: int = 10,
-                       query_params=None,
-                       offset_key: Union[str, None] = None):
+    def _get_exchanges(
+        cls, effective_date: dt.date = None, limit: int = 10, query_params=None, offset_key: Union[str, None] = None
+    ):
 
         if query_params is None:
             query_params = dict()
@@ -620,9 +666,7 @@ class GsSecurityMasterApi:
         for qp in query_params.keys():
             if qp not in allowed_keys:
                 raise ValueError(f" Parameter '{qp}' is not supported. Allowed parameters:  {allowed_keys}")
-        params = {
-            "limit": limit
-        }
+        params = {"limit": limit}
         if effective_date is not None:
             params['effectiveDate'] = effective_date
 
@@ -656,8 +700,17 @@ class GsSecurityMasterApi:
             raise ValueError(f"{param_name} must be a string or a list of strings")
 
     @classmethod
-    def _prepare_underlyers_params(cls, params, id_value, offset_key=None, type_=None, effective_date=None,
-                                   country_code=None, currency=None, include_inactive=None):
+    def _prepare_underlyers_params(
+        cls,
+        params,
+        id_value,
+        offset_key=None,
+        type_=None,
+        effective_date=None,
+        country_code=None,
+        currency=None,
+        include_inactive=None,
+    ):
         if id_value is not None:
             params["id"] = cls._prepare_string_or_list_param(id_value, "id_value")
         else:
@@ -686,19 +739,18 @@ class GsSecurityMasterApi:
             params["includeInactive"] = include_inactive
 
     @classmethod
-    def _get_securities_by_underlyers(cls,
-                                      id_value: Union[str, list],
-                                      type_: Union[SecMasterAssetType, list] = None,
-                                      effective_date: dt.date = None,
-                                      limit: int = 100,
-                                      country_code: Union[str, list] = None,
-                                      currency: Union[str, list] = None,
-                                      include_inactive: bool = False,
-                                      offset_key: str = None) \
-            -> Optional[dict]:
-        params = {
-            "limit": limit
-        }
+    def _get_securities_by_underlyers(
+        cls,
+        id_value: Union[str, list],
+        type_: Union[SecMasterAssetType, list] = None,
+        effective_date: dt.date = None,
+        limit: int = 100,
+        country_code: Union[str, list] = None,
+        currency: Union[str, list] = None,
+        include_inactive: bool = False,
+        offset_key: str = None,
+    ) -> Optional[dict]:
+        params = {"limit": limit}
 
         cls._prepare_underlyers_params(
             params=params,
@@ -708,7 +760,7 @@ class GsSecurityMasterApi:
             effective_date=effective_date,
             country_code=country_code,
             currency=currency,
-            include_inactive=include_inactive
+            include_inactive=include_inactive,
         )
 
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
@@ -719,17 +771,18 @@ class GsSecurityMasterApi:
         return r
 
     @classmethod
-    def get_securities_by_underlyers(cls,
-                                     id_value: Union[str, list],
-                                     type_: Union[SecMasterAssetType, list] = None,
-                                     effective_date: dt.date = None,
-                                     limit: int = None,
-                                     offset_key: str = None,
-                                     country_code: Union[str, list] = None,
-                                     currency: Union[str, list] = None,
-                                     include_inactive: bool = False,
-                                     scroll_all_pages: bool = False) \
-            -> Optional[dict]:
+    def get_securities_by_underlyers(
+        cls,
+        id_value: Union[str, list],
+        type_: Union[SecMasterAssetType, list] = None,
+        effective_date: dt.date = None,
+        limit: int = None,
+        offset_key: str = None,
+        country_code: Union[str, list] = None,
+        currency: Union[str, list] = None,
+        include_inactive: bool = False,
+        scroll_all_pages: bool = False,
+    ) -> Optional[dict]:
         """
         Retrieve reference data for listed derivatives based on their underlyers.
 
@@ -792,8 +845,11 @@ class GsSecurityMasterApi:
             >>> print(result["results"])
         """
 
-        supported_types = [SecMasterAssetType.Equity_Option, SecMasterAssetType.Future,
-                           SecMasterAssetType.Future_Option]
+        supported_types = [
+            SecMasterAssetType.Equity_Option,
+            SecMasterAssetType.Future,
+            SecMasterAssetType.Future_Option,
+        ]
         if type_ is not None:
             if isinstance(type_, SecMasterAssetType):
                 if type_ not in supported_types:
@@ -806,14 +862,16 @@ class GsSecurityMasterApi:
         if scroll_all_pages:
             if limit is None:
                 limit = 500
-            fn = partial(cls._get_securities_by_underlyers,
-                         id_value=id_value,
-                         type_=type_,
-                         effective_date=effective_date,
-                         limit=limit,
-                         country_code=country_code,
-                         currency=currency,
-                         include_inactive=include_inactive)
+            fn = partial(
+                cls._get_securities_by_underlyers,
+                id_value=id_value,
+                type_=type_,
+                effective_date=effective_date,
+                limit=limit,
+                country_code=country_code,
+                currency=currency,
+                include_inactive=include_inactive,
+            )
             results = cls.__fetch_all(fn, offset_key, extract_results=False)
             as_of_time = max(result['asOfTime'] for result in results)
             res = [item for result in results for item in result["results"]]
@@ -830,5 +888,5 @@ class GsSecurityMasterApi:
                 offset_key=offset_key,
                 country_code=country_code,
                 currency=currency,
-                include_inactive=include_inactive
+                include_inactive=include_inactive,
             )

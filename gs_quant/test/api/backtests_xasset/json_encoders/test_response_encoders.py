@@ -23,22 +23,26 @@ import datetime as dt
 
 def test_decode_basic_bt_transactions():
     server_response_minimum = {
-        dt.date(2025, 5, 1).isoformat(): [{
-            'portfolio': (EqOption(underlier='.SPX', expiration_date='2025-12-19', strike_price=5000).as_dict(),),
-        }]
+        dt.date(2025, 5, 1).isoformat(): [
+            {
+                'portfolio': (EqOption(underlier='.SPX', expiration_date='2025-12-19', strike_price=5000).as_dict(),),
+            }
+        ]
     }
     assert len(decode_basic_bt_transactions(server_response_minimum)) == 1
     assert len(decode_basic_bt_transactions(server_response_minimum, decode_instruments=False)) == 1
 
     server_response = {
-        dt.date(2025, 5, 1).isoformat(): [{
-            'portfolio': (EqOption(underlier='.SPX', expiration_date='2025-12-19', strike_price=5000).as_dict(),),
-            'currency': 'USD',
-            'portfolio_price': 100,
-            'cost': 0.5,
-            'direction': 'Entry',
-            'quantity': 25
-        }]
+        dt.date(2025, 5, 1).isoformat(): [
+            {
+                'portfolio': (EqOption(underlier='.SPX', expiration_date='2025-12-19', strike_price=5000).as_dict(),),
+                'currency': 'USD',
+                'portfolio_price': 100,
+                'cost': 0.5,
+                'direction': 'Entry',
+                'quantity': 25,
+            }
+        ]
     }
 
     decoded_response = decode_basic_bt_transactions(server_response)

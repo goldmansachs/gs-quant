@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from math import sqrt
 
@@ -27,8 +28,13 @@ from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
 from gs_quant.markets.securities import Stock
-from gs_quant.target.risk_models import RiskModel, RiskModelCoverage, RiskModelTerm, RiskModelUniverseIdentifier, \
-    RiskModelType
+from gs_quant.target.risk_models import (
+    RiskModel,
+    RiskModelCoverage,
+    RiskModelTerm,
+    RiskModelUniverseIdentifier,
+    RiskModelType,
+)
 
 mock_risk_model_obj = RiskModel(
     id_='model_id',
@@ -38,7 +44,7 @@ mock_risk_model_obj = RiskModel(
     universe_identifier=RiskModelUniverseIdentifier.gsid,
     vendor='GS',
     version=1.0,
-    type_=RiskModelType.Factor
+    type_=RiskModelType.Factor,
 )
 
 mock_risk_model_data = {
@@ -51,7 +57,7 @@ mock_risk_model_data = {
                 {'factorId': '1', 'factorCategory': 'Style'},
                 {'factorId': '2', 'factorCategory': 'Style'},
                 {'factorId': '3', 'factorCategory': 'Style'},
-            ]
+            ],
         },
         {
             'date': '2020-01-02',
@@ -59,7 +65,7 @@ mock_risk_model_data = {
                 {'factorId': '1', 'factorCategory': 'Style'},
                 {'factorId': '2', 'factorCategory': 'Style'},
                 {'factorId': '3', 'factorCategory': 'Style'},
-            ]
+            ],
         },
         {
             'date': '2020-01-03',
@@ -67,9 +73,9 @@ mock_risk_model_data = {
                 {'factorId': '1', 'factorCategory': 'Style'},
                 {'factorId': '2', 'factorCategory': 'Style'},
                 {'factorId': '3', 'factorCategory': 'Style'},
-            ]
-        }
-    ]
+            ],
+        },
+    ],
 }
 
 mock_risk_model_factor_data_intraday = {
@@ -81,41 +87,31 @@ mock_risk_model_factor_data_intraday = {
             'factor': 'Factor Name',
             'factorCategory': 'Style',
             "factorId": "factor_id",
-            "factorReturn": 1.022
+            "factorReturn": 1.022,
         },
         {
             'time': '2020-01-01T10:10:20Z',
             'factor': 'Factor Name 1',
             'factorCategory': 'Style',
             "factorId": "factor_id_1",
-            "factorReturn": 1.033
-        }
-    ]
+            "factorReturn": 1.033,
+        },
+    ],
 }
 
-mock_risk_model_factor_data = [{
-    'identifier': 'factor_id',
-    'type': 'Factor',
-    'name': "Factor Name",
-}]
+mock_risk_model_factor_data = [
+    {
+        'identifier': 'factor_id',
+        'type': 'Factor',
+        'name': "Factor Name",
+    }
+]
 
-mock_covariance_curve = {
-    '2020-01-01': 1.01,
-    '2020-01-02': 1.02,
-    '2020-01-03': 1.03
-}
+mock_covariance_curve = {'2020-01-01': 1.01, '2020-01-02': 1.02, '2020-01-03': 1.03}
 
-mock_volatility_curve = {
-    '2020-01-01': sqrt(1.01),
-    '2020-01-02': sqrt(1.02),
-    '2020-01-03': sqrt(1.03)
-}
+mock_volatility_curve = {'2020-01-01': sqrt(1.01), '2020-01-02': sqrt(1.02), '2020-01-03': sqrt(1.03)}
 
-mock_correlation_curve = {
-    '2020-01-01': 1.0,
-    '2020-01-02': 1.0,
-    '2020-01-03': 1.0
-}
+mock_correlation_curve = {'2020-01-01': 1.0, '2020-01-02': 1.0, '2020-01-03': 1.0}
 
 
 def mock_risk_model():
@@ -161,13 +157,14 @@ def test_risk_model_measure():
         'results': [
             {'date': '2024-08-19', 'assetData': {'universe': ['14593'], 'bidAskSpread30d': [0.1]}},
             {'date': '2024-08-20', 'assetData': {'universe': ['14593'], 'bidAskSpread30d': [0.2]}},
-            {'date': '2024-08-21', 'assetData': {'universe': ['14593'], 'bidAskSpread30d': [0.3]}}
-        ]
+            {'date': '2024-08-21', 'assetData': {'universe': ['14593'], 'bidAskSpread30d': [0.3]}},
+        ],
     }
 
     with DataContext(dt.date(2020, 1, 1), dt.date(2020, 1, 3)):
-        actual = mrm.risk_model_measure(Stock(id_='id', name='Fake Asset'), 'model_id',
-                                        mrm.ModelMeasureString.BID_AKS_SPREAD_30D)
+        actual = mrm.risk_model_measure(
+            Stock(id_='id', name='Fake Asset'), 'model_id', mrm.ModelMeasureString.BID_AKS_SPREAD_30D
+        )
         assert all(actual.values == [0.1, 0.2, 0.3])
 
     with pytest.raises(AttributeError):
@@ -202,39 +199,9 @@ def test_factor_zscore():
     mock = replace('gs_quant.models.risk_model.MarqueeRiskModel.get_data', Mock())
     mock.return_value = {
         'results': [
-            {
-                'date': '2020-01-01',
-                'assetData': {
-                    'factorExposure': [
-                        {
-                            'factor_id': 1.01,
-                            'factor_id_1': 1.23
-                        }
-                    ]
-                }
-            },
-            {
-                'date': '2020-01-02',
-                'assetData': {
-                    'factorExposure': [
-                        {
-                            'factor_id': 1.02,
-                            'factor_id_1': 1.23
-                        }
-                    ]
-                }
-            },
-            {
-                'date': '2020-01-03',
-                'assetData': {
-                    'factorExposure': [
-                        {
-                            'factor_id': 1.03,
-                            'factor_id_1': 1.23
-                        }
-                    ]
-                }
-            }
+            {'date': '2020-01-01', 'assetData': {'factorExposure': [{'factor_id': 1.01, 'factor_id_1': 1.23}]}},
+            {'date': '2020-01-02', 'assetData': {'factorExposure': [{'factor_id': 1.02, 'factor_id_1': 1.23}]}},
+            {'date': '2020-01-03', 'assetData': {'factorExposure': [{'factor_id': 1.03, 'factor_id_1': 1.23}]}},
         ]
     }
 
@@ -382,8 +349,11 @@ def test_factor_returns_intraday():
 
     # mock getting factor returns
     mock = replace('gs_quant.markets.factor.Factor.intraday_returns', Mock())
-    mock.return_value = (pd.DataFrame(mock_risk_model_factor_data_intraday.get('results')).set_index('time')
-                         .drop(columns=["factorCategory", "factor", "factorId"], errors='ignore'))
+    mock.return_value = (
+        pd.DataFrame(mock_risk_model_factor_data_intraday.get('results'))
+        .set_index('time')
+        .drop(columns=["factorCategory", "factor", "factorId"], errors='ignore')
+    )
 
     with DataContext(dt.datetime(2025, 1, 1, 0, 0, 0), dt.datetime(2025, 1, 1, 23, 59, 59)):
         actual = mrm.factor_returns_intraday(mock_risk_model(), 'Factor Name')
@@ -406,81 +376,98 @@ def test_factor_returns_percentile():
         "results": [
             {
                 'date': '2025-01-10',
-                "factorData": [{
-                    'factorName': 'Factor Name',
-                    'factorCategory': 'Style',
-                    "factorId": "factor_id",
-                    "factorReturn": 1.022
-                }],
+                "factorData": [
+                    {
+                        'factorName': 'Factor Name',
+                        'factorCategory': 'Style',
+                        "factorId": "factor_id",
+                        "factorReturn": 1.022,
+                    }
+                ],
             },
             {
                 'date': '2025-01-09',
-                "factorData": [{
-                    'factorName': 'Factor Name',
-                    'factorCategory': 'Style',
-                    "factorId": "factor_id",
-                    "factorReturn": 2.033
-                }],
+                "factorData": [
+                    {
+                        'factorName': 'Factor Name',
+                        'factorCategory': 'Style',
+                        "factorId": "factor_id",
+                        "factorReturn": 2.033,
+                    }
+                ],
             },
             {
                 'date': '2025-01-08',
-                "factorData": [{
-                    'factorName': 'Factor Name',
-                    'factorCategory': 'Style',
-                    "factorId": "factor_id",
-                    "factorReturn": 3.044
-                }],
+                "factorData": [
+                    {
+                        'factorName': 'Factor Name',
+                        'factorCategory': 'Style',
+                        "factorId": "factor_id",
+                        "factorReturn": 3.044,
+                    }
+                ],
             },
             {
                 'date': '2025-01-07',
-                "factorData": [{
-                    'factorName': 'Factor Name',
-                    'factorCategory': 'Style',
-                    "factorId": "factor_id",
-                    "factorReturn": 4.055
-                }],
+                "factorData": [
+                    {
+                        'factorName': 'Factor Name',
+                        'factorCategory': 'Style',
+                        "factorId": "factor_id",
+                        "factorReturn": 4.055,
+                    }
+                ],
             },
             {
                 'date': '2025-01-06',
-                "factorData": [{
-                    'factorName': 'Factor Name',
-                    'factorCategory': 'Style',
-                    "factorId": "factor_id",
-                    "factorReturn": 5.066
-                }],
+                "factorData": [
+                    {
+                        'factorName': 'Factor Name',
+                        'factorCategory': 'Style',
+                        "factorId": "factor_id",
+                        "factorReturn": 5.066,
+                    }
+                ],
             },
             {
                 'date': '2025-01-05',
-                "factorData": [{
-                    'factorName': 'Factor Name',
-                    'factorCategory': 'Style',
-                    "factorId": "factor_id",
-                    "factorReturn": 6.077
-                }],
+                "factorData": [
+                    {
+                        'factorName': 'Factor Name',
+                        'factorCategory': 'Style',
+                        "factorId": "factor_id",
+                        "factorReturn": 6.077,
+                    }
+                ],
             },
             {
                 'date': '2025-01-04',
-                "factorData": [{
-                    'factorName': 'Factor Name',
-                    'factorCategory': 'Style',
-                    "factorId": "factor_id",
-                    "factorReturn": 7.088
-                }
+                "factorData": [
+                    {
+                        'factorName': 'Factor Name',
+                        'factorCategory': 'Style',
+                        "factorId": "factor_id",
+                        "factorReturn": 7.088,
+                    }
                 ],
             },
         ]
     }
-    expected_percentile_value = np.percentile(np.array([f['factorReturn'] for data in
-                                                        mock_risk_model_factor_returns_data['results']
-                                                        for f in data['factorData']]), 90)
+    expected_percentile_value = np.percentile(
+        np.array(
+            [f['factorReturn'] for data in mock_risk_model_factor_returns_data['results'] for f in data['factorData']]
+        ),
+        90,
+    )
     mock = replace('gs_quant.api.gs.risk_models.GsFactorRiskModelApi.get_risk_model_data', Mock())
     mock.return_value = mock_risk_model_factor_returns_data
 
     start_time = dt.datetime(2025, 1, 10, 0, 0, 0)
     end_time = dt.datetime(2025, 1, 10, 23, 59, 59)
 
-    expected_series = pd.Series(expected_percentile_value, index=pd.date_range(start=start_time,
-                                                                               end=end_time, freq='2h'))
+    expected_series = pd.Series(
+        expected_percentile_value, index=pd.date_range(start=start_time, end=end_time, freq='2h')
+    )
     with DataContext(start_time, end_time):
         actual = mrm.factor_returns_percentile(mock_risk_model(), 'Factor Name', n_percentile=90)
         assert expected_series.equals(actual)

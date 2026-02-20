@@ -22,18 +22,20 @@ from gs_quant.target.groups import Group
 
 class GsGroupsApi:
     @classmethod
-    def get_groups(cls,
-                   ids: List[str] = None,
-                   names: List[str] = None,
-                   oe_ids: List[str] = None,
-                   owner_ids: List[str] = None,
-                   tags: List[str] = None,
-                   user_ids: List[str] = None,
-                   scroll_id: str = None,
-                   scroll_time: str = None,
-                   limit: int = 100,
-                   offset: int = 0,
-                   order_by: str = None) -> List:
+    def get_groups(
+        cls,
+        ids: List[str] = None,
+        names: List[str] = None,
+        oe_ids: List[str] = None,
+        owner_ids: List[str] = None,
+        tags: List[str] = None,
+        user_ids: List[str] = None,
+        scroll_id: str = None,
+        scroll_time: str = None,
+        limit: int = 100,
+        offset: int = 0,
+        order_by: str = None,
+    ) -> List:
         url = f'/groups?limit={limit}&offset={offset}'
         if ids:
             url += f'&id={"&id=".join(ids)}'
@@ -60,14 +62,11 @@ class GsGroupsApi:
         return GsSession.current._post('/groups', group, cls=Group)
 
     @classmethod
-    def get_group(cls,
-                  group_id: str) -> Group:
+    def get_group(cls, group_id: str) -> Group:
         return GsSession.current._get(f'/groups/{group_id}', cls=Group)
 
     @classmethod
-    def update_group(cls,
-                     group_id: str,
-                     group: Group) -> Group:
+    def update_group(cls, group_id: str, group: Group) -> Group:
         # PUT request for updating a group can't have the group ID in it
         group_dict = group.to_json()
         if group_dict.get('entitlements'):
@@ -76,23 +75,17 @@ class GsGroupsApi:
         return GsSession.current._put(f'/groups/{group_id}', group_dict, cls=Group)
 
     @classmethod
-    def delete_group(cls,
-                     group_id: str):
+    def delete_group(cls, group_id: str):
         GsSession.current._delete(f'/groups/{group_id}')
 
     @classmethod
-    def get_users_in_group(cls,
-                           group_id: str) -> List:
+    def get_users_in_group(cls, group_id: str) -> List:
         return GsSession.current._get(f'/groups/{group_id}/users').get('users', [])
 
     @classmethod
-    def add_users_to_group(cls,
-                           group_id: str,
-                           user_ids: List[str]):
+    def add_users_to_group(cls, group_id: str, user_ids: List[str]):
         GsSession.current._post(f'/groups/{group_id}/users', {'userIds': user_ids})
 
     @classmethod
-    def delete_users_from_group(cls,
-                                group_id: str,
-                                user_ids: List[str]):
+    def delete_users_from_group(cls, group_id: str, user_ids: List[str]):
         GsSession.current._delete(f'/groups/{group_id}/users', {'userIds': user_ids}, use_body=True)

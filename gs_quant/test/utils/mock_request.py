@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import hashlib
 import json
 import logging
@@ -31,7 +32,6 @@ logger = logging.getLogger("mock_request")
 
 
 class MockFileKey:
-
     def __init__(self, request_id):
         self.request_id = request_id.decode('utf-8') if isinstance(request_id, bytes) else request_id
         self.request_hash = self.get_hash(self.request_id)
@@ -43,8 +43,11 @@ class MockFileKey:
         return hashlib.md5(id_bytes).hexdigest()
 
     def __eq__(self, other):
-        return self.file_name == other.file_name and self.request_id == other.request_id and \
-            self.request_hash == other.request_hash
+        return (
+            self.file_name == other.file_name
+            and self.request_id == other.request_id
+            and self.request_hash == other.request_hash
+        )
 
     def __hash__(self):
         return hash((self.file_name, self.request_id, self.request_hash))
@@ -55,6 +58,7 @@ class MockFileKey:
 
 class MockFileRecord(NamedTuple):
     """a docstring"""
+
     foo: int
     bar: str
     used_in_tests: set
@@ -80,13 +84,19 @@ class MockRequest:
     def __enter__(self):
         if self.save_files:
             GsSession.use(Environment.PROD, None, None, application=self.application)
-            self.mocker.patch.object(self.api, self.method, side_effect=self.mock_calc_create_new_files if str(
-                self.save_files).casefold() == 'new' else self.mock_calc_check_and_create_files)
+            self.mocker.patch.object(
+                self.api,
+                self.method,
+                side_effect=self.mock_calc_create_new_files
+                if str(self.save_files).casefold() == 'new'
+                else self.mock_calc_check_and_create_files,
+            )
         else:
             try:
                 _ = GsSession.current
             except MqUninitialisedError:
                 from gs_quant.session import OAuth2Session
+
                 OAuth2Session._authenticate = mock.MagicMock(return_value=None)
                 GsSession.use(Environment.PROD, 'fake_client_id', 'fake_secret', application=self.application)
             self.mocker.patch.object(self.api, self.method, side_effect=self.mock_calc)
@@ -103,8 +113,10 @@ class MockRequest:
         mfk = MockFileKey(request_id)
         file_path = self.full_file_path(mfk)
         if not exists(file_path):
-            logger.error(f'Unable to find mock test date for {self.__class__.__name__}:\n'
-                         f'File {file_path} not found. Key: {request_id}')
+            logger.error(
+                f'Unable to find mock test date for {self.__class__.__name__}:\n'
+                f'File {file_path} not found. Key: {request_id}'
+            )
             raise FileNotFoundError(f'File {mfk.file_name} not found in {self.paths / "calc_cache"}')
         existing_meta, mock_data = self._load_mock_data_from_file(file_path)
         self._record_file_used_in_test(mfk)
@@ -155,8 +167,7 @@ class MockRequest:
         self._record_file_used_in_test(mfk)
 
     @abstractmethod
-    def mock_calc_create_files(self, *args, **kwargs):
-        ...
+    def mock_calc_create_files(self, *args, **kwargs): ...
 
     def mock_calc_check_and_create_files(self, *args, **kwargs):
         # Check if we have already saved this file in this test run, in which case skip re-saving it
@@ -199,8 +210,11 @@ class MockRequest:
                         unused_meta = {'tests': ['UNKNOWN']}
                     if log:
                         log_mock_data_event(f'Noticed UNUSED {test_file}.')
-                    unused_details = {'file': test_file, 'full_path': full_path,
-                                      'tests': tuple(unused_meta.get('tests', []))}
+                    unused_details = {
+                        'file': test_file,
+                        'full_path': full_path,
+                        'tests': tuple(unused_meta.get('tests', [])),
+                    }
                     unused_files.append(unused_details)
         return tuple(unused_files)
 
@@ -237,10 +251,16 @@ class MockRequest:
             if log:
                 missing = set(existing_used) - set(sorted_tests)
                 extra = set(sorted_tests) - set(existing_used)
-                missing_txt = f" {len(missing)} test(s) are listed in the file but weren't used: {missing}." \
-                    if len(missing) else ""
-                extra_txt = f" {len(extra)} test(s) that accessed this file were NOT listed in the file : {extra}." \
-                    if len(extra) else ""
+                missing_txt = (
+                    f" {len(missing)} test(s) are listed in the file but weren't used: {missing}."
+                    if len(missing)
+                    else ""
+                )
+                extra_txt = (
+                    f" {len(extra)} test(s) that accessed this file were NOT listed in the file : {extra}."
+                    if len(extra)
+                    else ""
+                )
                 log_mock_data_event(f'Noticed BAD INDEX {mock_file_key.file_name}. {missing_txt}{extra_txt}')
             return True
 
@@ -267,5 +287,4 @@ class MockRequest:
         return list(MockRequest.__saved_files)
 
     @abstractmethod
-    def get_request_id(self, args, kwargs):
-        ...
+    def get_request_id(self, args, kwargs): ...

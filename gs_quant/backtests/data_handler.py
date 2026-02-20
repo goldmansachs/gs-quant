@@ -26,8 +26,11 @@ class Clock(object):
 
     def update(self, time: dt.datetime):
 
-        compare_time = self._time.replace(tzinfo=None) \
-            if time.tzinfo is None or time.tzinfo.utcoffset(time) is None else self._time
+        compare_time = (
+            self._time.replace(tzinfo=None)
+            if time.tzinfo is None or time.tzinfo.utcoffset(time) is None
+            else self._time
+        )
 
         if time < compare_time:
             raise RuntimeError(f'current time is {compare_time}, cannot run backwards to {time}')

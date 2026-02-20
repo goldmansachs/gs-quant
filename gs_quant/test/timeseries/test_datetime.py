@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 from unittest import mock
 
@@ -26,9 +27,28 @@ from gs_quant.datetime import DayCountConvention, GsCalendar
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.errors import MqValueError, MqTypeError
 from gs_quant.test.api.test_risk import set_session
-from gs_quant.timeseries import Interpolate, align, interpolate, value, day, weekday, quarter, year, date_range, \
-    day_count_fractions, append, prepend, union, bucketize, AggregateFunction, day_count, align_calendar, \
-    AggregatePeriod, month, day_countdown
+from gs_quant.timeseries import (
+    Interpolate,
+    align,
+    interpolate,
+    value,
+    day,
+    weekday,
+    quarter,
+    year,
+    date_range,
+    day_count_fractions,
+    append,
+    prepend,
+    union,
+    bucketize,
+    AggregateFunction,
+    day_count,
+    align_calendar,
+    AggregatePeriod,
+    month,
+    day_countdown,
+)
 
 
 def test_basic():
@@ -470,12 +490,9 @@ def test_bucketize():
     series = pd.Series(range(len(dates)), index=dates)
 
     actual = bucketize(series, AggregateFunction.MAX, AggregatePeriod.MONTH)
-    expected_index = pd.DatetimeIndex([
-        dt.date(2021, 1, 31),
-        dt.date(2021, 2, 28),
-        dt.date(2021, 3, 31),
-        dt.date(2021, 4, 23)
-    ])
+    expected_index = pd.DatetimeIndex(
+        [dt.date(2021, 1, 31), dt.date(2021, 2, 28), dt.date(2021, 3, 31), dt.date(2021, 4, 23)]
+    )
     expected = pd.Series([20, 40, 63, 80], index=expected_index)
     actual.index.freq = None  # Ignore the index freq
     assert_series_equal(actual, expected, check_index_type=False)
@@ -549,11 +566,7 @@ def test_day_countdown():
     with mock.patch.dict(day_countdown.__globals__, {'dt': _DtShim}):
         actual_default = day_countdown(_PatchedDate(end_dt.year, end_dt.month, end_dt.day))
 
-        expected_default_idx = pd.date_range(
-            start=dt.date(2021, 5, 15),
-            end=dt.date(2021, 5, 17),
-            freq='D'
-        )
+        expected_default_idx = pd.date_range(start=dt.date(2021, 5, 15), end=dt.date(2021, 5, 17), freq='D')
         expected_default = pd.Series([2, 1, 0], index=expected_default_idx, dtype=np.int64)
         assert_series_equal(actual_default, expected_default, obj='day_countdown default start_date')
 
@@ -565,8 +578,7 @@ def test_align_calendar(mocker_data, mocker_cov):
     series = pd.Series(range(len(dates)), index=dates)
 
     set_session()
-    mocker_data.return_value = pd.DataFrame(index=[dt.datetime(2023, 1, 3)],
-                                            data={'holiday': 'New Year'})
+    mocker_data.return_value = pd.DataFrame(index=[dt.datetime(2023, 1, 3)], data={'holiday': 'New Year'})
     mocker_cov.return_value = pd.DataFrame()
 
     GsCalendar.reset()

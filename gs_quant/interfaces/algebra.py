@@ -19,23 +19,19 @@ import abc
 
 class AlgebraicType(abc.ABC):
     @abc.abstractmethod
-    def __add__(self, other):
-        ...
+    def __add__(self, other): ...
 
     def __radd__(self, other):
         return self.__add__(other)
 
     @abc.abstractmethod
-    def __sub__(self, other):
-        ...
+    def __sub__(self, other): ...
 
     @abc.abstractmethod
-    def __mul__(self, other):
-        ...
+    def __mul__(self, other): ...
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     @abc.abstractmethod
-    def __div__(self, other):
-        ...
+    def __div__(self, other): ...

@@ -38,7 +38,7 @@ class PositionType(Enum):
 
 
 class DateLimit(Enum):
-    """ Datetime date constants """
+    """Datetime date constants"""
 
     LOW_LIMIT = dt.date(1952, 1, 1)
 
@@ -59,7 +59,6 @@ class PayReceive(EnumBase, Enum):
 
 
 class RiskMeasure(__RiskMeasure):
-
     def __lt__(self, other):
         if self.name != other.name:
             return self.name < other.name
@@ -80,13 +79,20 @@ class RiskMeasure(__RiskMeasure):
     @property
     def pricing_context(self):
         from gs_quant.markets import PricingContext
+
         return PricingContext.current
 
 
 class ParameterisedRiskMeasure(RiskMeasure):
-    def __init__(self, asset_class: Union[AssetClass, str] = None,
-                 measure_type: Union[RiskMeasureType, str] = None, unit: Union[RiskMeasureUnit, str] = None,
-                 value: Union[float, str] = None, parameters: RiskMeasureParameter = None, name: str = None):
+    def __init__(
+        self,
+        asset_class: Union[AssetClass, str] = None,
+        measure_type: Union[RiskMeasureType, str] = None,
+        unit: Union[RiskMeasureUnit, str] = None,
+        value: Union[float, str] = None,
+        parameters: RiskMeasureParameter = None,
+        name: str = None,
+    ):
         super().__init__(asset_class=asset_class, measure_type=measure_type, unit=unit, value=value, name=name)
         if parameters:
             if isinstance(parameters, RiskMeasureParameter):
@@ -102,7 +108,8 @@ class ParameterisedRiskMeasure(RiskMeasure):
             params.pop('parameter_type', None)
             sorted_keys = sorted(params.keys(), key=lambda x: x.lower())
             params = ', '.join(
-                [f'{k}:{params[k].value if isinstance(params[k], EnumBase) else params[k]}' for k in sorted_keys])
+                [f'{k}:{params[k].value if isinstance(params[k], EnumBase) else params[k]}' for k in sorted_keys]
+            )
         return name + '(' + params + ')' if params else name
 
     def parameter_is_empty(self):

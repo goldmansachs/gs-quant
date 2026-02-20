@@ -30,18 +30,20 @@ from gs_quant.entities.entity import Entity
 
 
 class DataCell:
-    """ Entity data cell
-        Computes value and manages formatting of a data cell
+    """Entity data cell
+    Computes value and manages formatting of a data cell
     """
 
-    def __init__(self,
-                 name: str,
-                 processor: BaseProcessor,
-                 entity: Entity,
-                 dimension_overrides: List[Override],
-                 column_index: int,
-                 row_index: int,
-                 row_group: str = None):
+    def __init__(
+        self,
+        name: str,
+        processor: BaseProcessor,
+        entity: Entity,
+        dimension_overrides: List[Override],
+        column_index: int,
+        row_index: int,
+        row_group: str = None,
+    ):
         # Cell starts with root processor
         # Deep copies so the processor and children are unique objects
         self.cell_id = str(uuid.uuid4())
@@ -61,27 +63,24 @@ class DataCell:
         # Store the cell data queries
         self.data_queries: List[DataQueryInfo] = []
 
-    def build_cell_graph(self, all_queries: List[Union[DataQueryInfo, MeasureQueryInfo]],
-                         rdate_entity_map: Dict[str, Set[Tuple]]) -> None:
-        """ Generate and store the cell graph and data queries
+    def build_cell_graph(
+        self, all_queries: List[Union[DataQueryInfo, MeasureQueryInfo]], rdate_entity_map: Dict[str, Set[Tuple]]
+    ) -> None:
+        """Generate and store the cell graph and data queries
 
-            This can be modified to return the data queries rather than store on the cell
+        This can be modified to return the data queries rather than store on the cell
         """
         # Set the root processor node parent to data cell
         if self.processor:
             self.processor.parent = self
             cell_queries: List[DataQueryInfo] = []
-            self.processor.build_graph(self.entity,
-                                       self,
-                                       cell_queries,
-                                       rdate_entity_map,
-                                       self.dimension_overrides)
+            self.processor.build_graph(self.entity, self, cell_queries, rdate_entity_map, self.dimension_overrides)
 
             self.data_queries = cell_queries
             all_queries.extend(cell_queries)  # Add this cell's queries to the entire datagrid's list of queries
 
     def update(self, result: ProcessorResult) -> None:
-        """ Sets the value of the cell"""
+        """Sets the value of the cell"""
         if isinstance(result.data, pd.Series):
             if result.data.empty:
                 self.value = ProcessorResult(False, 'Empty series as a result of processing.')

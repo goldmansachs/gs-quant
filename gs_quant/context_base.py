@@ -22,7 +22,6 @@ thread_local = threading.local()
 
 
 class ContextMeta(type):
-
     @property
     def __path_key(cls) -> str:
         return '{}_path'.format(cls.__name__)
@@ -104,7 +103,6 @@ class ContextMeta(type):
 
 
 class ContextBase(metaclass=ContextMeta):
-
     def __enter__(self):
         self._cls.push(self)
         setattr(thread_local, self.__entered_key, True)
@@ -171,7 +169,6 @@ class ContextBase(metaclass=ContextMeta):
 
 
 class ContextBaseWithDefault(ContextBase):
-
     @classmethod
     def default_value(cls) -> object:
         return cls()
@@ -183,7 +180,6 @@ except ImportError:
     from contextlib import AbstractContextManager
 
     class nullcontext(AbstractContextManager):
-
         def __init__(self, enter_result=None):
             self.enter_result = enter_result
 

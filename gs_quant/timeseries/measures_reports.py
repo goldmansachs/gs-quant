@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import re
 from enum import Enum
@@ -31,8 +32,15 @@ from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.errors import MqValueError
 from gs_quant.markets.portfolio_manager import PortfolioManager
-from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport, ReturnFormat, \
-    format_aum_for_return_calculation, get_pnl_percent, get_factor_pnl_percent_for_single_factor
+from gs_quant.markets.report import (
+    FactorRiskReport,
+    PerformanceReport,
+    ThematicReport,
+    ReturnFormat,
+    format_aum_for_return_calculation,
+    get_pnl_percent,
+    get_factor_pnl_percent_for_single_factor,
+)
 from gs_quant.markets.securities import Bond
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.target.reports import PositionSourceType
@@ -47,8 +55,15 @@ class Unit(Enum):
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.FACTOR_EXPOSURE])
-def factor_exposure(report_id: str, factor_name: str, unit: str = 'Notional', *, source: str = None,
-                    real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_exposure(
+    report_id: str,
+    factor_name: str,
+    unit: str = 'Notional',
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Factor exposure data associated with a factor in a factor risk report
 
@@ -64,8 +79,15 @@ def factor_exposure(report_id: str, factor_name: str, unit: str = 'Notional', *,
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.FACTOR_PNL])
-def factor_pnl(report_id: str, factor_name: str, unit: str = 'Notional', *, source: str = None,
-               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_pnl(
+    report_id: str,
+    factor_name: str,
+    unit: str = 'Notional',
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Factor PnL data associated with a factor in a factor risk report
 
@@ -81,8 +103,9 @@ def factor_pnl(report_id: str, factor_name: str, unit: str = 'Notional', *, sour
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.FACTOR_PROPORTION_OF_RISK])
-def factor_proportion_of_risk(report_id: str, factor_name: str, *, source: str = None,
-                              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def factor_proportion_of_risk(
+    report_id: str, factor_name: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     Factor proportion of risk data associated with a factor in a factor risk report
 
@@ -97,8 +120,14 @@ def factor_proportion_of_risk(report_id: str, factor_name: str, *, source: str =
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.DAILY_RISK])
-def daily_risk(report_id: str, factor_name: str = 'Total', *, source: str = None,
-               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def daily_risk(
+    report_id: str,
+    factor_name: str = 'Total',
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Daily risk data associated with a factor in a factor risk report
 
@@ -113,8 +142,14 @@ def daily_risk(report_id: str, factor_name: str = 'Total', *, source: str = None
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.ANNUAL_RISK])
-def annual_risk(report_id: str, factor_name: str = 'Total', *, source: str = None,
-                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def annual_risk(
+    report_id: str,
+    factor_name: str = 'Total',
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Annual risk data associated with a factor in a factor risk report
 
@@ -129,8 +164,9 @@ def annual_risk(report_id: str, factor_name: str = 'Total', *, source: str = Non
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.PNL])
-def normalized_performance(report_id: str, leg: str = None, *, source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def normalized_performance(
+    report_id: str, leg: str = None, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     Returns the Normalized Performance of a performance report based on AUM source
     :param report_id: id of performance report
@@ -168,8 +204,8 @@ def normalized_performance(report_id: str, leg: str = None, *, source: str = Non
     performance_report = PerformanceReport.get(report_id)
 
     constituent_data = performance_report.get_portfolio_constituents(
-        fields=['assetId', 'pnl', 'quantity', 'netExposure'], start_date=start_date, end_date=end_date).set_index(
-        'date')
+        fields=['assetId', 'pnl', 'quantity', 'netExposure'], start_date=start_date, end_date=end_date
+    ).set_index('date')
 
     if leg:
         if leg.lower() == "long":
@@ -178,10 +214,12 @@ def normalized_performance(report_id: str, leg: str = None, *, source: str = Non
             constituent_data = constituent_data[constituent_data['quantity'] < 0]
 
     # Split into long and short and aggregate across dates
-    long_side = _return_metrics(constituent_data[constituent_data['quantity'] > 0],
-                                list(constituent_data.index.unique()), "long")
-    short_side = _return_metrics(constituent_data[constituent_data['quantity'] < 0],
-                                 list(constituent_data.index.unique()), "short")
+    long_side = _return_metrics(
+        constituent_data[constituent_data['quantity'] > 0], list(constituent_data.index.unique()), "long"
+    )
+    short_side = _return_metrics(
+        constituent_data[constituent_data['quantity'] < 0], list(constituent_data.index.unique()), "short"
+    )
 
     short_exposure = sum(abs(short_side['exposure']))
     long_exposure = sum(long_side['exposure'])
@@ -196,8 +234,9 @@ def normalized_performance(report_id: str, leg: str = None, *, source: str = Non
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.PNL])
-def long_pnl(report_id: str, *, source: str = None,
-             real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def long_pnl(
+    report_id: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     PNL from long holdings
 
@@ -212,15 +251,17 @@ def long_pnl(report_id: str, *, source: str = None,
     performance_report = PerformanceReport.get(report_id)
 
     constituent_data = performance_report.get_portfolio_constituents(
-        fields=['pnl', 'quantity'], start_date=start_date, end_date=end_date).set_index('date')
+        fields=['pnl', 'quantity'], start_date=start_date, end_date=end_date
+    ).set_index('date')
     long_leg = constituent_data[constituent_data['quantity'] > 0]['pnl']
     long_leg = long_leg.groupby(level=0).sum()
     return pd.Series(long_leg, name="longPnl")
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.PNL])
-def short_pnl(report_id: str, *, source: str = None,
-              real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def short_pnl(
+    report_id: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
 
     PNL from short holdings
@@ -235,15 +276,17 @@ def short_pnl(report_id: str, *, source: str = None,
     performance_report = PerformanceReport.get(report_id)
 
     constituent_data = performance_report.get_portfolio_constituents(
-        fields=['pnl', 'quantity'], start_date=start_date, end_date=end_date).set_index('date')
+        fields=['pnl', 'quantity'], start_date=start_date, end_date=end_date
+    ).set_index('date')
     short_leg = constituent_data[constituent_data['quantity'] < 0]['pnl']
     short_leg = short_leg.groupby(level=0).sum()
     return pd.Series(short_leg, name="shortPnl")
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.THEMATIC_EXPOSURE])
-def thematic_exposure(report_id: str, basket_ticker: str, *, source: str = None,
-                      real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def thematic_exposure(
+    report_id: str, basket_ticker: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     Thematic exposure of a portfolio to a requested GS thematic flagship basket
 
@@ -256,9 +299,11 @@ def thematic_exposure(report_id: str, basket_ticker: str, *, source: str = None,
     """
     thematic_report = ThematicReport.get(report_id)
     asset = SecurityMaster.get_asset(basket_ticker, AssetIdentifier.TICKER)
-    df = thematic_report.get_thematic_exposure(start_date=DataContext.current.start_date,
-                                               end_date=DataContext.current.end_date,
-                                               basket_ids=[asset.get_marquee_id()])
+    df = thematic_report.get_thematic_exposure(
+        start_date=DataContext.current.start_date,
+        end_date=DataContext.current.end_date,
+        basket_ids=[asset.get_marquee_id()],
+    )
     if not df.empty:
         df = df.set_index('date')
         df.index = pd.to_datetime(df.index)
@@ -266,8 +311,9 @@ def thematic_exposure(report_id: str, basket_ticker: str, *, source: str = None,
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.THEMATIC_EXPOSURE])
-def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
-                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def thematic_beta(
+    report_id: str, basket_ticker: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     Thematic beta values of a portfolio to a requested GS thematic flagship basket
 
@@ -280,9 +326,11 @@ def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
     """
     thematic_report = ThematicReport.get(report_id)
     asset = SecurityMaster.get_asset(basket_ticker, AssetIdentifier.TICKER)
-    df = thematic_report.get_thematic_betas(start_date=DataContext.current.start_date,
-                                            end_date=DataContext.current.end_date,
-                                            basket_ids=[asset.get_marquee_id()])
+    df = thematic_report.get_thematic_betas(
+        start_date=DataContext.current.start_date,
+        end_date=DataContext.current.end_date,
+        basket_ids=[asset.get_marquee_id()],
+    )
     if not df.empty:
         df = df.set_index('date')
         df.index = pd.to_datetime(df.index)
@@ -290,8 +338,7 @@ def thematic_beta(report_id: str, basket_ticker: str, *, source: str = None,
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.AUM])
-def aum(report_id: str, *, source: str = None,
-        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def aum(report_id: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
     """
     AUM of the portfolio
 
@@ -316,8 +363,14 @@ def aum(report_id: str, *, source: str = None,
 
 
 @plot_measure_entity(EntityType.REPORT, [QueryType.PNL])
-def pnl(report_id: str, unit: str = 'Notional', *, source: str = None,
-        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def pnl(
+    report_id: str,
+    unit: str = 'Notional',
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     PNL from all holdings, if unit is Percent, geometrically aggregate over time frame
 
@@ -341,8 +394,9 @@ def pnl(report_id: str, unit: str = 'Notional', *, source: str = None,
 
 
 @plot_measure_entity(EntityType.REPORT)
-def historical_simulation_estimated_pnl(report_id: str, *, source: str = None,
-                                        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def historical_simulation_estimated_pnl(
+    report_id: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     Estimated Pnl from replaying a historical simulation scenario on your latest positions
     :param report_id: id of performance report
@@ -360,9 +414,9 @@ def historical_simulation_estimated_pnl(report_id: str, *, source: str = None,
 
 
 @plot_measure_entity(EntityType.REPORT)
-def historical_simulation_estimated_factor_attribution(report_id: str, factor_name: str, *, source: str = None,
-                                                       real_time: bool = False,
-                                                       request_id: Optional[str] = None) -> pd.Series:
+def historical_simulation_estimated_factor_attribution(
+    report_id: str, factor_name: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     Estimated Pnl attributed to the factor after replaying a historical simulation scenario on a portfolio's latest
     positions
@@ -381,9 +435,14 @@ def historical_simulation_estimated_factor_attribution(report_id: str, factor_na
 
 
 @plot_measure_entity(EntityType.REPORT)
-def hit_rate(report_id: str, rolling_window: Union[int, str], *, source: str = None,
-             real_time: bool = False,
-             request_id: Optional[str] = None) -> pd.Series:
+def hit_rate(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The hit rate of a portfolio is a percentage of positions that have generated positive returns over a given period.
 
@@ -398,9 +457,9 @@ def hit_rate(report_id: str, rolling_window: Union[int, str], *, source: str = N
     end_date = DataContext.current.end_time.date()
     performance_report = PerformanceReport.get(report_id)
     window = _parse_window(rolling_window)
-    portfolio_constituents = performance_report.get_portfolio_constituents(fields=['date', 'pnl'],
-                                                                           start_date=start_date,
-                                                                           end_date=end_date).set_index('date')
+    portfolio_constituents = performance_report.get_portfolio_constituents(
+        fields=['date', 'pnl'], start_date=start_date, end_date=end_date
+    ).set_index('date')
 
     portfolio_constituents = portfolio_constituents[portfolio_constituents['entryType'] == 'Holding']
     portfolio_constituents = portfolio_constituents.sort_values('date')
@@ -414,10 +473,14 @@ def hit_rate(report_id: str, rolling_window: Union[int, str], *, source: str = N
 
 
 @plot_measure_entity(EntityType.REPORT)
-def portfolio_max_drawdown(report_id: str, rolling_window: Union[int, str], *,
-                           source: str = None,
-                           real_time: bool = False,
-                           request_id: Optional[str] = None) -> pd.Series:
+def portfolio_max_drawdown(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The largest drop from peak to trough in a sub-period over the stated timeframe
 
@@ -436,10 +499,14 @@ def portfolio_max_drawdown(report_id: str, rolling_window: Union[int, str], *,
 
 
 @plot_measure_entity(EntityType.REPORT)
-def drawdown_length(report_id: str, rolling_window: Union[int, str], *,
-                    source: str = None,
-                    real_time: bool = False,
-                    request_id: Optional[str] = None) -> pd.Series:
+def drawdown_length(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The length in days between the peak and the trough of the maximum drawdown
 
@@ -458,10 +525,14 @@ def drawdown_length(report_id: str, rolling_window: Union[int, str], *,
 
 
 @plot_measure_entity(EntityType.REPORT)
-def max_recovery_period(report_id: str, rolling_window: Union[int, str], *,
-                        source: str = None,
-                        real_time: bool = False,
-                        request_id: Optional[str] = None) -> pd.Series:
+def max_recovery_period(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The maximum number of days used to reach a previously broken price level over the stated timeframe.
 
@@ -521,9 +592,14 @@ def _drawdown_length(series):
 
 
 @plot_measure_entity(EntityType.REPORT)
-def standard_deviation(report_id: str, rolling_window: Union[int, str], *, source: str = None,
-                       real_time: bool = False,
-                       request_id: Optional[str] = None) -> pd.Series:
+def standard_deviation(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of the total return over the stated time frame.
 
@@ -543,9 +619,14 @@ def standard_deviation(report_id: str, rolling_window: Union[int, str], *, sourc
 
 
 @plot_measure_entity(EntityType.REPORT)
-def downside_risk(report_id: str, rolling_window: Union[int, str], *, source: str = None,
-                  real_time: bool = False,
-                  request_id: Optional[str] = None) -> pd.Series:
+def downside_risk(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of the periodic returns that are lower than the mean return over the stated time frame.
     Standard deviation is calculated using all returns, downside risk is calculated using only the returns
@@ -566,9 +647,14 @@ def downside_risk(report_id: str, rolling_window: Union[int, str], *, source: st
 
 
 @plot_measure_entity(EntityType.REPORT)
-def semi_variance(report_id: str, rolling_window: Union[int, str], *, source: str = None,
-                  real_time: bool = False,
-                  request_id: Optional[str] = None) -> pd.Series:
+def semi_variance(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of the periodic returns that are lower than the mean return over the stated time frame.
     Standard deviation is calculated using all returns, semi variance is calculated using only the returns
@@ -589,9 +675,14 @@ def semi_variance(report_id: str, rolling_window: Union[int, str], *, source: st
 
 
 @plot_measure_entity(EntityType.REPORT)
-def kurtosis(report_id: str, rolling_window: Union[int, str], *, source: str = None,
-             real_time: bool = False,
-             request_id: Optional[str] = None) -> pd.Series:
+def kurtosis(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Kurtosis measure the peakedness or flatness of the return distribution over the state time frame.
     In a flat distribution the average value is more likely to occur.
@@ -607,17 +698,21 @@ def kurtosis(report_id: str, rolling_window: Union[int, str], *, source: str = N
     portfolio_pnl = _get_daily_pnl(report_id)
     rolling_window = _parse_window(rolling_window)
     rolling_kurtosis = portfolio_pnl.rolling(window=rolling_window).apply(
-        lambda x: stats.kurtosis(x, fisher=True, bias=False),
-        raw=False
+        lambda x: stats.kurtosis(x, fisher=True, bias=False), raw=False
     )
 
     return rolling_kurtosis
 
 
 @plot_measure_entity(EntityType.REPORT)
-def skewness(report_id: str, rolling_window: Union[int, str], *, source: str = None,
-             real_time: bool = False,
-             request_id: Optional[str] = None) -> pd.Series:
+def skewness(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Skewness measures the degree of symmetry of the return distribution over the stated time frame.
     If the left tail is more pronounced than the right tail, it is said the return have negative skewness.
@@ -632,18 +727,22 @@ def skewness(report_id: str, rolling_window: Union[int, str], *, source: str = N
     portfolio_pnl = _get_daily_pnl(report_id)
     rolling_window = _parse_window(rolling_window)
     rolling_skewness = portfolio_pnl.rolling(window=rolling_window).apply(
-        lambda x: stats.skew(x, bias=False),
-        raw=False
+        lambda x: stats.skew(x, bias=False), raw=False
     )
 
     return rolling_skewness
 
 
 @plot_measure_entity(EntityType.REPORT)
-def realized_var(report_id: str, rolling_window: Union[int, str],
-                 confidence_interval: float = .95, *, source: str = None,
-                 real_time: bool = False,
-                 request_id: Optional[str] = None) -> pd.Series:
+def realized_var(
+    report_id: str,
+    rolling_window: Union[int, str],
+    confidence_interval: float = 0.95,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The maximum expected loss of the portfolios, calculated using
     the natural distribution of returns over a stated time frame and is based on a confidence level.
@@ -665,10 +764,15 @@ def realized_var(report_id: str, rolling_window: Union[int, str],
 
 
 @plot_measure_entity(EntityType.REPORT)
-def tracking_error(report_id: str, benchmark_id: str, rolling_window: Union[int, str],
-                   *, source: str = None,
-                   real_time: bool = False,
-                   request_id: Optional[str] = None) -> pd.Series:
+def tracking_error(
+    report_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The standard deviation of the excess return relative to the benchmark over the state time frame.
 
@@ -695,16 +799,21 @@ def tracking_error(report_id: str, benchmark_id: str, rolling_window: Union[int,
     rolling_window = _parse_window(rolling_window)
     benchmark_returns = _get_benchmark_daily_return(benchmark_id, start_date, end_date)
     portfolio_returns = _get_daily_pnl(report_id)
-    active_return = (portfolio_returns - benchmark_returns)
+    active_return = portfolio_returns - benchmark_returns
     rolling_error = active_return.rolling(window=rolling_window).std()
     return rolling_error
 
 
 @plot_measure_entity(EntityType.REPORT)
-def tracking_error_bear(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                        source: str = None,
-                        real_time: bool = False,
-                        request_id: Optional[str] = None) -> pd.Series:
+def tracking_error_bear(
+    report_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The standard deviation of the excess return relative to the benchmark over the state time frame,
     only counting the periods when benchmark returns were negative.
@@ -735,18 +844,21 @@ def tracking_error_bear(report_id: str, benchmark_id: str, rolling_window: Union
     is_bear = benchmark_returns <= 0
     active_return = portfolio_returns - benchmark_returns
     rolling_error_bear = active_return.rolling(window=rolling_window).apply(
-        lambda x: np.std(x, ddof=1) if is_bear.loc[x.index[-1]]
-        else np.nan,
-        raw=False
+        lambda x: np.std(x, ddof=1) if is_bear.loc[x.index[-1]] else np.nan, raw=False
     )
     return rolling_error_bear
 
 
 @plot_measure_entity(EntityType.REPORT)
-def tracking_error_bull(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                        source: str = None,
-                        real_time: bool = False,
-                        request_id: Optional[str] = None) -> pd.Series:
+def tracking_error_bull(
+    report_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     The standard deviation of the excess return relative to the benchmark over the state time frame,
     only counting the periods when benchmark returns were positive.
@@ -777,17 +889,21 @@ def tracking_error_bull(report_id: str, benchmark_id: str, rolling_window: Union
     is_bull = benchmark_returns > 0
     active_return = portfolio_pnl - benchmark_returns
     rolling_error_bull = active_return.rolling(window=rolling_window).apply(
-        lambda x: np.std(x, ddof=1) if is_bull.loc[x.index[-1]]
-        else np.nan,
-        raw=False
+        lambda x: np.std(x, ddof=1) if is_bull.loc[x.index[-1]] else np.nan, raw=False
     )
     return rolling_error_bull
 
 
 @plot_measure_entity(EntityType.REPORT)
-def portfolio_sharpe_ratio(report_id: str, risk_free_id: str, rolling_window: Union[int, str], *, source: str = None,
-                           real_time: bool = False,
-                           request_id: Optional[str] = None) -> pd.Series:
+def portfolio_sharpe_ratio(
+    report_id: str,
+    risk_free_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the risk free rate per unit of volatility
 
@@ -824,9 +940,14 @@ def portfolio_sharpe_ratio(report_id: str, risk_free_id: str, rolling_window: Un
 
 
 @plot_measure_entity(EntityType.REPORT)
-def calmar_ratio(report_id: str, rolling_window: Union[int, str], *, source: str = None,
-                 real_time: bool = False,
-                 request_id: Optional[str] = None) -> pd.Series:
+def calmar_ratio(
+    report_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted performance metric that divides an investment strategy’s
     annualized rate of return by its maximum drawdown, focusing specifically
@@ -853,10 +974,15 @@ def calmar_ratio(report_id: str, rolling_window: Union[int, str], *, source: str
 
 
 @plot_measure_entity(EntityType.REPORT)
-def sortino_ratio(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                  source: str = None,
-                  real_time: bool = False,
-                  request_id: Optional[str] = None) -> pd.Series:
+def sortino_ratio(
+    report_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the benchmark per unit of semi-variance
 
@@ -896,9 +1022,15 @@ def sortino_ratio(report_id: str, benchmark_id: str, rolling_window: Union[int, 
 
 
 @plot_measure_entity(EntityType.REPORT)
-def jensen_alpha(report_id: str, benchmark_id: str, risk_free_id: str, *, source: str = None,
-                 real_time: bool = False,
-                 request_id: Optional[str] = None) -> pd.Series:
+def jensen_alpha(
+    report_id: str,
+    benchmark_id: str,
+    risk_free_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-Adjusted measure that calculates the actual return of the portfolio
     over and above the return predicted by the CAPM, given the portfolios beta
@@ -932,14 +1064,20 @@ def jensen_alpha(report_id: str, benchmark_id: str, risk_free_id: str, *, source
     risk_free_rate = (1 + _get_risk_free_rate(risk_free_id, start_date, end_date)) ** (1 / 252) - 1
 
     portfolio_beta_series = beta(portfolio_pnl, benchmark_pnl, prices=False)
-    jensen = (portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate)))
+    jensen = portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate))
     return jensen
 
 
 @plot_measure_entity(EntityType.REPORT)
-def jensen_alpha_bear(report_id: str, benchmark_id: str, risk_free_id: str, *, source: str = None,
-                      real_time: bool = False,
-                      request_id: Optional[str] = None) -> pd.Series:
+def jensen_alpha_bear(
+    report_id: str,
+    benchmark_id: str,
+    risk_free_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-Adjusted measure that calculates the actual return of the portfolio
     over and above the return predicted by the CAPM, given the portfolios beta
@@ -974,14 +1112,20 @@ def jensen_alpha_bear(report_id: str, benchmark_id: str, risk_free_id: str, *, s
 
     benchmark_pnl = benchmark_pnl[benchmark_pnl < 0]
 
-    jensen = (portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate)))
+    jensen = portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate))
     return jensen
 
 
 @plot_measure_entity(EntityType.REPORT)
-def jensen_alpha_bull(report_id: str, benchmark_id: str, risk_free_id: str, *, source: str = None,
-                      real_time: bool = False,
-                      request_id: Optional[str] = None) -> pd.Series:
+def jensen_alpha_bull(
+    report_id: str,
+    benchmark_id: str,
+    risk_free_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-Adjusted measure that calculates the actual return of the portfolio
     over and above the return predicted by the CAPM, given the portfolios beta
@@ -1015,14 +1159,14 @@ def jensen_alpha_bull(report_id: str, benchmark_id: str, risk_free_id: str, *, s
 
     portfolio_beta_series = beta(portfolio_pnl, benchmark_pnl, prices=False)
     benchmark_pnl = benchmark_pnl[benchmark_pnl > 0]
-    jensen = (portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate)))
+    jensen = portfolio_pnl - (risk_free_rate + portfolio_beta_series * (benchmark_pnl - risk_free_rate))
     return jensen
 
 
 @plot_measure_entity(EntityType.REPORT)
-def information_ratio(report_id: str, benchmark_id: str, *, source: str = None,
-                      real_time: bool = False,
-                      request_id: Optional[str] = None) -> pd.Series:
+def information_ratio(
+    report_id: str, benchmark_id: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the benchmark,
     per unit of tracking error volatility. It measures the consistency with
@@ -1058,9 +1202,9 @@ def information_ratio(report_id: str, benchmark_id: str, *, source: str = None,
 
 
 @plot_measure_entity(EntityType.REPORT)
-def information_ratio_bear(report_id: str, benchmark_id: str, *, source: str = None,
-                           real_time: bool = False,
-                           request_id: Optional[str] = None) -> pd.Series:
+def information_ratio_bear(
+    report_id: str, benchmark_id: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the benchmark,
     per unit of tracking error volatility, counting only the periods when the benchmark return was negative
@@ -1096,9 +1240,9 @@ def information_ratio_bear(report_id: str, benchmark_id: str, *, source: str = N
 
 
 @plot_measure_entity(EntityType.REPORT)
-def information_ratio_bull(report_id: str, benchmark_id: str, *, source: str = None,
-                           real_time: bool = False,
-                           request_id: Optional[str] = None) -> pd.Series:
+def information_ratio_bull(
+    report_id: str, benchmark_id: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the benchmark,
     per unit of tracking error volatility, counting only the periods when the benchmark return was positive.
@@ -1133,11 +1277,16 @@ def information_ratio_bull(report_id: str, benchmark_id: str, *, source: str = N
 
 
 @plot_measure_entity(EntityType.REPORT)
-def modigliani_ratio(report_id: str, benchmark_id: str, risk_free_id: str,
-                     rolling_window: Union[int, str], *,
-                     source: str = None,
-                     real_time: bool = False,
-                     request_id: Optional[str] = None) -> pd.Series:
+def modigliani_ratio(
+    report_id: str,
+    benchmark_id: str,
+    risk_free_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Modigliani RAP measures how much the portfolio would have returns if it had had
     the same risk as the benchmark. It is a linear transformation of the Sharpe Ratio,
@@ -1181,9 +1330,15 @@ def modigliani_ratio(report_id: str, benchmark_id: str, risk_free_id: str,
 
 
 @plot_measure_entity(EntityType.REPORT)
-def treynor_measure(report_id: str, risk_free_id: str, benchmark_id: str, *, source: str = None,
-                    real_time: bool = False,
-                    request_id: Optional[str] = None) -> pd.Series:
+def treynor_measure(
+    report_id: str,
+    risk_free_id: str,
+    benchmark_id: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Risk-adjusted measure that calculates the excess return over the risk free rate
     per unit of beta relative to the benchmark. This is useful for assessing the excess
@@ -1210,8 +1365,7 @@ def treynor_measure(report_id: str, risk_free_id: str, benchmark_id: str, *, sou
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     portfolio_return = _get_daily_pnl(report_id)
-    security = SecurityMaster.get_asset(benchmark_id,
-                                        AssetIdentifier.MARQUEE_ID)
+    security = SecurityMaster.get_asset(benchmark_id, AssetIdentifier.MARQUEE_ID)
     spot_data_coordinate = security.get_data_coordinate(DataMeasure.SPOT_PRICE)
     benchmark_pricing = spot_data_coordinate.get_series(start=start_date, end=end_date)
     benchmark_pricing = benchmark_pricing.sort_index()
@@ -1225,10 +1379,15 @@ def treynor_measure(report_id: str, risk_free_id: str, benchmark_id: str, *, sou
 
 
 @plot_measure_entity(EntityType.REPORT)
-def alpha(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-          source: str = None,
-          real_time: bool = False,
-          request_id: Optional[str] = None) -> pd.Series:
+def alpha(
+    report_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     This is the intercept from a regression analysis, where the portfolio's returns are regressed
     against the benchmark's returns. It represents the portion of the portfolio's return that is
@@ -1253,8 +1412,8 @@ def alpha(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
     benchmark_pnl = benchmark_pnl.reindex(portfolio_pnl.index)
 
     for i in range(rolling_window, len(portfolio_pnl) + 1):
-        portfolio_window = portfolio_pnl.iloc[i - rolling_window:i]
-        benchmark_window = benchmark_pnl.iloc[i - rolling_window:i]
+        portfolio_window = portfolio_pnl.iloc[i - rolling_window : i]
+        benchmark_window = benchmark_pnl.iloc[i - rolling_window : i]
 
         slope, intercept, *_ = stats.linregress(portfolio_window, benchmark_window)
         intercepts[portfolio_pnl.index[i - 1]] = intercept
@@ -1265,10 +1424,15 @@ def alpha(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
 
 
 @plot_measure_entity(EntityType.REPORT)
-def portfolio_beta(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                   source: str = None,
-                   real_time: bool = False,
-                   request_id: Optional[str] = None) -> pd.Series:
+def portfolio_beta(
+    report_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Beta defined as the slope of the regression between report pnl and benchmark pnl
 
@@ -1290,11 +1454,15 @@ def portfolio_beta(report_id: str, benchmark_id: str, rolling_window: Union[int,
 
 
 @plot_measure_entity(EntityType.REPORT)
-def portfolio_correlation(report_id: str, benchmark_id: str, rolling_window: Union[int, str],
-                          *,
-                          source: str = None,
-                          real_time: bool = False,
-                          request_id: Optional[str] = None) -> pd.Series:
+def portfolio_correlation(
+    report_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Correlation coefficient between the portfolio and the benchmark returns over the stated time frame
 
@@ -1312,8 +1480,7 @@ def portfolio_correlation(report_id: str, benchmark_id: str, rolling_window: Uni
     portfolio_pnl = aum(report_id)
     portfolio_pnl.index = pd.to_datetime(portfolio_pnl.index)
 
-    security = SecurityMaster.get_asset(benchmark_id,
-                                        AssetIdentifier.MARQUEE_ID)
+    security = SecurityMaster.get_asset(benchmark_id, AssetIdentifier.MARQUEE_ID)
     spot_data_coordinate = security.get_data_coordinate(DataMeasure.SPOT_PRICE)
     benchmark_pricing = spot_data_coordinate.get_series(start=start_date, end=end_date)
     benchmark_pricing = benchmark_pricing.sort_index()
@@ -1322,10 +1489,15 @@ def portfolio_correlation(report_id: str, benchmark_id: str, rolling_window: Uni
 
 
 @plot_measure_entity(EntityType.REPORT)
-def capture_ratio(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-                  source: str = None,
-                  real_time: bool = False,
-                  request_id: Optional[str] = None) -> pd.Series:
+def capture_ratio(
+    report_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     A measure of how well portfolio is doing relative to the benchmark,
     defined as the ratio of the portfolio return to the benchmark return calculated
@@ -1348,15 +1520,20 @@ def capture_ratio(report_id: str, benchmark_id: str, rolling_window: Union[int, 
     avg_portfolio = portfolio_return.rolling(window=rolling_window).mean()
     avg_benchmark = benchmark_return.rolling(window=rolling_window).mean()
 
-    capture_ratio_series = (avg_portfolio / avg_benchmark)
+    capture_ratio_series = avg_portfolio / avg_benchmark
     return capture_ratio_series
 
 
 @plot_measure_entity(EntityType.REPORT)
-def r_squared(report_id: str, benchmark_id: str, rolling_window: Union[int, str], *,
-              source: str = None,
-              real_time: bool = False,
-              request_id: Optional[str] = None) -> pd.Series:
+def r_squared(
+    report_id: str,
+    benchmark_id: str,
+    rolling_window: Union[int, str],
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     A measure of how well the portfolio's performance correlates with the performance of the benchmark,
     and thus a measure of what portion of its performance may be explained by the performance of the benchmark.
@@ -1371,13 +1548,12 @@ def r_squared(report_id: str, benchmark_id: str, rolling_window: Union[int, str]
     """
     rolling_window = _parse_window(rolling_window)
     r_values = portfolio_correlation(report_id, benchmark_id, rolling_window)
-    r_values_squared = r_values ** 2
+    r_values_squared = r_values**2
     return r_values_squared
 
 
 def _get_benchmark_return(benchmark_id, start_date, end_date):
-    security = SecurityMaster.get_asset(benchmark_id,
-                                        AssetIdentifier.MARQUEE_ID)
+    security = SecurityMaster.get_asset(benchmark_id, AssetIdentifier.MARQUEE_ID)
     spot_data_coordinate = security.get_data_coordinate(DataMeasure.SPOT_PRICE)
     benchmark_pricing = spot_data_coordinate.get_series(start=start_date, end=end_date)
     benchmark_pricing = benchmark_pricing.sort_index()
@@ -1389,8 +1565,7 @@ def _get_benchmark_return(benchmark_id, start_date, end_date):
 
 
 def _get_benchmark_daily_return(benchmark_id, start_date, end_date):
-    security = SecurityMaster.get_asset(benchmark_id,
-                                        AssetIdentifier.MARQUEE_ID)
+    security = SecurityMaster.get_asset(benchmark_id, AssetIdentifier.MARQUEE_ID)
     spot_data_coordinate = security.get_data_coordinate(DataMeasure.SPOT_PRICE)
     benchmark_pricing = spot_data_coordinate.get_series(start=start_date, end=end_date)
     benchmark_pricing = benchmark_pricing.sort_index()
@@ -1406,20 +1581,20 @@ def _max_drawdown(series):
 
 def _compute_sortino(series):
     downside = series[series < 0]
-    downside_std = np.sqrt((downside ** 2).mean()) * np.sqrt(252)
+    downside_std = np.sqrt((downside**2).mean()) * np.sqrt(252)
     mean_excess = series.mean() * 252
     return mean_excess / downside_std if downside_std != 0 else np.nan
 
 
 def _rolling_downside_risk(series):
     negative_devs = series[series < series.mean()] - series.mean()
-    semi_variance_series = (negative_devs ** 2).mean()
+    semi_variance_series = (negative_devs**2).mean()
     return np.sqrt(semi_variance_series)
 
 
 def _rolling_semi_variance(series):
     negative_devs = series[series < 0] - series.mean()
-    semi_variance_series = (negative_devs ** 2).mean()
+    semi_variance_series = (negative_devs**2).mean()
     return np.sqrt(semi_variance_series)
 
 
@@ -1432,15 +1607,15 @@ def _get_daily_pnl(report_id: str) -> pd.Series:
 
 
 def _get_risk_free_rate(risk_free_id, start_date, end_date):
-    risk_free = SecurityMaster.get_asset(risk_free_id,
-                                         AssetIdentifier.MARQUEE_ID)
+    risk_free = SecurityMaster.get_asset(risk_free_id, AssetIdentifier.MARQUEE_ID)
     risk_free_pricing_data = risk_free.get_data_coordinate('yield')
     risk_free_rate = risk_free_pricing_data.get_series(start=start_date, end=end_date)
     return risk_free_rate.drop_duplicates()
 
 
-def _replay_historical_factor_moves_on_latest_positions(report_id: str, factors: List[str]) -> \
-        Union[pd.Series, pd.DataFrame]:
+def _replay_historical_factor_moves_on_latest_positions(
+    report_id: str, factors: List[str]
+) -> Union[pd.Series, pd.DataFrame]:
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()
     risk_report = FactorRiskReport.get(report_id)
@@ -1455,12 +1630,7 @@ def _replay_historical_factor_moves_on_latest_positions(report_id: str, factors:
         query.update({"factor": factors})
     for batch in batches:
         data_query_results += GsDataApi.execute_query(
-            'RISK_MODEL_FACTOR',
-            DataQuery(
-                where=query,
-                start_date=batch[0],
-                end_date=batch[-1]
-            )
+            'RISK_MODEL_FACTOR', DataQuery(where=query, start_date=batch[0], end_date=batch[-1])
         ).get('data', [])
 
     return_data = pd.DataFrame(data_query_results).pivot(columns="factor", index="date", values="return").sort_index()
@@ -1468,18 +1638,17 @@ def _replay_historical_factor_moves_on_latest_positions(report_id: str, factors:
 
     latest_report_date = risk_report.latest_end_date
     factor_exposures = risk_report.get_results(
-        start_date=latest_report_date,
-        end_date=latest_report_date,
-        return_format=ReturnFormat.JSON
+        start_date=latest_report_date, end_date=latest_report_date, return_format=ReturnFormat.JSON
     )
-    factor_exposure_df = pd.DataFrame(factor_exposures).pivot(columns="factor",
-                                                              index="date",
-                                                              values="exposure").sort_index()
+    factor_exposure_df = (
+        pd.DataFrame(factor_exposures).pivot(columns="factor", index="date", values="exposure").sort_index()
+    )
 
     factor_exposure_df = factor_exposure_df.reindex(columns=return_data_aggregated.columns)
     factor_attributed_pnl_values = return_data_aggregated.values * factor_exposure_df.values
-    factor_attributed_pnl = pd.DataFrame(factor_attributed_pnl_values, index=return_data_aggregated.index,
-                                         columns=return_data_aggregated.columns)
+    factor_attributed_pnl = pd.DataFrame(
+        factor_attributed_pnl_values, index=return_data_aggregated.index, columns=return_data_aggregated.columns
+    )
 
     return factor_attributed_pnl
 
@@ -1492,12 +1661,7 @@ def _parse_window(window: Union[int, str]):
         raise MqValueError('Invalid window format, please end with one of: ["d", "w", "m", "y"]')
     value, unit = match.groups()
     value = int(value)
-    unit_multipliers = {
-        'd': 1,
-        'w': 5,
-        'm': 22,
-        'y': 252
-    }
+    unit_multipliers = {'d': 1, 'w': 5, 'm': 22, 'y': 252}
     return value * unit_multipliers[unit]
 
 
@@ -1521,7 +1685,7 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
         factors=factors_to_query,
         start_date=DataContext.current.start_date,
         end_date=DataContext.current.end_date,
-        return_format=ReturnFormat.JSON
+        return_format=ReturnFormat.JSON,
     )
     total_data = [d for d in factor_data if d.get(data_type) is not None and d.get('factor') == 'Total']
     factor_data = [d for d in factor_data if d.get(data_type) is not None and d.get('factor') == factor_name]
@@ -1542,10 +1706,9 @@ def _get_factor_data(report_id: str, factor_name: str, query_type: QueryType, un
             for data in factor_data:
                 if aum.get(data['date']) is None:
                     raise MqValueError('Cannot convert to percent: Missing AUM on some dates in the date range')
-            factor_exposures = [{
-                'date': d['date'],
-                col_name: d[data_type] / aum.get(d['date']) * 100
-            } for d in factor_data]
+            factor_exposures = [
+                {'date': d['date'], col_name: d[data_type] / aum.get(d['date']) * 100} for d in factor_data
+            ]
     else:
         factor_exposures = [{'date': d['date'], col_name: d[data_type]} for d in factor_data]
 
@@ -1564,10 +1727,11 @@ def _return_metrics(one_leg: pd.DataFrame, dates: list, name: str):
 
     one_leg['cumulativePnl'] = one_leg['pnl'].cumsum(axis=0)
 
-    one_leg['normalizedExposure'] = (one_leg['exposure'] - one_leg['cumulativePnl'])
+    one_leg['normalizedExposure'] = one_leg['exposure'] - one_leg['cumulativePnl']
     one_leg.iloc[0, one_leg.columns.get_loc('cumulativePnl')] = 0
     one_leg[f'{name}Metrics'] = one_leg['cumulativePnl'] / one_leg['normalizedExposure'] + 1
 
-    one_leg[f'{name}Metrics'] = 1 / one_leg[f'{name}Metrics'] if one_leg['exposure'].iloc[-1] < 0 else one_leg[
-        f'{name}Metrics']
+    one_leg[f'{name}Metrics'] = (
+        1 / one_leg[f'{name}Metrics'] if one_leg['exposure'].iloc[-1] < 0 else one_leg[f'{name}Metrics']
+    )
     return one_leg

@@ -38,13 +38,15 @@ DEFAULT_SEARCH_FIELDS = [
 
 class GsUsersApi:
     @classmethod
-    def get_users(cls,
-                  user_ids: List[str] = None,
-                  user_emails: List[str] = None,
-                  user_names: List[str] = None,
-                  user_companies: List[str] = None,
-                  limit: int = 100,
-                  offset: int = 0) -> List:
+    def get_users(
+        cls,
+        user_ids: List[str] = None,
+        user_emails: List[str] = None,
+        user_names: List[str] = None,
+        user_companies: List[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> List:
         url = '/users?'
         if user_ids:
             url += f'&id={"&id=".join(user_ids)}'
@@ -80,7 +82,7 @@ class GsUsersApi:
         if fields is not None and key_type not in fields:
             fields = [*fields, key_type]
         for i in range(0, len(keys), chunk_size):
-            chunk = keys[i:i + chunk_size]
+            chunk = keys[i : i + chunk_size]
             fields_str = f"fields={','.join(fields)}&" if fields else ''
             url = f'/users?{fields_str}{key_type}={glue.join(chunk)}&limit=200'
             response = GsSession.current._get(url)
@@ -89,10 +91,9 @@ class GsUsersApi:
         return users_by_key
 
     @classmethod
-    def search(cls,
-               query: str,
-               fields: Optional[List[str]] = None,
-               where: Optional[Dict[str, any]] = None) -> Dict[str, Any]:
+    def search(
+        cls, query: str, fields: Optional[List[str]] = None, where: Optional[Dict[str, any]] = None
+    ) -> Dict[str, Any]:
         payload = {
             "q": query,
             "fields": fields or DEFAULT_SEARCH_FIELDS,

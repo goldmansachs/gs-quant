@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import pytest
 
 FAILED_TESTS = []
@@ -33,15 +34,11 @@ def log_mock_data_event(event: str):
 
 
 def pytest_addoption(parser):
-    parser.addoption(
-        '--fixmockdata', action='store_true'
-    )
+    parser.addoption('--fixmockdata', action='store_true')
 
 
 def pytest_configure(config):
-    config.addinivalue_line(
-        "markers", "fixmockdata: marker to update mock file data"
-    )
+    config.addinivalue_line("markers", "fixmockdata: marker to update mock file data")
 
 
 @pytest.hookimpl(tryfirst=True)

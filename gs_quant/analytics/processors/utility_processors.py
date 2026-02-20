@@ -23,14 +23,15 @@ from gs_quant.analytics.core.processor_result import ProcessorResult
 
 
 class LastProcessor(BaseProcessor):
-
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 *,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 **kwargs):
-        """ LastProcessor returns the last value of the series
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        *,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        **kwargs,
+    ):
+        """LastProcessor returns the last value of the series
 
         :param a: DataCoordinate or BaseProcessor for the first coordinate
         :param start: start date or time used in the underlying data query
@@ -45,7 +46,7 @@ class LastProcessor(BaseProcessor):
         self.end = end
 
     def process(self):
-        """ Calculate the result and store it as the processor value """
+        """Calculate the result and store it as the processor value"""
         a_data = self.children_data.get('a')
         if isinstance(a_data, ProcessorResult):
             if a_data.success and isinstance(a_data.data, pd.Series):
@@ -58,14 +59,15 @@ class LastProcessor(BaseProcessor):
 
 
 class MinProcessor(BaseProcessor):
-
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 *,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 **kwargs):
-        """ MinProcessor returns the minimum value of the series
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        *,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        **kwargs,
+    ):
+        """MinProcessor returns the minimum value of the series
 
         :param a: DataCoordinate or BaseProcessor for the coordinate
         :param start: start date or time used in the underlying data query
@@ -80,7 +82,7 @@ class MinProcessor(BaseProcessor):
         self.end = end
 
     def process(self):
-        """ Calculate the result and store it as the processor value """
+        """Calculate the result and store it as the processor value"""
         a = self.children_data.get('a')
         if isinstance(a, ProcessorResult):
             if a.success and isinstance(a.data, pd.Series):
@@ -97,14 +99,15 @@ class MinProcessor(BaseProcessor):
 
 
 class MaxProcessor(BaseProcessor):
-
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 *,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 **kwargs):
-        """ MaxProcessor returns the maximum value of the series
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        *,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        **kwargs,
+    ):
+        """MaxProcessor returns the maximum value of the series
 
         :param a: DataCoordinate or BaseProcessor for the coordinate
         :param start: start date or time used in the underlying data query
@@ -119,7 +122,7 @@ class MaxProcessor(BaseProcessor):
         self.end = end
 
     def process(self):
-        """ Calculate the result and store it as the processor value """
+        """Calculate the result and store it as the processor value"""
         a = self.children_data.get('a')
         if isinstance(a, ProcessorResult):
             if a.success and isinstance(a.data, pd.Series):
@@ -136,14 +139,16 @@ class MaxProcessor(BaseProcessor):
 
 
 class AppendProcessor(BaseProcessor):
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 b: DataCoordinateOrProcessor,
-                 *,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 **kwargs):
-        """ AppendProcessor appends both a and b data series into one series
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        b: DataCoordinateOrProcessor,
+        *,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        **kwargs,
+    ):
+        """AppendProcessor appends both a and b data series into one series
 
         :param a: DataCoordinate or BaseProcessor for the first series
         :param b: DataCoordinate or BaseProcessor for the second series
@@ -178,15 +183,17 @@ class AppendProcessor(BaseProcessor):
 
 
 class AdditionProcessor(BaseProcessor):
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 b: Optional[DataCoordinateOrProcessor] = None,
-                 *,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 addend: Optional[float] = None,
-                 **kwargs):
-        """ AdditionProcessor adds two series or an addend to a series
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        b: Optional[DataCoordinateOrProcessor] = None,
+        *,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        addend: Optional[float] = None,
+        **kwargs,
+    ):
+        """AdditionProcessor adds two series or an addend to a series
 
 
         :param a: DataCoordinate or BaseProcessor for the first series
@@ -230,15 +237,17 @@ class AdditionProcessor(BaseProcessor):
 
 
 class SubtractionProcessor(BaseProcessor):
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 b: Optional[DataCoordinateOrProcessor] = None,
-                 *,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 subtrahend: Optional[float] = None,
-                 **kwargs):
-        """ SubtractionProcessor subtract two series or a subtrahend to a series
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        b: Optional[DataCoordinateOrProcessor] = None,
+        *,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        subtrahend: Optional[float] = None,
+        **kwargs,
+    ):
+        """SubtractionProcessor subtract two series or a subtrahend to a series
 
 
         :param a: DataCoordinate or BaseProcessor for the first series
@@ -282,17 +291,19 @@ class SubtractionProcessor(BaseProcessor):
 
 
 class MultiplicationProcessor(BaseProcessor):
-    """ Multiply scalar or series together """
+    """Multiply scalar or series together"""
 
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 b: Optional[DataCoordinateOrProcessor] = None,
-                 *,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 factor: Optional[float] = None,
-                 **kwargs):
-        """ MultiplicationProcessor multiply two series or a factor to a series
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        b: Optional[DataCoordinateOrProcessor] = None,
+        *,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        factor: Optional[float] = None,
+        **kwargs,
+    ):
+        """MultiplicationProcessor multiply two series or a factor to a series
 
 
         :param a: DataCoordinate or BaseProcessor for the first series
@@ -336,15 +347,17 @@ class MultiplicationProcessor(BaseProcessor):
 
 
 class DivisionProcessor(BaseProcessor):
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 b: Optional[DataCoordinateOrProcessor] = None,
-                 *,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 dividend: Optional[float] = None,
-                 **kwargs):
-        """ DivisionProcessor divides two series or divides a dividend to a series
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        b: Optional[DataCoordinateOrProcessor] = None,
+        *,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        dividend: Optional[float] = None,
+        **kwargs,
+    ):
+        """DivisionProcessor divides two series or divides a dividend to a series
 
 
         :param a: DataCoordinate or BaseProcessor for the first series
@@ -388,9 +401,7 @@ class DivisionProcessor(BaseProcessor):
 
 
 class OneDayProcessor(BaseProcessor):
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 **kwargs):
+    def __init__(self, a: DataCoordinateOrProcessor, **kwargs):
         super().__init__(**kwargs)
         self.children['a'] = a
 
@@ -416,15 +427,16 @@ class OneDayProcessor(BaseProcessor):
 
 
 class NthLastProcessor(BaseProcessor):
-
-    def __init__(self,
-                 a: DataCoordinateOrProcessor,
-                 *,
-                 n: int = 1,
-                 start: Optional[DateOrDatetimeOrRDate] = None,
-                 end: Optional[DateOrDatetimeOrRDate] = None,
-                 **kwargs):
-        """ LastProcessor returns the last value of the series
+    def __init__(
+        self,
+        a: DataCoordinateOrProcessor,
+        *,
+        n: int = 1,
+        start: Optional[DateOrDatetimeOrRDate] = None,
+        end: Optional[DateOrDatetimeOrRDate] = None,
+        **kwargs,
+    ):
+        """LastProcessor returns the last value of the series
 
         :param a: DataCoordinate or BaseProcessor for the first coordinate
         :param start: start date or time used in the underlying data query
@@ -440,7 +452,7 @@ class NthLastProcessor(BaseProcessor):
         self.n = n
 
     def process(self):
-        """ Calculate the result and store it as the processor value """
+        """Calculate the result and store it as the processor value"""
         a_data = self.children_data.get('a')
         if isinstance(a_data, ProcessorResult):
             if a_data.success and isinstance(a_data.data, pd.Series):

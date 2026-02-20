@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import logging
 from typing import Optional, Union
 
@@ -30,8 +31,16 @@ from gs_quant.timeseries.econometrics import volatility, correlation
 from gs_quant.timeseries.measures_helper import VolReference, preprocess_implied_vol_strikes_eq
 from gs_quant import timeseries as ts
 from .algebra import sqrt
-from .helper import _create_enum, _tenor_to_month, _month_to_tenor, requires_session, Returns, plot_function, \
-    plot_method, Window
+from .helper import (
+    _create_enum,
+    _tenor_to_month,
+    _month_to_tenor,
+    requires_session,
+    Returns,
+    plot_function,
+    plot_method,
+    Window,
+)
 from ..api.gs.assets import GsAssetApi
 from ..api.gs.data import GsDataApi, MarketDataResponseFrame, QueryType
 from ..api.utils import ThreadPoolManager
@@ -46,10 +55,10 @@ ReturnType = _create_enum('ReturnType', ['excess_return'])
 
 
 def backtest_basket(
-        series: list,
-        weights: list,
-        costs: list = None,
-        rebal_freq: RebalFreq = RebalFreq.DAILY,
+    series: list,
+    weights: list,
+    costs: list = None,
+    rebal_freq: RebalFreq = RebalFreq.DAILY,
 ):
     num_assets = len(series)
     costs = costs or [0] * num_assets
@@ -65,11 +74,7 @@ def backtest_basket(
     cal = pd.DatetimeIndex(
         reduce(
             np.intersect1d,
-            (
-                curve.index
-                for curve in series + weights + costs
-                if isinstance(curve, pd.Series)
-            ),
+            (curve.index for curve in series + weights + costs if isinstance(curve, pd.Series)),
         )
     )
 
@@ -100,44 +105,35 @@ def backtest_basket(
 
     # Initialize backtest
     output_arr[0] = 100
-    units_arr[0, ] = (
-        output_arr[0] * weights.values[0, ] / series.values[0, ]
-    )
-    actual_weights_arr[0, ] = weights.values[0, ]
+    units_arr[0,] = output_arr[0] * weights.values[0,] / series.values[0,]
+    actual_weights_arr[0,] = weights.values[0,]
 
     # Run backtest
     prev_rebal = 0
     for i, date in enumerate(cal[1:], 1):
         # Update performance
-        output_arr[i] = output_arr[i - 1] + np.dot(
-            units_arr[i - 1, ], series.values[i, ] - series.values[i - 1, ]
-        )
+        output_arr[i] = output_arr[i - 1] + np.dot(units_arr[i - 1,], series.values[i,] - series.values[i - 1,])
 
-        actual_weights_arr[i, ] = (
-            weights.values[prev_rebal, ] *
-            (series.values[i, ] / series.values[prev_rebal, ]) *
-            (output_arr[prev_rebal] / output_arr[i])
+        actual_weights_arr[i,] = (
+            weights.values[prev_rebal,]
+            * (series.values[i,] / series.values[prev_rebal,])
+            * (output_arr[prev_rebal] / output_arr[i])
         )
 
         # Rebalance on rebal_dates
         if date in rebal_dates:
             # Compute costs
             output_arr[i] -= (
-                np.dot(costs.values[i, ], np.abs(weights.values[i, ] - actual_weights_arr[i, ])) *
-                output_arr[i]
+                np.dot(costs.values[i,], np.abs(weights.values[i,] - actual_weights_arr[i,])) * output_arr[i]
             )
 
             # Rebalance
-            units_arr[i, ] = (
-                output_arr[i] * weights.values[i, ] / series.values[i, ]
-            )
+            units_arr[i,] = output_arr[i] * weights.values[i,] / series.values[i,]
             prev_rebal = i
 
-            actual_weights_arr[i, ] = weights.values[i, ]
+            actual_weights_arr[i,] = weights.values[i,]
         else:
-            units_arr[i, ] = units_arr[
-                i - 1,
-            ]
+            units_arr[i,] = units_arr[i - 1,]
 
     # Copy results back to pandas objects
     output = pd.Series(output_arr, index=cal)
@@ -147,11 +143,11 @@ def backtest_basket(
 
 @plot_function
 def basket_series(
-        series: list,
-        weights: list = None,
-        costs: list = None,
-        rebal_freq: RebalFreq = RebalFreq.DAILY,
-        return_type: ReturnType = ReturnType.EXCESS_RETURN,
+    series: list,
+    weights: list = None,
+    costs: list = None,
+    rebal_freq: RebalFreq = RebalFreq.DAILY,
+    return_type: ReturnType = ReturnType.EXCESS_RETURN,
 ) -> pd.Series:
     """
     Calculates a basket return series.
@@ -220,8 +216,11 @@ class Basket:
     def get_marquee_ids(self):
         if self._marquee_ids is None:
             # Assets sorted by increasing rank
-            assets = reversed(GsAssetApi.get_many_assets_data(bbid=self.bbids, fields=('id', 'bbid', 'rank'),
-                                                              limit=2 * len(self.bbids), order_by=['>rank']))
+            assets = reversed(
+                GsAssetApi.get_many_assets_data(
+                    bbid=self.bbids, fields=('id', 'bbid', 'rank'), limit=2 * len(self.bbids), order_by=['>rank']
+                )
+            )
             # If duplicate assets exist, asset_dict will contain a entry for the one with the higher rank (relevant)
             assets_dict = {entry['bbid']: entry['id'] for entry in assets}
             if len(assets_dict) != len(set(self.bbids)):
@@ -238,8 +237,9 @@ class Basket:
         if self._spot_data is None:
             q = GsDataApi.build_market_data_query(self.get_marquee_ids(), QueryType.SPOT)
             log_debug(request_id, _logger, 'q %s', q)
-            spot_data = ts.get_historical_and_last_for_measure(self.get_marquee_ids(), QueryType.SPOT, {},
-                                                               request_id=request_id)
+            spot_data = ts.get_historical_and_last_for_measure(
+                self.get_marquee_ids(), QueryType.SPOT, {}, request_id=request_id
+            )
 
             dataset_ids = getattr(spot_data, 'dataset_ids', ())
 
@@ -293,9 +293,16 @@ class Basket:
 
     @requires_session
     @plot_method
-    def average_implied_volatility(self, tenor: str, strike_reference: VolReference, relative_strike: Real, *,
-                                   real_time: bool = False, request_id: Optional[str] = None,
-                                   source: Optional[str] = None) -> pd.Series:
+    def average_implied_volatility(
+        self,
+        tenor: str,
+        strike_reference: VolReference,
+        relative_strike: Real,
+        *,
+        real_time: bool = False,
+        request_id: Optional[str] = None,
+        source: Optional[str] = None,
+    ) -> pd.Series:
         """
         Weighted average implied volatility
 
@@ -313,17 +320,20 @@ class Basket:
 
         ref_string, relative_strike = preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
 
-        log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
-                  relative_strike)
+        log_debug(
+            request_id,
+            _logger,
+            'where tenor=%s, strikeReference=%s, relativeStrike=%s',
+            tenor,
+            ref_string,
+            relative_strike,
+        )
         where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
         tasks = []
         for i, chunked_assets in enumerate(chunk(self.get_marquee_ids(), 3)):
             query = GsDataApi.build_market_data_query(
-                chunked_assets,
-                QueryType.IMPLIED_VOLATILITY,
-                where=where,
-                source=source,
-                real_time=real_time)
+                chunked_assets, QueryType.IMPLIED_VOLATILITY, where=where, source=source, real_time=real_time
+            )
 
             tasks.append(partial(GsDataApi.get_market_data, query, request_id))
 
@@ -334,10 +344,19 @@ class Basket:
 
         # Add in today's data
         today = dt.date.today()
-        if not real_time and DataContext.current.end_date >= today and \
-                (vol_data.empty or today not in vol_data.index.date):
-            vol_data = ts.append_last_for_measure(vol_data, self.get_marquee_ids(), QueryType.IMPLIED_VOLATILITY, where,
-                                                  source=source, request_id=request_id)
+        if (
+            not real_time
+            and DataContext.current.end_date >= today
+            and (vol_data.empty or today not in vol_data.index.date)
+        ):
+            vol_data = ts.append_last_for_measure(
+                vol_data,
+                self.get_marquee_ids(),
+                QueryType.IMPLIED_VOLATILITY,
+                where,
+                source=source,
+                request_id=request_id,
+            )
             vol_data.index = vol_data.index.rename('date')
 
         # Below transformations will throw errors if vol_data is empty
@@ -355,8 +374,14 @@ class Basket:
 
     @requires_session
     @plot_method
-    def average_realized_volatility(self, tenor: str, returns_type: Returns = Returns.LOGARITHMIC, *,
-                                    real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    def average_realized_volatility(
+        self,
+        tenor: str,
+        returns_type: Returns = Returns.LOGARITHMIC,
+        *,
+        real_time: bool = False,
+        request_id: Optional[str] = None,
+    ) -> pd.Series:
         """
         Weighted average realized volatility
 
@@ -383,8 +408,9 @@ class Basket:
 
     @requires_session
     @plot_method
-    def average_realized_correlation(self, w: Union[Window, int, str] = Window(None, 0),
-                                     *, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+    def average_realized_correlation(
+        self, w: Union[Window, int, str] = Window(None, 0), *, real_time: bool = False, request_id: Optional[str] = None
+    ) -> pd.Series:
         """
         Weighted average realized correlation. Computes the correlation between each of the basket's constituents and
         returns their average, weighted by their representation in the basket.
@@ -418,9 +444,17 @@ class Basket:
 
     @requires_session
     @plot_method
-    def average_forward_vol(self, tenor: str, forward_start_date: str, strike_reference: VolReference,
-                            relative_strike: Real, *, real_time: bool = False, request_id: Optional[str] = None,
-                            source: Optional[str] = None) -> pd.Series:
+    def average_forward_vol(
+        self,
+        tenor: str,
+        forward_start_date: str,
+        strike_reference: VolReference,
+        relative_strike: Real,
+        *,
+        real_time: bool = False,
+        request_id: Optional[str] = None,
+        source: Optional[str] = None,
+    ) -> pd.Series:
         """
         Weighted average forward volatility.
 
@@ -443,13 +477,20 @@ class Basket:
         t1 = _month_to_tenor(t1_month)
         t2 = _month_to_tenor(t2_month)
 
-        log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', f'{t1},{t2}',
-                  ref_string, relative_strike)
+        log_debug(
+            request_id,
+            _logger,
+            'where tenor=%s, strikeReference=%s, relativeStrike=%s',
+            f'{t1},{t2}',
+            ref_string,
+            relative_strike,
+        )
         where = dict(tenor=[t1, t2], strikeReference=[ref_string], relativeStrike=[relative_strike])
         asset_ids = self.get_marquee_ids()
 
-        vol_data = ts.get_historical_and_last_for_measure(asset_ids, QueryType.IMPLIED_VOLATILITY, where, source=source,
-                                                          request_id=request_id)
+        vol_data = ts.get_historical_and_last_for_measure(
+            asset_ids, QueryType.IMPLIED_VOLATILITY, where, source=source, request_id=request_id
+        )
 
         # Below transformations will throw errors if vol_data is empty
         if vol_data.empty:
@@ -466,8 +507,9 @@ class Basket:
                 log_debug(request_id, _logger, 'no data for one or more tenors')
                 series = pd.Series(dtype=float, name='forwardVol')
             else:
-                series = pd.Series(sqrt((t2_month * lg ** 2 - t1_month * sg ** 2) / _tenor_to_month(tenor)),
-                                   name='forwardVol')
+                series = pd.Series(
+                    sqrt((t2_month * lg**2 - t1_month * sg**2) / _tenor_to_month(tenor)), name='forwardVol'
+                )
             s[asset_id] = series
 
         vols = pd.DataFrame(s)

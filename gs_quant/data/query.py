@@ -33,11 +33,13 @@ class DataQueryType(Enum):
 class DataQuery:
     """Defines a query on a coordinate"""
 
-    def __init__(self,
-                 coordinate: DataCoordinate,
-                 start: Union[DateOrDatetime, RelativeDate] = None,
-                 end: Union[DateOrDatetime, RelativeDate] = None,
-                 query_type: DataQueryType = DataQueryType.RANGE):
+    def __init__(
+        self,
+        coordinate: DataCoordinate,
+        start: Union[DateOrDatetime, RelativeDate] = None,
+        end: Union[DateOrDatetime, RelativeDate] = None,
+        query_type: DataQueryType = DataQueryType.RANGE,
+    ):
         """Initialize data query"""
 
         self.coordinate = coordinate

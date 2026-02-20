@@ -69,187 +69,251 @@ class TdapiCrossCurrencyRatesDefaultsProvider:
 CROSSCURRENCY_RATES_DEFAULTS = {
     "CURRENCIES": {
         "AUD": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "AUD-BBR-BBSW",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "AUD-AONIA-OIS-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
-            {"BenchmarkType": "SOFRVLIBOR",
-             "rateOption": "AUD-BBR-BBSW",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "AUD-BBR-BBSW",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "AUD-AONIA-OIS-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
+            {
+                "BenchmarkType": "SOFRVLIBOR",
+                "rateOption": "AUD-BBR-BBSW",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
         ],
         "CAD": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "CAD-BA-CDOR",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["NYC"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "CAD-BA-CDOR",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["NYC"]},
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "CAD-BA-CDOR",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["NYC"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "CAD-BA-CDOR",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["NYC"],
+            },
         ],
         "CHF": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "CHF-LIBOR-BBA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "CHF-SARON-OIS-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-            {"BenchmarkType": "SOFRVLIBOR",
-             "rateOption": "CHF-LIBOR-BBA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "CHF-LIBOR-BBA",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "CHF-SARON-OIS-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
+            {
+                "BenchmarkType": "SOFRVLIBOR",
+                "rateOption": "CHF-LIBOR-BBA",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
         ],
         "DKK": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "DKK-CIBOR2-DKNA13",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "DKK-CIBOR2-DKNA13",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "DKK-CIBOR2-DKNA13",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "DKK-CIBOR2-DKNA13",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
         ],
         "EUR": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "EUR-EURIBOR-TELERATE",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-            {"BenchmarkType": "OIS",
-             "rateOption": "EUR-EONIA-OIS-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "EUR-EUROSTR-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]}
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "EUR-EURIBOR-TELERATE",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
+            {
+                "BenchmarkType": "OIS",
+                "rateOption": "EUR-EONIA-OIS-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "EUR-EUROSTR-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
         ],
         "GBP": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "GBP-LIBOR-BBA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-            {"BenchmarkType": "OIS",
-             "rateOption": "GBP-SONIA-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "GBP-SONIA-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]}
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "GBP-LIBOR-BBA",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
+            {
+                "BenchmarkType": "OIS",
+                "rateOption": "GBP-SONIA-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "GBP-SONIA-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
         ],
         "JPY": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "JPY-LIBOR-BBA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
-            {"BenchmarkType": "OIS",
-             "rateOption": "JPY-TONA-OIS-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "JPY-TONA-OIS-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]}
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "JPY-LIBOR-BBA",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
+            {
+                "BenchmarkType": "OIS",
+                "rateOption": "JPY-TONA-OIS-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "JPY-TONA-OIS-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
         ],
         "NOK": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "NOK-NIBOR-BBA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "NOK-NIBOR-BBA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "NOK-NIBOR-BBA",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "NOK-NIBOR-BBA",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
         ],
         "NZD": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "NZD-BBR-FRA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "NZD-NZIONA-OIS-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
-            {"BenchmarkType": "SOFRVLIBOR",
-             "rateOption": "NZD-BBR-FRA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "NZD-BBR-FRA",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "NZD-NZIONA-OIS-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
+            {
+                "BenchmarkType": "SOFRVLIBOR",
+                "rateOption": "NZD-BBR-FRA",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
         ],
         "SEK": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "SEK-STIBOR-SIDE",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "SEK-STIBOR-SIDE",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["LDN"]},
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "SEK-STIBOR-SIDE",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "SEK-STIBOR-SIDE",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["LDN"],
+            },
         ],
         "SGD": [
-            {"BenchmarkType": "SOFR",
-             "rateOption": "SGD-SORA-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["TKO"]},
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "SGD-SORA-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["TKO"],
+            },
         ],
         "USD": [
-            {"BenchmarkType": "LIBOR",
-             "rateOption": "USD-LIBOR-BBA",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["NYC"]},
-            {"BenchmarkType": "OIS",
-             "rateOption": "USD-FEDERAL FUNDS-H.15-OIS-COMP",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["NYC"]},
-            {"BenchmarkType": "SOFR",
-             "rateOption": "USD-SOFR-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["NYC"]},
-            {"BenchmarkType": "SOFRVLIBOR",
-             "rateOption": "USD-SOFR-COMPOUND",
-             "designatedMaturity": "3m",
-             "pricingLocation": ["NYC"]}
+            {
+                "BenchmarkType": "LIBOR",
+                "rateOption": "USD-LIBOR-BBA",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["NYC"],
+            },
+            {
+                "BenchmarkType": "OIS",
+                "rateOption": "USD-FEDERAL FUNDS-H.15-OIS-COMP",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["NYC"],
+            },
+            {
+                "BenchmarkType": "SOFR",
+                "rateOption": "USD-SOFR-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["NYC"],
+            },
+            {
+                "BenchmarkType": "SOFRVLIBOR",
+                "rateOption": "USD-SOFR-COMPOUND",
+                "designatedMaturity": "3m",
+                "pricingLocation": ["NYC"],
+            },
         ],
     },
-    "COMMON": {
-        "payerSpread": "ATM",
-        "clearingHouse": "NONE",
-        "terminationTenor": "5y",
-        "effectiveDate": "0b"
-    }
+    "COMMON": {"payerSpread": "ATM", "clearingHouse": "NONE", "terminationTenor": "5y", "effectiveDate": "0b"},
 }
 crossCurrencyRates_defaults_provider = TdapiCrossCurrencyRatesDefaultsProvider(CROSSCURRENCY_RATES_DEFAULTS)
 
 CURRENCY_TO_XCCY_SWAP_RATE_BENCHMARK = {
-    'AUD': OrderedDict(
-        [('LIBOR', 'AUD-BBR-BBSW'), ('SOFR', 'AUD-AONIA-OIS-COMPOUND'), ('SOFRVLIBOR', 'AUD-BBR-BBSW')]),
-    'CAD': OrderedDict(
-        [('LIBOR', 'CAD-BA-CDOR'), ('SOFR', 'CAD-BA-CDOR')]),
-    'CHF': OrderedDict([('LIBOR', 'CHF-LIBOR-BBA'), ('OIS', 'CHF-SARON-OIS-COMPOUND'),
-                        ('SOFR', 'CHF-SARON-OIS-COMPOUND'), ('SOFRVLIBOR', 'CHF-LIBOR-BBA')]),
+    'AUD': OrderedDict([('LIBOR', 'AUD-BBR-BBSW'), ('SOFR', 'AUD-AONIA-OIS-COMPOUND'), ('SOFRVLIBOR', 'AUD-BBR-BBSW')]),
+    'CAD': OrderedDict([('LIBOR', 'CAD-BA-CDOR'), ('SOFR', 'CAD-BA-CDOR')]),
+    'CHF': OrderedDict(
+        [
+            ('LIBOR', 'CHF-LIBOR-BBA'),
+            ('OIS', 'CHF-SARON-OIS-COMPOUND'),
+            ('SOFR', 'CHF-SARON-OIS-COMPOUND'),
+            ('SOFRVLIBOR', 'CHF-LIBOR-BBA'),
+        ]
+    ),
     'DKK': OrderedDict([('LIBOR', 'DKK-CIBOR2-DKNA13'), ('SOFR', 'DKK-CIBOR2-DKNA13')]),
-    'EUR': OrderedDict([('LIBOR', 'EUR-EURIBOR-TELERATE'), ('OIS', 'EUR-EONIA-OIS-COMPOUND'),
-                        ('SOFR', 'EUR-EUROSTR-COMPOUND')]),
+    'EUR': OrderedDict(
+        [('LIBOR', 'EUR-EURIBOR-TELERATE'), ('OIS', 'EUR-EONIA-OIS-COMPOUND'), ('SOFR', 'EUR-EUROSTR-COMPOUND')]
+    ),
     'GBP': OrderedDict([('LIBOR', 'GBP-LIBOR-BBA'), ('OIS', 'GBP-SONIA-COMPOUND'), ('SOFR', 'GBP-SONIA-COMPOUND')]),
-    'JPY': OrderedDict([('LIBOR', 'JPY-LIBOR-BBA'), ('OIS', 'JPY-TONA-OIS-COMPOUND'),
-                        ('SOFR', 'JPY-TONA-OIS-COMPOUND')]),
-    'NOK': OrderedDict(
-        [('LIBOR', 'NOK-NIBOR-BBA'), ('SOFR', 'NOK-NIBOR-BBA')]),
-    'NZD': OrderedDict(
-        [('LIBOR', 'NZD-BBR-FRA'), ('SOFR', 'NZD-NZIONA-OIS-COMPOUND'), ('SOFRVLIBOR', 'NZD-BBR-FRA')]),
-    'SEK': OrderedDict(
-        [('LIBOR', 'SEK-STIBOR-SIDE'), ('SOFR', 'SEK-STIBOR-SIDE')]),
-    'SGD': OrderedDict(
-        [('SOFR', 'SGD-SORA-COMPOUND')]),
+    'JPY': OrderedDict(
+        [('LIBOR', 'JPY-LIBOR-BBA'), ('OIS', 'JPY-TONA-OIS-COMPOUND'), ('SOFR', 'JPY-TONA-OIS-COMPOUND')]
+    ),
+    'NOK': OrderedDict([('LIBOR', 'NOK-NIBOR-BBA'), ('SOFR', 'NOK-NIBOR-BBA')]),
+    'NZD': OrderedDict([('LIBOR', 'NZD-BBR-FRA'), ('SOFR', 'NZD-NZIONA-OIS-COMPOUND'), ('SOFRVLIBOR', 'NZD-BBR-FRA')]),
+    'SEK': OrderedDict([('LIBOR', 'SEK-STIBOR-SIDE'), ('SOFR', 'SEK-STIBOR-SIDE')]),
+    'SGD': OrderedDict([('SOFR', 'SGD-SORA-COMPOUND')]),
     'USD': OrderedDict(
-        [('LIBOR', 'USD-LIBOR-BBA'), ('OIS', 'USD-FEDERAL FUNDS-H.15-OIS-COMP'), ('SOFR', 'USD-SOFR-COMPOUND'),
-         ('SOFRVLIBOR', 'USD-SOFR-COMPOUND')]),
+        [
+            ('LIBOR', 'USD-LIBOR-BBA'),
+            ('OIS', 'USD-FEDERAL FUNDS-H.15-OIS-COMP'),
+            ('SOFR', 'USD-SOFR-COMPOUND'),
+            ('SOFRVLIBOR', 'USD-SOFR-COMPOUND'),
+        ]
+    ),
 }
 
 CURRENCY_TO_DUMMY_CROSSCURRENCY_SWAP_BBID = {
@@ -283,16 +347,23 @@ def _get_tdapi_crosscurrency_rates_assets(allow_many=False, **kwargs) -> Union[s
 
     # change order of basis swap legs and check if swap in dataset
     if len(assets) == 0 and ('asset_parameters_payer_rate_option' in kwargs):  # flip legs
-        kwargs['asset_parameters_payer_rate_option'], kwargs['asset_parameters_receiver_rate_option'] = \
-            kwargs['asset_parameters_receiver_rate_option'], kwargs['asset_parameters_payer_rate_option']
+        kwargs['asset_parameters_payer_rate_option'], kwargs['asset_parameters_receiver_rate_option'] = (
+            kwargs['asset_parameters_receiver_rate_option'],
+            kwargs['asset_parameters_payer_rate_option'],
+        )
         if 'asset_parameters_payer_designated_maturity' in kwargs:
-            kwargs['asset_parameters_payer_designated_maturity'], kwargs[
-                'asset_parameters_receiver_designated_maturity'] = \
-                kwargs['asset_parameters_receiver_designated_maturity'], kwargs[
-                    'asset_parameters_payer_designated_maturity']
+            (
+                kwargs['asset_parameters_payer_designated_maturity'],
+                kwargs['asset_parameters_receiver_designated_maturity'],
+            ) = (
+                kwargs['asset_parameters_receiver_designated_maturity'],
+                kwargs['asset_parameters_payer_designated_maturity'],
+            )
         if 'asset_parameters_payer_currency' in kwargs:
-            kwargs['asset_parameters_payer_currency'], kwargs['asset_parameters_receiver_currency'] = \
-                kwargs['asset_parameters_receiver_currency'], kwargs['asset_parameters_payer_currency']
+            kwargs['asset_parameters_payer_currency'], kwargs['asset_parameters_receiver_currency'] = (
+                kwargs['asset_parameters_receiver_currency'],
+                kwargs['asset_parameters_payer_currency'],
+            )
         assets = GsAssetApi.get_many_assets(**kwargs)
 
     if len(assets) == 0 and ('asset_parameters_clearing_house' in kwargs):  # test without the clearing house
@@ -302,22 +373,32 @@ def _get_tdapi_crosscurrency_rates_assets(allow_many=False, **kwargs) -> Union[s
 
     # change order of basis swap legs and check if swap in dataset
     if len(assets) == 0 and ('asset_parameters_payer_rate_option' in kwargs):  # flip legs
-        kwargs['asset_parameters_payer_rate_option'], kwargs['asset_parameters_receiver_rate_option'] = \
-            kwargs['asset_parameters_receiver_rate_option'], kwargs['asset_parameters_payer_rate_option']
+        kwargs['asset_parameters_payer_rate_option'], kwargs['asset_parameters_receiver_rate_option'] = (
+            kwargs['asset_parameters_receiver_rate_option'],
+            kwargs['asset_parameters_payer_rate_option'],
+        )
         if 'asset_parameters_payer_designated_maturity' in kwargs:
-            kwargs['asset_parameters_payer_designated_maturity'], kwargs[
-                'asset_parameters_receiver_designated_maturity'] = \
-                kwargs['asset_parameters_receiver_designated_maturity'], kwargs[
-                    'asset_parameters_payer_designated_maturity']
+            (
+                kwargs['asset_parameters_payer_designated_maturity'],
+                kwargs['asset_parameters_receiver_designated_maturity'],
+            ) = (
+                kwargs['asset_parameters_receiver_designated_maturity'],
+                kwargs['asset_parameters_payer_designated_maturity'],
+            )
         if 'asset_parameters_payer_currency' in kwargs:
-            kwargs['asset_parameters_payer_currency'], kwargs['asset_parameters_receiver_currency'] = \
-                kwargs['asset_parameters_receiver_currency'], kwargs['asset_parameters_payer_currency']
+            kwargs['asset_parameters_payer_currency'], kwargs['asset_parameters_receiver_currency'] = (
+                kwargs['asset_parameters_receiver_currency'],
+                kwargs['asset_parameters_payer_currency'],
+            )
         assets = GsAssetApi.get_many_assets(**kwargs)
 
     if len(assets) > 1:
         # term structure measures need multiple assets
-        if ('asset_parameters_termination_date' not in kwargs) or (
-                'asset_parameters_effective_date' not in kwargs) or allow_many:
+        if (
+            ('asset_parameters_termination_date' not in kwargs)
+            or ('asset_parameters_effective_date' not in kwargs)
+            or allow_many
+        ):
             return [asset.id for asset in assets]
         else:
             raise MqValueError('Specified arguments match multiple assets')
@@ -327,47 +408,65 @@ def _get_tdapi_crosscurrency_rates_assets(allow_many=False, **kwargs) -> Union[s
         return assets[0].id
 
 
-def _check_crosscurrency_rateoption_type(currency, benchmark_type: Union[CrossCurrencyRateOptionType, str]) \
-        -> CrossCurrencyRateOptionType:
+def _check_crosscurrency_rateoption_type(
+    currency, benchmark_type: Union[CrossCurrencyRateOptionType, str]
+) -> CrossCurrencyRateOptionType:
     if isinstance(benchmark_type, str):
         if benchmark_type.upper() in CrossCurrencyRateOptionType.__members__:
             benchmark_type = CrossCurrencyRateOptionType[benchmark_type.upper()]
         else:
             raise MqValueError(
-                benchmark_type.upper() + ' is not valid, pick one among ' +
-                ', '.join([x.value for x in CrossCurrencyRateOptionType]))
+                benchmark_type.upper()
+                + ' is not valid, pick one among '
+                + ', '.join([x.value for x in CrossCurrencyRateOptionType])
+            )
 
-    if isinstance(benchmark_type, CrossCurrencyRateOptionType) and \
-            benchmark_type.value not in CURRENCY_TO_XCCY_SWAP_RATE_BENCHMARK[currency.value].keys():
+    if (
+        isinstance(benchmark_type, CrossCurrencyRateOptionType)
+        and benchmark_type.value not in CURRENCY_TO_XCCY_SWAP_RATE_BENCHMARK[currency.value].keys()
+    ):
         raise MqValueError('%s is not supported for %s', benchmark_type.value, currency.value)
     else:
         return benchmark_type
 
 
-def _get_crosscurrency_swap_leg_defaults(currency: CurrencyEnum,
-                                         benchmark_type: CrossCurrencyRateOptionType = None) -> Dict:
+def _get_crosscurrency_swap_leg_defaults(
+    currency: CurrencyEnum, benchmark_type: CrossCurrencyRateOptionType = None
+) -> Dict:
     pricing_location = tm_rates.CURRENCY_TO_PRICING_LOCATION.get(currency, PricingLocation.LDN)
     # default benchmark types
     if benchmark_type is None:
         benchmark_type = CrossCurrencyRateOptionType(
-            str(list(CURRENCY_TO_XCCY_SWAP_RATE_BENCHMARK[currency.value].keys())[0]))
+            str(list(CURRENCY_TO_XCCY_SWAP_RATE_BENCHMARK[currency.value].keys())[0])
+        )
     benchmark_type_input = CURRENCY_TO_XCCY_SWAP_RATE_BENCHMARK[currency.value].get(benchmark_type.value, "")
-    designated_maturity = crossCurrencyRates_defaults_provider.get_maturity_for_benchmark(currency,
-                                                                                          benchmark_type.value)
-    return dict(currency=currency, rateOption=benchmark_type_input, designatedMaturity=designated_maturity,
-                pricing_location=pricing_location)
+    designated_maturity = crossCurrencyRates_defaults_provider.get_maturity_for_benchmark(
+        currency, benchmark_type.value
+    )
+    return dict(
+        currency=currency,
+        rateOption=benchmark_type_input,
+        designatedMaturity=designated_maturity,
+        pricing_location=pricing_location,
+    )
 
 
 def _get_crosscurrency_swap_csa_terms(curr: str, crosscurrencyindextype: str) -> dict:
     return dict(csaTerms=curr + '-1')
 
 
-def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, rateoption_type: str = None,
-                                 forward_tenor: Optional[GENERIC_DATE] = None,
-                                 clearing_house: tm_rates._ClearingHouse = None,
-                                 source: str = None, real_time: bool = False,
-                                 query_type: QueryType = QueryType.SWAP_RATE,
-                                 location: PricingLocation = None) -> pd.DataFrame:
+def _get_crosscurrency_swap_data(
+    asset1: Asset,
+    asset2: Asset,
+    swap_tenor: str,
+    rateoption_type: str = None,
+    forward_tenor: Optional[GENERIC_DATE] = None,
+    clearing_house: tm_rates._ClearingHouse = None,
+    source: str = None,
+    real_time: bool = False,
+    query_type: QueryType = QueryType.SWAP_RATE,
+    location: PricingLocation = None,
+) -> pd.DataFrame:
     if real_time:
         raise NotImplementedError('realtime swap_rate not implemented for anything but rates')
 
@@ -410,44 +509,64 @@ def _get_crosscurrency_swap_data(asset1: Asset, asset2: Asset, swap_tenor: str, 
 
     forward_tenor = tm_rates._check_forward_tenor(forward_tenor)
     fixed_rate = 'ATM'
-    kwargs = dict(asset_class='Rates',
-                  type='XccySwapMTM',
-                  asset_parameters_termination_date=swap_tenor,
-                  asset_parameters_effective_date=forward_tenor,
-                  asset_parameters_payer_spread=fixed_rate,
-                  # asset_parameters_payer_currency=defaults1['currency'].value,
-                  asset_parameters_payer_rate_option=defaults1['rateOption'],
-                  # asset_parameters_payer_designated_maturity=defaults1['designatedMaturity'],
-                  # asset_parameters_receiver_currency=defaults2['currency'].value,
-                  asset_parameters_receiver_rate_option=defaults2['rateOption'],
-                  # asset_parameters_receiver_designated_maturity=defaults2['designatedMaturity'],
-                  asset_parameters_clearing_house=clearing_house.value,
-                  pricing_location=pricing_location
-                  )
+    kwargs = dict(
+        asset_class='Rates',
+        type='XccySwapMTM',
+        asset_parameters_termination_date=swap_tenor,
+        asset_parameters_effective_date=forward_tenor,
+        asset_parameters_payer_spread=fixed_rate,
+        # asset_parameters_payer_currency=defaults1['currency'].value,
+        asset_parameters_payer_rate_option=defaults1['rateOption'],
+        # asset_parameters_payer_designated_maturity=defaults1['designatedMaturity'],
+        # asset_parameters_receiver_currency=defaults2['currency'].value,
+        asset_parameters_receiver_rate_option=defaults2['rateOption'],
+        # asset_parameters_receiver_designated_maturity=defaults2['designatedMaturity'],
+        asset_parameters_clearing_house=clearing_house.value,
+        pricing_location=pricing_location,
+    )
 
     rate_mqid = _get_tdapi_crosscurrency_rates_assets(**kwargs)
 
-    _logger.debug(f'where asset= {rate_mqid}, swap_tenor={swap_tenor}, forward_tenor={forward_tenor}, '
-                  f'payer_currency={defaults1["currency"].value}, payer_rate_option={defaults1["rateOption"]}, '
-                  f'payer_designated_maturity={defaults1["designatedMaturity"]}, '
-                  f'receiver_currency={defaults2["currency"].value}, receiver_rate_option={defaults2["rateOption"]}, '
-                  f'receiver_designated_maturity={defaults2["designatedMaturity"]}, '
-                  f'clearing_house={clearing_house.value}, pricing_location={pricing_location.value}')
-    q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source,
-                                          real_time=real_time)
+    _logger.debug(
+        f'where asset= {rate_mqid}, swap_tenor={swap_tenor}, forward_tenor={forward_tenor}, '
+        f'payer_currency={defaults1["currency"].value}, payer_rate_option={defaults1["rateOption"]}, '
+        f'payer_designated_maturity={defaults1["designatedMaturity"]}, '
+        f'receiver_currency={defaults2["currency"].value}, receiver_rate_option={defaults2["rateOption"]}, '
+        f'receiver_designated_maturity={defaults2["designatedMaturity"]}, '
+        f'clearing_house={clearing_house.value}, pricing_location={pricing_location.value}'
+    )
+    q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return df
 
 
-@plot_measure((AssetClass.Cash, AssetClass.FX,), (AssetType.Currency, AssetType.Cross,),
-              [MeasureDependency(id_provider=_currency_to_tdapi_crosscurrency_swap_rate_asset,
-                                 query_type=QueryType.XCCY_SWAP_SPREAD)])
-def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str = None,
-                            forward_tenor: Optional[GENERIC_DATE] = None,
-                            clearing_house: tm_rates._ClearingHouse = None,
-                            location: PricingLocation = None, *,
-                            source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (
+        AssetClass.Cash,
+        AssetClass.FX,
+    ),
+    (
+        AssetType.Currency,
+        AssetType.Cross,
+    ),
+    [
+        MeasureDependency(
+            id_provider=_currency_to_tdapi_crosscurrency_swap_rate_asset, query_type=QueryType.XCCY_SWAP_SPREAD
+        )
+    ],
+)
+def crosscurrency_swap_rate(
+    asset: Asset,
+    swap_tenor: str,
+    rateoption_type: str = None,
+    forward_tenor: Optional[GENERIC_DATE] = None,
+    clearing_house: tm_rates._ClearingHouse = None,
+    location: PricingLocation = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.Series:
     """
     GS end-of-day Zero Coupon CrossCurrency Swap curves across major currencies.
 
@@ -465,7 +584,7 @@ def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str 
 
     if asset.get_type().value == AssetType.Cross.value:
         pair = asset.name
-        [under, over] = [pair[i:i + 3] for i in range(0, 6, 3)]
+        [under, over] = [pair[i : i + 3] for i in range(0, 6, 3)]
         asset1 = SecurityMaster.get_asset(under, AssetIdentifier.BLOOMBERG_ID)
         asset2 = SecurityMaster.get_asset(over, AssetIdentifier.BLOOMBERG_ID)
     elif asset.get_type().value == AssetType.Currency.value:
@@ -474,12 +593,18 @@ def crosscurrency_swap_rate(asset: Asset, swap_tenor: str, rateoption_type: str 
     else:
         raise MqValueError('Asset type not supported ' + asset.get_type().value)
 
-    df = _get_crosscurrency_swap_data(asset1=asset1, asset2=asset2, swap_tenor=swap_tenor,
-                                      rateoption_type=rateoption_type,
-                                      forward_tenor=forward_tenor,
-                                      clearing_house=clearing_house, source=source,
-                                      real_time=real_time, query_type=QueryType.XCCY_SWAP_SPREAD,
-                                      location=location)
+    df = _get_crosscurrency_swap_data(
+        asset1=asset1,
+        asset2=asset2,
+        swap_tenor=swap_tenor,
+        rateoption_type=rateoption_type,
+        forward_tenor=forward_tenor,
+        clearing_house=clearing_house,
+        source=source,
+        real_time=real_time,
+        query_type=QueryType.XCCY_SWAP_SPREAD,
+        location=location,
+    )
 
     series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['xccySwapSpread'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())

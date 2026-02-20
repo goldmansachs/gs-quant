@@ -17,9 +17,19 @@ under the License.
 import dataclasses
 import pytest
 
-from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction, AdditionalResults, \
-    DateConfig, Trade, Configuration, TransactionCostConfig, FixedCostModel, ScaledCostModel, \
-    TransactionCostScalingType, AggregateCostModel, CostAggregationType
+from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
+    Transaction,
+    AdditionalResults,
+    DateConfig,
+    Trade,
+    Configuration,
+    TransactionCostConfig,
+    FixedCostModel,
+    ScaledCostModel,
+    TransactionCostScalingType,
+    AggregateCostModel,
+    CostAggregationType,
+)
 
 
 def test_request_types():
@@ -40,9 +50,9 @@ def test_model_addition():
     assert f2 + s2 == AggregateCostModel((f2, s2), CostAggregationType.Sum)
     assert (f1 + s1) + (f2 + s2) == AggregateCostModel((f1, s1, f2, s2), CostAggregationType.Sum)
     assert s1 + s3 == AggregateCostModel((s1, s3), CostAggregationType.Sum)
-    assert AggregateCostModel((f1, s1), CostAggregationType.Min) + \
-           AggregateCostModel((f2, s2), CostAggregationType.Min) == \
-           AggregateCostModel((f1, s1, f2, s2), CostAggregationType.Min)
+    assert AggregateCostModel((f1, s1), CostAggregationType.Min) + AggregateCostModel(
+        (f2, s2), CostAggregationType.Min
+    ) == AggregateCostModel((f1, s1, f2, s2), CostAggregationType.Min)
     with pytest.raises(TypeError):
         s1 + 1
     with pytest.raises(TypeError):

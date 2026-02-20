@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import dataclasses
 import datetime as dt
 from abc import abstractmethod
@@ -24,12 +25,17 @@ from typing import Optional, Tuple, Dict, Union, Any
 from dataclasses_json import dataclass_json, LetterCase, config
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs_decoder
-from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import \
-    decode_daily_portfolio
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import (
+    decode_daily_portfolio,
+)
 from gs_quant.instrument import Instrument
 from gs_quant.interfaces.algebra import AlgebraicType
-from gs_quant.json_convertors import decode_optional_date, encode_date_tuple, decode_date_tuple, \
-    decode_dict_date_key_or_float
+from gs_quant.json_convertors import (
+    decode_optional_date,
+    encode_date_tuple,
+    decode_date_tuple,
+    decode_dict_date_key_or_float,
+)
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
 from gs_quant.common import Currency, CurrencyName, PricingLocation
 
@@ -100,26 +106,29 @@ def decode_trade_event_tuple_dict(results: dict) -> Dict[dt.date, Tuple[TradeEve
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class AdditionalResults:
-    hedges: Optional[Dict[dt.date, Tuple[Instrument, ...]]] = field(default=None,
-                                                                    metadata=config(decoder=decode_daily_portfolio))
+    hedges: Optional[Dict[dt.date, Tuple[Instrument, ...]]] = field(
+        default=None, metadata=config(decoder=decode_daily_portfolio)
+    )
     hedge_pnl: Optional[Dict[dt.date, float]] = None
     no_of_calculations: Optional[int] = None
-    trade_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = field(default=None,
-                                                                          metadata=config(
-                                                                              decoder=decode_trade_event_tuple_dict))
-    hedge_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = field(default=None,
-                                                                          metadata=config(
-                                                                              decoder=decode_trade_event_tuple_dict))
+    trade_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = field(
+        default=None, metadata=config(decoder=decode_trade_event_tuple_dict)
+    )
+    hedge_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = field(
+        default=None, metadata=config(decoder=decode_trade_event_tuple_dict)
+    )
 
     @classmethod
     def from_dict_custom(cls, data: Any, decode_instruments: bool = True):
         if decode_instruments:
             return cls.from_dict(data)
-        return AdditionalResults(hedges=decode_daily_portfolio(data['hedges'], decode_instruments),
-                                 hedge_pnl=data['hedge_pnl'],
-                                 no_of_calculations=data['no_of_calculations'],
-                                 trade_events=decode_trade_event_tuple_dict(data['trade_events']),
-                                 hedge_events=decode_trade_event_tuple_dict(data['hedge_events']))
+        return AdditionalResults(
+            hedges=decode_daily_portfolio(data['hedges'], decode_instruments),
+            hedge_pnl=data['hedge_pnl'],
+            no_of_calculations=data['no_of_calculations'],
+            trade_events=decode_trade_event_tuple_dict(data['trade_events']),
+            hedge_events=decode_trade_event_tuple_dict(data['hedge_events']),
+        )
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -136,14 +145,16 @@ class DateConfig:
 class Trade:
     legs: Optional[Tuple[Instrument, ...]] = field(default=None, metadata=config(decoder=legs_decoder))
     buy_frequency: str = None
-    buy_dates: Optional[Tuple[dt.date, ...]] = field(default=None, metadata=config(encoder=encode_date_tuple,
-                                                                                   decoder=decode_date_tuple))
+    buy_dates: Optional[Tuple[dt.date, ...]] = field(
+        default=None, metadata=config(encoder=encode_date_tuple, decoder=decode_date_tuple)
+    )
     holding_period: str = None
-    exit_dates: Optional[Tuple[dt.date, ...]] = field(default=None, metadata=config(encoder=encode_date_tuple,
-                                                                                    decoder=decode_date_tuple))
-    quantity: Optional[Union[float, dict[dt.date, float]]] = field(default=None,
-                                                                   metadata=config(
-                                                                       decoder=decode_dict_date_key_or_float))
+    exit_dates: Optional[Tuple[dt.date, ...]] = field(
+        default=None, metadata=config(encoder=encode_date_tuple, decoder=decode_date_tuple)
+    )
+    quantity: Optional[Union[float, dict[dt.date, float]]] = field(
+        default=None, metadata=config(decoder=decode_dict_date_key_or_float)
+    )
     quantity_type: BacktestTradingQuantityType = BacktestTradingQuantityType.quantity
 
 
@@ -154,8 +165,7 @@ class Model(AlgebraicType):
 
     @property
     @abstractmethod
-    def scaling_property(self):
-        ...
+    def scaling_property(self): ...
 
     def set_scaling_property(self, value: float):
         setattr(self, self.scaling_property, value)
@@ -166,8 +176,9 @@ class Model(AlgebraicType):
         if isinstance(other, AggregateCostModel):
             return other + self
         scaling_prop_name = self.scaling_property
-        can_add_scaling = type(self) is type(other) and \
-            other == dataclasses.replace(self, **{scaling_prop_name: getattr(other, scaling_prop_name)})
+        can_add_scaling = type(self) is type(other) and other == dataclasses.replace(
+            self, **{scaling_prop_name: getattr(other, scaling_prop_name)}
+        )
         if can_add_scaling:
             result = dataclasses.replace(self)
             result.set_scaling_property(getattr(self, scaling_prop_name) + getattr(other, scaling_prop_name))
@@ -221,7 +232,7 @@ _type_to_basic_model_map = {
     'fixed_cost_model': FixedCostModel,
     'scaled_cost_model': ScaledCostModel,
     'FixedCostModel': FixedCostModel,
-    'ScaledCostModel': ScaledCostModel
+    'ScaledCostModel': ScaledCostModel,
 }
 
 
@@ -257,18 +268,22 @@ class AggregateCostModel(Model):
 
 
 def tcm_decoder(data: Optional[dict]) -> Optional[Union[FixedCostModel, ScaledCostModel, AggregateCostModel]]:
-    full_type_map = {**_type_to_basic_model_map,
-                     **{'aggregate_cost_model': AggregateCostModel, 'AggregateCostModel': AggregateCostModel}}
+    full_type_map = {
+        **_type_to_basic_model_map,
+        **{'aggregate_cost_model': AggregateCostModel, 'AggregateCostModel': AggregateCostModel},
+    }
     return full_type_map[data['type']].from_dict(data) if data is not None else None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class TradingCosts:
-    entry: Union[FixedCostModel, ScaledCostModel, AggregateCostModel] = \
-        field(default=FixedCostModel(0), metadata=config(decoder=tcm_decoder))
-    exit: Optional[Union[FixedCostModel, ScaledCostModel, AggregateCostModel]] = \
-        field(default=None, metadata=config(decoder=tcm_decoder))
+    entry: Union[FixedCostModel, ScaledCostModel, AggregateCostModel] = field(
+        default=FixedCostModel(0), metadata=config(decoder=tcm_decoder)
+    )
+    exit: Optional[Union[FixedCostModel, ScaledCostModel, AggregateCostModel]] = field(
+        default=None, metadata=config(decoder=tcm_decoder)
+    )
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

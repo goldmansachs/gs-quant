@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import inspect
 from pathlib import Path
@@ -64,9 +65,15 @@ class MockCalc(MockRequest):
 
     def __init__(self, mocker, save_files=False, paths=None, application='gs-quant'):
         super().__init__(mocker, save_files, paths, application)
-        self.paths = paths if paths else \
-            Path(next(filter(lambda x: x.code_context and self.__class__.__name__ in x.code_context[0],
-                             inspect.stack())).filename).parents[1]
+        self.paths = (
+            paths
+            if paths
+            else Path(
+                next(
+                    filter(lambda x: x.code_context and self.__class__.__name__ in x.code_context[0], inspect.stack())
+                ).filename
+            ).parents[1]
+        )
 
     def mock_calc_create_files(self, *args, **kwargs):
         import orjson
@@ -83,8 +90,9 @@ class MockCalc(MockRequest):
             return this_json
 
         result = get_json(*args, **kwargs)
-        result_json = orjson.dumps(result,
-                                   option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS)
+        result_json = orjson.dumps(
+            result, option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS
+        )
         request_id = self.get_request_id(args, kwargs)
         self.create_files(request_id, result_json)
         return result

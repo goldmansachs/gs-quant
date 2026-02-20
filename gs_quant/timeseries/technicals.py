@@ -192,8 +192,9 @@ def smoothed_moving_average(x: pd.Series, w: Union[Window, int, str] = Window(No
             window_num_elem = window_size
         else:
             window_num_elem = len(x[(x.index > (x.index[i] - window_size).date()) & (x.index <= x.index[i])])
-        smoothed_moving_averages.iloc[i] = ((window_num_elem - 1) *
-                                            smoothed_moving_averages.iloc[i - 1] + x.iloc[i]) / window_num_elem
+        smoothed_moving_averages.iloc[i] = (
+            (window_num_elem - 1) * smoothed_moving_averages.iloc[i - 1] + x.iloc[i]
+        ) / window_num_elem
     return smoothed_moving_averages
 
 
@@ -471,8 +472,7 @@ def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEAR):
     return x, period
 
 
-def _seasonal_decompose(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE,
-                        freq: Frequency = Frequency.YEAR):
+def _seasonal_decompose(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE, freq: Frequency = Frequency.YEAR):
     x, period = _freq_to_period(x, freq)
     if x.shape[0] < 2 * period:
         # Replace ValueError in seasonal_decompose with more descriptive error
@@ -482,8 +482,9 @@ def _seasonal_decompose(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDI
 
 
 @plot_function
-def seasonally_adjusted(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE,
-                        freq: Frequency = Frequency.YEAR) -> pd.Series:
+def seasonally_adjusted(
+    x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE, freq: Frequency = Frequency.YEAR
+) -> pd.Series:
     """
     Seasonally adjusted series
 
@@ -528,8 +529,7 @@ def seasonally_adjusted(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDI
 
 
 @plot_function
-def trend(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE, freq: Frequency = Frequency.YEAR) -> \
-        pd.Series:
+def trend(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDITIVE, freq: Frequency = Frequency.YEAR) -> pd.Series:
     """
     Trend of series with seasonality and residuals removed.
 

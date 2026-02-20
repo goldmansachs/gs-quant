@@ -74,15 +74,9 @@ class FactorAnalytics:
             position_mapping[position.asset_id] = position.identifier
 
             if position.quantity is not None:
-                api_positions.append({
-                    "assetId": position.asset_id,
-                    "quantity": position.quantity
-                })
+                api_positions.append({"assetId": position.asset_id, "quantity": position.quantity})
             elif position.weight is not None:
-                api_positions.append({
-                    "assetId": position.asset_id,
-                    "weight": position.weight * 100
-                })
+                api_positions.append({"assetId": position.asset_id, "weight": position.weight * 100})
             else:
                 _logger.warning(f"Position {position.identifier} has no quantity or weight")
 
@@ -104,14 +98,15 @@ class FactorAnalytics:
                     "Risk Buckets",
                     "Factor Risk Buckets",
                     "Factor Exposure Buckets",
-                    "Exposure Buckets"
-                ]
+                    "Exposure Buckets",
+                ],
             )
             return results
         except MqValueError as e:
             error_msg = str(e)
             if 'missing in marquee' in error_msg.lower():
                 import re
+
                 asset_ids_match = re.findall(r'MA[A-Z0-9]+', error_msg)
                 if asset_ids_match:
                     problematic_positions = []
@@ -148,27 +143,16 @@ class FactorAnalytics:
         if not style_factors:
             _logger.warning("No style factor data in hedge result")
 
-        sub_factors = [
-            {'name': item['factor'], 'value': item['exposure']}
-            for item in style_factors
-        ]
+        sub_factors = [{'name': item['factor'], 'value': item['exposure']} for item in style_factors]
 
         return {
-            'factorExposureBuckets': [
-                {
-                    'name': 'Style',
-                    'subFactors': sub_factors
-                }
-            ],
+            'factorExposureBuckets': [{'name': 'Style', 'subFactors': sub_factors}],
             'notional': 0,
             'currency': 'USD',
-            'riskBuckets': []
+            'riskBuckets': [],
         }
 
-    def create_exposure_bar_chart(self,
-                                  exposures: Dict[str, float],
-                                  title: str,
-                                  horizontal: bool = True) -> go.Figure:
+    def create_exposure_bar_chart(self, exposures: Dict[str, float], title: str, horizontal: bool = True) -> go.Figure:
         """
         Create a bar chart for style factor exposures with color coding.
         Note: This method is intended for style factors only.
@@ -189,26 +173,30 @@ class FactorAnalytics:
         fig = go.Figure()
 
         if horizontal:
-            fig.add_trace(go.Bar(
-                y=names,
-                x=values,
-                orientation='h',
-                marker_color=colors,
-                text=[f'{v:,.0f}' for v in values],
-                textposition='outside',
-                showlegend=False
-            ))
+            fig.add_trace(
+                go.Bar(
+                    y=names,
+                    x=values,
+                    orientation='h',
+                    marker_color=colors,
+                    text=[f'{v:,.0f}' for v in values],
+                    textposition='outside',
+                    showlegend=False,
+                )
+            )
             fig.update_xaxes(title="Exposure")
             fig.update_yaxes(title="")
         else:
-            fig.add_trace(go.Bar(
-                x=names,
-                y=values,
-                marker_color=colors,
-                text=[f'{v:,.0f}' for v in values],
-                textposition='outside',
-                showlegend=False
-            ))
+            fig.add_trace(
+                go.Bar(
+                    x=names,
+                    y=values,
+                    marker_color=colors,
+                    text=[f'{v:,.0f}' for v in values],
+                    textposition='outside',
+                    showlegend=False,
+                )
+            )
             fig.update_xaxes(title="")
             fig.update_yaxes(title="Exposure")
 
@@ -217,16 +205,13 @@ class FactorAnalytics:
         else:
             chart_height = 500
 
-        fig.update_layout(
-            title=title,
-            height=chart_height,
-            margin=dict(l=200 if horizontal else 50, r=50, t=80, b=50)
-        )
+        fig.update_layout(title=title, height=chart_height, margin=dict(l=200 if horizontal else 50, r=50, t=80, b=50))
 
         return fig
 
-    def create_style_factor_chart(self, factor_analysis: Dict, rows: int = None,
-                                  title: str = "Style Factor Exposures") -> go.Figure:
+    def create_style_factor_chart(
+        self, factor_analysis: Dict, rows: int = None, title: str = "Style Factor Exposures"
+    ) -> go.Figure:
         """
         Create a bar chart showing positive and negative style factor exposures.
 
@@ -259,8 +244,7 @@ class FactorAnalytics:
 
         # descending order - highest first)
         top_positive_limit = rows if rows is not None else None
-        top_positive_items = sorted(positive_factors.items(), key=lambda x: x[1],
-                                    reverse=True)[:top_positive_limit]
+        top_positive_items = sorted(positive_factors.items(), key=lambda x: x[1], reverse=True)[:top_positive_limit]
         # Reverse to get ascending order for display (lowest to highest)
         top_positive = dict(reversed(top_positive_items))
 
@@ -275,11 +259,7 @@ class FactorAnalytics:
         if rows is not None:
             subset_title = f"{title} (Top {rows} Positive & Top {rows} Negative, {total_factors} Total)"
 
-        return self.create_exposure_bar_chart(
-            selected_factors,
-            subset_title,
-            horizontal=True
-        )
+        return self.create_exposure_bar_chart(selected_factors, subset_title, horizontal=True)
 
     def create_exposure_summary_table(self, factor_analysis: Dict) -> pd.DataFrame:
         """
@@ -291,34 +271,25 @@ class FactorAnalytics:
         notional = factor_analysis.get('notional', 0)
         currency = factor_analysis.get('currency', 'USD')
 
-        risk_buckets = {bucket['name']: bucket['value']
-                        for bucket in factor_analysis.get('riskBuckets', [])}
+        risk_buckets = {bucket['name']: bucket['value'] for bucket in factor_analysis.get('riskBuckets', [])}
 
         data = {
-            'Metric': [
-                'Notional',
-                'Currency',
-                'Market Risk',
-                'Specific Risk',
-                'Sector Risk',
-                'Style Risk'
-            ],
+            'Metric': ['Notional', 'Currency', 'Market Risk', 'Specific Risk', 'Sector Risk', 'Style Risk'],
             'Value': [
                 f"${notional:,.0f}",
                 currency,
                 f"{risk_buckets.get('Market', 0):.4f}",
                 f"{risk_buckets.get('Specific', 0):.4f}",
                 f"{risk_buckets.get('Sector', 0):.4f}",
-                f"{risk_buckets.get('Style', 0):.4f}"
-            ]
+                f"{risk_buckets.get('Style', 0):.4f}",
+            ],
         }
 
         return pd.DataFrame(data, index=None)
 
-    def create_performance_chart(self,
-                                 performance_data: pd.DataFrame,
-                                 metric: str = 'cumulativePnl',
-                                 title: str = "Performance") -> go.Figure:
+    def create_performance_chart(
+        self, performance_data: pd.DataFrame, metric: str = 'cumulativePnl', title: str = "Performance"
+    ) -> go.Figure:
         """
         Create a time series performance chart.
 
@@ -332,27 +303,29 @@ class FactorAnalytics:
 
         fig = go.Figure()
 
-        fig.add_trace(go.Scatter(
-            x=performance_data['date'] if 'date' in performance_data.columns else performance_data.index,
-            y=performance_data[metric] if metric in performance_data.columns else performance_data.iloc[:, 0],
-            mode='lines',
-            name=metric,
-            line=dict(width=2)
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=performance_data['date'] if 'date' in performance_data.columns else performance_data.index,
+                y=performance_data[metric] if metric in performance_data.columns else performance_data.iloc[:, 0],
+                mode='lines',
+                name=metric,
+                line=dict(width=2),
+            )
+        )
 
         fig.update_layout(
             title=title,
             xaxis_title="Date",
             yaxis_title=metric.replace('_', ' ').title(),
             height=500,
-            hovermode='x unified'
+            hovermode='x unified',
         )
 
         return fig
 
-    def create_dynamic_performance_chart(self,
-                                         factor_analysis: Dict,
-                                         title: str = "Portfolio Performance Metrics") -> go.Figure:
+    def create_dynamic_performance_chart(
+        self, factor_analysis: Dict, title: str = "Portfolio Performance Metrics"
+    ) -> go.Figure:
         """
         Create a dynamic chart with toggleable performance metrics from timeseriesData.
         Shows cumulative PnL and normalized performance.
@@ -367,7 +340,7 @@ class FactorAnalytics:
             return go.Figure().add_annotation(
                 text="No time series data available. Ensure 'Time Series Data' measure is included.",
                 showarrow=False,
-                font=dict(size=14)
+                font=dict(size=14),
             )
 
         total_data = None
@@ -381,9 +354,7 @@ class FactorAnalytics:
 
         if not cumulative_pnl_raw and not normalized_performance_raw:
             return go.Figure().add_annotation(
-                text="No cumulative PnL or normalized performance data available.",
-                showarrow=False,
-                font=dict(size=14)
+                text="No cumulative PnL or normalized performance data available.", showarrow=False, font=dict(size=14)
             )
 
         cumulative_dates = []
@@ -408,42 +379,40 @@ class FactorAnalytics:
         fig = go.Figure()
 
         if cumulative_values:
-            fig.add_trace(go.Scatter(
-                x=cumulative_dates,
-                y=cumulative_values,
-                mode='lines',
-                name='Cumulative PnL',
-                visible=True,
-                line=dict(width=2, color='blue')
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=cumulative_dates,
+                    y=cumulative_values,
+                    mode='lines',
+                    name='Cumulative PnL',
+                    visible=True,
+                    line=dict(width=2, color='blue'),
+                )
+            )
 
         if normalized_values:
-            fig.add_trace(go.Scatter(
-                x=normalized_dates,
-                y=normalized_values,
-                mode='lines',
-                name='Normalized Performance',
-                visible=False,
-                line=dict(width=2, color='green')
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=normalized_dates,
+                    y=normalized_values,
+                    mode='lines',
+                    name='Normalized Performance',
+                    visible=False,
+                    line=dict(width=2, color='green'),
+                )
+            )
 
         buttons = [
             dict(
                 label="Cumulative PnL",
                 method="update",
-                args=[
-                    {"visible": [True, False]},
-                    {"yaxis.title.text": "Cumulative PnL ($)"}
-                ]
+                args=[{"visible": [True, False]}, {"yaxis.title.text": "Cumulative PnL ($)"}],
             ),
             dict(
                 label="Normalized Performance",
                 method="update",
-                args=[
-                    {"visible": [False, True]},
-                    {"yaxis.title.text": "Normalized Performance"}
-                ]
-            )
+                args=[{"visible": [False, True]}, {"yaxis.title.text": "Normalized Performance"}],
+            ),
         ]
 
         fig.update_layout(
@@ -461,28 +430,19 @@ class FactorAnalytics:
                     x=0.11,
                     xanchor="left",
                     y=1.15,
-                    yanchor="top"
+                    yanchor="top",
                 )
             ],
             annotations=[
-                dict(
-                    text="Select Metric:",
-                    showarrow=False,
-                    x=0.01,
-                    xref="paper",
-                    y=1.13,
-                    yref="paper",
-                    align="left"
-                )
-            ]
+                dict(text="Select Metric:", showarrow=False, x=0.01, xref="paper", y=1.13, yref="paper", align="left")
+            ],
         )
 
         return fig
 
-    def create_factor_heatmap_comparison(self,
-                                         initial_analysis: Dict,
-                                         hedged_analysis: Dict,
-                                         title: str = "Style Factor Comparison: Initial vs Hedged") -> go.Figure:
+    def create_factor_heatmap_comparison(
+        self, initial_analysis: Dict, hedged_analysis: Dict, title: str = "Style Factor Comparison: Initial vs Hedged"
+    ) -> go.Figure:
         """
         Create a grouped bar chart comparing style factor exposures.
         Shows side-by-side bars for easy comparison.
@@ -492,6 +452,7 @@ class FactorAnalytics:
         :param title: Chart title
         :return: Plotly figure with grouped bar chart
         """
+
         def extract_style_factors(analysis):
             for bucket in analysis.get('factorExposureBuckets', []):
                 if bucket.get('name') == 'Style':
@@ -513,28 +474,32 @@ class FactorAnalytics:
 
         fig = go.Figure()
 
-        fig.add_trace(go.Bar(
-            name='Initial Portfolio',
-            y=sorted_factors,
-            x=initial_values,
-            orientation='h',
-            marker_color='#4472C4',
-            text=[f'{v:,.0f}' for v in initial_values],
-            textposition='outside',
-            textfont=dict(size=10)
-        ))
+        fig.add_trace(
+            go.Bar(
+                name='Initial Portfolio',
+                y=sorted_factors,
+                x=initial_values,
+                orientation='h',
+                marker_color='#4472C4',
+                text=[f'{v:,.0f}' for v in initial_values],
+                textposition='outside',
+                textfont=dict(size=10),
+            )
+        )
 
         # Hedged portfolio bars
-        fig.add_trace(go.Bar(
-            name='Hedged Portfolio',
-            y=sorted_factors,
-            x=hedged_values,
-            orientation='h',
-            marker_color='#70AD47',
-            text=[f'{v:,.0f}' for v in hedged_values],
-            textposition='outside',
-            textfont=dict(size=10)
-        ))
+        fig.add_trace(
+            go.Bar(
+                name='Hedged Portfolio',
+                y=sorted_factors,
+                x=hedged_values,
+                orientation='h',
+                marker_color='#70AD47',
+                text=[f'{v:,.0f}' for v in hedged_values],
+                textposition='outside',
+                textfont=dict(size=10),
+            )
+        )
 
         # Calculate dynamic height based on number of factors
         chart_height = max(500, len(sorted_factors) * 35 + 150)
@@ -547,14 +512,8 @@ class FactorAnalytics:
             barmode='group',
             bargap=0.15,
             bargroupgap=0.1,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            ),
-            margin=dict(l=200, r=100, t=100, b=50)
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            margin=dict(l=200, r=100, t=100, b=50),
         )
 
         # Add vertical line at x=0 for reference

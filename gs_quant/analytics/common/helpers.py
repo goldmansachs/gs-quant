@@ -59,8 +59,8 @@ def resolve_entities(reference_list: List[Dict], entity_cache: Dict = None):
             data_query_info = reference[REFERENCE].children.get(reference[PARAMETER])
             if not data_query_info:
                 raise MqValueError(
-                    f'{reference[PARAMETER]} does not exist in children of '
-                    f'{reference[REFERENCE].__class__.__name__}')
+                    f'{reference[PARAMETER]} does not exist in children of {reference[REFERENCE].__class__.__name__}'
+                )
             data_query_info.entity = entity
 
 

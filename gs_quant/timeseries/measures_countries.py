@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import logging
 from enum import Enum
 from typing import Optional
@@ -25,8 +26,7 @@ from gs_quant.data import Dataset
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.timeseries import plot_measure_entity
-from gs_quant.timeseries.measures import _market_data_timed, _extract_series_from_df, \
-    ExtendedSeries
+from gs_quant.timeseries.measures import _market_data_timed, _extract_series_from_df, ExtendedSeries
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,8 +47,14 @@ class _FCI_MEASURE(Enum):
 
 
 @plot_measure_entity(EntityType.COUNTRY, [QueryType.FCI])
-def fci(country_id: str, measure: _FCI_MEASURE = _FCI_MEASURE.FCI, *, source: str = None,
-        real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def fci(
+    country_id: str,
+    measure: _FCI_MEASURE = _FCI_MEASURE.FCI,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Daily Financial Conditions Index (FCI) for each of the world's large economies and many smaller ones,
     as well as aggregate FCIs for regions.
@@ -76,7 +82,6 @@ def fci(country_id: str, measure: _FCI_MEASURE = _FCI_MEASURE.FCI, *, source: st
         series.dataset_ids = ('FCI',)
         return series
 
-    q = GsDataApi.build_market_data_query([country_id], query_type=type_, source=source,
-                                          real_time=real_time)
+    q = GsDataApi.build_market_data_query([country_id], query_type=type_, source=source, real_time=real_time)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, type_, True)

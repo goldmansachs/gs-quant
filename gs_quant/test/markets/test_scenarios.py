@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from unittest import mock
 
 import pytest
@@ -23,40 +24,32 @@ from gs_quant.markets.scenario import FactorScenario, FactorScenarioType, Factor
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.risk import Scenario
 
-default_entitlements = TargetEntitlements(
-    edit=(),
-    view=(),
-    admin=()
-)
+default_entitlements = TargetEntitlements(edit=(), view=(), admin=())
 
 default_scenario_parameters = {
     "riskModel": "MODEL_ID",
     "propagateShocks": True,
-    "factorShocks": [
-        {"factor": "Factor 1", "shock": 5},
-        {"factor": "Factor 2", "shock": -5}
-    ]
+    "factorShocks": [{"factor": "Factor 1", "shock": 5}, {"factor": "Factor 2", "shock": -5}],
 }
 
-mock_scenario_obj = Scenario(name="Scenario 1",
-                             description="Scenario 1",
-                             entitlements=default_entitlements,
-                             id_="MSCENARIO",
-                             parameters=default_scenario_parameters,
-                             type_=FactorScenarioType.Factor_Shock)
+mock_scenario_obj = Scenario(
+    name="Scenario 1",
+    description="Scenario 1",
+    entitlements=default_entitlements,
+    id_="MSCENARIO",
+    parameters=default_scenario_parameters,
+    type_=FactorScenarioType.Factor_Shock,
+)
 
 
 def mock_factor_scenario(mocker):
     from gs_quant.session import OAuth2Session
+
     OAuth2Session.init = mock.MagicMock(return_value=None)
     GsSession.use(Environment.QA, 'client_id', 'secret')
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_post', return_value=mock_scenario_obj)
     mocker.patch.object(GsSession.current, '_get', return_value=mock_scenario_obj)
     mocker.patch.object(GsSession.current, '_put', return_value=mock_scenario_obj)
@@ -66,19 +59,18 @@ def mock_factor_scenario(mocker):
 def test_create_factor_scenario(mocker):
     mock_factor_scenario(mocker)
     mocker.patch.object(GsSession.current, '_post', return_value=mock_scenario_obj)
-    new_scenario = FactorScenario(name="Scenario 1",
-                                  type=FactorScenarioType.Factor_Shock,
-                                  parameters=FactorShockParameters(
-                                      factor_shocks=[
-                                          FactorShock(factor="Factor 1", shock=5),
-                                          FactorShock(factor="Factor 2", shock=-5)],
-                                      propagate_shocks=True,
-                                      risk_model="MODEL_ID"),
-                                  entitlements=Entitlements(view=EntitlementBlock(),
-                                                            edit=EntitlementBlock(),
-                                                            admin=EntitlementBlock()),
-                                  id_="MSCENARIO",
-                                  description="Scenario 1")
+    new_scenario = FactorScenario(
+        name="Scenario 1",
+        type=FactorScenarioType.Factor_Shock,
+        parameters=FactorShockParameters(
+            factor_shocks=[FactorShock(factor="Factor 1", shock=5), FactorShock(factor="Factor 2", shock=-5)],
+            propagate_shocks=True,
+            risk_model="MODEL_ID",
+        ),
+        entitlements=Entitlements(view=EntitlementBlock(), edit=EntitlementBlock(), admin=EntitlementBlock()),
+        id_="MSCENARIO",
+        description="Scenario 1",
+    )
 
     new_scenario.save()
     assert new_scenario.id == mock_scenario_obj.id
@@ -92,9 +84,9 @@ def test_create_factor_scenario(mocker):
 def test_update_scenario_entitlements(mocker):
     scenario = mock_factor_scenario(mocker)
 
-    new_entitlements = Entitlements(view=EntitlementBlock(roles=["role:A"]),
-                                    edit=EntitlementBlock(roles=["role:B"]),
-                                    admin=EntitlementBlock())
+    new_entitlements = Entitlements(
+        view=EntitlementBlock(roles=["role:A"]), edit=EntitlementBlock(roles=["role:B"]), admin=EntitlementBlock()
+    )
 
     scenario.entitlements = new_entitlements
     scenario.save()

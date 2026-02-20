@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import math
 import os
@@ -28,10 +29,33 @@ from gs_quant.common import Currency as CurrencyEnum
 from gs_quant.datetime import DayCountConvention
 from gs_quant.errors import MqValueError, MqTypeError, MqError
 from gs_quant.markets.securities import Cash
-from gs_quant.timeseries import returns, prices, index, change, annualize, volatility, correlation, beta, \
-    max_drawdown, Returns, Window, Direction, generate_series, SeriesType, Interpolate, CurveType
-from gs_quant.timeseries.econometrics import _get_ratio, excess_returns, RiskFreeRateCurrency, sharpe_ratio, \
-    excess_returns_, corr_swap_correlation, vol_swap_volatility
+from gs_quant.timeseries import (
+    returns,
+    prices,
+    index,
+    change,
+    annualize,
+    volatility,
+    correlation,
+    beta,
+    max_drawdown,
+    Returns,
+    Window,
+    Direction,
+    generate_series,
+    SeriesType,
+    Interpolate,
+    CurveType,
+)
+from gs_quant.timeseries.econometrics import (
+    _get_ratio,
+    excess_returns,
+    RiskFreeRateCurrency,
+    sharpe_ratio,
+    excess_returns_,
+    corr_swap_correlation,
+    vol_swap_volatility,
+)
 
 
 def test_returns():
@@ -296,7 +320,7 @@ def test_volatility():
     vol = std * math.sqrt(252) * 100
 
     real_vol = volatility(x)
-    assert (real_vol.iloc[-1] == vol)
+    assert real_vol.iloc[-1] == vol
 
     vol_already_returns = volatility(returns(x), returns_type=None)
     assert_series_equal(vol_already_returns, real_vol, obj="Volatility strdate")
@@ -312,31 +336,81 @@ def test_volatility():
 
 def test_volatility_assume_zero_mean():
     dates = pd.date_range(start='2020-01-01', periods=50, freq='D')
-    prices = pd.Series([100, 102, 101, 103, 102, 104, 103, 105, 104, 106,
-                        105, 107, 106, 108, 107, 109, 108, 110, 109, 111,
-                        110, 112, 111, 113, 112, 114, 113, 115, 114, 116,
-                        115, 117, 116, 118, 117, 119, 118, 120, 119, 121,
-                        120, 122, 121, 123, 122, 124, 123, 125, 124, 126],
-                       index=dates)
+    prices = pd.Series(
+        [
+            100,
+            102,
+            101,
+            103,
+            102,
+            104,
+            103,
+            105,
+            104,
+            106,
+            105,
+            107,
+            106,
+            108,
+            107,
+            109,
+            108,
+            110,
+            109,
+            111,
+            110,
+            112,
+            111,
+            113,
+            112,
+            114,
+            113,
+            115,
+            114,
+            116,
+            115,
+            117,
+            116,
+            118,
+            117,
+            119,
+            118,
+            120,
+            119,
+            121,
+            120,
+            122,
+            121,
+            123,
+            122,
+            124,
+            123,
+            125,
+            124,
+            126,
+        ],
+        index=dates,
+    )
 
     window_size = 10
 
     # zero-mean should give different result than standard volatility
     vol_zero_mean = volatility(prices, w=window_size, assume_zero_mean=True)
     vol_standard = volatility(prices, w=window_size, assume_zero_mean=False)
-    assert not np.allclose(vol_zero_mean.dropna(), vol_standard.dropna()), \
+    assert not np.allclose(vol_zero_mean.dropna(), vol_standard.dropna()), (
         "Zero-mean and standard volatility should differ"
+    )
 
     # manual calc check
-    result = volatility(prices, w=window_size, returns_type=Returns.LOGARITHMIC,
-                        assume_zero_mean=True)
+    result = volatility(prices, w=window_size, returns_type=Returns.LOGARITHMIC, assume_zero_mean=True)
 
     log_returns = np.log(prices / prices.shift(1)).dropna()
     last_window_returns = log_returns.iloc[-window_size:].values
-    expected_vol = np.sqrt(np.mean(last_window_returns ** 2)) * np.sqrt(252) * 100
+    expected_vol = np.sqrt(np.mean(last_window_returns**2)) * np.sqrt(252) * 100
 
-    assert abs(result.iloc[-1] - expected_vol) < 0.01, \
+    assert abs(result.iloc[-1] - expected_vol) < 0.01, (
         f"Manual calculation mismatch: {result.iloc[-1]} vs {expected_vol}"
+    )
 
     # single value window
     vol_single = volatility(prices, w=1, assume_zero_mean=True)
@@ -345,10 +419,11 @@ def test_volatility_assume_zero_mean():
     # full series (no window)
     vol_full = volatility(prices, returns_type=Returns.LOGARITHMIC, assume_zero_mean=True)
     all_returns = np.log(prices / prices.shift(1)).dropna().values
-    expected_full = np.sqrt(np.mean(all_returns ** 2)) * np.sqrt(252) * 100
+    expected_full = np.sqrt(np.mean(all_returns**2)) * np.sqrt(252) * 100
 
-    assert abs(vol_full.iloc[-1] - expected_full) < 0.01, \
+    assert abs(vol_full.iloc[-1] - expected_full) < 0.01, (
         f"Full series calculation incorrect: {vol_full.iloc[-1]} vs {expected_full}"
+    )
 
 
 def test_volatility_annualization_factor():
@@ -370,15 +445,14 @@ def test_volatility_annualization_factor():
     actual_ratio_255 = vol_255.iloc[-1] / vol_252.iloc[-1]
     np.testing.assert_almost_equal(actual_ratio_255, expected_ratio_255, decimal=5)
 
-    vol_swap = volatility(prices, returns_type=Returns.LOGARITHMIC,
-                          annualization_factor=255, assume_zero_mean=True)
+    vol_swap = volatility(prices, returns_type=Returns.LOGARITHMIC, annualization_factor=255, assume_zero_mean=True)
 
-    assert not np.allclose(vol_swap.iloc[-1], vol_255.iloc[-1]), \
+    assert not np.allclose(vol_swap.iloc[-1], vol_255.iloc[-1]), (
         "Zero-mean volatility should differ from standard volatility"
+    )
 
     final_vol = vol_252.iloc[-1]
-    assert 15 < final_vol < 25, \
-        "Volatility should be around 20%"
+    assert 15 < final_vol < 25, "Volatility should be around 20%"
 
 
 def test_vol_swap_volatility():
@@ -393,8 +467,9 @@ def test_vol_swap_volatility():
 
     for n_days in [3, 25, 49, 50]:
         # Windows and numbers get treated identically
-        pd.testing.assert_series_equal(vol_swap_volatility(prices, n_days=n_days),
-                                       vol_swap_volatility(prices, n_days=Window(n_days, n_days - 1)))
+        pd.testing.assert_series_equal(
+            vol_swap_volatility(prices, n_days=n_days), vol_swap_volatility(prices, n_days=Window(n_days, n_days - 1))
+        )
 
     result_wrapper = vol_swap_volatility(prices, n_days=22)
     result_direct = volatility(prices, Window(22, 21), Returns.LOGARITHMIC, 252, True)
@@ -447,8 +522,9 @@ def test_correlation():
     assert_series_equal(result, expected)
 
     result = correlation(x, y, Window(2, 0))
-    expected = pd.Series([np.nan, np.nan, -1.0000000000000435, 1.0, 0.9999999999999994, -1.0000000000000007],
-                         index=daily_dates)
+    expected = pd.Series(
+        [np.nan, np.nan, -1.0000000000000435, 1.0, 0.9999999999999994, -1.0000000000000007], index=daily_dates
+    )
 
     assert_series_equal(result, expected)
 
@@ -456,14 +532,7 @@ def test_correlation():
     ret_y = returns(y)
 
     result = correlation(ret_x, ret_y, Window(2, 0), False)
-    values = [
-        np.nan,
-        np.nan,
-        -1.0000000000000435,
-        1.0,
-        0.9999999999999994,
-        -1.0000000000000007
-    ]
+    values = [np.nan, np.nan, -1.0000000000000435, 1.0, 0.9999999999999994, -1.0000000000000007]
     expected = pd.Series(values, index=daily_dates)
 
     assert_series_equal(result, expected)
@@ -523,12 +592,19 @@ def test_corr_swap_correlation():
 
     for n_days in [3, 5, 9, 10]:
         # Windows and numbers get treated identically
-        pd.testing.assert_series_equal(corr_swap_correlation(x, y, n_days=n_days),
-                                       corr_swap_correlation(x, y, n_days=Window(n_days - 1, n_days - 2)))
+        pd.testing.assert_series_equal(
+            corr_swap_correlation(x, y, n_days=n_days),
+            corr_swap_correlation(x, y, n_days=Window(n_days - 1, n_days - 2)),
+        )
 
     # n_days left unspecified defaults to the number of price dates
-    pd.testing.assert_series_equal(corr_swap_correlation(x, y, n_days=num_dates),
-                                   corr_swap_correlation(x, y,))
+    pd.testing.assert_series_equal(
+        corr_swap_correlation(x, y, n_days=num_dates),
+        corr_swap_correlation(
+            x,
+            y,
+        ),
+    )
 
     for window_size in [3, 5, 9]:
         # assume_zero_mean=False should match correlation function
@@ -548,8 +624,8 @@ def test_corr_swap_correlation():
         window_x = ret_x.iloc[0:window_size].values
         window_y = ret_y.iloc[0:window_size].values
         denom = len(window_x)
-        var_x = np.sum(window_x ** 2) / denom
-        var_y = np.sum(window_y ** 2) / denom
+        var_x = np.sum(window_x**2) / denom
+        var_y = np.sum(window_y**2) / denom
         covar = np.sum(window_x * window_y) / denom
         if var_x > 0 and var_y > 0:
             expected_zero_mean_corr = covar / (np.sqrt(var_x) * np.sqrt(var_y))
@@ -558,7 +634,7 @@ def test_corr_swap_correlation():
                 actual_zero_mean_corr,
                 expected_zero_mean_corr,
                 decimal=10,
-                err_msg=f"Zero-mean correlation mismatch for window_size={window_size}"
+                err_msg=f"Zero-mean correlation mismatch for window_size={window_size}",
             )
 
 
@@ -590,21 +666,22 @@ def test_beta():
     assert_series_equal(result, expected)
 
     result = beta(x, y, Window(2, 0))
-    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
-                          0.7054398925453326, -2.24327163719368], index=daily_dates)
+    expected = pd.Series(
+        [np.nan, np.nan, np.nan, 0.8255252918287954, 0.7054398925453326, -2.24327163719368], index=daily_dates
+    )
     assert_series_equal(result, expected)
 
     ret_x = returns(x)
     ret_y = returns(y)
 
     result = beta(ret_x, ret_y, Window(2, 0), False)
-    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
-                          0.7054398925453326, -2.24327163719368], index=daily_dates)
+    expected = pd.Series(
+        [np.nan, np.nan, np.nan, 0.8255252918287954, 0.7054398925453326, -2.24327163719368], index=daily_dates
+    )
     assert_series_equal(result, expected)
 
     result = beta(x, y, Window('2d', 0))
-    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954,
-                          np.nan, -2.24327163719368], index=daily_dates)
+    expected = pd.Series([np.nan, np.nan, np.nan, 0.8255252918287954, np.nan, -2.24327163719368], index=daily_dates)
     assert_series_equal(result, expected)
 
     result = beta(x, y, '2d')
@@ -696,8 +773,9 @@ def test_sharpe_ratio():
     actual = sharpe_ratio(price_df['SPX'], RiskFreeRateCurrency.USD)
     np.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
     actual = sharpe_ratio(price_df['SPX'][:], RiskFreeRateCurrency.USD, '1m')
-    expected = pd.Series([np.nan, np.nan, np.nan, 8.266434, 6.731811],
-                         index=pd.date_range(dt.date(2019, 2, 4), periods=5))
+    expected = pd.Series(
+        [np.nan, np.nan, np.nan, 8.266434, 6.731811], index=pd.date_range(dt.date(2019, 2, 4), periods=5)
+    )
     np.testing.assert_almost_equal(actual[:5].values, expected.values, decimal=5)
     with pytest.raises(MqValueError):
         actual = sharpe_ratio(price_df['SPX'][:], RiskFreeRateCurrency.USD, 22, method=Interpolate.INTERSECT)
@@ -707,8 +785,9 @@ def test_sharpe_ratio():
     actual = _get_ratio(price_df['SPX'], 0.0175, 10, day_count_convention=DayCountConvention.ACTUAL_360)
     np.testing.assert_almost_equal(actual.values, er_df['SR10'].values[10:], decimal=5)
 
-    actual = _get_ratio(er_df['ER'], 0.0175, 0, day_count_convention=DayCountConvention.ACTUAL_360,
-                        curve_type=CurveType.EXCESS_RETURNS)
+    actual = _get_ratio(
+        er_df['ER'], 0.0175, 0, day_count_convention=DayCountConvention.ACTUAL_360, curve_type=CurveType.EXCESS_RETURNS
+    )
     np.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
 
 

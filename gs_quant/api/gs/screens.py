@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import logging
 from typing import Tuple, List
 
@@ -24,10 +25,10 @@ _logger = logging.getLogger(__name__)
 
 
 class GsScreenApi:
-
     @classmethod
-    def get_screens(cls, screen_ids: List[str] = None, screen_names: List[str] = None, limit: int = 100) \
-            -> Tuple[Screen, ...]:
+    def get_screens(
+        cls, screen_ids: List[str] = None, screen_names: List[str] = None, limit: int = 100
+    ) -> Tuple[Screen, ...]:
         url = '/screens?'
         if screen_ids:
             url += f'&id={"&id=".join(screen_ids)}'

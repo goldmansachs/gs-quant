@@ -41,13 +41,15 @@ class Index(Asset, PositionedEntity):
     Includes support for STS indices.
     """
 
-    def __init__(self,
-                 id_: str,
-                 asset_class: AssetClass,
-                 name: str,
-                 exchange: Optional[str] = None,
-                 currency: Optional[Currency] = None,
-                 entity: Optional[Dict] = None):
+    def __init__(
+        self,
+        id_: str,
+        asset_class: AssetClass,
+        name: str,
+        exchange: Optional[str] = None,
+        currency: Optional[Currency] = None,
+        entity: Optional[Dict] = None,
+    ):
 
         Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
         PositionedEntity.__init__(self, id_, EntityType.ASSET)
@@ -99,17 +101,25 @@ class Index(Asset, PositionedEntity):
         gs_asset = cls.__get_gs_asset(identifier)
         asset_entity: Dict = json.loads(json.dumps(gs_asset.as_dict(), cls=JSONEncoder))
         if gs_asset.type.value in STSIndexType.to_list() or gs_asset.type.value == 'Index':
-            return cls(gs_asset.id, gs_asset.asset_class, gs_asset.name, exchange=gs_asset.exchange,
-                       currency=gs_asset.currency, entity=asset_entity)
+            return cls(
+                gs_asset.id,
+                gs_asset.asset_class,
+                gs_asset.name,
+                exchange=gs_asset.exchange,
+                currency=gs_asset.currency,
+                entity=asset_entity,
+            )
         else:
             raise MqValueError(f'{identifier} is not an Index identifier')
 
-    def get_fundamentals(self,
-                         start: dt.date = DateLimit.LOW_LIMIT.value,
-                         end: dt.date = dt.date.today(),
-                         period: Optional[DataMeasure] = None,
-                         direction: DataMeasure = DataMeasure.FORWARD.value,
-                         metrics: List[DataMeasure] = DataMeasure.list_fundamentals()) -> pd.DataFrame:
+    def get_fundamentals(
+        self,
+        start: dt.date = DateLimit.LOW_LIMIT.value,
+        end: dt.date = dt.date.today(),
+        period: Optional[DataMeasure] = None,
+        direction: DataMeasure = DataMeasure.FORWARD.value,
+        metrics: List[DataMeasure] = DataMeasure.list_fundamentals(),
+    ) -> pd.DataFrame:
         """
         Retrieve fundamentals data for an index across a date range. Currently supports STS indices only
 
@@ -187,9 +197,9 @@ class Index(Asset, PositionedEntity):
 
         return prices
 
-    def get_close_price_for_date(self,
-                                 date: dt.date = dt.date.today(),
-                                 price_type: List[PriceType] = None) -> pd.DataFrame:
+    def get_close_price_for_date(
+        self, date: dt.date = dt.date.today(), price_type: List[PriceType] = None
+    ) -> pd.DataFrame:
         """
         Retrieve close prices for an index. Only STS indices support indicative prices.
 
@@ -230,10 +240,12 @@ class Index(Asset, PositionedEntity):
 
         return prices
 
-    def get_close_prices(self,
-                         start: dt.date = DateLimit.LOW_LIMIT.value,
-                         end: dt.date = dt.date.today(),
-                         price_type: List[PriceType] = None) -> pd.DataFrame:
+    def get_close_prices(
+        self,
+        start: dt.date = DateLimit.LOW_LIMIT.value,
+        end: dt.date = dt.date.today(),
+        price_type: List[PriceType] = None,
+    ) -> pd.DataFrame:
         """
         Retrieve close prices for an index for a date range. Only STS indices support indicative prices.
 
@@ -280,8 +292,7 @@ class Index(Asset, PositionedEntity):
         else:
             raise MqValueError('PriceType.INDICATIVE_CLOSE_PRICE currently supports STS indices only')
 
-    def get_underlier_tree(self,
-                           refresh_tree: Optional[bool] = False) -> AssetTreeNode:
+    def get_underlier_tree(self, refresh_tree: Optional[bool] = False) -> AssetTreeNode:
         """
         Get the root node of the tree formed by the Index, as an AssetTreeNode object.
 
@@ -301,7 +312,6 @@ class Index(Asset, PositionedEntity):
         """
         if self.__is_sts_index():
             if (not self.tree_helper.tree_built) or refresh_tree:
-
                 self.tree_helper.build_tree()
                 self.tree_helper.populate_weights('STS_UNDERLIER_WEIGHTS')
                 self.tree_helper.populate_attribution('STS_UNDERLIER_ATTRIBUTION')
@@ -330,8 +340,9 @@ class Index(Asset, PositionedEntity):
             if len(self.tree_df) == 0:
                 self.get_underlier_tree()
 
-            return self.tree_df.loc[self.tree_df.depth == 1].drop(columns=['absoluteAttribution', 'assetId',
-                                                                           'assetName', 'depth'])
+            return self.tree_df.loc[self.tree_df.depth == 1].drop(
+                columns=['absoluteAttribution', 'assetId', 'assetName', 'depth']
+            )
         else:
             raise MqValueError('This method currently supports STS indices only')
 
@@ -358,9 +369,7 @@ class Index(Asset, PositionedEntity):
         else:
             raise MqValueError('This method currently supports STS indices only')
 
-    def visualise_tree(self,
-                       visualise_by: Optional[str] = 'asset_name'):
-
+    def visualise_tree(self, visualise_by: Optional[str] = 'asset_name'):
         """
         Visualise the tree by printing the structure of the entire tree.
         The visualise_by argument can be either 'asset_name' or 'bbid'. Currently supports STS indices only.
@@ -404,8 +413,7 @@ class Index(Asset, PositionedEntity):
 
         return self.get_latest_position_set().get_positions()
 
-    def get_constituents_for_date(self,
-                                  date: dt.date = dt.date.today()) -> pd.DataFrame:
+    def get_constituents_for_date(self, date: dt.date = dt.date.today()) -> pd.DataFrame:
         """
         Fetch the constituents of the index in a pandas dataframe for a the given date.
 
@@ -428,9 +436,9 @@ class Index(Asset, PositionedEntity):
 
         return self.get_position_set_for_date(date).get_positions()
 
-    def get_constituents(self,
-                         start: dt.date = DateLimit.LOW_LIMIT.value,
-                         end: dt.date = dt.date.today()) -> List[pd.DataFrame]:
+    def get_constituents(
+        self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
+    ) -> List[pd.DataFrame]:
         """
         Fetch the constituents of the index in a pandas dataframe for the given date range
 
@@ -475,8 +483,7 @@ class Index(Asset, PositionedEntity):
 
         return GsAssetApi.get_instruments_for_positions(self.get_latest_position_set().to_target().positions)
 
-    def get_constituent_instruments_for_date(self,
-                                             date: dt.date = dt.date.today()) -> Tuple[Instrument, ...]:
+    def get_constituent_instruments_for_date(self, date: dt.date = dt.date.today()) -> Tuple[Instrument, ...]:
         """
         Fetch the constituents of the index for a given date as instrument objects.
 
@@ -499,9 +506,9 @@ class Index(Asset, PositionedEntity):
 
         return GsAssetApi.get_instruments_for_positions(self.get_position_set_for_date(date).to_target().positions)
 
-    def get_constituent_instruments(self,
-                                    start: dt.date = DateLimit.LOW_LIMIT.value,
-                                    end: dt.date = dt.date.today()) -> Tuple[Tuple[Instrument, ...], ...]:
+    def get_constituent_instruments(
+        self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
+    ) -> Tuple[Tuple[Instrument, ...], ...]:
         """
         Fetch the constituents of the index as instrument objects for the given date range
 
@@ -522,8 +529,10 @@ class Index(Asset, PositionedEntity):
         >>> index.get_constituent_instruments(dt.date(2021, 6, 1), dt.date(2021, 6, 10))
         """
         position_sets = self.get_position_sets(start, end)
-        return [GsAssetApi.get_instruments_for_positions(position_set.to_target().positions)
-                for position_set in position_sets]
+        return [
+            GsAssetApi.get_instruments_for_positions(position_set.to_target().positions)
+            for position_set in position_sets
+        ]
 
     def __is_sts_index(self) -> bool:
         """Checks if is an STS get_index"""
@@ -542,7 +551,7 @@ class Index(Asset, PositionedEntity):
 
         response = GsDataApi.query_data(query=query, dataset_id=IndicesDatasets.STS_INDICATIVE_LEVELS.value)
         indicative_level = pd.DataFrame(response)
-        if (len(indicative_level) == 0):
+        if len(indicative_level) == 0:
             indicative_level['date'] = ''
             indicative_level['assetId'] = ''
             indicative_level['updateTime'] = ''
@@ -551,7 +560,7 @@ class Index(Asset, PositionedEntity):
 
     @staticmethod
     def __get_gs_asset(identifier: str) -> GsAsset:
-        """ Resolves index identifier during initialization """
+        """Resolves index identifier during initialization"""
         response = GsAssetApi.resolve_assets(identifier=[identifier], fields=['id'], limit=1)[identifier]
         if len(response) == 0 or get(response, '0.id') is None:
             raise MqValueError(f'Asset could not be found using identifier {identifier}')

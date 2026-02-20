@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import asyncio
 import datetime as dt
 import json
@@ -27,18 +28,35 @@ import numpy as np
 import pandas as pd
 
 from gs_quant.analytics.common import DATAGRID_HELP_MSG
-from gs_quant.analytics.common.helpers import resolve_entities, get_entity_rdate_key, get_entity_rdate_key_from_rdate, \
-    get_rdate_cache_key
+from gs_quant.analytics.common.helpers import (
+    resolve_entities,
+    get_entity_rdate_key,
+    get_entity_rdate_key_from_rdate,
+    get_rdate_cache_key,
+)
 from gs_quant.analytics.core.processor import DataQueryInfo, MeasureQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.analytics.core.query_helpers import aggregate_queries, fetch_query, build_query_string, valid_dimensions
 from gs_quant.analytics.datagrid.data_cell import DataCell
 from gs_quant.analytics.datagrid.data_column import DataColumn, ColumnFormat, MultiColumnGroup
-from gs_quant.analytics.datagrid.data_row import DataRow, DimensionsOverride, ProcessorOverride, Override, \
-    ValueOverride, RowSeparator
+from gs_quant.analytics.datagrid.data_row import (
+    DataRow,
+    DimensionsOverride,
+    ProcessorOverride,
+    Override,
+    ValueOverride,
+    RowSeparator,
+)
 from gs_quant.analytics.datagrid.serializers import row_from_dict
-from gs_quant.analytics.datagrid.utils import DataGridSort, SortOrder, SortType, DataGridFilter, FilterOperation, \
-    FilterCondition, get_utc_now
+from gs_quant.analytics.datagrid.utils import (
+    DataGridSort,
+    SortOrder,
+    SortType,
+    DataGridFilter,
+    FilterOperation,
+    FilterCondition,
+    get_utc_now,
+)
 from gs_quant.analytics.processors import CoordinateProcessor, EntityProcessor
 from gs_quant.common import Entitlements as Entitlements_
 from gs_quant.datetime.relative_date import RelativeDate
@@ -101,18 +119,20 @@ class DataGrid:
     https://developer.gs.com/docs/gsquant/tutorials/Data/DataGrid/
     """
 
-    def __init__(self,
-                 name: str,
-                 rows: List[Union[DataRow, RowSeparator]],
-                 columns: List[DataColumn],
-                 *,
-                 id_: str = None,
-                 entitlements: Union[Entitlements, Entitlements_] = None,
-                 polling_time: int = None,
-                 sorts: Optional[List[DataGridSort]] = None,
-                 filters: Optional[List[DataGridFilter]] = None,
-                 multiColumnGroups: Optional[List[MultiColumnGroup]] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        name: str,
+        rows: List[Union[DataRow, RowSeparator]],
+        columns: List[DataColumn],
+        *,
+        id_: str = None,
+        entitlements: Union[Entitlements, Entitlements_] = None,
+        polling_time: int = None,
+        sorts: Optional[List[DataGridSort]] = None,
+        filters: Optional[List[DataGridFilter]] = None,
+        multiColumnGroups: Optional[List[MultiColumnGroup]] = None,
+        **kwargs,
+    ):
         self.id_ = id_
         self.entitlements = entitlements
         self.name = name
@@ -141,7 +161,7 @@ class DataGrid:
         print(DATAGRID_HELP_MSG)
 
     def get_id(self) -> Optional[str]:
-        """Get the unique DataGrid identifier. Will only exists if the DataGrid has been persisted. """
+        """Get the unique DataGrid identifier. Will only exists if the DataGrid has been persisted."""
         return self.id_
 
     def initialize(self) -> None:
@@ -178,13 +198,9 @@ class DataGrid:
                 data_overrides, value_override, processor_override = _get_overrides(row_overrides, column_name)
 
                 # Create the cell
-                cell: DataCell = DataCell(column_name,
-                                          column_processor,
-                                          entity,
-                                          data_overrides,
-                                          column_index,
-                                          row_index,
-                                          current_row_group)
+                cell: DataCell = DataCell(
+                    column_name, column_processor, entity, data_overrides, column_index, row_index, current_row_group
+                )
 
                 if processor_override:
                     # Check if there is a processor override and apply if so
@@ -218,8 +234,8 @@ class DataGrid:
         self.is_initialized = True
 
     def poll(self) -> None:
-        """ Poll the data queries required to process this grid.
-            Set the results at the leaf processors
+        """Poll the data queries required to process this grid.
+        Set the results at the leaf processors
         """
         self._resolve_rdates()
         self._resolve_queries()
@@ -297,8 +313,10 @@ class DataGrid:
             try:
                 cell.value = cell.processor.process(cell.entity)
             except Exception as e:
-                cell.value = f'Error Calculating processor {cell.processor.__class__.__name__} ' \
-                             f'for entity: {cell.entity.get_marquee_id()} due to {e}'
+                cell.value = (
+                    f'Error Calculating processor {cell.processor.__class__.__name__} '
+                    f'for entity: {cell.entity.get_marquee_id()} due to {e}'
+                )
 
             cell.updated_time = get_utc_now()
 
@@ -306,8 +324,10 @@ class DataGrid:
             try:
                 cell.value = cell.processor.process()
             except Exception as e:
-                cell.value = f'Error Calculating processor {cell.processor.__class__.__name__} ' \
-                             f'for entity: {cell.entity.get_marquee_id()} due to {e}'
+                cell.value = (
+                    f'Error Calculating processor {cell.processor.__class__.__name__} '
+                    f'for entity: {cell.entity.get_marquee_id()} due to {e}'
+                )
 
             cell.updated_time = get_utc_now()
 
@@ -329,21 +349,20 @@ class DataGrid:
                 exchanges = [exchange] if exchange else None
             for rule_base_date_tuple in rules:
                 rule, base_date = rule_base_date_tuple[0], rule_base_date_tuple[1]
-                cache_key = get_rdate_cache_key(rule_base_date_tuple[0], rule_base_date_tuple[1], currencies,
-                                                exchanges)
+                cache_key = get_rdate_cache_key(rule_base_date_tuple[0], rule_base_date_tuple[1], currencies, exchanges)
                 date_value = rule_cache.get(cache_key)
                 if date_value is None:
                     if base_date:
                         base_date = dt.datetime.strptime(base_date, "%Y-%m-%d").date()
-                    date_value = RelativeDate(rule, base_date).apply_rule(currencies=currencies,
-                                                                          exchanges=exchanges,
-                                                                          holiday_calendar=calendar)
+                    date_value = RelativeDate(rule, base_date).apply_rule(
+                        currencies=currencies, exchanges=exchanges, holiday_calendar=calendar
+                    )
                     rule_cache[cache_key] = date_value
                 self.rule_cache[get_entity_rdate_key(entity_id, rule, base_date)] = date_value
 
     def _resolve_queries(self, availability_cache: Dict = None) -> None:
-        """ Resolves the dataset_id for each data query
-            This is used to query data thereafter
+        """Resolves the dataset_id for each data query
+        This is used to query data thereafter
         """
         availability_cache = availability_cache or {}
 
@@ -380,13 +399,14 @@ class DataGrid:
                         if raw_availability is None:
                             raw_availability: Dict = GsSession.current._get(f'/data/measures/{entity_id}/availability')
                             availability_cache[entity.get_marquee_id()] = raw_availability
-                        query.coordinate = entity.get_data_coordinate(measure=coord.measure,
-                                                                      dimensions=coord.dimensions,
-                                                                      frequency=coord.frequency,
-                                                                      availability=raw_availability)
+                        query.coordinate = entity.get_data_coordinate(
+                            measure=coord.measure,
+                            dimensions=coord.dimensions,
+                            frequency=coord.frequency,
+                            availability=raw_availability,
+                        )
                     except Exception as e:
-                        _logger.info(
-                            f'Could not get DataCoordinate with {coord} for entity {entity_id} due to {e}')
+                        _logger.info(f'Could not get DataCoordinate with {coord} for entity {entity_id} due to {e}')
 
     def _fetch_queries(self):
         query_aggregations = aggregate_queries(self._data_queries)
@@ -407,23 +427,24 @@ class DataGrid:
         for query_info in self._data_queries:
             if isinstance(query_info, MeasureQueryInfo):
                 asyncio.get_event_loop().run_until_complete(
-                    query_info.processor.calculate(query_info.attr,
-                                                   ProcessorResult(True, None),
-                                                   self.rule_cache,
-                                                   query_info=query_info))
+                    query_info.processor.calculate(
+                        query_info.attr, ProcessorResult(True, None), self.rule_cache, query_info=query_info
+                    )
+                )
             elif query_info.data is None or len(query_info.data) == 0:
                 asyncio.get_event_loop().run_until_complete(
-                    query_info.processor.calculate(query_info.attr,
-                                                   ProcessorResult(False,
-                                                                   f'No data found for '
-                                                                   f'Coordinate {query_info.query.coordinate}'),
-                                                   self.rule_cache))
+                    query_info.processor.calculate(
+                        query_info.attr,
+                        ProcessorResult(False, f'No data found for Coordinate {query_info.query.coordinate}'),
+                        self.rule_cache,
+                    )
+                )
             else:
                 asyncio.get_event_loop().run_until_complete(
-                    query_info.processor.calculate(query_info.attr,
-                                                   ProcessorResult(True,
-                                                                   query_info.data),
-                                                   self.rule_cache))
+                    query_info.processor.calculate(
+                        query_info.attr, ProcessorResult(True, query_info.data), self.rule_cache
+                    )
+                )
 
     @staticmethod
     def aggregate_queries(query_infos):
@@ -433,10 +454,7 @@ class DataGrid:
             coordinate = query.coordinate
             dataset_mappings = mappings[coordinate.dataset_id]
             query_key = query.get_range_string()
-            dataset_mappings.setdefault(query_key, {
-                'parameters': {},
-                'queries': {}
-            })
+            dataset_mappings.setdefault(query_key, {'parameters': {}, 'queries': {}})
             queries = dataset_mappings[query_key]['queries']
             queries[coordinate.get_dimensions()] = query_info
             parameters = dataset_mappings[query_key]['parameters']
@@ -515,10 +533,12 @@ class DataGrid:
                 df = df.sort_values(by=column_name, ascending=True, na_position='last').head(filter_value)
             elif operation == FilterOperation.ABSOLUTE_TOP:
                 df = df.reindex(df[column_name].abs().sort_values(ascending=False, na_position='last').index).head(
-                    filter_value)
+                    filter_value
+                )
             elif operation == FilterOperation.ABSOLUTE_BOTTOM:
                 df = df.reindex(df[column_name].abs().sort_values(ascending=True, na_position='last').index).head(
-                    filter_value)
+                    filter_value
+                )
             elif operation == FilterOperation.EQUALS:
                 if not isinstance(filter_value, list):
                     filter_value = [filter_value]
@@ -589,16 +609,18 @@ class DataGrid:
         if should_resolve_entities:
             resolve_entities(reference_list)
 
-        return DataGrid(name=name,
-                        rows=rows,
-                        columns=columns,
-                        id_=id_,
-                        entitlements=entitlements,
-                        primary_column_index=parameters.get('primaryColumnIndex', 0),
-                        polling_time=parameters.get('pollingTime', 0),
-                        multiColumnGroups=multi_column_groups,
-                        sorts=sorts,
-                        filters=filters)
+        return DataGrid(
+            name=name,
+            rows=rows,
+            columns=columns,
+            id_=id_,
+            entitlements=entitlements,
+            primary_column_index=parameters.get('primaryColumnIndex', 0),
+            polling_time=parameters.get('pollingTime', 0),
+            multiColumnGroups=multi_column_groups,
+            sorts=sorts,
+            filters=filters,
+        )
 
     def as_dict(self):
         datagrid = {
@@ -607,8 +629,8 @@ class DataGrid:
                 'rows': [row.as_dict() for row in self.rows],
                 'columns': [column.as_dict() for column in self.columns],
                 'primaryColumnIndex': self._primary_column_index,
-                'pollingTime': self.polling_time or 0
-            }
+                'pollingTime': self.polling_time or 0,
+            },
         }
         if self.entitlements:
             if isinstance(self.entitlements, Entitlements_):
@@ -622,8 +644,7 @@ class DataGrid:
         if len(self.filters):
             datagrid['parameters']['filters'] = [asdict(filter_) for filter_ in self.filters]
         if self.multiColumnGroups:
-            datagrid['parameters']['multiColumnGroups'] = [group.asdict()
-                                                           for group in self.multiColumnGroups]
+            datagrid['parameters']['multiColumnGroups'] = [group.asdict() for group in self.multiColumnGroups]
         return datagrid
 
     def set_primary_column_index(self, index: int):
@@ -678,9 +699,9 @@ class DataGrid:
         return json.dumps(self.as_dict())
 
 
-def _get_overrides(row_overrides: List[Override],
-                   column_name: str) -> \
-        Tuple[List[DimensionsOverride], Optional[ValueOverride], Optional[ProcessorOverride]]:
+def _get_overrides(
+    row_overrides: List[Override], column_name: str
+) -> Tuple[List[DimensionsOverride], Optional[ValueOverride], Optional[ProcessorOverride]]:
     if not row_overrides:
         return [], None, None
 

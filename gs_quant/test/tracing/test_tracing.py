@@ -77,12 +77,16 @@ def test_tracer_print():
     # Force elapsed time to 0 to make sure no spurious tiny times
     make_zero_duration(Tracer.get_spans())
     tracer_str, _ = Tracer.print(reset=True)
-    expected = '\n'.join(['A                                                      0.0 ms',
-                          '* B                                                    0.0 ms',
-                          '* C                                                    0.0 ms',
-                          '* * D                                                  0.0 ms',
-                          '* * E                                                  0.0 ms [Error]',
-                          'F                                                      0.0 ms'])
+    expected = '\n'.join(
+        [
+            'A                                                      0.0 ms',
+            '* B                                                    0.0 ms',
+            '* C                                                    0.0 ms',
+            '* * D                                                  0.0 ms',
+            '* * E                                                  0.0 ms [Error]',
+            'F                                                      0.0 ms',
+        ]
+    )
     assert tracer_str == expected
 
 
@@ -120,7 +124,9 @@ def test_tracer_wrapped_error():
     Tracer.reset()
     with pytest.raises(MqError, match='Unable to calculate: Outer Thing'):
         with Tracer('Outer Thing', wrap_exceptions=True):
-            with Tracer('Inner Thing', ):
+            with Tracer(
+                'Inner Thing',
+            ):
                 raise KeyError('meaningless error')
     spans = Tracer.get_spans()
     assert 'error' in spans[0].tags
@@ -187,13 +193,16 @@ def test_span_activation():
     # Force elapsed time to 0 to make sure no spurious tiny times
     make_zero_duration(Tracer.get_spans())
     tracer_str, _ = Tracer.print(reset=True)
-    expected = '\n'.join(['parent                                                 0.0 ms',
-                          '* child-2                                              0.0 ms',
-                          '* child-3                                              0.0 ms',
-                          '* child-1                                              0.0 ms',
-                          '* * nested-child                                       0.0 ms',
-                          '* * another-nested-child                               0.0 ms',
-                          ])
+    expected = '\n'.join(
+        [
+            'parent                                                 0.0 ms',
+            '* child-2                                              0.0 ms',
+            '* child-3                                              0.0 ms',
+            '* child-1                                              0.0 ms',
+            '* * nested-child                                       0.0 ms',
+            '* * another-nested-child                               0.0 ms',
+        ]
+    )
     assert tracer_str == expected
 
 
@@ -229,6 +238,7 @@ def test_ignore_active_span():
 @pytest.mark.asyncio
 async def test_callback_in_scope():
     import asyncio
+
     Tracer.reset()
 
     finished = asyncio.Future()
@@ -248,9 +258,7 @@ async def test_callback_in_scope():
         main_scope.span.set_tag('main', 'yes')
 
         task = asyncio.create_task(some_async_work())
-        task.add_done_callback(
-            Tracer.in_scope(my_callback_on_complete)
-        )
+        task.add_done_callback(Tracer.in_scope(my_callback_on_complete))
         await task
         await finished
         assert finished.result()

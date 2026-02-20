@@ -43,8 +43,11 @@ def _get_asset_temporal_xrefs(position_sets_df: pd.DataFrame) -> Tuple[pd.DataFr
         all_xrefs = []
         for item in xrefs_list:
             if dt.datetime.strptime(item.get('endDate'), '%Y-%m-%d') >= earliest_position_date:
-                new_xref_map = {'assetId': res.get('assetId'),
-                                'startDate': item.get('startDate'), 'endDate': item.get('endDate')}
+                new_xref_map = {
+                    'assetId': res.get('assetId'),
+                    'startDate': item.get('startDate'),
+                    'endDate': item.get('endDate'),
+                }
                 new_xref_map.update(**item.get('identifiers'))
                 all_xrefs.append(new_xref_map)
         asset_xrefs_final += all_xrefs
@@ -52,8 +55,19 @@ def _get_asset_temporal_xrefs(position_sets_df: pd.DataFrame) -> Tuple[pd.DataFr
     xref_df = pd.DataFrame(asset_xrefs_final)
 
     # Infer identifier type
-    all_possible_identifier_types = ["ticker", "bbid", "bcid", "ric", "cusip", "isin", "sedol", "gss", "gsid",
-                                     "primeId", "gsn"]
+    all_possible_identifier_types = [
+        "ticker",
+        "bbid",
+        "bcid",
+        "ric",
+        "cusip",
+        "isin",
+        "sedol",
+        "gss",
+        "gsid",
+        "primeId",
+        "gsn",
+    ]
     identifiers_found = set(xref_df.columns.tolist()) & set(all_possible_identifier_types)
     inferred_identifier_type = None
     largest_count = 0
@@ -74,12 +88,13 @@ def _get_asset_temporal_xrefs(position_sets_df: pd.DataFrame) -> Tuple[pd.DataFr
 
 def _group_temporal_xrefs_into_discrete_time_ranges(xref_df: pd.DataFrame):
     """Helper function that group asset xref data with overlapping temporal history"""
+
     def group_fn(df):
         # Find where the next group should start
         df = df.sort_values(by="endDate")
 
         # Groups should have non-overlapping time intervals/start_date, end_date
-        where_next_group_should_start = (df['startDate'].shift(-1) > df['endDate'])
+        where_next_group_should_start = df['startDate'].shift(-1) > df['endDate']
 
         # Assign group numbers based on where the next groups starts
         group_numbers = where_next_group_should_start.cumsum().shift(1).fillna(0).astype(int)
@@ -94,7 +109,7 @@ def _group_temporal_xrefs_into_discrete_time_ranges(xref_df: pd.DataFrame):
 
 
 def _resolve_many_assets(historical_xref_df: pd.DataFrame, identifier_type: str, **kwargs) -> pd.DataFrame:
-    """Given a dataframe with temporal xref asset data, resolve """
+    """Given a dataframe with temporal xref asset data, resolve"""
     all_dfs = []
     xref_group_by = historical_xref_df.groupby('group')
     for _, grouped_df in xref_group_by:
@@ -107,9 +122,13 @@ def _resolve_many_assets(historical_xref_df: pd.DataFrame, identifier_type: str,
         resolved_positions = {}
 
         for batch in batches:
-            curr_batch_map = GsAssetApi.resolve_assets(identifier=list(batch), as_of=as_of, limit=500,
-                                                       fields=['name', 'id', identifier_type, 'tradingRestriction'],
-                                                       **kwargs)
+            curr_batch_map = GsAssetApi.resolve_assets(
+                identifier=list(batch),
+                as_of=as_of,
+                limit=500,
+                fields=['name', 'id', identifier_type, 'tradingRestriction'],
+                **kwargs,
+            )
             resolved_positions = {**resolved_positions, **curr_batch_map}
 
         for asset_identifier, asset_resolved_data in resolved_positions.items():
@@ -120,11 +139,9 @@ def _resolve_many_assets(historical_xref_df: pd.DataFrame, identifier_type: str,
 
         df = pd.DataFrame(all_results + unmapped)
         df['asOfDate'] = as_of
-        df = pd.merge(df, grouped_df,
-                      how="inner",
-                      left_on=["id", identifier_type],
-                      right_on=["assetId", identifier_type])[["assetId", "name", identifier_type,
-                                                              "tradingRestriction", "asOfDate", "startDate", "endDate"]]
+        df = pd.merge(
+            df, grouped_df, how="inner", left_on=["id", identifier_type], right_on=["assetId", identifier_type]
+        )[["assetId", "name", identifier_type, "tradingRestriction", "asOfDate", "startDate", "endDate"]]
         all_dfs.append(df)
 
     final_df = pd.concat(all_dfs) if all_dfs else pd.DataFrame()

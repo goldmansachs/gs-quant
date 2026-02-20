@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import re
 import webbrowser
@@ -32,8 +33,15 @@ from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
 from functools import partial
 from gs_quant.data.utilities import Utilities
-from gs_quant.target.data import (DataSetEntity, DataSetParameters, DataSetDimensions,
-                                  FieldColumnPair, DataSetFieldEntity, DBConfig, DataSetType)
+from gs_quant.target.data import (
+    DataSetEntity,
+    DataSetParameters,
+    DataSetDimensions,
+    FieldColumnPair,
+    DataSetFieldEntity,
+    DBConfig,
+    DataSetType,
+)
 
 
 class InvalidInputException(Exception):
@@ -113,11 +121,19 @@ class Dataset:
     @property
     def provider(self):
         from gs_quant.api.gs.data import GsDataApi
+
         return self.__provider or GsDataApi
 
     def _build_data_query(
-            self, start: Union[dt.date, dt.datetime], end: Union[dt.date, dt.datetime], as_of: dt.datetime,
-            since: dt.datetime, fields: Iterable[Union[str, Fields]], empty_intervals: bool, **kwargs):
+        self,
+        start: Union[dt.date, dt.datetime],
+        end: Union[dt.date, dt.datetime],
+        as_of: dt.datetime,
+        since: dt.datetime,
+        fields: Iterable[Union[str, Fields]],
+        empty_intervals: bool,
+        **kwargs,
+    ):
         field_names = None if fields is None else list(map(lambda f: f if isinstance(f, str) else f.value, fields))
         # check whether a function is called e.g. difference(tradePrice)
         schema_varies = field_names is not None and any(map(lambda s: re.match("\\w+\\(", s), field_names))
@@ -130,29 +146,38 @@ class Dataset:
                     pass  # Ignore error if date parameter is in some other format
             if "dates" not in kwargs and start is None and end is None:
                 kwargs["dates"] = (kwargs["date"],)
-        return self.provider.build_query(start=start, end=end, as_of=as_of, since=since, fields=field_names,
-                                         empty_intervals=empty_intervals, **kwargs), schema_varies
+        return self.provider.build_query(
+            start=start,
+            end=end,
+            as_of=as_of,
+            since=since,
+            fields=field_names,
+            empty_intervals=empty_intervals,
+            **kwargs,
+        ), schema_varies
 
     def _build_data_frame(self, data, schema_varies, standard_fields) -> pd.DataFrame:
         if type(data) is tuple:
-            df = self.provider.construct_dataframe_with_types(self.id, data[0], schema_varies,
-                                                              standard_fields=standard_fields)
+            df = self.provider.construct_dataframe_with_types(
+                self.id, data[0], schema_varies, standard_fields=standard_fields
+            )
             return df.groupby(data[1], group_keys=True).apply(lambda x: x)
         else:
-            return self.provider.construct_dataframe_with_types(self.id, data, schema_varies,
-                                                                standard_fields=standard_fields)
+            return self.provider.construct_dataframe_with_types(
+                self.id, data, schema_varies, standard_fields=standard_fields
+            )
 
     def get_data(
-            self,
-            start: Optional[Union[dt.date, dt.datetime]] = None,
-            end: Optional[Union[dt.date, dt.datetime]] = None,
-            as_of: Optional[dt.datetime] = None,
-            since: Optional[dt.datetime] = None,
-            fields: Optional[Iterable[Union[str, Fields]]] = None,
-            asset_id_type: Optional[str] = None,
-            empty_intervals: Optional[bool] = None,
-            standard_fields: Optional[bool] = False,
-            **kwargs
+        self,
+        start: Optional[Union[dt.date, dt.datetime]] = None,
+        end: Optional[Union[dt.date, dt.datetime]] = None,
+        as_of: Optional[dt.datetime] = None,
+        since: Optional[dt.datetime] = None,
+        fields: Optional[Iterable[Union[str, Fields]]] = None,
+        asset_id_type: Optional[str] = None,
+        empty_intervals: Optional[bool] = None,
+        standard_fields: Optional[bool] = False,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Get data for the given range and parameters
@@ -181,15 +206,15 @@ class Dataset:
         return self._build_data_frame(data, schema_varies, standard_fields)
 
     async def get_data_async(
-            self,
-            start: Optional[Union[dt.date, dt.datetime]] = None,
-            end: Optional[Union[dt.date, dt.datetime]] = None,
-            as_of: Optional[dt.datetime] = None,
-            since: Optional[dt.datetime] = None,
-            fields: Optional[Iterable[Union[str, Fields]]] = None,
-            empty_intervals: Optional[bool] = None,
-            standard_fields: Optional[bool] = False,
-            **kwargs
+        self,
+        start: Optional[Union[dt.date, dt.datetime]] = None,
+        end: Optional[Union[dt.date, dt.datetime]] = None,
+        as_of: Optional[dt.datetime] = None,
+        since: Optional[dt.datetime] = None,
+        fields: Optional[Iterable[Union[str, Fields]]] = None,
+        empty_intervals: Optional[bool] = None,
+        standard_fields: Optional[bool] = False,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Get data for the given range and parameters
@@ -218,18 +243,19 @@ class Dataset:
         data = await self.provider.query_data_async(query, self.id)
         return self._build_data_frame(data, schema_varies, standard_fields)
 
-    def _build_data_series_query(self, field: Union[str, Fields], start: Union[dt.date, dt.datetime],
-                                 end: Union[dt.date, dt.datetime], as_of: dt.datetime, since: dt.datetime,
-                                 dates: List[dt.date], **kwargs):
+    def _build_data_series_query(
+        self,
+        field: Union[str, Fields],
+        start: Union[dt.date, dt.datetime],
+        end: Union[dt.date, dt.datetime],
+        as_of: dt.datetime,
+        since: dt.datetime,
+        dates: List[dt.date],
+        **kwargs,
+    ):
         field_value = field if isinstance(field, str) else field.value
         query = self.provider.build_query(
-            start=start,
-            end=end,
-            as_of=as_of,
-            since=since,
-            fields=(field_value,),
-            dates=dates,
-            **kwargs
+            start=start, end=end, as_of=as_of, since=since, fields=(field_value,), dates=dates, **kwargs
         )
         symbol_dimensions = self.provider.symbol_dimensions(self.id)
         if len(symbol_dimensions) != 1:
@@ -254,15 +280,15 @@ class Dataset:
         return pd.Series(index=df.index, data=df.loc[:, field_value].values)
 
     def get_data_series(
-            self,
-            field: Union[str, Fields],
-            start: Optional[Union[dt.date, dt.datetime]] = None,
-            end: Optional[Union[dt.date, dt.datetime]] = None,
-            as_of: Optional[dt.datetime] = None,
-            since: Optional[dt.datetime] = None,
-            dates: Optional[List[dt.date]] = None,
-            standard_fields: Optional[bool] = False,
-            **kwargs
+        self,
+        field: Union[str, Fields],
+        start: Optional[Union[dt.date, dt.datetime]] = None,
+        end: Optional[Union[dt.date, dt.datetime]] = None,
+        as_of: Optional[dt.datetime] = None,
+        since: Optional[dt.datetime] = None,
+        dates: Optional[List[dt.date]] = None,
+        standard_fields: Optional[bool] = False,
+        **kwargs,
     ) -> pd.Series:
         """
         Get a time series of data for a field of a dataset
@@ -286,21 +312,22 @@ class Dataset:
         >>> dew_point = weather
         >>>>    .get_data_series('dewPoint', dt.date(2016, 1, 15), dt.date(2016, 1, 16), city=('Boston', 'Austin'))
         """
-        field_value, query, symbol_dimension = self._build_data_series_query(field, start, end, as_of, since, dates,
-                                                                             **kwargs)
+        field_value, query, symbol_dimension = self._build_data_series_query(
+            field, start, end, as_of, since, dates, **kwargs
+        )
         data = self.provider.query_data(query, self.id)
         return self._build_data_series(data, field_value, symbol_dimension, standard_fields)
 
     async def get_data_series_async(
-            self,
-            field: Union[str, Fields],
-            start: Optional[Union[dt.date, dt.datetime]] = None,
-            end: Optional[Union[dt.date, dt.datetime]] = None,
-            as_of: Optional[dt.datetime] = None,
-            since: Optional[dt.datetime] = None,
-            dates: Optional[List[dt.date]] = None,
-            standard_fields: Optional[bool] = False,
-            **kwargs
+        self,
+        field: Union[str, Fields],
+        start: Optional[Union[dt.date, dt.datetime]] = None,
+        end: Optional[Union[dt.date, dt.datetime]] = None,
+        as_of: Optional[dt.datetime] = None,
+        since: Optional[dt.datetime] = None,
+        dates: Optional[List[dt.date]] = None,
+        standard_fields: Optional[bool] = False,
+        **kwargs,
     ) -> pd.Series:
         """
         Get a time series of data for a field of a dataset
@@ -324,18 +351,19 @@ class Dataset:
         >>> dew_point = await weather.get_data_series_async('dewPoint', dt.date(2016, 1, 15), dt.date(2016, 1, 16),
         >>>                                                 city=('Boston', 'Austin'))
         """
-        field_value, query, symbol_dimension = self._build_data_series_query(field, start, end, as_of, since, dates,
-                                                                             **kwargs)
+        field_value, query, symbol_dimension = self._build_data_series_query(
+            field, start, end, as_of, since, dates, **kwargs
+        )
         data = await self.provider.query_data_async(query, self.id)
         return self._build_data_series(data, field_value, symbol_dimension, standard_fields)
 
     def get_data_last(
-            self,
-            as_of: Optional[Union[dt.date, dt.datetime]],
-            start: Optional[Union[dt.date, dt.datetime]] = None,
-            fields: Optional[Iterable[str]] = None,
-            standard_fields: Optional[bool] = False,
-            **kwargs
+        self,
+        as_of: Optional[Union[dt.date, dt.datetime]],
+        start: Optional[Union[dt.date, dt.datetime]] = None,
+        fields: Optional[Iterable[str]] = None,
+        standard_fields: Optional[bool] = False,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Get the last point for this DataSet, at or before as_of
@@ -355,25 +383,19 @@ class Dataset:
         >>> weather = Dataset('WEATHER')
         >>> last = weather.get_data_last(dt.datetime.now())
         """
-        query = self.provider.build_query(
-            start=start,
-            end=as_of,
-            fields=fields,
-            format='JSON',
-            **kwargs
-        )
+        query = self.provider.build_query(start=start, end=as_of, fields=fields, format='JSON', **kwargs)
         query.format = None  # "last" endpoint does not support MessagePack
 
         data = self.provider.last_data(query, self.id)
         return self.provider.construct_dataframe_with_types(self.id, data, standard_fields=standard_fields)
 
     def get_coverage(
-            self,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None,
-            fields: Optional[List[str]] = None,
-            include_history: bool = False,
-            **kwargs
+        self,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        fields: Optional[List[str]] = None,
+        include_history: bool = False,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Get the assets covered by this DataSet
@@ -392,23 +414,18 @@ class Dataset:
         >>> cities = weather.get_coverage()
         """
         coverage = self.provider.get_coverage(
-            self.id,
-            limit=limit,
-            offset=offset,
-            fields=fields,
-            include_history=include_history,
-            **kwargs
+            self.id, limit=limit, offset=offset, fields=fields, include_history=include_history, **kwargs
         )
 
         return pd.DataFrame(coverage)
 
     async def get_coverage_async(
-            self,
-            limit: Optional[int] = None,
-            offset: Optional[int] = None,
-            fields: Optional[List[str]] = None,
-            include_history: bool = False,
-            **kwargs
+        self,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        fields: Optional[List[str]] = None,
+        include_history: bool = False,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Get the assets covered by this DataSet
@@ -427,12 +444,7 @@ class Dataset:
         >>> cities = await weather.get_coverage_async()
         """
         coverage = await self.provider.get_coverage_async(
-            self.id,
-            limit=limit,
-            offset=offset,
-            fields=fields,
-            include_history=include_history,
-            **kwargs
+            self.id, limit=limit, offset=offset, fields=fields, include_history=include_history, **kwargs
         )
 
         return pd.DataFrame(coverage)
@@ -505,15 +517,16 @@ class Dataset:
         """
         return self.provider.upload_data(self.id, data)
 
-    def get_data_bulk(self,
-                      request_batch_size,
-                      original_start: dt.datetime,
-                      final_end: Optional[dt.datetime] = None,
-                      identifier="bbid",
-                      symbols_per_csv: int = 1000,
-                      datetime_delta_override: Optional[int] = None,
-                      handler: Optional[Callable[[pd.DataFrame], None]] = None
-                      ):
+    def get_data_bulk(
+        self,
+        request_batch_size,
+        original_start: dt.datetime,
+        final_end: Optional[dt.datetime] = None,
+        identifier="bbid",
+        symbols_per_csv: int = 1000,
+        datetime_delta_override: Optional[int] = None,
+        handler: Optional[Callable[[pd.DataFrame], None]] = None,
+    ):
         """
         Extracts data from dataset by running parallel queries in the background
 
@@ -543,31 +556,33 @@ class Dataset:
         """
 
         try:
-            authenticate = partial(GsSession.use,
-                                   client_id=GsSession.current.client_id,
-                                   client_secret=GsSession.current.client_secret
-                                   )
+            authenticate = partial(
+                GsSession.use, client_id=GsSession.current.client_id, client_secret=GsSession.current.client_secret
+            )
         except AttributeError:
             authenticate = partial(GsSession.use)
 
         time_field, history_time, symbol_dimension, timedelta = Utilities.get_dataset_parameter(self)
         final_end = final_end or dt.datetime.now()
         write_to_csv = handler is None
-        final_end, target_dir_result = Utilities.pre_checks(final_end, original_start, time_field,
-                                                            datetime_delta_override, request_batch_size, write_to_csv)
+        final_end, target_dir_result = Utilities.pre_checks(
+            final_end, original_start, time_field, datetime_delta_override, request_batch_size, write_to_csv
+        )
         if write_to_csv:
             print("Target Destination Folder: ", target_dir_result)
 
         if time_field == 'date':
             original_start = max(original_start.date(), history_time.date())
             final_end = max(final_end.date(), history_time.date())
-            datetime_delta_override = timedelta if datetime_delta_override is None else dt.timedelta(
-                days=datetime_delta_override)
+            datetime_delta_override = (
+                timedelta if datetime_delta_override is None else dt.timedelta(days=datetime_delta_override)
+            )
         elif time_field == 'time':
             original_start = max(original_start.astimezone(dt.timezone.utc), history_time.astimezone(dt.timezone.utc))
             final_end = max(final_end.astimezone(dt.timezone.utc), history_time.astimezone(dt.timezone.utc))
-            datetime_delta_override = timedelta if datetime_delta_override is None else dt.timedelta(
-                hours=datetime_delta_override)
+            datetime_delta_override = (
+                timedelta if datetime_delta_override is None else dt.timedelta(hours=datetime_delta_override)
+            )
 
         original_end = min(original_start + datetime_delta_override, final_end)
         coverage = Utilities.get_dataset_coverage(identifier, symbol_dimension, self)
@@ -591,7 +606,7 @@ class Dataset:
                 batch_number,
                 coverage_length,
                 symbols_per_csv,
-                handler
+                handler,
             )
 
             batch_number += 1
@@ -627,8 +642,9 @@ class PTPDataset(Dataset):
             series = pd.DataFrame({series.attrs.get('name', 'values'): series})
         if not isinstance(series.index, pd.DatetimeIndex):
             raise MqValueError('PTP datasets require a Pandas object with a DatetimeIndex.')
-        if isinstance(series, pd.DataFrame) and \
-                len(series.select_dtypes(include=np.number).columns) != len(series.columns):
+        if isinstance(series, pd.DataFrame) and len(series.select_dtypes(include=np.number).columns) != len(
+            series.columns
+        ):
             raise MqValueError('PTP datasets must contain only numbers.')
 
         self._series = series
@@ -641,11 +657,13 @@ class PTPDataset(Dataset):
         """
         temp_ser = self._series.assign(date=self._series.index.to_series().apply(dt.date.isoformat))
         data = temp_ser.to_dict('records')
-        kwargs = dict(data=data, name=self._name if self._name else 'GSQ Default',
-                      fields=list(self._series.columns))
+        kwargs = dict(data=data, name=self._name if self._name else 'GSQ Default', fields=list(self._series.columns))
         res = GsSession.current._post('/plots/datasets', payload=kwargs)
-        self._fields = {key: inflection.underscore(field) for key, field in res['fieldMap'].items() if field not in
-                        ['updateTime', 'date', 'datasetId']}
+        self._fields = {
+            key: inflection.underscore(field)
+            for key, field in res['fieldMap'].items()
+            if field not in ['updateTime', 'date', 'datasetId']
+        }
         self._id = res['dataset']['id']
         super(PTPDataset, self).__init__(self._id, None)
 
@@ -703,12 +721,12 @@ class MarqueeDataIngestionLibrary:
     @property
     def provider(self):
         from gs_quant.api.gs.data import GsDataApi
+
         return self.__provider or GsDataApi
 
-    def _create_parameters(self,
-                           time_dimension: str,
-                           symbol_dimension: str,
-                           is_internal_user: bool) -> DataSetParameters:
+    def _create_parameters(
+        self, time_dimension: str, symbol_dimension: str, is_internal_user: bool
+    ) -> DataSetParameters:
         """
         Create the parameters for the dataset.
 
@@ -729,20 +747,23 @@ class MarqueeDataIngestionLibrary:
             if not (self.provider.get_dataset_fields(names=field_name)):
                 data_type = pd.api.types.infer_dtype(dataframe[column])
                 api_data_type = 'number' if data_type in ['floating', 'integer'] else data_type
-                fields_to_create.append(DataSetFieldEntity(name=field_name, type_=api_data_type,
-                                                           description=f'field {field_name} created from GSQuant'))
+                fields_to_create.append(
+                    DataSetFieldEntity(
+                        name=field_name, type_=api_data_type, description=f'field {field_name} created from GSQuant'
+                    )
+                )
 
         if fields_to_create:
             return self.provider.create_dataset_fields(fields_to_create)
 
     def _create_dimensions(
-            self,
-            data: pd.DataFrame,
-            symbol_dimension: str,
-            time_dimension: str,
-            dimensions: Optional[List[str]],
-            measures: List[str],
-            internal_user: bool
+        self,
+        data: pd.DataFrame,
+        symbol_dimension: str,
+        time_dimension: str,
+        dimensions: Optional[List[str]],
+        measures: List[str],
+        internal_user: bool,
     ) -> DataSetDimensions:
         """
         Create the dimensions for the dataset.
@@ -770,19 +791,24 @@ class MarqueeDataIngestionLibrary:
             INVALID_DRG_NAME_CHARS = r"Pvt Ltd.*|Private Ltd.*|Limited.*|Ltd.*|Inc.*|LP$|LLP$|[^a-zA-Z0-9]"
             drgName = re.sub(INVALID_DRG_NAME_CHARS, "", drgName)
 
-            fieldMap = {field: self.to_camel_case((field if field == 'updateTime' else f"{field}Org{drgName}")[:64])
-                        for field in (dimensions + measures)}
+            fieldMap = {
+                field: self.to_camel_case((field if field == 'updateTime' else f"{field}Org{drgName}")[:64])
+                for field in (dimensions + measures)
+            }
 
         self._check_and_create_field(fieldMap, data)
 
         dataset_dimensions.non_symbol_dimensions = tuple(
-            FieldColumnPair(field_=fieldMap.get(dim),
-                            column=self.to_upper_underscore(dim)) for dim in (dimensions or [])
+            FieldColumnPair(field_=fieldMap.get(dim), column=self.to_upper_underscore(dim))
+            for dim in (dimensions or [])
         )
         dataset_dimensions.measures = tuple(
-            FieldColumnPair(field_=fieldMap.get(mea),
-                            column=self.to_upper_underscore(mea),
-                            resolvable=True if mea != 'updateTime' else None) for mea in measures
+            FieldColumnPair(
+                field_=fieldMap.get(mea),
+                column=self.to_upper_underscore(mea),
+                resolvable=True if mea != 'updateTime' else None,
+            )
+            for mea in measures
         )
         return dataset_dimensions
 
@@ -798,7 +824,7 @@ class MarqueeDataIngestionLibrary:
         dataset_id: str,
         symbol_dimension: str,
         time_dimension: str,
-        dimensions: Optional[List[str]] = []
+        dimensions: Optional[List[str]] = [],
     ) -> DataSetEntity:
         """
         Create a dataset using the provided data and metadata.
@@ -821,14 +847,16 @@ class MarqueeDataIngestionLibrary:
         """
 
         if data.empty or not dataset_id or not symbol_dimension or not time_dimension:
-            print(
-                "Error: 'data', 'dataset_id', 'symbol_dimension', and 'time_dimension' are all required.")
+            print("Error: 'data', 'dataset_id', 'symbol_dimension', and 'time_dimension' are all required.")
             raise InvalidInputException("One or more required parameters are empty or null.")
 
-        if (not pd.api.types.is_datetime64_any_dtype(pd.to_datetime(data[time_dimension])) or
-                not all(pd.to_datetime(data[time_dimension]).dt.time == dt.time(0, 0))):
-            raise InvalidInputException(f"Snowflake doesn't support intraday data. The time_dimension "
-                                        f"'{time_dimension}' must be a date, not a timestamp.")
+        if not pd.api.types.is_datetime64_any_dtype(pd.to_datetime(data[time_dimension])) or not all(
+            pd.to_datetime(data[time_dimension]).dt.time == dt.time(0, 0)
+        ):
+            raise InvalidInputException(
+                f"Snowflake doesn't support intraday data. The time_dimension "
+                f"'{time_dimension}' must be a date, not a timestamp."
+            )
 
         dataset_definition = DataSetEntity()
         dataset_definition.id_ = dataset_id
@@ -842,26 +870,21 @@ class MarqueeDataIngestionLibrary:
         VALID_TIME_DIMENSION = {  # we do not support intraday data for snowflake datasets
             "date"
         }
-        VALID_SYMBOL_DIMENSION = {
-            "isin",
-            "bbid",
-            "ric",
-            "sedol",
-            "cusip",
-            "ticker",
-            "countryId",
-            "currency"
-        }
+        VALID_SYMBOL_DIMENSION = {"isin", "bbid", "ric", "sedol", "cusip", "ticker", "countryId", "currency"}
 
         internal_user = self.user.get("internal")
 
-        custom_symbol_dimension = "customId" if (not internal_user and self.to_camel_case(symbol_dimension) not in
-                                                 VALID_SYMBOL_DIMENSION) else self.to_camel_case(symbol_dimension)
+        custom_symbol_dimension = (
+            "customId"
+            if (not internal_user and self.to_camel_case(symbol_dimension) not in VALID_SYMBOL_DIMENSION)
+            else self.to_camel_case(symbol_dimension)
+        )
         custom_time_dimensions = "date" if time_dimension not in VALID_TIME_DIMENSION else time_dimension
 
         dataset_definition.parameters = self._create_parameters(time_dimension, symbol_dimension, internal_user)
-        dataset_definition.dimensions = self._create_dimensions(data, custom_symbol_dimension, custom_time_dimensions,
-                                                                dimensions, measures, internal_user)
+        dataset_definition.dimensions = self._create_dimensions(
+            data, custom_symbol_dimension, custom_time_dimensions, dimensions, measures, internal_user
+        )
         dataset_definition.type_ = DataSetType.NativeSnowflake
 
         result = self.provider.create(dataset_definition)
@@ -884,19 +907,27 @@ class MarqueeDataIngestionLibrary:
 
         # Upload data to the dataset
         dataset = self.provider.get_definition(dataset_id)
-        allFields = (dataset.dimensions.non_symbol_dimensions +
-                     dataset.dimensions.measures +
-                     (FieldColumnPair(field_=dataset.dimensions.time_field,
-                                      column=dataset.parameters.snowflake_config.date_time_column),
-                      FieldColumnPair(field_=dataset.dimensions.symbol_dimensions[0],
-                                      column=dataset.parameters.snowflake_config.id_column)))
+        allFields = (
+            dataset.dimensions.non_symbol_dimensions
+            + dataset.dimensions.measures
+            + (
+                FieldColumnPair(
+                    field_=dataset.dimensions.time_field, column=dataset.parameters.snowflake_config.date_time_column
+                ),
+                FieldColumnPair(
+                    field_=dataset.dimensions.symbol_dimensions[0], column=dataset.parameters.snowflake_config.id_column
+                ),
+            )
+        )
 
-        renamed_df = df.copy().rename(columns={
-            column: field.field_
-            for column in df.columns
-            for field in allFields
-            if self.to_upper_underscore(column) == field.column
-        })
+        renamed_df = df.copy().rename(
+            columns={
+                column: field.field_
+                for column in df.columns
+                for field in allFields
+                if self.to_upper_underscore(column) == field.column
+            }
+        )
 
         data = renamed_df.to_dict('records')
 

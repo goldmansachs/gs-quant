@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 from typing import Iterable, Union, Tuple
@@ -21,20 +22,43 @@ import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.api.gs.backtests_xasset.apis import GsBacktestXassetApi
 from gs_quant.api.gs.backtests_xasset.request import BasicBacktestRequest
-from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import DateConfig, Trade, Configuration, \
-    RollDateMode, TransactionCostConfig, StrategyHedge
+from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
+    DateConfig,
+    Trade,
+    Configuration,
+    RollDateMode,
+    TransactionCostConfig,
+    StrategyHedge,
+)
 from gs_quant.backtests.core import Backtest, TradeInMethod
 from gs_quant.base import get_enum_value, Base
 from gs_quant.common import Currency
 from gs_quant.common import FieldValueMap, AssetClass
 from gs_quant.errors import MqValueError
-from gs_quant.instrument import EqOption, EqVarianceSwap, FXOption, FXBinary, FXCorrelationSwap, FXOneTouch, \
-    FXVarianceSwap, FXVolatilitySwap, Instrument, IRSwaption
-from gs_quant.target.backtests import BacktestResult, BacktestRisk, \
-    BacktestTradingQuantityType, DeltaHedgeParameters, \
-    BacktestSignalSeriesItem, \
-    BacktestStrategyUnderlier, BacktestStrategyUnderlierHedge, EquityMarketModel, BacktestTradingParameters, \
-    FlowVolBacktestMeasure
+from gs_quant.instrument import (
+    EqOption,
+    EqVarianceSwap,
+    FXOption,
+    FXBinary,
+    FXCorrelationSwap,
+    FXOneTouch,
+    FXVarianceSwap,
+    FXVolatilitySwap,
+    Instrument,
+    IRSwaption,
+)
+from gs_quant.target.backtests import (
+    BacktestResult,
+    BacktestRisk,
+    BacktestTradingQuantityType,
+    DeltaHedgeParameters,
+    BacktestSignalSeriesItem,
+    BacktestStrategyUnderlier,
+    BacktestStrategyUnderlierHedge,
+    EquityMarketModel,
+    BacktestTradingParameters,
+    FlowVolBacktestMeasure,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -45,32 +69,35 @@ ISO_FORMAT = r"^([0-9]{4})-([0-9]{2})-([0-9]{2})$"
 
 class StrategySystematic:
     """Equity back testing systematic strategy"""
+
     _supported_eq_instruments = (EqOption, EqVarianceSwap)
     _supported_fx_instruments = (FXOption, FXBinary, FXCorrelationSwap, FXOneTouch, FXVarianceSwap, FXVolatilitySwap)
     _supported_ir_instruments = (IRSwaption,)
     _supported_instruments = _supported_eq_instruments + _supported_fx_instruments + _supported_ir_instruments
 
-    def __init__(self,
-                 underliers: Union[Instrument, Iterable[Instrument]],
-                 quantity: float = 1,
-                 quantity_type: Union[BacktestTradingQuantityType, str] = BacktestTradingQuantityType.notional,
-                 trade_in_method: Union[TradeInMethod, str] = TradeInMethod.FixedRoll,
-                 roll_frequency: str = None,
-                 scaling_method: str = None,
-                 index_initial_value: float = 0.0,
-                 delta_hedge: DeltaHedgeParameters = None,
-                 name: str = None,
-                 cost_netting: bool = False,
-                 currency: Union[Currency, str] = Currency.USD,
-                 trade_in_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
-                 trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
-                 market_model: Union[EquityMarketModel, str] = EquityMarketModel.SFK,
-                 roll_date_mode: str = None,
-                 expiry_date_mode: str = None,
-                 cash_accrual: bool = True,
-                 combine_roll_signal_entries: bool = False,
-                 transaction_cost_config: TransactionCostConfig = None,
-                 use_xasset_backtesting_service: bool = True):
+    def __init__(
+        self,
+        underliers: Union[Instrument, Iterable[Instrument]],
+        quantity: float = 1,
+        quantity_type: Union[BacktestTradingQuantityType, str] = BacktestTradingQuantityType.notional,
+        trade_in_method: Union[TradeInMethod, str] = TradeInMethod.FixedRoll,
+        roll_frequency: str = None,
+        scaling_method: str = None,
+        index_initial_value: float = 0.0,
+        delta_hedge: DeltaHedgeParameters = None,
+        name: str = None,
+        cost_netting: bool = False,
+        currency: Union[Currency, str] = Currency.USD,
+        trade_in_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
+        trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
+        market_model: Union[EquityMarketModel, str] = EquityMarketModel.SFK,
+        roll_date_mode: str = None,
+        expiry_date_mode: str = None,
+        cash_accrual: bool = True,
+        combine_roll_signal_entries: bool = False,
+        transaction_cost_config: TransactionCostConfig = None,
+        use_xasset_backtesting_service: bool = True,
+    ):
         self.__cost_netting = cost_netting
         self.__currency = get_enum_value(Currency, currency)
         self.__name = name
@@ -87,7 +114,7 @@ class StrategySystematic:
             roll_frequency=roll_frequency,
             trade_in_signals=trade_in_signals,
             trade_out_signals=trade_out_signals,
-            roll_date_mode=roll_date_mode
+            roll_date_mode=roll_date_mode,
         )
 
         self.__underliers = []
@@ -96,12 +123,15 @@ class StrategySystematic:
             instrument = underliers
             notional_percentage = 100
             trade_instruments.append(instrument)
-            self.__underliers.append(BacktestStrategyUnderlier(
-                instrument=instrument,
-                notional_percentage=notional_percentage,
-                hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
-                market_model=market_model,
-                expiry_date_mode=expiry_date_mode))
+            self.__underliers.append(
+                BacktestStrategyUnderlier(
+                    instrument=instrument,
+                    notional_percentage=notional_percentage,
+                    hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
+                    market_model=market_model,
+                    expiry_date_mode=expiry_date_mode,
+                )
+            )
         else:
             for underlier in underliers:
                 if isinstance(underlier, tuple):
@@ -116,18 +146,31 @@ class StrategySystematic:
                 else:
                     instrument = instrument.scale(notional_percentage / 100, in_place=False, check_resolved=False)
                 trade_instruments.append(instrument)
-                self.__underliers.append(BacktestStrategyUnderlier(
-                    instrument=instrument,
-                    notional_percentage=notional_percentage,
-                    hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
-                    market_model=market_model,
-                    expiry_date_mode=expiry_date_mode))
+                self.__underliers.append(
+                    BacktestStrategyUnderlier(
+                        instrument=instrument,
+                        notional_percentage=notional_percentage,
+                        hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
+                        market_model=market_model,
+                        expiry_date_mode=expiry_date_mode,
+                    )
+                )
         # xasset backtesting service fields
         trade_buy_dates = tuple(s.date for s in trade_in_signals if s.value) if trade_in_signals is not None else None
-        trade_exit_dates = tuple(s.date for s in trade_out_signals if s.value) if trade_out_signals is not None else \
-            None
-        self.__trades = (Trade(tuple(trade_instruments), roll_frequency, trade_buy_dates, roll_frequency,
-                               trade_exit_dates, quantity, quantity_type),)
+        trade_exit_dates = (
+            tuple(s.date for s in trade_out_signals if s.value) if trade_out_signals is not None else None
+        )
+        self.__trades = (
+            Trade(
+                tuple(trade_instruments),
+                roll_frequency,
+                trade_buy_dates,
+                roll_frequency,
+                trade_exit_dates,
+                quantity,
+                quantity_type,
+            ),
+        )
 
         if delta_hedge:
             self.__hedge_params = StrategyHedge()
@@ -139,12 +182,12 @@ class StrategySystematic:
             self.__hedge_params = None
 
         self.__transaction_cost_config = transaction_cost_config
-        self.__xasset_bt_service_config = Configuration(roll_date_mode=RollDateMode(roll_date_mode) if
-                                                        roll_date_mode is not None else None,
-                                                        market_model=EquityMarketModel(market_model) if
-                                                        market_model else None,
-                                                        cash_accrual=cash_accrual,
-                                                        combine_roll_signal_entries=combine_roll_signal_entries)
+        self.__xasset_bt_service_config = Configuration(
+            roll_date_mode=RollDateMode(roll_date_mode) if roll_date_mode is not None else None,
+            market_model=EquityMarketModel(market_model) if market_model else None,
+            cash_accrual=cash_accrual,
+            combine_roll_signal_entries=combine_roll_signal_entries,
+        )
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         backtest_parameter_args = {
@@ -152,7 +195,7 @@ class StrategySystematic:
             'underliers': self.__underliers,
             'trade_in_method': trade_in_method,
             'scaling_method': scaling_method,
-            'index_initial_value': index_initial_value
+            'index_initial_value': index_initial_value,
         }
         self.__backtest_parameters = backtest_parameters_class.from_dict(backtest_parameter_args)
         all_eq = all(isinstance(i, self._supported_eq_instruments) for i in trade_instruments)
@@ -162,45 +205,71 @@ class StrategySystematic:
             raise MqValueError('Cannot run backtests for different asset classes.')
         self.__use_xasset_backtesting_service = all_fx or all_ir or use_xasset_backtesting_service
 
-    def __run_service_based_backtest(self, start: dt.date, end: dt.date,
-                                     measures: Iterable[FlowVolBacktestMeasure]) -> BacktestResult:
+    def __run_service_based_backtest(
+        self, start: dt.date, end: dt.date, measures: Iterable[FlowVolBacktestMeasure]
+    ) -> BacktestResult:
         date_cfg = DateConfig(start, end)
         if not measures:
             measures = (FlowVolBacktestMeasure.PNL,)
-        basic_bt_request = BasicBacktestRequest(dates=date_cfg, trades=self.__trades, measures=measures,
-                                                transaction_costs=self.__transaction_cost_config,
-                                                configuration=self.__xasset_bt_service_config,
-                                                hedge=self.__hedge_params)
+        basic_bt_request = BasicBacktestRequest(
+            dates=date_cfg,
+            trades=self.__trades,
+            measures=measures,
+            transaction_costs=self.__transaction_cost_config,
+            configuration=self.__xasset_bt_service_config,
+            hedge=self.__hedge_params,
+        )
         basic_bt_response = GsBacktestXassetApi.calculate_basic_backtest(basic_bt_request, decode_instruments=False)
         risks = tuple(
-            BacktestRisk(name=k.value,
-                         timeseries=tuple(FieldValueMap(date=d, value=r.result) for d, r in v.items()))
+            BacktestRisk(name=k.value, timeseries=tuple(FieldValueMap(date=d, value=r.result) for d, r in v.items()))
             for k, v in basic_bt_response.measures.items()
         )
         events = []
         if basic_bt_response.additional_results is not None:
             if basic_bt_response.additional_results.trade_events is not None:
-                events.append(BacktestRisk(name="trade_events",
-                                           timeseries=tuple(FieldValueMap(date=d, value=e) for d, e in
-                                                            basic_bt_response.additional_results.trade_events.items())))
+                events.append(
+                    BacktestRisk(
+                        name="trade_events",
+                        timeseries=tuple(
+                            FieldValueMap(date=d, value=e)
+                            for d, e in basic_bt_response.additional_results.trade_events.items()
+                        ),
+                    )
+                )
             if basic_bt_response.additional_results.hedge_events is not None:
-                events.append(BacktestRisk(name="hedge_events",
-                                           timeseries=tuple(FieldValueMap(date=d, value=e) for d, e in
-                                                            basic_bt_response.additional_results.hedge_events.items())))
+                events.append(
+                    BacktestRisk(
+                        name="hedge_events",
+                        timeseries=tuple(
+                            FieldValueMap(date=d, value=e)
+                            for d, e in basic_bt_response.additional_results.hedge_events.items()
+                        ),
+                    )
+                )
         portfolio = []
         for d in sorted(set().union(basic_bt_response.portfolio.keys(), basic_bt_response.transactions.keys())):
             if d in basic_bt_response.portfolio:
-                positions = [{'instrument': i if i is not None else {}, 'quantity': self.__position_quantity(i)} for
-                             i in basic_bt_response.portfolio[d]]
+                positions = [
+                    {'instrument': i if i is not None else {}, 'quantity': self.__position_quantity(i)}
+                    for i in basic_bt_response.portfolio[d]
+                ]
             else:
                 positions = []
             transactions = []
             if d in basic_bt_response.transactions:
                 for t in basic_bt_response.transactions[d]:
-                    trades = [{'instrument': i if i is not None else {},
-                               'price': t.portfolio_price,
-                               'quantity': t.quantity if t.quantity is not None else None}
-                              for i in t.portfolio] if t.portfolio is not None else []
+                    trades = (
+                        [
+                            {
+                                'instrument': i if i is not None else {},
+                                'price': t.portfolio_price,
+                                'quantity': t.quantity if t.quantity is not None else None,
+                            }
+                            for i in t.portfolio
+                        ]
+                        if t.portfolio is not None
+                        else []
+                    )
                     transactions.append({'type': t.direction.value, 'trades': trades, 'cost': t.cost})
             portfolio.append({'date': d, 'positions': positions, 'transactions': transactions})
         return BacktestResult(risks=risks, events=tuple(events), portfolio=portfolio)
@@ -213,12 +282,12 @@ class StrategySystematic:
         return None
 
     def backtest(
-            self,
-            start: dt.date = None,
-            end: dt.date = dt.date.today() - dt.timedelta(days=1),
-            is_async: bool = False,
-            measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,),
-            correlation_id: str = None
+        self,
+        start: dt.date = None,
+        end: dt.date = dt.date.today() - dt.timedelta(days=1),
+        is_async: bool = False,
+        measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,),
+        correlation_id: str = None,
     ) -> Union[Backtest, BacktestResult]:
         if self.__use_xasset_backtesting_service:
             return self.__run_service_based_backtest(start, end, measures)
@@ -227,16 +296,18 @@ class StrategySystematic:
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')
         params = backtest_parameters_class.from_dict(params_dict)
 
-        backtest = Backtest(name=self.__name,
-                            mq_symbol=self.__name,
-                            parameters=params,
-                            start_date=start,
-                            end_date=end,
-                            type=BACKTEST_TYPE_VALUE,
-                            asset_class=AssetClass.Equity,
-                            currency=self.__currency,
-                            cost_netting=self.__cost_netting,
-                            cash_accrual=self.__cash_accrual)
+        backtest = Backtest(
+            name=self.__name,
+            mq_symbol=self.__name,
+            parameters=params,
+            start_date=start,
+            end_date=end,
+            type=BACKTEST_TYPE_VALUE,
+            asset_class=AssetClass.Equity,
+            currency=self.__currency,
+            cost_netting=self.__cost_netting,
+            cash_accrual=self.__cash_accrual,
+        )
 
         if is_async:
             # Create back test ...

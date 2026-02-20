@@ -46,8 +46,9 @@ class FilterOperator(Enum):
 
 
 @plot_function
-def add(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
-        -> Union[pd.Series, Real]:
+def add(
+    x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP
+) -> Union[pd.Series, Real]:
     """
     Add two series or scalars
 
@@ -104,8 +105,9 @@ def add(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolat
 
 
 @plot_function
-def subtract(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
-        -> Union[pd.Series, Real]:
+def subtract(
+    x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP
+) -> Union[pd.Series, Real]:
     """
     Add two series or scalars
 
@@ -164,8 +166,9 @@ def subtract(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Inter
 
 
 @plot_function
-def multiply(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
-        -> Union[pd.Series, Real]:
+def multiply(
+    x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP
+) -> Union[pd.Series, Real]:
     """
     Multiply two series or scalars
 
@@ -222,8 +225,9 @@ def multiply(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Inter
 
 
 @plot_function
-def divide(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
-        -> Union[pd.Series, Real]:
+def divide(
+    x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP
+) -> Union[pd.Series, Real]:
     """
     Divide two series or scalars
 
@@ -280,8 +284,9 @@ def divide(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpo
 
 
 @plot_function
-def floordiv(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
-        -> Union[pd.Series, Real]:
+def floordiv(
+    x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP
+) -> Union[pd.Series, Real]:
     """
     Floor divide two series or scalars
 
@@ -619,8 +624,9 @@ def filter_(x: pd.Series, operator: Optional[FilterOperator] = None, value: Opti
 
 
 @plot_function
-def filter_dates(x: pd.Series, operator: Optional[FilterOperator] = None,
-                 dates: Union[List[dt.date], dt.date] = None) -> pd.Series:
+def filter_dates(
+    x: pd.Series, operator: Optional[FilterOperator] = None, dates: Union[List[dt.date], dt.date] = None
+) -> pd.Series:
     """
     Removes dates where comparison with the operator and dates combination results in true, defaults to removing
     missing values from the series
@@ -804,10 +810,7 @@ def weighted_sum(series: List[pd.Series], weights: list) -> pd.Series:
     cal = pd.DatetimeIndex(
         reduce(
             np.intersect1d,
-            (
-                curve.index
-                for curve in series
-            ),
+            (curve.index for curve in series),
         )
     )
 

@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import numpy as np
 
 from gs_quant.models.epidemiology import SIR, EpidemicModel, SEIR
@@ -22,15 +23,20 @@ def test_SIR():
     # Initialize a model
     beta_0 = 0.1
     gamma_0 = 0.2
-    parameters, initial_conditions = SIR.get_parameters(99, 1, 0, 100,
-                                                        beta=beta_0,
-                                                        gamma=gamma_0,
-                                                        S0_fixed=True,
-                                                        I0_fixed=False,
-                                                        R0_fixed=True,
-                                                        S0_max=10e6,
-                                                        I0_max=5e6,
-                                                        R0_max=10e6)
+    parameters, initial_conditions = SIR.get_parameters(
+        99,
+        1,
+        0,
+        100,
+        beta=beta_0,
+        gamma=gamma_0,
+        S0_fixed=True,
+        I0_fixed=False,
+        R0_fixed=True,
+        S0_max=10e6,
+        I0_max=5e6,
+        R0_max=10e6,
+    )
     sir = EpidemicModel(SIR, parameters=parameters, initial_conditions=initial_conditions)
 
     # Solve a problem with an independently checkable solution
@@ -51,16 +57,21 @@ def test_SIR():
     data = np.array([S_data, I_data, R_data]).T
 
     # slightly perturbed parameters, to check if the fitting finds the original (optimal) parameters
-    parameters, initial_conditions = SIR.get_parameters(S_data[0], I_data[0], R_data[0], N, beta=beta + 0.4,
-                                                        gamma=gamma + 0.2,
-                                                        S0_fixed=True,
-                                                        I0_fixed=True,
-                                                        R0_fixed=True,
-                                                        S0_max=10e6,
-                                                        I0_max=5e6,
-                                                        R0_max=10e6)
-    sir = EpidemicModel(SIR, parameters=parameters, data=data,
-                        initial_conditions=initial_conditions)
+    parameters, initial_conditions = SIR.get_parameters(
+        S_data[0],
+        I_data[0],
+        R_data[0],
+        N,
+        beta=beta + 0.4,
+        gamma=gamma + 0.2,
+        S0_fixed=True,
+        I0_fixed=True,
+        R0_fixed=True,
+        S0_max=10e6,
+        I0_max=5e6,
+        R0_max=10e6,
+    )
+    sir = EpidemicModel(SIR, parameters=parameters, data=data, initial_conditions=initial_conditions)
     sir.fit()
 
     # check fitted parameters
@@ -86,17 +97,23 @@ def test_SEIR():
     beta_0 = 0.1
     gamma_0 = 0.2
     sigma_0 = 0.1
-    parameters, initial_conditions = SEIR.get_parameters(99, 1, 1, 0, 100,
-                                                         beta=beta_0,
-                                                         gamma=gamma_0,
-                                                         sigma=sigma_0,
-                                                         S0_fixed=True,
-                                                         E0_fixed=True,
-                                                         I0_fixed=False,
-                                                         R0_fixed=True,
-                                                         S0_max=10e6,
-                                                         I0_max=5e6,
-                                                         R0_max=10e6)
+    parameters, initial_conditions = SEIR.get_parameters(
+        99,
+        1,
+        1,
+        0,
+        100,
+        beta=beta_0,
+        gamma=gamma_0,
+        sigma=sigma_0,
+        S0_fixed=True,
+        E0_fixed=True,
+        I0_fixed=False,
+        R0_fixed=True,
+        S0_max=10e6,
+        I0_max=5e6,
+        R0_max=10e6,
+    )
     sir = EpidemicModel(SEIR, parameters=parameters, initial_conditions=initial_conditions)
 
     # Solve a problem with an independently checkable solution
@@ -120,17 +137,23 @@ def test_SEIR():
     data = np.array([S_data, E_data, I_data, R_data]).T
 
     # slightly perturbed parameters, to check if the fitting finds the original (optimal) parameters
-    parameters, initial_conditions = SEIR.get_parameters(S_data[0], E_data[0], I_data[0], R_data[0], N,
-                                                         beta=beta + 0.4,
-                                                         gamma=gamma + 0.2,
-                                                         sigma=sigma + 0.1,
-                                                         S0_fixed=True,
-                                                         E0_fixed=True,
-                                                         I0_fixed=True,
-                                                         R0_fixed=True,
-                                                         S0_max=10e6,
-                                                         I0_max=5e6,
-                                                         R0_max=10e6)
+    parameters, initial_conditions = SEIR.get_parameters(
+        S_data[0],
+        E_data[0],
+        I_data[0],
+        R_data[0],
+        N,
+        beta=beta + 0.4,
+        gamma=gamma + 0.2,
+        sigma=sigma + 0.1,
+        S0_fixed=True,
+        E0_fixed=True,
+        I0_fixed=True,
+        R0_fixed=True,
+        S0_max=10e6,
+        I0_max=5e6,
+        R0_max=10e6,
+    )
     seir = EpidemicModel(SEIR, parameters=parameters, data=data, initial_conditions=initial_conditions)
     seir.fit()
 

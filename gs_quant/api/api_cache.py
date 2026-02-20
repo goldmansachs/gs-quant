@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Tuple
@@ -30,7 +31,6 @@ class CacheEvent(Enum):
 
 
 class ApiRequestCache(ABC):
-
     def get(self, session: GsSession, key: Any, **kwargs):
         cache_lookup = self._get(session, key, **kwargs)
         if cache_lookup is not None:
@@ -54,7 +54,6 @@ class ApiRequestCache(ABC):
 
 
 class InMemoryApiRequestCache(ApiRequestCache):
-
     def __init__(self, max_size=1000, ttl_in_seconds=3600):
         self._cache = cachetools.TTLCache(max_size, ttl_in_seconds)
         self._records = []

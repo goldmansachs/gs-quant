@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import datetime as dt
 import logging
 from typing import Iterable, Optional, Union
@@ -20,14 +21,25 @@ from typing import Iterable, Optional, Union
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.common import RiskMeasure, AssetClass, RiskMeasureType
 from gs_quant.risk.measures import PnlExplain
-from .core import DataFrameWithInfo, ErrorValue, UnsupportedValue, FloatWithInfo, SeriesWithInfo, StringWithInfo, \
-    sort_values, MQVSValidatorDefnsWithInfo, MQVSValidatorDefn, DictWithInfo
+from .core import (
+    DataFrameWithInfo,
+    ErrorValue,
+    UnsupportedValue,
+    FloatWithInfo,
+    SeriesWithInfo,
+    StringWithInfo,
+    sort_values,
+    MQVSValidatorDefnsWithInfo,
+    MQVSValidatorDefn,
+    DictWithInfo,
+)
 
 _logger = logging.getLogger(__name__)
 
 
-def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey, request_id: Optional[str] = None) \
-        -> DataFrameWithInfo:
+def __dataframe_handler(
+    result: Iterable, mappings: tuple, risk_key: RiskKey, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     first_row = next(iter(result), None)
     if first_row is None:
         return DataFrameWithInfo(risk_key=risk_key, request_id=request_id)
@@ -51,8 +63,9 @@ def __dataframe_handler(result: Iterable, mappings: tuple, risk_key: RiskKey, re
     return df
 
 
-def __dataframe_handler_unsorted(result: Iterable, mappings: tuple, date_cols: tuple, risk_key: RiskKey,
-                                 request_id: Optional[str] = None) -> DataFrameWithInfo:
+def __dataframe_handler_unsorted(
+    result: Iterable, mappings: tuple, date_cols: tuple, risk_key: RiskKey, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     first_row = next(iter(result), None)
     if first_row is None:
         return DataFrameWithInfo(risk_key=risk_key, request_id=request_id)
@@ -66,8 +79,9 @@ def __dataframe_handler_unsorted(result: Iterable, mappings: tuple, date_cols: t
     return df
 
 
-def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
-        -> DataFrameWithInfo:
+def cashflows_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     mappings = (
         ('currency', 'currency'),
         ('payment_date', 'payDate'),
@@ -82,14 +96,15 @@ def cashflows_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBa
         ('day_count_fraction', 'dayCountFraction'),
         ('spread', 'spread'),
         ('rate', 'rate'),
-        ('discount_factor', 'discountFactor')
+        ('discount_factor', 'discountFactor'),
     )
     date_cols = ('payment_date', 'set_date', 'accrual_start_date', 'accrual_end_date')
     return __dataframe_handler_unsorted(result['cashflows'], mappings, date_cols, risk_key, request_id=request_id)
 
 
-def error_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase, request_id: Optional[str] = None) \
-        -> ErrorValue:
+def error_handler(
+    result: dict, risk_key: RiskKey, instrument: InstrumentBase, request_id: Optional[str] = None
+) -> ErrorValue:
     error = result.get('errorString', 'Unknown error')
     if request_id:
         error += f'. request Id={request_id}'
@@ -98,13 +113,15 @@ def error_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase, r
     return ErrorValue(risk_key, error, request_id=request_id)
 
 
-def leg_definition_handler(result: dict, risk_key: RiskKey, instrument: InstrumentBase,
-                           request_id: Optional[str] = None) -> InstrumentBase:
+def leg_definition_handler(
+    result: dict, risk_key: RiskKey, instrument: InstrumentBase, request_id: Optional[str] = None
+) -> InstrumentBase:
     return instrument.resolved(result, risk_key)
 
 
-def message_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
-        -> Union[StringWithInfo, ErrorValue]:
+def message_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> Union[StringWithInfo, ErrorValue]:
     message = result.get('message')
     if message is None:
         return ErrorValue(risk_key, "No result returned", request_id=request_id)
@@ -112,25 +129,28 @@ def message_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase
         return StringWithInfo(risk_key, message, request_id=request_id)
 
 
-def number_and_unit_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                            request_id: Optional[str] = None) -> FloatWithInfo:
+def number_and_unit_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> FloatWithInfo:
     return FloatWithInfo(risk_key, result.get('value', float('nan')), unit=result.get('unit'), request_id=request_id)
 
 
-def required_assets_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                            request_id: Optional[str] = None) -> DataFrameWithInfo:
+def required_assets_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     mappings = (('mkt_type', 'type'), ('mkt_asset', 'asset'))
     return __dataframe_handler(result['requiredAssets'], mappings, risk_key, request_id=request_id)
 
 
 def dict_risk_handler(
-        result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
 ) -> DictWithInfo:
     return DictWithInfo(risk_key, result, unit=None, request_id=request_id)
 
 
-def risk_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None) \
-        -> Union[DataFrameWithInfo, FloatWithInfo]:
+def risk_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> Union[DataFrameWithInfo, FloatWithInfo]:
     if result.get('children'):
         # result with leg valuations
         classes = []
@@ -139,24 +159,23 @@ def risk_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase, r
 
         for key, val in result.get('children').items():
             classes.append({'path': key, 'value': val})
-        mappings = (
-            ('path', 'path'),
-            ('value', 'value')
-        )
+        mappings = (('path', 'path'), ('value', 'value'))
         return __dataframe_handler(classes, mappings, risk_key, request_id=request_id)
     else:
         return FloatWithInfo(risk_key, result.get('val', float('nan')), unit=result.get('unit'), request_id=request_id)
 
 
-def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                          request_id: Optional[str] = None) -> Union[DataFrameWithInfo, FloatWithInfo]:
+def risk_by_class_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> Union[DataFrameWithInfo, FloatWithInfo]:
     # TODO Remove this once we migrate parallel USD IRDelta measures
     types = [c['type'] for c in result['classes']]
     # list of risk by class measures exposed in gs-quant
     external_risk_by_class_val = ['IRBasisParallel', 'IRDeltaParallel', 'IRVegaParallel', 'PnlExplain']
     if str(risk_key.risk_measure.name) in external_risk_by_class_val and len(types) <= 2 and len(set(types)) == 1:
-        return FloatWithInfo(risk_key, sum(result.get('values', (float('nan'),))), unit=result.get('unit'),
-                             request_id=request_id)
+        return FloatWithInfo(
+            risk_key, sum(result.get('values', (float('nan'),))), unit=result.get('unit'), request_id=request_id
+        )
     else:
         classes = []
         skip = []
@@ -176,11 +195,7 @@ def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: Instrume
             if idx not in skip:
                 classes.append(clazz)
 
-        mappings = (
-            ('mkt_type', 'type'),
-            ('mkt_asset', 'asset'),
-            ('value', 'value')
-        )
+        mappings = (('mkt_type', 'type'), ('mkt_asset', 'asset'), ('value', 'value'))
 
         if isinstance(risk_key.risk_measure, PnlExplain):
             return __dataframe_handler_unsorted(classes, mappings, (), risk_key, request_id=request_id)
@@ -188,8 +203,9 @@ def risk_by_class_handler(result: dict, risk_key: RiskKey, _instrument: Instrume
             return __dataframe_handler(classes, mappings, risk_key, request_id=request_id)
 
 
-def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                        request_id: Optional[str] = None) -> DataFrameWithInfo:
+def risk_vector_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     assets = result['asset']
     # Handle equity risk measures which are really scalars
     if len(assets) == 1 and risk_key.risk_measure.name.startswith('Eq'):
@@ -204,13 +220,14 @@ def risk_vector_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
         ('mkt_class', 'class_'),
         ('mkt_point', 'point'),
         ('mkt_quoting_style', 'quoteStyle'),
-        ('value', 'value')
+        ('value', 'value'),
     )
     return __dataframe_handler(result['points'], mappings, risk_key, request_id=request_id)
 
 
-def fixing_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                         request_id: Optional[str] = None) -> SeriesWithInfo:
+def fixing_table_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> SeriesWithInfo:
     rows = result['fixingTableRows']
 
     dates = []
@@ -222,22 +239,28 @@ def fixing_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrumen
     return SeriesWithInfo(values, index=dates, risk_key=risk_key, request_id=request_id)
 
 
-def simple_valtable_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                            request_id: Optional[str] = None) -> DataFrameWithInfo:
+def simple_valtable_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     def get_value(value):
         handler = result_handlers.get(value.get('$type'))
         return handler(value, risk_key, _instrument, request_id)
 
     raw_res = result['rows']
     # simplevaltable's values contain all the information on units which needs to be extracted into the dataframe
-    df = DataFrameWithInfo([(res['label'], get_value(res['value'])) for res in raw_res], risk_key=risk_key,
-                           request_id=request_id, unit=raw_res[0]['value'].get('unit'))
+    df = DataFrameWithInfo(
+        [(res['label'], get_value(res['value'])) for res in raw_res],
+        risk_key=risk_key,
+        request_id=request_id,
+        unit=raw_res[0]['value'].get('unit'),
+    )
     df.columns = ['label', 'value']
     return df
 
 
-def canonical_projection_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                                       request_id: Optional[str] = None) -> DataFrameWithInfo:
+def canonical_projection_table_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     mappings = (
         ('asset_class', 'assetClass'),
         ('asset', 'asset'),
@@ -261,20 +284,24 @@ def canonical_projection_table_handler(result: dict, risk_key: RiskKey, _instrum
         ('tenor', 'tenor'),
         ('tenor_unit', 'tenorUnit'),
         ('premium_currency', 'premiumCcy'),
-        ('currency', 'currency')
+        ('currency', 'currency'),
     )
     date_cols = ('start_date', 'end_date', 'expiration_date')
     return __dataframe_handler_unsorted(result['rows'], mappings, date_cols, risk_key, request_id)
 
 
-def risk_float_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                       request_id: Optional[str] = None) -> FloatWithInfo:
+def risk_float_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> FloatWithInfo:
     return FloatWithInfo(risk_key, result['values'][0], request_id=request_id)
 
 
 def map_coordinate_to_column(coordinate_struct, tag):
-    updated_struct = {tag + "_" + k: v for k, v in coordinate_struct.items() if
-                      k in ['type', 'asset', 'class_', 'point', 'quoteStyle']}
+    updated_struct = {
+        tag + "_" + k: v
+        for k, v in coordinate_struct.items()
+        if k in ['type', 'asset', 'class_', 'point', 'quoteStyle']
+    }
     raw_point = updated_struct.get('point', '')
     point = ';'.join(raw_point) if isinstance(raw_point, list) else raw_point
     updated_struct['point'] = point
@@ -282,20 +309,23 @@ def map_coordinate_to_column(coordinate_struct, tag):
 
 
 def __is_single_row_2nd_order_risk(risk_key: RiskKey):
-    return risk_key is not None and isinstance(risk_key.risk_measure,
-                                               RiskMeasure) and \
-        risk_key.risk_measure.asset_class == AssetClass.Rates and \
-        risk_key.risk_measure.measure_type in (RiskMeasureType.ParallelGamma, RiskMeasureType.ParallelGammaLocalCcy)
+    return (
+        risk_key is not None
+        and isinstance(risk_key.risk_measure, RiskMeasure)
+        and risk_key.risk_measure.asset_class == AssetClass.Rates
+        and risk_key.risk_measure.measure_type in (RiskMeasureType.ParallelGamma, RiskMeasureType.ParallelGammaLocalCcy)
+    )
 
 
-def mdapi_second_order_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                                     request_id: Optional[str] = None) -> Union[DataFrameWithInfo, FloatWithInfo]:
+def mdapi_second_order_table_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> Union[DataFrameWithInfo, FloatWithInfo]:
     if len(result['values']) == 1 and __is_single_row_2nd_order_risk(risk_key):
         return risk_float_handler(result, risk_key, _instrument, request_id)
 
     coordinate_pairs = []
 
-    if (len(result['innerPoints']) != len(result['outerPoints'])):
+    if len(result['innerPoints']) != len(result['outerPoints']):
         raise Exception("Found inner and outer points of different size")
 
     for inner, outer, value in zip(result['innerPoints'], result['outerPoints'], result['values']):
@@ -303,24 +333,27 @@ def mdapi_second_order_table_handler(result: dict, risk_key: RiskKey, _instrumen
         row_dict.update({'value': value})
         coordinate_pairs.append(row_dict)
 
-    mappings = (('inner_mkt_type', 'inner_type'),
-                ('inner_mkt_asset', 'inner_asset'),
-                ('inner_mkt_class', 'inner_class_'),
-                ('inner_mkt_point', 'inner_point'),
-                ('inner_mkt_quoting_style', 'inner_quotingStyle'),
-                ('outer_mkt_type', 'outer_type'),
-                ('outer_mkt_asset', 'outer_asset'),
-                ('outer_mkt_class', 'outer_class_'),
-                ('outer_mkt_point', 'outer_point'),
-                ('outer_mkt_quoting_style', 'outer_quotingStyle'),
-                ('value', 'value'),
-                ('permissions', 'permissions'))
+    mappings = (
+        ('inner_mkt_type', 'inner_type'),
+        ('inner_mkt_asset', 'inner_asset'),
+        ('inner_mkt_class', 'inner_class_'),
+        ('inner_mkt_point', 'inner_point'),
+        ('inner_mkt_quoting_style', 'inner_quotingStyle'),
+        ('outer_mkt_type', 'outer_type'),
+        ('outer_mkt_asset', 'outer_asset'),
+        ('outer_mkt_class', 'outer_class_'),
+        ('outer_mkt_point', 'outer_point'),
+        ('outer_mkt_quoting_style', 'outer_quotingStyle'),
+        ('value', 'value'),
+        ('permissions', 'permissions'),
+    )
 
     return __dataframe_handler(coordinate_pairs, mappings, risk_key, request_id=request_id)
 
 
-def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                        request_id: Optional[str] = None) -> DataFrameWithInfo:
+def mdapi_table_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     coordinates = []
     for r in result['rows']:
         raw_point = r['coordinate'].get('point', '')
@@ -330,19 +363,22 @@ def mdapi_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
         r['coordinate'].update({'permissions': r['permissions']})
         coordinates.append(r['coordinate'])
 
-    mappings = (('mkt_type', 'type'),
-                ('mkt_asset', 'asset'),
-                ('mkt_class', 'assetClass'),
-                ('mkt_point', 'point'),
-                ('mkt_quoting_style', 'quotingStyle'),
-                ('value', 'value'),
-                ('permissions', 'permissions'))
+    mappings = (
+        ('mkt_type', 'type'),
+        ('mkt_asset', 'asset'),
+        ('mkt_class', 'assetClass'),
+        ('mkt_point', 'point'),
+        ('mkt_quoting_style', 'quotingStyle'),
+        ('value', 'value'),
+        ('permissions', 'permissions'),
+    )
 
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
 
 
-def mmapi_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                        request_id: Optional[str] = None) -> DataFrameWithInfo:
+def mmapi_table_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     coordinates = []
     for r in result['rows']:
         raw_point = r['modelCoordinate'].get('point', '')
@@ -358,18 +394,21 @@ def mmapi_table_handler(result: dict, risk_key: RiskKey, _instrument: Instrument
         r['modelCoordinate'].update({'value': DataPoints})
         coordinates.append(r['modelCoordinate'])
 
-    mappings = (('mkt_type', 'type'),
-                ('mkt_asset', 'asset'),
-                ('mkt_point', 'point'),
-                ('mkt_tags', 'tags'),
-                ('mkt_quoting_style', 'quotingStyle'),
-                ('value', 'value'))
+    mappings = (
+        ('mkt_type', 'type'),
+        ('mkt_asset', 'asset'),
+        ('mkt_point', 'point'),
+        ('mkt_tags', 'tags'),
+        ('mkt_quoting_style', 'quotingStyle'),
+        ('value', 'value'),
+    )
 
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
 
 
-def mmapi_pca_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                            request_id: Optional[str] = None) -> DataFrameWithInfo:
+def mmapi_pca_table_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     coordinates = []
     for r in result['rows']:
         raw_point = r['coordinate'].get('point', '')
@@ -386,26 +425,29 @@ def mmapi_pca_table_handler(result: dict, risk_key: RiskKey, _instrument: Instru
         r['coordinate'].update({'endDate': r['endDate']})
         coordinates.append(r['coordinate'])
 
-    mappings = (('mkt_type', 'type'),
-                ('mkt_asset', 'asset'),
-                ('mkt_class', 'assetClass'),
-                ('mkt_point', 'point'),
-                ('mkt_quoting_style', 'quotingStyle'),
-                ('value', 'value'),
-                ('layer1', 'layer1'),
-                ('layer2', 'layer2'),
-                ('layer3', 'layer3'),
-                ('layer4', 'layer4'),
-                ('level', 'level'),
-                ('sensitivity', 'sensitivity'),
-                ('irDelta', 'irDelta'),
-                ('endDate', 'endDate'))
+    mappings = (
+        ('mkt_type', 'type'),
+        ('mkt_asset', 'asset'),
+        ('mkt_class', 'assetClass'),
+        ('mkt_point', 'point'),
+        ('mkt_quoting_style', 'quotingStyle'),
+        ('value', 'value'),
+        ('layer1', 'layer1'),
+        ('layer2', 'layer2'),
+        ('layer3', 'layer3'),
+        ('layer4', 'layer4'),
+        ('level', 'level'),
+        ('sensitivity', 'sensitivity'),
+        ('irDelta', 'irDelta'),
+        ('endDate', 'endDate'),
+    )
 
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
 
 
-def mmapi_pca_hedge_table_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                                  request_id: Optional[str] = None) -> DataFrameWithInfo:
+def mmapi_pca_hedge_table_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> DataFrameWithInfo:
     coordinates = []
     for r in result['rows']:
         raw_point = r['coordinate'].get('point', '')
@@ -415,31 +457,36 @@ def mmapi_pca_hedge_table_handler(result: dict, risk_key: RiskKey, _instrument: 
         r['coordinate'].update({'fixedRate': r.get('fixedRate')})
         r['coordinate'].update({'irDelta': r.get('irDelta')})
         coordinates.append(r['coordinate'])
-    mappings = (('mkt_type', 'type'),
-                ('mkt_asset', 'asset'),
-                ('mkt_class', 'assetClass'),
-                ('mkt_point', 'point'),
-                ('mkt_quoting_style', 'quotingStyle'),
-                ('size', 'size'),
-                ('fixedRate', 'fixedRate'),
-                ('irDelta', 'irDelta'))
+    mappings = (
+        ('mkt_type', 'type'),
+        ('mkt_asset', 'asset'),
+        ('mkt_class', 'assetClass'),
+        ('mkt_point', 'point'),
+        ('mkt_quoting_style', 'quotingStyle'),
+        ('size', 'size'),
+        ('fixedRate', 'fixedRate'),
+        ('irDelta', 'irDelta'),
+    )
 
     return __dataframe_handler(coordinates, mappings, risk_key, request_id=request_id)
 
 
-def mqvs_validators_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                            request_id: Optional[str] = None) -> MQVSValidatorDefnsWithInfo:
+def mqvs_validators_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> MQVSValidatorDefnsWithInfo:
     validators = [MQVSValidatorDefn.from_dict(r) for r in result['validators']]
     return MQVSValidatorDefnsWithInfo(risk_key, tuple(validators), request_id=request_id)
 
 
-def market_handler(result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                   request_id: Optional[str] = None) -> StringWithInfo:
+def market_handler(
+    result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> StringWithInfo:
     return StringWithInfo(risk_key, result.get('marketRef'), request_id=request_id)
 
 
-def unsupported_handler(_result: dict, risk_key: RiskKey, _instrument: InstrumentBase,
-                        request_id: Optional[str] = None) -> UnsupportedValue:
+def unsupported_handler(
+    _result: dict, risk_key: RiskKey, _instrument: InstrumentBase, request_id: Optional[str] = None
+) -> UnsupportedValue:
     return UnsupportedValue(risk_key, request_id=request_id)
 
 
@@ -465,5 +512,5 @@ result_handlers = {
     'RiskSecondOrderVector': mdapi_second_order_table_handler,
     'RiskTheta': risk_float_handler,
     'Market': market_handler,
-    'Unsupported': unsupported_handler
+    'Unsupported': unsupported_handler,
 }

@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 import logging
 from enum import Enum
 from numbers import Real
@@ -28,8 +29,13 @@ from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset, SecurityMaster
 from gs_quant.timeseries import ASSET_SPEC, plot_measure, MeasureDependency, FXSpotCarry
 from gs_quant.timeseries import ExtendedSeries, measures_rates as tm_rates
-from gs_quant.timeseries.measures import _asset_from_spec, _market_data_timed, _cross_stored_direction_helper, \
-    _preprocess_implied_vol_strikes_fx, _tenor_month_to_year
+from gs_quant.timeseries.measures import (
+    _asset_from_spec,
+    _market_data_timed,
+    _cross_stored_direction_helper,
+    _preprocess_implied_vol_strikes_fx,
+    _tenor_month_to_year,
+)
 from gs_quant.timeseries.measures_helper import VolReference
 
 _logger = logging.getLogger(__name__)
@@ -53,136 +59,71 @@ class TdapiFXDefaultsProvider:
 
 
 FX_DEFAULTS = {
-    "AUDCAD": {"under": "AUD", "over": "CAD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "AUDJPY": {"under": "AUD", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "AUDUSD": {"under": "AUD", "over": "USD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "BRLJPY": {"under": "BRL", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "CADJPY": {"under": "CAD", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "CADMXN": {"under": "CAD", "over": "MXN",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "CHFJPY": {"under": "CHF", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "CNHJPY": {"under": "CNH", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURAUD": {"under": "EUR", "over": "AUD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURBRL": {"under": "EUR", "over": "BRL",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURCAD": {"under": "EUR", "over": "CAD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURCHF": {"under": "EUR", "over": "CHF",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURCLP": {"under": "EUR", "over": "CLP",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURCNH": {"under": "EUR", "over": "CNH",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURCZK": {"under": "EUR", "over": "CZK",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURGBP": {"under": "EUR", "over": "GBP",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURHUF": {"under": "EUR", "over": "HUF",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURILS": {"under": "EUR", "over": "ILS",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURINR": {"under": "EUR", "over": "INR",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURJPY": {"under": "EUR", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURKRW": {"under": "EUR", "over": "KRW",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURMXN": {"under": "EUR", "over": "MXN",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURNOK": {"under": "EUR", "over": "NOK",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURNZD": {"under": "EUR", "over": "NZD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURPLN": {"under": "EUR", "over": "PLN",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURRUB": {"under": "EUR", "over": "RUB",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURSEK": {"under": "EUR", "over": "SEK",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURTRY": {"under": "EUR", "over": "TRY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURUSD": {"under": "EUR", "over": "USD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "EURZAR": {"under": "EUR", "over": "ZAR",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "GBPJPY": {"under": "GBP", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "GBPUSD": {"under": "GBP", "over": "USD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "HUFJPY": {"under": "HUF", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "ILSJPY": {"under": "ILS", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "INRJPY": {"under": "INR", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "JPYKRW": {"under": "JPY", "over": "KRW",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "MXNJPY": {"under": "MXN", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "NOKJPY": {"under": "NOK", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "NZDJPY": {"under": "NZD", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "NZDUSD": {"under": "NZD", "over": "USD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "PLNJPY": {"under": "PLN", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "RUBJPY": {"under": "RUB", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "SEKJPY": {"under": "SEK", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDBRL": {"under": "USD", "over": "BRL",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDCAD": {"under": "USD", "over": "CAD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDCHF": {"under": "USD", "over": "CHF",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDCLP": {"under": "USD", "over": "CLP",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDCNH": {"under": "USD", "over": "CNH",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDCOP": {"under": "USD", "over": "COP",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDHUF": {"under": "USD", "over": "HUF",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDIDR": {"under": "USD", "over": "IDR",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDILS": {"under": "USD", "over": "ILS",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDINR": {"under": "USD", "over": "INR",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDJPY": {"under": "USD", "over": "JPY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDKRW": {"under": "USD", "over": "KRW",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDMXN": {"under": "USD", "over": "MXN",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDNOK": {"under": "USD", "over": "NOK",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDPHP": {"under": "USD", "over": "PHP",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDPLN": {"under": "USD", "over": "PLN",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDRUB": {"under": "USD", "over": "RUB",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDSEK": {"under": "USD", "over": "SEK",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDSGD": {"under": "USD", "over": "SGD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDTRY": {"under": "USD", "over": "TRY",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDTWD": {"under": "USD", "over": "TWD",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
-    "USDZAR": {"under": "USD", "over": "ZAR",
-               "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"}
+    "AUDCAD": {"under": "AUD", "over": "CAD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "AUDJPY": {"under": "AUD", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "AUDUSD": {"under": "AUD", "over": "USD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "BRLJPY": {"under": "BRL", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "CADJPY": {"under": "CAD", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "CADMXN": {"under": "CAD", "over": "MXN", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "CHFJPY": {"under": "CHF", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "CNHJPY": {"under": "CNH", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURAUD": {"under": "EUR", "over": "AUD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURBRL": {"under": "EUR", "over": "BRL", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURCAD": {"under": "EUR", "over": "CAD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURCHF": {"under": "EUR", "over": "CHF", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURCLP": {"under": "EUR", "over": "CLP", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURCNH": {"under": "EUR", "over": "CNH", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURCZK": {"under": "EUR", "over": "CZK", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURGBP": {"under": "EUR", "over": "GBP", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURHUF": {"under": "EUR", "over": "HUF", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURILS": {"under": "EUR", "over": "ILS", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURINR": {"under": "EUR", "over": "INR", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURJPY": {"under": "EUR", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURKRW": {"under": "EUR", "over": "KRW", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURMXN": {"under": "EUR", "over": "MXN", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURNOK": {"under": "EUR", "over": "NOK", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURNZD": {"under": "EUR", "over": "NZD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURPLN": {"under": "EUR", "over": "PLN", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURRUB": {"under": "EUR", "over": "RUB", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURSEK": {"under": "EUR", "over": "SEK", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURTRY": {"under": "EUR", "over": "TRY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURUSD": {"under": "EUR", "over": "USD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "EURZAR": {"under": "EUR", "over": "ZAR", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "GBPJPY": {"under": "GBP", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "GBPUSD": {"under": "GBP", "over": "USD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "HUFJPY": {"under": "HUF", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "ILSJPY": {"under": "ILS", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "INRJPY": {"under": "INR", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "JPYKRW": {"under": "JPY", "over": "KRW", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "MXNJPY": {"under": "MXN", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "NOKJPY": {"under": "NOK", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "NZDJPY": {"under": "NZD", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "NZDUSD": {"under": "NZD", "over": "USD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "PLNJPY": {"under": "PLN", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "RUBJPY": {"under": "RUB", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "SEKJPY": {"under": "SEK", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDBRL": {"under": "USD", "over": "BRL", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDCAD": {"under": "USD", "over": "CAD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDCHF": {"under": "USD", "over": "CHF", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDCLP": {"under": "USD", "over": "CLP", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDCNH": {"under": "USD", "over": "CNH", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDCOP": {"under": "USD", "over": "COP", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDHUF": {"under": "USD", "over": "HUF", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDIDR": {"under": "USD", "over": "IDR", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDILS": {"under": "USD", "over": "ILS", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDINR": {"under": "USD", "over": "INR", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDJPY": {"under": "USD", "over": "JPY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDKRW": {"under": "USD", "over": "KRW", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDMXN": {"under": "USD", "over": "MXN", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDNOK": {"under": "USD", "over": "NOK", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDPHP": {"under": "USD", "over": "PHP", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDPLN": {"under": "USD", "over": "PLN", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDRUB": {"under": "USD", "over": "RUB", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDSEK": {"under": "USD", "over": "SEK", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDSGD": {"under": "USD", "over": "SGD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDTRY": {"under": "USD", "over": "TRY", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDTWD": {"under": "USD", "over": "TWD", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
+    "USDZAR": {"under": "USD", "over": "ZAR", "expirationTime": "NYC", "premiumPaymentDate": "Fwd Settle"},
 }
 fx_defaults_provider = TdapiFXDefaultsProvider(FX_DEFAULTS)
 
@@ -199,7 +140,7 @@ FX_VOL_SWAP_DEFAULTS = [
     "NZDUSD",
     "USDCNH",
     "INRUSD",
-    "USDSGD"
+    "USDSGD",
 ]
 
 CURRENCY_TO_DUMMY_FFO_BBID = {
@@ -267,7 +208,7 @@ CURRENCY_TO_DUMMY_FFO_BBID = {
     'USDSGD': 'MA9DWW9GPFT7H1A9',
     'USDTRY': 'MA4YKBCXZ4W341YC',
     'USDTWD': 'MAANPDQCDNKV6G2X',
-    'USDZAR': 'MA9T8EZ1GXEGY8C3'
+    'USDZAR': 'MA9T8EZ1GXEGY8C3',
 }
 
 CURRENCY_TO_DUMMY_FFO_BBID_VOL_SWAPS = {
@@ -283,7 +224,7 @@ CURRENCY_TO_DUMMY_FFO_BBID_VOL_SWAPS = {
     "NZDUSD": "MA9RP21MYV18TW3E",
     "USDCNH": "MAQEB18HP88FEP5G",
     "INRUSD": "MAMC996297G5GEAM",
-    "USDSGD": "MAFCHSQN3NH77G17"
+    "USDSGD": "MAFCHSQN3NH77G17",
 }
 
 
@@ -291,10 +232,12 @@ def _currencypair_to_tdapi_fxfwd_asset(asset_spec: ASSET_SPEC) -> str:
     asset = _asset_from_spec(asset_spec)
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
 
-    kwargs = dict(asset_class='FX', type='Forward',
-                  asset_parameters_pair=bbid,
-                  asset_parameters_settlement_date='1y',
-                  )
+    kwargs = dict(
+        asset_class='FX',
+        type='Forward',
+        asset_parameters_pair=bbid,
+        asset_parameters_settlement_date='1y',
+    )
 
     mqid = _get_tdapi_fxo_assets(**kwargs)
     return mqid
@@ -335,8 +278,14 @@ def _get_tdapi_fxo_assets(**kwargs) -> Union[str, list]:
         return assets[0].id
 
 
-def get_fxo_asset(asset: Asset, expiry_tenor: str, strike: str, option_type: str = None,
-                  expiration_location: str = None, premium_payment_date: str = None) -> str:
+def get_fxo_asset(
+    asset: Asset,
+    expiry_tenor: str,
+    strike: str,
+    option_type: str = None,
+    expiration_location: str = None,
+    premium_payment_date: str = None,
+) -> str:
     cross = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
 
     if cross not in FX_DEFAULTS.keys():
@@ -364,14 +313,16 @@ def get_fxo_asset(asset: Asset, expiry_tenor: str, strike: str, option_type: str
         call_ccy = defaults["under"]
         put_ccy = defaults["over"]
 
-    kwargs = dict(asset_class='FX', type='Option',
-                  asset_parameters_call_currency=call_ccy,
-                  asset_parameters_put_currency=put_ccy,
-                  asset_parameters_expiration_date=expiry_tenor,
-                  asset_parameters_option_type=option_type,
-                  asset_parameters_premium_payment_date=premium_date,
-                  asset_parameters_strike_price_relative=strike,
-                  )
+    kwargs = dict(
+        asset_class='FX',
+        type='Option',
+        asset_parameters_call_currency=call_ccy,
+        asset_parameters_put_currency=put_ccy,
+        asset_parameters_expiration_date=expiry_tenor,
+        asset_parameters_option_type=option_type,
+        asset_parameters_premium_payment_date=premium_date,
+        asset_parameters_strike_price_relative=strike,
+    )
 
     return _get_tdapi_fxo_assets(**kwargs)
 
@@ -423,11 +374,15 @@ def _get_fx_csa_terms() -> dict:
     return dict(csaTerms='USD-1')
 
 
-def _get_fx_vol_swap_data(asset: Asset, expiry_tenor: str, strike_type: str = None,
-                          location: PricingLocation = None,
-                          source: str = None, real_time: bool = False,
-                          query_type: QueryType = QueryType.STRIKE_VOL) \
-        -> pd.DataFrame:
+def _get_fx_vol_swap_data(
+    asset: Asset,
+    expiry_tenor: str,
+    strike_type: str = None,
+    location: PricingLocation = None,
+    source: str = None,
+    real_time: bool = False,
+    query_type: QueryType = QueryType.STRIKE_VOL,
+) -> pd.DataFrame:
     if real_time:
         raise NotImplementedError('realtime FX Vol swap data not implemented')
 
@@ -436,11 +391,13 @@ def _get_fx_vol_swap_data(asset: Asset, expiry_tenor: str, strike_type: str = No
     if cross not in FX_VOL_SWAP_DEFAULTS:
         raise NotImplementedError('Data not available for {} FX Vol Swaps'.format(cross))
 
-    kwargs = dict(asset_class='FX', type='VolatilitySwap',
-                  expiry_tenor=expiry_tenor,
-                  asset_parameters_pair=cross,
-                  # asset_parameters_strike_vol=strike_type
-                  )
+    kwargs = dict(
+        asset_class='FX',
+        type='VolatilitySwap',
+        expiry_tenor=expiry_tenor,
+        asset_parameters_pair=cross,
+        # asset_parameters_strike_vol=strike_type
+    )
     fxv_mqid = _get_tdapi_fxo_assets_vol_swaps(**kwargs)
 
     if location is None:
@@ -450,22 +407,25 @@ def _get_fx_vol_swap_data(asset: Asset, expiry_tenor: str, strike_type: str = No
 
     where = dict(pricingLocation=pricing_location.value)
 
-    q = GsDataApi.build_market_data_query([fxv_mqid], query_type, where=where, source=source,
-                                          real_time=real_time)
+    q = GsDataApi.build_market_data_query([fxv_mqid], query_type, where=where, source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return df
 
 
-def _get_fxfwd_data(asset: Asset, settlement_date: str,
-                    location: str = None,
-                    source: str = None, real_time: bool = False,
-                    query_type: QueryType = QueryType.FWD_POINTS) \
-        -> pd.DataFrame:
+def _get_fxfwd_data(
+    asset: Asset,
+    settlement_date: str,
+    location: str = None,
+    source: str = None,
+    real_time: bool = False,
+    query_type: QueryType = QueryType.FWD_POINTS,
+) -> pd.DataFrame:
     if real_time:
         mqid = asset.get_identifier(AssetIdentifier.MARQUEE_ID)
-        q = GsDataApi.build_market_data_query([mqid], QueryType.FORWARD_POINT, source=source,
-                                              real_time=real_time, where={'tenor': settlement_date})
+        q = GsDataApi.build_market_data_query(
+            [mqid], QueryType.FORWARD_POINT, source=source, real_time=real_time, where={'tenor': settlement_date}
+        )
         _logger.debug('q %s', q)
         df = _market_data_timed(q)
         return df
@@ -475,11 +435,13 @@ def _get_fxfwd_data(asset: Asset, settlement_date: str,
     if not (tm_rates._is_valid_relative_date_tenor(settlement_date)):
         raise MqValueError('invalid settlements date ' + settlement_date)
 
-    kwargs = dict(asset_class='FX', type='Forward',
-                  asset_parameters_pair=cross,
-                  asset_parameters_settlement_date=settlement_date,
-                  name_prefix='FX Forward'
-                  )
+    kwargs = dict(
+        asset_class='FX',
+        type='Forward',
+        asset_parameters_pair=cross,
+        asset_parameters_settlement_date=settlement_date,
+        name_prefix='FX Forward',
+    )
 
     mqid = _get_tdapi_fxo_assets(**kwargs)
 
@@ -490,24 +452,35 @@ def _get_fxfwd_data(asset: Asset, settlement_date: str,
 
     where = dict(pricingLocation=pricing_location.value)
 
-    q = GsDataApi.build_market_data_query([mqid], query_type, where=where, source=source,
-                                          real_time=real_time)
+    q = GsDataApi.build_market_data_query([mqid], query_type, where=where, source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return df
 
 
-def _get_fxo_data(asset: Asset, expiry_tenor: str, strike: str, option_type: str = None,
-                  expiration_location: str = None,
-                  location: PricingLocation = None, premium_payment_date: str = None,
-                  source: str = None, real_time: bool = False,
-                  query_type: QueryType = QueryType.IMPLIED_VOLATILITY) \
-        -> pd.DataFrame:
+def _get_fxo_data(
+    asset: Asset,
+    expiry_tenor: str,
+    strike: str,
+    option_type: str = None,
+    expiration_location: str = None,
+    location: PricingLocation = None,
+    premium_payment_date: str = None,
+    source: str = None,
+    real_time: bool = False,
+    query_type: QueryType = QueryType.IMPLIED_VOLATILITY,
+) -> pd.DataFrame:
     if real_time:
         raise NotImplementedError('realtime FX Option data not implemented')
 
-    asset_mqid = get_fxo_asset(asset=asset, expiry_tenor=expiry_tenor, strike=strike, option_type=option_type,
-                               expiration_location=expiration_location, premium_payment_date=premium_payment_date)
+    asset_mqid = get_fxo_asset(
+        asset=asset,
+        expiry_tenor=expiry_tenor,
+        strike=strike,
+        option_type=option_type,
+        expiration_location=expiration_location,
+        premium_payment_date=premium_payment_date,
+    )
 
     if location is None:
         pricing_location = PricingLocation.NYC
@@ -519,17 +492,24 @@ def _get_fxo_data(asset: Asset, expiry_tenor: str, strike: str, option_type: str
     # _logger.debug(f'where asset= {rate_mqid}, swap_tenor={swap_tenor}, index={defaults["index_type"]}, '
     #              f'forward_tenor={forward_tenor}, pricing_location={pricing_location.value}, '
     #              f'clearing_house={clearing_house.value}, notional_currency={currency.name}')
-    q = GsDataApi.build_market_data_query([asset_mqid], query_type, where=where, source=source,
-                                          real_time=real_time)
+    q = GsDataApi.build_market_data_query([asset_mqid], query_type, where=where, source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     return df
 
 
-def implied_volatility_new(asset: Asset, expiry_tenor: str, strike: str, option_type: str = None,
-                           expiration_location: str = None,
-                           location: PricingLocation = None, premium_payment_date: str = None, *,
-                           source: str = None, real_time: bool = False) -> pd.Series:
+def implied_volatility_new(
+    asset: Asset,
+    expiry_tenor: str,
+    strike: str,
+    option_type: str = None,
+    expiration_location: str = None,
+    location: PricingLocation = None,
+    premium_payment_date: str = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.Series:
     """
     GS end-of-day FX vanilla implied volatilities across major crosses.
 
@@ -545,12 +525,18 @@ def implied_volatility_new(asset: Asset, expiry_tenor: str, strike: str, option_
     :return: swap rate curve
     """
 
-    df = _get_fxo_data(asset=asset, expiry_tenor=expiry_tenor, strike=strike,
-                       option_type=option_type,
-                       expiration_location=expiration_location,
-                       location=location,
-                       premium_payment_date=premium_payment_date, source=source,
-                       real_time=real_time, query_type=QueryType.IMPLIED_VOLATILITY)
+    df = _get_fxo_data(
+        asset=asset,
+        expiry_tenor=expiry_tenor,
+        strike=strike,
+        option_type=option_type,
+        expiration_location=expiration_location,
+        location=location,
+        premium_payment_date=premium_payment_date,
+        source=source,
+        real_time=real_time,
+        query_type=QueryType.IMPLIED_VOLATILITY,
+    )
 
     series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['impliedVolatility'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
@@ -562,14 +548,23 @@ New Implementation
 """
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Cross,),
-              [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
-                                 query_type=QueryType.IMPLIED_VOLATILITY)],
-              display_name="implied_volatility")
-def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolReference = None,
-                             relative_strike: Real = None, location: Optional[PricingLocation] = None,
-                             legacy_implementation: bool = False, *,
-                             source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.FX,),
+    (AssetType.Cross,),
+    [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
+    display_name="implied_volatility",
+)
+def implied_volatility_fxvol(
+    asset: Asset,
+    tenor: str,
+    strike_reference: VolReference = None,
+    relative_strike: Real = None,
+    location: Optional[PricingLocation] = None,
+    legacy_implementation: bool = False,
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -623,17 +618,21 @@ def implied_volatility_fxvol(asset: Asset, tenor: str, strike_reference: VolRefe
         raise MqValueError('unknown strike_reference and relative_strike combination')
 
     tenor = _tenor_month_to_year(tenor)
-    s = implied_volatility_new(cross_asset, tenor, strike, option_type, location=location, source=source,
-                               real_time=real_time)
+    s = implied_volatility_new(
+        cross_asset, tenor, strike, option_type, location=location, source=source, real_time=real_time
+    )
     return s
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Cross,),
-              [MeasureDependency(id_provider=_currencypair_to_tdapi_fxfwd_asset,
-                                 query_type=QueryType.FWD_POINTS)],
-              display_name="forward_point")
-def fwd_points(asset: Asset, settlement_date: str,
-               location: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.FX,),
+    (AssetType.Cross,),
+    [MeasureDependency(id_provider=_currencypair_to_tdapi_fxfwd_asset, query_type=QueryType.FWD_POINTS)],
+    display_name="forward_point",
+)
+def fwd_points(
+    asset: Asset, settlement_date: str, location: str = None, *, source: str = None, real_time: bool = False
+) -> pd.Series:
     """
     GS End-of-day FX forward points for G3, G10, and EM crosses.
 
@@ -644,9 +643,14 @@ def fwd_points(asset: Asset, settlement_date: str,
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: fwd points
     """
-    df = _get_fxfwd_data(asset=asset, settlement_date=settlement_date,
-                         location=location, source=source,
-                         real_time=real_time, query_type=QueryType.FWD_POINTS)
+    df = _get_fxfwd_data(
+        asset=asset,
+        settlement_date=settlement_date,
+        location=location,
+        source=source,
+        real_time=real_time,
+        query_type=QueryType.FWD_POINTS,
+    )
     if real_time:
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['forwardPoint'])
     else:
@@ -655,12 +659,20 @@ def fwd_points(asset: Asset, settlement_date: str,
     return series
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Cross,),
-              [MeasureDependency(id_provider=_currencypair_to_tdapi_fx_vol_swap_asset,
-                                 query_type=QueryType.STRIKE_VOL)])
-def vol_swap_strike(asset: Asset, expiry_tenor: str, strike_type: str = None,
-                    location: PricingLocation = None, *,
-                    source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.FX,),
+    (AssetType.Cross,),
+    [MeasureDependency(id_provider=_currencypair_to_tdapi_fx_vol_swap_asset, query_type=QueryType.STRIKE_VOL)],
+)
+def vol_swap_strike(
+    asset: Asset,
+    expiry_tenor: str,
+    strike_type: str = None,
+    location: PricingLocation = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.Series:
     """
     GS end-of-day FX Vol Swaps volatilities across major crosses.
 
@@ -672,13 +684,15 @@ def vol_swap_strike(asset: Asset, expiry_tenor: str, strike_type: str = None,
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: curve of vol swap strike
     """
-    df = _get_fx_vol_swap_data(asset=asset,
-                               expiry_tenor=expiry_tenor,
-                               strike_type=strike_type,
-                               location=location,
-                               source=source,
-                               real_time=real_time,
-                               query_type=QueryType.STRIKE_VOL)
+    df = _get_fx_vol_swap_data(
+        asset=asset,
+        expiry_tenor=expiry_tenor,
+        strike_type=strike_type,
+        location=location,
+        source=source,
+        real_time=real_time,
+        query_type=QueryType.STRIKE_VOL,
+    )
 
     series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['strikeVol'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
@@ -686,9 +700,15 @@ def vol_swap_strike(asset: Asset, expiry_tenor: str, strike_type: str = None,
 
 
 @plot_measure((AssetClass.FX,), None, [QueryType.FORWARD_POINT])
-def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.DAILY,
-               pricing_location: Optional[PricingLocation] = None, *, source: str = None,
-               real_time: bool = False) -> pd.Series:
+def spot_carry(
+    asset: Asset,
+    tenor: str,
+    annualized: FXSpotCarry = FXSpotCarry.DAILY,
+    pricing_location: Optional[PricingLocation] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.Series:
     """
     Calculates carry using forward term structure i.e forwardpoints/spot with option to return it in annualized terms.
 
@@ -704,18 +724,35 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
     if real_time:
         raise NotImplementedError('realtime spot_carry not implemented')
 
-    if tenor not in ['1m', '2m', '3m', '4m', '5m', '6m', '7m', '8m', '9m', '10m', '11m', '1y', '15m', '18m', '21m',
-                     '2y']:
+    if tenor not in [
+        '1m',
+        '2m',
+        '3m',
+        '4m',
+        '5m',
+        '6m',
+        '7m',
+        '8m',
+        '9m',
+        '10m',
+        '11m',
+        '1y',
+        '15m',
+        '18m',
+        '21m',
+        '2y',
+    ]:
         raise MqValueError('tenor not included in dataset')
     cross = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    kwargs = dict(asset_class='FX', type='Forward',
-                  asset_parameters_pair=cross,
-                  asset_parameters_settlement_date=tenor,
-                  name_prefix='FX Forward'
-                  )
+    kwargs = dict(
+        asset_class='FX',
+        type='Forward',
+        asset_parameters_pair=cross,
+        asset_parameters_settlement_date=tenor,
+        name_prefix='FX Forward',
+    )
     mqid = _get_tdapi_fxo_assets(**kwargs)
-    q = GsDataApi.build_market_data_query([mqid], QueryType.FWD_POINTS,
-                                          source=source, real_time=real_time)
+    q = GsDataApi.build_market_data_query([mqid], QueryType.FWD_POINTS, source=source, real_time=real_time)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     if df.empty:
@@ -724,8 +761,7 @@ def spot_carry(asset: Asset, tenor: str, annualized: FXSpotCarry = FXSpotCarry.D
     ds = Dataset(dataset_ids[0])
     location = pricing_location if pricing_location else PricingLocation.NYC
     start, end = DataContext.current.start_date, DataContext.current.end_date
-    mq_df = ds.get_data(asset_id=mqid, start=start, end=end,
-                        pricingLocation=location.value)
+    mq_df = ds.get_data(asset_id=mqid, start=start, end=end, pricingLocation=location.value)
     if mq_df.empty:
         return pd.Series(dtype=float)
     mq_df = mq_df.reset_index()

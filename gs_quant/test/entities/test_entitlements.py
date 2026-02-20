@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from testfixtures import Replacer
 from testfixtures.mock import Mock
 
@@ -23,12 +24,9 @@ from gs_quant.target.reports import User as TargetUser
 
 
 def get_fake_user():
-    user = TargetUser.from_dict({
-        'id': 'userId',
-        'email': 'jane.doe@gs.com',
-        'name': 'Jane Doe',
-        'company': 'Goldman Sachs Group'
-    })
+    user = TargetUser.from_dict(
+        {'id': 'userId', 'email': 'jane.doe@gs.com', 'name': 'Jane Doe', 'company': 'Goldman Sachs Group'}
+    )
 
     replace = Replacer()
     mock = replace('gs_quant.api.gs.users.GsUsersApi.get_users', Mock())
@@ -40,11 +38,7 @@ def get_fake_user():
 
 
 def get_fake_group():
-    group = TargetGroup.from_dict({
-        'name': 'fakeGroup',
-        'id': 'groupId',
-        'tags': []
-    })
+    group = TargetGroup.from_dict({'name': 'fakeGroup', 'id': 'groupId', 'tags': []})
 
     replace = Replacer()
     mock = replace('gs_quant.api.gs.groups.GsGroupsApi.get_group', Mock())
@@ -70,12 +64,11 @@ def test_to_dict():
 def test_from_target():
     replace = Replacer()
     mock = replace('gs_quant.api.gs.users.GsUsersApi.get_users', Mock())
-    mock.return_value = [TargetUser.from_dict({
-        'id': 'userId',
-        'email': 'jane.doe@gs.com',
-        'name': 'Jane Doe',
-        'company': 'Goldman Sachs Group'
-    })]
+    mock.return_value = [
+        TargetUser.from_dict(
+            {'id': 'userId', 'email': 'jane.doe@gs.com', 'name': 'Jane Doe', 'company': 'Goldman Sachs Group'}
+        )
+    ]
     ent = Entitlements.from_target(TargetEntitlements(edit=('guid:userId', 'role:roleId')))
     replace.restore()
     assert ent.edit.users == [get_fake_user()]
@@ -85,12 +78,11 @@ def test_from_target():
 def test_from_dict():
     replace = Replacer()
     mock = replace('gs_quant.api.gs.users.GsUsersApi.get_users', Mock())
-    mock.return_value = [TargetUser.from_dict({
-        'id': 'userId',
-        'email': 'jane.doe@gs.com',
-        'name': 'Jane Doe',
-        'company': 'Goldman Sachs Group'
-    })]
+    mock.return_value = [
+        TargetUser.from_dict(
+            {'id': 'userId', 'email': 'jane.doe@gs.com', 'name': 'Jane Doe', 'company': 'Goldman Sachs Group'}
+        )
+    ]
     ent = Entitlements.from_dict({'edit': ['guid:userId', 'role:roleId']})
     replace.restore()
     assert ent.edit.users == [get_fake_user()]

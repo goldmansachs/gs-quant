@@ -89,6 +89,7 @@ examples providing a searchable library of short specific snippets.
         - 📄 [07_fx_knockout_trade_construction.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/07_fx_knockout_trade_construction.ipynb)
         - 📄 [08_fx_double_touch_trade_construction.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/08_fx_double_touch_trade_construction.ipynb)
         - 📄 [09_fx_delta_measures.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/09_fx_delta_measures.ipynb)
+        - 📄 [10_fx_gamma_measures.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/10_fx_gamma_measures.ipynb)
       - 📁 03_eq
         - 📄 [01_calc_eq_option_price.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/03_eq/01_calc_eq_option_price.ipynb)
         - 📄 [02_calc_eq_option_risk_measures.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/03_eq/02_calc_eq_option_risk_measures.ipynb)

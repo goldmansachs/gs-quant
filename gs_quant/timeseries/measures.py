@@ -43,12 +43,27 @@ from gs_quant.entities.entity import PositionedEntity
 from gs_quant.errors import MqValueError, MqTypeError
 from gs_quant.markets.securities import Asset, AssetIdentifier, AssetType as SecAssetType, SecurityMaster, Stock
 from gs_quant.timeseries import Basket, RelativeDate, Returns, Window, sqrt, volatility
-from gs_quant.timeseries.helper import (FREQ_MONTH_END, _month_to_tenor, _split_where_conditions, _tenor_to_month,
-                                        _to_offset, check_forward_looking, get_dataset_with_many_assets,
-                                        get_df_with_retries, log_return, plot_measure)
+from gs_quant.timeseries.helper import (
+    FREQ_MONTH_END,
+    _month_to_tenor,
+    _split_where_conditions,
+    _tenor_to_month,
+    _to_offset,
+    check_forward_looking,
+    get_dataset_with_many_assets,
+    get_df_with_retries,
+    log_return,
+    plot_measure,
+)
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
-from pandas.tseries.holiday import AbstractHolidayCalendar, Holiday, USLaborDay, USMemorialDay, USThanksgivingDay, \
-    sunday_to_monday
+from pandas.tseries.holiday import (
+    AbstractHolidayCalendar,
+    Holiday,
+    USLaborDay,
+    USMemorialDay,
+    USThanksgivingDay,
+    sunday_to_monday,
+)
 from pydash import chunk, flatten, get
 
 GENERIC_DATE = Union[dt.date, str]
@@ -92,7 +107,7 @@ class NercCalendar(AbstractHolidayCalendar):
         Holiday('July 4th', month=7, day=4, observance=sunday_to_monday),
         USLaborDay,
         USThanksgivingDay,
-        Holiday('Christmas', month=12, day=25, observance=sunday_to_monday)
+        Holiday('Christmas', month=12, day=25, observance=sunday_to_monday),
     ]
 
 
@@ -291,7 +306,7 @@ ESG_METRIC_TO_QUERY_TYPE = {
     "gRegionalPercentile": QueryType.G_REGIONAL_PERCENTILE,
     "esDisclosurePercentage": QueryType.ES_DISCLOSURE_PERCENTAGE,
     "controversyScore": QueryType.CONTROVERSY_SCORE,
-    "controversyPercentile": QueryType.CONTROVERSY_PERCENTILE
+    "controversyPercentile": QueryType.CONTROVERSY_PERCENTILE,
 }
 
 CURRENCY_TO_OIS_RATE_BENCHMARK = {
@@ -304,20 +319,17 @@ CURRENCY_TO_OIS_RATE_BENCHMARK = {
     'NOK': 'NOK OIS',
     'NZD': 'NZD OIS',
     'SEK': 'SEK OIS',
-    'CHF': 'CHF OIS'
+    'CHF': 'CHF OIS',
 }
 
 CURRENCY_TO_DEFAULT_RATE_BENCHMARK = {
     'USD': 'USD-LIBOR-BBA',
     'EUR': 'EUR-EURIBOR-Telerate',
     'GBP': 'GBP-LIBOR-BBA',
-    'JPY': 'JPY-LIBOR-BBA'
+    'JPY': 'JPY-LIBOR-BBA',
 }
 
-CURRENCY_TO_INFLATION_RATE_BENCHMARK = {
-    'GBP': 'CPI-UKRPI',
-    'EUR': 'CPI-CPXTEMU'
-}
+CURRENCY_TO_INFLATION_RATE_BENCHMARK = {'GBP': 'CPI-UKRPI', 'EUR': 'CPI-CPXTEMU'}
 
 CROSS_TO_CROSS_CURRENCY_BASIS = {
     'JPYUSD': 'USD-3m/JPY-3m',
@@ -325,28 +337,28 @@ CROSS_TO_CROSS_CURRENCY_BASIS = {
     'USDEUR': 'EUR-3m/USD-3m',
     'EURUSD': 'EUR-3m/USD-3m',
     'USDGBP': 'GBP-3m/USD-3m',
-    'GBPUSD': 'GBP-3m/USD-3m'
+    'GBPUSD': 'GBP-3m/USD-3m',
 }
 
 _FACTOR_PROFILE_METRIC_TO_QUERY_TYPE = {
     'growthScore': QueryType.GROWTH_SCORE,
     'financialReturnsScore': QueryType.FINANCIAL_RETURNS_SCORE,
     'multipleScore': QueryType.MULTIPLE_SCORE,
-    'integratedScore': QueryType.INTEGRATED_SCORE
+    'integratedScore': QueryType.INTEGRATED_SCORE,
 }
 
-_RATING_METRIC_TO_QUERY_TYPE = {
-    'rating': QueryType.RATING,
-    'convictionList': QueryType.CONVICTION_LIST
-}
+_RATING_METRIC_TO_QUERY_TYPE = {'rating': QueryType.RATING, 'convictionList': QueryType.CONVICTION_LIST}
 
 _COMMOD_CONTRACT_MONTH_CODES = "FGHJKMNQUVXZ"
 _COMMOD_CONTRACT_MONTH_CODES_DICT = {k: v for k, v in enumerate(_COMMOD_CONTRACT_MONTH_CODES)}
 
 
 def _asset_from_spec(asset_spec: ASSET_SPEC) -> Asset:
-    return asset_spec if isinstance(asset_spec, Asset) else SecurityMaster.get_asset(asset_spec,
-                                                                                     AssetIdentifier.MARQUEE_ID)
+    return (
+        asset_spec
+        if isinstance(asset_spec, Asset)
+        else SecurityMaster.get_asset(asset_spec, AssetIdentifier.MARQUEE_ID)
+    )
 
 
 def _cross_stored_direction_helper(bbid):
@@ -444,8 +456,9 @@ def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionT
         if c_type is RatesConversionType.DEFAULT_BENCHMARK_RATE:
             to_asset = CURRENCY_TO_DEFAULT_RATE_BENCHMARK[bbid]
         elif c_type is RatesConversionType.DEFAULT_SWAP_RATE_ASSET:
-            to_asset = (bbid + '-3m') if bbid == "USD" else (bbid + '-6m') if bbid in ['GBP', 'EUR', 'CHF', 'SEK'] \
-                else bbid
+            to_asset = (
+                (bbid + '-3m') if bbid == "USD" else (bbid + '-6m') if bbid in ['GBP', 'EUR', 'CHF', 'SEK'] else bbid
+            )
         elif c_type is RatesConversionType.INFLATION_BENCHMARK_RATE:
             to_asset = CURRENCY_TO_INFLATION_RATE_BENCHMARK[bbid]
         elif c_type is RatesConversionType.OIS_BENCHMARK_RATE:
@@ -467,6 +480,7 @@ def convert_asset_for_rates_data_set(from_asset: Asset, c_type: RatesConversionT
 
 def _get_custom_bd(exchange):
     from pandas.tseries.offsets import CustomBusinessDay
+
     calendar = GsCalendar.get(exchange).business_day_calendar()
     return CustomBusinessDay(calendar=calendar)
 
@@ -508,15 +522,21 @@ def _extract_series_from_df(df: pd.DataFrame, query_type: QueryType, handle_miss
     return series
 
 
-def _fundamentals_md_query(mqid: str, period: str, period_direction: FundamentalMetricPeriodDirection,
-                           metric: str, source: str = None, real_time: bool = False,
-                           request_id: Optional[str] = None) -> pd.Series:
+def _fundamentals_md_query(
+    mqid: str,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    metric: str,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     q = GsDataApi.build_market_data_query(
         [mqid],
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -525,12 +545,23 @@ def _fundamentals_md_query(mqid: str, period: str, period_direction: Fundamental
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [
-    MeasureDependency(id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)
-], asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
-def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Real,
-         normalization_mode: NormalizationMode = None, *,
-         source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.FX, AssetClass.Equity, AssetClass.Commod),
+    None,
+    [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
+    asset_type_excluded=(AssetType.CommodityNaturalGasHub,),
+)
+def skew(
+    asset: Asset,
+    tenor: str,
+    strike_reference: SkewReference,
+    distance: Real,
+    normalization_mode: NormalizationMode = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Difference in implied volatility of equidistant out-of-the-money put and call options.
 
@@ -587,8 +618,9 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
     kwargs[column] = q_strikes
     log_debug(request_id, _logger, 'where tenor=%s and %s', tenor, kwargs)
     where = dict(tenor=tenor, **kwargs)
-    q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
-                                          real_time=real_time)
+    q = GsDataApi.build_market_data_query(
+        [asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source, real_time=real_time
+    )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     dataset_ids = getattr(df, 'dataset_ids', ())
@@ -600,17 +632,28 @@ def skew(asset: Asset, tenor: str, strike_reference: SkewReference, distance: Re
         if len(curves) < 3:
             raise MqValueError('skew not available for given inputs')
         series = [curves[qs]['impliedVolatility'] for qs in q_strikes]
-        ext_series = ((series[0] - series[1]) / series[2]) if normalization_mode == NormalizationMode.NORMALIZED \
+        ext_series = (
+            ((series[0] - series[1]) / series[2])
+            if normalization_mode == NormalizationMode.NORMALIZED
             else (series[0] - series[1])
+        )
         series = ExtendedSeries(ext_series)
     series.dataset_ids = dataset_ids
     return series
 
 
 @plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE])
-def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_reference: CdsVolReference,
-                           relative_strike: Real, *, source: str = None, real_time: bool = False,
-                           request_id: Optional[str] = None) -> pd.Series:
+def cds_implied_volatility(
+    asset: Asset,
+    expiry: str,
+    tenor: str,
+    strike_reference: CdsVolReference,
+    relative_strike: Real,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of a cds index implied by observations of market prices.
 
@@ -630,32 +673,37 @@ def cds_implied_volatility(asset: Asset, expiry: str, tenor: str, strike_referen
     delta_strike = "ATMF" if strike_reference is CdsVolReference.FORWARD else "{}DC".format(relative_strike)
     option_type = "payer" if strike_reference is CdsVolReference.DELTA_CALL else "receiver"
 
-    _logger.debug('where expiry=%s, tenor=%s, deltaStrike=%s, optionType=%s, location=NYC',
-                  expiry, tenor, delta_strike, option_type)
+    _logger.debug(
+        'where expiry=%s, tenor=%s, deltaStrike=%s, optionType=%s, location=NYC',
+        expiry,
+        tenor,
+        delta_strike,
+        option_type,
+    )
 
     q = GsDataApi.build_market_data_query(
         [asset.get_marquee_id()],
         QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE,
-        where=dict(
-            expiry=expiry,
-            tenor=tenor,
-            deltaStrike=delta_strike,
-            optionType=option_type,
-            location='NYC'
-        ),
+        where=dict(expiry=expiry, tenor=tenor, deltaStrike=delta_strike, optionType=option_type, location='NYC'),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE)
 
 
-@plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.OPTION_PREMIUM],
-              display_name='option_premium')
-def option_premium_credit(asset: Asset, expiry: str, strike_reference: CdsVolReference,
-                          relative_strike: Real, *, source: str = None, real_time: bool = False,
-                          request_id: Optional[str] = None) -> pd.Series:
+@plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.OPTION_PREMIUM], display_name='option_premium')
+def option_premium_credit(
+    asset: Asset,
+    expiry: str,
+    strike_reference: CdsVolReference,
+    relative_strike: Real,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Option premium of a cds index for a given expiry and delta strike.
 
@@ -690,18 +738,24 @@ def option_premium_credit(asset: Asset, expiry: str, strike_reference: CdsVolRef
             deltaStrike=delta_strike,
         ),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.OPTION_PREMIUM)
 
 
-@plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.ABSOLUTE_STRIKE],
-              display_name='absolute_strike')
-def absolute_strike_credit(asset: Asset, expiry: str, strike_reference: CdsVolReference,
-                           relative_strike: Real, *, source: str = None, real_time: bool = False,
-                           request_id: Optional[str] = None) -> pd.Series:
+@plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.ABSOLUTE_STRIKE], display_name='absolute_strike')
+def absolute_strike_credit(
+    asset: Asset,
+    expiry: str,
+    strike_reference: CdsVolReference,
+    relative_strike: Real,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Absolute strike of a cds index for a given expiry and delta strike.
 
@@ -736,18 +790,29 @@ def absolute_strike_credit(asset: Asset, expiry: str, strike_reference: CdsVolRe
             deltaStrike=delta_strike,
         ),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.ABSOLUTE_STRIKE)
 
 
-@plot_measure((AssetClass.Credit,), (AssetType.Index,), [QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE],
-              display_name='implied_volatility')
-def implied_volatility_credit(asset: Asset, expiry: str, strike_reference: CdsVolReference,
-                              relative_strike: Real, *, source: str = None, real_time: bool = False,
-                              request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Credit,),
+    (AssetType.Index,),
+    [QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE],
+    display_name='implied_volatility',
+)
+def implied_volatility_credit(
+    asset: Asset,
+    expiry: str,
+    strike_reference: CdsVolReference,
+    relative_strike: Real,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of a cds index implied by observations of market prices.
 
@@ -782,17 +847,17 @@ def implied_volatility_credit(asset: Asset, expiry: str, strike_reference: CdsVo
             deltaStrike=delta_strike,
         ),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY_BY_DELTA_STRIKE)
 
 
-@plot_measure((AssetClass.Credit,), (AssetType.Default_Swap,), [QueryType.CDS_SPREAD_100],
-              display_name='spread')
-def cds_spread(asset: Asset, spread: int, *, source: str = None, real_time: bool = False,
-               request_id: Optional[str] = None) -> pd.Series:
+@plot_measure((AssetClass.Credit,), (AssetType.Default_Swap,), [QueryType.CDS_SPREAD_100], display_name='spread')
+def cds_spread(
+    asset: Asset, spread: int, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """
     CDS Spread levels.
 
@@ -818,26 +883,33 @@ def cds_spread(asset: Asset, spread: int, *, source: str = None, real_time: bool
         raise NotImplementedError("Spread {} not implemented".format(spread))
 
     q = GsDataApi.build_market_data_query(
-        [asset.get_marquee_id()],
-        qt,
-        where=dict(
-            pricingLocation="NYC"
-        ),
-        source=source,
-        real_time=real_time
+        [asset.get_marquee_id()], qt, where=dict(pricingLocation="NYC"), source=source, real_time=real_time
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, qt)
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod,), None,
-              [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol,
-                                 query_type=QueryType.IMPLIED_VOLATILITY)],
-              asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
-def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference = None,
-                       relative_strike: Real = None, parallelize_queries: bool = True, *, source: str = None,
-                       real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (
+        AssetClass.Equity,
+        AssetClass.Commod,
+    ),
+    None,
+    [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
+    asset_type_excluded=(AssetType.CommodityNaturalGasHub,),
+)
+def implied_volatility(
+    asset: Asset,
+    tenor: str,
+    strike_reference: VolReference = None,
+    relative_strike: Real = None,
+    parallelize_queries: bool = True,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -856,8 +928,9 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
     """
 
     if asset.asset_class == AssetClass.Commod and asset.get_type() not in (SecAssetType.ETF, SecAssetType.STOCK):
-        return _weighted_average_valuation_curve_for_calendar_strip(asset, tenor,
-                                                                    QueryType.IMPLIED_VOLATILITY, "impliedVolatility")
+        return _weighted_average_valuation_curve_for_calendar_strip(
+            asset, tenor, QueryType.IMPLIED_VOLATILITY, "impliedVolatility"
+        )
 
     if asset.asset_class == AssetClass.FX:
         asset_id = cross_stored_direction_for_fx_vol(asset.get_marquee_id())
@@ -867,14 +940,21 @@ def implied_volatility(asset: Asset, tenor: str, strike_reference: VolReference 
         asset_id = asset.get_marquee_id()
         ref_string, relative_strike = preprocess_implied_vol_strikes_eq(strike_reference, relative_strike)
 
-    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
-              relative_strike)
+    log_debug(
+        request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string, relative_strike
+    )
     tenor = _tenor_month_to_year(tenor)
     where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
     # Parallel calls when fetching / appending last results
-    df = get_historical_and_last_for_measure([asset_id], QueryType.IMPLIED_VOLATILITY, where, source=source,
-                                             real_time=real_time, request_id=request_id,
-                                             parallelize_queries=parallelize_queries)
+    df = get_historical_and_last_for_measure(
+        [asset_id],
+        QueryType.IMPLIED_VOLATILITY,
+        where,
+        source=source,
+        real_time=real_time,
+        request_id=request_id,
+        parallelize_queries=parallelize_queries,
+    )
 
     s = _extract_series_from_df(df, QueryType.IMPLIED_VOLATILITY)
     return s
@@ -889,10 +969,21 @@ def _tenor_month_to_year(tenor: str):
     return tenor
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.IMPLIED_VOLATILITY],
-              display_name='implied_volatility')
-def implied_volatility_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
-                          real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Commod,),
+    (AssetType.CommodityNaturalGasHub,),
+    [QueryType.IMPLIED_VOLATILITY],
+    display_name='implied_volatility',
+)
+def implied_volatility_ng(
+    asset: Asset,
+    contract_range: str = 'F20',
+    price_method: str = 'GDD',
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility of an asset implied by observations of market prices.
 
@@ -920,10 +1011,9 @@ def implied_volatility_ng(asset: Asset, contract_range: str = 'F20', price_metho
     where = dict(contract=contracts_to_query, priceMethod=price_method)
 
     with DataContext(start, end):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.IMPLIED_VOLATILITY,
-                                              where=where,
-                                              source=source,
-                                              real_time=False)
+        q = GsDataApi.build_market_data_query(
+            [asset.get_marquee_id()], QueryType.IMPLIED_VOLATILITY, where=where, source=source, real_time=False
+        )
         data = _market_data_timed(q, request_id)
         dataset_ids = getattr(data, 'dataset_ids', ())
 
@@ -955,8 +1045,11 @@ def _preprocess_implied_vol_strikes_fx(strike_reference: VolReference = None, re
     if strike_reference == VolReference.DELTA_PUT:
         relative_strike *= -1
 
-    ref_string = "delta" if strike_reference in (VolReference.DELTA_CALL, VolReference.DELTA_PUT,
-                                                 VolReference.DELTA_NEUTRAL) else strike_reference.value
+    ref_string = (
+        "delta"
+        if strike_reference in (VolReference.DELTA_CALL, VolReference.DELTA_PUT, VolReference.DELTA_NEUTRAL)
+        else strike_reference.value
+    )
     return ref_string, relative_strike
 
 
@@ -969,11 +1062,26 @@ def _check_top_n(top_n):
         raise MqValueError(f'top_n should be a number, not a {type(top_n).__name__}')
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
-def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
-                        top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None,
-                        *, source: str = None, real_time: bool = False,
-                        request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Index,
+        AssetType.ETF,
+    ),
+    [QueryType.IMPLIED_CORRELATION],
+)
+def implied_correlation(
+    asset: Asset,
+    tenor: str,
+    strike_reference: EdrDataReference,
+    relative_strike: Real,
+    top_n_of_index: Optional[int] = None,
+    composition_date: Optional[GENERIC_DATE] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Correlation of an asset implied by observations of market prices.
 
@@ -1007,15 +1115,17 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
     delta_types = (EdrDataReference.DELTA_CALL, EdrDataReference.DELTA_PUT)
     strike_ref = "delta" if strike_reference in delta_types else strike_reference.value
 
-    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref,
-              relative_strike)
+    log_debug(
+        request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref, relative_strike
+    )
 
     mqid = asset.get_marquee_id()
     where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
 
     if top_n_of_index is None:
-        q = GsDataApi.build_market_data_query([mqid], QueryType.IMPLIED_CORRELATION, where=where,
-                                              source=source, real_time=real_time)
+        q = GsDataApi.build_market_data_query(
+            [mqid], QueryType.IMPLIED_CORRELATION, where=where, source=source, real_time=real_time
+        )
         log_debug(request_id, _logger, 'q %s', q)
         df = _market_data_timed(q, request_id)
         return _extract_series_from_df(df, QueryType.IMPLIED_CORRELATION)
@@ -1025,8 +1135,14 @@ def implied_correlation(asset: Asset, tenor: str, strike_reference: EdrDataRefer
 
     asset_ids = constituents.index.to_list() + [mqid]
 
-    df = get_historical_and_last_for_measure(asset_ids=asset_ids, query_type=QueryType.IMPLIED_VOLATILITY,
-                                             where=where, source=source, real_time=real_time, request_id=request_id)
+    df = get_historical_and_last_for_measure(
+        asset_ids=asset_ids,
+        query_type=QueryType.IMPLIED_VOLATILITY,
+        where=where,
+        source=source,
+        real_time=real_time,
+        request_id=request_id,
+    )
 
     if df.empty:
         return pd.Series(dtype=float)
@@ -1078,10 +1194,25 @@ def _calculate_implied_correlation(index_mqid, vol_df, constituents_weights, req
     return series
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
-def implied_correlation_with_basket(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
-                                    basket: Basket, *, source: str = None, real_time: bool = False,
-                                    request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Index,
+        AssetType.ETF,
+    ),
+    [QueryType.IMPLIED_CORRELATION],
+)
+def implied_correlation_with_basket(
+    asset: Asset,
+    tenor: str,
+    strike_reference: EdrDataReference,
+    relative_strike: Real,
+    basket: Basket,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Implied correlation between index and stock basket.
 
@@ -1106,8 +1237,9 @@ def implied_correlation_with_basket(asset: Asset, tenor: str, strike_reference: 
     delta_types = (EdrDataReference.DELTA_CALL, EdrDataReference.DELTA_PUT)
     strike_ref = "delta" if strike_reference in delta_types else strike_reference.value
 
-    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref,
-              relative_strike)
+    log_debug(
+        request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref, relative_strike
+    )
 
     index_mqid = asset.get_marquee_id()
     where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
@@ -1117,7 +1249,7 @@ def implied_correlation_with_basket(asset: Asset, tenor: str, strike_reference: 
         QueryType.IMPLIED_VOLATILITY,
         where=where,
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
     log_debug(request_id, _logger, 'q %s', query)
 
@@ -1131,9 +1263,23 @@ def implied_correlation_with_basket(asset: Asset, tenor: str, strike_reference: 
     return series
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.IMPLIED_CORRELATION])
-def realized_correlation_with_basket(asset: Asset, tenor: str, basket: Basket, *, source: str = None,
-                                     real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Index,
+        AssetType.ETF,
+    ),
+    [QueryType.IMPLIED_CORRELATION],
+)
+def realized_correlation_with_basket(
+    asset: Asset,
+    tenor: str,
+    basket: Basket,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Realized correlation between index and stock basket.
 
@@ -1171,13 +1317,27 @@ def realized_correlation_with_basket(asset: Asset, tenor: str, basket: Basket, *
     return series
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.AVERAGE_IMPLIED_VOLATILITY,
-                                                                        QueryType.IMPLIED_VOLATILITY])
-def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real,
-                               top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None,
-                               weight_threshold: Optional[Real] = None, *,
-                               source: str = None, real_time: bool = False,
-                               request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Index,
+        AssetType.ETF,
+    ),
+    [QueryType.AVERAGE_IMPLIED_VOLATILITY, QueryType.IMPLIED_VOLATILITY],
+)
+def average_implied_volatility(
+    asset: Asset,
+    tenor: str,
+    strike_reference: EdrDataReference,
+    relative_strike: Real,
+    top_n_of_index: Optional[int] = None,
+    composition_date: Optional[GENERIC_DATE] = None,
+    weight_threshold: Optional[Real] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Historical weighted average implied volatility of the top constituents of an equity index. If top_n_of_index and
     composition_date are not provided, the average is of all constituents based on the weights at each evaluation date.
@@ -1206,23 +1366,37 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
 
     _check_top_n(top_n_of_index)
     if top_n_of_index is not None and top_n_of_index > 100:
-        raise NotImplementedError('Maximum number of constituents exceeded. Do not use top_n_of_index to calculate on '
-                                  'the full list')
+        raise NotImplementedError(
+            'Maximum number of constituents exceeded. Do not use top_n_of_index to calculate on the full list'
+        )
 
     if top_n_of_index is not None:
         constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
 
-        ref_string, relative_strike = preprocess_implied_vol_strikes_eq(VolReference(strike_reference.value),
-                                                                        relative_strike)
+        ref_string, relative_strike = preprocess_implied_vol_strikes_eq(
+            VolReference(strike_reference.value), relative_strike
+        )
         tenor = _tenor_month_to_year(tenor)
-        log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, ref_string,
-                  relative_strike)
+        log_debug(
+            request_id,
+            _logger,
+            'where tenor=%s, strikeReference=%s, relativeStrike=%s',
+            tenor,
+            ref_string,
+            relative_strike,
+        )
         where = dict(tenor=tenor, strikeReference=ref_string, relativeStrike=relative_strike)
 
         asset_ids = constituents.index.to_list()
-        df = get_historical_and_last_for_measure(asset_ids=asset_ids, query_type=QueryType.IMPLIED_VOLATILITY,
-                                                 where=where, source=source, real_time=real_time, request_id=request_id,
-                                                 ignore_errors=True)
+        df = get_historical_and_last_for_measure(
+            asset_ids=asset_ids,
+            query_type=QueryType.IMPLIED_VOLATILITY,
+            where=where,
+            source=source,
+            real_time=real_time,
+            request_id=request_id,
+            ignore_errors=True,
+        )
 
         if not df.empty:
             asset_to_weight = constituents['netWeight'].to_dict()
@@ -1233,7 +1407,8 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
                     msg += f'{asset} ({asset_to_weight[asset]:.2f})'
                 raise MqValueError(
                     f'Unable to calculate average_implied_volatility due to missing implied vols for assets {msg}. '
-                    f'Try adding a weight_threshold to skip these assets.')
+                    f'Try adding a weight_threshold to skip these assets.'
+                )
 
             if weight_threshold:
                 total_missing_weight = sum(asset_to_weight[missing_asset] for missing_asset in missing_assets)
@@ -1243,7 +1418,8 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
                         msg += f'{asset} ({asset_to_weight[asset]:.2f})'
                     raise MqValueError(
                         f'Unable to calculate average_implied_volatility due to missing implied vols for assets {msg}. '
-                        f'Try increasing the weight_threshold to skip these assets.')
+                        f'Try increasing the weight_threshold to skip these assets.'
+                    )
 
                 constituents.drop(index=list(missing_assets))
 
@@ -1273,18 +1449,33 @@ def average_implied_volatility(asset: Asset, tenor: str, strike_reference: EdrDa
     mqid = asset.get_marquee_id()
     where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
     # no append last here, since there is no real-time avg implied vol dataset
-    q = GsDataApi.build_market_data_query([mqid], QueryType.AVERAGE_IMPLIED_VOLATILITY,
-                                          where=where, source=source, real_time=real_time)
+    q = GsDataApi.build_market_data_query(
+        [mqid], QueryType.AVERAGE_IMPLIED_VOLATILITY, where=where, source=source, real_time=real_time
+    )
 
     _logger.debug('q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.AVERAGE_IMPLIED_VOLATILITY)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.AVERAGE_IMPLIED_VARIANCE])
-def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrDataReference, relative_strike: Real, *,
-                             source: str = None, real_time: bool = False,
-                             request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Index,
+        AssetType.ETF,
+    ),
+    [QueryType.AVERAGE_IMPLIED_VARIANCE],
+)
+def average_implied_variance(
+    asset: Asset,
+    tenor: str,
+    strike_reference: EdrDataReference,
+    relative_strike: Real,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Historical weighted average implied variance for the underlying assets of an equity index.
 
@@ -1308,25 +1499,40 @@ def average_implied_variance(asset: Asset, tenor: str, strike_reference: EdrData
     delta_types = (EdrDataReference.DELTA_CALL, EdrDataReference.DELTA_PUT)
     strike_ref = "delta" if strike_reference in delta_types else strike_reference.value
 
-    log_debug(request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref,
-              relative_strike)
+    log_debug(
+        request_id, _logger, 'where tenor=%s, strikeReference=%s, relativeStrike=%s', tenor, strike_ref, relative_strike
+    )
 
     mqid = asset.get_marquee_id()
     where = dict(tenor=tenor, strikeReference=strike_ref, relativeStrike=relative_strike)
-    q = GsDataApi.build_market_data_query([mqid], QueryType.AVERAGE_IMPLIED_VARIANCE, where=where, source=source,
-                                          real_time=real_time)
+    q = GsDataApi.build_market_data_query(
+        [mqid], QueryType.AVERAGE_IMPLIED_VARIANCE, where=where, source=source, real_time=real_time
+    )
 
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.AVERAGE_IMPLIED_VARIANCE)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF,), [QueryType.AVERAGE_REALIZED_VOLATILITY,
-                                                                        QueryType.SPOT])
-def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns = Returns.LOGARITHMIC,
-                                top_n_of_index: int = None, composition_date: Optional[GENERIC_DATE] = None,
-                                *, source: str = None, real_time: bool = False,
-                                request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Index,
+        AssetType.ETF,
+    ),
+    [QueryType.AVERAGE_REALIZED_VOLATILITY, QueryType.SPOT],
+)
+def average_realized_volatility(
+    asset: Asset,
+    tenor: str,
+    returns_type: Returns = Returns.LOGARITHMIC,
+    top_n_of_index: int = None,
+    composition_date: Optional[GENERIC_DATE] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Historical weighted average realized volatility for the underlying assets of an equity index. If top_n_of_index and
     composition_date are not provided, the average is of all constituents based on the weights at each evaluation date
@@ -1359,12 +1565,7 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
     if top_n_of_index is not None:
         constituents = _get_index_constituent_weights(asset, top_n_of_index, composition_date)
         assets = constituents.index.to_list()
-        q = GsDataApi.build_market_data_query(
-            assets,
-            QueryType.SPOT,
-            source=source,
-            real_time=real_time
-        )
+        q = GsDataApi.build_market_data_query(assets, QueryType.SPOT, source=source, real_time=real_time)
         log_debug(request_id, _logger, 'q %s', q)
         df = _market_data_timed(q, request_id)
         if not real_time and DataContext.current.end_date >= dt.date.today():
@@ -1375,14 +1576,19 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         for underlying_id, weight in zip(constituents.index, constituents['netWeight']):
             filtered = grouped.get_group(underlying_id) if underlying_id in grouped.indices else pd.DataFrame()
             filtered = filtered.loc[~filtered.index.duplicated(keep='last')]
-            vol = ExtendedSeries(dtype=float) if filtered.empty else ExtendedSeries(volatility(filtered['spot'],
-                                                                                               Window(tenor, tenor),
-                                                                                               returns_type))
+            vol = (
+                ExtendedSeries(dtype=float)
+                if filtered.empty
+                else ExtendedSeries(volatility(filtered['spot'], Window(tenor, tenor), returns_type))
+            )
             weighted_vols.append(vol * weight)
 
         vol_df = pd.concat(weighted_vols, axis=1).ffill()
-        series = ExtendedSeries(vol_df.sum(1, min_count=top_n_of_index),
-                                name='averageRealizedVolatility') if len(weighted_vols) else ExtendedSeries(dtype=float)
+        series = (
+            ExtendedSeries(vol_df.sum(1, min_count=top_n_of_index), name='averageRealizedVolatility')
+            if len(weighted_vols)
+            else ExtendedSeries(dtype=float)
+        )
         series.dataset_ids = getattr(df, 'dataset_ids', ())
         return series
 
@@ -1391,15 +1597,16 @@ def average_realized_volatility(asset: Asset, tenor: str, returns_type: Returns 
         QueryType.AVERAGE_REALIZED_VOLATILITY,
         where={'tenor': tenor},
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     return _extract_series_from_df(df, QueryType.AVERAGE_REALIZED_VOLATILITY)
 
 
-def _get_index_constituent_weights(asset: Asset, top_n_of_index: Optional[int] = None,
-                                   composition_date: Optional[GENERIC_DATE] = None):
+def _get_index_constituent_weights(
+    asset: Asset, top_n_of_index: Optional[int] = None, composition_date: Optional[GENERIC_DATE] = None
+):
     start, end = _range_from_pricing_date(asset.exchange, composition_date, buffer=1)
     mqid = asset.get_marquee_id()
     positions_data = GsIndexApi.get_positions_data(mqid, start, end, ['netWeight'])
@@ -1420,10 +1627,20 @@ def _get_index_constituent_weights(asset: Asset, top_n_of_index: Optional[int] =
     return constituents
 
 
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.CAP_FLOOR_VOL)])
-def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *, source: str = None,
-                  real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Cash,),
+    (AssetType.Currency,),
+    [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.CAP_FLOOR_VOL)],
+)
+def cap_floor_vol(
+    asset: Asset,
+    expiration_tenor: str,
+    relative_strike: float,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     GS end-of-day implied normal volatility for cap and floor vol matrices.
 
@@ -1447,7 +1664,7 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
         QueryType.CAP_FLOOR_VOL,
         where=dict(expiry=expiration_tenor, strike=relative_strike),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     log_debug(request_id, _logger, 'q %s', q)
@@ -1455,11 +1672,19 @@ def cap_floor_vol(asset: Asset, expiration_tenor: str, relative_strike: float, *
     return _extract_series_from_df(df, QueryType.CAP_FLOOR_VOL)
 
 
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
-                                 query_type=QueryType.CAP_FLOOR_ATM_FWD_RATE)])
-def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Cash,),
+    (AssetType.Currency,),
+    [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.CAP_FLOOR_ATM_FWD_RATE)],
+)
+def cap_floor_atm_fwd_rate(
+    asset: Asset,
+    expiration_tenor: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     GS end-of-day at-the-money forward rate for cap and floor matrices.
 
@@ -1478,7 +1703,7 @@ def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str =
         QueryType.CAP_FLOOR_ATM_FWD_RATE,
         where=dict(expiry=expiration_tenor, strike=0),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     log_debug(request_id, _logger, 'q %s', q)
@@ -1486,11 +1711,22 @@ def cap_floor_atm_fwd_rate(asset: Asset, expiration_tenor: str, *, source: str =
     return _extract_series_from_df(df, QueryType.CAP_FLOOR_ATM_FWD_RATE)
 
 
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
-                                 query_type=QueryType.SPREAD_OPTION_VOL)])
-def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, short_tenor: str, relative_strike: float,
-                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Cash,),
+    (AssetType.Currency,),
+    [MeasureDependency(id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SPREAD_OPTION_VOL)],
+)
+def spread_option_vol(
+    asset: Asset,
+    expiration_tenor: str,
+    long_tenor: str,
+    short_tenor: str,
+    relative_strike: float,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     GS end-of-day implied normal volatility for spread option vol matrices.
 
@@ -1509,16 +1745,20 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
 
     rate_benchmark_mqid = convert_asset_for_rates_data_set(asset, RatesConversionType.DEFAULT_BENCHMARK_RATE)
 
-    _logger.debug('where expiry=%s, longTenor=%s, shortTenor=%s, strike=%s', expiration_tenor, long_tenor, short_tenor,
-                  relative_strike)
+    _logger.debug(
+        'where expiry=%s, longTenor=%s, shortTenor=%s, strike=%s',
+        expiration_tenor,
+        long_tenor,
+        short_tenor,
+        relative_strike,
+    )
 
     q = GsDataApi.build_market_data_query(
         [rate_benchmark_mqid],
         QueryType.SPREAD_OPTION_VOL,
-        where=dict(expiry=expiration_tenor, longTenor=long_tenor, shortTenor=short_tenor,
-                   strike=relative_strike),
+        where=dict(expiry=expiration_tenor, longTenor=long_tenor, shortTenor=short_tenor, strike=relative_strike),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     log_debug(request_id, _logger, 'q %s', q)
@@ -1526,12 +1766,25 @@ def spread_option_vol(asset: Asset, expiration_tenor: str, long_tenor: str, shor
     return _extract_series_from_df(df, QueryType.SPREAD_OPTION_VOL)
 
 
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_default_benchmark_rate,
-                                 query_type=QueryType.SPREAD_OPTION_ATM_FWD_RATE)])
-def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: str, short_tenor: str,
-                               *, source: str = None, real_time: bool = False,
-                               request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Cash,),
+    (AssetType.Currency,),
+    [
+        MeasureDependency(
+            id_provider=currency_to_default_benchmark_rate, query_type=QueryType.SPREAD_OPTION_ATM_FWD_RATE
+        )
+    ],
+)
+def spread_option_atm_fwd_rate(
+    asset: Asset,
+    expiration_tenor: str,
+    long_tenor: str,
+    short_tenor: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     GS end-of-day At-the-money forward rate for spread option vol matrices.
 
@@ -1552,7 +1805,7 @@ def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: 
         QueryType.SPREAD_OPTION_ATM_FWD_RATE,
         where=dict(expiry=expiration_tenor, longTenor=long_tenor, shortTenor=short_tenor, strike=0),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     log_debug(request_id, _logger, 'q %s', q)
@@ -1560,11 +1813,19 @@ def spread_option_atm_fwd_rate(asset: Asset, expiration_tenor: str, long_tenor: 
     return _extract_series_from_df(df, QueryType.SPREAD_OPTION_ATM_FWD_RATE)
 
 
-@plot_measure((AssetClass.Cash,), (AssetType.Currency,),
-              [MeasureDependency(id_provider=currency_to_inflation_benchmark_rate,
-                                 query_type=QueryType.INFLATION_SWAP_RATE)])
-def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Cash,),
+    (AssetType.Currency,),
+    [MeasureDependency(id_provider=currency_to_inflation_benchmark_rate, query_type=QueryType.INFLATION_SWAP_RATE)],
+)
+def zc_inflation_swap_rate(
+    asset: Asset,
+    termination_tenor: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     GS end-of-day zero coupon inflation swap break-even rate.
 
@@ -1587,7 +1848,7 @@ def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str 
         QueryType.INFLATION_SWAP_RATE,
         where=dict(tenor=termination_tenor),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     log_debug(request_id, _logger, 'q %s', q)
@@ -1595,10 +1856,17 @@ def zc_inflation_swap_rate(asset: Asset, termination_tenor: str, *, source: str 
     return _extract_series_from_df(df, QueryType.INFLATION_SWAP_RATE)
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Cross,),
-              [MeasureDependency(id_provider=cross_to_basis, query_type=QueryType.BASIS)])
-def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time: bool = False,
-          request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(id_provider=cross_to_basis, query_type=QueryType.BASIS)]
+)
+def basis(
+    asset: Asset,
+    termination_tenor: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     GS end-of-day cross-currency basis swap spread.
 
@@ -1617,11 +1885,7 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
     _logger.debug('where tenor=%s', termination_tenor)
 
     q = GsDataApi.build_market_data_query(
-        [basis_mqid],
-        QueryType.BASIS,
-        where=dict(tenor=termination_tenor),
-        source=source,
-        real_time=real_time
+        [basis_mqid], QueryType.BASIS, where=dict(tenor=termination_tenor), source=source, real_time=real_time
     )
 
     log_debug(request_id, _logger, 'q %s', q)
@@ -1629,12 +1893,20 @@ def basis(asset: Asset, termination_tenor: str, *, source: str = None, real_time
     return _extract_series_from_df(df, QueryType.BASIS)
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
-    id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)])
-def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHorizon.THREE_MONTH,
-                relative_period: Optional[FxForecastHorizon] = None,
-                *,
-                source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.FX,),
+    (AssetType.Cross,),
+    [MeasureDependency(id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)],
+)
+def fx_forecast(
+    asset: Asset,
+    relativePeriod: FxForecastHorizon = FxForecastHorizon.THREE_MONTH,
+    relative_period: Optional[FxForecastHorizon] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     FX forecasts made by Global Investment Research (GIR) macro analysts.
 
@@ -1660,7 +1932,7 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
         query_type,
         where=dict(relativePeriod=relative_period or relativePeriod),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
@@ -1673,14 +1945,18 @@ def fx_forecast(asset: Asset, relativePeriod: FxForecastHorizon = FxForecastHori
     return series
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
-    id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)])
+@plot_measure(
+    (AssetClass.FX,),
+    (AssetType.Cross,),
+    [MeasureDependency(id_provider=cross_to_usd_based_cross, query_type=QueryType.FX_FORECAST)],
+)
 def fx_forecast_time_series(
-        asset: Union[Asset, str],
-        forecastFrequency: Union[str, _FxForecastTimeSeriesPeriodType] = _FxForecastTimeSeriesPeriodType.ANNUAL, *,
-        source: str = None,
-        real_time: bool = False,
-        request_id: Optional[str] = None
+    asset: Union[Asset, str],
+    forecastFrequency: Union[str, _FxForecastTimeSeriesPeriodType] = _FxForecastTimeSeriesPeriodType.ANNUAL,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
 ) -> pd.Series:
     """
     Short and long-term FX forecast time series.
@@ -1707,12 +1983,7 @@ def fx_forecast_time_series(
     col_name = query_type.value.replace(' ', '')
     col_name = col_name[0].lower() + col_name[1:]
 
-    q = GsDataApi.build_market_data_query(
-        [usd_based_cross_mqid],
-        query_type,
-        source=source,
-        real_time=real_time
-    )
+    q = GsDataApi.build_market_data_query([usd_based_cross_mqid], query_type, source=source, real_time=real_time)
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     df.index.name = 'date'
@@ -1725,11 +1996,11 @@ def fx_forecast_time_series(
     elif forecastFrequency == _FxForecastTimeSeriesPeriodType.ANNUAL.value:
         df = df[df['relativePeriod'].str.startswith('EOY')].drop('date', axis=1)
         df['date'] = df['relativePeriod'].apply(
-            lambda x: pd.Timestamp(f"{pd.Timestamp.today().year + int(x[3:])}-01-01"))
+            lambda x: pd.Timestamp(f"{pd.Timestamp.today().year + int(x[3:])}-01-01")
+        )
         df = df[['date', col_name]].sort_values(by='date').set_index('date')
     else:
-        raise ValueError(
-            "Invalid forecastFrequency. Must be one of '3/6/12-Month', 'Annual'.")
+        raise ValueError("Invalid forecastFrequency. Must be one of '3/6/12-Month', 'Annual'.")
     series = _extract_series_from_df(df, query_type)
     if cross_mqid != usd_based_cross_mqid:
         series = 1 / series
@@ -1738,9 +2009,17 @@ def fx_forecast_time_series(
 
 
 @plot_measure((AssetClass.Equity, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
-def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_reference: VolReference,
-                relative_strike: Real, *, source: str = None, real_time: bool = False,
-                request_id: Optional[str] = None) -> pd.Series:
+def forward_vol(
+    asset: Asset,
+    tenor: str,
+    forward_start_date: str,
+    strike_reference: VolReference,
+    relative_strike: Real,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Forward volatility.
 
@@ -1769,11 +2048,18 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
     t1 = _month_to_tenor(t1_month)
     t2 = _month_to_tenor(t2_month)
 
-    log_debug(request_id, _logger, 'where strikeReference=%s, relativeStrike=%s, tenor=%s',
-              sr_string, relative_strike, f'{t1},{t2}')
+    log_debug(
+        request_id,
+        _logger,
+        'where strikeReference=%s, relativeStrike=%s, tenor=%s',
+        sr_string,
+        relative_strike,
+        f'{t1},{t2}',
+    )
     where = dict(tenor=[t1, t2], strikeReference=[sr_string], relativeStrike=[relative_strike])
-    q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY, where=where,
-                                          source=source, real_time=real_time)
+    q = GsDataApi.build_market_data_query(
+        [asset_id], QueryType.IMPLIED_VOLATILITY, where=where, source=source, real_time=real_time
+    )
     dataset_ids = []
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
@@ -1786,8 +2072,9 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
         with DataContext(now - delta, now + delta):
             net = {"queries": []}
             for wl in where_list:
-                last_q = GsDataApi.build_market_data_query([asset_id], QueryType.IMPLIED_VOLATILITY,
-                                                           where=wl, source=source, real_time=True, measure='Last')
+                last_q = GsDataApi.build_market_data_query(
+                    [asset_id], QueryType.IMPLIED_VOLATILITY, where=wl, source=source, real_time=True, measure='Last'
+                )
                 net["queries"].extend(last_q["queries"])
 
         log_debug(request_id, _logger, 'last q %s', net)
@@ -1815,8 +2102,9 @@ def forward_vol(asset: Asset, tenor: str, forward_start_date: str, strike_refere
             log_debug(request_id, _logger, 'no data for one or more tenors')
             series = ExtendedSeries(dtype=float, name='forwardVol')
         else:
-            series = ExtendedSeries(sqrt((t2_month * lg ** 2 - t1_month * sg ** 2) / _tenor_to_month(tenor)),
-                                    name='forwardVol')
+            series = ExtendedSeries(
+                sqrt((t2_month * lg**2 - t1_month * sg**2) / _tenor_to_month(tenor)), name='forwardVol'
+            )
             series.index = _normalize_dtidx(series.index)
     series.dataset_ids = tuple(dataset_ids)
     return series
@@ -1828,18 +2116,27 @@ def _process_forward_vol_term(asset: Asset, vol_series: pd.Series, vol_col: str,
     else:
         cbd = _get_custom_bd(asset.exchange)
         vol_df = pd.DataFrame(vol_series)
-        latest = vol_series.attrs['latest'].date() if isinstance(vol_series.attrs['latest'],
-                                                                 pd.Timestamp) else vol_series.attrs['latest']
+        latest = (
+            vol_series.attrs['latest'].date()
+            if isinstance(vol_series.attrs['latest'], pd.Timestamp)
+            else vol_series.attrs['latest']
+        )
         vol_df['calTimeToExp'] = vol_df.apply(lambda row: (row.name.date() - latest).days / DAYS_IN_YEAR, axis=1)
-        vol_df['timeToExp'] = vol_df.apply(lambda row: np.busday_count(latest, row.name.date(), weekmask=cbd.weekmask,
-                                                                       holidays=cbd.holidays) / 252, axis=1)
+        vol_df['timeToExp'] = vol_df.apply(
+            lambda row: np.busday_count(latest, row.name.date(), weekmask=cbd.weekmask, holidays=cbd.holidays) / 252,
+            axis=1,
+        )
         vol_df['multiplier'] = sqrt(vol_df['calTimeToExp'] / vol_df['timeToExp'])
         vol_df['fwdVol'] = sqrt(
-            (vol_df['timeToExp'] * (vol_df[vol_col] * vol_df['multiplier']) ** 2 -
-             vol_df['timeToExp'].shift(1) * (vol_df[vol_col].shift(1) * vol_df['multiplier'].shift(1)) ** 2) /
-            (vol_df['timeToExp'] - vol_df['timeToExp'].shift(1)))
-        ext_series = ExtendedSeries(vol_df['fwdVol'], name=series_name)[DataContext.current.start_date:
-                                                                        DataContext.current.end_date]
+            (
+                vol_df['timeToExp'] * (vol_df[vol_col] * vol_df['multiplier']) ** 2
+                - vol_df['timeToExp'].shift(1) * (vol_df[vol_col].shift(1) * vol_df['multiplier'].shift(1)) ** 2
+            )
+            / (vol_df['timeToExp'] - vol_df['timeToExp'].shift(1))
+        )
+        ext_series = ExtendedSeries(vol_df['fwdVol'], name=series_name)[
+            DataContext.current.start_date : DataContext.current.end_date
+        ]
         ext_series.index = _normalize_dtidx(ext_series.index)
         ext_series.dataset_ids = getattr(vol_series, 'dataset_ids', ())
         ext_series = ext_series.sort_index()
@@ -1847,9 +2144,16 @@ def _process_forward_vol_term(asset: Asset, vol_series: pd.Series, vol_col: str,
 
 
 @plot_measure((AssetClass.Equity, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY])
-def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real,
-                     pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
-                     request_id: Optional[str] = None) -> pd.Series:
+def forward_vol_term(
+    asset: Asset,
+    strike_reference: VolReference,
+    relative_strike: Real,
+    pricing_date: Optional[GENERIC_DATE] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Forward volatility term structure.
 
@@ -1862,8 +2166,15 @@ def forward_vol_term(asset: Asset, strike_reference: VolReference, relative_stri
     :param request_id: service request id, if any
     :return: forward volatility term structure
     """
-    vt = vol_term(asset=asset, strike_reference=strike_reference, relative_strike=relative_strike,
-                  pricing_date=pricing_date, source=source, real_time=real_time, request_id=request_id)
+    vt = vol_term(
+        asset=asset,
+        strike_reference=strike_reference,
+        relative_strike=relative_strike,
+        pricing_date=pricing_date,
+        source=source,
+        real_time=real_time,
+        request_id=request_id,
+    )
     series = _process_forward_vol_term(asset, vt, 'impliedVolatility', 'forwardVolTerm')
     return series
 
@@ -1904,8 +2215,9 @@ def _get_skew_strikes(asset: Asset, strike_reference: SkewReference, distance: R
     return q_strikes, buffer
 
 
-def _skew(df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes, normalization_mode: NormalizationMode) \
-        -> ExtendedSeries:
+def _skew(
+    df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes, normalization_mode: NormalizationMode
+) -> ExtendedSeries:
     """
     Calculates skew using the data in df and returns it as a series.
 
@@ -1921,8 +2233,11 @@ def _skew(df: MarketDataResponseFrame, relative_strike_col, iv_col, q_strikes, n
     if len(curves) < 3:
         raise MqValueError('Skew not available for given inputs')
     series = [curves[qs][iv_col] for qs in q_strikes]
-    ext_series = ((series[0] - series[1]) / series[2]) if normalization_mode == NormalizationMode.NORMALIZED \
+    ext_series = (
+        ((series[0] - series[1]) / series[2])
+        if normalization_mode == NormalizationMode.NORMALIZED
         else (series[0] - series[1])
+    )
     series = ExtendedSeries(ext_series)
     series.index = _normalize_dtidx(series.index)
     return series
@@ -1940,25 +2255,33 @@ def _skew_fetcher(asset_id, query_type, where, source, real_time, request_id=Non
     :param request_id: for debugging purposes
     """
     try:
-        q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source,
-                                              real_time=real_time)
+        q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source, real_time=real_time)
         log_debug(request_id, _logger, 'q %s', q)
         return _market_data_timed(q, request_id)
     except MqValueError as m:
         if allow_exception:
-            log_warning(request_id, _logger, "Ignoring expiry data fetching since there's no data for the given"
-                                             "asset")
+            log_warning(request_id, _logger, "Ignoring expiry data fetching since there's no data for the givenasset")
             return MarketDataResponseFrame()
         raise m
 
 
-@plot_measure((AssetClass.FX, AssetClass.Equity, AssetClass.Commod), None, [
-    MeasureDependency(id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)
-], asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
-def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
-              pricing_date: Optional[GENERIC_DATE] = None, normalization_mode: NormalizationMode = None,
-              *, source: str = None, real_time: bool = False,
-              request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.FX, AssetClass.Equity, AssetClass.Commod),
+    None,
+    [MeasureDependency(id_provider=cross_stored_direction_for_fx_vol, query_type=QueryType.IMPLIED_VOLATILITY)],
+    asset_type_excluded=(AssetType.CommodityNaturalGasHub,),
+)
+def skew_term(
+    asset: Asset,
+    strike_reference: SkewReference,
+    distance: Real,
+    pricing_date: Optional[GENERIC_DATE] = None,
+    normalization_mode: NormalizationMode = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Skew term structure. Uses most recent date available if pricing_date is not provided.
 
@@ -1999,11 +2322,24 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
 
     if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= dt.date.today()):  # intraday
         data_requests = [
-            partial(_get_latest_term_structure_data, asset_id, QueryType.IMPLIED_VOLATILITY, where=where,
-                    groupby=['tenor', 'relativeStrike'], source=source, request_id=request_id),
-            partial(_get_latest_term_structure_data, asset_id, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION,
-                    where=where, groupby=['expirationDate', 'relativeStrike'], source=source,
-                    request_id=request_id)
+            partial(
+                _get_latest_term_structure_data,
+                asset_id,
+                QueryType.IMPLIED_VOLATILITY,
+                where=where,
+                groupby=['tenor', 'relativeStrike'],
+                source=source,
+                request_id=request_id,
+            ),
+            partial(
+                _get_latest_term_structure_data,
+                asset_id,
+                QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION,
+                where=where,
+                groupby=['expirationDate', 'relativeStrike'],
+                source=source,
+                request_id=request_id,
+            ),
         ]
         df, df_expiry = ThreadPoolManager.run_async(data_requests)
         dataset_ids.update(getattr(df, 'dataset_ids', ()))
@@ -2011,11 +2347,23 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
 
     if df.empty and df_expiry.empty:  # historical
         data_requests = [
-            partial(get_df_with_retries, partial(_skew_fetcher, asset_id, QueryType.IMPLIED_VOLATILITY, where, source,
-                                                 real_time, request_id), start_date=start, end_date=end,
-                    exchange=asset.exchange),
-            partial(_skew_fetcher, asset_id, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION,
-                    where, source, real_time, request_id, allow_exception=True)
+            partial(
+                get_df_with_retries,
+                partial(_skew_fetcher, asset_id, QueryType.IMPLIED_VOLATILITY, where, source, real_time, request_id),
+                start_date=start,
+                end_date=end,
+                exchange=asset.exchange,
+            ),
+            partial(
+                _skew_fetcher,
+                asset_id,
+                QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION,
+                where,
+                source,
+                real_time,
+                request_id,
+                allow_exception=True,
+            ),
         ]
         df, df_expiry = ThreadPoolManager.run_async(data_requests)
 
@@ -2034,31 +2382,46 @@ def skew_term(asset: Asset, strike_reference: SkewReference, distance: Real,
         df = df.loc[p_date]
         df.index = pd.DatetimeIndex(df.index) if not isinstance(df.index, pd.DatetimeIndex) else df.index
         df.index = pd.DatetimeIndex(
-            [RelativeDate(df['tenor'].iloc[i], df.index.date[i]).apply_rule(exchange=asset.exchange)
-             for i in range(len(df))])
+            [
+                RelativeDate(df['tenor'].iloc[i], df.index.date[i]).apply_rule(exchange=asset.exchange)
+                for i in range(len(df))
+            ]
+        )
         series = _skew(df, 'relativeStrike', 'impliedVolatility', q_strikes, normalization_mode)
 
     # Add additional data from expiry DF
     if not df_expiry.empty:
         df_expiry = df_expiry.loc[p_date]
         df_expiry.index = df_expiry['expirationDate']
-        series_expiry = _skew(df_expiry, 'relativeStrike', 'impliedVolatilityByExpiration', q_strikes,
-                              normalization_mode)
+        series_expiry = _skew(
+            df_expiry, 'relativeStrike', 'impliedVolatilityByExpiration', q_strikes, normalization_mode
+        )
         series_expiry = series_expiry[~series_expiry.index.isin(series.index)]
         series = pd.concat([series, series_expiry])
 
     series.name = "impliedVolatility"
     series = series.sort_index()
-    series = ExtendedSeries(series.loc[DataContext.current.start_date: DataContext.current.end_date])
+    series = ExtendedSeries(series.loc[DataContext.current.start_date : DataContext.current.end_date])
     series.dataset_ids = tuple(dataset_ids)
     return series
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod, AssetClass.FX), None, [QueryType.IMPLIED_VOLATILITY],
-              asset_type_excluded=(AssetType.CommodityNaturalGasHub,))
-def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real,
-             pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
-             request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity, AssetClass.Commod, AssetClass.FX),
+    None,
+    [QueryType.IMPLIED_VOLATILITY],
+    asset_type_excluded=(AssetType.CommodityNaturalGasHub,),
+)
+def vol_term(
+    asset: Asset,
+    strike_reference: VolReference,
+    relative_strike: Real,
+    pricing_date: Optional[GENERIC_DATE] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility term structure. Defaults to use the most recent date with live data if available. A specific pricing_date
     can also be provided.
@@ -2093,23 +2456,31 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
     today = dt.date.today()
     if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # use intraday data
         df = _get_latest_term_structure_data(asset_id, QueryType.IMPLIED_VOLATILITY, where, 'tenor', source, request_id)
-        df_expiry = _get_latest_term_structure_data(asset_id, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION, where,
-                                                    'expirationDate', source, request_id)
+        df_expiry = _get_latest_term_structure_data(
+            asset_id, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION, where, 'expirationDate', source, request_id
+        )
         dataset_ids.update(getattr(df, 'dataset_ids', ()))
         dataset_ids.update(getattr(df_expiry, 'dataset_ids', ()))
 
     if df.empty and df_expiry.empty:
+
         def fetcher(query_type):
-            q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source,
-                                                  real_time=real_time)
+            q = GsDataApi.build_market_data_query(
+                [asset_id], query_type, where=where, source=source, real_time=real_time
+            )
             log_debug(request_id, _logger, 'q %s', q)
             return _market_data_timed(q, request_id)
 
-        df = get_df_with_retries(partial(fetcher, QueryType.IMPLIED_VOLATILITY), start_date=start, end_date=end,
-                                 exchange=asset.exchange)
+        df = get_df_with_retries(
+            partial(fetcher, QueryType.IMPLIED_VOLATILITY), start_date=start, end_date=end, exchange=asset.exchange
+        )
         try:
-            df_expiry = get_df_with_retries(partial(fetcher, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION),
-                                            start_date=start, end_date=end, exchange=asset.exchange)
+            df_expiry = get_df_with_retries(
+                partial(fetcher, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION),
+                start_date=start,
+                end_date=end,
+                exchange=asset.exchange,
+            )
         except MqValueError:
             log_warning(request_id, _logger, "Ignoring expiry data fetching since there's no data for the given asset")
             pass  # Allow to fail since it's not required to compute end result
@@ -2144,7 +2515,7 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
 
     series.name = "impliedVolatility"
     series = series.sort_index()
-    series = series.loc[DataContext.current.start_date: DataContext.current.end_date]
+    series = series.loc[DataContext.current.start_date : DataContext.current.end_date]
     series = ExtendedSeries(series)
     series.attrs = dict(latest=latest)
     series.dataset_ids = tuple(dataset_ids)
@@ -2152,9 +2523,16 @@ def vol_term(asset: Asset, strike_reference: VolReference, relative_strike: Real
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.IMPLIED_VOLATILITY])
-def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
-              pricing_date: Optional[GENERIC_DATE] = None,
-              *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def vol_smile(
+    asset: Asset,
+    tenor: str,
+    strike_reference: VolSmileReference,
+    pricing_date: Optional[GENERIC_DATE] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Volatility smile of an asset implied by observations of market prices.
 
@@ -2179,7 +2557,7 @@ def vol_smile(asset: Asset, tenor: str, strike_reference: VolSmileReference,
             QueryType.IMPLIED_VOLATILITY,
             where=dict(tenor=tenor, strikeReference=strike_reference.value),
             source=source,
-            real_time=real_time
+            real_time=real_time,
         )
         log_debug(request_id, _logger, 'q %s', q)
         return _market_data_timed(q, request_id)
@@ -2211,8 +2589,14 @@ def measure_request_safe(parent_fn_name, asset, fn, request_id, *args, **kwargs)
 
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.FORWARD])
-def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None, real_time: bool = False,
-             request_id: Optional[str] = None) -> pd.Series:
+def fwd_term(
+    asset: Asset,
+    pricing_date: Optional[GENERIC_DATE] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Forward term structure. Uses most recent date available if pricing_date is not provided. If pricing_date falls on
     a weekend or holiday, uses the previous business day as pricing date.
@@ -2236,8 +2620,7 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
     start = start + cbd - cbd  # get previous business day's pricing if start, end on a non-BD
     with DataContext(start, end):
-        q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source,
-                                              real_time=real_time)
+        q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source, real_time=real_time)
         log_debug(request_id, _logger, 'q %s', q)
         df = measure_request_safe('fwd_term', asset, _market_data_timed, request_id, q, request_id)
     dataset_ids = getattr(df, 'dataset_ids', ())
@@ -2251,16 +2634,22 @@ def fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, sourc
         df = df.set_index('expirationDate')
         df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
-        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[forward_col_name])
     series.dataset_ids = dataset_ids
     return series
 
 
 @plot_measure((AssetClass.FX,), None, [QueryType.SPOT, QueryType.FORWARD_POINT], display_name='fwd_term')
-def fx_fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
-                fwd_type: FXForwardType = FXForwardType.OUTRIGHT, *, source: str = None, real_time: bool = False,
-                request_id: Optional[str] = None) -> pd.Series:
+def fx_fwd_term(
+    asset: Asset,
+    pricing_date: Optional[GENERIC_DATE] = None,
+    fwd_type: FXForwardType = FXForwardType.OUTRIGHT,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Forward term structure. Uses most recent date available if pricing_date is not provided. If pricing_date falls on
     a weekend or holiday, uses the previous business day as pricing date.
@@ -2289,15 +2678,18 @@ def fx_fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
     start = start + cbd - cbd  # get previous business day's pricing if start, end on a non-BD
     dataset_ids = set()
     with DataContext(start, end):
-        q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source,
-                                              real_time=real_time)
+        q = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source, real_time=real_time)
         if get_spot:  # Add in spot data for FX outright mode
-            q_spot = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT, where={}, source=source,
-                                                       real_time=real_time)
-            data_requests = [partial(_market_data_timed, q, request_id),
-                             partial(_market_data_timed, q_spot, request_id)]
-            df, spot_df = measure_request_safe('fwd_term', asset, ThreadPoolManager.run_async, request_id,
-                                               data_requests)
+            q_spot = GsDataApi.build_market_data_query(
+                [asset_id], QueryType.SPOT, where={}, source=source, real_time=real_time
+            )
+            data_requests = [
+                partial(_market_data_timed, q, request_id),
+                partial(_market_data_timed, q_spot, request_id),
+            ]
+            df, spot_df = measure_request_safe(
+                'fwd_term', asset, ThreadPoolManager.run_async, request_id, data_requests
+            )
             dataset_ids.update(getattr(df, 'dataset_ids', ()) + getattr(spot_df, 'dataset_ids', ()))
         else:
             log_debug(request_id, _logger, 'q %s', q)
@@ -2314,7 +2706,7 @@ def fx_fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
         df = df.set_index('expirationDate')
         df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
-        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
         if get_spot:
             spot = spot_df.loc[latest]['spot']
             df[forward_col_name] = df[forward_col_name] + spot
@@ -2324,9 +2716,15 @@ def fx_fwd_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
 
 
 @plot_measure((AssetClass.FX,), None, [QueryType.FORWARD_POINT, QueryType.SPOT])
-def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
-               annualized: FXSpotCarry = FXSpotCarry.ANNUALIZED, *, source: str = None,
-               real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def carry_term(
+    asset: Asset,
+    pricing_date: Optional[GENERIC_DATE] = None,
+    annualized: FXSpotCarry = FXSpotCarry.ANNUALIZED,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Carry term structure. Uses most recent date available if pricing_date is not provided. If pricing_date falls on
     a weekend or holiday, uses the previous business day as pricing date.
@@ -2352,14 +2750,14 @@ def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
     start, end = _range_from_pricing_date(asset.exchange, pricing_date)
     start = start + cbd - cbd  # get previous business day's pricing if start, end on a non-BD
     with DataContext(start, end):
-        q = GsDataApi.build_market_data_query([asset_id], QueryType.FORWARD_POINT, where={}, source=source,
-                                              real_time=real_time)
+        q = GsDataApi.build_market_data_query(
+            [asset_id], QueryType.FORWARD_POINT, where={}, source=source, real_time=real_time
+        )
         # setting pricing location as NYC as we have forward points only for NYC close
-        q_spot = GsDataApi.build_market_data_query([asset_id], QueryType.SPOT, where={'pricingLocation': 'NYC'},
-                                                   source=source,
-                                                   real_time=real_time)
-        data_requests = [partial(_market_data_timed, q, request_id),
-                         partial(_market_data_timed, q_spot, request_id)]
+        q_spot = GsDataApi.build_market_data_query(
+            [asset_id], QueryType.SPOT, where={'pricingLocation': 'NYC'}, source=source, real_time=real_time
+        )
+        data_requests = [partial(_market_data_timed, q, request_id), partial(_market_data_timed, q_spot, request_id)]
         df, spot_df = measure_request_safe('fwd_term', asset, ThreadPoolManager.run_async, request_id, data_requests)
     dataset_ids = set(getattr(df, 'dataset_ids', ()) + getattr(spot_df, 'dataset_ids', ()))
     if df.empty:
@@ -2373,7 +2771,7 @@ def carry_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None,
         df = df.set_index('expirationDate')
         df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
-        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
         spot = spot_df.loc[latest]['spot']
 
         if annualized == FXSpotCarry.ANNUALIZED:
@@ -2403,8 +2801,14 @@ def _var_swap_tenors(asset: Asset, request_id=None):
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.VAR_SWAP])
-def forward_var_term(asset: Asset, pricing_date: Optional[GENERIC_DATE] = None, *, source: str = None,
-                     real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def forward_var_term(
+    asset: Asset,
+    pricing_date: Optional[GENERIC_DATE] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Forward variance swap term structure.
 
@@ -2424,8 +2828,9 @@ def _get_latest_term_structure_data(asset_id, query_type, where, groupby, source
     today = dt.date.today()
     query_end = today + dt.timedelta(days=1)
     with DataContext(today, query_end):
-        q_l = GsDataApi.build_market_data_query([asset_id], query_type, where=where, source=source, real_time=True,
-                                                measure='Last')
+        q_l = GsDataApi.build_market_data_query(
+            [asset_id], query_type, where=where, source=source, real_time=True, measure='Last'
+        )
 
     log_debug(request_id, _logger, 'q_l %s', q_l)
     df_l = _market_data_timed(q_l, request_id)
@@ -2453,8 +2858,15 @@ def _get_latest_term_structure_data(asset_id, query_type, where, groupby, source
 
 
 @plot_measure((AssetClass.Equity, AssetClass.Commod), None, [QueryType.VAR_SWAP])
-def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_date: Optional[str] = None,
-             *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def var_term(
+    asset: Asset,
+    pricing_date: Optional[str] = None,
+    forward_start_date: Optional[str] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Variance swap term structure. Uses most recent date available if pricing_date is not provided.
 
@@ -2503,8 +2915,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
 
         if df.empty:
             with DataContext(start, end):
-                q = GsDataApi.build_market_data_query([asset_id], QueryType.VAR_SWAP, source=source,
-                                                      real_time=False)
+                q = GsDataApi.build_market_data_query([asset_id], QueryType.VAR_SWAP, source=source, real_time=False)
             log_debug(request_id, _logger, 'q %s', q)
             df = _market_data_timed(q, request_id)
             dataset_ids.update(getattr(df, 'dataset_ids', ()))
@@ -2520,7 +2931,7 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
         df = df.set_index(Fields.EXPIRATION_DATE.value)
         df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
-        df = df.loc[DataContext.current.start_date: DataContext.current.end_date]
+        df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
         series.attrs = dict(latest=latest)
 
@@ -2530,8 +2941,9 @@ def var_term(asset: Asset, pricing_date: Optional[str] = None, forward_start_dat
 
 def _get_var_swap_df(asset: Asset, where, source, real_time):
     ids = []
-    q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
-                                          where=where, source=source, real_time=real_time)
+    q = GsDataApi.build_market_data_query(
+        [asset.get_marquee_id()], QueryType.VAR_SWAP, where=where, source=source, real_time=real_time
+    )
     _logger.debug('q %s', q)
     result = _market_data_timed(q)
     ids.extend(getattr(result, 'dataset_ids', tuple()))
@@ -2543,8 +2955,14 @@ def _get_var_swap_df(asset: Asset, where, source, real_time):
         with DataContext(now - delta, now + delta):
             net = {"queries": []}
             for wl in where_list:
-                qp = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.VAR_SWAP,
-                                                       where=wl, source=source, real_time=True, measure='Last')
+                qp = GsDataApi.build_market_data_query(
+                    [asset.get_marquee_id()],
+                    QueryType.VAR_SWAP,
+                    where=wl,
+                    source=source,
+                    real_time=True,
+                    measure='Last',
+                )
                 net["queries"].extend(qp["queries"])
         _logger.debug('last q %s', net)
 
@@ -2565,9 +2983,17 @@ def _get_var_swap_df(asset: Asset, where, source, real_time):
     return result
 
 
-@plot_measure((AssetClass.Equity, AssetClass.Commod,), None, [QueryType.VAR_SWAP])
-def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
-             *, source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (
+        AssetClass.Equity,
+        AssetClass.Commod,
+    ),
+    None,
+    [QueryType.VAR_SWAP],
+)
+def var_swap(
+    asset: Asset, tenor: str, forward_start_date: Optional[str] = None, *, source: str = None, real_time: bool = False
+) -> pd.Series:
     """
     Strike such that the price of an uncapped variance swap on the underlying index is zero at inception. If
     forward start date is provided, then the result is a forward starting variance swap.
@@ -2619,7 +3045,7 @@ def var_swap(asset: Asset, tenor: str, forward_start_date: Optional[str] = None,
                 series = ExtendedSeries(dtype=float)
                 series.dataset_ids = ()
                 return series
-            series = ExtendedSeries(sqrt((z * zg ** 2 - y * yg ** 2) / x))
+            series = ExtendedSeries(sqrt((z * zg**2 - y * yg**2) / x))
         series.dataset_ids = dataset_ids
         return series
 
@@ -2646,8 +3072,11 @@ def _get_iso_data(region: str):
 def _get_qbt_mapping(bucket, region):
     # Finds combo bucket for power by mapping of the quantity bucket
     weekend_offpeak = "SUH1X16" if region == 'CAISO' else "2X16H"
-    QBT_mapping = {"OFFPEAK": [weekend_offpeak, "7X8"], "7X16": ["PEAK", weekend_offpeak],
-                   "7X24": ["PEAK", "7X8", weekend_offpeak]}
+    QBT_mapping = {
+        "OFFPEAK": [weekend_offpeak, "7X8"],
+        "7X16": ["PEAK", weekend_offpeak],
+        "7X24": ["PEAK", "7X8", weekend_offpeak],
+    }
     return QBT_mapping[bucket.upper()] if bucket.upper() in QBT_mapping else [bucket.upper()]
 
 
@@ -2684,21 +3113,32 @@ def _filter_by_bucket(df, bucket, holidays, region):
         pass
     # offpeak: 11pm-7am & weekend & holiday
     elif bucket.lower() == 'offpeak':
-        df = df.loc[df['date'].isin(holidays) |
-                    df['day'].isin(weekends) |
-                    (~df['date'].isin(holidays) & ~df['day'].isin(weekends) &
-                     ((df['hour'] < peak_start) | (df['hour'] > peak_end - 1)))]
+        df = df.loc[
+            df['date'].isin(holidays)
+            | df['day'].isin(weekends)
+            | (
+                ~df['date'].isin(holidays)
+                & ~df['day'].isin(weekends)
+                & ((df['hour'] < peak_start) | (df['hour'] > peak_end - 1))
+            )
+        ]
     # peak: 7am to 11pm on weekdays
     elif bucket.lower() == 'peak':
-        df = df.loc[(~df['date'].isin(holidays)) & (~df['day'].isin(weekends)) & (df['hour'] > peak_start - 1) &
-                    (df['hour'] < peak_end)]
+        df = df.loc[
+            (~df['date'].isin(holidays))
+            & (~df['day'].isin(weekends))
+            & (df['hour'] > peak_start - 1)
+            & (df['hour'] < peak_end)
+        ]
     # 7x8: 11pm to 7am
     elif bucket.lower() == '7x8':
         df = df.loc[(df['hour'] < peak_start) | (df['hour'] > peak_end - 1)]
     # 2x16h: weekends & holidays
     elif bucket.lower() == '2x16h' or bucket.lower() == 'suh1x16':
-        df = df.loc[((df['date'].isin(holidays)) | df['day'].isin(weekends)) & ((df['hour'] > peak_start - 1) &
-                                                                                (df['hour'] < peak_end))]
+        df = df.loc[
+            ((df['date'].isin(holidays)) | df['day'].isin(weekends))
+            & ((df['hour'] > peak_start - 1) & (df['hour'] < peak_end))
+        ]
     else:
         raise MqValueError('Invalid bucket: ' + bucket + '. Expected Value: peak, offpeak, 7x24, 7x8, 2x16h.')
     return df
@@ -2730,7 +3170,8 @@ def _string_to_date_interval(interval: str):
         else:
             return "Invalid month"
     elif (len(interval) == 2 + len(YS) and interval.isdigit()) or (
-            interval.casefold().startswith("Cal".casefold()) and len(interval) == 3 + len(YS)):
+        interval.casefold().startswith("Cal".casefold()) and len(interval) == 3 + len(YS)
+    ):
         start_date = dt.date(year, 1, 1)
         end_date = dt.date(year, 12, 31)
     elif len(interval) == 2 + len(YS):
@@ -2740,7 +3181,7 @@ def _string_to_date_interval(interval: str):
             return "Invalid num"
         if interval[1].upper() == "Q":
             if 1 <= num <= 4:
-                start_date = (start_year + relativedelta(months=+(3 * (num - 1))))
+                start_date = start_year + relativedelta(months=+(3 * (num - 1)))
                 end_date = start_year + relativedelta(months=+(3 * num), days=-1)
             else:
                 return "Invalid Quarter"
@@ -2751,7 +3192,7 @@ def _string_to_date_interval(interval: str):
             else:
                 return "Invalid Half Year"
     elif len(interval) >= 3 + len(YS):
-        left = interval[0:len(interval) - len(YS)]
+        left = interval[0 : len(interval) - len(YS)]
         if left.isalpha():
             if left in calendar.month_name:
                 month_index = {v: k for k, v in enumerate(calendar.month_name)}[left]
@@ -2832,10 +3273,9 @@ def _weighted_average_valuation_curve_for_calendar_strip(asset, contract_range, 
     where = dict(contract=contracts_to_query)
 
     with DataContext(start, end):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], query_type,
-                                              where=where,
-                                              source=None,
-                                              real_time=False)
+        q = GsDataApi.build_market_data_query(
+            [asset.get_marquee_id()], query_type, where=where, source=None, real_time=False
+        )
         data = _market_data_timed(q)
         dataset_ids = getattr(data, 'dataset_ids', ())
 
@@ -2849,8 +3289,9 @@ def _weighted_average_valuation_curve_for_calendar_strip(asset, contract_range, 
 
 
 @plot_measure((AssetClass.Commod,), None, [QueryType.FAIR_PRICE])
-def fair_price(asset: Asset, tenor: str = None, *,
-               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def fair_price(
+    asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
     """'
     Fair Price for Swap Instrument
 
@@ -2870,8 +3311,7 @@ def fair_price(asset: Asset, tenor: str = None, *,
         return _weighted_average_valuation_curve_for_calendar_strip(asset, tenor, QueryType.FAIR_PRICE, "fairPrice")
 
     asset_id = asset.get_marquee_id()
-    q = GsDataApi.build_market_data_query([asset_id], QueryType.FAIR_PRICE, source=source,
-                                          real_time=real_time)
+    q = GsDataApi.build_market_data_query([asset_id], QueryType.FAIR_PRICE, source=source, real_time=real_time)
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
     series = _extract_series_from_df(df, QueryType.FAIR_PRICE)
@@ -2901,8 +3341,9 @@ def get_weights_for_contracts(contract_range: str) -> dict:
     return weights
 
 
-def _forward_price_natgas(asset: Asset, price_method: str = 'GDD',
-                          contract_range: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
+def _forward_price_natgas(
+    asset: Asset, price_method: str = 'GDD', contract_range: str = None, *, source: str = None, real_time: bool = False
+) -> pd.Series:
     """'
     US NG Forward Price
 
@@ -2920,10 +3361,9 @@ def _forward_price_natgas(asset: Asset, price_method: str = 'GDD',
     start, end = DataContext.current.start_date, DataContext.current.end_date
     where = dict(contract=contracts_to_query, priceMethod=price_method.upper())
     with DataContext(start, end):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
-                                              where=where,
-                                              source=source,
-                                              real_time=False)
+        q = GsDataApi.build_market_data_query(
+            [asset.get_marquee_id()], QueryType.FORWARD_PRICE, where=where, source=source, real_time=False
+        )
         _logger.debug('q %s', q)
         data = _market_data_timed(q)
         dataset_ids = getattr(data, 'dataset_ids', ())
@@ -2938,18 +3378,25 @@ def _forward_price_natgas(asset: Asset, price_method: str = 'GDD',
     return result
 
 
-def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
-                        contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
+def _forward_price_elec(
+    asset: Asset,
+    price_method: str = 'LMP',
+    bucket: str = 'PEAK',
+    contract_range: str = 'F20',
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.Series:
     """
-        Us Power Forward Prices
+    Us Power Forward Prices
 
-        :param asset: asset object loaded from security master
-        :param price_method: price method between LMP, MCP, SPP, Physical: Default value = LMP
-        :param bucket: bucket type among '7x24', 'peak', 'offpeak', '2x16h', '7x16' and '7x8': Default value = 7x24
-        :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
-        :param source: name of function caller: default source = None
-        :param real_time: whether to retrieve intraday data instead of EOD: default value = False
-        :return: Us Power Forward Prices
+    :param asset: asset object loaded from security master
+    :param price_method: price method between LMP, MCP, SPP, Physical: Default value = LMP
+    :param bucket: bucket type among '7x24', 'peak', 'offpeak', '2x16h', '7x16' and '7x8': Default value = 7x24
+    :param contract_range: e.g. inputs - 'Cal20', 'F20-G20', '2Q20', '2H20', 'Cal20-Cal21': Default Value = F20
+    :param source: name of function caller: default source = None
+    :param real_time: whether to retrieve intraday data instead of EOD: default value = False
+    :return: Us Power Forward Prices
     """
 
     (start_contract_range, end_contract_range) = _get_start_and_end_dates(contract_range=contract_range)
@@ -2962,10 +3409,11 @@ def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = '
 
     where = dict(priceMethod=price_method.upper(), quantityBucket=quantitybuckets_to_query, contract=contracts_to_query)
     with DataContext(start, end):
+
         def _query_fwd(asset_, where_, source_=None):
-            q = GsDataApi.build_market_data_query([asset_.get_marquee_id()], QueryType.FORWARD_PRICE,
-                                                  where=where_, source=source_,
-                                                  real_time=False)
+            q = GsDataApi.build_market_data_query(
+                [asset_.get_marquee_id()], QueryType.FORWARD_PRICE, where=where_, source=source_, real_time=False
+            )
             _logger.debug('q %s', q)
             return _market_data_timed(q)
 
@@ -2988,10 +3436,24 @@ def _forward_price_elec(asset: Asset, price_method: str = 'LMP', bucket: str = '
     return result
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
-                                     AssetType.CommodityPowerNode,), [QueryType.FORWARD_PRICE], )
-def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
-                  contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.Commod,),
+    (
+        AssetType.Index,
+        AssetType.CommodityPowerAggregatedNodes,
+        AssetType.CommodityPowerNode,
+    ),
+    [QueryType.FORWARD_PRICE],
+)
+def forward_price(
+    asset: Asset,
+    price_method: str = 'LMP',
+    bucket: str = 'PEAK',
+    contract_range: str = 'F20',
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.Series:
     """
     Forward Prices
 
@@ -3010,10 +3472,24 @@ def forward_price(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
     return _forward_price_elec(asset, price_method, bucket, contract_range, source=source)
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
-                                     AssetType.CommodityPowerNode,), [QueryType.IMPLIED_VOLATILITY])
-def implied_volatility_elec(asset: Asset, price_method: str = 'LMP', bucket: str = 'PEAK',
-                            contract_range: str = 'F20', *, source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.Commod,),
+    (
+        AssetType.Index,
+        AssetType.CommodityPowerAggregatedNodes,
+        AssetType.CommodityPowerNode,
+    ),
+    [QueryType.IMPLIED_VOLATILITY],
+)
+def implied_volatility_elec(
+    asset: Asset,
+    price_method: str = 'LMP',
+    bucket: str = 'PEAK',
+    contract_range: str = 'F20',
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.Series:
     """
     Implied Volatility
 
@@ -3069,11 +3545,15 @@ def eu_ng_hub_to_swap(asset_spec: ASSET_SPEC) -> str:
     return result_id
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub, AssetType.CommodityEUNaturalGasHub),
-              [MeasureDependency(id_provider=eu_ng_hub_to_swap, query_type=QueryType.FORWARD_PRICE)],
-              display_name='forward_price')
-def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None,
-                     real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.Commod,),
+    (AssetType.CommodityNaturalGasHub, AssetType.CommodityEUNaturalGasHub),
+    [MeasureDependency(id_provider=eu_ng_hub_to_swap, query_type=QueryType.FORWARD_PRICE)],
+    display_name='forward_price',
+)
+def forward_price_ng(
+    asset: Asset, contract_range: str = 'F20', price_method: str = 'GDD', *, source: str = None, real_time: bool = False
+) -> pd.Series:
     """
     Forward Prices
 
@@ -3087,9 +3567,9 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
     if real_time:
         raise MqValueError('Use daily frequency instead of intraday')
 
-    if (asset.get_type() == SecAssetType.COMMODITY_NATURAL_GAS_HUB):
+    if asset.get_type() == SecAssetType.COMMODITY_NATURAL_GAS_HUB:
         return _forward_price_natgas(asset, price_method, contract_range, source=source)
-    if (asset.get_type() == SecAssetType.COMMODITY_EU_NATURAL_GAS_HUB):
+    if asset.get_type() == SecAssetType.COMMODITY_EU_NATURAL_GAS_HUB:
         # If no currency mentioned, defaults to GDD from parent method
         if price_method == 'GDD':
             price_method = 'ICE'
@@ -3100,15 +3580,17 @@ def forward_price_ng(asset: Asset, contract_range: str = 'F20', price_method: st
 
 def get_contract_range(start_contract_range, end_contract_range, timezone):
     if timezone:
-        df = pd.date_range(start_contract_range, end_contract_range + dt.timedelta(days=1), None, 'h',
-                           timezone, False, None, 'left').to_frame()
+        df = pd.date_range(
+            start_contract_range, end_contract_range + dt.timedelta(days=1), None, 'h', timezone, False, None, 'left'
+        ).to_frame()
 
         df['hour'] = df.index.hour
         df['day'] = df.index.dayofweek
     else:
-        df = pd.date_range(start=start_contract_range,
-                           end=end_contract_range,
-                           ).to_frame()
+        df = pd.date_range(
+            start=start_contract_range,
+            end=end_contract_range,
+        ).to_frame()
 
     df['date'] = df.index.date
     df['month'] = df.index.month - 1
@@ -3118,11 +3600,25 @@ def get_contract_range(start_contract_range, end_contract_range, timezone):
     return df
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
-                                     AssetType.CommodityPowerNode,), [QueryType.PRICE])
-def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
-                    granularity: str = 'daily', *, source: str = None, real_time: bool = False,
-                    request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Commod,),
+    (
+        AssetType.Index,
+        AssetType.CommodityPowerAggregatedNodes,
+        AssetType.CommodityPowerNode,
+    ),
+    [QueryType.PRICE],
+)
+def bucketize_price(
+    asset: Asset,
+    price_method: str,
+    bucket: str = '7x24',
+    granularity: str = 'daily',
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """'
     Bucketized COMMOD_US_ELEC_ENERGY_PRICES
 
@@ -3160,16 +3656,16 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
     # in local time and then converted to UTC time
     # End time is constructed by combining end date with 23:59:59 timestamp
     # in local time and then converted to UTC time
-    start_time = dt.datetime.combine(start_date, dt.datetime.min.time(), tzinfo=from_zone) \
-        .astimezone(to_zone)
+    start_time = dt.datetime.combine(start_date, dt.datetime.min.time(), tzinfo=from_zone).astimezone(to_zone)
     end_time = dt.datetime.combine(end_date, dt.datetime.max.time(), tzinfo=from_zone).astimezone(to_zone)
 
     where = dict(priceMethod=price_method.upper())
     with DataContext(start_time, end_time):
+
         def _query_prices(asset_, where_):
-            q = GsDataApi.build_market_data_query([asset_.get_marquee_id()], QueryType.PRICE, where=where_,
-                                                  source=source,
-                                                  real_time=True)
+            q = GsDataApi.build_market_data_query(
+                [asset_.get_marquee_id()], QueryType.PRICE, where=where_, source=source, real_time=True
+            )
             log_debug(request_id, _logger, 'q %s', q)
             return _market_data_timed(q, request_id)
 
@@ -3199,8 +3695,9 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         if freq == 0:
             raise MqValueError('Duplicate data rows probable for this period')
         # checking missing data points
-        ref_hour_range = pd.date_range(str(start_date), str(end_date + dt.timedelta(days=1)),
-                                       None, str(freq) + "s", timezone, False, None, 'left')
+        ref_hour_range = pd.date_range(
+            str(start_date), str(end_date + dt.timedelta(days=1)), None, str(freq) + "s", timezone, False, None, 'left'
+        )
 
         missing_hours = ref_hour_range[~ref_hour_range.isin(df.index)]
         missing_dates = np.unique(missing_hours.date)
@@ -3214,7 +3711,7 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
         df = _filter_by_bucket(df, bucket, holidays, region)
         df = df['price'].resample(granularity).mean()
         df.index = df.index.date
-        df = df.loc[start_date: end_date]
+        df = df.loc[start_date:end_date]
         series = ExtendedSeries(df)
 
     series.dataset_ids = dataset_ids
@@ -3222,8 +3719,15 @@ def bucketize_price(asset: Asset, price_method: str, bucket: str = '7x24',
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def dividend_yield(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Dividend Yield of the single stock or the asset-weighted average of dividend yields of a composite's underliers.
 
@@ -3254,7 +3758,7 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3263,12 +3767,20 @@ def dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetri
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket, AssetType.Equity_Basket,
-               AssetType.ETF, AssetType.Index),
-              [QueryType.FUNDAMENTAL_METRIC])
-def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
-                       source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (AssetType.Research_Basket, AssetType.Custom_Basket, AssetType.Equity_Basket, AssetType.ETF, AssetType.Index),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def earnings_per_share(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Earnings Per Share (EPS) of the single stock or the asset-weighted average EPS  of a composite's underliers.
 
@@ -3299,7 +3811,7 @@ def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalM
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3309,9 +3821,15 @@ def earnings_per_share(asset: Asset, period: str, period_direction: FundamentalM
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def earnings_per_share_positive(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection, *,
-                                source: str = None, real_time: bool = False,
-                                request_id: Optional[str] = None) -> pd.Series:
+def earnings_per_share_positive(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Earnings Per Share Positive of the single stock or the asset-weighted average EPSP of a composite's underliers.
 
@@ -3342,7 +3860,7 @@ def earnings_per_share_positive(asset: Asset, period: str, period_direction: Fun
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3352,10 +3870,15 @@ def earnings_per_share_positive(asset: Asset, period: str, period_direction: Fun
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def net_debt_to_ebitda(asset: Asset,
-                       period: str,
-                       period_direction: FundamentalMetricPeriodDirection,
-                       *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def net_debt_to_ebitda(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Net Debt to EBITDA of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3386,7 +3909,7 @@ def net_debt_to_ebitda(asset: Asset,
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3396,8 +3919,15 @@ def net_debt_to_ebitda(asset: Asset,
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                  *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def price_to_book(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Price to Book of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3428,7 +3958,7 @@ def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetric
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3438,8 +3968,15 @@ def price_to_book(asset: Asset, period: str, period_direction: FundamentalMetric
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                  *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def price_to_cash(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Price to Cash of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3470,7 +4007,7 @@ def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetric
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3480,8 +4017,15 @@ def price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetric
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                      *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def price_to_earnings(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Price to Earnings of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3512,7 +4056,7 @@ def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMe
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3522,11 +4066,15 @@ def price_to_earnings(asset: Asset, period: str, period_direction: FundamentalMe
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_earnings_positive(asset: Asset,
-                               period: str,
-                               period_direction: FundamentalMetricPeriodDirection,
-                               *, source: str = None, real_time: bool = False,
-                               request_id: Optional[str] = None) -> pd.Series:
+def price_to_earnings_positive(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Price to Earnings Positive of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3557,7 +4105,7 @@ def price_to_earnings_positive(asset: Asset,
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3567,9 +4115,15 @@ def price_to_earnings_positive(asset: Asset,
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_earnings_positive_exclusive(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                                         *, source: str = None, real_time: bool = False,
-                                         request_id: Optional[str] = None) -> pd.Series:
+def price_to_earnings_positive_exclusive(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Price to Earnings Positive of the single stock or the asset-weighted average value of a composite's underliers
     excluding negative EPS stocks.
@@ -3600,8 +4154,15 @@ def price_to_earnings_positive_exclusive(asset: Asset, period: str, period_direc
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def price_to_sales(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Price to Sales of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3632,7 +4193,7 @@ def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetri
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3642,8 +4203,15 @@ def price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetri
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                     *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def return_on_equity(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Return on Equity of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3674,7 +4242,7 @@ def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMet
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3684,8 +4252,15 @@ def return_on_equity(asset: Asset, period: str, period_direction: FundamentalMet
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.FUNDAMENTAL_METRIC])
-def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                    *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def sales_per_share(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Sales per Share of the single stock or the asset-weighted average value of a composite's underliers.
 
@@ -3716,7 +4291,7 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
         QueryType.FUNDAMENTAL_METRIC,
         where=dict(metric=metric, period=period, periodDirection=period_direction.value),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
 
     q['queries'][0]['vendor'] = 'Goldman Sachs'
@@ -3725,12 +4300,23 @@ def sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetr
     return _extract_series_from_df(df, QueryType.FUNDAMENTAL_METRIC)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_dividend_yield(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                                        *, source: str = None, real_time: bool = False,
-                                        request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_dividend_yield(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Dividend Yield of the asset-weighted average of dividend yields of a composite's underliers.
 
@@ -3752,8 +4338,9 @@ def current_constituents_dividend_yield(asset: Asset, period: str, period_direct
         raise NotImplementedError('real-time current_constituents_dividend_yield not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_dividend_yield not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_dividend_yield not implemented for this basket. Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_DIVIDEND_YIELD.value
@@ -3763,13 +4350,23 @@ def current_constituents_dividend_yield(asset: Asset, period: str, period_direct
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_earnings_per_share(asset: Asset, period: str,
-                                            period_direction: FundamentalMetricPeriodDirection, *,
-                                            source: str = None, real_time: bool = False,
-                                            request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_earnings_per_share(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Earnings Per Share (EPS) of the asset-weighted average EPS of a composite's underliers.
 
@@ -3791,8 +4388,10 @@ def current_constituents_earnings_per_share(asset: Asset, period: str,
         raise NotImplementedError('real-time current_constituents_earnings_per_share not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_earnings_per_share not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_earnings_per_share not implemented for this basket. '
+            'Only available for flagship baskets'
+        )
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE.value
 
@@ -3801,13 +4400,23 @@ def current_constituents_earnings_per_share(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_earnings_per_share_positive(asset: Asset, period: str,
-                                                     period_direction: FundamentalMetricPeriodDirection, *,
-                                                     source: str = None, real_time: bool = False,
-                                                     request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_earnings_per_share_positive(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Earnings Per Share Positive of the asset-weighted average EPSP of a composite's underliers.
 
@@ -3829,8 +4438,10 @@ def current_constituents_earnings_per_share_positive(asset: Asset, period: str,
         raise NotImplementedError('real-time current_constituents_earnings_per_share_positive not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_earnings_per_share_positive not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_earnings_per_share_positive not implemented for this basket. '
+            'Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_EARNINGS_PER_SHARE_POSITIVE.value
@@ -3840,13 +4451,23 @@ def current_constituents_earnings_per_share_positive(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_net_debt_to_ebitda(asset: Asset, period: str,
-                                            period_direction: FundamentalMetricPeriodDirection,
-                                            *, source: str = None, real_time: bool = False,
-                                            request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_net_debt_to_ebitda(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Net Debt to EBITDA of the asset-weighted average value of a composite's underliers.
 
@@ -3868,8 +4489,10 @@ def current_constituents_net_debt_to_ebitda(asset: Asset, period: str,
         raise NotImplementedError('real-time current_constituents_net_debt_to_ebitda not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_net_debt_to_ebitda not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_net_debt_to_ebitda not implemented for this basket. '
+            'Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_NET_DEBT_TO_EBITDA.value
@@ -3879,12 +4502,23 @@ def current_constituents_net_debt_to_ebitda(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_price_to_book(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                                       *, source: str = None, real_time: bool = False,
-                                       request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_price_to_book(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Price to Book of the asset-weighted average value of a composite's underliers.
 
@@ -3906,8 +4540,9 @@ def current_constituents_price_to_book(asset: Asset, period: str, period_directi
         raise NotImplementedError('real-time current_constituents_price_to_book not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_price_to_book not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_price_to_book not implemented for this basket. Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_BOOK.value
@@ -3917,12 +4552,23 @@ def current_constituents_price_to_book(asset: Asset, period: str, period_directi
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_price_to_cash(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                                       *, source: str = None, real_time: bool = False,
-                                       request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_price_to_cash(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Price to Cash of the asset-weighted average value of a composite's underliers.
 
@@ -3944,8 +4590,9 @@ def current_constituents_price_to_cash(asset: Asset, period: str, period_directi
         raise NotImplementedError('real-time current_constituents_price_to_cash not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_price_to_cash not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_price_to_cash not implemented for this basket. Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_CASH.value
@@ -3955,13 +4602,23 @@ def current_constituents_price_to_cash(asset: Asset, period: str, period_directi
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_price_to_earnings(asset: Asset, period: str,
-                                           period_direction: FundamentalMetricPeriodDirection,
-                                           *, source: str = None, real_time: bool = False,
-                                           request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_price_to_earnings(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Price to Earnings of the asset-weighted average value of a composite's underliers.
 
@@ -3983,8 +4640,10 @@ def current_constituents_price_to_earnings(asset: Asset, period: str,
         raise NotImplementedError('real-time current_constituents_price_to_earnings not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_price_to_earnings not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_price_to_earnings not implemented for this basket. '
+            'Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS.value
@@ -3994,13 +4653,23 @@ def current_constituents_price_to_earnings(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_price_to_earnings_positive(asset: Asset, period: str,
-                                                    period_direction: FundamentalMetricPeriodDirection,
-                                                    *, source: str = None, real_time: bool = False,
-                                                    request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_price_to_earnings_positive(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Price to Earnings Positive of the asset-weighted average value of a composite's underliers.
 
@@ -4022,8 +4691,10 @@ def current_constituents_price_to_earnings_positive(asset: Asset, period: str,
         raise NotImplementedError('real-time current_constituents_price_to_earnings_positive not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_price_to_earnings_positive not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_price_to_earnings_positive not implemented for this basket. '
+            'Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_EARNINGS_POSITIVE.value
@@ -4033,12 +4704,23 @@ def current_constituents_price_to_earnings_positive(asset: Asset, period: str,
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_price_to_sales(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                                        *, source: str = None, real_time: bool = False,
-                                        request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_price_to_sales(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Price to Sales of the asset-weighted average value of a composite's underliers.
 
@@ -4060,8 +4742,9 @@ def current_constituents_price_to_sales(asset: Asset, period: str, period_direct
         raise NotImplementedError('real-time current_constituents_price_to_sales not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_price_to_sales not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_price_to_sales not implemented for this basket. Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_PRICE_TO_SALES.value
@@ -4071,12 +4754,23 @@ def current_constituents_price_to_sales(asset: Asset, period: str, period_direct
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_return_on_equity(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                                          *, source: str = None, real_time: bool = False,
-                                          request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_return_on_equity(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Return on Equity of the asset-weighted average value of a composite's underliers.
 
@@ -4098,8 +4792,9 @@ def current_constituents_return_on_equity(asset: Asset, period: str, period_dire
         raise NotImplementedError('real-time current_constituents_return_on_equity not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_return_on_equity not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_return_on_equity not implemented for this basket. Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_RETURN_ON_EQUITY.value
@@ -4109,12 +4804,23 @@ def current_constituents_return_on_equity(asset: Asset, period: str, period_dire
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,),
-              (AssetType.Research_Basket, AssetType.Custom_Basket,),
-              [QueryType.FUNDAMENTAL_METRIC])
-def current_constituents_sales_per_share(asset: Asset, period: str, period_direction: FundamentalMetricPeriodDirection,
-                                         *, source: str = None, real_time: bool = False,
-                                         request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Research_Basket,
+        AssetType.Custom_Basket,
+    ),
+    [QueryType.FUNDAMENTAL_METRIC],
+)
+def current_constituents_sales_per_share(
+    asset: Asset,
+    period: str,
+    period_direction: FundamentalMetricPeriodDirection,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Current Constituents Sales per Share of the asset-weighted average value of a composite's underliers.
 
@@ -4136,8 +4842,9 @@ def current_constituents_sales_per_share(asset: Asset, period: str, period_direc
         raise NotImplementedError('real-time current_constituents_sales_per_share not implemented')
 
     if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
-        raise NotImplementedError('current_constituents_sales_per_share not implemented for this basket. '
-                                  'Only available for flagship baskets')
+        raise NotImplementedError(
+            'current_constituents_sales_per_share not implemented for this basket. Only available for flagship baskets'
+        )
 
     mqid = asset.get_marquee_id()
     metric = DataMeasure.CURRENT_CONSTITUENTS_SALES_PER_SHARE.value
@@ -4147,11 +4854,21 @@ def current_constituents_sales_per_share(asset: Asset, period: str, period_direc
     return _fundamentals_md_query(mqid, period, period_direction, metric, source, real_time, request_id)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.ETF, AssetType.Custom_Basket,
-                                     AssetType.Research_Basket), [QueryType.REALIZED_CORRELATION])
-def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int] = None,
-                         composition_date: Optional[GENERIC_DATE] = None, *, source: str = None,
-                         real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (AssetType.Index, AssetType.ETF, AssetType.Custom_Basket, AssetType.Research_Basket),
+    [QueryType.REALIZED_CORRELATION],
+)
+def realized_correlation(
+    asset: Asset,
+    tenor: str,
+    top_n_of_index: Optional[int] = None,
+    composition_date: Optional[GENERIC_DATE] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Realized correlation of an asset.
 
@@ -4184,8 +4901,9 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
 
     if top_n_of_index is None:
         # no append last b/c there is no real-time Realized Correlation dataset
-        q = GsDataApi.build_market_data_query([mqid], QueryType.REALIZED_CORRELATION, where=where,
-                                              source=source, real_time=real_time)
+        q = GsDataApi.build_market_data_query(
+            [mqid], QueryType.REALIZED_CORRELATION, where=where, source=source, real_time=real_time
+        )
         log_debug(request_id, _logger, 'q %s', q)
         df = _market_data_timed(q, request_id)
         return _extract_series_from_df(df, QueryType.REALIZED_CORRELATION)
@@ -4195,12 +4913,7 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
     head_start = DataContext.current.start_date - dt.timedelta(days=relative_date_add(tenor, True) + 1)
     with DataContext(head_start, DataContext.current.end_date):
         asset_ids = constituents.index.to_list() + [mqid]
-        q = GsDataApi.build_market_data_query(
-            asset_ids,
-            QueryType.SPOT,
-            source=source,
-            real_time=real_time
-        )
+        q = GsDataApi.build_market_data_query(asset_ids, QueryType.SPOT, source=source, real_time=real_time)
         log_debug(request_id, _logger, 'q %s', q)
         df = _market_data_timed(q, request_id)
 
@@ -4239,12 +4952,25 @@ def realized_correlation(asset: Asset, tenor: str, top_n_of_index: Optional[int]
     return series
 
 
-@plot_measure((AssetClass.Commod, AssetClass.Equity, AssetClass.FX, AssetClass.Credit, AssetClass.Rates), None,
-              [QueryType.SPOT],
-              asset_type_excluded=(AssetType.CommodityEUNaturalGasHub, AssetType.CommodityNaturalGasHub,))
-def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 0),
-                        returns_type: Returns = Returns.LOGARITHMIC, pricing_location: Optional[PricingLocation] = None,
-                        *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Commod, AssetClass.Equity, AssetClass.FX, AssetClass.Credit, AssetClass.Rates),
+    None,
+    [QueryType.SPOT],
+    asset_type_excluded=(
+        AssetType.CommodityEUNaturalGasHub,
+        AssetType.CommodityNaturalGasHub,
+    ),
+)
+def realized_volatility(
+    asset: Asset,
+    w: Union[Window, int, str] = Window(None, 0),
+    returns_type: Returns = Returns.LOGARITHMIC,
+    pricing_location: Optional[PricingLocation] = None,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Realized volatility for an asset.
 
@@ -4261,27 +4987,22 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
 
     if asset.asset_class != AssetClass.FX or real_time:
         q = GsDataApi.build_market_data_query(
-            [asset.get_marquee_id()],
-            QueryType.SPOT,
-            source=source,
-            real_time=real_time
+            [asset.get_marquee_id()], QueryType.SPOT, source=source, real_time=real_time
         )
         log_debug(request_id, _logger, 'q %s', q)
-        df = get_historical_and_last_for_measure([asset.get_marquee_id()], QueryType.SPOT, {}, source=source,
-                                                 real_time=real_time, request_id=request_id)
+        df = get_historical_and_last_for_measure(
+            [asset.get_marquee_id()], QueryType.SPOT, {}, source=source, real_time=real_time, request_id=request_id
+        )
     else:
         location = pricing_location if pricing_location else PricingLocation.NYC
         where = dict(pricingLocation=location.value)
         q = GsDataApi.build_market_data_query(
-            [asset.get_marquee_id()],
-            QueryType.SPOT,
-            where=where,
-            source=source,
-            real_time=real_time
+            [asset.get_marquee_id()], QueryType.SPOT, where=where, source=source, real_time=real_time
         )
         log_debug(request_id, _logger, 'q %s', q)
-        df = get_historical_and_last_for_measure([asset.get_marquee_id()], QueryType.SPOT, where, source=source,
-                                                 real_time=real_time, request_id=request_id)
+        df = get_historical_and_last_for_measure(
+            [asset.get_marquee_id()], QueryType.SPOT, where, source=source, real_time=real_time, request_id=request_id
+        )
 
     spot = df['spot']
     spot = spot[~spot.index.duplicated(keep='first')]
@@ -4291,8 +5012,14 @@ def realized_volatility(asset: Asset, w: Union[Window, int, str] = Window(None, 
 
 
 @plot_measure((AssetClass.Equity,), None, [QueryType.ES_SCORE])
-def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE, *,
-                        source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def esg_headline_metric(
+    asset: Asset,
+    metricName: EsgMetric = EsgMetric.ENVIRONMENTAL_SOCIAL_AGGREGATE_SCORE,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Environmental, Social, and Governance (ESG) scores and percentiles for a broad set of companies across the globe,
     including, but not limited to, companies covered by Global Investment Research (GIR) analysts.
@@ -4318,8 +5045,14 @@ def esg_headline_metric(asset: Asset, metricName: EsgMetric = EsgMetric.ENVIRONM
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.RATING])
-def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source: str = None, real_time: bool = False,
-           request_id: Optional[str] = None) -> pd.Series:
+def rating(
+    asset: Asset,
+    metric: _RatingMetric = _RatingMetric.RATING,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Analyst Rating, which may take on the following values
     {'Sell': -1, 'Neutral': 0, 'Buy': 1}
@@ -4355,10 +5088,19 @@ def rating(asset: Asset, metric: _RatingMetric = _RatingMetric.RATING, *, source
     return series
 
 
-@plot_measure((AssetClass.FX,), (AssetType.Cross,), [MeasureDependency(
-    id_provider=cross_to_usd_based_cross, query_type=QueryType.FAIR_VALUE)])
-def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = EquilibriumExchangeRateMetric.GSDEER, *,
-               source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.FX,),
+    (AssetType.Cross,),
+    [MeasureDependency(id_provider=cross_to_usd_based_cross, query_type=QueryType.FAIR_VALUE)],
+)
+def fair_value(
+    asset: Asset,
+    metric: EquilibriumExchangeRateMetric = EquilibriumExchangeRateMetric.GSDEER,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     GSDEER and GSFEER quarterly estimates for currency fair values made by Global Investment Research (GIR)
     macro analysts.
@@ -4386,10 +5128,15 @@ def fair_value(asset: Asset, metric: EquilibriumExchangeRateMetric = Equilibrium
     return series
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,),
-              [QueryType.GROWTH_SCORE])
-def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMetric.GROWTH_SCORE,
-                   *, source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,), [QueryType.GROWTH_SCORE])
+def factor_profile(
+    asset: Asset,
+    metric: _FactorProfileMetric = _FactorProfileMetric.GROWTH_SCORE,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     This dataset consists of Goldman Sachs Investment Profile ("IP") percentiles for US and Canadian securities
     covered by Goldman Sachs GIR analysts. Beginning in mid-2017, IP was renamed GS Factor Profile;
@@ -4431,10 +5178,23 @@ def factor_profile(asset: Asset, metric: _FactorProfileMetric = _FactorProfileMe
     return series
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
-def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
-                       forecastType: _CommodityForecastType = _CommodityForecastType.SPOT_RETURN, *,
-                       source: str = None, real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Commod,),
+    (
+        AssetType.Commodity,
+        AssetType.Index,
+    ),
+    [QueryType.COMMODITY_FORECAST],
+)
+def commodity_forecast(
+    asset: Asset,
+    forecastPeriod: str = "3m",
+    forecastType: _CommodityForecastType = _CommodityForecastType.SPOT_RETURN,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Short and long-term commodities forecast.
     :param asset: asset object loaded from security master
@@ -4451,14 +5211,19 @@ def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
         raise NotImplementedError('real-time commodity_forecast not implemented')
     mqid = asset.get_marquee_id()
     query_type = QueryType.COMMODITY_FORECAST
-    _logger.debug('where assetId=%s, forecastPeriod=%s, forecastType=%s, query_type=%s',
-                  mqid, forecastPeriod, forecastType, query_type.value)
+    _logger.debug(
+        'where assetId=%s, forecastPeriod=%s, forecastType=%s, query_type=%s',
+        mqid,
+        forecastPeriod,
+        forecastType,
+        query_type.value,
+    )
     q = GsDataApi.build_market_data_query(
         [mqid],
         query_type,
         where=dict(forecastPeriod=str(forecastPeriod), forecastType=forecastType),
         source=source,
-        real_time=real_time
+        real_time=real_time,
     )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id)
@@ -4466,16 +5231,25 @@ def commodity_forecast(asset: Asset, forecastPeriod: str = "3m",
     return series
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.Commodity, AssetType.Index,), [QueryType.COMMODITY_FORECAST])
+@plot_measure(
+    (AssetClass.Commod,),
+    (
+        AssetType.Commodity,
+        AssetType.Index,
+    ),
+    [QueryType.COMMODITY_FORECAST],
+)
 def commodity_forecast_time_series(
-        asset: Union[Asset, str],
-        forecastFrequency: Union[str, _CommodityForecastTimeSeriesPeriodType] =
-        _CommodityForecastTimeSeriesPeriodType.ANNUAL,
-        forecastType: _CommodityForecastType = _CommodityForecastType.SPOT,
-        forecastHorizonYears: int = 12, *,
-        source: str = None,
-        real_time: bool = False,
-        request_id: Optional[str] = None
+    asset: Union[Asset, str],
+    forecastFrequency: Union[
+        str, _CommodityForecastTimeSeriesPeriodType
+    ] = _CommodityForecastTimeSeriesPeriodType.ANNUAL,
+    forecastType: _CommodityForecastType = _CommodityForecastType.SPOT,
+    forecastHorizonYears: int = 12,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
 ) -> pd.Series:
     """
     Short and long-term commodities forecast time series.
@@ -4509,27 +5283,34 @@ def commodity_forecast_time_series(
     if forecastFrequency == _CommodityForecastTimeSeriesPeriodType.SHORT_TERM.value:
         periods = ["3m", "6m", "12m"]
     elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.MONTHLY.value:
-        periods = [f"{date.year}M{date.month}"
-                   for date in pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="MS")]
+        periods = [
+            f"{date.year}M{date.month}"
+            for date in pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="MS")
+        ]
     elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.QUARTERLY.value:
         periods = pd.period_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="Q").strftime("%YQ%q")
     elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.ANNUAL.value:
         periods = pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="YS").strftime("%Y")
     else:
         raise ValueError(
-            "Invalid forecastFrequency. Must be one of '3/6/12-Month Rolling', "
-            "'Monthly', 'Quarterly', 'Annual'.")
+            "Invalid forecastFrequency. Must be one of '3/6/12-Month Rolling', 'Monthly', 'Quarterly', 'Annual'."
+        )
     results = []
     for period in periods:
-        _logger.debug('where assetId=%s, forecastPeriod=%s, forecastType=%s, query_type=%s',
-                      mqid, period, forecastType, query_type.value)
+        _logger.debug(
+            'where assetId=%s, forecastPeriod=%s, forecastType=%s, query_type=%s',
+            mqid,
+            period,
+            forecastType,
+            query_type.value,
+        )
 
         q = GsDataApi.build_market_data_query(
             [mqid],
             query_type,
             where=dict(forecastPeriod=period, forecastType=forecastType),
             source=source,
-            real_time=real_time
+            real_time=real_time,
         )
         log_debug(request_id, _logger, 'q %s', q)
 
@@ -4597,10 +5378,18 @@ def _get_marketdate_validation(market_date, start_date, end_date, timezone=None)
     return market_date, start_date
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.Index, AssetType.CommodityPowerAggregatedNodes,
-                                     AssetType.CommodityPowerNode,), [QueryType.FORWARD_PRICE])
-def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
-                  *, source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.Commod,),
+    (
+        AssetType.Index,
+        AssetType.CommodityPowerAggregatedNodes,
+        AssetType.CommodityPowerNode,
+    ),
+    [QueryType.FORWARD_PRICE],
+)
+def forward_curve(
+    asset: Asset, bucket: str = 'PEAK', market_date: str = "", *, source: str = None, real_time: bool = False
+) -> pd.Series:
     """
     Forward Curve for Futures Data
 
@@ -4634,9 +5423,9 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
     # Get data for given asset for given market date for valid contracts and buckets
     where = dict(quantityBucket=quantitybuckets_to_query, contract=contracts_to_query)
     with DataContext(market_date, market_date):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
-                                              where=where, source=None,
-                                              real_time=False)
+        q = GsDataApi.build_market_data_query(
+            [asset.get_marquee_id()], QueryType.FORWARD_PRICE, where=where, source=None, real_time=False
+        )
         forward_price = _market_data_timed(q)
         dataset_ids = getattr(forward_price, 'dataset_ids', ())
 
@@ -4651,9 +5440,11 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
         forward_dates_to_plot[month] = start_date_month
 
     # Create a dataframe with required columns
-    forward_curve_plot = {'contract': forward_price['contract'],
-                          'forwardPrice': forward_price['forwardPrice'],
-                          'quantityBucket': forward_price['quantityBucket']}
+    forward_curve_plot = {
+        'contract': forward_price['contract'],
+        'forwardPrice': forward_price['forwardPrice'],
+        'quantityBucket': forward_price['quantityBucket'],
+    }
     df = pd.DataFrame(forward_curve_plot)
     df = df.reset_index(drop=True)
 
@@ -4679,10 +5470,12 @@ def forward_curve(asset: Asset, bucket: str = 'PEAK', market_date: str = "",
     return result
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.FORWARD_PRICE],
-              display_name='forward_curve')
-def forward_curve_ng(asset: Asset, price_method: str = 'GDD', market_date: str = "", *, source: str = None,
-                     real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.Commod,), (AssetType.CommodityNaturalGasHub,), [QueryType.FORWARD_PRICE], display_name='forward_curve'
+)
+def forward_curve_ng(
+    asset: Asset, price_method: str = 'GDD', market_date: str = "", *, source: str = None, real_time: bool = False
+) -> pd.Series:
     """
     Forward Curve for Us gas Data
 
@@ -4713,9 +5506,9 @@ def forward_curve_ng(asset: Asset, price_method: str = 'GDD', market_date: str =
     # Get data for given asset for given market date for valid contracts and buckets
     where = dict(contract=contracts_to_query, priceMethod=price_method.upper())
     with DataContext(market_date, market_date):
-        q = GsDataApi.build_market_data_query([asset.get_marquee_id()], QueryType.FORWARD_PRICE,
-                                              where=where, source=None,
-                                              real_time=False)
+        q = GsDataApi.build_market_data_query(
+            [asset.get_marquee_id()], QueryType.FORWARD_PRICE, where=where, source=None, real_time=False
+        )
         forward_price = _market_data_timed(q)
         dataset_ids = getattr(forward_price, 'dataset_ids', ())
 
@@ -4730,9 +5523,11 @@ def forward_curve_ng(asset: Asset, price_method: str = 'GDD', market_date: str =
         forward_dates_to_plot[month] = start_date_month
 
     # Create a dataframe with required columns
-    forward_curve_plot = {'contract': forward_price['contract'],
-                          'forwardPrice': forward_price['forwardPrice'],
-                          'priceMethod': forward_price['priceMethod']}
+    forward_curve_plot = {
+        'contract': forward_price['contract'],
+        'forwardPrice': forward_price['forwardPrice'],
+        'priceMethod': forward_price['priceMethod'],
+    }
     df = pd.DataFrame(forward_curve_plot)
     df = df.reset_index(drop=True)
 
@@ -4750,8 +5545,9 @@ def forward_curve_ng(asset: Asset, price_method: str = 'GDD', market_date: str =
     return result
 
 
-def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_method: str = 'ICE', *,
-                             source: str = None, real_time: bool = False) -> pd.Series:
+def _forward_price_eu_natgas(
+    asset: Asset, contract_range: str = 'F20', price_method: str = 'ICE', *, source: str = None, real_time: bool = False
+) -> pd.Series:
     """'
     EU NG Forward Price - function to map the assets to right instruments and fetch the forward
     prices for given hub for required contracts
@@ -4775,8 +5571,9 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_me
 
     # Find all assets to query for each of these contract months
     for contract in contracts_to_query:
-        kwargs = dict(asset_parameters_commodity_reference_price=asset_commod_ref_price,
-                      asset_parameters_start=contract)
+        kwargs = dict(
+            asset_parameters_commodity_reference_price=asset_commod_ref_price, asset_parameters_start=contract
+        )
         try:
             instruments = GsAssetApi.get_many_assets(**kwargs)
             if len(instruments) == 1:
@@ -4787,9 +5584,7 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_me
             _logger.debug('Cannot find asset or found multiple assets for: %s', contract)
 
     # Get data for each asset for the specified duration
-    q = GsDataApi.build_market_data_query(assets_to_query, QueryType.FORWARD_PRICE,
-                                          source=source,
-                                          real_time=False)
+    q = GsDataApi.build_market_data_query(assets_to_query, QueryType.FORWARD_PRICE, source=source, real_time=False)
     _logger.debug('q %s', q)
     df = _market_data_timed(q)
     dataset_ids = getattr(df, 'dataset_ids', ())
@@ -4807,8 +5602,15 @@ def _forward_price_eu_natgas(asset: Asset, contract_range: str = 'F20', price_me
 
 
 @plot_measure((AssetClass.FX,), None, [QueryType.IMPLIED_VOLATILITY])
-def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: str = None,
-                           real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+def fx_implied_correlation(
+    asset: Asset,
+    asset_2: Asset,
+    tenor: str,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     FX implied correlation. Uses most recent date available if pricing_date is not provided.
 
@@ -4855,8 +5657,9 @@ def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: 
     new_asset_2 = cross_stored_direction_for_fx_vol(asset_2, return_asset=True)
     id_1 = new_asset_1.get_marquee_id()
     id_2 = new_asset_2.get_marquee_id()
-    id_3 = SecurityMaster.get_asset(_cross_stored_direction_helper(cross_3),
-                                    AssetIdentifier.BLOOMBERG_ID).get_marquee_id()
+    id_3 = SecurityMaster.get_asset(
+        _cross_stored_direction_helper(cross_3), AssetIdentifier.BLOOMBERG_ID
+    ).get_marquee_id()
 
     # normal crosses
     c_1 = get_bbid(new_asset_1)
@@ -4871,8 +5674,9 @@ def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: 
         invert_factor *= -1
 
     where = dict(tenor=tenor, strikeReference='delta', relativeStrike=0)
-    q = GsDataApi.build_market_data_query([id_1, id_2, id_3], QueryType.IMPLIED_VOLATILITY, where=where, source=source,
-                                          real_time=real_time)
+    q = GsDataApi.build_market_data_query(
+        [id_1, id_2, id_3], QueryType.IMPLIED_VOLATILITY, where=where, source=source, real_time=real_time
+    )
     log_debug(request_id, _logger, 'q %s', q)
     df = _market_data_timed(q, request_id=request_id)
     if df.empty:
@@ -4888,13 +5692,21 @@ def fx_implied_correlation(asset: Asset, asset_2: Asset, tenor: str, *, source: 
     return series
 
 
-def get_last_for_measure(asset_ids: List[str], query_type, where, *, source: str = None,
-                         request_id: Optional[str] = None, ignore_errors: bool = False):
+def get_last_for_measure(
+    asset_ids: List[str],
+    query_type,
+    where,
+    *,
+    source: str = None,
+    request_id: Optional[str] = None,
+    ignore_errors: bool = False,
+):
     now = dt.date.today()
     delta = dt.timedelta(days=2)
     with DataContext(now - delta, now + delta):
-        q_l = GsDataApi.build_market_data_query(asset_ids, query_type, where=where,
-                                                source=source, real_time=True, measure='Last')
+        q_l = GsDataApi.build_market_data_query(
+            asset_ids, query_type, where=where, source=source, real_time=True, measure='Last'
+        )
     log_debug(request_id, _logger, 'q_l %s', q_l)
 
     try:
@@ -4922,8 +5734,9 @@ def merge_dataframes(dataframes: List[pd.DataFrame]):
     return result
 
 
-def append_last_for_measure(df: pd.DataFrame, asset_ids: List[str], query_type, where, *, source: str = None,
-                            request_id: Optional[str] = None):
+def append_last_for_measure(
+    df: pd.DataFrame, asset_ids: List[str], query_type, where, *, source: str = None, request_id: Optional[str] = None
+):
     df_l = get_last_for_measure(asset_ids, query_type, where, source=source, request_id=request_id)
     if df_l is None:
         return df
@@ -4935,16 +5748,18 @@ def append_last_for_measure(df: pd.DataFrame, asset_ids: List[str], query_type, 
     return result
 
 
-def get_market_data_tasks(asset_ids: List[str],
-                          query_type,
-                          where: dict,
-                          *,
-                          source: str = None,
-                          real_time: bool = False,
-                          request_id: Optional[str] = None,
-                          chunk_size: int = 5,
-                          ignore_errors: bool = False,
-                          parallelize_queries: bool = False) -> list:
+def get_market_data_tasks(
+    asset_ids: List[str],
+    query_type,
+    where: dict,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+    chunk_size: int = 5,
+    ignore_errors: bool = False,
+    parallelize_queries: bool = False,
+) -> list:
     tasks = []
     for i, chunked_assets in enumerate(chunk(asset_ids, chunk_size)):
         queries = GsDataApi.build_market_data_query(
@@ -4953,39 +5768,62 @@ def get_market_data_tasks(asset_ids: List[str],
             where=where,
             source=source,
             real_time=real_time,
-            parallelize_queries=parallelize_queries)
+            parallelize_queries=parallelize_queries,
+        )
 
         queries = [queries] if not isinstance(queries, list) else queries
-        tasks.extend(
-            partial(_market_data_timed, query, request_id, ignore_errors=ignore_errors) for query in queries)
+        tasks.extend(partial(_market_data_timed, query, request_id, ignore_errors=ignore_errors) for query in queries)
     return tasks
 
 
-def get_historical_and_last_for_measure(asset_ids: List[str],
-                                        query_type,
-                                        where: dict,
-                                        *,
-                                        source: str = None,
-                                        real_time: bool = False,
-                                        request_id: Optional[str] = None,
-                                        chunk_size: int = 5,
-                                        ignore_errors: bool = False,
-                                        parallelize_queries: bool = False):
-    tasks = get_market_data_tasks(asset_ids, query_type, where, source=source, real_time=real_time,
-                                  request_id=request_id, chunk_size=chunk_size, ignore_errors=ignore_errors,
-                                  parallelize_queries=parallelize_queries)
+def get_historical_and_last_for_measure(
+    asset_ids: List[str],
+    query_type,
+    where: dict,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+    chunk_size: int = 5,
+    ignore_errors: bool = False,
+    parallelize_queries: bool = False,
+):
+    tasks = get_market_data_tasks(
+        asset_ids,
+        query_type,
+        where,
+        source=source,
+        real_time=real_time,
+        request_id=request_id,
+        chunk_size=chunk_size,
+        ignore_errors=ignore_errors,
+        parallelize_queries=parallelize_queries,
+    )
 
     if not real_time and DataContext.current.end_date >= dt.date.today():
         where_list = _split_where_conditions(where)
         for w in where_list:
-            tasks.append(partial(get_last_for_measure, asset_ids=asset_ids, query_type=query_type, where=w,
-                                 source=source, request_id=request_id, ignore_errors=ignore_errors))
+            tasks.append(
+                partial(
+                    get_last_for_measure,
+                    asset_ids=asset_ids,
+                    query_type=query_type,
+                    where=w,
+                    source=source,
+                    request_id=request_id,
+                    ignore_errors=ignore_errors,
+                )
+            )
 
     results = ThreadPoolManager.run_async(tasks)
     return merge_dataframes(results)
 
 
-@plot_measure((AssetClass.Commod,), (AssetType.FutureMarket,), [QueryType.SETTLEMENT_PRICE], )
+@plot_measure(
+    (AssetClass.Commod,),
+    (AssetType.FutureMarket,),
+    [QueryType.SETTLEMENT_PRICE],
+)
 def settlement_price(asset: Asset, contract: str = 'F22', *, source: str = None, real_time: bool = False) -> pd.Series:
     """
     Settlement price from exchanges for Commod FutureMarket
@@ -5006,17 +5844,21 @@ def settlement_price(asset: Asset, contract: str = 'F22', *, source: str = None,
             asset_exchange = asset_parameters['exchange']
             asset_product = asset_parameters['productGroup']
 
-            if asset_exchange == EUPowerDataReference.ICE_EXCHANGE.value and \
-                    asset_product == EUPowerDataReference.CARBON_CREDIT_PRODUCT.value:
+            if (
+                asset_exchange == EUPowerDataReference.ICE_EXCHANGE.value
+                and asset_product == EUPowerDataReference.CARBON_CREDIT_PRODUCT.value
+            ):
                 ds = Dataset(EUPowerDataReference.CARBON_CREDIT_DATASET.value)
-            elif (asset_exchange == EUPowerDataReference.EEX_EXCHANGE.value or
-                  asset_exchange == EUPowerDataReference.ICE_EXCHANGE.value or
-                  asset_exchange == EUPowerDataReference.NASDAQ_EXCHANGE.value) and \
-                    asset_product == EUPowerDataReference.EU_POWER_PRODUCT.value:
+            elif (
+                asset_exchange == EUPowerDataReference.EEX_EXCHANGE.value
+                or asset_exchange == EUPowerDataReference.ICE_EXCHANGE.value
+                or asset_exchange == EUPowerDataReference.NASDAQ_EXCHANGE.value
+            ) and asset_product == EUPowerDataReference.EU_POWER_PRODUCT.value:
                 ds = Dataset(EUPowerDataReference.EU_POWER_EXCHANGE_DATASET.value)
             else:
-                raise MqTypeError('Assets of exchange %s and group %s not handled currently', asset_exchange,
-                                  asset_product)
+                raise MqTypeError(
+                    'Assets of exchange %s and group %s not handled currently', asset_exchange, asset_product
+                )
         else:
             raise MqTypeError("No required parameter information on asset schema")
     except (TypeError, ValueError, KeyError) as e:
@@ -5038,8 +5880,13 @@ def settlement_price(asset: Asset, contract: str = 'F22', *, source: str = None,
 
 
 @plot_measure((AssetClass.Equity,), (AssetType.Index, AssetType.Single_Stock), [QueryType.SPOT])
-def hloc_prices(asset: Asset, interval_frequency: IntervalFrequency = IntervalFrequency.DAILY, *,
-                source: str = None, real_time: bool = False) -> pd.DataFrame:
+def hloc_prices(
+    asset: Asset,
+    interval_frequency: IntervalFrequency = IntervalFrequency.DAILY,
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.DataFrame:
     """
     Get the hloc (high, low, open, and close) prices of the given asset.
     :param asset: asset object loaded from security master
@@ -5054,10 +5901,14 @@ def hloc_prices(asset: Asset, interval_frequency: IntervalFrequency = IntervalFr
     return asset.get_hloc_prices(start, end, interval_frequency)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
-                                     AssetType.ETF), [QueryType.THEMATIC_MODEL_BETA])
-def thematic_model_exposure(asset: Asset, basket_identifier: str, notional: int = 10000000,
-                            *, source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index, AssetType.ETF),
+    [QueryType.THEMATIC_MODEL_BETA],
+)
+def thematic_model_exposure(
+    asset: Asset, basket_identifier: str, notional: int = 10000000, *, source: str = None, real_time: bool = False
+) -> pd.Series:
     """
     Thematic exposure of an asset to a requested GS thematic flagship basket
 
@@ -5075,10 +5926,14 @@ def thematic_model_exposure(asset: Asset, basket_identifier: str, notional: int 
     return _extract_series_from_df(thematic_exposures, QueryType.THEMATIC_EXPOSURE)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
-                                     AssetType.ETF, AssetType.Single_Stock), [QueryType.THEMATIC_MODEL_BETA])
-def thematic_model_beta(asset: Asset, basket_identifier: str, *, source: str = None,
-                        real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index, AssetType.ETF, AssetType.Single_Stock),
+    [QueryType.THEMATIC_MODEL_BETA],
+)
+def thematic_model_beta(
+    asset: Asset, basket_identifier: str, *, source: str = None, real_time: bool = False
+) -> pd.Series:
     """
     Thematic beta values of an asset to a requested GS thematic flagship basket
 
@@ -5099,13 +5954,20 @@ def thematic_model_beta(asset: Asset, basket_identifier: str, *, source: str = N
     return _extract_series_from_df(thematic_betas, QueryType.THEMATIC_BETA)
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index,
-                                     AssetType.ETF),
-              [QueryType.SPOT])
-def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.RETAIL_PCT_SHARES,
-                        data_source: UnderlyingSourceCategory = UnderlyingSourceCategory.ALL,
-                        sector: GICSSector = GICSSector.ALL, *,
-                        source: str = None, real_time: bool = False) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index, AssetType.ETF),
+    [QueryType.SPOT],
+)
+def retail_interest_agg(
+    asset: Asset,
+    measure: RetailMeasures = RetailMeasures.RETAIL_PCT_SHARES,
+    data_source: UnderlyingSourceCategory = UnderlyingSourceCategory.ALL,
+    sector: GICSSector = GICSSector.ALL,
+    *,
+    source: str = None,
+    real_time: bool = False,
+) -> pd.Series:
     """
     Aggregates retail interest for specified Equity asset with underliers.
     :param sector: Any valid GICSSector like Information Technology, Energy etc. or All
@@ -5126,15 +5988,17 @@ def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.R
         raise MqValueError('Specified asset does not have underliers, single names have separate retail measures')
 
     if sector != GICSSector.ALL:
-        data = pd.DataFrame(PositionedEntity.get_positions_data(asset,
-                                                                RelativeDate('-2b', base_date=end).apply_rule(),
-                                                                end,
-                                                                fields=['assetClassificationsGicsSector']))
+        data = pd.DataFrame(
+            PositionedEntity.get_positions_data(
+                asset, RelativeDate('-2b', base_date=end).apply_rule(), end, fields=['assetClassificationsGicsSector']
+            )
+        )
         underliers = list(data[data['assetClassificationsGicsSector'] == sector.value]['id'].drop_duplicates().values)
 
     ds = Dataset(Dataset.GS.RETAIL_FLOW_DAILY_V2_PREMIUM.value)
-    retail_data = get_dataset_with_many_assets(ds, assets=underliers, start=start, end=end,
-                                               underlyingSourceCategory=data_source)
+    retail_data = get_dataset_with_many_assets(
+        ds, assets=underliers, start=start, end=end, underlyingSourceCategory=data_source
+    )
 
     if retail_data.empty:
         return ExtendedSeries(dtype=float)
@@ -5146,8 +6010,7 @@ def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.R
         else:
             measures_to_sum.append(RetailMeasures.NOTIONAL.value)
         category_sums = retail_data.groupby([retail_data.index])[measures_to_sum].agg("sum")
-        category_sums[measure.value] = 100 * category_sums[measures_to_sum[0]] / category_sums[
-            measures_to_sum[1]]
+        category_sums[measure.value] = 100 * category_sums[measures_to_sum[0]] / category_sums[measures_to_sum[1]]
         category_sums.drop(columns=measures_to_sum)
     else:
         category_sums = retail_data.groupby([retail_data.index])[[measure.value]].agg(sum)
@@ -5157,19 +6020,31 @@ def retail_interest_agg(asset: Asset, measure: RetailMeasures = RetailMeasures.R
 
 
 class S3Metrics(Enum):
-    LONG_CROWDING = "Long Crowding",
-    SHORT_CROWDING = "Short Crowding",
-    LONG_SHORT_CROWDING_RATION = "Long Short Crowding Ratio",
-    CURRENT_CONSTITUENTS_LONG_CROWDING = "Current Constituents Long Crowding",
-    CURRENT_CONSTITUENTS_SHORT_CROWDING = "Current Constituents Short Crowding",
-    CURRENT_CONSTITUENTS_LONG_SHORT_CROWDING = "Current Constituents Long Short Crowding Ratio",
-    CROWDING_NET_EXPOSURE = "Crowding Net Exposure",
+    LONG_CROWDING = ("Long Crowding",)
+    SHORT_CROWDING = ("Short Crowding",)
+    LONG_SHORT_CROWDING_RATION = ("Long Short Crowding Ratio",)
+    CURRENT_CONSTITUENTS_LONG_CROWDING = ("Current Constituents Long Crowding",)
+    CURRENT_CONSTITUENTS_SHORT_CROWDING = ("Current Constituents Short Crowding",)
+    CURRENT_CONSTITUENTS_LONG_SHORT_CROWDING = ("Current Constituents Long Short Crowding Ratio",)
+    CROWDING_NET_EXPOSURE = ("Crowding Net Exposure",)
     CURRENT_CONSTITUENTS_CROWDING_NET_EXPOSURES = "Current Constituents Crowding Net Exposure"
 
 
-@plot_measure((AssetClass.Equity,), (AssetType.Custom_Basket, AssetType.Research_Basket,))
-def s3_long_short_concentration(asset: Asset, s3Metric: S3Metrics = S3Metrics.LONG_CROWDING, *, source: str = None,
-                                real_time: bool = False, request_id: Optional[str] = None) -> pd.Series:
+@plot_measure(
+    (AssetClass.Equity,),
+    (
+        AssetType.Custom_Basket,
+        AssetType.Research_Basket,
+    ),
+)
+def s3_long_short_concentration(
+    asset: Asset,
+    s3Metric: S3Metrics = S3Metrics.LONG_CROWDING,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
     """
     Retrieves the specified metric from the S3 Partners Long/Short Concentration Aggregated Data dataset
     for a given asset and plots it.

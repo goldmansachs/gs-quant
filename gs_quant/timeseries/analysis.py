@@ -38,8 +38,9 @@ class ThresholdType(str, Enum):
 
 
 @plot_function
-def smooth_spikes(x: pd.Series, threshold: float,
-                  threshold_type: ThresholdType = ThresholdType.percentage) -> pd.Series:
+def smooth_spikes(
+    x: pd.Series, threshold: float, threshold_type: ThresholdType = ThresholdType.percentage
+) -> pd.Series:
     """
     Smooth out the spikes of a series. If a point is larger/smaller than (1 +/- threshold) times both neighbors, replace
     it with the average of those neighbours. Note: the first and last points in the input series are dropped.
@@ -78,8 +79,9 @@ def smooth_spikes(x: pd.Series, threshold: float,
     if len(x) < 3:
         return pd.Series(dtype=float)
 
-    threshold_value, check_spike = (threshold, check_absolute) if threshold_type == ThresholdType.absolute else (
-        (1 + threshold), check_percentage)
+    threshold_value, check_spike = (
+        (threshold, check_absolute) if threshold_type == ThresholdType.absolute else ((1 + threshold), check_percentage)
+    )
 
     result = x.astype(float)
     current, next_ = x.iloc[0:2]
@@ -277,8 +279,9 @@ def diff(x: pd.Series, obs: Union[Window, int, str] = 1) -> pd.Series:
 
 
 @plot_function
-def compare(x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP) \
-        -> Union[pd.Series, Real]:
+def compare(
+    x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.STEP
+) -> Union[pd.Series, Real]:
     """
     Compare two series or scalars against each other
 

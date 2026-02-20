@@ -26,40 +26,49 @@ def test_layout_creation():
     plot_component_4 = PlotComponent(550, id_='CHCHF6NW1KXKFDAG', width=8)
 
     # Case 1: Simple layout
-    rows = [
-        WorkspaceRow(components=[plot_component_1, plot_component_2])
-    ]
+    rows = [WorkspaceRow(components=[plot_component_1, plot_component_2])]
     workspace = Workspace(rows=rows, alias='testing-something', name='Testing')
     workspace = workspace.as_dict()
     assert workspace['parameters']['layout'] == 'r(c6($0)c6($1))'
 
     # Case 2: Extra columns equal spaced layout
     rows = [
-        WorkspaceRow(components=[
-            WorkspaceColumn(components=[WorkspaceRow(components=[plot_component_1]),
-                                        WorkspaceRow(components=[plot_component_2])]),
-            plot_component_3
-        ])
+        WorkspaceRow(
+            components=[
+                WorkspaceColumn(
+                    components=[
+                        WorkspaceRow(components=[plot_component_1]),
+                        WorkspaceRow(components=[plot_component_2]),
+                    ]
+                ),
+                plot_component_3,
+            ]
+        )
     ]
     workspace = Workspace(rows=rows, alias='testing-something', name='Testing')
     workspace = workspace.as_dict()
     assert workspace['parameters']['layout'] == 'r(c6(r(c12($0))r(c12($1)))c6($2))'
 
     # Case 3: Simple non-equal layout
-    rows = [
-        WorkspaceRow(components=[plot_component_4, plot_component_2])
-    ]
+    rows = [WorkspaceRow(components=[plot_component_4, plot_component_2])]
     workspace = Workspace(rows=rows, alias='testing-something', name='Testing')
     workspace = workspace.as_dict()
     assert workspace['parameters']['layout'] == 'r(c8($0)c4($1))'
 
     # Case 4: Non-equal spacing
     rows = [
-        WorkspaceRow(components=[
-            WorkspaceColumn(width=8, components=[WorkspaceRow(components=[plot_component_1]),
-                                                 WorkspaceRow(components=[plot_component_2])]),
-            plot_component_3
-        ])
+        WorkspaceRow(
+            components=[
+                WorkspaceColumn(
+                    width=8,
+                    components=[
+                        WorkspaceRow(components=[plot_component_1]),
+                        WorkspaceRow(components=[plot_component_2]),
+                    ],
+                ),
+                plot_component_3,
+            ]
+        )
     ]
     workspace = Workspace(rows=rows, alias='testing-something', name='Testing')
     workspace = workspace.as_dict()
@@ -72,9 +81,7 @@ def test_layout_parsing():
     plot_component_3 = PlotComponent(3, id_='CHCHF6NW1KXKFDAG')
 
     # Case 1: Single Component
-    rows = [
-        WorkspaceRow(components=[plot_component_1])
-    ]
+    rows = [WorkspaceRow(components=[plot_component_1])]
     workspace = Workspace(rows=rows, alias='testing-something', name='Testing')
     workspace = Workspace.from_dict(workspace.as_dict())
 
@@ -84,9 +91,7 @@ def test_layout_parsing():
     assert workspace.rows[0].components[0].height == 1
 
     # Case 2: 2 Components
-    rows = [
-        WorkspaceRow(components=[plot_component_1, plot_component_2])
-    ]
+    rows = [WorkspaceRow(components=[plot_component_1, plot_component_2])]
     workspace = Workspace(rows=rows, alias='testing-something', name='Testing')
     workspace = Workspace.from_dict(workspace.as_dict())
 
@@ -101,11 +106,17 @@ def test_layout_parsing():
 
     # Case 3: Nested Columns
     rows = [
-        WorkspaceRow(components=[
-            WorkspaceColumn(components=[WorkspaceRow(components=[plot_component_1]),
-                                        WorkspaceRow(components=[plot_component_2])]),
-            plot_component_3
-        ])
+        WorkspaceRow(
+            components=[
+                WorkspaceColumn(
+                    components=[
+                        WorkspaceRow(components=[plot_component_1]),
+                        WorkspaceRow(components=[plot_component_2]),
+                    ]
+                ),
+                plot_component_3,
+            ]
+        )
     ]
     workspace = Workspace(rows=rows, alias='testing-something', name='Testing')
     workspace = Workspace.from_dict(workspace.as_dict())

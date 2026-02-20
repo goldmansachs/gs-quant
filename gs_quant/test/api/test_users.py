@@ -13,6 +13,7 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
 from unittest import mock
 
 import pytest
@@ -34,20 +35,12 @@ def test_get_users(mocker):
                 "city": "New York",
                 "company": "Goldman Sachs Group",
                 "rootOEId": "id123",
-                "rootOEIndustry": {
-                    "name": "Multi-Business Organization"
-                },
-                "oeIndustry": {
-                    "name": "Multi-Business Organization"
-                },
+                "rootOEIndustry": {"name": "Multi-Business Organization"},
+                "oeIndustry": {"name": "Multi-Business Organization"},
                 "oeAlias": 17670,
                 "country": "US",
                 "coverage": [
-                    {
-                        "phone": "+1 855-MARQUE-0",
-                        "name": "Marquee Help Desk",
-                        "email": "gs-marquee-help@gs.com"
-                    }
+                    {"phone": "+1 855-MARQUE-0", "name": "Marquee Help Desk", "email": "gs-marquee-help@gs.com"}
                 ],
                 "email": "jane.doe@gs.com",
                 "kerberos": "doeja",
@@ -63,36 +56,26 @@ def test_get_users(mocker):
                 "businessUnit": "Marquee Engineering",
                 "title": "Analyst",
                 "login": "doeja",
-                "tokens": [
-                    "active"
-                ],
-                "roles": [
-                    "MarqueeResearchExperienceEligible"
-                ],
-                "groups": [
-                    "3AV5PPWJBS4B89X76"
-                ],
-                "expertiseTags": []
+                "tokens": ["active"],
+                "roles": ["MarqueeResearchExperienceEligible"],
+                "groups": ["3AV5PPWJBS4B89X76"],
+                "expertiseTags": [],
             }
-        ]
+        ],
     }
 
     # mock GsSession
     from gs_quant.session import OAuth2Session
+
     OAuth2Session.init = mock.MagicMock(return_value=None)
     GsSession.use(Environment.QA, 'client_id', 'secret')
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test
-    response = GsUsersApi.get_users(user_ids=['doeja'],
-                                    user_emails=['jane.doe@gs.com'])
+    response = GsUsersApi.get_users(user_ids=['doeja'], user_emails=['jane.doe@gs.com'])
     GsSession.current._get.assert_called_with('/users?&id=doeja&email=jane.doe@gs.com&limit=100&offset=0', cls=User)
     assert response == mock_response['results']
 
@@ -106,21 +89,11 @@ def test_get_current_user_info(mocker):
         "city": "New York",
         "company": "Goldman Sachs Group",
         "rootOEId": "id123",
-        "rootOEIndustry": {
-            "name": "Multi-Business Organization"
-        },
-        "oeIndustry": {
-            "name": "Multi-Business Organization"
-        },
+        "rootOEIndustry": {"name": "Multi-Business Organization"},
+        "oeIndustry": {"name": "Multi-Business Organization"},
         "oeAlias": 17670,
         "country": "US",
-        "coverage": [
-            {
-                "phone": "+1 855-MARQUE-0",
-                "name": "Marquee Help Desk",
-                "email": "gs-marquee-help@gs.com"
-            }
-        ],
+        "coverage": [{"phone": "+1 855-MARQUE-0", "name": "Marquee Help Desk", "email": "gs-marquee-help@gs.com"}],
         "email": "jane.doe@gs.com",
         "kerberos": "doeja",
         "id": "id",
@@ -135,29 +108,20 @@ def test_get_current_user_info(mocker):
         "businessUnit": "Marquee Engineering",
         "title": "Analyst",
         "login": "doeja",
-        "tokens": [
-            "active"
-        ],
-        "roles": [
-            "MarqueeResearchExperienceEligible"
-        ],
-        "groups": [
-            "3AV5PPWJBS4B89X76"
-        ],
-        "expertiseTags": []
+        "tokens": ["active"],
+        "roles": ["MarqueeResearchExperienceEligible"],
+        "groups": ["3AV5PPWJBS4B89X76"],
+        "expertiseTags": [],
     }
 
     # mock GsSession
     from gs_quant.session import OAuth2Session
+
     OAuth2Session.init = mock.MagicMock(return_value=None)
     GsSession.use(Environment.QA, 'client_id', 'secret')
     mocker.patch.object(
-        GsSession.__class__,
-        'default_value',
-        return_value=GsSession.get(
-            Environment.QA,
-            'client_id',
-            'secret'))
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
     mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
 
     # run test

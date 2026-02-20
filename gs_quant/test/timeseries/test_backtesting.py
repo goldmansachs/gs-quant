@@ -24,8 +24,7 @@ from testfixtures import Replacer
 from testfixtures.mock import Mock
 
 from gs_quant.timeseries import VolReference
-from gs_quant.timeseries.backtesting import Basket, basket_series, MqValueError, MqTypeError, RebalFreq, \
-    DataContext
+from gs_quant.timeseries.backtesting import Basket, basket_series, MqValueError, MqTypeError, RebalFreq, DataContext
 
 
 def test_basket_series():
@@ -66,9 +65,9 @@ def test_basket_series():
         dt.datetime(2019, 2, 6),
     ]
     mreb = pd.Series(
-        [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792,
-         100.0, 101, 103.02, 100.9596, 100.9596, 102.978792],
-        index=dates)
+        [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792, 100.0, 101, 103.02, 100.9596, 100.9596, 102.978792],
+        index=dates,
+    )
     assert_series_equal(mreb, basket_series([mreb], [1], rebal_freq=RebalFreq.MONTHLY))
 
     dates = [
@@ -82,29 +81,28 @@ def test_basket_series():
         dt.datetime(2019, 1, 10),
         dt.datetime(2019, 1, 11),
         dt.datetime(2019, 1, 12),
-        dt.datetime(2019, 1, 13)
+        dt.datetime(2019, 1, 13),
     ]
-    wreb = pd.Series(
-        [100.0, 105, 110, 115, 120, 125,
-         130, 135, 140, 145, 150],
-        index=dates)
+    wreb = pd.Series([100.0, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150], index=dates)
 
-    wreb_2 = pd.Series(
-        [100.0, 105, 110, 115, 120, 125,
-         130, 135, 140, 145, 150],
-        index=dates)
+    wreb_2 = pd.Series([100.0, 105, 110, 115, 120, 125, 130, 135, 140, 145, 150], index=dates)
 
-    ret_wreb = pd.Series(
-        [100.0, 110.0, 120.0, 130.0, 140.0, 150.0,
-         162.0, 174.0, 186.0, 198.0, 210.0],
-        index=dates)
+    ret_wreb = pd.Series([100.0, 110.0, 120.0, 130.0, 140.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0], index=dates)
 
     assert_series_equal(ret_wreb, basket_series([wreb, wreb_2], [1, 1], rebal_freq=RebalFreq.WEEKLY))
 
 
 def _mock_spot_data():
-    dates = pd.DatetimeIndex([dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3),
-                              dt.date(2021, 1, 4), dt.date(2021, 1, 5), dt.date(2021, 1, 6)])
+    dates = pd.DatetimeIndex(
+        [
+            dt.date(2021, 1, 1),
+            dt.date(2021, 1, 2),
+            dt.date(2021, 1, 3),
+            dt.date(2021, 1, 4),
+            dt.date(2021, 1, 5),
+            dt.date(2021, 1, 6),
+        ]
+    )
     x = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 100, 100, 100, 100, 100]}, index=dates)
@@ -113,8 +111,16 @@ def _mock_spot_data():
 
 
 def _mock_spot_data_feb():
-    dates_feb = pd.DatetimeIndex([dt.date(2021, 2, 1), dt.date(2021, 2, 2), dt.date(2021, 2, 3),
-                                  dt.date(2021, 2, 4), dt.date(2021, 2, 5), dt.date(2021, 2, 6)])
+    dates_feb = pd.DatetimeIndex(
+        [
+            dt.date(2021, 2, 1),
+            dt.date(2021, 2, 2),
+            dt.date(2021, 2, 3),
+            dt.date(2021, 2, 4),
+            dt.date(2021, 2, 5),
+            dt.date(2021, 2, 6),
+        ]
+    )
     x = pd.DataFrame({'spot': [100.0, 101.5, 106.02, 100.1, 105.3, 102.9]}, index=dates_feb)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 101.5, 100.02, 98.1, 95.3, 93.9]}, index=dates_feb)
@@ -127,10 +133,25 @@ def test_basket_price():
         Basket(['AAPL UW'], [0.1, 0.9], RebalFreq.MONTHLY)
 
     dates = pd.DatetimeIndex(
-        [dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3), dt.date(2021, 1, 4), dt.date(2021, 1, 5),
-         dt.date(2021, 1, 6)])
-    dates_feb = pd.DatetimeIndex([dt.date(2021, 2, 1), dt.date(2021, 2, 2), dt.date(2021, 2, 3), dt.date(2021, 2, 4),
-                                  dt.date(2021, 2, 5), dt.date(2021, 2, 6)])
+        [
+            dt.date(2021, 1, 1),
+            dt.date(2021, 1, 2),
+            dt.date(2021, 1, 3),
+            dt.date(2021, 1, 4),
+            dt.date(2021, 1, 5),
+            dt.date(2021, 1, 6),
+        ]
+    )
+    dates_feb = pd.DatetimeIndex(
+        [
+            dt.date(2021, 2, 1),
+            dt.date(2021, 2, 2),
+            dt.date(2021, 2, 3),
+            dt.date(2021, 2, 4),
+            dt.date(2021, 2, 5),
+            dt.date(2021, 2, 6),
+        ]
+    )
 
     replace = Replacer()
 
@@ -138,8 +159,10 @@ def test_basket_price():
     mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
-                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
+    mock_asset.return_value = [
+        {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
+    ]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.MONTHLY)
     expected = pd.Series([100.0, 100.1, 100.302, 100.09596, 100.09596, 100.297879], index=dates)
@@ -167,8 +190,15 @@ def test_basket_average_implied_vol():
     replace = Replacer()
 
     dates = pd.DatetimeIndex(
-        [dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3), dt.date(2021, 1, 4), dt.date(2021, 1, 5),
-         dt.date(2021, 1, 6)])
+        [
+            dt.date(2021, 1, 1),
+            dt.date(2021, 1, 2),
+            dt.date(2021, 1, 3),
+            dt.date(2021, 1, 4),
+            dt.date(2021, 1, 5),
+            dt.date(2021, 1, 6),
+        ]
+    )
 
     x = pd.DataFrame({'impliedVolatility': [30.0, 30.2, 29.8, 30.6, 30.1, 30.0]}, index=dates)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
@@ -184,8 +214,10 @@ def test_basket_average_implied_vol():
     mock_data.return_value = [implied_vol]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
-                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
+    mock_asset.return_value = [
+        {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
+    ]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
     expected = pd.Series([21.0, 21.2, 21.25, 21.6, 22.0, 21.0], index=dates)
@@ -207,17 +239,34 @@ def test_basket_average_realized_vol():
     replace = Replacer()
 
     dates = pd.DatetimeIndex(
-        [dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3), dt.date(2021, 1, 4), dt.date(2021, 1, 5),
-         dt.date(2021, 1, 6)])
-    dates_feb = pd.DatetimeIndex([dt.date(2021, 2, 1), dt.date(2021, 2, 2), dt.date(2021, 2, 3), dt.date(2021, 2, 4),
-                                  dt.date(2021, 2, 5), dt.date(2021, 2, 6)])
+        [
+            dt.date(2021, 1, 1),
+            dt.date(2021, 1, 2),
+            dt.date(2021, 1, 3),
+            dt.date(2021, 1, 4),
+            dt.date(2021, 1, 5),
+            dt.date(2021, 1, 6),
+        ]
+    )
+    dates_feb = pd.DatetimeIndex(
+        [
+            dt.date(2021, 2, 1),
+            dt.date(2021, 2, 2),
+            dt.date(2021, 2, 3),
+            dt.date(2021, 2, 4),
+            dt.date(2021, 2, 5),
+            dt.date(2021, 2, 6),
+        ]
+    )
 
     mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
     mock_data.side_effect = [_mock_spot_data(), _mock_spot_data_feb(), _mock_spot_data_feb()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
-                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
+    mock_asset.return_value = [
+        {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
+    ]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
 
@@ -259,14 +308,22 @@ def _mock_data_simple():
     x['assetId'] = 'XLC_MOCK_MQID'
     y = pd.DataFrame({'spot': a.tolist()}, index=a.index)
     y['assetId'] = 'XLB_MOCK_MQID'
-    z = pd.DataFrame({'spot': (a ** 3).tolist()}, index=a.index)
+    z = pd.DataFrame({'spot': (a**3).tolist()}, index=a.index)
     z['assetId'] = 'SPX_MOCK_MQID'
     return pd.concat([x, y, z])
 
 
 def _mock_spot_data_identical():
-    dates = pd.DatetimeIndex([dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3),
-                              dt.date(2021, 1, 4), dt.date(2021, 1, 5), dt.date(2021, 1, 6)])
+    dates = pd.DatetimeIndex(
+        [
+            dt.date(2021, 1, 1),
+            dt.date(2021, 1, 2),
+            dt.date(2021, 1, 3),
+            dt.date(2021, 1, 4),
+            dt.date(2021, 1, 5),
+            dt.date(2021, 1, 6),
+        ]
+    )
     x = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
     x['assetId'] = 'MA4B66MW5E27U9VBB94'
     y = pd.DataFrame({'spot': [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792]}, index=dates)
@@ -275,8 +332,16 @@ def _mock_spot_data_identical():
 
 
 def _mock_spot_data_corr():
-    dates = pd.DatetimeIndex([dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3),
-                              dt.date(2021, 1, 4), dt.date(2021, 1, 5), dt.date(2021, 1, 6)])
+    dates = pd.DatetimeIndex(
+        [
+            dt.date(2021, 1, 1),
+            dt.date(2021, 1, 2),
+            dt.date(2021, 1, 3),
+            dt.date(2021, 1, 4),
+            dt.date(2021, 1, 5),
+            dt.date(2021, 1, 6),
+        ]
+    )
     x = pd.DataFrame({'spot': [78, 9, 1003, 17, -12, 5], 'assetId': 'MA4B66MW5E27U9VBB94'}, index=dates)
     y = pd.DataFrame({'spot': [-33, 33, 15, 21, -3, 2], 'assetId': 'MA4B66MW5E27UAL9SUX'}, index=dates)
     z = pd.DataFrame({'spot': [86, 86, 56, 86, 86, 9], 'assetId': 'MA4B66MW5E27UANZH2M'}, index=dates)
@@ -290,8 +355,11 @@ def test_basket_average_realized_vol_wts():
     mock_data.side_effect = [_mock_data_simple()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'XLB_MOCK_MQID', 'bbid': 'XLP UP'},
-                               {'id': 'XLC_MOCK_MQID', 'bbid': 'XLC UP'}, {'id': 'SPX_MOCK_MQID', 'bbid': 'SPX'}]
+    mock_asset.return_value = [
+        {'id': 'XLB_MOCK_MQID', 'bbid': 'XLP UP'},
+        {'id': 'XLC_MOCK_MQID', 'bbid': 'XLC UP'},
+        {'id': 'SPX_MOCK_MQID', 'bbid': 'SPX'},
+    ]
 
     mock_vol = replace('gs_quant.timeseries.backtesting.volatility', Mock())
     mock_vol.side_effect = [_mock_vol_simple(), _mock_vol_simple() * 2, _mock_vol_simple() * 3, _mock_vol_simple() * 4]
@@ -312,7 +380,7 @@ def test_basket_average_realized_vol_intraday():
     start_date = end_date - dt.timedelta(days=4)
 
     a = pd.Series([1 for i in range(5)], index=pd.date_range(start_date, end_date))
-    z = pd.DataFrame({'spot': (a ** 3).tolist()}, index=a.index)
+    z = pd.DataFrame({'spot': (a**3).tolist()}, index=a.index)
     z['assetId'] = 'SPX_MOCK_MQID'
 
     mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
@@ -322,8 +390,7 @@ def test_basket_average_realized_vol_intraday():
     mock_asset.return_value = [{'id': 'SPX_MOCK_MQID', 'bbid': 'SPX'}]
 
     mock_today = replace('gs_quant.timeseries.get_last_for_measure', Mock())
-    mock_today.side_effect = [pd.DataFrame({'assetId': 'SPX_MOCK_MQID', 'spot': 5001.0},
-                                           index=[dt.datetime.now()])]
+    mock_today.side_effect = [pd.DataFrame({'assetId': 'SPX_MOCK_MQID', 'spot': 5001.0}, index=[dt.datetime.now()])]
 
     a_basket = Basket(['SPX'], [1], RebalFreq.DAILY)
 
@@ -338,19 +405,24 @@ def test_basket_average_realized_corr():
     replace = Replacer()
 
     dates = pd.DatetimeIndex(
-        [dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3), dt.date(2021, 1, 4), dt.date(2021, 1, 5),
-         dt.date(2021, 1, 6)])
+        [
+            dt.date(2021, 1, 1),
+            dt.date(2021, 1, 2),
+            dt.date(2021, 1, 3),
+            dt.date(2021, 1, 4),
+            dt.date(2021, 1, 5),
+            dt.date(2021, 1, 6),
+        ]
+    )
 
     mock_data = replace('gs_quant.timeseries.backtesting.ts.get_historical_and_last_for_measure', Mock())
-    mock_data.side_effect = [_mock_spot_data_identical(), _mock_spot_data_corr(),
-                             _mock_spot_data_identical()]
+    mock_data.side_effect = [_mock_spot_data_identical(), _mock_spot_data_corr(), _mock_spot_data_identical()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
     mock_asset.return_value = [
         {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
         {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
-        {'id': 'ID of a dUpLiCaTe AAPL', 'bbid': 'AAPL UW'}
-
+        {'id': 'ID of a dUpLiCaTe AAPL', 'bbid': 'AAPL UW'},
     ]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
@@ -366,7 +438,7 @@ def test_basket_average_realized_corr():
         {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
         {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
         {'id': 'MA4B66MW5E27UANZH2M', 'bbid': 'XLP UP'},
-        {'id': 'ID of a dUpLiCaTe XLP UP', 'bbid': 'XLP UP'}
+        {'id': 'ID of a dUpLiCaTe XLP UP', 'bbid': 'XLP UP'},
     ]
 
     b_basket = Basket(['AAPL UW', 'MSFT UW', 'XLP UP'], [0.2, 0.3, 0.5], RebalFreq.DAILY)
@@ -383,7 +455,7 @@ def test_basket_average_realized_corr():
         {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
         {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
         {'id': 'MA4B66MW5E27UANZH2M', 'bbid': 'XLP UP'},
-        {'id': 'ID of a DuPlIcAtE MSFT UW', 'bbid': 'MSFT UW'}
+        {'id': 'ID of a DuPlIcAtE MSFT UW', 'bbid': 'MSFT UW'},
     ]
 
     with pytest.raises(NotImplementedError):
@@ -399,8 +471,10 @@ def test_basket_without_weights():
     mock_data.side_effect = [_mock_spot_data(), _mock_spot_data(), _mock_spot_data(), _mock_spot_data()]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
-                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
+    mock_asset.return_value = [
+        {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
+    ]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.5, 0.5], RebalFreq.DAILY)
     b_basket = Basket(['AAPL UW', 'MSFT UW'])
@@ -424,8 +498,15 @@ def test_basket_avg_fwd_vol():
     replace = Replacer()
 
     dates = pd.DatetimeIndex(
-        [dt.date(2021, 1, 1), dt.date(2021, 1, 2), dt.date(2021, 1, 3), dt.date(2021, 1, 4), dt.date(2021, 1, 5),
-         dt.date(2021, 1, 6)])
+        [
+            dt.date(2021, 1, 1),
+            dt.date(2021, 1, 2),
+            dt.date(2021, 1, 3),
+            dt.date(2021, 1, 4),
+            dt.date(2021, 1, 5),
+            dt.date(2021, 1, 6),
+        ]
+    )
 
     x_1m = pd.DataFrame({'impliedVolatility': [30.0, 30.2, 29.8, 30.6, 30.1, 30.0]}, index=dates)
     x_1m['assetId'] = 'MA4B66MW5E27U9VBB94'
@@ -446,8 +527,10 @@ def test_basket_avg_fwd_vol():
     mock_data.side_effect = [implied_vol, spot]
 
     mock_asset = replace('gs_quant.timeseries.backtesting.GsAssetApi.get_many_assets_data', Mock())
-    mock_asset.return_value = [{'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
-                               {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'}]
+    mock_asset.return_value = [
+        {'id': 'MA4B66MW5E27U9VBB94', 'bbid': 'AAPL UW'},
+        {'id': 'MA4B66MW5E27UAL9SUX', 'bbid': 'MSFT UW'},
+    ]
 
     a_basket = Basket(['AAPL UW', 'MSFT UW'], [0.1, 0.9], RebalFreq.DAILY)
     expected = pd.Series([24.55488, 26.61354, 27.45295, 23.557069, 26.90214, 24.046239], index=dates)
