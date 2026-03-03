@@ -38,14 +38,7 @@ from gs_quant.errors import MqValueError
 from gs_quant.instrument import (
     EqOption,
     EqVarianceSwap,
-    FXOption,
-    FXBinary,
-    FXCorrelationSwap,
-    FXOneTouch,
-    FXVarianceSwap,
-    FXVolatilitySwap,
     Instrument,
-    IRSwaption,
 )
 from gs_quant.target.backtests import (
     BacktestResult,
@@ -71,9 +64,6 @@ class StrategySystematic:
     """Equity back testing systematic strategy"""
 
     _supported_eq_instruments = (EqOption, EqVarianceSwap)
-    _supported_fx_instruments = (FXOption, FXBinary, FXCorrelationSwap, FXOneTouch, FXVarianceSwap, FXVolatilitySwap)
-    _supported_ir_instruments = (IRSwaption,)
-    _supported_instruments = _supported_eq_instruments + _supported_fx_instruments + _supported_ir_instruments
 
     def __init__(
         self,
@@ -119,20 +109,11 @@ class StrategySystematic:
 
         self.__underliers = []
         trade_instruments = []
-        if isinstance(underliers, self._supported_instruments):
-            instrument = underliers
-            notional_percentage = 100
-            trade_instruments.append(instrument)
-            self.__underliers.append(
-                BacktestStrategyUnderlier(
-                    instrument=instrument,
-                    notional_percentage=notional_percentage,
-                    hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
-                    market_model=market_model,
-                    expiry_date_mode=expiry_date_mode,
-                )
-            )
-        else:
+
+        def is_unsupported_eq_instrument(inst):
+            return inst.__class__.__name__.startswith('Eq') and not isinstance(inst, self._supported_eq_instruments)
+
+        if isinstance(underliers, Iterable):
             for underlier in underliers:
                 if isinstance(underlier, tuple):
                     instrument = underlier[0]
@@ -141,7 +122,7 @@ class StrategySystematic:
                     instrument = underlier
                     notional_percentage = 100
 
-                if not isinstance(instrument, self._supported_instruments):
+                if is_unsupported_eq_instrument(instrument):
                     raise MqValueError('The format of the backtest asset is incorrect.')
                 else:
                     instrument = instrument.scale(notional_percentage / 100, in_place=False, check_resolved=False)
@@ -155,6 +136,21 @@ class StrategySystematic:
                         expiry_date_mode=expiry_date_mode,
                     )
                 )
+        else:
+            instrument = underliers
+            if is_unsupported_eq_instrument(instrument):
+                raise MqValueError('The format of the backtest asset is incorrect.')
+            notional_percentage = 100
+            trade_instruments.append(instrument)
+            self.__underliers.append(
+                BacktestStrategyUnderlier(
+                    instrument=instrument,
+                    notional_percentage=notional_percentage,
+                    hedge=BacktestStrategyUnderlierHedge(risk_details=delta_hedge),
+                    market_model=market_model,
+                    expiry_date_mode=expiry_date_mode,
+                )
+            )
         # xasset backtesting service fields
         trade_buy_dates = tuple(s.date for s in trade_in_signals if s.value) if trade_in_signals is not None else None
         trade_exit_dates = (
@@ -198,12 +194,7 @@ class StrategySystematic:
             'index_initial_value': index_initial_value,
         }
         self.__backtest_parameters = backtest_parameters_class.from_dict(backtest_parameter_args)
-        all_eq = all(isinstance(i, self._supported_eq_instruments) for i in trade_instruments)
-        all_fx = all(isinstance(i, self._supported_fx_instruments) for i in trade_instruments)
-        all_ir = all(isinstance(i, self._supported_ir_instruments) for i in trade_instruments)
-        if not (all_eq or all_fx or all_ir):
-            raise MqValueError('Cannot run backtests for different asset classes.')
-        self.__use_xasset_backtesting_service = all_fx or all_ir or use_xasset_backtesting_service
+        self.__use_xasset_backtesting_service = use_xasset_backtesting_service
 
     def __run_service_based_backtest(
         self, start: dt.date, end: dt.date, measures: Iterable[FlowVolBacktestMeasure]

@@ -1917,14 +1917,10 @@ class SecurityMaster:
         output = {}
         for k, v in id_map.items():
             r = GsSession.current._get(f'/markets/securities/{v}/identifiers')
+
             piece = []
             for e in r['results']:
-                time_str = e['updateTime'].split('.')[0]
-                if time_str.endswith('Z'):
-                    time_str = time_str[0:-1]
-                time = dt.datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S')
-                if start <= time <= end:
-                    piece.append(e)
+                piece.append(e)
             output[k] = piece
 
         return output
