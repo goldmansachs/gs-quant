@@ -113,10 +113,10 @@ class AssetTreeNode:
 
             for key, value in node.data.items():
                 data[key] = value
-            constituents_df = constituents_df.append(pd.DataFrame(data, index=[0]))
+            constituents_df = pd.concat([constituents_df, pd.DataFrame(data, index=[0])])
             d = node.__build_constituents_df(pd.DataFrame())
             if len(d) > 0:
-                constituents_df = constituents_df.append(d)
+                constituents_df = pd.concat([constituents_df, d])
         return constituents_df
 
 
