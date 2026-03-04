@@ -266,7 +266,7 @@ class StrategySystematic:
         return BacktestResult(risks=risks, events=tuple(events), portfolio=portfolio)
 
     def __position_quantity(self, instrument: dict) -> float:
-        if instrument['assetClass'] == AssetClass.Equity.value:
+        if instrument.get('assetClass') == AssetClass.Equity.value:
             direction = 1 if instrument['buySell'] == 'Buy' else -1
             quantity = instrument['numberOfOptions'] if instrument['type'] == 'Option' else instrument['quantity']
             return direction * quantity
