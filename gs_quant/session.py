@@ -687,7 +687,22 @@ class GsSession(ContextBase):
         )
 
     def _headers(self):
-        return [('Cookie', 'GSSSO=' + self._session.cookies['GSSSO'])]
+        headers = []
+        if self._session:
+            for k, v in self._session.headers.items():
+                if k.upper() in ('AUTHORIZATION', 'X-MARQUEE-CSRF-TOKEN', 'X-APPLICATION', 'X-VERSION'):
+                    headers.append((k, v))
+            cookies = ()
+            if self._session.cookies:
+                if "MarqueeLogin" in self._session.cookies:
+                    cookies += (f"MarqueeLogin={self._session.cookies['MarqueeLogin']}",)
+                if "MARQUEE-CSRF-TOKEN" in self._session.cookies:
+                    cookies += (f"MARQUEE-CSRF-TOKEN={self._session.cookies['MARQUEE-CSRF-TOKEN']}",)
+                if 'GSSSO' in self._session.cookies:
+                    cookies += (f"GSSSO={self._session.cookies['GSSSO']}",)
+            if cookies:
+                headers += [('Cookie', "; ".join(cookies))]
+        return headers
 
     def _get_mds_domain(self):
         env_config = GsSession._config_for_environment(self.environment.name)
