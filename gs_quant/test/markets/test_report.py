@@ -169,7 +169,7 @@ def test_get_aum_source(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=portfolio)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=portfolio)
 
     # run test
     response = fake_ppa.get_aum_source()
@@ -181,7 +181,7 @@ def test_get_custom_aum(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=custom_aum)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=custom_aum)
 
     # run test
     response = fake_ppa.get_custom_aum()
@@ -194,7 +194,7 @@ def test_get_aum(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=portfolio)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=portfolio)
     mocker.patch.object(GsDataApi, 'query_data', return_value=ppa_data)
 
     # run test
@@ -247,7 +247,7 @@ def test_get_factor_pnl(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_factor_pnl(factor_names=['factor1'])
@@ -259,7 +259,7 @@ def test_get_factor_proportion_of_risk(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_factor_proportion_of_risk(factor_names=['factor1'])
@@ -271,7 +271,7 @@ def test_get_factor_exposure(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_factor_exposure(factor_names=['factor1'])
@@ -283,7 +283,7 @@ def test_get_annual_risk(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_annual_risk('factor1')
@@ -295,7 +295,7 @@ def test_get_daily_risk(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=factor_risk_results)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=factor_risk_results)
 
     # run test
     response = fake_pfr.get_daily_risk('factor1')

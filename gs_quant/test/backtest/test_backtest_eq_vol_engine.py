@@ -62,8 +62,13 @@ from gs_quant.target.backtests import (
     FlowVolBacktestMeasure,
     EquityMarketModel,
 )
+import pytest
 import pandas as pd
 from gs_quant.common import TradeAs
+
+# Tests in this module intentionally exercise the deprecated EnterPositionQuantityScaledAction and
+# ExitPositionAction classes to verify the equity vol engine still supports them.
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 
 def set_session():

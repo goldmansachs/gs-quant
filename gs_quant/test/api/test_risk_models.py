@@ -86,11 +86,11 @@ def test_get_risk_models(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsRiskModelApi.get_risk_models()
-    GsSession.current._get.assert_called_with('/risk/models?', cls=RiskModel)
+    GsSession.current.sync.get.assert_called_with('/risk/models?', cls=RiskModel)
     assert response == expected_response
 
 
@@ -124,11 +124,11 @@ def test_get_risk_model(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=model)
 
     # run test
     response = GsRiskModelApi.get_risk_model(model_id)
-    GsSession.current._get.assert_called_with('/risk/models/{id}'.format(id=model_id), cls=RiskModel)
+    GsSession.current.sync.get.assert_called_with('/risk/models/{id}'.format(id=model_id), cls=RiskModel)
     assert response == expected_response
 
 
@@ -161,11 +161,11 @@ def test_create_risk_model(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=model)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=model)
 
     # run test
     response = GsRiskModelApi.create_risk_model(model)
-    GsSession.current._post.assert_called_with('/risk/models', model, cls=RiskModel)
+    GsSession.current.sync.post.assert_called_with('/risk/models', model, cls=RiskModel)
     assert response == expected_response
 
 
@@ -186,11 +186,11 @@ def test_update_risk_model(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_put', return_value=model)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=model)
 
     # run test
     response = GsRiskModelApi.update_risk_model(model)
-    GsSession.current._put.assert_called_with('/risk/models/{id}'.format(id='WW_TEST_MODEL'), model, cls=RiskModel)
+    GsSession.current.sync.put.assert_called_with('/risk/models/{id}'.format(id='WW_TEST_MODEL'), model, cls=RiskModel)
     assert response == model
 
 
@@ -201,11 +201,11 @@ def test_delete_risk_model(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'delete', return_value=mock_response)
 
     # run test
     response = GsRiskModelApi.delete_risk_model('model id')
-    GsSession.current._delete.assert_called_with('/risk/models/{id}'.format(id='model id'))
+    GsSession.current.sync.delete.assert_called_with('/risk/models/{id}'.format(id='model id'))
     assert response == mock_response
 
 
@@ -216,11 +216,11 @@ def test_get_risk_model_calendar(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=calendar)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=calendar)
 
     # run test
     response = GsRiskModelApi.get_risk_model_calendar('id')
-    GsSession.current._get.assert_called_with('/risk/models/{id}/calendar'.format(id='id'), cls=RiskModelCalendar)
+    GsSession.current.sync.get.assert_called_with('/risk/models/{id}/calendar'.format(id='id'), cls=RiskModelCalendar)
     assert response == calendar
 
 
@@ -231,11 +231,11 @@ def test_upload_risk_model_calendar(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_put', return_value=calendar)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=calendar)
 
     # run test
     response = GsRiskModelApi.upload_risk_model_calendar('WW_TEST_MODEL', calendar)
-    GsSession.current._put.assert_called_with(
+    GsSession.current.sync.put.assert_called_with(
         '/risk/models/{id}/calendar'.format(id='WW_TEST_MODEL'), calendar, cls=RiskModelCalendar
     )
     assert response == calendar
@@ -256,11 +256,11 @@ def test_get_risk_model_factors(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=factors)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=factors)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_factors(model_id='id')
-    GsSession.current._get.assert_called_with('/risk/models/id/factors', cls=Factor)
+    GsSession.current.sync.get.assert_called_with('/risk/models/id/factors', cls=Factor)
     assert response == expected_response
 
 
@@ -273,11 +273,11 @@ def test_create_risk_model_factor(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=factor)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=factor)
 
     # run test
     response = GsFactorRiskModelApi.create_risk_model_factor(model_id='id', factor=factor)
-    GsSession.current._post.assert_called_with('/risk/models/id/factors', factor, cls=Factor)
+    GsSession.current.sync.post.assert_called_with('/risk/models/id/factors', factor, cls=Factor)
     assert response == expected_response
 
 
@@ -288,11 +288,11 @@ def test_update_risk_model_factor(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_put', return_value=factor)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=factor)
 
     # run test
     response = GsFactorRiskModelApi.update_risk_model_factor(model_id='id', factor=factor)
-    GsSession.current._put.assert_called_with(
+    GsSession.current.sync.put.assert_called_with(
         '/risk/models/{id}/factors/{identifier}'.format(id='id', identifier='factor'), factor, cls=Factor
     )
     assert response == factor
@@ -310,11 +310,11 @@ def test_get_risk_model_coverage(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_coverage()
-    GsSession.current._post.assert_called_with('/risk/models/coverage', {}, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/coverage', {}, timeout=200)
     assert response == results['results']
 
 
@@ -340,11 +340,13 @@ def test_upload_risk_model_data(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value='Successfully uploaded')
+    mocker.patch.object(GsSession.current.sync, 'post', return_value='Successfully uploaded')
 
     # run test
     response = GsFactorRiskModelApi.upload_risk_model_data(model_id='id', model_data=risk_model_data)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}'.format(id='id'), risk_model_data, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}'.format(id='id'), risk_model_data, timeout=200
+    )
     assert response == 'Successfully uploaded'
 
 
@@ -390,11 +392,11 @@ def test_upload_macro_risk_model_data(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value='Successfully uploaded')
+    mocker.patch.object(GsSession.current.sync, 'post', return_value='Successfully uploaded')
 
     # run test
     response = GsFactorRiskModelApi.upload_risk_model_data(model_id='id', model_data=macro_risk_model_data)
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/risk/models/data/{id}'.format(id='id'), macro_risk_model_data, timeout=200
     )
     assert response == 'Successfully uploaded'
@@ -436,13 +438,13 @@ def test_get_risk_model_data(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(
         model_id='id', start_date=dt.date(2020, 1, 1), end_date=dt.date(2020, 3, 3)
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == results
 
 
@@ -467,7 +469,7 @@ def test_get_r_squared(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=r_squared_results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=r_squared_results)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(
@@ -478,7 +480,7 @@ def test_get_r_squared(mocker):
         measures=[Measure.R_Squared, Measure.Asset_Universe],
         limit_factors=False,
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == r_squared_results
 
 
@@ -507,7 +509,7 @@ def test_get_fair_value_gap(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=fvg_results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=fvg_results)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(
@@ -518,7 +520,7 @@ def test_get_fair_value_gap(mocker):
         measures=[Measure.Fair_Value_Gap_Percent, Measure.Fair_Value_Gap_Standard_Deviation, Measure.Asset_Universe],
         limit_factors=False,
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == fvg_results
 
 
@@ -546,7 +548,7 @@ def test_get_factor_standard_deviation(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=factor_standard_deviation_results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=factor_standard_deviation_results)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(
@@ -557,7 +559,7 @@ def test_get_factor_standard_deviation(mocker):
         measures=[Measure.Factor_Standard_Deviation, Measure.Factor_Name, Measure.Factor_Id],
         limit_factors=False,
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == factor_standard_deviation_results
 
 
@@ -585,7 +587,7 @@ def test_get_factor_z_score(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=factor_z_score_results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=factor_z_score_results)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(
@@ -596,7 +598,7 @@ def test_get_factor_z_score(mocker):
         measures=[Measure.Factor_Z_Score, Measure.Factor_Name, Measure.Factor_Id],
         limit_factors=False,
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == factor_z_score_results
 
 
@@ -621,7 +623,7 @@ def test_get_predicted_beta(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=predicted_beta_results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=predicted_beta_results)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(
@@ -632,7 +634,7 @@ def test_get_predicted_beta(mocker):
         measures=[Measure.Predicted_Beta, Measure.Asset_Universe],
         limit_factors=False,
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == predicted_beta_results
 
 
@@ -660,7 +662,7 @@ def test_get_global_predicted_beta(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=global_predicted_beta_results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=global_predicted_beta_results)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(
@@ -671,7 +673,7 @@ def test_get_global_predicted_beta(mocker):
         measures=[Measure.Global_Predicted_Beta, Measure.Asset_Universe],
         limit_factors=False,
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == global_predicted_beta_results
 
 
@@ -696,7 +698,7 @@ def test_get_daily_return(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=daily_return_results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=daily_return_results)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(
@@ -707,7 +709,7 @@ def test_get_daily_return(mocker):
         measures=[Measure.Daily_Return, Measure.Asset_Universe],
         limit_factors=False,
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == daily_return_results
 
 
@@ -732,7 +734,7 @@ def test_get_specific_return(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=specific_return_resutls)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=specific_return_resutls)
 
     # run test
     response = GsFactorRiskModelApi.get_risk_model_data(
@@ -743,5 +745,5 @@ def test_get_specific_return(mocker):
         measures=[Measure.Specific_Return, Measure.Asset_Universe],
         limit_factors=False,
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with('/risk/models/data/{id}/query'.format(id='id'), query, timeout=200)
     assert response == specific_return_resutls

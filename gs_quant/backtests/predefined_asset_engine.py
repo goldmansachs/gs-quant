@@ -46,7 +46,6 @@ class AddTradeActionImpl(ActionHandler):
         super().__init__(action)
 
     def generate_orders(self, state: dt.datetime, backtest: PredefinedAssetBacktest, info: AddTradeActionInfo):
-
         orders = []
         for pricable in self.action.priceables:
             quantity = pricable.instrument_quantity * 1 if info is None or info.scaling is None else info.scaling

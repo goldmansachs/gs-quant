@@ -38,11 +38,11 @@ def test_get_all_screeners(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsBaseScreenerApi.get_screeners()
-    GsSession.current._get.assert_called_with('/data/screeners', cls=Screener)
+    GsSession.current.sync.get.assert_called_with('/data/screeners', cls=Screener)
     assert response == expected_response
 
 
@@ -58,11 +58,11 @@ def test_get_screen(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsBaseScreenerApi.get_screener(screener_id)
-    GsSession.current._get.assert_called_with('/data/screeners/{id}'.format(id=screener_id), cls=Screener)
+    GsSession.current.sync.get.assert_called_with('/data/screeners/{id}'.format(id=screener_id), cls=Screener)
     assert response == mock_response
 
 
@@ -78,12 +78,12 @@ def test_create_screener(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     # run test
     response = GsBaseScreenerApi.create_screener(mock_input)
     request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/data/screeners', mock_input, request_headers=request_headers, cls=Screener
     )
     assert response == mock_response
@@ -101,12 +101,12 @@ def test_edit_screener(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_put', return_value=mock_screen)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=mock_screen)
 
     # run test
     response = GsBaseScreenerApi.edit_screener(screener_id, mock_screen)
     request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-    GsSession.current._put.assert_called_with(
+    GsSession.current.sync.put.assert_called_with(
         '/data/screeners/{id}'.format(id=screener_id), mock_screen, request_headers=request_headers, cls=Screener
     )
     assert response == mock_screen
@@ -142,12 +142,12 @@ def test_publish_to_screener(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     # run test
     response = GsBaseScreenerApi.publish_to_screener(screener_id, publish_data)
     request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/data/screeners/{id}/publish'.format(id=screener_id), publish_data, request_headers=request_headers
     )
     assert response == expected_result
@@ -162,12 +162,12 @@ def test_clear_screener(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     # run test
     response = GsBaseScreenerApi.clear_screener(screener_id)
     request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/data/screeners/{id}/clear'.format(id=screener_id), {}, request_headers=request_headers
     )
 
@@ -182,10 +182,10 @@ def test_delete_screener(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'delete', return_value=mock_response)
 
     # run test
     response = GsBaseScreenerApi.delete_screener(screener_id)
-    GsSession.current._delete.assert_called_with('/data/screeners/{id}'.format(id=screener_id))
+    GsSession.current.sync.delete.assert_called_with('/data/screeners/{id}'.format(id=screener_id))
 
     assert response == mock_response

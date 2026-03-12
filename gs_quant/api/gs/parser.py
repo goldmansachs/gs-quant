@@ -26,10 +26,10 @@ class GsParserApi:
 
     @classmethod
     def get_instrument_from_text_asset_class(cls, text: str, asset_class: str) -> dict:
-        res = GsSession.current._post('/parser/quoteTicket', payload={'message': text, 'assetClass': asset_class})
+        res = GsSession.current.sync.post('/parser/quoteTicket', payload={'message': text, 'assetClass': asset_class})
         return res['ticket']['quote']['instrument']
 
     @classmethod
     def get_instrument_from_text(cls, text: str) -> dict:
-        res = GsSession.current._post('/parser/portfolio', payload={'message': text})
+        res = GsSession.current.sync.post('/parser/portfolio', payload={'message': text})
         return res['instruments']

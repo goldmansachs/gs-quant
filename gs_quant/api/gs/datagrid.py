@@ -31,7 +31,9 @@ class GsDataGridApi:
     @classmethod
     def get_datagrids(cls, limit: int = 10, **kwargs) -> List[DataGrid]:
         raw_datagrids = get(
-            GsSession.current._get(f'{API}?limit={limit}&orderBy=>lastUpdatedTime&{urllib.parse.urlencode(kwargs)}'),
+            GsSession.current.sync.get(
+                f'{API}?limit={limit}&orderBy=>lastUpdatedTime&{urllib.parse.urlencode(kwargs)}'
+            ),
             'results',
             [],
         )
@@ -39,9 +41,9 @@ class GsDataGridApi:
 
     @classmethod
     def get_my_datagrids(cls, limit: int = 10, **kwargs) -> List[DataGrid]:
-        user_id = GsSession.current._get('/users/self')['id']
+        user_id = GsSession.current.sync.get('/users/self')['id']
         raw_datagrids = get(
-            GsSession.current._get(
+            GsSession.current.sync.get(
                 f'{API}?limit={limit}&ownerId={user_id}&orderBy=>lastUpdatedTime&{urllib.parse.urlencode(kwargs)}'
             ),
             'results',
@@ -51,21 +53,21 @@ class GsDataGridApi:
 
     @classmethod
     def get_datagrid(cls, datagrid_id: str) -> DataGrid:
-        raw_datagrid = GsSession.current._get(f'{API}/{datagrid_id}')
+        raw_datagrid = GsSession.current.sync.get(f'{API}/{datagrid_id}')
         return DataGrid.from_dict(raw_datagrid)
 
     @classmethod
     def create_datagrid(cls, datagrid: DataGrid) -> DataGrid:
         datagrid_json = json.dumps(datagrid.as_dict())
-        response = GsSession.current._post(f'{API}', datagrid_json, request_headers=DATAGRID_HEADERS)
+        response = GsSession.current.sync.post(f'{API}', datagrid_json, request_headers=DATAGRID_HEADERS)
         return DataGrid.from_dict(response)
 
     @classmethod
     def update_datagrid(cls, datagrid: DataGrid):
         datagrid_json = json.dumps(datagrid.as_dict())
-        datagrid = GsSession.current._put(f'{API}/{datagrid.id_}', datagrid_json, request_headers=DATAGRID_HEADERS)
+        datagrid = GsSession.current.sync.put(f'{API}/{datagrid.id_}', datagrid_json, request_headers=DATAGRID_HEADERS)
         return DataGrid.from_dict(datagrid)
 
     @classmethod
     def delete_datagrid(cls, datagrid: DataGrid):
-        return GsSession.current._delete(f'{API}/{datagrid.id_}')
+        return GsSession.current.sync.delete(f'{API}/{datagrid.id_}')

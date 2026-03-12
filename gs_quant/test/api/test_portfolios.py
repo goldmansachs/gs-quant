@@ -44,11 +44,11 @@ def test_get_many_portfolios(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_portfolios()
-    GsSession.current._get.assert_called_with('/portfolios?&limit=100', cls=Portfolio)
+    GsSession.current.sync.get.assert_called_with('/portfolios?&limit=100', cls=Portfolio)
     assert response == expected_response
 
 
@@ -60,11 +60,11 @@ def test_get_portfolio(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_portfolio(id_1)
-    GsSession.current._get.assert_called_with('/portfolios/{id}'.format(id=id_1), cls=Portfolio)
+    GsSession.current.sync.get.assert_called_with('/portfolios/{id}'.format(id=id_1), cls=Portfolio)
     assert response == mock_response
 
 
@@ -77,11 +77,11 @@ def test_create_portfolio(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=portfolio)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=portfolio)
 
     # run test
     response = GsPortfolioApi.create_portfolio(portfolio)
-    GsSession.current._post.assert_called_with('/portfolios', portfolio, cls=Portfolio)
+    GsSession.current.sync.post.assert_called_with('/portfolios', portfolio, cls=Portfolio)
     assert response == portfolio
 
 
@@ -94,11 +94,11 @@ def test_update_portfolio(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_put', return_value=portfolio)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=portfolio)
 
     # run test
     response = GsPortfolioApi.update_portfolio(portfolio)
-    GsSession.current._put.assert_called_with('/portfolios/{id}'.format(id=id_1), portfolio, cls=Portfolio)
+    GsSession.current.sync.put.assert_called_with('/portfolios/{id}'.format(id=id_1), portfolio, cls=Portfolio)
     assert response == portfolio
 
 
@@ -111,11 +111,11 @@ def test_delete_portfolio(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'delete', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.delete_portfolio(id_1)
-    GsSession.current._delete.assert_called_with('/portfolios/{id}'.format(id=id_1))
+    GsSession.current.sync.delete.assert_called_with('/portfolios/{id}'.format(id=id_1))
     assert response == mock_response
 
 
@@ -160,12 +160,12 @@ def test_get_portfolio_positions(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_positions(id_1, start_date, end_date)
 
-    GsSession.current._get.assert_called_with(
+    GsSession.current.sync.get.assert_called_with(
         '/portfolios/{id}/positions?type=close&startDate={sd}&endDate={ed}'.format(id=id_1, sd=start_date, ed=end_date)
     )
 
@@ -200,12 +200,12 @@ def test_get_portfolio_positions_for_date(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_positions_for_date(id_1, date)
 
-    GsSession.current._get.assert_called_with(
+    GsSession.current.sync.get.assert_called_with(
         '/portfolios/{id}/positions/{d}?type=close'.format(id=id_1, d=date), cls=PositionSet
     )
 
@@ -236,12 +236,12 @@ def test_get_latest_portfolio_positions(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_latest_positions(id_1)
 
-    GsSession.current._get.assert_called_with('/portfolios/{id}/positions/last?type=close'.format(id=id_1))
+    GsSession.current.sync.get.assert_called_with('/portfolios/{id}/positions/last?type=close'.format(id=id_1))
 
     assert response == expected_response
 
@@ -257,12 +257,12 @@ def test_get_portfolio_position_dates(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_position_dates(id_1)
 
-    GsSession.current._get.assert_called_with('/portfolios/{id}/positions/dates'.format(id=id_1))
+    GsSession.current.sync.get.assert_called_with('/portfolios/{id}/positions/dates'.format(id=id_1))
 
     assert response == expected_response
 
@@ -304,12 +304,12 @@ def test_portfolio_positions_data(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_positions_data('portfolio_id', dt.date(2020, 1, 1), dt.date(2021, 1, 1))
 
-    GsSession.current._get.assert_called_with(
+    GsSession.current.sync.get.assert_called_with(
         '/portfolios/portfolio_id/positions/data?startDate=2020-01-01&endDate=2021-01-01'
     )
 
@@ -333,12 +333,12 @@ def test_get_risk_models_by_coverage(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_risk_models_by_coverage('portfolio_id')
 
-    GsSession.current._get.assert_called_with('/portfolios/portfolio_id/models?sortByTerm=Medium')
+    GsSession.current.sync.get.assert_called_with('/portfolios/portfolio_id/models?sortByTerm=Medium')
 
     assert response == expected_response
 
@@ -840,11 +840,11 @@ def test_get_portfolio_analyze(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsPortfolioApi.get_portfolio_analyze('portfolio_id')
 
-    GsSession.current._get.assert_called_with('/portfolios/portfolio_id/analyze')
+    GsSession.current.sync.get.assert_called_with('/portfolios/portfolio_id/analyze')
 
     assert response == expected_response

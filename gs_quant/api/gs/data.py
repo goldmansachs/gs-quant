@@ -231,7 +231,7 @@ class GsDataApi(DataApi):
     def _post_with_cache_check(cls, url, validator=lambda x: x, domain=None, **kwargs):
         result, cache_key, session = cls._check_cache(url=url, **kwargs)
         if result is None:
-            result = validator(session._post(url, domain=domain, **kwargs))
+            result = validator(session.sync.post(url, domain=domain, **kwargs))
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
         return result
@@ -240,7 +240,7 @@ class GsDataApi(DataApi):
     def _get_with_cache_check(cls, url, validator=lambda x: x, domain=None, **kwargs):
         result, cache_key, session = cls._check_cache(url, **kwargs)
         if result is None:
-            result = validator(session._get(url, domain=domain, **kwargs))
+            result = validator(session.sync.get(url, domain=domain, **kwargs))
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
         return result
@@ -249,7 +249,7 @@ class GsDataApi(DataApi):
     async def _get_with_cache_check_async(cls, url, validator=lambda x: x, domain=None, **kwargs):
         result, cache_key, session = cls._check_cache(url, **kwargs)
         if result is None:
-            result = await session._get_async(url, domain=domain, **kwargs)
+            result = await session.async_.get(url, domain=domain, **kwargs)
             result = validator(result)
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
@@ -259,7 +259,7 @@ class GsDataApi(DataApi):
     async def _post_with_cache_check_async(cls, url, validator=lambda x: x, domain=None, **kwargs):
         result, cache_key, session = cls._check_cache(url, **kwargs)
         if result is None:
-            result = await session._post_async(url, domain=domain, **kwargs)
+            result = await session.async_.post(url, domain=domain, **kwargs)
             result = validator(result)
             if cls._api_request_cache:
                 cls._api_request_cache.put(session, cache_key, result)
@@ -450,7 +450,7 @@ class GsDataApi(DataApi):
     ) -> List[dict]:
         session = cls.get_session()
         params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
-        body = session._get(f'/data/{dataset_id}/coverage', payload=params)
+        body = session.sync.get(f'/data/{dataset_id}/coverage', payload=params)
         results = scroll_results = body['results']
         total_results = body['totalResults']
         while len(scroll_results) and len(results) < total_results:
@@ -458,7 +458,7 @@ class GsDataApi(DataApi):
             if scroll_id is None:
                 break
             params['scrollId'] = scroll_id
-            body = session._get(f'/data/{dataset_id}/coverage', payload=params)
+            body = session.sync.get(f'/data/{dataset_id}/coverage', payload=params)
             scroll_results = body['results']
             results += scroll_results
 
@@ -478,12 +478,12 @@ class GsDataApi(DataApi):
     ) -> List[dict]:
         session = cls.get_session()
         params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
-        body = await session._get_async(f'/data/{dataset_id}/coverage', payload=params)
+        body = await session.async_.get(f'/data/{dataset_id}/coverage', payload=params)
         results = scroll_results = body['results']
         total_results = body['totalResults']
         while len(scroll_results) and len(results) < total_results:
             params['scrollId'] = body['scrollId']
-            body = await session._get_async(f'/data/{dataset_id}/coverage', payload=params)
+            body = await session.async_.get(f'/data/{dataset_id}/coverage', payload=params)
             scroll_results = body['results']
             if scroll_results:
                 results += scroll_results
@@ -491,7 +491,7 @@ class GsDataApi(DataApi):
 
     @classmethod
     def create(cls, definition: Union[DataSetEntity, dict]) -> DataSetEntity:
-        result = cls.get_session()._post('/data/datasets', payload=definition)
+        result = cls.get_session().sync.post('/data/datasets', payload=definition)
         return result
 
     @classmethod
@@ -505,17 +505,19 @@ class GsDataApi(DataApi):
 
     @classmethod
     def delete_dataset(cls, dataset_id: str) -> dict:
-        result = cls.get_session()._delete(f'/data/datasets/{dataset_id}')
+        result = cls.get_session().sync.delete(f'/data/datasets/{dataset_id}')
         return result
 
     @classmethod
     def undelete_dataset(cls, dataset_id: str) -> dict:
-        result = cls.get_session()._put(f'/data/datasets/{dataset_id}/undelete')
+        result = cls.get_session().sync.put(f'/data/datasets/{dataset_id}/undelete')
         return result
 
     @classmethod
     def update_definition(cls, dataset_id: str, definition: Union[DataSetEntity, dict]) -> DataSetEntity:
-        result = cls.get_session()._put('/data/datasets/{}'.format(dataset_id), payload=definition, cls=DataSetEntity)
+        result = cls.get_session().sync.put(
+            '/data/datasets/{}'.format(dataset_id), payload=definition, cls=DataSetEntity
+        )
         return result
 
     @classmethod
@@ -527,7 +529,7 @@ class GsDataApi(DataApi):
         # Don't use msgpack for MDS
         session = cls.get_session()
         headers = None if 'us-east' in session.domain else {'Content-Type': 'application/x-msgpack'}
-        result = session._post('/data/{}'.format(dataset_id), payload=data, request_headers=headers)
+        result = session.sync.post('/data/{}'.format(dataset_id), payload=data, request_headers=headers)
         return result
 
     @classmethod
@@ -536,13 +538,13 @@ class GsDataApi(DataApi):
         Delete data from dataset. You must have admin access to the dataset to delete data.
         All data deleted is not recoverable.
         """
-        return cls.get_session()._delete(f'/data/{dataset_id}', payload=delete_query, use_body=True)
+        return cls.get_session().sync.delete(f'/data/{dataset_id}', payload=delete_query, use_body=True)
 
     @classmethod
     def get_definition(cls, dataset_id: str) -> DataSetEntity:
         definition = cls.__definitions.get(dataset_id)
         if not definition:
-            definition = cls.get_session()._get('/data/datasets/{}'.format(dataset_id), cls=DataSetEntity)
+            definition = cls.get_session().sync.get('/data/datasets/{}'.format(dataset_id), cls=DataSetEntity)
             if not definition:
                 raise MqValueError('Unknown dataset {}'.format(dataset_id))
 
@@ -558,7 +560,6 @@ class GsDataApi(DataApi):
         scroll: str = DEFAULT_SCROLL,
         scroll_id: Optional[str] = None,
     ) -> Tuple[DataSetEntity, ...]:
-
         params = dict(
             filter(
                 lambda item: item[1] is not None,
@@ -566,13 +567,13 @@ class GsDataApi(DataApi):
             )
         )
 
-        body = cls.get_session()._get('/data/datasets', payload=params, cls=DataSetEntity)
+        body = cls.get_session().sync.get('/data/datasets', payload=params, cls=DataSetEntity)
         results = scroll_results = body['results']
         total_results = body['totalResults']
 
         while len(scroll_results) and len(results) < total_results:
             params['scrollId'] = body['scrollId']
-            body = cls.get_session()._get('/data/datasets', payload=params, cls=DataSetEntity)
+            body = cls.get_session().sync.get('/data/datasets', payload=params, cls=DataSetEntity)
             scroll_results = body['results']
             results = results + scroll_results
 
@@ -587,11 +588,10 @@ class GsDataApi(DataApi):
         scroll: str = DEFAULT_SCROLL,
         scroll_id: Optional[str] = None,
     ) -> Tuple[DataSetCatalogEntry, ...]:
-
         query = f'dataSetId={"&dataSetId=".join(dataset_ids)}' if dataset_ids else ''
         gs_session = cls.get_session()
         if len(query):
-            return gs_session._get(f'/data/catalog?{query}', cls=DataSetCatalogEntry)['results']
+            return gs_session.sync.get(f'/data/catalog?{query}', cls=DataSetCatalogEntry)['results']
         else:
             params = dict(
                 filter(
@@ -602,13 +602,13 @@ class GsDataApi(DataApi):
                 )
             )
 
-            body = gs_session._get('/data/catalog', payload=params, cls=DataSetEntity)
+            body = gs_session.sync.get('/data/catalog', payload=params, cls=DataSetEntity)
             results = scroll_results = body['results']
             total_results = body['totalResults']
 
             while len(scroll_results) and len(results) < total_results:
                 params['scrollId'] = body['scrollId']
-                body = gs_session._get('/data/catalog', payload=params, cls=DataSetEntity)
+                body = gs_session.sync.get('/data/catalog', payload=params, cls=DataSetEntity)
                 scroll_results = body['results']
                 results = results + scroll_results
 
@@ -1029,7 +1029,9 @@ class GsDataApi(DataApi):
         Return a dictionary containing a set of dataset providers for each available data field.
         For each field will return a dict of daily and real-time dataset providers where available.
         """
-        response = availability if availability else cls.get_session()._get(f'/data/measures/{entity_id}/availability')
+        response = (
+            availability if availability else cls.get_session().sync.get(f'/data/measures/{entity_id}/availability')
+        )
         if 'errorMessages' in response:
             raise MqValueError(
                 f"Data availability request {response['requestId']} failed: {response.get('errorMessages', '')}"
@@ -1345,7 +1347,7 @@ class GsDataApi(DataApi):
     @classmethod
     @cachetools.cached(TTLCache(ttl=3600, maxsize=128))
     def get_types(cls, dataset_id: str):
-        results = cls.get_session()._get(f'/data/catalog/{dataset_id}')
+        results = cls.get_session().sync.get(f'/data/catalog/{dataset_id}')
         fields = results.get("fields")
         if fields:
             field_types = {}
@@ -1445,7 +1447,7 @@ class GsDataApi(DataApi):
         """
 
         where = dict(filter(lambda item: item[1] is not None, dict(id=ids, name=names).items()))
-        response = cls.get_session()._post(
+        response = cls.get_session().sync.post(
             '/data/fields/query', payload={'where': where, 'limit': limit}, cls=DataSetFieldEntity
         )
         return response['results']
@@ -1472,7 +1474,7 @@ class GsDataApi(DataApi):
         >>> GsDataApi.create_dataset_fields(fields)
         """
         params = {'fields': fields}
-        response = cls.get_session()._post('/data/fields/bulk', payload=params, cls=DataSetFieldEntity)
+        response = cls.get_session().sync.post('/data/fields/bulk', payload=params, cls=DataSetFieldEntity)
         return response['results']
 
     @classmethod
@@ -1499,7 +1501,7 @@ class GsDataApi(DataApi):
         >>> GsDataApi.update_dataset_fields(fields)
         """
         params = {'fields': fields}
-        response = cls.get_session()._put('/data/fields/bulk', payload=params, cls=DataSetFieldEntity)
+        response = cls.get_session().sync.put('/data/fields/bulk', payload=params, cls=DataSetFieldEntity)
         return response['results']
 
 

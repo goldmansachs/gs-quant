@@ -25,7 +25,6 @@ class Clock(object):
         self.reset()
 
     def update(self, time: dt.datetime):
-
         compare_time = (
             self._time.replace(tzinfo=None)
             if time.tzinfo is None or time.tzinfo.utcoffset(time) is None

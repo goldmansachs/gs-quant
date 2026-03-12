@@ -37,11 +37,11 @@ def test_get_all_screens(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsDataScreenApi.get_screens()
-    GsSession.current._get.assert_called_with('/data/screens', cls=AnalyticsScreen)
+    GsSession.current.sync.get.assert_called_with('/data/screens', cls=AnalyticsScreen)
     assert response == expected_response
 
 
@@ -54,11 +54,11 @@ def test_get_screen(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsDataScreenApi.get_screen(screen_id)
-    GsSession.current._get.assert_called_with('/data/screens/{id}'.format(id=screen_id), cls=AnalyticsScreen)
+    GsSession.current.sync.get.assert_called_with('/data/screens/{id}'.format(id=screen_id), cls=AnalyticsScreen)
     assert response == mock_response
 
 
@@ -81,11 +81,11 @@ def test_get_column_info(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsDataScreenApi.get_column_info(screen_id)
-    GsSession.current._get.assert_called_with('/data/screens/{id}/filters'.format(id=screen_id))
+    GsSession.current.sync.get.assert_called_with('/data/screens/{id}/filters'.format(id=screen_id))
 
     assert response == expected_response
 
@@ -98,11 +98,11 @@ def test_delete_screen(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'delete', return_value=mock_response)
 
     # run test
     response = GsDataScreenApi.delete_screen(screen_id)
-    GsSession.current._delete.assert_called_with('/data/screens/{id}'.format(id=screen_id))
+    GsSession.current.sync.delete.assert_called_with('/data/screens/{id}'.format(id=screen_id))
 
     assert response == mock_response
 
@@ -115,11 +115,11 @@ def test_create_screen(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     # run test
     response = GsDataScreenApi.create_screen(mock_input)
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/data/screens',
         mock_input,
         request_headers={'Content-Type': 'application/json;charset=utf-8'},
@@ -146,11 +146,11 @@ def test_filter_screen(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     # run test
     response = GsDataScreenApi.filter_screen(screen_id, mock_filter)
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/data/screens/{id}/filter'.format(id=screen_id),
         mock_filter,
         request_headers={'Content-Type': 'application/json;charset=utf-8'},
@@ -170,11 +170,11 @@ def test_update_screen(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_put', return_value=screen_input)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=screen_input)
 
     # run test
     response = GsDataScreenApi.update_screen(screen_id, screen_input)
-    GsSession.current._put.assert_called_with(
+    GsSession.current.sync.put.assert_called_with(
         '/data/screens/{id}'.format(id=screen_id),
         screen_input,
         request_headers={'Content-Type': 'application/json;charset=utf-8'},

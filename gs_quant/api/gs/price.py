@@ -30,13 +30,13 @@ class GsPriceApi:
     @backoff.on_exception(lambda: backoff.constant(60), MqRateLimitedError, max_tries=5)
     def price_positions(cls, inputs: PositionSetPriceInput) -> PositionSetPriceResponse:
         url = '/price/positions'
-        return GsSession.current._post(url, payload=inputs, cls=PositionSetPriceResponse)
+        return GsSession.current.sync.post(url, payload=inputs, cls=PositionSetPriceResponse)
 
     @classmethod
     def price_many_positions(cls, pricing_request: PositionsPricingRequest) -> dict:
         url = '/positions/price/bulk'
         GsSession.current.api_version = "v2"
-        pricing_response = GsSession.current._post(url, payload=pricing_request)
+        pricing_response = GsSession.current.sync.post(url, payload=pricing_request)
         GsSession.current.api_version = "v1"
 
         positions = pricing_response.get("positions")

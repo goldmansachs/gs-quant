@@ -638,7 +638,6 @@ class Grid(Portfolio):
         y_values: Iterable,
         name: Optional[str] = None,
     ):
-
         x_overrides = [{x_param: v, 'name': v} for v in x_values]
         y_overrides = [{y_param: v} for v in y_values]
         super().__init__(

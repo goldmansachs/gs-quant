@@ -30,7 +30,7 @@ class GsDataScreenApi:
 
         :return: AnalyticsScreen tuple, a tuple containing each screen available to the user.
         """
-        return GsSession.current._get('/data/screens', cls=AnalyticsScreen)['results']
+        return GsSession.current.sync.get('/data/screens', cls=AnalyticsScreen)['results']
 
     @classmethod
     def get_screen(cls, screen_id: str) -> AnalyticsScreen:
@@ -41,7 +41,7 @@ class GsDataScreenApi:
 
         :return: AnalyticsScreen, an object containing information about the screen associated with screen_id.
         """
-        return GsSession.current._get('/data/screens/{id}'.format(id=screen_id), cls=AnalyticsScreen)
+        return GsSession.current.sync.get('/data/screens/{id}'.format(id=screen_id), cls=AnalyticsScreen)
 
     @classmethod
     def get_column_info(cls, screen_id: str) -> Dict[str, Dict]:
@@ -54,7 +54,7 @@ class GsDataScreenApi:
         :return: dict, a dictionary where each key identifies a column and each value identifies properties of that
         column.
         """
-        return GsSession.current._get('/data/screens/{id}/filters'.format(id=screen_id))['aggregations']
+        return GsSession.current.sync.get('/data/screens/{id}/filters'.format(id=screen_id))['aggregations']
 
     @classmethod
     def delete_screen(cls, screen_id: str) -> None:
@@ -65,7 +65,7 @@ class GsDataScreenApi:
 
         :return: None
         """
-        return GsSession.current._delete('/data/screens/{id}'.format(id=screen_id))
+        return GsSession.current.sync.delete('/data/screens/{id}'.format(id=screen_id))
 
     @classmethod
     def create_screen(cls, screen: AnalyticsScreen) -> AnalyticsScreen:
@@ -79,7 +79,9 @@ class GsDataScreenApi:
         :return: AnalyticsScreen, the new screen object containing a new id
         """
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._post('/data/screens', screen, request_headers=request_headers, cls=AnalyticsScreen)
+        return GsSession.current.sync.post(
+            '/data/screens', screen, request_headers=request_headers, cls=AnalyticsScreen
+        )
 
     @classmethod
     def filter_screen(cls, screen_id: str, filter_request: FilterRequest) -> Tuple[DataRow, ...]:
@@ -97,7 +99,7 @@ class GsDataScreenApi:
         :return: Tuple of DataRow objects, each DataRow in the tuple is a row of filtered data from this screen.
         """
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._post(
+        return GsSession.current.sync.post(
             '/data/screens/{id}/filter'.format(id=screen_id),
             filter_request,
             request_headers=request_headers,
@@ -123,6 +125,6 @@ class GsDataScreenApi:
         assert screen_id == screen.id_
 
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._put(
+        return GsSession.current.sync.put(
             '/data/screens/{id}'.format(id=screen_id), screen, request_headers=request_headers, cls=AnalyticsScreen
         )

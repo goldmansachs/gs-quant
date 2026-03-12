@@ -94,9 +94,9 @@ def fetch_query(query_info: Dict):
     query = {'where': where, **query_info['range'], 'useFieldAlias': True, 'remapSchemaToAlias': True}
     try:
         if query_info['realTime'] and not query_info['range']:
-            response = GsSession.current._post(f'/data/{query_info["datasetId"]}/last/query', payload=query)
+            response = GsSession.current.sync.post(f'/data/{query_info["datasetId"]}/last/query', payload=query)
         else:
-            response = GsSession.current._post(f'/data/{query_info["datasetId"]}/query', payload=query)
+            response = GsSession.current.sync.post(f'/data/{query_info["datasetId"]}/query', payload=query)
     except Exception as e:
         _logger.error(f'Error fetching query due to {e}')
         return pd.DataFrame()

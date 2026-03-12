@@ -29,7 +29,6 @@ def build_eq_vol_scenario_intraday(
     start_time: dt.datetime = dt.datetime.now() - dt.timedelta(hours=1),
     end_time: dt.datetime = dt.datetime.now(),
 ) -> MarketDataVolShockScenario:
-
     asset = SecurityMaster.get_asset(asset_name, asset_name_type)
     vol_dataset = Dataset(source_dataset)
     vol_data = vol_dataset.get_data(
@@ -46,7 +45,6 @@ def build_eq_vol_scenario_eod(
     asset_name_type: AssetIdentifier = AssetIdentifier.REUTERS_ID,
     vol_date: dt.date = dt.date.today(),
 ) -> MarketDataVolShockScenario:
-
     asset = SecurityMaster.get_asset(asset_name, asset_name_type)
     vol_dataset = Dataset(source_dataset)
     vol_data = vol_dataset.get_data(

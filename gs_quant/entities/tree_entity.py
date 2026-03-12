@@ -27,7 +27,6 @@ from gs_quant.errors import MqValueError
 
 class AssetTreeNode:
     def __init__(self, id, depth: Optional[int] = 0, date: Optional[dt.date] = None, asset: Optional[GsAsset] = None):
-
         self.id = id
         self.date = date  # date for which the Tree is constructed. If None, it is set to the latest available date.
         self.depth = depth  # depth of the node with respect to the root node
@@ -98,7 +97,6 @@ class AssetTreeNode:
         return query
 
     def __build_constituents_df(self, constituents_df) -> pd.DataFrame:
-
         for node in self.direct_underlier_assets_as_nodes:
             data = {
                 'date': self.date,
@@ -128,7 +126,6 @@ class TreeHelper:
         tree_underlier_dataset: Optional[str] = None,
         underlier_column: Optional[str] = 'underlyingAssetId',
     ):
-
         self.id = id
         self.root = AssetTreeNode(self.id, 0, date, GsAssetApi.get_asset(asset_id=self.id))
         self.date = self.root.date
@@ -139,7 +136,6 @@ class TreeHelper:
         self.__underlier_column = underlier_column
 
     def populate_weights(self, dataset, weight_column: Optional[str] = 'weight'):
-
         if not self.tree_built:
             self.build_tree()
 
@@ -147,7 +143,6 @@ class TreeHelper:
         self.root.populate_values(dataset, weight_column, self.__underlier_column)
 
     def populate_attribution(self, dataset, attribution_column: Optional[str] = 'absoluteAttribution'):
-
         if not self.tree_built:
             self.build_tree()
 

@@ -585,7 +585,7 @@ class PerformanceHedgeParameters:
             payload['parameters']['weightingStrategy'] = "Weight"
 
         try:
-            price_results = GsSession.current._post('/price/positions', payload)
+            price_results = GsSession.current.sync.post('/price/positions', payload)
         except Exception as e:
             raise MqValueError(f'There was an error pricing your positions: {e}')
         if 'errorMessage' in price_results:

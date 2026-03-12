@@ -1607,11 +1607,15 @@ def swaption_vol_term(
         _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
         business_day = _get_custom_bd(asset.exchange)
-        df = df.assign(expirationDate=df.index + df[tenor_to_plot].map(_to_offset) + business_day - business_day)
+        df = df.assign(
+            expirationDate=pd.DatetimeIndex(
+                [ts + _to_offset(t) + business_day - business_day for ts, t in zip(df.index, df[tenor_to_plot])]
+            )
+        )
         df = df.set_index('expirationDate')
         df.index = pd.DatetimeIndex(df.index)
         df = df.sort_index()
-        df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
+        df = df.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swaptionVol'])
     series.dataset_ids = dataset_ids
     if series.empty:  # Raise descriptive error if no data returned + historical date context
@@ -2166,16 +2170,21 @@ def swap_term_structure(
         col_to_plot = tenor_dict['tenor_to_plot']
         if isinstance(df, pd.Series):
             series = ExtendedSeries(
-                pd.Series(df['swapRate'], index=[_get_term_struct_date(df[col_to_plot], latest, biz_day)])
+                pd.Series(
+                    df['swapRate'], index=pd.DatetimeIndex([_get_term_struct_date(df[col_to_plot], latest, biz_day)])
+                )
             )
-            series = series.loc[DataContext.current.start_date : DataContext.current.end_date]
+            series = series.loc[
+                pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)
+            ]
         else:
             if col_to_plot == 'effectiveTenor':
                 df = df[~df[col_to_plot].isin(['imm1', 'imm2', 'imm3', 'imm4'])]
             df['expirationDate'] = df[col_to_plot].apply(_get_term_struct_date, args=(latest, biz_day))
             df = df.set_index('expirationDate')
+            df.index = pd.DatetimeIndex(df.index)
             df = df.sort_index()
-            df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
+            df = df.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
             series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     if series.empty:  # Raise descriptive error if no data returned + date context is in the past
@@ -2275,15 +2284,22 @@ def basis_swap_term_structure(
         col_to_plot = tenor_dict['tenor_to_plot']
         if isinstance(df, pd.Series):  # single asset returned
             series = ExtendedSeries(
-                pd.Series(df['basisSwapRate'], index=[_get_term_struct_date(df[col_to_plot], latest, biz_day)])
+                pd.Series(
+                    df['basisSwapRate'],
+                    index=pd.DatetimeIndex([_get_term_struct_date(df[col_to_plot], latest, biz_day)]),
+                )
             )
-            series = series.loc[DataContext.current.start_date : DataContext.current.end_date]
+            series = series.loc[
+                pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)
+            ]
         else:
             if col_to_plot == 'effectiveTenor':  # for forward term structure imm date assets
                 df = df[~df[col_to_plot].isin(['imm1', 'imm2', 'imm3', 'imm4'])]
             df['expirationDate'] = df[col_to_plot].apply(_get_term_struct_date, args=(latest, biz_day))
-            df = df.set_index('expirationDate').sort_index()
-            df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
+            df = df.set_index('expirationDate')
+            df.index = pd.DatetimeIndex(df.index)
+            df = df.sort_index()
+            df = df.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
             series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['basisSwapRate'])
     series.dataset_ids = getattr(df, 'dataset_ids', ())
     if series.empty:  # Raise descriptive error if no data returned + historical date context
@@ -2812,8 +2828,11 @@ def policy_rate_term_structure_rt(
         col_to_plot = 'effectiveDate'
         joined_df.loc[:, 'expirationDate'] = joined_df[col_to_plot].apply(_get_term_struct_date, args=(latest, biz_day))
         joined_df = joined_df.set_index('expirationDate')
+        joined_df.index = pd.DatetimeIndex(joined_df.index)
         joined_df = joined_df.sort_index()
-        joined_df = joined_df.loc[DataContext.current.start_date : DataContext.current.end_date]
+        joined_df = joined_df.loc[
+            pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)
+        ]
         series = ExtendedSeries(dtype=float) if joined_df.empty else ExtendedSeries(joined_df['rate'])
     series.dataset_ids = getattr(joined_df, 'dataset_ids', ())
     if series.empty:  # Raise descriptive error if no data returned + date context is in the past

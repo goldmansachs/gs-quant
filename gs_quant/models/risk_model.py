@@ -877,7 +877,6 @@ class MarqueeRiskModel(RiskModel):
         factors: List[str] = [],
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
     ) -> Union[List[Dict], pd.DataFrame]:
-
         limit_factors = False
         measures = [requested_measure, Measure.Factor_Name, Measure.Factor_Id]
         if assets:

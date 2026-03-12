@@ -215,7 +215,7 @@ def test_currency_to_tdapi_swaption_rate_asset_retuns_asset_id(mocker):
     mocker.patch.object(
         GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
 
@@ -610,7 +610,7 @@ def test_cross_to_fxfwd_xcswp_asset(mocker):
     mocker.patch.object(
         GsSession.__class__, 'current', return_value=GsSession.get(Environment.DEV, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     correct_mapping = {
@@ -1165,13 +1165,13 @@ def test_policy_rate_term_structure_rt(mocker):
         actual_abs = tm_rates.policy_rate_term_structure_rt(
             mock_eur, tm_rates.EventType.MEETING, tm_rates.RateType.ABSOLUTE, None
         )
-        assert target['meeting_absolute'] == actual_abs.loc[dt.date(2022, 7, 27)]
+        assert target['meeting_absolute'] == actual_abs.loc[pd.Timestamp(dt.date(2022, 7, 27))]
 
         mocker.patch.object(Dataset, 'get_data', side_effect=get_data_policy_rate_term_rt_mocker)
         actual_rel = tm_rates.policy_rate_term_structure_rt(
             mock_eur, tm_rates.EventType.MEETING, tm_rates.RateType.RELATIVE, None
         )
-        assert target['meeting_relative'] == actual_rel.loc[dt.date(2022, 7, 27)]
+        assert target['meeting_relative'] == actual_rel.loc[pd.Timestamp(dt.date(2022, 7, 27))]
 
         mock_get_data.return_value = mock_policy_rt_spot()
         actual_spot = tm_rates.policy_rate_term_structure_rt(

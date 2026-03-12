@@ -419,7 +419,7 @@ class Asset(Entity, metaclass=ABCMeta):
 
         """
 
-        availability_response = GsSession.current._get(f'/data/measures/{self.get_marquee_id()}/availability')
+        availability_response = GsSession.current.sync.get(f'/data/measures/{self.get_marquee_id()}/availability')
         final_measure_set = set()
 
         if availability_response['data']:
@@ -769,7 +769,6 @@ class SecMasterAsset(Asset):
         end: dt.date = dt.date.today(),
         interval_frequency: IntervalFrequency = IntervalFrequency.DAILY,
     ) -> pd.DataFrame:
-
         if self.__is_validate_range(start=start, end=end):
             with PricingContext(start):
                 return super(SecMasterAsset, self).get_hloc_prices(
@@ -849,7 +848,7 @@ class SecMasterAsset(Asset):
 
     def __load_identifiers(self) -> None:
         if self.__cached_identifiers is None:
-            r = GsSession.current._get(f'/markets/securities/{self.entity["id"]}/identifiers')
+            r = GsSession.current.sync.get(f'/markets/securities/{self.entity["id"]}/identifiers')
             results = r['results']
             xrefs = defaultdict(list)
             for temporal_xref in results:
@@ -894,7 +893,6 @@ class Stock(Asset):
     def get_thematic_beta(
         self, basket_identifier: str, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
     ) -> pd.DataFrame:
-
         response = GsAssetApi.resolve_assets(identifier=[basket_identifier], fields=['id', 'type'], limit=1)[
             basket_identifier
         ]
@@ -1344,7 +1342,7 @@ class Security:
 
 @backoff.on_exception(backoff.expo, MqRequestError, giveup=lambda e: e.status != 429)
 def _get_with_retries(url, payload):
-    return GsSession.current._get(url, payload=payload)
+    return GsSession.current.sync.get(url, payload=payload)
 
 
 class SecurityMaster:
@@ -1858,7 +1856,7 @@ class SecurityMaster:
         fields: Optional[List[str]] = None,
     ) -> SecMasterAsset:
         params = cls._get_security_master_asset_params(id_value, id_type, as_of, fields)
-        response = GsSession.current._get('/markets/securities', payload=params)
+        response = GsSession.current.sync.get('/markets/securities', payload=params)
         return cls._get_security_master_asset_response(response)
 
     @classmethod
@@ -1870,7 +1868,7 @@ class SecurityMaster:
         fields: Optional[List[str]] = None,
     ) -> SecMasterAsset:
         params = cls._get_security_master_asset_params(id_value, id_type, as_of, fields)
-        response = await GsSession.current._get_async('/markets/securities', payload=params)
+        response = await GsSession.current.async_.get('/markets/securities', payload=params)
         return cls._get_security_master_asset_response(response)
 
     @classmethod
@@ -1906,7 +1904,7 @@ class SecurityMaster:
             'asOfDate': as_of.strftime('%Y-%m-%d'),  # TODO: update endpoint to take times
         }
 
-        r = GsSession.current._get('/markets/securities', payload=params)
+        r = GsSession.current.sync.get('/markets/securities', payload=params)
         id_map = {}
         for asset in r['results']:
             id_map[asset['identifiers'][type_]] = asset['id']
@@ -1916,7 +1914,7 @@ class SecurityMaster:
 
         output = {}
         for k, v in id_map.items():
-            r = GsSession.current._get(f'/markets/securities/{v}/identifiers')
+            r = GsSession.current.sync.get(f'/markets/securities/{v}/identifiers')
 
             piece = []
             for e in r['results']:

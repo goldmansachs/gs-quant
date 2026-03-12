@@ -187,7 +187,7 @@ def test_currency_to_default_ois_asset(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_ois_mocker)
 
     asset_id_list = ["MAJNQPFGN1EBDHAE"]
@@ -206,7 +206,7 @@ def test_currency_to_default_benchmark_rate(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_default_mocker)
 
     asset_id_list = [
@@ -235,7 +235,7 @@ def test_currency_to_default_swap_rate_asset(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_swap_rate_mocker)
 
     asset_id_list = ['MAZ7RWC904JYHYPS', 'MAJNQPFGN1EBDHAE', 'MAJ6SEQH3GT0GA2Z']
@@ -250,7 +250,7 @@ def test_currency_to_inflation_benchmark_rate(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_inflation_mocker)
 
     asset_id_list = ["MA66CZBQJST05XKG", "MAK1FHKH5P5GJSHH", "MA4J1YB8XZP2BPT8"]
@@ -269,7 +269,7 @@ def test_cross_to_basis(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_cross_basis_mocker)
 
     asset_id_list = ["MAYJPCVVF2RWXCES", "MA4B66MW5E27U8P32SB", "nobbid"]
@@ -289,7 +289,7 @@ def test_currency_to_tdapi_swap_rate_asset(mocker):
     mocker.patch.object(
         GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     with PricingContext(dt.date.today()):
@@ -359,7 +359,7 @@ def test_currency_to_tdapi_basis_swap_rate_asset(mocker):
     mocker.patch.object(
         GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     with PricingContext(dt.date.today()):
@@ -408,7 +408,7 @@ def test_currency_to_tdapi_swap_rate_asset_for_intraday(mocker):
     mocker.patch.object(
         GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
 
     bbid_mock = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
@@ -671,8 +671,8 @@ def test_cross_stored_direction_for_fx_vol(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
-    mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'post', side_effect=mock_request)
     asset_id_list = ["MAYJPCVVF2RWXCES", "MATGYV0J9MPX534Z"]
     correct_mapping = ["MATGYV0J9MPX534Z", "MATGYV0J9MPX534Z"]
     with PricingContext(dt.date.today()):
@@ -685,8 +685,8 @@ def test_cross_to_usd_based_cross_for_fx_forecast(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
-    mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'post', side_effect=mock_request)
     asset_id_list = ["MAYJPCVVF2RWXCES", "MATGYV0J9MPX534Z"]
     correct_mapping = ["MATGYV0J9MPX534Z", "MATGYV0J9MPX534Z"]
     with PricingContext(dt.date.today()):
@@ -699,8 +699,8 @@ def test_cross_to_used_based_cross(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
-    mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'post', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=TypeError('unsupported'))
 
     replace = Replacer()
@@ -715,8 +715,8 @@ def test_cross_stored_direction(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
-    mocker.patch.object(GsSession.current, '_post', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'post', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=TypeError('unsupported'))
 
     replace = Replacer()
@@ -3288,7 +3288,7 @@ def _var_term_typical():
     actual = tm.var_term(Index('MA123', AssetClass.Equity, '123'))
     idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='varSwap')
     expected = pd.Series([1, 2, 3, 4], name='varSwap', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     if expected.empty:
         assert actual.empty
@@ -3336,7 +3336,7 @@ def _var_term_fwd():
     actual = tm.var_term(Index('MA123', AssetClass.Equity, '123'), forward_start_date='1m')
     idx = _make_index(['2018-02-02', '2018-03-02'], name='varSwap')
     expected = pd.Series([2, 4], name='varSwap', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     if expected.empty:
         assert actual.empty
@@ -3362,7 +3362,7 @@ def _var_term_latest():
     actual = tm.var_term(Index('MA123', AssetClass.Equity, '123'))
     idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1, 2, 3, 4], name='varSwap', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     if expected.empty:
         assert actual.empty
@@ -3589,7 +3589,7 @@ def _vol_term_typical(reference, value):
     actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), reference, value)
     idx = _make_index(['2018-01-06', '2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1.2, 1, 2, 3, 4], name='impliedVolatility', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     if expected.empty:
         assert actual.empty
@@ -3638,7 +3638,7 @@ def _skew_term_typical(reference, value, normalization_mode=None):
         if normalization_mode == tm.NormalizationMode.NORMALIZED
         else pd.Series([1000, 10, 10], name='impliedVolatility', index=idx)
     )
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
     if expected.empty:
         assert actual.empty
     else:
@@ -3686,7 +3686,7 @@ def _skew_term_typical_fx(reference, value, normalization_mode=None):
         if normalization_mode == tm.NormalizationMode.NORMALIZED
         else pd.Series([1000, 10, 10], name='impliedVolatility', index=idx)
     )
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
     if expected.empty:
         assert actual.empty
     else:
@@ -3738,7 +3738,7 @@ def _vol_term_latest():
     actual = tm.vol_term(Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100)
     idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1, 2, 3, 4], name='impliedVolatility', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     if expected.empty:
         assert actual.empty
@@ -3885,7 +3885,7 @@ def _vol_term_fx(reference, value):
     actual = tm.vol_term(Cross('ABCDE', 'EURUSD'), reference, value)
     idx = _make_index(['2018-01-06', '2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1.2, 1, 2, 3, 4], name='impliedVolatility', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     if expected.empty:
         assert actual.empty
@@ -3912,7 +3912,7 @@ def _vol_term_fx_no_expiry(reference, value):
     actual = tm.vol_term(Cross('ABCDE', 'EURUSD'), reference, value)
     idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01'], name='expirationDate')
     expected = pd.Series([1, 2, 3], name='impliedVolatility', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     if expected.empty:
         assert actual.empty
@@ -3952,7 +3952,7 @@ def _fwd_term_typical():
     actual = tm.fwd_term(Index('MA123', AssetClass.Equity, '123'))
     idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1, 2, 3, 4], name='forward', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     if expected.empty:
         assert actual.empty
@@ -3987,14 +3987,14 @@ def _fx_fwd_term_typical():
     actual = tm.fx_fwd_term(Index('MA123', AssetClass.FX, '123'))
     idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([101, 102, 103, 104], name='forwardPoint', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
     assert_series_equal(pd.Series(actual), expected)
     assert actual.dataset_ids == _test_datasets
 
     actual = tm.fx_fwd_term(Index('MA123', AssetClass.FX, '123'), fwd_type=tm.FXForwardType.POINTS)
     idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([1, 2, 3, 4], name='forwardPoint', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
     assert_series_equal(pd.Series(actual), expected)
     assert actual.dataset_ids == _test_datasets
 
@@ -4076,7 +4076,7 @@ def _carry_term_typical():
     actual = tm.carry_term(Index('MA123', AssetClass.FX, '123'), annualized=tm.FXSpotCarry.DAILY)
     idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([0.01, 0.02, 0.03, 0.04], name='carry', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     assert_series_equal(expected, pd.Series(actual))
     assert actual.dataset_ids == _test_datasets
@@ -4084,7 +4084,7 @@ def _carry_term_typical():
     actual = tm.carry_term(Index('MA123', AssetClass.FX, '123'))
     idx = _make_index(['2018-01-08', '2018-01-15', '2019-01-01', '2020-01-01'], name='expirationDate')
     expected = pd.Series([0.001667, 0.004714, 0.036105, 0.05621], name='carry', index=idx)
-    expected = expected.loc[DataContext.current.start_date : DataContext.current.end_date]
+    expected = expected.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
 
     assert_series_equal(expected, pd.Series(actual), check_exact=False, atol=0.00001)
     assert actual.dataset_ids == _test_datasets

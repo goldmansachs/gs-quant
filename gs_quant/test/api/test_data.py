@@ -142,8 +142,8 @@ def test_coordinates_data(mocker):
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
     mocker.patch.object(
-        GsSession.current,
-        '_post',
+        GsSession.current.sync,
+        'post',
         side_effect=[
             {'responses': [{'data': bond_data}]},
             {'responses': [{'data': swap_data}]},
@@ -165,14 +165,14 @@ def test_coordinates_data(mocker):
     assert_frame_equal(coords_data_result[0], bond_expected_frame)
     assert_frame_equal(coords_data_result[1], swap_expected_frame)
 
-    GsSession.current._post.reset_mock()
+    GsSession.current.sync.post.reset_mock()
     str_coords_data_result = GsDataApi.coordinates_data(
         coordinates=test_str_coordinates, start=start, end=end, as_multiple_dataframes=True
     )
     assert len(str_coords_data_result) == 2
     assert_frame_equal(str_coords_data_result[0], bond_expected_frame)
     assert_frame_equal(str_coords_data_result[1], swap_expected_frame)
-    GsSession.current._post.assert_called_once_with(
+    GsSession.current.sync.post.assert_called_once_with(
         '/data/coordinates/query',
         domain=None,
         payload=MDAPIDataQuery(
@@ -194,8 +194,8 @@ def test_coordinate_data_series(mocker):
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
     mocker.patch.object(
-        GsSession.current,
-        '_post',
+        GsSession.current.sync,
+        'post',
         side_effect=[
             {'responses': [{'data': bond_data}]},
             {'responses': [{'data': swap_data}]},
@@ -218,12 +218,12 @@ def test_coordinate_data_series(mocker):
     assert_series_equal(coords_data_result[0], bond_expected_series)
     assert_series_equal(coords_data_result[1], swap_expected_series)
 
-    GsSession.current._post.reset_mock()
+    GsSession.current.sync.post.reset_mock()
     str_coords_data_result = GsDataApi.coordinates_data_series(coordinates=test_str_coordinates, start=start, end=end)
     assert len(str_coords_data_result) == 2
     assert_series_equal(str_coords_data_result[0], bond_expected_series)
     assert_series_equal(str_coords_data_result[1], swap_expected_series)
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/data/coordinates/query',
         domain=None,
         payload=MDAPIDataQuery(
@@ -284,15 +284,15 @@ def test_coordinate_last(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    GsSession.current._post = mocker.Mock(return_value=data)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=data)
 
     result = GsDataApi.coordinates_last(coordinates=test_coordinates, as_of=as_of, as_dataframe=True)
     assert result.equals(expected_result)
 
-    GsSession.current._post.reset_mock()
+    GsSession.current.sync.post.reset_mock()
     result_from_str = GsDataApi.coordinates_last(coordinates=test_str_coordinates, as_of=as_of, as_dataframe=True)
     assert result_from_str.equals(expected_result)
-    GsSession.current._post.assert_called_once_with(
+    GsSession.current.sync.post.assert_called_once_with(
         '/data/coordinates/query/last',
         domain=None,
         payload=MDAPIDataQuery(
@@ -309,7 +309,7 @@ def test_get_coverage_api(mocker):
     test_coverage_data_2 = {'results': [], 'scrollId': 'fake-scroll-id-2', 'totalResults': 1}
 
     mocker.patch.object(ContextMeta, 'current', return_value=GsSession(Environment.QA))
-    mock = mocker.patch.object(ContextMeta.current, '_get')
+    mock = mocker.patch.object(ContextMeta.current.sync, 'get')
     mock.side_effect = [test_coverage_data_1, test_coverage_data_2]
     data = GsDataApi.get_coverage('MA_RANK')
 
@@ -327,11 +327,11 @@ def test_get_many_defns_api(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsDataApi.get_many_definitions()
-    GsSession.current._get.assert_called_with('/data/datasets', payload=expected_payload, cls=DataSetEntity)
+    GsSession.current.sync.get.assert_called_with('/data/datasets', payload=expected_payload, cls=DataSetEntity)
     assert response == expected_response
 
 
@@ -369,7 +369,7 @@ def test_auto_scroll_on_pages(mocker):
         "data": [{"date": "2012-01-25", "assetId": "MADXKSGX6921CFNF", "value": 1}],
     }
     mocker.patch.object(ContextMeta, 'current', return_value=GsSession(Environment.QA))
-    mocker.patch.object(ContextMeta.current, '_post', return_value=response)
+    mocker.patch.object(ContextMeta.current.sync, 'post', return_value=response)
 
     query = DataQuery(
         start_date=dt.date(2017, 1, 15), end_date=dt.date(2017, 1, 18), where=FieldFilterMapDataQuery(currency="GBP")
@@ -431,13 +431,13 @@ def test_get_dataset_fields(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     response = GsDataApi.get_dataset_fields(ids=['FIVCFB4GAWBT61GT', 'FI4YBC6DS3PRE7W9'])
     assert len(response) == 2
     assert response == mock_response['results']
 
-    GsSession.current._post.assert_called_once_with(
+    GsSession.current.sync.post.assert_called_once_with(
         '/data/fields/query',
         payload={'where': {'id': ['FIVCFB4GAWBT61GT', 'FI4YBC6DS3PRE7W9']}, 'limit': 10},
         cls=DataSetFieldEntity,
@@ -467,13 +467,13 @@ def test_get_field_types(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     response = GsDataApi.get_field_types(field_names=['price', 'strikeReference', 'adjDate', 'time'])
     assert len(response) == 4
     assert response == mock_field_types
 
-    GsSession.current._post.assert_called_once_with(
+    GsSession.current.sync.post.assert_called_once_with(
         '/data/fields/query',
         payload={'where': {'name': ['price', 'strikeReference', 'adjDate', 'time']}, 'limit': 4},
         cls=DataSetFieldEntity,

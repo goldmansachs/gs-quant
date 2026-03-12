@@ -47,7 +47,7 @@ def test_get_asset(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
 
@@ -65,7 +65,7 @@ def test_get_asset(mocker):
     assert asset.get_type() == AssetType.STOCK
 
     mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.Index, name='Test Asset')
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
 
@@ -73,7 +73,7 @@ def test_get_asset(mocker):
     assert asset.get_type() == AssetType.INDEX
 
     mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.Future, name='Test Asset')
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
 
@@ -81,7 +81,7 @@ def test_get_asset(mocker):
     assert asset.get_type() == AssetType.FUTURE
 
     mock_response = GsAsset(asset_class=AssetClass.Equity, type_=GsAssetType.ETF, name='Test Asset')
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
 
@@ -91,7 +91,7 @@ def test_get_asset(mocker):
     mock_response = GsAsset(
         asset_class=AssetClass.Equity, type_=GsAssetType.Custom_Basket, name='Test Asset', id_=marquee_id
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
 
@@ -102,7 +102,7 @@ def test_get_asset(mocker):
         'results': (GsAsset(id=marquee_id, assetClass='Equity', type='Single Stock', name='Test 1'),),
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
     asset = SecurityMaster.get_asset('GS.N', AssetIdentifier.REUTERS_ID)
     assert asset.name == "Test 1"
     assert asset.get_type() == AssetType.STOCK
@@ -115,7 +115,7 @@ def test_get_asset(mocker):
     assert asset.name == "Test 1"
     assert asset.get_type() == AssetType.STOCK
 
-    mocker.patch.object(GsSession.current, '_post', return_value={'results': ()})
+    mocker.patch.object(GsSession.current.sync, 'post', return_value={'results': ()})
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.REUTERS_ID)
     assert asset is None
 
@@ -127,7 +127,7 @@ def test_asset_identifiers(mocker):
     mock_response = GsAsset(
         asset_class=AssetClass.Equity, type_=GsAssetType.Custom_Basket, name='Test Asset', id_=marquee_id
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     asset = SecurityMaster.get_asset(marquee_id, AssetIdentifier.MARQUEE_ID)
 
@@ -151,7 +151,7 @@ def test_asset_identifiers(mocker):
         )
     }
 
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     identifiers = asset.get_identifiers(dt.date.today())
 
@@ -288,7 +288,7 @@ def test_get_security(mocker):
             },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_response, mock_identifier_history_response])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock_response, mock_identifier_history_response])
 
     with SecMasterContext():
         asset = SecurityMaster.get_asset('GS UN', SecurityIdentifier.BBID)
@@ -363,7 +363,7 @@ def test_get_security_fields(mocker):
             },
         ],
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_response, mock_identifiers_response])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock_response, mock_identifiers_response])
 
     with SecMasterContext():
         asset = SecurityMaster.get_asset('GS UN', SecurityIdentifier.BBID, fields=['name', 'id'])
@@ -421,7 +421,7 @@ def test_get_identifiers(mocker):
             },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[assets, ids_gs, ids_ap])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[assets, ids_gs, ids_ap])
     with SecMasterContext():
         identifiers = SecurityMaster.get_identifiers(['GS UN', 'AAPL UW'], SecurityIdentifier.BBID)
     assert 'GS UN' in identifiers
@@ -463,14 +463,14 @@ def test_get_all_identifiers(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=[p1, p2, p3])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[p1, p2, p3])
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers(use_offset_key=False)
     assert len(output) == 2
     assert output['GSPD901026E154'] == p1['results'][0]['identifiers']
     assert output['GSPD14593E459'] == p2['results'][0]['identifiers']
 
-    mocker.patch.object(GsSession.current, '_get', side_effect=[p1, p2, p3])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[p1, p2, p3])
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers(id_type=SecurityIdentifier.BBID, use_offset_key=False)
     assert len(output) == 2
@@ -522,13 +522,13 @@ def test_get_all_identifiers_with_assetTypes_not_none(mocker):
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
 
-    mocker.patch.object(GsSession.current, '_get', side_effect=get_identifiers_byte)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=get_identifiers_byte)
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers(AssetClass.Equity, types=[AssetType.ETF])
     assert len(output) == 1
     assert output['mock_ETF_id'] == mock_etf['results'][0]['identifiers']
 
-    mocker.patch.object(GsSession.current, '_get', side_effect=get_identifiers_byte)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=get_identifiers_byte)
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers(AssetClass.Equity, types=[AssetType.STOCK])
     assert len(output) == 1
@@ -595,7 +595,7 @@ def test_offset_key(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=fetch)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=fetch)
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers(sleep=0)
     assert len(output) == 2
@@ -603,7 +603,7 @@ def test_offset_key(mocker):
     assert output['GSPD14593E459'] == p2['results'][0]['identifiers']
     assert all(map(lambda x: x == 1, hits))
 
-    mocker.patch.object(GsSession.current, '_get', side_effect=fetch)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=fetch)
     with SecMasterContext():
         output = SecurityMaster.get_all_identifiers(id_type=SecurityIdentifier.BBID, sleep=0)
     assert len(output) == 2
@@ -611,7 +611,7 @@ def test_offset_key(mocker):
     assert output['AAPL UW'] == p2['results'][0]['identifiers']
     assert all(map(lambda x: x == 2, hits))
 
-    mocker.patch.object(GsSession.current, '_get', side_effect=fetch)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=fetch)
     with SecMasterContext():
         gen = SecurityMaster.get_all_identifiers_gen(id_type=SecurityIdentifier.BBID, sleep=0)
         page = next(gen)
@@ -701,7 +701,7 @@ def test_map_identifiers(mocker):
         ]
     )
 
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock2, mock2])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock2, mock2])
     start = dt.date(2021, 10, 11)
     end = dt.date(2021, 10, 12)
 
@@ -815,7 +815,7 @@ def test_map_identifiers_change(mocker):
             },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock])
     start = dt.date(2021, 1, 1)
     end = dt.date(2021, 11, 1)
 
@@ -832,7 +832,7 @@ def test_map_identifiers_change(mocker):
 
 def test_map_identifiers_empty(mocker):
     mock = {"results": []}
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock])
 
     with SecMasterContext():
         actual = SecurityMaster.map_identifiers(SecurityIdentifier.BBID, ['invalid id'], [SecurityIdentifier.RIC])
@@ -855,7 +855,7 @@ def test_map_identifiers_eq_index(mocker):
             }
         ]
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock])
 
     with SecMasterContext():
         actual = SecurityMaster.map_identifiers(
@@ -895,7 +895,7 @@ def test_secmaster_map_identifiers_with_passed_input_types(mocker):
                 mock_output['results'].append(row)
         return mock_output
 
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_mapping_service_response_by_input_type)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_mapping_service_response_by_input_type)
 
     with SecMasterContext():
         mock_any_ids = ["mock-any-1", "mock-any-2"]
@@ -986,7 +986,7 @@ def test_secmaster_map_identifiers_return_array_results(mocker):
             },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock])
     with SecMasterContext():
         actual = SecurityMaster.map_identifiers(
             input_type=SecurityIdentifier.CUSIP,
@@ -1033,7 +1033,7 @@ def test_secmaster_get_asset_no_asset_id_response_should_fail(mocker):
     }
 
     mock_no_asset_id_response = {"results": []}
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_response, mock_no_asset_id_response])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock_response, mock_no_asset_id_response])
 
     with SecMasterContext():
         asset = SecurityMaster.get_asset(id_value="GS", id_type=SecurityIdentifier.TICKER)
@@ -1159,8 +1159,10 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
             },
         ]
     }
-
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_equity_response, mock_eq_id_history_response])
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock_equity_response, mock_eq_id_history_response])
     with SecMasterContext():
         stock = SecurityMaster.get_asset(id_value=901026, id_type=SecurityIdentifier.GSID)
     assert isinstance(stock, SecMasterAsset)
@@ -1268,7 +1270,9 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
             },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_index_response, mock_index_id_history_response])
+    mocker.patch.object(
+        GsSession.current.sync, 'get', side_effect=[mock_index_response, mock_index_id_history_response]
+    )
     with SecMasterContext():
         index = SecurityMaster.get_asset(id_value=100, id_type=SecurityIdentifier.GSID)
     assert isinstance(index, SecMasterAsset)
@@ -1401,7 +1405,7 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
             },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_ETF_response, mock_etf_id_history_response])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock_ETF_response, mock_etf_id_history_response])
     with SecMasterContext():
         etf = SecurityMaster.get_asset(id_value=159943, id_type=SecurityIdentifier.GSID)
     assert isinstance(etf, SecMasterAsset)
@@ -1454,7 +1458,7 @@ def test_secmaster_get_asset_returning_secmasterassets(mocker):
         ]
     }
     mocker.patch.object(
-        GsSession.current, '_get', side_effect=[mock_currency_response, mock_currency_id_history_response]
+        GsSession.current.sync, 'get', side_effect=[mock_currency_response, mock_currency_id_history_response]
     )
     with SecMasterContext():
         currency = SecurityMaster.get_asset(id_value=4007, id_type=SecurityIdentifier.GSID)
@@ -1507,7 +1511,7 @@ def test_get_asset_get_data_series_with_range_over_many_asset_id_should_throw_mq
             },
         ]
     }
-    mocker.patch.object(GsSession.current, '_get', side_effect=[mock_asset, mock_id_history_response])
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=[mock_asset, mock_id_history_response])
 
     with SecMasterContext():
         asset = SecurityMaster.get_asset(id_value=4007, id_type=SecurityIdentifier.GSID)

@@ -69,7 +69,7 @@ class GsRiskApi(RiskApi):
         headers = {'Content-Type': 'application/x-msgpack'} if use_msgpack else {}
         risk_session = cls.get_session()
         version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
-        result, request_id = risk_session._post(
+        result, request_id = risk_session.sync.post(
             f'/{version}' + cls.__url(request),
             request,
             include_version=False,
@@ -134,7 +134,7 @@ class GsRiskApi(RiskApi):
             try:
                 risk_session = cls.get_session()
                 version = GsRiskApi.PRICING_API_VERSION or risk_session.api_version
-                calc_results = risk_session._post(
+                calc_results = risk_session.sync.post(
                     f'/{version}/risk/calculate/results/bulk', list(pending_requests.keys()), include_version=False
                 )
 
@@ -335,7 +335,7 @@ class GsRiskApi(RiskApi):
     @classmethod
     def create_pretrade_execution_optimization(cls, request: OptimizationRequest) -> str:
         try:
-            response = cls.get_session()._post(r'/risk/execution/pretrade', request)
+            response = cls.get_session().sync.post(r'/risk/execution/pretrade', request)
             _logger.info('New optimization is created with id: {}'.format(response.get("optimizationId")))
             return response
         except Exception as e:
@@ -355,7 +355,7 @@ class GsRiskApi(RiskApi):
                 time.sleep(math.pow(2, attempts))
                 _logger.error('Retrying (attempt {} of {})'.format(attempts, max_attempts))
             try:
-                results = cls.get_session()._get(url)
+                results = cls.get_session().sync.get(url)
                 if results.get('status') == 'Running':
                     attempts += 1
                 else:
@@ -420,7 +420,7 @@ class GsRiskApi(RiskApi):
             payload["notional"] = notional
 
         try:
-            response = cls.get_session()._post('/risk/liquidity', payload)
+            response = cls.get_session().sync.post('/risk/liquidity', payload)
 
             if isinstance(response, dict) and 'errorMessage' in response:
                 error_msg = response['errorMessage']

@@ -87,6 +87,200 @@ class Domain:
     APP = "AppDomain"
 
 
+class _SyncSessionAPI:
+    """Synchronous HTTP interface for GsSession. Access via ``GsSession.current.sync``."""
+
+    def __init__(self, session: 'GsSession'):
+        self._session = session
+
+    def get(
+        self,
+        path: str,
+        payload: Optional[Union[dict, 'Base']] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union['Base', tuple, dict]:
+        return self._session._get(
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
+
+    def post(
+        self,
+        path: str,
+        payload: Optional[Union[dict, bytes, 'Base', 'pd.DataFrame']] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union['Base', tuple, dict]:
+        return self._session._post(
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
+
+    def put(
+        self,
+        path: str,
+        payload: Optional[Union[dict, 'Base']] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union['Base', tuple, dict]:
+        return self._session._put(
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
+
+    def delete(
+        self,
+        path: str,
+        payload: Optional[Union[dict, 'Base']] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        use_body: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union['Base', tuple, dict]:
+        return self._session._delete(
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            use_body=use_body,
+            domain=domain,
+        )
+
+
+class _AsyncSessionAPI:
+    """Asynchronous HTTP interface for GsSession. Access via ``GsSession.current.async_``."""
+
+    def __init__(self, session: 'GsSession'):
+        self._session = session
+
+    async def get(
+        self,
+        path: str,
+        payload: Optional[Union[dict, 'Base']] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union['Base', tuple, dict]:
+        return await self._session._get_async(
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
+
+    async def post(
+        self,
+        path: str,
+        payload: Optional[Union[dict, bytes, 'Base', 'pd.DataFrame']] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union['Base', tuple, dict]:
+        return await self._session._post_async(
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
+
+    async def put(
+        self,
+        path: str,
+        payload: Optional[Union[dict, 'Base']] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union['Base', tuple, dict]:
+        return await self._session._put_async(
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            domain=domain,
+        )
+
+    async def delete(
+        self,
+        path: str,
+        payload: Optional[Union[dict, 'Base']] = None,
+        request_headers: Optional[dict] = None,
+        cls: Optional[type] = None,
+        include_version: Optional[bool] = True,
+        timeout: Optional[int] = DEFAULT_TIMEOUT,
+        return_request_id: Optional[bool] = False,
+        use_body: Optional[bool] = False,
+        domain: Optional[str] = None,
+    ) -> Union['Base', tuple, dict]:
+        return await self._session._delete_async(
+            path,
+            payload=payload,
+            request_headers=request_headers,
+            cls=cls,
+            include_version=include_version,
+            timeout=timeout,
+            return_request_id=return_request_id,
+            use_body=use_body,
+            domain=domain,
+        )
+
+
 class GsSession(ContextBase):
     __config = None
 
@@ -126,6 +320,8 @@ class GsSession(ContextBase):
         super().__init__()
         self._session = None
         self._session_async = None
+        self._sync_api: Optional['_SyncSessionAPI'] = None
+        self._async_api: Optional['_AsyncSessionAPI'] = None
         self.domain = domain
         self._orig_domain = domain
         if environment in tuple(x.name for x in Environment):
@@ -555,6 +751,7 @@ class GsSession(ContextBase):
         timeout: Optional[int] = DEFAULT_TIMEOUT,
         return_request_id: Optional[bool] = False,
         use_body: Optional[bool] = False,
+        domain: Optional[str] = None,
     ) -> Union[Base, tuple, dict]:
         return self.__request(
             'DELETE',
@@ -566,6 +763,7 @@ class GsSession(ContextBase):
             timeout=timeout,
             return_request_id=return_request_id,
             use_body=use_body,
+            domain=domain,
         )
 
     async def _delete_async(
@@ -578,6 +776,7 @@ class GsSession(ContextBase):
         timeout: Optional[int] = DEFAULT_TIMEOUT,
         return_request_id: Optional[bool] = False,
         use_body: Optional[bool] = False,
+        domain: Optional[str] = None,
     ) -> Union[Base, tuple, dict]:
         ret = await self.__request_async(
             'DELETE',
@@ -589,6 +788,7 @@ class GsSession(ContextBase):
             timeout=timeout,
             return_request_id=return_request_id,
             use_body=use_body,
+            domain=domain,
         )
         return ret
 
@@ -601,6 +801,7 @@ class GsSession(ContextBase):
         include_version: Optional[bool] = True,
         timeout: Optional[int] = DEFAULT_TIMEOUT,
         return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
     ) -> Union[Base, tuple, dict]:
         return self.__request(
             'PUT',
@@ -611,6 +812,7 @@ class GsSession(ContextBase):
             include_version=include_version,
             timeout=timeout,
             return_request_id=return_request_id,
+            domain=domain,
         )
 
     async def _put_async(
@@ -622,6 +824,7 @@ class GsSession(ContextBase):
         include_version: Optional[bool] = True,
         timeout: Optional[int] = DEFAULT_TIMEOUT,
         return_request_id: Optional[bool] = False,
+        domain: Optional[str] = None,
     ) -> Union[Base, tuple, dict]:
         ret = await self.__request_async(
             'PUT',
@@ -632,6 +835,7 @@ class GsSession(ContextBase):
             include_version=include_version,
             timeout=timeout,
             return_request_id=return_request_id,
+            domain=domain,
         )
         return ret
 
@@ -876,6 +1080,20 @@ class GsSession(ContextBase):
     def is_internal(self) -> bool:
         return False
 
+    @property
+    def sync(self) -> '_SyncSessionAPI':
+        """Synchronous HTTP interface. Use in non-async code."""
+        if self._sync_api is None:
+            self._sync_api = _SyncSessionAPI(self)
+        return self._sync_api
+
+    @property
+    def async_(self) -> '_AsyncSessionAPI':
+        """Asynchronous HTTP interface. Use with ``await`` inside async functions."""
+        if self._async_api is None:
+            self._async_api = _AsyncSessionAPI(self)
+        return self._async_api
+
 
 class OAuth2Session(GsSession):
     def __init__(
@@ -889,7 +1107,6 @@ class OAuth2Session(GsSession):
         http_adapter=None,
         domain=Domain.APP,
     ):
-
         if environment not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
             env_config = self._config_for_environment(Environment.DEV.name)
             url = environment

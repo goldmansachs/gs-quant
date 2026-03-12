@@ -50,15 +50,15 @@ def mock_factor_scenario(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_scenario_obj)
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_scenario_obj)
-    mocker.patch.object(GsSession.current, '_put', return_value=mock_scenario_obj)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_scenario_obj)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_scenario_obj)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=mock_scenario_obj)
     return FactorScenario.get('MSCENARIO')
 
 
 def test_create_factor_scenario(mocker):
     mock_factor_scenario(mocker)
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_scenario_obj)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_scenario_obj)
     new_scenario = FactorScenario(
         name="Scenario 1",
         type=FactorScenarioType.Factor_Shock,
@@ -91,7 +91,7 @@ def test_update_scenario_entitlements(mocker):
     scenario.entitlements = new_entitlements
     scenario.save()
 
-    mocker.patch.object(GsSession.current, '_get', return_value=scenario)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=scenario)
 
     assert 'role:A' in scenario.entitlements.view.roles
     assert 'role:B' in scenario.entitlements.edit.roles

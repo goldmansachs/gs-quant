@@ -139,9 +139,9 @@ class GsSecurityMasterApi:
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
 
         if flatten:
-            r = GsSession.current._get('/markets/securities/data', payload=payload)
+            r = GsSession.current.sync.get('/markets/securities/data', payload=payload)
         else:
-            r = GsSession.current._get('/markets/securities', payload=payload)
+            r = GsSession.current.sync.get('/markets/securities', payload=payload)
         if r['totalResults'] == 0:
             return None
         return r
@@ -225,7 +225,7 @@ class GsSecurityMasterApi:
         """
         if not secmaster_id.startswith("GS"):
             raise ValueError(f"Invalid id_value {secmaster_id}. Secmaster id starts with 'GS'")
-        r = GsSession.current._get(f'/markets/securities/{secmaster_id}/identifiers')
+        r = GsSession.current.sync.get(f'/markets/securities/{secmaster_id}/identifiers')
         return r['results']
 
     @classmethod
@@ -330,7 +330,7 @@ class GsSecurityMasterApi:
                 payload['limit'] = limit
 
             payload = json.loads(json.dumps(payload, cls=JSONEncoder))
-            response = GsSession.current._get('/markets/securities/identifiers', payload=payload)
+            response = GsSession.current.sync.get('/markets/securities/identifiers', payload=payload)
 
             if 'results' in response:
                 for entity_id, data in response['results'].items():
@@ -383,7 +383,7 @@ class GsSecurityMasterApi:
             params['endDate'] = end_date
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
 
-        r = GsSession.current._get('/markets/securities/map', payload)
+        r = GsSession.current.sync.get('/markets/securities/map', payload)
         results = r['results']
         return results
 
@@ -413,7 +413,7 @@ class GsSecurityMasterApi:
         if active_listing is not None:
             params["activeListing"] = active_listing
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
-        r = GsSession.current._get('/v2/markets/securities/search', payload=payload, include_version=False)
+        r = GsSession.current.sync.get('/v2/markets/securities/search', payload=payload, include_version=False)
         if r['totalResults'] == 0:
             return None
         return r["results"]
@@ -447,7 +447,6 @@ class GsSecurityMasterApi:
 
     @classmethod
     def _get_corporate_actions(cls, id_value: str, id_type: SecMasterIdentifiers, effective_date: dt.date, offset_key):
-
         params = {
             id_type.value: id_value,
         }
@@ -457,7 +456,7 @@ class GsSecurityMasterApi:
         if offset_key is not None:
             params["offsetKey"] = offset_key
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
-        r = GsSession.current._get("/markets/corpactions", payload=payload)
+        r = GsSession.current.sync.get("/markets/corpactions", payload=payload)
         return r
 
     @classmethod
@@ -557,7 +556,7 @@ class GsSecurityMasterApi:
         params = {id_type.value: id_value}
         cls.prepare_params(params, is_primary, offset_key, type_, effective_date)
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
-        r = GsSession.current._get("/markets/capitalstructure", payload=payload)
+        r = GsSession.current.sync.get("/markets/capitalstructure", payload=payload)
         return r
 
     @classmethod
@@ -581,7 +580,6 @@ class GsSecurityMasterApi:
         limit: int = None,
         offset_key: str = None,
     ) -> Iterable[dict]:
-
         params = {}
         if raw is not None:
             params["raw"] = GsSecurityMasterApi.__stringify_boolean(raw)
@@ -597,7 +595,7 @@ class GsSecurityMasterApi:
             params["offsetKey"] = offset_key
 
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
-        r = GsSession.current._get("/markets/securities/identifiers/updates-feed", payload=payload)
+        r = GsSession.current.sync.get("/markets/securities/identifiers/updates-feed", payload=payload)
         return r
 
     @classmethod
@@ -659,7 +657,6 @@ class GsSecurityMasterApi:
     def _get_exchanges(
         cls, effective_date: dt.date = None, limit: int = 10, query_params=None, offset_key: Union[str, None] = None
     ):
-
         if query_params is None:
             query_params = dict()
         allowed_keys = list(ExchangeId._value2member_map_.keys())
@@ -674,7 +671,7 @@ class GsSecurityMasterApi:
         if offset_key is not None:
             params["offsetKey"] = offset_key
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
-        r = GsSession.current._get('/markets/exchanges', payload=payload)
+        r = GsSession.current.sync.get('/markets/exchanges', payload=payload)
         if r['totalResults'] == 0:
             return None
         return r
@@ -687,7 +684,7 @@ class GsSecurityMasterApi:
         @param gs_exchange_id:  exchange_id id
         @return: list of dict with date ranges of the identifiers.
         """
-        r = GsSession.current._get(f'/markets/exchanges/{gs_exchange_id}/identifiers')
+        r = GsSession.current.sync.get(f'/markets/exchanges/{gs_exchange_id}/identifiers')
         return r['results']
 
     @classmethod
@@ -765,7 +762,7 @@ class GsSecurityMasterApi:
 
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
 
-        r = GsSession.current._get('/markets/securities/underlyers', payload=payload)
+        r = GsSession.current.sync.get('/markets/securities/underlyers', payload=payload)
         if r['totalResults'] == 0:
             return None
         return r

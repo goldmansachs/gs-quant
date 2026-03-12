@@ -33,32 +33,36 @@ class GsWorkspacesMarketsApi:
 
     @classmethod
     def get_workspaces(cls, limit: int = 10, **kwargs) -> Tuple[Workspace, ...]:
-        return GsSession.current._get(f'{API}?limit={limit}&{urllib.parse.urlencode(kwargs)}', cls=Workspace)['results']
+        return GsSession.current.sync.get(f'{API}?limit={limit}&{urllib.parse.urlencode(kwargs)}', cls=Workspace)[
+            'results'
+        ]
 
     @classmethod
     def get_workspace(cls, workspace_id: str):
-        return GsSession.current._get(f'{API}/{workspace_id}', cls=Workspace)
+        return GsSession.current.sync.get(f'{API}/{workspace_id}', cls=Workspace)
 
     @classmethod
     def get_workspace_by_alias(cls, alias: str) -> Workspace:
-        workspace = get(GsSession.current._get(f'{API}?alias={alias}', cls=Workspace), 'results.0')
+        workspace = get(GsSession.current.sync.get(f'{API}?alias={alias}', cls=Workspace), 'results.0')
         if not workspace:
             raise ValueError(f'Workspace with alias {alias} not found')
         return workspace
 
     @classmethod
     def create_workspace(cls, workspace: Workspace) -> Workspace:
-        return GsSession.current._post(f'{API}', workspace, cls=Workspace, request_headers=WORKSPACES_MARKETS_HEADERS)
+        return GsSession.current.sync.post(
+            f'{API}', workspace, cls=Workspace, request_headers=WORKSPACES_MARKETS_HEADERS
+        )
 
     @classmethod
     def update_workspace(cls, workspace: Workspace):
-        return GsSession.current._put(
+        return GsSession.current.sync.put(
             f'{API}/{workspace.id}', workspace, cls=Workspace, request_headers=WORKSPACES_MARKETS_HEADERS
         )
 
     @classmethod
     def delete_workspace(cls, workspace_id: str) -> Dict:
-        return GsSession.current._delete(f'{API}/{workspace_id}')
+        return GsSession.current.sync.delete(f'{API}/{workspace_id}')
 
     @classmethod
     def open_workspace(cls, workspace: Workspace):

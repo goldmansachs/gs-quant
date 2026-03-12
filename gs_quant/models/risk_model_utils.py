@@ -146,7 +146,6 @@ def build_factor_data_map(
 def build_pfp_data_dataframe(
     results: List, return_df: bool = True, get_factors_by_name: bool = True
 ) -> Union[pd.DataFrame, list]:
-
     factor_data_df = pd.DataFrame(results)[["date", "factorData"]]
     factor_data_df = factor_data_df.explode('factorData')
     factor_data_df['factorId'] = factor_data_df['factorData'].apply(lambda x: x.get('factorId'))

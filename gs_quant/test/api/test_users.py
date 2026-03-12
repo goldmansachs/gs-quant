@@ -72,11 +72,11 @@ def test_get_users(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsUsersApi.get_users(user_ids=['doeja'], user_emails=['jane.doe@gs.com'])
-    GsSession.current._get.assert_called_with('/users?&id=doeja&email=jane.doe@gs.com&limit=100&offset=0', cls=User)
+    GsSession.current.sync.get.assert_called_with('/users?&id=doeja&email=jane.doe@gs.com&limit=100&offset=0', cls=User)
     assert response == mock_response['results']
 
 
@@ -122,11 +122,11 @@ def test_get_current_user_info(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsUsersApi.get_current_user_info()
-    GsSession.current._get.assert_called_with('/users/self')
+    GsSession.current.sync.get.assert_called_with('/users/self')
     assert response == mock_response
 
 

@@ -59,7 +59,7 @@ def test_currency_to_tdapi_xccy_swap_rate_asset(mocker):
     mocker.patch.object(
         GsSession.__class__, 'current', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', side_effect=mock_request)
+    mocker.patch.object(GsSession.current.sync, 'get', side_effect=mock_request)
     mocker.patch.object(SecurityMaster, 'get_asset', side_effect=mock_request)
     bbid_mock = replace('gs_quant.timeseries.measures_xccy.Asset.get_identifier', Mock())
 

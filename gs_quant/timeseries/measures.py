@@ -1309,8 +1309,8 @@ def realized_correlation_with_basket(
     vols = constituents_spot.apply(lambda col: volatility(constituents_spot[col.name], Window(tenor, tenor)) / 100)
     weighted_vols = actual_weights.mul(vols)
     idx_vol = volatility(index_spot['spot'], Window(tenor, tenor)) / 100
-    s1 = weighted_vols.sum(1, skipna=False)
-    s2 = weighted_vols.apply(lambda x: x * x).sum(1, skipna=False)
+    s1 = weighted_vols.sum(axis=1, skipna=False)
+    s2 = weighted_vols.apply(lambda x: x * x).sum(axis=1, skipna=False)
     values = (idx_vol * idx_vol - s2) / (s1 * s1 - s2) * 100
     series = ExtendedSeries(values)
     series.dataset_ids = dataset_ids
@@ -1585,7 +1585,7 @@ def average_realized_volatility(
 
         vol_df = pd.concat(weighted_vols, axis=1).ffill()
         series = (
-            ExtendedSeries(vol_df.sum(1, min_count=top_n_of_index), name='averageRealizedVolatility')
+            ExtendedSeries(vol_df.sum(axis=1, min_count=top_n_of_index), name='averageRealizedVolatility')
             if len(weighted_vols)
             else ExtendedSeries(dtype=float)
         )
@@ -2135,7 +2135,7 @@ def _process_forward_vol_term(asset: Asset, vol_series: pd.Series, vol_col: str,
             / (vol_df['timeToExp'] - vol_df['timeToExp'].shift(1))
         )
         ext_series = ExtendedSeries(vol_df['fwdVol'], name=series_name)[
-            DataContext.current.start_date : DataContext.current.end_date
+            pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)
         ]
         ext_series.index = _normalize_dtidx(ext_series.index)
         ext_series.dataset_ids = getattr(vol_series, 'dataset_ids', ())
@@ -2401,7 +2401,9 @@ def skew_term(
 
     series.name = "impliedVolatility"
     series = series.sort_index()
-    series = ExtendedSeries(series.loc[DataContext.current.start_date : DataContext.current.end_date])
+    series = ExtendedSeries(
+        series.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
+    )
     series.dataset_ids = tuple(dataset_ids)
     return series
 
@@ -2498,7 +2500,9 @@ def vol_term(
     else:
         df = df.loc[latest]
         cbd = _get_custom_bd(asset.exchange)
-        df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
+        df = df.assign(
+            expirationDate=pd.DatetimeIndex([ts + _to_offset(t) + cbd - cbd for ts, t in zip(df.index, df['tenor'])])
+        )
         series = df.set_index('expirationDate')['impliedVolatility']
         series.index = _normalize_dtidx(series.index)
 
@@ -2515,7 +2519,7 @@ def vol_term(
 
     series.name = "impliedVolatility"
     series = series.sort_index()
-    series = series.loc[DataContext.current.start_date : DataContext.current.end_date]
+    series = series.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
     series = ExtendedSeries(series)
     series.attrs = dict(latest=latest)
     series.dataset_ids = tuple(dataset_ids)
@@ -2630,11 +2634,13 @@ def fwd_term(
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
-        df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
+        df.loc[:, 'expirationDate'] = pd.DatetimeIndex(
+            [ts + _to_offset(t) + cbd - cbd for ts, t in zip(df.index, df['tenor'])]
+        )
         df = df.set_index('expirationDate')
         df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
-        df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
+        df = df.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[forward_col_name])
     series.dataset_ids = dataset_ids
     return series
@@ -2702,11 +2708,13 @@ def fx_fwd_term(
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
-        df.loc[:, 'expirationDate'] = df.index + df['tenor'].map(_to_offset) + cbd - cbd
+        df.loc[:, 'expirationDate'] = pd.DatetimeIndex(
+            [ts + _to_offset(t) + cbd - cbd for ts, t in zip(df.index, df['tenor'])]
+        )
         df = df.set_index('expirationDate')
         df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
-        df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
+        df = df.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
         if get_spot:
             spot = spot_df.loc[latest]['spot']
             df[forward_col_name] = df[forward_col_name] + spot
@@ -2766,12 +2774,14 @@ def carry_term(
         latest = df.index.max()
         _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
-        df = df.assign(expirationDate=df.index + df['tenor'].map(_to_offset) + cbd - cbd)
+        df = df.assign(
+            expirationDate=pd.DatetimeIndex([ts + _to_offset(t) + cbd - cbd for ts, t in zip(df.index, df['tenor'])])
+        )
 
         df = df.set_index('expirationDate')
         df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
-        df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
+        df = df.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
         spot = spot_df.loc[latest]['spot']
 
         if annualized == FXSpotCarry.ANNUALIZED:
@@ -2790,7 +2800,7 @@ def _var_swap_tenors(asset: Asset, request_id=None):
     from gs_quant.session import GsSession
 
     aid = asset.get_marquee_id()
-    body = GsSession.current._get(f"/data/markets/{aid}/availability")
+    body = GsSession.current.sync.get(f"/data/markets/{aid}/availability")
     log_debug(request_id, _logger, 'Queried market availability (%s) for %s', body.get('requestId'), aid)
     for r in body['data']:
         if r['dataField'] == Fields.VAR_SWAP.value:
@@ -2927,11 +2937,13 @@ def var_term(
         _logger.info('selected pricing date %s', latest)
         df = df.loc[latest]
         cbd = _get_custom_bd(asset.exchange)
-        df.loc[:, Fields.EXPIRATION_DATE.value] = df.index + df[Fields.TENOR.value].map(_to_offset) + cbd - cbd
+        df.loc[:, Fields.EXPIRATION_DATE.value] = pd.DatetimeIndex(
+            [ts + _to_offset(t) + cbd - cbd for ts, t in zip(df.index, df[Fields.TENOR.value])]
+        )
         df = df.set_index(Fields.EXPIRATION_DATE.value)
         df.index = _normalize_dtidx(df.index)
         df = df.sort_index()
-        df = df.loc[DataContext.current.start_date : DataContext.current.end_date]
+        df = df.loc[pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)]
         series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df[Fields.VAR_SWAP.value])
         series.attrs = dict(latest=latest)
 
@@ -4940,8 +4952,8 @@ def realized_correlation(
     # expected number of data points for each pricing date. All assets required, i.e. do not calculate
     # if constituent is missing on that day
     min_no_of_assets = top_n_of_index
-    s1 = pd.concat(weighted_vols, axis=1).sum(1, min_count=min_no_of_assets).dropna()
-    s2 = pd.concat(map(lambda x: x * x, weighted_vols), axis=1).sum(1, min_count=min_no_of_assets).dropna()
+    s1 = pd.concat(weighted_vols, axis=1).sum(axis=1, min_count=min_no_of_assets).dropna()
+    s2 = pd.concat(map(lambda x: x * x, weighted_vols), axis=1).sum(axis=1, min_count=min_no_of_assets).dropna()
 
     idx_vol = volatility(df_asset['spot'], Window(tenor, tenor)) / 100
     idx_vol = idx_vol[idx_vol.index.isin(s1.index)]

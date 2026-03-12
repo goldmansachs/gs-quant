@@ -29,11 +29,11 @@ class GsScenarioApi:
 
     @classmethod
     def create_scenario(cls, scenario: Scenario) -> Scenario:
-        return GsSession.current._post('/risk/scenarios', scenario, cls=Scenario)
+        return GsSession.current.sync.post('/risk/scenarios', scenario, cls=Scenario)
 
     @classmethod
     def get_scenario(cls, scenario_id: str) -> Scenario:
-        return GsSession.current._get(f'/risk/scenarios/{scenario_id}', cls=Scenario)
+        return GsSession.current.sync.get(f'/risk/scenarios/{scenario_id}', cls=Scenario)
 
     @classmethod
     def get_many_scenarios(
@@ -48,12 +48,12 @@ class GsScenarioApi:
             for k, v in kwargs.items():
                 url += f'&{k}={f"&{k}=".join(v)}' if isinstance(v, list) else f'&{k}={v}'
 
-        return GsSession.current._get(url, cls=Scenario).get('results', [])
+        return GsSession.current.sync.get(url, cls=Scenario).get('results', [])
 
     @classmethod
     def get_scenario_by_name(cls, name: str) -> Scenario:
         url = f"/risk/scenarios?name={name}"
-        ret = GsSession.current._get(url, cls=Scenario)
+        ret = GsSession.current.sync.get(url, cls=Scenario)
         num_found = ret.get('totalResults', 0)
 
         if num_found == 0:
@@ -65,15 +65,15 @@ class GsScenarioApi:
 
     @classmethod
     def update_scenario(cls, scenario: Scenario) -> Dict:
-        return GsSession.current._put(f'/risk/scenarios/{scenario.id_}', scenario, cls=Scenario)
+        return GsSession.current.sync.put(f'/risk/scenarios/{scenario.id_}', scenario, cls=Scenario)
 
     @classmethod
     def delete_scenario(cls, scenario_id: str) -> Dict:
-        return GsSession.current._delete(f'/risk/scenarios/{scenario_id}')
+        return GsSession.current.sync.delete(f'/risk/scenarios/{scenario_id}')
 
     @classmethod
     def calculate_scenario(cls, request: Dict) -> Dict:
-        return GsSession.current._post('/scenarios/calculate', request)
+        return GsSession.current.sync.post('/scenarios/calculate', request)
 
 
 class GsFactorScenarioApi(GsScenarioApi):

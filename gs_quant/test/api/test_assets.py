@@ -34,12 +34,12 @@ def test_get_asset(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsAssetApi.get_asset(marquee_id)
 
-    GsSession.current._get.assert_called_with('/assets/{id}'.format(id=marquee_id), cls=GsAsset)
+    GsSession.current.sync.get.assert_called_with('/assets/{id}'.format(id=marquee_id), cls=GsAsset)
 
     assert response == mock_response
 
@@ -69,12 +69,12 @@ def test_get_many_assets(mocker, monkeypatch):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     # run test
     monkeypatch.delenv(ENABLE_ASSET_CACHING, raising=False)
     response = GsAssetApi.get_many_assets(id=[marquee_id_1, marquee_id_2], as_of=as_of)
-    GsSession.current._post.assert_called_with('/assets/query', cls=GsAsset, payload=inputs)
+    GsSession.current.sync.post.assert_called_with('/assets/query', cls=GsAsset, payload=inputs)
     assert response == expected_response
 
     monkeypatch.setenv(ENABLE_ASSET_CACHING, '1')  # run 2x with cache on
@@ -134,12 +134,12 @@ def test_get_asset_xrefs(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsAssetApi.get_asset_xrefs(marquee_id)
 
-    GsSession.current._get.assert_called_with('/assets/{id}/xrefs'.format(id=marquee_id))
+    GsSession.current.sync.get.assert_called_with('/assets/{id}/xrefs'.format(id=marquee_id))
     testfixtures.compare(response, expected_response)
 
 
@@ -191,12 +191,14 @@ def test_get_asset_positions_for_date(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsAssetApi.get_asset_positions_for_date(marquee_id, position_date)
 
-    GsSession.current._get.assert_called_with('/assets/{id}/positions/{date}'.format(id=marquee_id, date=position_date))
+    GsSession.current.sync.get.assert_called_with(
+        '/assets/{id}/positions/{date}'.format(id=marquee_id, date=position_date)
+    )
 
     testfixtures.compare(response, expected_response)
 
@@ -228,7 +230,7 @@ def test_get_asset_positions_for_date(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
 
@@ -236,7 +238,7 @@ def test_get_asset_positions_for_date(mocker):
 
     testfixtures.compare(response, expected_response)
 
-    GsSession.current._get.assert_called_with(
+    GsSession.current.sync.get.assert_called_with(
         '/assets/{id}/positions/{date}?type=close'.format(id=marquee_id, date=position_date)
     )
 

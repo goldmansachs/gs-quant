@@ -31,23 +31,23 @@ def test_get_many_monitors(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     GsMonitorsApi.get_monitors()
-    GsSession.current._get.assert_called_with('/monitors?limit=100', cls=Monitor)
+    GsSession.current.sync.get.assert_called_with('/monitors?limit=100', cls=Monitor)
     GsMonitorsApi.get_monitors(monitor_id='abc')
-    GsSession.current._get.assert_called_with('/monitors?id=abc&limit=100', cls=Monitor)
+    GsSession.current.sync.get.assert_called_with('/monitors?id=abc&limit=100', cls=Monitor)
     GsMonitorsApi.get_monitors(owner_id='aedf')
-    GsSession.current._get.assert_called_with('/monitors?ownerId=aedf&limit=100', cls=Monitor)
+    GsSession.current.sync.get.assert_called_with('/monitors?ownerId=aedf&limit=100', cls=Monitor)
     GsMonitorsApi.get_monitors(name='name')
-    GsSession.current._get.assert_called_with('/monitors?name=name&limit=100', cls=Monitor)
+    GsSession.current.sync.get.assert_called_with('/monitors?name=name&limit=100', cls=Monitor)
     GsMonitorsApi.get_monitors(folder_name='folderName')
-    GsSession.current._get.assert_called_with('/monitors?folderName=folderName&limit=100', cls=Monitor)
+    GsSession.current.sync.get.assert_called_with('/monitors?folderName=folderName&limit=100', cls=Monitor)
     GsMonitorsApi.get_monitors(monitor_type='type')
-    GsSession.current._get.assert_called_with('/monitors?type=type&limit=100', cls=Monitor)
+    GsSession.current.sync.get.assert_called_with('/monitors?type=type&limit=100', cls=Monitor)
     response = GsMonitorsApi.get_monitors(name='name', owner_id='ia', limit=10)
-    GsSession.current._get.assert_called_with('/monitors?ownerId=ia&name=name&limit=10', cls=Monitor)
+    GsSession.current.sync.get.assert_called_with('/monitors?ownerId=ia&name=name&limit=10', cls=Monitor)
     assert response == expected_response
 
 
@@ -59,11 +59,11 @@ def test_get_monitor(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsMonitorsApi.get_monitor(monitor_id)
-    GsSession.current._get.assert_called_with('/monitors/{id}'.format(id=monitor_id), cls=Monitor)
+    GsSession.current.sync.get.assert_called_with('/monitors/{id}'.format(id=monitor_id), cls=Monitor)
     assert response == mock_response
 
 
@@ -76,11 +76,11 @@ def test_create_monitor(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=monitor)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=monitor)
 
     # run test
     response = GsMonitorsApi.create_monitor(monitor)
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/monitors', monitor, request_headers={'Content-Type': 'application/json;charset=utf-8'}, cls=Monitor
     )
     assert response == monitor
@@ -95,11 +95,11 @@ def test_update_monitor(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_put', return_value=monitor)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=monitor)
 
     # run test
     response = GsMonitorsApi.update_monitor(monitor)
-    GsSession.current._put.assert_called_with(
+    GsSession.current.sync.put.assert_called_with(
         '/monitors/{id}'.format(id=monitor_id),
         monitor,
         request_headers={'Content-Type': 'application/json;charset=utf-8'},
@@ -117,11 +117,11 @@ def test_delete_monitor(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'delete', return_value=mock_response)
 
     # run test
     response = GsMonitorsApi.delete_monitor(monitor_id)
-    GsSession.current._delete.assert_called_with('/monitors/{id}'.format(id=monitor_id))
+    GsSession.current.sync.delete.assert_called_with('/monitors/{id}'.format(id=monitor_id))
     assert response == mock_response
 
 
@@ -141,9 +141,9 @@ def test_calculate_monitor(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsMonitorsApi.calculate_monitor(monitor_id)
-    GsSession.current._get.assert_called_with('/monitors/{id}/data'.format(id=monitor_id), cls=MonitorResponseData)
+    GsSession.current.sync.get.assert_called_with('/monitors/{id}/data'.format(id=monitor_id), cls=MonitorResponseData)
     assert response == mock_response

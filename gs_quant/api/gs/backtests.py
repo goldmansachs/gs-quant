@@ -49,31 +49,31 @@ class GsBacktestApi:
                 )
             )
         )
-        return GsSession.current._get('/backtests?{query}'.format(query=query_string), cls=Backtest)['results']
+        return GsSession.current.sync.get('/backtests?{query}'.format(query=query_string), cls=Backtest)['results']
 
     @classmethod
     def get_backtest(cls, backtest_id: str) -> Backtest:
-        return GsSession.current._get('/backtests/{id}'.format(id=backtest_id), cls=Backtest)
+        return GsSession.current.sync.get('/backtests/{id}'.format(id=backtest_id), cls=Backtest)
 
     @classmethod
     def create_backtest(cls, backtest: Backtest) -> Backtest:
         request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
-        return GsSession.current._post('/backtests', backtest, request_headers=request_headers, cls=Backtest)
+        return GsSession.current.sync.post('/backtests', backtest, request_headers=request_headers, cls=Backtest)
 
     @classmethod
     def update_backtest(cls, backtest: Backtest):
         request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
-        return GsSession.current._put(
+        return GsSession.current.sync.put(
             '/backtests/{id}'.format(id=backtest.id), backtest, request_headers=request_headers, cls=Backtest
         )
 
     @classmethod
     def delete_backtest(cls, backtest_id: str) -> dict:
-        return GsSession.current._delete('/backtests/{id}'.format(id=backtest_id))
+        return GsSession.current.sync.delete('/backtests/{id}'.format(id=backtest_id))
 
     @classmethod
     def get_results(cls, backtest_id: str) -> Tuple[BacktestResult, ...]:
-        return GsSession.current._get('/backtests/results?id={id}'.format(id=backtest_id))['backtestResults']
+        return GsSession.current.sync.get('/backtests/results?id={id}'.format(id=backtest_id))['backtestResults']
 
     @classmethod
     def get_comparison_results(
@@ -104,12 +104,12 @@ class GsBacktestApi:
                 )
             )
         )
-        result = GsSession.current._get('/backtests/results?{query}'.format(query=query_string))
+        result = GsSession.current.sync.get('/backtests/results?{query}'.format(query=query_string))
         return result['backtestResults'], result['comparisonResults']
 
     @classmethod
     def schedule_backtest(cls, backtest_id: str) -> dict:
-        return GsSession.current._post('/backtests/{id}/schedule'.format(id=backtest_id))
+        return GsSession.current.sync.post('/backtests/{id}/schedule'.format(id=backtest_id))
 
     @classmethod
     def run_backtest(
@@ -125,7 +125,7 @@ class GsBacktestApi:
         if correlation_id is not None:
             request_headers["X-CorrelationId"] = correlation_id
 
-        response = GsSession.current._post(
+        response = GsSession.current.sync.post(
             '/backtests/calculate', backtest, request_headers=request_headers, timeout=timeout
         )
         return cls.backtest_result_from_response(response)
@@ -148,18 +148,18 @@ class GsBacktestApi:
         cls, backtestRiskRequest: BacktestRiskRequest, timeout: Optional[int] = DEFAULT_TIMEOUT
     ) -> dict:
         request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
-        return GsSession.current._post(
+        return GsSession.current.sync.post(
             '/backtests/calculate-position-risk', backtestRiskRequest, request_headers=request_headers, timeout=timeout
         )
 
     @classmethod
     def get_ref_data(cls) -> BacktestRefData:
-        return GsSession.current._get('/backtests/refData', cls=BacktestRefData)
+        return GsSession.current.sync.get('/backtests/refData', cls=BacktestRefData)
 
     @classmethod
     def update_ref_data(cls, backtest_ref_data: BacktestRefData):
         request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
-        return GsSession.current._put(
+        return GsSession.current.sync.put(
             '/backtests/refData', backtest_ref_data, request_headers=request_headers, cls=backtest_ref_data
         )
 
@@ -170,7 +170,7 @@ class GsBacktestApiAsync(GsBacktestApi):
         cls, backtestRiskRequest: BacktestRiskRequest, timeout: Optional[int] = DEFAULT_TIMEOUT
     ) -> dict:
         request_headers = {'Content-Type': 'application/json;charset=utf-8', 'Accept': 'application/json;charset=utf-8'}
-        response = await GsSession.current._post_async(
+        response = await GsSession.current.async_.post(
             '/backtests/calculate-position-risk', backtestRiskRequest, request_headers=request_headers, timeout=timeout
         )
         return response
@@ -189,7 +189,7 @@ class GsBacktestApiAsync(GsBacktestApi):
         if correlation_id is not None:
             request_headers["X-CorrelationId"] = correlation_id
 
-        response = await GsSession.current._post_async(
+        response = await GsSession.current.async_.post(
             '/backtests/calculate', backtest, request_headers=request_headers, timeout=timeout
         )
         return cls.backtest_result_from_response(response)

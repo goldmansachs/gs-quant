@@ -658,7 +658,7 @@ class PTPDataset(Dataset):
         temp_ser = self._series.assign(date=self._series.index.to_series().apply(dt.date.isoformat))
         data = temp_ser.to_dict('records')
         kwargs = dict(data=data, name=self._name if self._name else 'GSQ Default', fields=list(self._series.columns))
-        res = GsSession.current._post('/plots/datasets', payload=kwargs)
+        res = GsSession.current.sync.post('/plots/datasets', payload=kwargs)
         self._fields = {
             key: inflection.underscore(field)
             for key, field in res['fieldMap'].items()
@@ -741,7 +741,6 @@ class MarqueeDataIngestionLibrary:
         return parameters
 
     def _check_and_create_field(self, fieldMap: Dict[str, str], dataframe: pd.DataFrame) -> None:
-
         fields_to_create = []
         for column, field_name in fieldMap.items():
             if not (self.provider.get_dataset_fields(names=field_name)):

@@ -75,9 +75,9 @@ def mock_risk_model(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_risk_model_obj)
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_risk_model_obj)
-    mocker.patch.object(GsSession.current, '_put', return_value=mock_risk_model_obj)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_risk_model_obj)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_risk_model_obj)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=mock_risk_model_obj)
     return FactorRiskModel.get('model_id')
 
 
@@ -89,16 +89,16 @@ def mock_macro_risk_model(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_macro_risk_model_obj)
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_macro_risk_model_obj)
-    mocker.patch.object(GsSession.current, '_put', return_value=mock_macro_risk_model_obj)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_macro_risk_model_obj)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_macro_risk_model_obj)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=mock_macro_risk_model_obj)
     return MacroRiskModel.get('macro_model_id')
 
 
 def test_create_risk_model(mocker):
     mock_risk_model(mocker)
     risk_model_id = 'model_id'
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_risk_model_obj)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_risk_model_obj)
     new_model = FactorRiskModel(
         risk_model_id,
         'Fake Risk Model',
@@ -133,7 +133,7 @@ def test_update_risk_model_entitlements(mocker):
     new_model.entitlements = new_entitlements
     new_model.save()
     assert 'guid:X' in new_model.entitlements.get('execute')
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     new_model.entitlements = empty_entitlements
     new_model.save()
     new_entitlements = {
@@ -146,7 +146,7 @@ def test_update_risk_model_entitlements(mocker):
     }
     new_model.entitlements = new_entitlements
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert 'guid:X' in new_model.entitlements.get('execute')
     assert 'guid:XX' in new_model.entitlements.get('admin')
     assert 'guid:XXX' in new_model.entitlements.get('upload')
@@ -157,52 +157,52 @@ def test_update_risk_model(mocker):
 
     new_model.term = RiskModelTerm.Short
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.term == RiskModelTerm.Short
 
     new_model.description = 'Test risk model'
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.description == 'Test risk model'
 
     new_model.vendor = 'GS'
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.vendor == 'GS'
 
     new_model.term = RiskModelTerm.Medium
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.term == RiskModelTerm.Medium
 
     new_model.version = 0.1
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.version == 0.1
 
     new_model.universe_size = 10000
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.universe_size == 10000
 
     new_model.coverage = RiskModelCoverage.Global
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.coverage == RiskModelCoverage.Global
 
     new_model.name = 'TEST RISK MODEL'
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.name == 'TEST RISK MODEL'
 
     new_model.expected_update_time = dt.time(1, 0, 0)
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.expected_update_time == dt.time(1, 0, 0)
 
     new_model.type = RiskModelType.Thematic
     new_model.save()
-    mocker.patch.object(GsSession.current, '_get', return_value=new_model)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.type == RiskModelType.Thematic
 
 
@@ -235,7 +235,7 @@ def test_get_r_squared(mocker):
         '904026': {'2022-04-05': 89.0},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = macro_model.get_r_squared(
@@ -245,7 +245,7 @@ def test_get_r_squared(mocker):
         format=ReturnFormat.JSON,
     )
 
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/risk/models/data/{id}/query'.format(id='macro_model_id'), query, timeout=200
     )
     assert response == r_squared_response
@@ -283,14 +283,14 @@ def test_get_fair_value_gap_standard_deviation(mocker):
         '904026': {'2022-04-05': 4.0},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
     response = macro_model.get_fair_value_gap(
         start_date=dt.date(2022, 4, 4),
         end_date=dt.date(2022, 4, 6),
         assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
         format=ReturnFormat.JSON,
     )
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/risk/models/data/{id}/query'.format(id='macro_model_id'), query, timeout=200
     )
     assert response == fvg_response
@@ -328,7 +328,7 @@ def test_get_fair_value_gap_percent(mocker):
         '904026': {'2022-04-05': 90.0},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
     response = macro_model.get_fair_value_gap(
         start_date=dt.date(2022, 4, 4),
         end_date=dt.date(2022, 4, 6),
@@ -336,7 +336,7 @@ def test_get_fair_value_gap_percent(mocker):
         fair_value_gap_unit=Unit.PERCENT,
         format=ReturnFormat.JSON,
     )
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/risk/models/data/{id}/query'.format(id='macro_model_id'), query, timeout=200
     )
     assert response == fvg_response
@@ -412,10 +412,12 @@ def test_get_statistical_factor_data(mocker, statistical_measure, fieldKey):
         ): risk_model.get_factor_cross_sectional_standard_deviation,
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     actual_response = field_key_to_getter_ref[fieldKey](**kwargs)
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
 
     assert actual_response == expected_response
 
@@ -462,7 +464,7 @@ def test_get_factor_z_score(mocker):
 
     factor_z_score_response = {'Factor1': {'2022-04-05': 1.5}, 'Factor2': {'2022-04-05': -1.0}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = macro_model.get_factor_z_score(
@@ -471,7 +473,7 @@ def test_get_factor_z_score(mocker):
         assets=DataAssetsRequest(UniverseIdentifier.gsid, universe),
         format=ReturnFormat.JSON,
     )
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/risk/models/data/{id}/query'.format(id='macro_model_id'), query, timeout=200
     )
     assert response == factor_z_score_response
@@ -509,7 +511,7 @@ def test_get_predicted_beta(mocker):
         '904026': {'2022-04-05': 0.4},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_predicted_beta(
@@ -519,7 +521,9 @@ def test_get_predicted_beta(mocker):
         format=ReturnFormat.JSON,
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == predicted_beta_response
 
 
@@ -555,7 +559,7 @@ def test_get_global_predicted_beta(mocker):
         '904026': {'2022-04-05': 0.4},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_global_predicted_beta(
@@ -565,7 +569,9 @@ def test_get_global_predicted_beta(mocker):
         format=ReturnFormat.JSON,
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == global_predicted_beta_response
 
 
@@ -601,7 +607,7 @@ def test_get_estimation_universe_weights(mocker):
         '904026': {'2022-04-05': 0.4},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_estimation_universe_weights(
@@ -611,7 +617,9 @@ def test_get_estimation_universe_weights(mocker):
         format=ReturnFormat.JSON,
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == estu_response
 
 
@@ -647,7 +655,7 @@ def test_get_daily_return(mocker):
         '904026': {'2022-04-05': -0.4},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_daily_return(
@@ -657,7 +665,9 @@ def test_get_daily_return(mocker):
         format=ReturnFormat.JSON,
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == daily_return_response
 
 
@@ -693,7 +703,7 @@ def test_get_specific_return(mocker):
         '904026': {'2022-04-05': 0.5},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_specific_return(
@@ -703,7 +713,9 @@ def test_get_specific_return(mocker):
         format=ReturnFormat.JSON,
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == specific_return_response
 
 
@@ -824,17 +836,17 @@ def test_upload_risk_model_data(mocker, aws_upload):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value='Upload Successful')
+    mocker.patch.object(GsSession.current.sync, 'post', return_value='Upload Successful')
 
     max_asset_batch_size = 2
     model.upload_data(risk_model_data, max_asset_batch_size=max_asset_batch_size, aws_upload=aws_upload)
 
-    call_args_list = GsSession.current._post.call_args_list
+    call_args_list = GsSession.current.sync.post.call_args_list
 
     assert len(call_args_list) == len(expected_calls)
     assert call_args_list == expected_calls
 
-    GsSession.current._post.assert_has_calls(expected_calls, any_order=False)
+    GsSession.current.sync.post.assert_has_calls(expected_calls, any_order=False)
 
 
 @pytest.mark.parametrize("days", [0, 30, 60, 90])
@@ -867,14 +879,16 @@ def test_get_bid_ask_spread(mocker, days):
 
     bid_ask_spread_response = {'2588173': {'2022-04-05': 1.6}, '2046251': {'2022-04-05': 0.5}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_bid_ask_spread(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), days=days, assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == bid_ask_spread_response
 
 
@@ -908,14 +922,16 @@ def test_get_trading_volume(mocker, days):
 
     trading_volume_response = {'2588173': {'2022-04-05': 1.6}, '2046251': {'2022-04-05': 0.5}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_trading_volume(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), days=days, assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == trading_volume_response
 
 
@@ -943,14 +959,16 @@ def test_get_traded_value(mocker, days):
 
     trading_value_30d_response = {'2588173': {'2022-04-05': 1.6}, '2046251': {'2022-04-05': 0.5}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_traded_value(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), days=days, assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == trading_value_30d_response
 
 
@@ -984,14 +1002,16 @@ def test_get_composite_volume(mocker, days):
 
     composite_volume_response = {'2588173': {'2022-04-05': 1.6}, '2046251': {'2022-04-05': 0.5}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_composite_volume(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), days=days, assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == composite_volume_response
 
 
@@ -1019,14 +1039,16 @@ def test_get_composite_value(mocker, days):
 
     composite_value_response = {'2588173': {'2022-04-05': 1.6}, '2046251': {'2022-04-05': 0.5}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_composite_value(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), days=days, assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == composite_value_response
 
 
@@ -1055,14 +1077,16 @@ def test_get_issuer_market_cap(mocker):
 
     issuer_market_cap_response = {'2588173': {'2022-04-05': 2000000000}, '2046251': {'2022-04-05': 1000000000}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_issuer_market_cap(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == issuer_market_cap_response
 
 
@@ -1086,14 +1110,16 @@ def test_get_asset_price(mocker):
 
     price_response = {'2588173': {'2022-04-05': 200}, '2046251': {'2022-04-05': 100}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_asset_price(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == price_response
 
 
@@ -1122,14 +1148,16 @@ def test_get_asset_capitalization(mocker):
 
     capitalization_response = {'2588173': {'2022-04-05': 2000000000}, '2046251': {'2022-04-05': 1000000000}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_asset_capitalization(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == capitalization_response
 
 
@@ -1155,14 +1183,16 @@ def test_get_currency(mocker):
 
     currency_response = {'2588173': {'2022-04-05': "GBP"}, '2046251': {'2022-04-05': "USD"}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_currency(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == currency_response
 
 
@@ -1191,14 +1221,16 @@ def test_get_unadjusted_specific_risk(mocker):
 
     unadjusted_specific_risk_response = {'2588173': {'2022-04-05': 1.6}, '2046251': {'2022-04-05': 0.5}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_unadjusted_specific_risk(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == unadjusted_specific_risk_response
 
 
@@ -1224,14 +1256,16 @@ def test_get_dividend_yield(mocker):
 
     dividend_yield_response = {'2588173': {'2022-04-05': 1.6}, '2046251': {'2022-04-05': 0.5}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_dividend_yield(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == dividend_yield_response
 
 
@@ -1257,14 +1291,14 @@ def test_get_model_price(mocker):
 
     model_price_response = {'2588173': {'2022-04-05': 200}, '2046251': {'2022-04-05': 100}}
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_model_price(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/risk/models/data/{id}/query'.format(id='macro_model_id'), query, timeout=200
     )
     assert response == model_price_response
@@ -1352,14 +1386,16 @@ def test_get_covariance_matrix(mocker):
         }
     ]
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_covariance_matrix(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == covariance_matrix_response
 
 
@@ -1445,14 +1481,16 @@ def test_get_unadjusted_covariance_matrix(mocker):
         }
     ]
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_unadjusted_covariance_matrix(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == unadjusted_covariance_matrix_response
 
 
@@ -1538,14 +1576,16 @@ def test_get_pre_vra_covariance_matrix(mocker):
         }
     ]
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     # run test
     response = model.get_pre_vra_covariance_matrix(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), assets=assets, format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == pre_vra_covariance_matrix_response
 
 
@@ -1579,13 +1619,15 @@ def test_get_risk_free_rate(mocker):
         "riskFreeRate": {('2022-04-05', 0): 1.08, ('2022-04-05', 1): 0.012},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     response = model.get_risk_free_rate(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == risk_free_rate_response
 
     # fitler risk free rates by currency
@@ -1597,7 +1639,9 @@ def test_get_risk_free_rate(mocker):
         format=ReturnFormat.JSON,
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
 
     assert actual_filtered_rates == expected_filtered_rates
 
@@ -1620,7 +1664,9 @@ def test_get_risk_free_rate(mocker):
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), currencies=[Currency.INR]
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
 
     assert_frame_equal(expected_data_frame, actual_data_frame, check_like=True)
 
@@ -1655,13 +1701,15 @@ def test_get_currency_exchange_rate(mocker):
         "exchangeRate": {('2022-04-05', 0): 1.08, ('2022-04-05', 1): 0.012},
     }
 
-    mocker.patch.object(GsSession.current, '_post', return_value=results)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=results)
 
     response = model.get_currency_exchange_rate(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), format=ReturnFormat.JSON
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
     assert response == currency_exchange_rate_response
 
     # fitler risk free rates by currency
@@ -1673,7 +1721,9 @@ def test_get_currency_exchange_rate(mocker):
         format=ReturnFormat.JSON,
     )
 
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
 
     assert actual_filtered_rates == expected_filtered_rates
 
@@ -1697,7 +1747,9 @@ def test_get_currency_exchange_rate(mocker):
     actual_data_frame = model.get_currency_exchange_rate(
         start_date=dt.date(2022, 4, 5), end_date=dt.date(2022, 4, 5), currencies=[Currency.INR]
     )
-    GsSession.current._post.assert_called_with('/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/{id}/query'.format(id='model_id'), query, timeout=200
+    )
 
     assert_frame_equal(expected_data_frame, actual_data_frame, check_like=True)
 

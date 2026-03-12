@@ -92,7 +92,7 @@ def test_get_risk_models(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsEsgApi.get_esg(
@@ -102,7 +102,7 @@ def test_get_risk_models(mocker):
         measures=[ESGMeasure.G_PERCENTILE, ESGMeasure.ES_DISCLOSURE_PERCENTAGE],
         cards=[ESGCard.SUMMARY, ESGCard.BOTTOM_TEN_RANKED],
     )
-    GsSession.current._get.assert_called_with(
+    GsSession.current.sync.get.assert_called_with(
         '/esg/MPM9Y3434RDFVKA3?&date=2021-04-08&benchmark=MA4B66MW5E27U8P32SB&measure=gPercentile&'
         'measure=esDisclosurePercentage&card=summary&card=bottomTenRanked'
     )

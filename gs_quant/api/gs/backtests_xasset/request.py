@@ -15,13 +15,13 @@ under the License.
 """
 
 import datetime as dt
-
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional, Union, Tuple
 
 from dataclasses_json import dataclass_json, LetterCase, config
 
-from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs_encoder, legs_decoder
+from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs_encoder, legs_decoder, enum_decode
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
     DateConfig,
     Trade,
@@ -30,11 +30,17 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes impo
     StrategyHedge,
 )
 from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import Strategy
+from gs_quant.base import EnumBase
 from gs_quant.common import RiskMeasure
 from gs_quant.json_convertors import decode_optional_date, decode_date_tuple, encode_date_tuple
 from gs_quant.json_convertors_common import encode_risk_measure_tuple, decode_risk_measure_tuple
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.backtests import FlowVolBacktestMeasure
+
+
+class RiskProviderEnum(EnumBase, Enum):
+    Default = "Default"
+    DataSetProvider = "DataSetProvider"
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -51,6 +57,9 @@ class RiskRequest:
     measures: Optional[Tuple[RiskMeasure, ...]] = field(
         default=None, metadata=config(encoder=encode_risk_measure_tuple, decoder=decode_risk_measure_tuple)
     )
+    risk_provider: Optional[RiskProviderEnum] = field(
+        default=None, metadata=config(decoder=enum_decode(RiskProviderEnum))
+    )
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -63,6 +72,9 @@ class BasicBacktestRequest:
     transaction_costs: Optional[TransactionCostConfig] = None
     configuration: Optional[Configuration] = None
     hedge: Optional[StrategyHedge] = None
+    risk_provider: Optional[RiskProviderEnum] = field(
+        default=None, metadata=config(decoder=enum_decode(RiskProviderEnum))
+    )
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

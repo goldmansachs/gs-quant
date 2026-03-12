@@ -345,33 +345,32 @@ def test_data_series_format(mocker):
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
     mock_response = {'requestId': 'qwerty', 'data': test_data}
-    mocker.patch.object(GsSession.current, '_post', side_effect=lambda *args, **kwargs: mock_response)
-    mocker.patch.object(GsSession.current, '_get', return_value={"id": "TREOD"})
+    mocker.patch.object(GsSession.current.sync, 'post', side_effect=lambda *args, **kwargs: mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value={"id": "TREOD"})
     mocker.patch.object(GsDataApi, 'symbol_dimensions', return_value=('assetId',))
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
 
     actual = Dataset('TREOD').get_data_series(field='tradePrice', start=start, end=end, assetId='MA4B66MW5E27U8P32SB')
     pd.testing.assert_series_equal(actual, expected)
-    assert len(GsSession.current._post.mock_calls) == 1
-    name, args, kwargs = GsSession.current._post.mock_calls[0]
+    assert len(GsSession.current.sync.post.mock_calls) == 1
+    name, args, kwargs = GsSession.current.sync.post.mock_calls[0]
     assert kwargs['payload'].format == Format.MessagePack
     assert kwargs['request_headers'] == {'Accept': 'application/msgpack'}
     assert args[0] == '/data/TREOD/query'
 
-    GsSession.current._post.reset_mock()
+    GsSession.current.sync.post.reset_mock()
     actual = Dataset('TREOD').get_data_series(
         field='tradePrice', start=start, end=end, assetId='MA4B66MW5E27U8P32SB', format=Format.Json
     )
     pd.testing.assert_series_equal(actual, expected)
-    assert len(GsSession.current._post.mock_calls) == 1
-    name, args, kwargs = GsSession.current._post.mock_calls[0]
+    assert len(GsSession.current.sync.post.mock_calls) == 1
+    name, args, kwargs = GsSession.current.sync.post.mock_calls[0]
     assert kwargs['payload'].format == Format.Json
     assert 'request_headers' not in kwargs
     assert args[0] == '/data/TREOD/query'
 
 
 def test_get_data_bulk(mocker):
-
     df2 = pd.DataFrame()
     test_df = {
         'date': {pd.Timestamp('20230302'): dt.date(2023, 3, 2)},

@@ -228,7 +228,7 @@ def test_apply_ramp_with_window_greater_than_series_length():
 
 
 def test_apply_ramp_dateoffset():
-    x = pd.Series(range(10), index=pd.bdate_range('2020-02-17', freq='b', periods=10))
+    x = pd.Series(range(10), index=pd.bdate_range('2020-02-17', freq='B', periods=10))
     y = apply_ramp(x, Window(pd.DateOffset(weeks=1), pd.DateOffset(days=1)))
     assert len(y) == 9
 

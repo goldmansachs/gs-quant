@@ -54,28 +54,28 @@ class GsMonitorsApi:
                 )
             )
         )
-        return GsSession.current._get('/monitors?{query}'.format(query=query_string), cls=Monitor)['results']
+        return GsSession.current.sync.get('/monitors?{query}'.format(query=query_string), cls=Monitor)['results']
 
     @classmethod
     def get_monitor(cls, monitor_id: str) -> Monitor:
-        return GsSession.current._get('/monitors/{id}'.format(id=monitor_id), cls=Monitor)
+        return GsSession.current.sync.get('/monitors/{id}'.format(id=monitor_id), cls=Monitor)
 
     @classmethod
     def create_monitor(cls, monitor: Monitor) -> Monitor:
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._post('/monitors', monitor, request_headers=request_headers, cls=Monitor)
+        return GsSession.current.sync.post('/monitors', monitor, request_headers=request_headers, cls=Monitor)
 
     @classmethod
     def update_monitor(cls, monitor: Monitor):
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._put(
+        return GsSession.current.sync.put(
             '/monitors/{id}'.format(id=monitor.id), monitor, request_headers=request_headers, cls=Monitor
         )
 
     @classmethod
     def delete_monitor(cls, monitor_id: str) -> dict:
-        return GsSession.current._delete('/monitors/{id}'.format(id=monitor_id))
+        return GsSession.current.sync.delete('/monitors/{id}'.format(id=monitor_id))
 
     @classmethod
     def calculate_monitor(cls, monitor_id) -> MonitorResponseData:
-        return GsSession.current._get('/monitors/{id}/data'.format(id=monitor_id), cls=MonitorResponseData)
+        return GsSession.current.sync.get('/monitors/{id}/data'.format(id=monitor_id), cls=MonitorResponseData)

@@ -39,11 +39,11 @@ def test_get_groups(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsGroupsApi.get_groups(ids=['id1', 'id2'], names=['name1'], tags=['tag1'], limit=1)
-    GsSession.current._get.assert_called_with(
+    GsSession.current.sync.get.assert_called_with(
         '/groups?limit=1&offset=0&id=id1&id=id2&name=name1&tags=tag1', cls=TargetGroup
     )
     assert len(response) == 1
@@ -66,11 +66,11 @@ def test_get_group(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsGroupsApi.get_group(group_id='id123')
-    GsSession.current._get.assert_called_with('/groups/id123', cls=TargetGroup)
+    GsSession.current.sync.get.assert_called_with('/groups/id123', cls=TargetGroup)
     assert response.name == 'Fake Group'
 
 
@@ -91,9 +91,9 @@ def test_create_group(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=target_group)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=target_group)
 
     # run test
     response = GsGroupsApi.create_group(target_group)
-    GsSession.current._post.assert_called_with('/groups', target_group, cls=TargetGroup)
+    GsSession.current.sync.post.assert_called_with('/groups', target_group, cls=TargetGroup)
     assert response.name == 'Fake Group'

@@ -59,11 +59,11 @@ class GsUsersApi:
             url += f'&name={"&name=".join(user_names)}'
         if user_companies:
             url += f'&company={"&company=".join(user_companies)}'
-        return GsSession.current._get(f'{url}&limit={limit}&offset={offset}', cls=User)['results']
+        return GsSession.current.sync.get(f'{url}&limit={limit}&offset={offset}', cls=User)['results']
 
     @classmethod
     def get_my_guid(cls) -> str:
-        return f"guid:{GsSession.current._get('/users/self')['id']}"
+        return f"guid:{GsSession.current.sync.get('/users/self')['id']}"
 
     @classmethod
     def get_current_user_info(cls) -> Dict[str, Any]:
@@ -71,11 +71,11 @@ class GsUsersApi:
         Gets user
         :return: user
         """
-        return GsSession.current._get('/users/self')
+        return GsSession.current.sync.get('/users/self')
 
     @classmethod
     def get_current_app_managers(cls) -> List[str]:
-        return [f"guid:{manager}" for manager in get(GsSession.current._get('/users/self'), 'appManagers', [])]
+        return [f"guid:{manager}" for manager in get(GsSession.current.sync.get('/users/self'), 'appManagers', [])]
 
     @classmethod
     def get_many(cls, key_type: str, keys: List[str], fields: Optional[List[str]] = None) -> dict:
@@ -88,7 +88,7 @@ class GsUsersApi:
             chunk = keys[i : i + chunk_size]
             fields_str = f"fields={','.join(fields)}&" if fields else ''
             url = f'/users?{fields_str}{key_type}={glue.join(chunk)}&limit=200'
-            response = GsSession.current._get(url)
+            response = GsSession.current.sync.get(url)
             for user in response.get('results', []):
                 users_by_key[user[key_type]] = user
         return users_by_key
@@ -102,4 +102,4 @@ class GsUsersApi:
             "fields": fields or DEFAULT_SEARCH_FIELDS,
             **({"where": where} if where else {}),
         }
-        return GsSession.current._post("/search/users/query", payload=payload)
+        return GsSession.current.sync.post("/search/users/query", payload=payload)

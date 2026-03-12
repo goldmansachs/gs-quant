@@ -250,7 +250,7 @@ class GsAssetApi:
         with tracer as scope:
             cls._set_tags(scope, kwargs)
             query = cls.__create_query(fields, as_of, limit, order_by=order_by, **kwargs)
-            response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
+            response = GsSession.current.sync.post('/assets/query', payload=query, cls=return_type)
             return response['results']
 
     @classmethod
@@ -269,7 +269,7 @@ class GsAssetApi:
         with tracer as scope:
             cls._set_tags(scope, kwargs)
             query = cls.__create_query(fields, as_of, limit, order_by=order_by, **kwargs)
-            response = await GsSession.current._post_async('/assets/query', payload=query, cls=return_type)
+            response = await GsSession.current.async_.post('/assets/query', payload=query, cls=return_type)
             return response['results']
 
     @classmethod
@@ -289,11 +289,11 @@ class GsAssetApi:
         with tracer as scope:
             cls._set_tags(scope, kwargs)
             query = cls.__create_query(fields, as_of, limit, scroll, order_by=order_by, **kwargs)
-            response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
+            response = GsSession.current.sync.post('/assets/query', payload=query, cls=return_type)
             results = get(response, 'results')
             while has(response, 'scrollId') and len(get(response, 'results')):
                 query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
-                response = GsSession.current._post('/assets/query', payload=query, cls=return_type)
+                response = GsSession.current.sync.post('/assets/query', payload=query, cls=return_type)
                 results += get(response, 'results')
             return results
 
@@ -308,7 +308,7 @@ class GsAssetApi:
             cls._set_tags(scope, kwargs)
             query = cls.__create_query(fields, as_of, limit, **kwargs)
             request_headers = {'X-Application': 'Studio'} if source == "Basket" else None
-            response = GsSession.current._post('/assets/data/query', payload=query, request_headers=request_headers)
+            response = GsSession.current.sync.post('/assets/data/query', payload=query, request_headers=request_headers)
             return response['results']
 
     @classmethod
@@ -321,7 +321,7 @@ class GsAssetApi:
         with tracer as scope:
             cls._set_tags(scope, kwargs)
             query = cls.__create_query(fields, as_of, limit, **kwargs)
-            response = await GsSession.current._post_async('/assets/data/query', payload=query)
+            response = await GsSession.current.async_.post('/assets/data/query', payload=query)
             return response['results']
 
     @classmethod
@@ -341,11 +341,13 @@ class GsAssetApi:
             cls._set_tags(scope, kwargs)
             query = cls.__create_query(fields, as_of, limit, scroll, **kwargs)
             request_headers = {'X-Application': 'Studio'} if source == "Basket" else None
-            response = GsSession.current._post('/assets/data/query', payload=query, request_headers=request_headers)
+            response = GsSession.current.sync.post('/assets/data/query', payload=query, request_headers=request_headers)
             results = get(response, 'results')
             while has(response, 'scrollId') and len(get(response, 'results')):
                 query = cls.__create_query(fields, as_of, limit, scroll, get(response, 'scrollId'), **kwargs)
-                response = GsSession.current._post('/assets/data/query', payload=query, request_headers=request_headers)
+                response = GsSession.current.sync.post(
+                    '/assets/data/query', payload=query, request_headers=request_headers
+                )
                 results += get(response, 'results')
             return results
 
@@ -363,7 +365,7 @@ class GsAssetApi:
     ) -> Tuple[dict, ...]:
         where = dict(identifier=identifier, **kwargs)
         query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
-        return GsSession.current._post('/positions/resolver', payload=query)
+        return GsSession.current.sync.post('/positions/resolver', payload=query)
 
     @classmethod
     def get_many_asset_xrefs(
@@ -377,17 +379,17 @@ class GsAssetApi:
         where = dict(identifier=identifier, **kwargs)
         query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
-        return GsSession.current._post('/assets/xrefs/query', payload=query).get('results')
+        return GsSession.current.sync.post('/assets/xrefs/query', payload=query).get('results')
 
     @classmethod
     @_cached
     def get_asset_xrefs(cls, asset_id: str) -> Tuple[GsTemporalXRef, ...]:
-        response = GsSession.current._get('/assets/{id}/xrefs'.format(id=asset_id))
+        response = GsSession.current.sync.get('/assets/{id}/xrefs'.format(id=asset_id))
         return tuple(GsTemporalXRef.from_dict(x) for x in response.get('xrefs', ()))
 
     @classmethod
     def put_asset_xrefs(cls, asset_id: str, xrefs: List[TemporalXRef]):
-        return GsSession.current._put(f'/assets/{asset_id}/xrefs', payload=xrefs)
+        return GsSession.current.sync.put(f'/assets/{asset_id}/xrefs', payload=xrefs)
 
     @classmethod
     @_cached
@@ -395,7 +397,7 @@ class GsAssetApi:
         cls,
         asset_id: str,
     ) -> GsAsset:
-        return GsSession.current._get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
+        return GsSession.current.sync.get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
 
     @classmethod
     @_cached_async
@@ -403,11 +405,11 @@ class GsAssetApi:
         cls,
         asset_id: str,
     ) -> GsAsset:
-        return await GsSession.current._get_async('/assets/{id}'.format(id=asset_id), cls=GsAsset)
+        return await GsSession.current.async_.get('/assets/{id}'.format(id=asset_id), cls=GsAsset)
 
     @classmethod
     def get_asset_by_name(cls, name: str) -> GsAsset:
-        ret = GsSession.current._get('/assets?name={}'.format(name))
+        ret = GsSession.current.sync.get('/assets?name={}'.format(name))
         num_found = ret.get('totalResults', 0)
 
         if num_found == 0:
@@ -419,15 +421,15 @@ class GsAssetApi:
 
     @classmethod
     def create_asset(cls, asset: GsAsset) -> GsAsset:
-        return GsSession.current._post('/assets', payload=asset, cls=GsAsset)
+        return GsSession.current.sync.post('/assets', payload=asset, cls=GsAsset)
 
     @classmethod
     def delete_asset(cls, asset_id: str):
-        return GsSession.current._delete(f'/assets/{asset_id}')
+        return GsSession.current.sync.delete(f'/assets/{asset_id}')
 
     @staticmethod
     def get_position_dates(asset_id: str) -> Tuple[dt.date, ...]:
-        position_dates = GsSession.current._get(f'/assets/{asset_id}/positions/dates')['results']
+        position_dates = GsSession.current.sync.get(f'/assets/{asset_id}/positions/dates')['results']
         return tuple(dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates)
 
     @staticmethod
@@ -442,7 +444,7 @@ class GsAssetApi:
         if position_type is not None:
             url += f'?type={position_type}' if isinstance(position_type, str) else f'?type={position_type.value}'
 
-        results = GsSession.current._get(url)['results']
+        results = GsSession.current.sync.get(url)['results']
         return tuple(PositionSet.from_dict(r) for r in results)
 
     @staticmethod
@@ -463,7 +465,7 @@ class GsAssetApi:
                 end_date_str = date.date().isoformat()
                 url = f'/assets/{asset_id}/positions?startDate={start_date_str}&endDate={end_date_str}&type={position_type}'
                 try:
-                    position_sets += GsSession.current._get(url)['positionSets']
+                    position_sets += GsSession.current.sync.get(url)['positionSets']
                     start_date_str = (date.date() + dt.timedelta(days=1)).isoformat()
                 except HTTPError as err:
                     raise ValueError(f'Unable to fetch position data at {url} with {err}')
@@ -471,7 +473,7 @@ class GsAssetApi:
             end_date_str = end_date.isoformat()
             url = f'/assets/{asset_id}/positions?startDate={start_date_str}&endDate={end_date_str}&type={position_type}'
             try:
-                position_sets += GsSession.current._get(url)['positionSets']
+                position_sets += GsSession.current.sync.get(url)['positionSets']
             except HTTPError as err:
                 raise ValueError(f'Unable to fetch position data at {url} with {err}')
         return tuple(PositionSet.from_dict(r) for r in position_sets)
@@ -484,7 +486,7 @@ class GsAssetApi:
                 ptype=position_type if isinstance(position_type, str) else position_type.value
             )
 
-        results = GsSession.current._get(url)['results']
+        results = GsSession.current.sync.get(url)['results']
 
         return PositionSet.from_dict(results)
 
@@ -497,12 +499,12 @@ class GsAssetApi:
             parameters=instrument.as_dict(as_camel_case=True),
         )
 
-        results = GsSession.current._post('/assets', asset)
+        results = GsSession.current.sync.post('/assets', asset)
         return results['id']
 
     @staticmethod
     def get_instruments_for_asset_ids(asset_ids: Tuple[str, ...]) -> Tuple[Optional[Union[Instrument, Security]]]:
-        instrument_infos = GsSession.current._post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
+        instrument_infos = GsSession.current.sync.post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
         instrument_lookup = {i.assetId: i.instrument for i in instrument_infos if i}
         ret: Tuple[Optional[Union[Instrument, Security]], ...] = tuple(instrument_lookup.get(a) for a in asset_ids)
 
@@ -512,7 +514,7 @@ class GsAssetApi:
     def get_instruments_for_positions(positions: Iterable[Position]) -> Tuple[Optional[Union[Instrument, Security]]]:
         asset_ids = tuple(filter(None, (p.asset_id for p in positions)))
         instrument_infos = (
-            GsSession.current._post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
+            GsSession.current.sync.post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
             if asset_ids
             else {}
         )
@@ -559,21 +561,21 @@ class GsAssetApi:
         if position_type is not None:
             url += '&type=' + position_type.value
 
-        results = GsSession.current._get(url)['results']
+        results = GsSession.current.sync.get(url)['results']
         return results
 
     @staticmethod
     def update_asset_entitlements(asset_id: str, entitlements: Entitlements) -> dict:
         url = f'/assets/{asset_id}/entitlements'
         try:
-            results = GsSession.current._put(url, payload=entitlements)
+            results = GsSession.current.sync.put(url, payload=entitlements)
         except HTTPError as err:
             raise ValueError(f'Unable to update asset entitlements with {err}')
         return results
 
     @classmethod
     def get_reports(cls, asset_id: str) -> Tuple[Report, ...]:
-        return GsSession.current._get(f'/assets/{asset_id}/reports', cls=Report)['results']
+        return GsSession.current.sync.get(f'/assets/{asset_id}/reports', cls=Report)['results']
 
     @classmethod
     @_cached
@@ -602,7 +604,7 @@ class GsAssetApi:
 
         limit = limit or 4 * len(ids)
         query = cls.__create_query((input_type, output_type), as_of, limit, **the_args)
-        results = GsSession.current._post('/assets/data/query', payload=query)
+        results = GsSession.current.sync.post('/assets/data/query', payload=query)
         if len(results) >= query.limit:
             raise MqValueError('number of results may have exceeded capacity')
 

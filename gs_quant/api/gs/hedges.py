@@ -36,15 +36,15 @@ class GsHedgeApi:
             url += f'&id={"&id=".join(ids)}'
         if names:
             url += f'&name={"&name=".join(names)}'
-        return GsSession.current._get(url, cls=Hedge)
+        return GsSession.current.sync.get(url, cls=Hedge)
 
     @classmethod
     def create_hedge(cls, hedge: Dict) -> Hedge:
-        return GsSession.current._post('/hedges', hedge, cls=Hedge)
+        return GsSession.current.sync.post('/hedges', hedge, cls=Hedge)
 
     @classmethod
     def get_hedge(cls, hedge_id: str) -> Hedge:
-        return GsSession.current._get(f'/hedges/{hedge_id}', cls=Hedge)
+        return GsSession.current.sync.get(f'/hedges/{hedge_id}', cls=Hedge)
 
     @classmethod
     def get_hedge_data(cls, ids: List[str] = None, names: List[str] = None, limit: int = 100) -> List[Dict]:
@@ -53,7 +53,7 @@ class GsHedgeApi:
             url += f'&id={"&id=".join(ids)}'
         if names:
             url += f'&name={"&name=".join(names)}'
-        return GsSession.current._get(url, cls=Hedge)['results']
+        return GsSession.current.sync.get(url, cls=Hedge)['results']
 
     @classmethod
     def get_hedge_results(cls, hedge_id: str, start_date: dt.date = None, end_date: dt.date = None) -> Dict:
@@ -62,15 +62,15 @@ class GsHedgeApi:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
         if end_date is not None:
             url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
-        return GsSession.current._get(url)['results'][0]
+        return GsSession.current.sync.get(url)['results'][0]
 
     @classmethod
     def update_hedge(cls, hedge_id: str, hedge: Hedge) -> Hedge:
-        return GsSession.current._put(f'/hedges/{hedge_id}', hedge, cls=Hedge)
+        return GsSession.current.sync.put(f'/hedges/{hedge_id}', hedge, cls=Hedge)
 
     @classmethod
     def delete_hedge(cls, hedge_id: str):
-        return GsSession.current._delete(f'/hedges/{hedge_id}', cls=Hedge)
+        return GsSession.current.sync.delete(f'/hedges/{hedge_id}', cls=Hedge)
 
     @classmethod
     def construct_performance_hedge_query(
@@ -197,7 +197,7 @@ class GsHedgeApi:
         :param hedge_query: dict, hedge data that is sent to the Marquee API as input to the performance hedger
         :return: dict, the results of calling the Marquee performance hedger
         """
-        return GsSession.current._post('/hedges/calculations', payload=hedge_query, timeout=CALCULATION_TIMEOUT)
+        return GsSession.current.sync.post('/hedges/calculations', payload=hedge_query, timeout=CALCULATION_TIMEOUT)
 
     @classmethod
     def share_hedge_group(
@@ -239,7 +239,7 @@ class GsHedgeApi:
 
         try:
             # First, GET the current hedge group to retrieve existing metadata
-            hedge_group_data = GsSession.current._get(url)
+            hedge_group_data = GsSession.current.sync.get(url)
 
             # Get current user's GUID from existing entitlements
             current_user_guid = hedge_group_data.get('ownerId', '')
@@ -315,7 +315,7 @@ class GsHedgeApi:
             }
 
             # PUT the updated hedge group back
-            result = GsSession.current._put(url, payload)
+            result = GsSession.current.sync.put(url, payload)
 
             print("Hedge group shared successfully!")
             print(f"  Hedge Group ID: {hedge_group_id}")

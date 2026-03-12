@@ -1714,7 +1714,7 @@ class OptimizerStrategy:
         if self.initial_position_set.reference_notional is not None:
             payload['parameters']['targetNotional'] = self.initial_position_set.reference_notional
         try:
-            price_results = GsSession.current._post('/price/positions', payload)
+            price_results = GsSession.current.sync.post('/price/positions', payload)
         except Exception as e:
             raise MqValueError(f'There was an error pricing your positions: {e}')
         if 'errorMessage' in price_results:
@@ -2261,7 +2261,7 @@ class OptimizerStrategy:
         url = "/hedges/groups"
 
         try:
-            response = GsSession.current._post(url, payload=payload)
+            response = GsSession.current.sync.post(url, payload=payload)
 
             result = response
             hedge_group_id = result.get('id', 'N/A')

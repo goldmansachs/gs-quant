@@ -250,9 +250,9 @@ class DataGrid:
         """
         datagrid_json = self.__as_json()
         if self.id_:
-            response = GsSession.current._put(f'{API}/{self.id_}', datagrid_json, request_headers=DATAGRID_HEADERS)
+            response = GsSession.current.sync.put(f'{API}/{self.id_}', datagrid_json, request_headers=DATAGRID_HEADERS)
         else:
-            response = GsSession.current._post(f'{API}', datagrid_json, request_headers=DATAGRID_HEADERS)
+            response = GsSession.current.sync.post(f'{API}', datagrid_json, request_headers=DATAGRID_HEADERS)
             self.id_ = response['id']
         return DataGrid.from_dict(response).id_
 
@@ -263,7 +263,7 @@ class DataGrid:
         :return: New DataGrid unique identifier
         """
         datagrid_json = self.__as_json()
-        response = GsSession.current._post(f'{API}', datagrid_json, request_headers=DATAGRID_HEADERS)
+        response = GsSession.current.sync.post(f'{API}', datagrid_json, request_headers=DATAGRID_HEADERS)
         self.id_ = response['id']
         return response['id']
 
@@ -273,7 +273,7 @@ class DataGrid:
         :return: None
         """
         if self.id_:
-            GsSession.current._delete(f'{API}/{self.id_}', request_headers=DATAGRID_HEADERS)
+            GsSession.current.sync.delete(f'{API}/{self.id_}', request_headers=DATAGRID_HEADERS)
         else:
             raise MqValueError('DataGrid has not been persisted.')
 
@@ -397,7 +397,9 @@ class DataGrid:
                     try:
                         raw_availability = availability_cache.get(entity_id)
                         if raw_availability is None:
-                            raw_availability: Dict = GsSession.current._get(f'/data/measures/{entity_id}/availability')
+                            raw_availability: Dict = GsSession.current.sync.get(
+                                f'/data/measures/{entity_id}/availability'
+                            )
                             availability_cache[entity.get_marquee_id()] = raw_availability
                         query.coordinate = entity.get_data_coordinate(
                             measure=coord.measure,

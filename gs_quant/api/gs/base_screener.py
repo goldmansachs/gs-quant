@@ -30,7 +30,7 @@ class GsBaseScreenerApi:
 
         :return: Screener tuple, a tuple containing each screener available to the user.
         """
-        return GsSession.current._get('/data/screeners', cls=Screener)['results']
+        return GsSession.current.sync.get('/data/screeners', cls=Screener)['results']
 
     @classmethod
     def get_screener(cls, screener_id: str) -> Screener:
@@ -42,7 +42,7 @@ class GsBaseScreenerApi:
         :return: Screener, an object containing information about the screener associated
         with screener_id.
         """
-        return GsSession.current._get('/data/screeners/{id}'.format(id=screener_id), cls=Screener)
+        return GsSession.current.sync.get('/data/screeners/{id}'.format(id=screener_id), cls=Screener)
 
     @classmethod
     def create_screener(cls, screener: Screener) -> Screener:
@@ -59,7 +59,7 @@ class GsBaseScreenerApi:
         :return: Screener, the new screener object containing a new id
         """
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._post('/data/screeners', screener, request_headers=request_headers, cls=Screener)
+        return GsSession.current.sync.post('/data/screeners', screener, request_headers=request_headers, cls=Screener)
 
     @classmethod
     def edit_screener(cls, screener_id: str, screener: Screener) -> Screener:
@@ -85,7 +85,7 @@ class GsBaseScreenerApi:
         assert screener_id == screener.id
 
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._put(
+        return GsSession.current.sync.put(
             '/data/screeners/{id}'.format(id=screener_id), screener, request_headers=request_headers, cls=Screener
         )
 
@@ -106,7 +106,7 @@ class GsBaseScreenerApi:
         of data to be published to the screener.
         """
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._post(
+        return GsSession.current.sync.post(
             '/data/screeners/{id}/publish'.format(id=screener_id), data, request_headers=request_headers
         )['data']
 
@@ -124,7 +124,7 @@ class GsBaseScreenerApi:
         :return: dict, a dictionary with information about if the screener was successfully cleared.
         """
         request_headers = {'Content-Type': 'application/json;charset=utf-8'}
-        return GsSession.current._post(
+        return GsSession.current.sync.post(
             '/data/screeners/{id}/clear'.format(id=screener_id), {}, request_headers=request_headers
         )
 
@@ -139,4 +139,4 @@ class GsBaseScreenerApi:
 
         :return: None
         """
-        return GsSession.current._delete('/data/screeners/{id}'.format(id=screener_id))
+        return GsSession.current.sync.delete('/data/screeners/{id}'.format(id=screener_id))

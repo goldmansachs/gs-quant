@@ -26,7 +26,6 @@ from gs_quant.models.risk_model_utils import _upload_factor_data_if_present
 
 @pytest.mark.parametrize('total_factors', [100])
 def test__upload_factor_data_if_present(mocker, total_factors: int):
-
     from gs_quant.session import OAuth2Session
 
     OAuth2Session.init = mock.MagicMock(return_value=None)
@@ -67,12 +66,14 @@ def test__upload_factor_data_if_present(mocker, total_factors: int):
             assert key in actual_data
             assert risk_model_data[key] == actual_data[key]
 
-    mocker.patch.object(GsSession.current, '_post', return_value='success', side_effect=match_dictionaries)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value='success', side_effect=match_dictionaries)
 
     _upload_factor_data_if_present('TEST_RISK_MODEL', risk_model_data, date)
-    GsSession.current._post.assert_called_with('/risk/models/data/TEST_RISK_MODEL?partialUpload=true', ANY, timeout=200)
+    GsSession.current.sync.post.assert_called_with(
+        '/risk/models/data/TEST_RISK_MODEL?partialUpload=true', ANY, timeout=200
+    )
 
     _upload_factor_data_if_present('TEST_RISK_MODEL', risk_model_data, date, aws_upload=True)
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/risk/models/data/TEST_RISK_MODEL?partialUpload=true&awsUpload=true', ANY, timeout=200
     )

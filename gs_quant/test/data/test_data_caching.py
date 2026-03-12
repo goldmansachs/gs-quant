@@ -24,6 +24,17 @@ from gs_quant.api.gs.data import GsDataApi, QueryType
 from gs_quant.data import Dataset, DataContext
 
 
+class _FakeSyncAPI:
+    def __init__(self, session_cls):
+        self._session_cls = session_cls
+
+    def get(self, url, **kwargs):
+        return self._session_cls._get(url, **kwargs)
+
+    def post(self, url, **kwargs):
+        return self._session_cls._post(url, **kwargs)
+
+
 class NotExpectedToBeCalledSession:
     redirect_to_mds = True
 
@@ -38,6 +49,10 @@ class NotExpectedToBeCalledSession:
     def _post(cls, url, **kwargs):
         raise Exception("Not expecting to be called at this point")
 
+    @property
+    def sync(self):
+        return _FakeSyncAPI(NotExpectedToBeCalledSession)
+
 
 class MarketDataErrorSession:
     redirect_to_mds = True
@@ -48,6 +63,10 @@ class MarketDataErrorSession:
             "requestId": "890",
             "responses": [{"queryResponse": [{"errorMessages": ["Test Failure"]}]}],
         }
+
+    @property
+    def sync(self):
+        return _FakeSyncAPI(MarketDataErrorSession)
 
 
 class FakeSession:
@@ -140,6 +159,10 @@ class FakeSession:
                     }
                 ],
             }
+
+    @property
+    def sync(self):
+        return _FakeSyncAPI(FakeSession)
 
 
 class TestDataApiCache:

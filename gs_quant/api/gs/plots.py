@@ -28,43 +28,43 @@ class GsPlotApi:
 
     @classmethod
     def get_many_charts(cls, limit: int = 100) -> Tuple[Chart, ...]:
-        return GsSession.current._get(f'/charts?limit={limit}', cls=Chart)['results']
+        return GsSession.current.sync.get(f'/charts?limit={limit}', cls=Chart)['results']
 
     @classmethod
     async def get_many_charts_async(cls, limit: int = 100) -> Tuple[Chart, ...]:
-        return (await GsSession.current._get_async(f'/charts?limit={limit}', cls=Chart))['results']
+        return (await GsSession.current.async_.get(f'/charts?limit={limit}', cls=Chart))['results']
 
     @classmethod
     def get_chart(cls, chart_id: str) -> Chart:
-        return GsSession.current._get(f'/charts/{chart_id}', cls=Chart)
+        return GsSession.current.sync.get(f'/charts/{chart_id}', cls=Chart)
 
     @classmethod
     async def get_chart_async(cls, chart_id: str) -> Chart:
-        return await GsSession.current._get_async(f'/charts/{chart_id}', cls=Chart)
+        return await GsSession.current.async_.get(f'/charts/{chart_id}', cls=Chart)
 
     @classmethod
     def create_chart(cls, chart: Chart) -> Chart:
-        return GsSession.current._post('/charts', chart, cls=Chart)
+        return GsSession.current.sync.post('/charts', chart, cls=Chart)
 
     @classmethod
     async def create_chart_async(cls, chart: Chart) -> Chart:
-        return await GsSession.current._post_async('/charts', chart, cls=Chart)
+        return await GsSession.current.async_.post('/charts', chart, cls=Chart)
 
     @classmethod
     def update_chart(cls, chart: Chart):
-        return GsSession.current._put(f'/charts/{chart.id}', chart, cls=Chart)
+        return GsSession.current.sync.put(f'/charts/{chart.id}', chart, cls=Chart)
 
     @classmethod
     async def update_chart_async(cls, chart: Chart):
-        return await GsSession.current._put_async(f'/charts/{chart.id}', chart, cls=Chart)
+        return await GsSession.current.async_.put(f'/charts/{chart.id}', chart, cls=Chart)
 
     @classmethod
     def delete_chart(cls, chart_id: str) -> dict:
-        return GsSession.current._delete(f'/charts/{chart_id}')
+        return GsSession.current.sync.delete(f'/charts/{chart_id}')
 
     @classmethod
     async def delete_chart_async(cls, chart_id: str) -> dict:
-        return await GsSession.current._delete_async(f'/charts/{chart_id}')
+        return await GsSession.current.async_.delete(f'/charts/{chart_id}')
 
     # Additional methods
 
@@ -75,7 +75,7 @@ class GsPlotApi:
             raise ValueError('Chart can only be shared with individual users via this method.')
         chart = cls.get_chart(chart_id)
         share = ChartShare(tuple(users), chart.version)
-        return GsSession.current._post(f'/charts/{chart_id}/share', share, cls=Chart)
+        return GsSession.current.sync.post(f'/charts/{chart_id}/share', share, cls=Chart)
 
     @classmethod
     async def share_chart_async(cls, chart_id: str, users: Iterable):
@@ -84,4 +84,4 @@ class GsPlotApi:
             raise ValueError('Chart can only be shared with individual users via this method.')
         chart = await cls.get_chart_async(chart_id)
         share = ChartShare(tuple(users), chart.version)
-        return await GsSession.current._post_async(f'/charts/{chart_id}/share', share, cls=Chart)
+        return await GsSession.current.async_.post(f'/charts/{chart_id}/share', share, cls=Chart)

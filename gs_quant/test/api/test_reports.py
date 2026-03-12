@@ -70,11 +70,11 @@ def test_get_reports(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsReportApi.get_reports()
-    GsSession.current._get.assert_called_with('/reports?limit=100', cls=Report)
+    GsSession.current.sync.get.assert_called_with('/reports?limit=100', cls=Report)
     assert response == expected_response
 
 
@@ -94,11 +94,11 @@ def test_get_report(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsReportApi.get_report(id_1)
-    GsSession.current._get.assert_called_with('/reports/{id}'.format(id=id_1), cls=Report)
+    GsSession.current.sync.get.assert_called_with('/reports/{id}'.format(id=id_1), cls=Report)
     assert response == mock_response
 
 
@@ -119,11 +119,11 @@ def test_create_report(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=report)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=report)
 
     # run test
     response = GsReportApi.create_report(report)
-    GsSession.current._post.assert_called_with('/reports', report, cls=Report)
+    GsSession.current.sync.post.assert_called_with('/reports', report, cls=Report)
     assert response == report
 
 
@@ -144,11 +144,11 @@ def test_update_report(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_put', return_value=report)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=report)
 
     # run test
     response = GsReportApi.update_report(report)
-    GsSession.current._put.assert_called_with('/reports/{id}'.format(id=id_1), report, cls=Report)
+    GsSession.current.sync.put.assert_called_with('/reports/{id}'.format(id=id_1), report, cls=Report)
     assert response == report
 
 
@@ -161,11 +161,11 @@ def test_delete_portfolio(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'delete', return_value=mock_response)
 
     # run test
     response = GsReportApi.delete_report(id_1)
-    GsSession.current._delete.assert_called_with('/reports/{id}'.format(id=id_1))
+    GsSession.current.sync.delete.assert_called_with('/reports/{id}'.format(id=id_1))
     assert response == mock_response
 
 
@@ -180,12 +180,12 @@ def test_schedule_report(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     # run test
     response = GsReportApi.schedule_report(id_1, start_date, end_date)
 
-    GsSession.current._post.assert_called_with(
+    GsSession.current.sync.post.assert_called_with(
         '/reports/{id}/schedule'.format(id=id_1), {'endDate': '2019-02-19', 'startDate': '2019-02-18'}
     )
 
@@ -204,11 +204,11 @@ def test_get_report_status(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsReportApi.get_report_status(id_1)
-    GsSession.current._get.assert_called_with('/reports/{id}/status'.format(id=id_1))
+    GsSession.current.sync.get.assert_called_with('/reports/{id}/status'.format(id=id_1))
     assert response == mock_response
 
 
@@ -256,11 +256,11 @@ def test_get_report_jobs(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsReportApi.get_report_jobs(id_1)
-    GsSession.current._get.assert_called_with('/reports/{id}/jobs'.format(id=id_1))
+    GsSession.current.sync.get.assert_called_with('/reports/{id}/jobs'.format(id=id_1))
     assert response == expected_response
 
 
@@ -277,11 +277,11 @@ def test_report_job(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsReportApi.get_report_job(id_1)
-    GsSession.current._get.assert_called_with('/reports/jobs/{id}'.format(id=id_1))
+    GsSession.current.sync.get.assert_called_with('/reports/jobs/{id}'.format(id=id_1))
     assert response == mock_response
 
 
@@ -294,11 +294,11 @@ def test_cancel_report_job(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     # run test
     response = GsReportApi.cancel_report_job(id_1)
-    GsSession.current._post.assert_called_with('/reports/jobs/{id}/cancel'.format(id=id_1))
+    GsSession.current.sync.post.assert_called_with('/reports/jobs/{id}/cancel'.format(id=id_1))
     assert response == mock_response
 
 
@@ -311,12 +311,12 @@ def test_update_report_job(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
 
     # run test
     response = GsReportApi.update_report_job(id_1, status)
     status_body = {"status": 'done'}
-    GsSession.current._post.assert_called_with('/reports/jobs/{id}/update'.format(id=id_1), status_body)
+    GsSession.current.sync.post.assert_called_with('/reports/jobs/{id}/update'.format(id=id_1), status_body)
     assert response == mock_response
 
 
@@ -345,12 +345,12 @@ def test_get_factor_risk_report_results(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsReportApi.get_factor_risk_report_results('reportId')
 
-    GsSession.current._get.assert_called_with('/risk/factors/reports/reportId/results?')
+    GsSession.current.sync.get.assert_called_with('/risk/factors/reports/reportId/results?')
     assert response == mock_response
 
 
@@ -372,10 +372,10 @@ def test_get_factor_risk_report_view(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsReportApi.get_factor_risk_report_view(report_id)
 
-    GsSession.current._get.assert_called_with(f'/factor/risk/{report_id}/views?')
+    GsSession.current.sync.get.assert_called_with(f'/factor/risk/{report_id}/views?')
     assert response == mock_response

@@ -81,4 +81,4 @@ class GsEsgApi:
         for card in cards:
             url += f'&card={card}'
 
-        return GsSession.current._get(url)
+        return GsSession.current.sync.get(url)

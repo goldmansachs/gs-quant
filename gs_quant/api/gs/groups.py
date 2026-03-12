@@ -55,15 +55,15 @@ class GsGroupsApi:
             url += f'&scrollTime={scroll_time}'
         if order_by:
             url += f'&orderBy={order_by}'
-        return GsSession.current._get(url, cls=Group)['results']
+        return GsSession.current.sync.get(url, cls=Group)['results']
 
     @classmethod
     def create_group(cls, group: Group) -> Dict:
-        return GsSession.current._post('/groups', group, cls=Group)
+        return GsSession.current.sync.post('/groups', group, cls=Group)
 
     @classmethod
     def get_group(cls, group_id: str) -> Group:
-        return GsSession.current._get(f'/groups/{group_id}', cls=Group)
+        return GsSession.current.sync.get(f'/groups/{group_id}', cls=Group)
 
     @classmethod
     def update_group(cls, group_id: str, group: Group) -> Group:
@@ -72,20 +72,20 @@ class GsGroupsApi:
         if group_dict.get('entitlements'):
             group_dict['entitlements'] = group_dict['entitlements'].to_json()
         group_dict.pop('id')
-        return GsSession.current._put(f'/groups/{group_id}', group_dict, cls=Group)
+        return GsSession.current.sync.put(f'/groups/{group_id}', group_dict, cls=Group)
 
     @classmethod
     def delete_group(cls, group_id: str):
-        GsSession.current._delete(f'/groups/{group_id}')
+        GsSession.current.sync.delete(f'/groups/{group_id}')
 
     @classmethod
     def get_users_in_group(cls, group_id: str) -> List:
-        return GsSession.current._get(f'/groups/{group_id}/users').get('users', [])
+        return GsSession.current.sync.get(f'/groups/{group_id}/users').get('users', [])
 
     @classmethod
     def add_users_to_group(cls, group_id: str, user_ids: List[str]):
-        GsSession.current._post(f'/groups/{group_id}/users', {'userIds': user_ids})
+        GsSession.current.sync.post(f'/groups/{group_id}/users', {'userIds': user_ids})
 
     @classmethod
     def delete_users_from_group(cls, group_id: str, user_ids: List[str]):
-        GsSession.current._delete(f'/groups/{group_id}/users', {'userIds': user_ids}, use_body=True)
+        GsSession.current.sync.delete(f'/groups/{group_id}/users', {'userIds': user_ids}, use_body=True)

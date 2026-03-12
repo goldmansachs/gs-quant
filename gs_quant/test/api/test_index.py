@@ -180,13 +180,13 @@ def test_get_asset_positions_data(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsIndexApi.get_positions_data(marquee_id, position_date, position_date)
 
     position_date_str = position_date.isoformat()
-    GsSession.current._get.assert_called_with(
+    GsSession.current.sync.get.assert_called_with(
         '/indices/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(
             id=marquee_id, start_date=position_date_str, end_date=position_date_str
         )

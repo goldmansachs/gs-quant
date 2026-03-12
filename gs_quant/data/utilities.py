@@ -66,12 +66,11 @@ class Utilities:
             cls, fields: IdList = None, as_of: dt.datetime = None, limit: int = None, **kwargs
         ) -> dict:
             query = cls.__create_query(fields, as_of, limit, **kwargs)
-            response = GsSession.current._post('/assets/data/query', payload=query)
+            response = GsSession.current.sync.post('/assets/data/query', payload=query)
             return response['results']
 
     @staticmethod
     def target_folder():
-
         get_cwd = os.getcwd()
         target_dir = 'data_extract_' + dt.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
 
@@ -90,7 +89,6 @@ class Utilities:
 
     @staticmethod
     def pre_checks(final_end, original_start, time_field, datetime_delta_override, request_batch_size, write_to_csv):
-
         if write_to_csv:
             target_dir_result = Utilities.target_folder()
             if target_dir_result == 1:
@@ -123,14 +121,12 @@ class Utilities:
 
     @staticmethod
     def batch(iterable, n=1):
-
         iter_len = len(iterable)
         for ndx in range(0, iter_len, n):
             yield iterable[ndx : min(ndx + n, iter_len)]
 
     @staticmethod
     def fetch_data(dataset, symbols, start=dt.datetime.now(), end=dt.datetime.now(), dimension="assetId", auth=None):
-
         if auth is not None:
             auth()
         try:
@@ -143,7 +139,6 @@ class Utilities:
     def execute_parallel_query(
         dataset, coverage, start, end, symbol_dimension, parallel_factor, batch_size, authenticate, retry=0
     ):
-
         bound_get_data = partial(
             Utilities.fetch_data, dataset, start=start, end=end, dimension=symbol_dimension, auth=authenticate
         )
@@ -206,7 +201,6 @@ class Utilities:
         handler,
         parallel_factor=5,
     ):
-
         start = original_start
         end = original_end
         data_frame = pd.DataFrame()
@@ -239,13 +233,11 @@ class Utilities:
 
     @staticmethod
     def extract_xref(assets, out_type):
-
         # if multiple assets match, return highest ranking
         return sorted(assets, key=lambda x: x.get("rank", 0), reverse=True)[0].get(out_type, "")
 
     @staticmethod
     def map_identifiers(input_type: str, output_type: str, ids, as_of=dt.datetime.now()):
-
         asset_batches = Utilities.batch(ids, n=1000)
         all_assets = []
         for asset_batch in asset_batches:
@@ -266,7 +258,6 @@ class Utilities:
 
     @staticmethod
     def get_dataset_coverage(identifier, symbol_dimension, dataset):
-
         if symbol_dimension == "assetId":
             cov = dataset.get_coverage(fields=[identifier])
             coverage = cov[cov[identifier].notna()][identifier].tolist()

@@ -166,4 +166,4 @@ class GsCarbonApi:
         )
 
         # TODO: Add scope as API parameter
-        return GsSession.current._get(url)
+        return GsSession.current.sync.get(url)

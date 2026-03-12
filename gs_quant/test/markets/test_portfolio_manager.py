@@ -1875,7 +1875,9 @@ def test_get_schedule_dates(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value={'startDate': '2019-01-01', 'endDate': '2020-01-02'})
+    mocker.patch.object(
+        GsSession.current.sync, 'get', return_value={'startDate': '2019-01-01', 'endDate': '2020-01-02'}
+    )
 
     # run test
     pm = PortfolioManager('MP')

@@ -88,7 +88,7 @@ class GsContentApi:
         )
 
         query_string = '' if not parameters_dict else cls._build_query_string(parameters_dict)
-        contents = GsSession.current._get(f'/content{query_string}', cls=GetManyContentsResponse)
+        contents = GsSession.current.sync.get(f'/content{query_string}', cls=GetManyContentsResponse)
         return contents.data
 
     @staticmethod

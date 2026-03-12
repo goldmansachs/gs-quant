@@ -418,7 +418,6 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
         return self
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
-
         if self.empty:
             if display_options is not None and not isinstance(display_options, DisplayOptions):
                 raise TypeError("display_options must be of type DisplayOptions")

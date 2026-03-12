@@ -50,7 +50,6 @@ class Index(Asset, PositionedEntity):
         currency: Optional[Currency] = None,
         entity: Optional[Dict] = None,
     ):
-
         Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
         PositionedEntity.__init__(self, id_, EntityType.ASSET)
 
@@ -542,7 +541,6 @@ class Index(Asset, PositionedEntity):
         return False
 
     def __query_indicative_levels_dataset(self, start=None, end=None) -> pd.DataFrame:
-
         where = dict(assetId=self.id)
         if start is None:
             query = DataQuery(where=where)

@@ -26,7 +26,7 @@ def test_get_many_scenarios(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value={})
+    mocker.patch.object(GsSession.current.sync, 'get', return_value={})
 
     # run test
     GsFactorScenarioApi.get_many_scenarios(
@@ -40,7 +40,7 @@ def test_get_many_scenarios(mocker):
         end_date=dt.date(2024, 1, 1),
     )
 
-    GsSession.current._get.assert_called_with(
+    GsSession.current.sync.get.assert_called_with(
         '/risk/scenarios?limit=100&'
         'id=scenario_1&name=scenario_name&riskModel=MODEL_ID'
         '&factorScenarioType=Factor Shock'
@@ -66,11 +66,11 @@ def test_get_scenario(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=expected_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=expected_response)
 
     # run test
     response = GsFactorScenarioApi.get_scenario(scenario_id)
-    GsSession.current._get.assert_called_with(f'/risk/scenarios/{scenario_id}', cls=Scenario)
+    GsSession.current.sync.get.assert_called_with(f'/risk/scenarios/{scenario_id}', cls=Scenario)
     assert response == expected_response
 
 
@@ -96,11 +96,11 @@ def test_create_scenario(mocker):
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
 
-    mocker.patch.object(GsSession.current, '_post', return_value=expected_response)
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=expected_response)
 
     # run test
     response = GsFactorScenarioApi.create_scenario(scenario_without_id)
-    GsSession.current._post.assert_called_with('/risk/scenarios', scenario_without_id, cls=Scenario)
+    GsSession.current.sync.post.assert_called_with('/risk/scenarios', scenario_without_id, cls=Scenario)
     assert response == expected_response
 
 
@@ -120,11 +120,11 @@ def test_update_scenario(mocker):
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
 
-    mocker.patch.object(GsSession.current, '_put', return_value=scenario)
+    mocker.patch.object(GsSession.current.sync, 'put', return_value=scenario)
 
     # run test
     GsFactorScenarioApi.update_scenario(scenario)
-    GsSession.current._put.assert_called_with(f'/risk/scenarios/{scenario_id}', scenario, cls=Scenario)
+    GsSession.current.sync.put.assert_called_with(f'/risk/scenarios/{scenario_id}', scenario, cls=Scenario)
 
 
 def test_delete_scenario(mocker):
@@ -134,11 +134,11 @@ def test_delete_scenario(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_delete', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'delete', return_value=mock_response)
 
     # run test
     response = GsFactorScenarioApi.delete_scenario('SCENARIO_ID')
-    GsSession.current._delete.assert_called_with('/risk/scenarios/SCENARIO_ID')
+    GsSession.current.sync.delete.assert_called_with('/risk/scenarios/SCENARIO_ID')
     assert response == mock_response
 
 
@@ -155,8 +155,8 @@ def test_scenario_calculate(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_post', return_value=dict())
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=dict())
 
     # run test
     GsFactorScenarioApi.calculate_scenario(calculation_request)
-    GsSession.current._post.assert_called_with('/scenarios/calculate', calculation_request)
+    GsSession.current.sync.post.assert_called_with('/scenarios/calculate', calculation_request)

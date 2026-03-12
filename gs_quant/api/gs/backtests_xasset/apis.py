@@ -25,7 +25,7 @@ class GsBacktestXassetApi:
 
     @classmethod
     def calculate_risk(cls, risk_request: RiskRequest) -> RiskResponse:
-        response = GsSession.current._post(
+        response = GsSession.current.sync.post(
             '/backtests/xasset/risk', risk_request.to_json(), request_headers=cls.HEADERS, timeout=cls.TIMEOUT
         )
         result = RiskResponse.from_dict(response)
@@ -35,7 +35,7 @@ class GsBacktestXassetApi:
     def calculate_basic_backtest(
         cls, backtest_request: BasicBacktestRequest, decode_instruments: bool = True
     ) -> BasicBacktestResponse:
-        response = GsSession.current._post(
+        response = GsSession.current.sync.post(
             '/backtests/xasset/strategy/basic',
             backtest_request.to_json(),
             request_headers=cls.HEADERS,
@@ -48,7 +48,7 @@ class GsBacktestXassetApi:
 class GsBacktestXassetApiAsync(GsBacktestXassetApi):
     @classmethod
     async def calculate_risk(cls, risk_request: RiskRequest) -> RiskResponse:
-        response = await GsSession.current._post_async(
+        response = await GsSession.current.async_.post(
             '/backtests/xasset/risk', risk_request.to_json(), request_headers=cls.HEADERS, timeout=cls.TIMEOUT
         )
         result = RiskResponse.from_dict(response)
@@ -58,7 +58,7 @@ class GsBacktestXassetApiAsync(GsBacktestXassetApi):
     async def calculate_basic_backtest(
         cls, backtest_request: BasicBacktestRequest, decode_instruments: bool = True
     ) -> BasicBacktestResponse:
-        response = await GsSession.current._post_async(
+        response = await GsSession.current.async_.post(
             '/backtests/xasset/strategy/basic',
             backtest_request.to_json(),
             request_headers=cls.HEADERS,

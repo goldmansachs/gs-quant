@@ -52,11 +52,11 @@ class GsReportApi:
 
     @classmethod
     def create_report(cls, report: Report) -> Report:
-        return GsSession.current._post('/reports', report, cls=Report)
+        return GsSession.current.sync.post('/reports', report, cls=Report)
 
     @classmethod
     def get_report(cls, report_id: str) -> Report:
-        return GsSession.current._get('/reports/{id}'.format(id=report_id), cls=Report)
+        return GsSession.current.sync.get('/reports/{id}'.format(id=report_id), cls=Report)
 
     @classmethod
     def get_reports(
@@ -91,11 +91,11 @@ class GsReportApi:
                 url += f'&orderBy={order_by}'
             return url
 
-        response = GsSession.current._get(build_url(), cls=Report)
+        response = GsSession.current.sync.get(build_url(), cls=Report)
         results = response.get('results', [])
 
         while response.get('scrollId') and response.get('results'):
-            response = GsSession.current._get(build_url(scroll_id=response.get('scrollId')), cls=Report)
+            response = GsSession.current.sync.get(build_url(scroll_id=response.get('scrollId')), cls=Report)
             results += response.get('results', [])
 
         if tags is not None:
@@ -107,11 +107,11 @@ class GsReportApi:
 
     @classmethod
     def update_report(cls, report: Report) -> dict:
-        return GsSession.current._put('/reports/{id}'.format(id=report.id), report, cls=Report)
+        return GsSession.current.sync.put('/reports/{id}'.format(id=report.id), report, cls=Report)
 
     @classmethod
     def delete_report(cls, report_id: str) -> dict:
-        return GsSession.current._delete('/reports/{id}'.format(id=report_id))
+        return GsSession.current.sync.delete('/reports/{id}'.format(id=report_id))
 
     @classmethod
     @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
@@ -123,32 +123,32 @@ class GsReportApi:
         }
         if backcast:
             report_schedule_request['parameters'] = {'backcast': backcast}
-        return GsSession.current._post('/reports/{id}/schedule'.format(id=report_id), report_schedule_request)
+        return GsSession.current.sync.post('/reports/{id}/schedule'.format(id=report_id), report_schedule_request)
 
     @classmethod
     def get_report_status(cls, report_id: str) -> Tuple[dict, ...]:
-        return GsSession.current._get('/reports/{id}/status'.format(id=report_id))
+        return GsSession.current.sync.get('/reports/{id}/status'.format(id=report_id))
 
     @classmethod
     def get_report_jobs(cls, report_id: str) -> Tuple[dict, ...]:
-        return GsSession.current._get('/reports/{id}/jobs'.format(id=report_id))['results']
+        return GsSession.current.sync.get('/reports/{id}/jobs'.format(id=report_id))['results']
 
     @classmethod
     def get_report_job(cls, report_job_id: str) -> dict:
-        return GsSession.current._get('/reports/jobs/{report_job_id}'.format(report_job_id=report_job_id))
+        return GsSession.current.sync.get('/reports/jobs/{report_job_id}'.format(report_job_id=report_job_id))
 
     @classmethod
     def reschedule_report_job(cls, report_job_id: str):
-        return GsSession.current._post(f'/reports/jobs/{report_job_id}/reschedule', {})
+        return GsSession.current.sync.post(f'/reports/jobs/{report_job_id}/reschedule', {})
 
     @classmethod
     def cancel_report_job(cls, report_job_id: str) -> dict:
-        return GsSession.current._post('/reports/jobs/{report_job_id}/cancel'.format(report_job_id=report_job_id))
+        return GsSession.current.sync.post('/reports/jobs/{report_job_id}/cancel'.format(report_job_id=report_job_id))
 
     @classmethod
     def update_report_job(cls, report_job_id: str, status: str) -> dict:
         status_body = {"status": '{status}'.format(status=status)}
-        return GsSession.current._post(
+        return GsSession.current.sync.post(
             '/reports/jobs/{report_job_id}/update'.format(report_job_id=report_job_id), status_body
         )
 
@@ -159,7 +159,7 @@ class GsReportApi:
             url += f"&startDate={start_date.strftime('%Y-%m-%d')}"
         if end_date:
             url += f"&endDate={end_date.strftime('%Y-%m-%d')}"
-        return GsSession.current._get(url)['data']
+        return GsSession.current.sync.get(url)['data']
 
     @classmethod
     def upload_custom_aum(cls, report_id: str, aum_data: List[dict], clear_existing_data: bool = None) -> dict:
@@ -167,7 +167,7 @@ class GsReportApi:
         payload = {'data': aum_data}
         if clear_existing_data:
             url += '?clearExistingData=true'
-        return GsSession.current._post(url, payload)
+        return GsSession.current.sync.post(url, payload)
 
     @classmethod
     @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
@@ -200,7 +200,7 @@ class GsReportApi:
         if unit is not None:
             url += f'&unit={unit}'
 
-        return GsSession.current._get(url)
+        return GsSession.current.sync.get(url)
 
     @classmethod
     def get_factor_risk_report_view(
@@ -213,7 +213,6 @@ class GsReportApi:
         end_date: dt.date = None,
         unit: str = None,
     ) -> dict:
-
         query_string = urllib.parse.urlencode(
             dict(
                 filter(
@@ -232,7 +231,7 @@ class GsReportApi:
 
         GsSession.current.api_version = "v2"
         url = f'/factor/risk/{risk_report_id}/views?{query_string}'
-        response = GsSession.current._get(url)
+        response = GsSession.current.sync.get(url)
         GsSession.current.api_version = "v1"
         return response
 
@@ -247,7 +246,6 @@ class GsReportApi:
         start_date: dt.date = None,
         end_date: dt.date = None,
     ) -> dict:
-
         GsSession.current.api_version = "v2"
         url = f'/factor/risk/{risk_report_id}/tables?'
         if mode is not None:
@@ -263,7 +261,7 @@ class GsReportApi:
         if end_date is not None:
             url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
 
-        response = GsSession.current._get(url)
+        response = GsSession.current.sync.get(url)
         GsSession.current.api_version = "v1"
         return response
 
@@ -295,4 +293,4 @@ class GsReportApi:
         if end_date is not None:
             url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
 
-        return GsSession.current._get(url)
+        return GsSession.current.sync.get(url)

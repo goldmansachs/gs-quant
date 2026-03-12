@@ -336,25 +336,25 @@ class Workspace:
 
     @classmethod
     def get_by_id(cls, workspace_id: str) -> 'Workspace':
-        resp = GsSession.current._get(f'{API}/{workspace_id}')
+        resp = GsSession.current.sync.get(f'{API}/{workspace_id}')
         return Workspace.from_dict(resp)
 
     @classmethod
     def get_by_alias(cls, alias: str) -> 'Workspace':
-        resp = get(GsSession.current._get(f'{API}?alias={alias}'), 'results.0')
+        resp = get(GsSession.current.sync.get(f'{API}?alias={alias}'), 'results.0')
         if not resp:
             raise MqValueError(f'Workspace not found with alias {alias}')
         return Workspace.from_dict(resp)
 
     def save(self):
         if self.__id:
-            GsSession.current._put(f'{API}/{self.__id}', self.as_dict(), request_headers=HEADERS)
+            GsSession.current.sync.put(f'{API}/{self.__id}', self.as_dict(), request_headers=HEADERS)
         elif self.__alias:
-            id_ = get(GsSession.current._get(f'{API}?alias={self.__alias}'), 'results.0.id')
+            id_ = get(GsSession.current.sync.get(f'{API}?alias={self.__alias}'), 'results.0.id')
             if id_:
-                self.__id = GsSession.current._put(f'{API}/{id_}', self.as_dict(), request_headers=HEADERS)['id']
+                self.__id = GsSession.current.sync.put(f'{API}/{id_}', self.as_dict(), request_headers=HEADERS)['id']
             else:
-                self.__id = GsSession.current._post(API, self.as_dict(), request_headers=HEADERS)['id']
+                self.__id = GsSession.current.sync.post(API, self.as_dict(), request_headers=HEADERS)['id']
 
     def open(self):
         if self.__id is None:
@@ -367,13 +367,13 @@ class Workspace:
         webbrowser.open(url)
 
     def create(self):
-        resp = GsSession.current._post(f'{API}', self.as_dict(), request_headers=HEADERS)
+        resp = GsSession.current.sync.post(f'{API}', self.as_dict(), request_headers=HEADERS)
         self.__id = resp['id']
 
     def delete(self):
         if self.__id is None:
             raise MqValueError('Workspace must have an id to be deleted.')
-        resp = GsSession.current._delete(f'{API}/{self.__id}')
+        resp = GsSession.current.sync.delete(f'{API}/{self.__id}')
         self.__id = resp['id']
 
     def delete_all(self, include_tabs: bool = False):
@@ -618,7 +618,7 @@ class Workspace:
                 type_ = type(component)
                 if type_ in cls.PERSISTED_COMPONENTS:
                     try:
-                        GsSession.current._delete(f'{cls.PERSISTED_COMPONENTS[type_]}/{component.id_}')
+                        GsSession.current.sync.delete(f'{cls.PERSISTED_COMPONENTS[type_]}/{component.id_}')
                     except MqRequestError as ex:
                         _logger.warning(
                             f'Failed to delete {type_.__name__} with id {component.id_} due to {ex.message}'

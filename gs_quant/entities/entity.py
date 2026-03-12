@@ -154,9 +154,9 @@ class Entity(metaclass=ABCMeta):
             return SecurityMaster.get_asset(id_value, AssetIdentifier.MARQUEE_ID)
 
         if id_type == 'MQID':
-            result = GsSession.current._get(f'/{endpoint}/{id_value}')
+            result = GsSession.current.sync.get(f'/{endpoint}/{id_value}')
         else:
-            result = get(GsSession.current._get(f'/{endpoint}?{id_type.lower()}={id_value}'), 'results.0')
+            result = get(GsSession.current.sync.get(f'/{endpoint}?{id_type.lower()}={id_value}'), 'results.0')
         if result:
             return cls._get_entity_from_type(result, EntityType(entity_type))
 

@@ -244,11 +244,11 @@ def test_create_pretrade_execution_optimization():
     )
 
     set_session()
-    with mock.patch.object(GsSession.current, '_post') as mocker:
+    with mock.patch.object(GsSession.current.sync, 'post') as mock_post:
         mock_response = {'optimizationId': 'LI0D2ND2JCFANFAN'}
-        mocker.return_value = mock_response
+        mock_post.return_value = mock_response
         response = GsRiskApi.create_pretrade_execution_optimization(request)
-        GsSession.current._post.assert_called_with('/risk/execution/pretrade', request)
+        mock_post.assert_called_with('/risk/execution/pretrade', request)
         assert response == mock_response
 
 
@@ -257,8 +257,8 @@ def test_get_pretrade_execution_optimization():
     mock_response = {'id': optimization_id, 'analytics': {}, 'status': 'Completed'}
 
     set_session()
-    with mock.patch.object(GsSession.current, '_get') as mocker:
-        mocker.return_value = mock_response
+    with mock.patch.object(GsSession.current.sync, 'get') as mock_get:
+        mock_get.return_value = mock_response
         response = GsRiskApi.get_pretrade_execution_optimization(optimization_id)
-        GsSession.current._get.assert_called_with('/risk/execution/pretrade/{}/results'.format(optimization_id))
+        mock_get.assert_called_with('/risk/execution/pretrade/{}/results'.format(optimization_id))
         assert response == mock_response

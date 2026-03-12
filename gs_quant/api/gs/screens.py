@@ -34,28 +34,28 @@ class GsScreenApi:
             url += f'&id={"&id=".join(screen_ids)}'
         if screen_names:
             url += f'&name={"&name=".join(screen_names)}'
-        return GsSession.current._get(f'{url}&limit={limit}', cls=Screen)['results']
+        return GsSession.current.sync.get(f'{url}&limit={limit}', cls=Screen)['results']
 
     @classmethod
     def get_screen(cls, screen_id: str) -> Screen:
-        return GsSession.current._get(f'/screens/{screen_id}', cls=Screen)
+        return GsSession.current.sync.get(f'/screens/{screen_id}', cls=Screen)
 
     @classmethod
     def create_screen(cls, screen: Screen) -> Screen:
-        return GsSession.current._post('/screens', screen, cls=Screen)
+        return GsSession.current.sync.post('/screens', screen, cls=Screen)
 
     @classmethod
     def update_screen(cls, screen: Screen) -> Screen:
-        return GsSession.current._put(f'/screens/{screen.id}', screen, cls=Screen)
+        return GsSession.current.sync.put(f'/screens/{screen.id}', screen, cls=Screen)
 
     @classmethod
     def delete_screen(cls, screen_id: str) -> str:
-        return GsSession.current._delete(f'/screens/{screen_id}')
+        return GsSession.current.sync.delete(f'/screens/{screen_id}')
 
     @classmethod
     def get_filter_options(cls) -> dict:
-        return GsSession.current._get('/assets/screener/options')
+        return GsSession.current.sync.get('/assets/screener/options')
 
     @classmethod
     def calculate(cls, payload: AssetScreenerRequest) -> dict:
-        return GsSession.current._post('/assets/screener', payload=payload)
+        return GsSession.current.sync.post('/assets/screener', payload=payload)

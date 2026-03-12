@@ -61,7 +61,7 @@ class GsSecurityMasterFederatedApi:
             params["effectiveDate"] = effective_date
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
 
-        return GsSession.current._get(f'{SECURITIES_FEDERATED}/{id}', payload=payload)
+        return GsSession.current.sync.get(f'{SECURITIES_FEDERATED}/{id}', payload=payload)
 
     @classmethod
     def get_security_identifiers(cls, id: str) -> Optional[dict]:
@@ -74,7 +74,7 @@ class GsSecurityMasterFederatedApi:
         if not id.startswith("GS") and not id.startswith("MA"):
             raise ValueError(f"Invalid id: {id}. Security id starts with 'GS' and Asset id starts with 'MA'")
 
-        return GsSession.current._get(f'{SECURITIES_FEDERATED}/{id}/identifiers')
+        return GsSession.current.sync.get(f'{SECURITIES_FEDERATED}/{id}/identifiers')
 
     @classmethod
     def get_many_securities(
@@ -217,8 +217,8 @@ class GsSecurityMasterFederatedApi:
         params = {**params, **query_params}
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
         if flatten:
-            return GsSession.current._get(f'{SECURITIES_FEDERATED}/data', payload=payload)
-        return GsSession.current._get(f'{SECURITIES_FEDERATED}', payload=payload)
+            return GsSession.current.sync.get(f'{SECURITIES_FEDERATED}/data', payload=payload)
+        return GsSession.current.sync.get(f'{SECURITIES_FEDERATED}', payload=payload)
 
     @classmethod
     def __search_securities(
@@ -238,8 +238,8 @@ class GsSecurityMasterFederatedApi:
         cls.__prepare_params(params, None, offset_key, is_primary, type_, asset_class)
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
         if flatten:
-            return GsSession.current._get(f'{SECURITIES_FEDERATED}/search/data', payload=payload)
-        return GsSession.current._get(f'{SECURITIES_FEDERATED}/search', payload=payload)
+            return GsSession.current.sync.get(f'{SECURITIES_FEDERATED}/search/data', payload=payload)
+        return GsSession.current.sync.get(f'{SECURITIES_FEDERATED}/search', payload=payload)
 
     @classmethod
     def __prepare_params(cls, params, effective_date, offset_key, is_primary, type_, asset_class):

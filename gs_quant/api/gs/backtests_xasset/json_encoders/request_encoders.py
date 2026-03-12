@@ -16,6 +16,7 @@ under the License.
 
 from typing import Any, Iterable
 
+from gs_quant.base import EnumBase
 from gs_quant.common import RiskMeasure
 from gs_quant.instrument import Instrument
 from gs_quant.json_convertors_common import encode_risk_measure
@@ -50,3 +51,19 @@ def legs_decoder(data: Any):
 
 def legs_encoder(data: Iterable[Instrument]):
     return [i.to_dict() for i in data]
+
+
+def enum_decode(enum_class):
+    def decode_value(value):
+        if value is None or 'null' == value:
+            return None
+        if isinstance(value, EnumBase):
+            return value
+        if isinstance(value, str):
+            try:
+                return enum_class(value)
+            except ValueError:
+                pass
+        raise ValueError(f'Unable to decode {value} into any enum class')
+
+    return decode_value

@@ -139,7 +139,7 @@ def test_get_carbon_data(mocker):
     mocker.patch.object(
         GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
     )
-    mocker.patch.object(GsSession.current, '_get', return_value=mock_response)
+    mocker.patch.object(GsSession.current.sync, 'get', return_value=mock_response)
 
     # run test
     response = GsCarbonApi.get_carbon_analytics(
@@ -149,7 +149,7 @@ def test_get_carbon_data(mocker):
         currency=Currency.GBP,
         cards=[CarbonCard.COVERAGE, CarbonCard.EMISSIONS],
     )
-    GsSession.current._get.assert_called_with(
+    GsSession.current.sync.get.assert_called_with(
         '/carbon/MPRE78YG4J918ERD?benchmark=MA4B66MW5E27U8P32SB&reportingYear=Latest&currency=GBP'
         '&includeEstimates=true&useHistoricalData=false&normalizeEmissions=false&card=coverage&card=emissions'
         '&analyticsView=Long'

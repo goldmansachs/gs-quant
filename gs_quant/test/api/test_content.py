@@ -67,12 +67,11 @@ def set_session():
 def test_get_contents(
     description, channels, asset_ids, author_ids, tags, offset, limit, order_by, expected_uri, expected_exception
 ):
-
     # Arrange
     set_session()
 
     contents = ContentFixtures.get_many_contents_response()
-    with mock.patch.object(GsSession, '_get', return_value=contents) as mock_method:
+    with mock.patch.object(GsSession.current.sync, 'get', return_value=contents) as mock_method:
         # Act
         if expected_exception is not None:
             with pytest.raises(expected_exception):

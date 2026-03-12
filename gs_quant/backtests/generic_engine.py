@@ -128,7 +128,6 @@ class AddTradeActionImpl(OrderBasedActionImpl):
         backtest: BackTest,
         trigger_info: Optional[Union[AddTradeActionInfo, Iterable[AddTradeActionInfo]]] = None,
     ):
-
         orders = self._raise_order(state, trigger_info)
 
         current_tc_entries = []
@@ -336,7 +335,6 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
         backtest: BackTest,
         trigger_info: Optional[Union[AddScaledTradeActionInfo, Iterable[AddScaledTradeActionInfo]]] = None,
     ):
-
         state_list = make_list(state)
         if trigger_info is None or isinstance(trigger_info, AddScaledTradeActionInfo):
             trigger_info = [trigger_info for _ in range(len(state_list))]
@@ -457,7 +455,6 @@ class ExitTradeActionImpl(ActionHandler):
         backtest: BackTest,
         trigger_info: Optional[Union[ExitTradeActionInfo, Iterable[ExitTradeActionInfo]]] = None,
     ):
-
         for s in make_list(state):
             trades_to_remove = []
             if self.action.priceable_names is None:
@@ -559,7 +556,6 @@ class RebalanceActionImpl(ActionHandler):
         backtest: BackTest,
         trigger_info: Optional[Union[RebalanceActionInfo, Iterable[RebalanceActionInfo]]] = None,
     ):
-
         new_size = self.action.method(state, backtest, trigger_info)
         current_size = 0
         for trade in backtest.portfolio_dict[state]:

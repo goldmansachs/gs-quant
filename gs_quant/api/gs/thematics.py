@@ -77,4 +77,4 @@ class GsThematicApi:
             payload['measures'] = [m.value for m in measures]
         if notional:
             payload['notional'] = notional
-        return GsSession.current._post('/thematics', payload=json.dumps(payload)).get('results', [])
+        return GsSession.current.sync.post('/thematics', payload=json.dumps(payload)).get('results', [])
