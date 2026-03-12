@@ -280,6 +280,20 @@ class _AsyncSessionAPI:
             domain=domain,
         )
 
+    @asynccontextmanager
+    async def connect_websocket(
+        self,
+        path: str,
+        headers: Optional[dict] = None,
+        include_version=True,
+        domain: Optional[str] = None,
+        **kwargs: Any,
+    ):
+        async with self._session._connect_websocket(
+            path, headers=headers, include_version=include_version, domain=domain, **kwargs
+        ) as ws:
+            yield ws
+
 
 class GsSession(ContextBase):
     __config = None
