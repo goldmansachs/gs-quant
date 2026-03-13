@@ -218,6 +218,7 @@ class AddScaledTradeAction(Action):
         default=None, metadata=config(decoder=dc_decode(ConstantTransactionModel))
     )
     holiday_calendar: Iterable[dt.date] = None
+    dated_priceables: dict[dt.date, Priceable] = None
     class_type: str = static_field('add_scaled_trade_action')
 
     def __post_init__(self):

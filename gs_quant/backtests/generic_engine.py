@@ -86,7 +86,7 @@ class OrderBasedActionImpl(ActionHandler, metaclass=ABCMeta):
 
     def get_base_orders_for_states(self, states: Collection[dt.date], **kwargs):
         orders = {}
-        dated_priceables = getattr(self.action, 'dated_priceables', {})
+        dated_priceables = getattr(self.action, 'dated_priceables', {}) or {}
         with PricingContext():
             for s in states:
                 active_portfolio = dated_priceables.get(s) or self.action.priceables
@@ -312,7 +312,9 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
         final_orders = {}
         for d, res in orders.items():
             new_port = []
-            for inst in self.action.priceables:
+            dated_priceables = getattr(self.action, 'dated_priceables', {}) or {}
+            instruments = dated_priceables.get(d) or self.action.priceables
+            for inst in instruments:
                 new_inst = res[inst]
                 if len(self._order_valuations) > 1:
                     new_inst = new_inst[ResolvedInstrumentValues]
