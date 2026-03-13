@@ -947,7 +947,7 @@ class Hedge:
         prices_df = pd.DataFrame()
         for date in backtest_dates:
             data = thomson_reuters_eod_data.get_data(date, date, assetId=portfolio_asset_ids)
-            prices_df = prices_df.append(data)
+            prices_df = pd.concat([prices_df, data])
         for asset_id in portfolio_asset_ids:
             id_prices_map[asset_id] = list(prices_df.loc[prices_df['assetId'] == asset_id]['closePrice'])
 
