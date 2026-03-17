@@ -205,6 +205,7 @@ examples providing a searchable library of short specific snippets.
       - 📄 [040311_handling_holidays.ipynb](04_backtesting/examples/03_GenericEngine/040311_handling_holidays.ipynb)
       - 📄 [040312_strategy_scaled_add_action.ipynb](04_backtesting/examples/03_GenericEngine/040312_strategy_scaled_add_action.ipynb)
       - 📄 [040313_chained_actions.ipynb](04_backtesting/examples/03_GenericEngine/040313_chained_actions.ipynb)
+      - 📄 [040314_gradual_entries.ipynb](04_backtesting/examples/03_GenericEngine/040314_gradual_entries.ipynb)
   - 📁 tutorials
     - 📄 [Backtesting.ipynb](04_backtesting/tutorials/Backtesting.ipynb)
     - 📄 [Basic backtest walkthrough.ipynb](04_backtesting/tutorials/Basic%20backtest%20walkthrough.ipynb)

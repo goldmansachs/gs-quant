@@ -274,7 +274,7 @@ def returns(series: pd.Series, obs: Union[Window, int, str] = 1, type: Returns =
     Calculate returns from price series
 
     :param series: time series of prices
-    :param obs: number of observations or relative date e.g. 3d, 1w, 1m
+    :param obs: number of observations or relative date e.g. 3d, 1w, 1m ( relative date should be of pattern \d+[dmywDMYW] ).
     :param type: returns type: simple, logarithmic or absolute
     :return: date-based time series of return
 

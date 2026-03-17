@@ -176,6 +176,7 @@ HedgeActionInfo = namedtuple('HedgeActionInfo', 'next_schedule')
 ExitTradeActionInfo = namedtuple('ExitTradeActionInfo', 'not_applicable')
 RebalanceActionInfo = namedtuple('RebalanceActionInfo', 'not_applicable')
 AddScaledTradeActionInfo = namedtuple('AddScaledActionInfo', 'next_schedule')
+AddWeightedTradeActionInfo = namedtuple('AddWeightedActionInfo', 'next_schedule')
 
 
 @dataclass_json
@@ -223,6 +224,61 @@ class AddScaledTradeAction(Action):
 
     def __post_init__(self):
         super().__post_init__()
+        named_priceables = []
+        for i, p in enumerate(make_list(self.priceables)):
+            if p.name is None:
+                named_priceables.append(p.clone(name=f'{self.name}_Priceable{i}'))
+            elif p.name.startswith(self.name):
+                named_priceables.append(p)
+            else:
+                named_priceables.append(p.clone(name=f'{self.name}_{p.name}'))
+        self.priceables = named_priceables
+        if self.transaction_cost_exit is None:
+            self.transaction_cost_exit = self.transaction_cost
+
+
+@dataclass_json
+@dataclass
+class AddWeightedTradeAction(Action):
+    """
+    create an action which adds trades when triggered.  The trades are weighted by a measure.
+    The trades are resolved on the trigger date (state) and last until the trade_duration if specified or for
+    all future dates if not.
+    :param priceables: a portfolio.
+    :param trade_duration: an instrument attribute eg. 'expiration_date' or a date or a tenor or timedelta
+                           if left as None the
+                           trades will be added for all future dates
+                           can also specify 'next schedule' in order to exit at the next periodic trigger date
+    :param name: optional additional name to the priceable name
+    :param scaling_risk: if the scaling type is a measure then this is the definition of the measure
+    :param total_size: the total notional that we are scaling to
+    :param transaction_cost: optional a cash amount paid for each transaction
+    :param transaction_cost_exit: optionally specify a different model for exits; defaults to entry cost if None
+    :param holiday_calendar: optional an iterable list of holiday dates
+    """
+
+    priceables: Portfolio = field(
+        default=None, metadata=config(decoder=decode_named_instrument, encoder=encode_named_instrument)
+    )
+    trade_duration: Duration = field(
+        default=None,  # de/encoder doesn't handle timedelta
+        metadata=config(decoder=decode_date_or_str),
+    )
+    name: str = None
+    scaling_risk: RiskMeasure = None
+    total_size: float = 100000.0
+    transaction_cost: TransactionModel = field(
+        default_factory=default_transaction_cost, metadata=config(decoder=dc_decode(ConstantTransactionModel))
+    )
+    transaction_cost_exit: Optional[TransactionModel] = field(
+        default=None, metadata=config(decoder=dc_decode(ConstantTransactionModel))
+    )
+    holiday_calendar: Iterable[dt.date] = None
+    class_type: str = static_field('add_weighted_trade_action')
+
+    def __post_init__(self):
+        super().__post_init__()
+        self._calc_type = CalcType.semi_path_dependent
         named_priceables = []
         for i, p in enumerate(make_list(self.priceables)):
             if p.name is None:

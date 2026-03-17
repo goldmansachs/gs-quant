@@ -27,6 +27,7 @@ from gs_quant.backtests.actions import (
     AddScaledTradeAction,
     ScalingActionType,
     ExitAllPositionsAction,
+    AddWeightedTradeAction,
 )
 from gs_quant.backtests.backtest_objects import (
     ScaledTransactionModel,
@@ -1016,3 +1017,77 @@ def test_add_scaled_trade_action_with_quantity_signal(mocker):
         }
 
         assert quantity_by_date == expected_quantity_by_date
+
+
+@patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
+def test_add_weighted_trade_action(mocker):
+    """
+    Test AddWeightedTradeAction which scales instruments in a portfolio
+    so that each has equal risk contribution based on a specified risk measure.
+    """
+    with MockCalc(mocker):
+        start_date = dt.date(2021, 12, 6)
+        end_date = dt.date(2021, 12, 10)
+
+        # Create a portfolio of equity options with different characteristics
+        # Each option will be scaled to have equal risk (EqDelta) contribution
+        # Use simple names that match patterns in existing mock data
+        call = EqOption(
+            '.STOXX50E',
+            expiration_date='1m',
+            strike_price='ATM',
+            option_type=OptionType.Call,
+            option_style=OptionStyle.European,
+            name='call',
+        )
+        put = EqOption(
+            '.STOXX50E',
+            expiration_date='1m',
+            strike_price='ATM',
+            option_type=OptionType.Put,
+            option_style=OptionStyle.European,
+            name='put',
+        )
+
+        # Create portfolio of instruments to be weighted
+        weighted_portfolio = Portfolio([call, put])
+
+        # Define the weighted trade action
+        # This will scale each instrument so they all have equal EqDelta risk
+        weighted_action = AddWeightedTradeAction(
+            priceables=weighted_portfolio,
+            trade_duration='1m',  # Hold trades for 1 month
+            name='WeightedAction1',
+            scaling_risk=EqDelta,  # Risk measure to equalize across instruments
+            total_size=20000.0,  # Total risk budget to distribute equally
+        )
+
+        # Verify action is created correctly
+        assert weighted_action.scaling_risk == EqDelta
+        assert weighted_action.total_size == 20000.0
+        assert len(weighted_action.priceables) == 2
+
+        # Verify priceables are named correctly with action prefix
+        priceable_names = [p.name for p in weighted_action.priceables]
+        assert all('WeightedAction1' in name for name in priceable_names)
+
+        # Verify calc type is semi_path_dependent
+        from gs_quant.backtests.backtest_utils import CalcType
+
+        assert weighted_action.calc_type == CalcType.semi_path_dependent
+
+        # Define periodic trigger - add weighted trades daily
+        trigger_req = PeriodicTriggerRequirements(
+            start_date=start_date,
+            end_date=end_date,
+            frequency='1b',
+        )
+        trigger = PeriodicTrigger(trigger_req, weighted_action)
+
+        # Create strategy with no initial portfolio
+        strategy = Strategy(None, trigger)
+
+        # Verify the strategy is created correctly
+        assert len(strategy.triggers) == 1
+        assert len(strategy.triggers[0].actions) == 1
+        assert isinstance(strategy.triggers[0].actions[0], AddWeightedTradeAction)

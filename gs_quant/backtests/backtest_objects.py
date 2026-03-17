@@ -98,6 +98,7 @@ class BackTest(BaseBacktest):
         self._portfolio_dict = defaultdict(Portfolio)  # portfolio by state
         self._cash_dict = {}  # cash by state
         self._hedges = defaultdict(list)  # list of Hedge by date
+        self._weighted_trades = defaultdict(list)  # list of WeightedTrade by date
         self._cash_payments = defaultdict(list)  # list of cash payments (entry, unwind)
         self._transaction_costs = defaultdict(int)  # list of transaction costs by date
         self._transaction_cost_entries = defaultdict(list)  # entries tracking transaction costs by state
@@ -148,6 +149,14 @@ class BackTest(BaseBacktest):
     @hedges.setter
     def hedges(self, hedges):
         self._hedges = hedges
+
+    @property
+    def weighted_trades(self):
+        return self._weighted_trades
+
+    @weighted_trades.setter
+    def weighted_trades(self, weighted_trades):
+        self._weighted_trades = weighted_trades
 
     @property
     def results(self):
@@ -580,6 +589,45 @@ class Hedge:
         self.scaling_portfolio = scaling_portfolio
         self.entry_payment = entry_payment
         self.exit_payment = exit_payment
+
+
+class WeightedScalingPortfolio:
+    """
+    Similar to ScalingPortfolio but for weighted trade actions where each instrument
+    in the portfolio is scaled to have equal risk contribution.
+    """
+
+    def __init__(
+        self,
+        trades: Portfolio,
+        dates: list,
+        risk: RiskMeasure,
+        total_size: float,
+        csa_term=None,
+    ):
+        self.trades = trades  # Portfolio of instruments to be weighted
+        self.dates = dates
+        self.risk = risk  # The risk measure used for weighting
+        self.total_size = total_size  # Total notional to distribute equally by risk
+        self.csa_term = csa_term
+        self.results = None  # Will store risk calculation results
+
+
+class WeightedTrade:
+    """
+    Represents a weighted trade entry containing the scaling portfolio and cash payments.
+    Similar to Hedge but for weighted trade actions.
+    """
+
+    def __init__(
+        self,
+        scaling_portfolio: WeightedScalingPortfolio,
+        entry_payments: list,  # List of CashPayment for each instrument
+        exit_payments: list,  # List of CashPayment for each instrument (or None)
+    ):
+        self.scaling_portfolio = scaling_portfolio
+        self.entry_payments = entry_payments
+        self.exit_payments = exit_payments
 
 
 @dataclass_json
