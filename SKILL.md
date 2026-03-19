@@ -1,11 +1,12 @@
 ---
 name: gs-quant
-description: This document covers the core workflows for using the `gs_quant` library: establishing a session, constructing and resolving instruments, building portfolios, pricing historically, and extracting results.
----
+description: This document covers the core workflows for using the `gs_quant` library: establishing a session, constructing and resolving instruments, building portfolios, pricing historically, and extracting results. For backtesting, see the dedicated guide at `gs_quant/backtests/SKILL.md`.
 
 # SKILL.md — gs_quant Usage Guide
 
 This document covers the core workflows for using the `gs_quant` library: establishing a session, constructing and resolving instruments, building portfolios, pricing historically, and extracting results.
+
+> **Backtesting:** For a comprehensive guide to the backtesting framework (engines, triggers, actions, strategies, and result extraction), see [`gs_quant/backtests/SKILL.md`](gs_quant/backtests/SKILL.md).
 
 ---
 
@@ -600,5 +601,48 @@ scaled = result * 1000
 
 # Add results from different portfolios
 combined = result_a + result_b
+```
+
+---
+
+## 7. Backtesting
+
+gs_quant includes a full backtesting framework under `gs_quant.backtests`. It lets you define trading strategies as combinations of **triggers** (when to act) and **actions** (what to do), then simulate them historically using one of several engines.
+
+For the complete backtesting guide — including all trigger types, action types, engine selection, and result extraction — see:
+
+📄 **[`gs_quant/backtests/SKILL.md`](gs_quant/backtests/SKILL.md)**
+
+### Quick Example — Monthly FX Option Roll
+
+```python
+from datetime import date
+from gs_quant.instrument import FXOption
+from gs_quant.common import BuySell, OptionType
+from gs_quant.backtests.triggers import PeriodicTrigger, PeriodicTriggerRequirements
+from gs_quant.backtests.actions import AddTradeAction
+from gs_quant.backtests.generic_engine import GenericEngine
+from gs_quant.backtests.strategy import Strategy
+from gs_quant.risk import Price
+
+start_date = date(2023, 1, 3)
+end_date = date(2024, 12, 31)
+
+call = FXOption(
+    buy_sell=BuySell.Buy, option_type=OptionType.Call,
+    pair='USDJPY', strike_price='ATMF', expiration_date='2y',
+    name='2y_call', premium=0,
+)
+
+trig_req = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m')
+action = AddTradeAction(call, '1m')
+trigger = PeriodicTrigger(trig_req, action)
+
+strategy = Strategy(None, trigger)
+GE = GenericEngine()
+backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', show_progress=True)
+
+# View results
+backtest.result_summary['Total'].plot(title='Performance')
 ```
 

@@ -378,6 +378,141 @@ class BackTest(BaseBacktest):
             pnl_explain_results[attribute.attribute_name] = result
         return pnl_explain_results
 
+    def summary_stats(self, annualisation_factor: int = 252) -> pd.Series:
+        """
+        Compute summary statistics for the backtest useful for evaluating and comparing strategies.
+
+        Returns a pandas Series with the following metrics:
+
+        - **Total PnL**: final value of the Total performance series
+        - **Total Transaction Costs**: cumulative transaction costs (always negative or zero)
+        - **Total Trades**: number of trades entered during the backtest
+        - **Start Date / End Date**: backtest date range
+        - **Duration (days)**: calendar days in the backtest
+        - **Annualised Return**: total return annualised assuming the given annualisation_factor
+        - **Annualised Volatility**: standard deviation of daily P&L changes, annualised
+        - **Sharpe Ratio**: annualised return / annualised volatility (assumes zero risk-free rate)
+        - **Sortino Ratio**: annualised return / annualised downside deviation
+        - **Max Drawdown**: largest peak-to-trough decline in the Total series
+        - **Max Drawdown Duration (days)**: longest period (calendar days) spent in drawdown
+        - **Calmar Ratio**: annualised return / |max drawdown|
+        - **Average Daily PnL**: mean of daily PnL changes
+        - **Daily PnL Std Dev**: standard deviation of daily PnL changes
+        - **Best Day**: largest single-day gain
+        - **Worst Day**: largest single-day loss
+        - **% Positive Days**: proportion of days with positive PnL change
+        - **Skewness**: skewness of daily PnL changes
+        - **Kurtosis**: excess kurtosis of daily PnL changes
+        - **Peak PnL**: highest Total value reached
+        - **Current Drawdown**: drawdown at the end of the backtest
+
+        :param annualisation_factor: number of business days per year (default 252)
+        :return: pandas Series of summary statistics
+        """
+        summary = self.result_summary
+        if summary.empty:
+            return pd.Series(dtype=float)
+
+        total = summary[self.TOTAL_COLUMN]
+        daily_pnl = total.diff().dropna()
+
+        # Basic info
+        start_date = total.index[0]
+        end_date = total.index[-1]
+        duration_days = (end_date - start_date).days
+        num_periods = len(daily_pnl)
+
+        # Total PnL and transaction costs
+        total_pnl = total.iloc[-1]
+        total_tc = summary[self.TRANSACTION_COSTS_COLUMN].iloc[-1] if self.TRANSACTION_COSTS_COLUMN in summary else 0
+
+        # Trade count
+        try:
+            ledger = self.trade_ledger()
+            num_trades = len(ledger)
+        except Exception:
+            num_trades = np.nan
+
+        # Annualised return and volatility
+        avg_daily = daily_pnl.mean()
+        std_daily = daily_pnl.std()
+        ann_return = avg_daily * annualisation_factor
+        ann_vol = std_daily * np.sqrt(annualisation_factor)
+
+        # Sharpe ratio (excess return over zero risk-free rate)
+        sharpe = ann_return / ann_vol if ann_vol != 0 else np.nan
+
+        # Sortino ratio (downside deviation)
+        downside = daily_pnl[daily_pnl < 0]
+        downside_std = np.sqrt((downside**2).mean()) if len(downside) > 0 else 0.0
+        ann_downside = downside_std * np.sqrt(annualisation_factor)
+        sortino = ann_return / ann_downside if ann_downside != 0 else np.nan
+
+        # Drawdown analysis
+        running_max = total.cummax()
+        drawdown = total - running_max
+        max_drawdown = drawdown.min()
+
+        # Calmar ratio
+        calmar = ann_return / abs(max_drawdown) if max_drawdown != 0 else np.nan
+
+        # Current drawdown
+        current_drawdown = drawdown.iloc[-1]
+
+        # Peak PnL
+        peak_pnl = running_max.iloc[-1]
+
+        # Max drawdown duration (longest streak below the running max)
+        in_drawdown = drawdown < 0
+        if in_drawdown.any():
+            dd_groups = (~in_drawdown).cumsum()
+            dd_durations = in_drawdown.groupby(dd_groups).apply(
+                lambda g: (g.index[-1] - g.index[0]).days if g.any() else 0
+            )
+            max_dd_duration = dd_durations.max()
+        else:
+            max_dd_duration = 0
+
+        # Best / worst day
+        best_day = daily_pnl.max()
+        worst_day = daily_pnl.min()
+
+        # Percentage of positive days
+        pct_positive = (daily_pnl > 0).sum() / num_periods * 100 if num_periods > 0 else np.nan
+
+        # Higher moments
+        skewness = daily_pnl.skew()
+        kurtosis = daily_pnl.kurtosis()  # excess kurtosis
+
+        stats = pd.Series(
+            {
+                'Start Date': start_date,
+                'End Date': end_date,
+                'Duration (days)': duration_days,
+                'Total PnL': total_pnl,
+                'Total Transaction Costs': total_tc,
+                'Total Trades': num_trades,
+                'Peak PnL': peak_pnl,
+                'Annualised Return': ann_return,
+                'Annualised Volatility': ann_vol,
+                'Sharpe Ratio': sharpe,
+                'Sortino Ratio': sortino,
+                'Max Drawdown': max_drawdown,
+                'Max Drawdown Duration (days)': max_dd_duration,
+                'Calmar Ratio': calmar,
+                'Current Drawdown': current_drawdown,
+                'Average Daily PnL': avg_daily,
+                'Daily PnL Std Dev': std_daily,
+                'Best Day': best_day,
+                'Worst Day': worst_day,
+                '% Positive Days': pct_positive,
+                'Skewness': skewness,
+                'Kurtosis': kurtosis,
+            }
+        )
+
+        return stats
+
 
 class ScalingPortfolio:
     def __init__(

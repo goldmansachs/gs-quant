@@ -15,10 +15,14 @@ under the License.
 """
 
 from collections.abc import Iterable
-from typing import Tuple
+from typing import Tuple, Union, Sequence
 
+from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.session import GsSession
 from gs_quant.target.charts import Chart, ChartShare
+import datetime as dt
+
+from gs_quant.common import TimeFilter
 
 
 class GsPlotApi:
@@ -67,6 +71,68 @@ class GsPlotApi:
         return await GsSession.current.async_.delete(f'/charts/{chart_id}')
 
     # Additional methods
+
+    @staticmethod
+    def _build_plot_payload(
+        expressions: Sequence[str],
+        start: Union[dt.date, dt.datetime, RelativeDate, str] = RelativeDate("-1y"),
+        end: Union[dt.date, dt.datetime, RelativeDate, str] = RelativeDate("-1b"),
+        real_time: bool = False,
+        *,
+        statistics: bool = False,
+        interval: str = None,
+        time_filter: TimeFilter = None,
+    ) -> dict:
+        start = start.apply_rule() if isinstance(start, RelativeDate) else start
+        end = end.apply_rule() if isinstance(end, RelativeDate) else end
+        expressions = [expressions] if isinstance(expressions, str) else expressions
+        if real_time and (
+            (isinstance(start, dt.date) and not isinstance(start, dt.datetime))
+            or (isinstance(end, dt.date) and not isinstance(end, dt.datetime))
+        ):
+            raise ValueError("Real-time plots require start and end to be datetimes, not dates.")
+        return {
+            "expressions": expressions,
+            "statistics": statistics,
+            "realTime": real_time,
+            "interval": interval or ("1m" if real_time else "1D"),
+            **({"startTime": start, "endTime": end} if real_time else {"startDate": start, "endDate": end}),
+            **({"timeFilter": time_filter} if time_filter else {}),
+        }
+
+    @classmethod
+    async def plot_runner_async(
+        cls,
+        expressions: Sequence[str],
+        start: Union[dt.date, dt.datetime, RelativeDate, str] = RelativeDate("-1y"),
+        end: Union[dt.date, dt.datetime, RelativeDate, str] = RelativeDate("-1b"),
+        real_time: bool = False,
+        *,
+        statistics: bool = False,
+        interval: str = None,
+        time_filter: TimeFilter = None,
+    ) -> dict:
+        payload = cls._build_plot_payload(
+            expressions, start, end, real_time, statistics=statistics, interval=interval, time_filter=time_filter
+        )
+        return await GsSession.current.async_.post('/plots/runner', payload)
+
+    @classmethod
+    def plot_runner(
+        cls,
+        expressions: Sequence[str],
+        start: Union[dt.date, dt.datetime, RelativeDate, str] = RelativeDate("-1y"),
+        end: Union[dt.date, dt.datetime, RelativeDate, str] = RelativeDate("-1b"),
+        real_time: bool = False,
+        *,
+        statistics: bool = False,
+        interval: str = None,
+        time_filter: TimeFilter = None,
+    ) -> dict:
+        payload = cls._build_plot_payload(
+            expressions, start, end, real_time, statistics=statistics, interval=interval, time_filter=time_filter
+        )
+        return GsSession.current.sync.post('/plots/runner', payload)
 
     @classmethod
     def share_chart(cls, chart_id: str, users: Iterable):

@@ -1020,6 +1020,7 @@ class GsSession(ContextBase):
         http_adapter: requests.adapters.HTTPAdapter = None,
         application_version: str = APP_VERSION,
         domain: Domain = Domain.APP,
+        is_jwt_login: bool = False,
     ) -> 'GsSession':
         """Return an instance of the appropriate session type for the given credentials"""
 
@@ -1065,6 +1066,16 @@ class GsSession(ContextBase):
                     application_version=application_version,
                     application=application,
                     mq_login_token=token,
+                )
+            elif is_jwt_login:
+                return MQLoginSession(
+                    environment_or_domain,
+                    domain=domain,
+                    api_version=api_version,
+                    http_adapter=http_adapter,
+                    application_version=application_version,
+                    application=application,
+                    jwt_token=token,
                 )
             else:
                 return PassThroughSession(
@@ -1284,12 +1295,14 @@ try:
             http_adapter: requests.adapters.HTTPAdapter = None,
             application_version: str = APP_VERSION,
             mq_login_token=None,
+            jwt_token=None,
         ):
             selected_domain, verify = self.domain_and_verify(environment_or_domain)
             if domain == Domain.MDS_WEB:
                 env_config = self._config_for_environment(environment_or_domain)
                 selected_domain = env_config[domain]
             self.mq_login_token = mq_login_token
+            self.jwt_token = jwt_token
             GsSession.__init__(
                 self,
                 selected_domain,
@@ -1302,6 +1315,10 @@ try:
             )
             self._orig_domain = domain
 
+        def _authenticate(self):
+            if self.jwt_token:
+                self._session.headers.update({'Authorization': 'Bearer {}'.format(self.jwt_token)})
+            super()._authenticate()
 
 except ModuleNotFoundError:
     pass
