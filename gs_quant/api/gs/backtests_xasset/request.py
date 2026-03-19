@@ -41,6 +41,7 @@ from gs_quant.target.backtests import FlowVolBacktestMeasure
 class RiskProviderEnum(EnumBase, Enum):
     Default = "Default"
     DataSetProvider = "DataSetProvider"
+    EqVolRiskProvider = "EqVolRiskProvider"
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
