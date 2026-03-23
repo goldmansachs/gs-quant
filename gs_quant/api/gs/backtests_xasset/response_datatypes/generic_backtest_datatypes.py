@@ -14,15 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json
+
+def decode_strategy(data: dict):
+    """Decode a strategy dict into a gs_quant.backtests.strategy.Strategy instance."""
+    from gs_quant.backtests.strategy import Strategy
+
+    if isinstance(data, Strategy):
+        return data
+    return Strategy.from_dict(data)
 
 
-@dataclass_json
-@dataclass
-class Strategy(object):
-    """
-    A strategy object on which one may run a backtest
-    """
-
-    pass
+__all__ = ['decode_strategy']

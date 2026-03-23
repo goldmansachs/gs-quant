@@ -80,6 +80,152 @@ swap = IRSwap(
 )
 ```
 
+#### Cross-Currency Swap — Fix / Fix (`IRXccySwapFixFix`)
+
+Both legs pay a fixed coupon. Each leg has its own notional, set independently to encode
+the agreed FX rate at inception.
+
+```python
+from gs_quant.instrument import IRXccySwapFixFix
+from gs_quant.common import Currency, PrincipalExchange
+
+swap = IRXccySwapFixFix(
+    termination_date='5y',
+    effective_date='0b',                # spot start
+    payer_currency=Currency.USD,
+    payer_rate=0.04,                    # 4.00% fixed USD coupon
+    receiver_currency=Currency.EUR,
+    receiver_rate=0.025,                # 2.50% fixed EUR coupon
+    notional_amount=10e6,
+    principal_exchange=PrincipalExchange.Both,
+)
+swap.resolve()
+```
+
+Key parameters: `payer_rate`, `receiver_rate`, `notional_amount` (payer leg),
+`receiver_notional_amount` (receiver leg — set explicitly to encode the agreed FX rate),
+`payer_frequency`, `receiver_frequency`, `payer_day_count_fraction`,
+`receiver_day_count_fraction`, `payer_business_day_convention`,
+`receiver_business_day_convention`.
+
+#### Cross-Currency Swap — Fix / Float (`IRXccySwapFixFlt`)
+
+One leg pays a fixed rate; the other pays a floating rate (LIBOR/RFR + spread).
+`pay_or_receive` controls which side you pay. Currencies are specified via
+`fixed_rate_currency` and `floating_rate_currency` (not payer/receiver).
+
+```python
+from gs_quant.instrument import IRXccySwapFixFlt
+from gs_quant.common import Currency, PrincipalExchange, PayReceive
+
+swap = IRXccySwapFixFlt(
+    pay_or_receive=PayReceive.Pay,      # pay fixed USD, receive floating EUR
+    termination_date='5y',
+    effective_date='0b',
+    fixed_rate_currency=Currency.USD,
+    fixed_rate=0.04,                    # 4.00% fixed USD rate
+    floating_rate_currency=Currency.EUR,
+    floating_rate_spread=0.0,
+    notional_amount=10000,
+    principal_exchange=PrincipalExchange.Both,
+)
+swap.resolve()
+```
+
+Key parameters: `pay_or_receive`, `fixed_rate_currency`, `fixed_rate`,
+`fixed_rate_frequency`, `fixed_rate_day_count_fraction`,
+`fixed_rate_business_day_convention`, `fixed_first_stub`, `fixed_last_stub`,
+`fixed_holidays`, `floating_rate_currency`, `floating_rate_option`,
+`floating_rate_designated_maturity`, `floating_rate_spread`, `floating_rate_frequency`,
+`floating_rate_day_count_fraction`, `floating_rate_business_day_convention`,
+`floating_first_stub`, `floating_last_stub`, `floating_holidays`,
+`floating_rate_for_the_initial_calculation_period`.
+
+#### Cross-Currency Swap — Float / Float non-MTM (`IRXccySwapFltFlt`)
+
+Both legs pay a floating rate in different currencies. The notional is **fixed for the
+life of the trade** — the FX rate does not reset. Set `receiver_amount` to encode the
+agreed FX rate. The XCcy basis spread is typically applied as `receiver_spread`.
+
+```python
+from gs_quant.instrument import IRXccySwapFltFlt
+from gs_quant.common import Currency, PrincipalExchange
+
+swap = IRXccySwapFltFlt(
+    termination_date='5y',
+    effective_date='0b',
+    payer_currency=Currency.USD,
+    payer_spread=0.0,
+    receiver_currency=Currency.EUR,
+    receiver_spread=0.0,                # XCcy basis spread — resolve at par if omitted
+    notional_amount=10000,
+    principal_exchange=PrincipalExchange.Both,
+)
+swap.resolve()
+```
+
+Key parameters: `payer_rate_option`, `payer_designated_maturity`, `payer_spread`,
+`payer_frequency`, `payer_day_count_fraction`, `payer_business_day_convention`,
+`payer_first_stub`, `payer_last_stub`, `payer_holidays`, and the equivalent `receiver_*`
+fields. `receiver_amount` encodes the agreed FX rate and is fixed at inception.
+
+#### Cross-Currency Swap — Float / Float MTM (`IRXccySwap`)
+
+Same structure as `IRXccySwapFltFlt` but the receiver notional **resets to FX spot at
+each period start**, eliminating FX credit exposure. This is the standard interbank
+product. Note: `receiver_amount` is **not** a field — the receiver notional is computed
+automatically each period.
+
+```python
+from gs_quant.instrument import IRXccySwap
+from gs_quant.common import Currency, PrincipalExchange, PayReceive
+
+swap = IRXccySwap(
+    termination_date='5y',
+    effective_date='0b',
+    payer_currency=Currency.USD,
+    payer_spread=0.0,
+    receiver_currency=Currency.EUR,
+    receiver_spread=0.0,                # XCcy basis — resolve at par if omitted
+    notional_amount=10000,         # payer notional only; receiver resets to FX spot
+    principal_exchange=PrincipalExchange.Both,
+    # initial_fx_rate=1.10,             # optional: pin the opening FX rate
+    # notional_reset_side=PayReceive.Receive,  # default — receiver resets (standard MTM)
+)
+swap.resolve()
+```
+
+Key additional parameters vs `IRXccySwapFltFlt`: `initial_fx_rate` (optional, pins the
+opening FX rate), `notional_reset_side` (`PayReceive.Receive` by default — the standard
+convention). `receiver_amount` is absent; do not set it.
+
+**MTM vs non-MTM at a glance:**
+
+| | `IRXccySwap` (MTM) | `IRXccySwapFltFlt` (non-MTM) |
+|---|---|---|
+| Receiver notional | Resets to FX spot each period | Fixed at inception |
+| FX credit exposure | Eliminated | Builds up over trade life |
+| `receiver_amount` field | Not present | Required — encodes the agreed FX rate |
+| `initial_fx_rate` field | Available | Not available |
+| `notional_reset_side` field | Available | Not available |
+
+All four XCcy swap types accept `principal_exchange` (`PrincipalExchange.Both` is
+standard — notionals exchanged at start and maturity) and an optional `fee` /
+`fee_currency` / `fee_payment_date`. Note if you have a principal exchange which is
+in the past this cash flow will not be ignored by the Price measure.  So in general
+only have exchanges which are in the past relative to the PricingContext.
+Relevant risk measures:
+
+```python
+from gs_quant.risk import IRDeltaParallel, IRXccyDeltaParallel, IRDelta, IRXccyDelta
+# IRDeltaParallel      — total rate DV01 (1bp parallel shift in discount/fwd curve, USD)
+# IRXccyDeltaParallel  — total XCcy basis DV01 (1bp shift in cross-ccy basis, USD)
+# IRDelta              — bucketed rate delta ladder (per tenor)
+# IRXccyDelta          — bucketed XCcy basis delta ladder (per tenor)
+```
+
+---
+
 #### Interest Rate Swaption
 
 ```python
@@ -646,3 +792,177 @@ backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='
 backtest.result_summary['Total'].plot(title='Performance')
 ```
 
+---
+
+## 8. Accessing Data with `Dataset`
+
+The `Dataset` class in `gs_quant.data` provides access to Marquee datasets — structured,
+time-series collections of market and reference data. Each dataset has a fixed schema, a
+set of symbol dimensions (e.g. `bbid`, `assetId`, `ticker`), and entitlements that control
+access.
+
+```python
+from gs_quant.data import Dataset
+import datetime as dt
+```
+
+### Constructing a Dataset
+
+Pass the dataset ID string (visible in the Marquee catalog URL):
+
+```python
+ds = Dataset('FXIVOL_STANDARD')
+```
+
+You can also use the built-in vendor enums to avoid hardcoding strings:
+
+```python
+ds = Dataset(Dataset.GS.HOLIDAY)
+ds = Dataset(Dataset.TR.TREOD)
+```
+
+> **Equities and listed instruments:** For equities and most other listed instruments
+> (equity indices, ETFs, futures, etc.) the correct dataset is almost always `TREOD`
+> (Thomson Reuters End-of-Day). This is a broad coverage, daily EOD dataset sourced from
+> Refinitiv. Use `bbid` as the symbol dimension.
+>
+> ```python
+> ds = Dataset('TREOD')                          # or Dataset(Dataset.TR.TREOD)
+> df = ds.get_data(dt.date(2025, 1, 2), dt.date(2026, 3, 19), bbid=['GS UN', 'AAPL UW'])
+> ```
+
+### `get_data` — Fetch a DataFrame
+
+The primary method. Returns a `pandas.DataFrame` with one row per data point.
+
+```python
+df = ds.get_data(
+    start=dt.date(2025, 1, 2),
+    end=dt.date(2025, 3, 19),
+    bbid=['EURUSD', 'USDJPY'],      # filter by symbol dimension — passed as kwargs
+)
+```
+
+**Key parameters:**
+
+| Parameter | Description |
+|---|---|
+| `start` | Start date or datetime of the query |
+| `end` | End date or datetime (inclusive) |
+| `as_of` | Return data as it existed at this point in time |
+| `since` | Return data updated since this datetime |
+| `fields` | List of field names to return; omit for all fields |
+| `**kwargs` | Symbol dimension filters, e.g. `bbid=['EURUSD']`, `ticker='SPX'`, `assetId='...'` |
+
+Filter kwargs match the dataset's symbol dimensions exactly — check the Marquee catalog
+page for the correct dimension name. Multiple values are passed as a list.
+
+```python
+# Filter by a single value
+df = ds.get_data(dt.date(2025, 1, 2), dt.date(2025, 3, 19), bbid='EURUSD')
+
+# Filter by multiple values
+df = ds.get_data(dt.date(2025, 1, 2), dt.date(2025, 3, 19), bbid=['EURUSD', 'GBPUSD'])
+
+# Restrict to specific fields
+df = ds.get_data(dt.date(2025, 1, 2), dt.date(2025, 3, 19),
+                 bbid=['EURUSD'],
+                 fields=['impliedVolatility', 'tenor'])
+
+# Query specific dates rather than a range
+df = ds.get_data(dates=[dt.date(2025, 1, 15), dt.date(2025, 3, 19)], bbid=['EURUSD'])
+```
+
+### `get_data_series` — Fetch a Single-Field Time Series
+
+Returns a `pandas.Series` indexed by date/time when the dataset has exactly one symbol
+dimension and you want a single field:
+
+```python
+series = ds.get_data_series(
+    field='impliedVolatility',
+    start=dt.date(2025, 1, 2),
+    end=dt.date(2025, 3, 19),
+    bbid='EURUSD',
+)
+# series is a pd.Series indexed by date
+```
+
+### `get_data_last` — Most Recent Data Point
+
+Returns the latest available row at or before `as_of`:
+
+```python
+latest = ds.get_data_last(
+    as_of=dt.datetime.now(),
+    bbid=['EURUSD', 'USDJPY'],
+)
+```
+
+### `get_coverage` — What Assets Are Available
+
+Returns a DataFrame listing every symbol covered by the dataset:
+
+```python
+coverage = ds.get_coverage()
+print(coverage.head())
+
+# Include the history start date for each asset
+coverage = ds.get_coverage(include_history=True)
+coverage = coverage.sort_values('historyStartDate')
+```
+
+### Iterating Over Large Queries
+
+For datasets with many assets or long date ranges, break the query into smaller chunks
+to avoid API limits:
+
+```python
+from datetime import timedelta
+
+def query_in_batches(dataset, ids, start, end, id_field='bbid', time_delta=timedelta(days=30)):
+    """Fetch data in time batches for a list of symbol IDs."""
+    frames = []
+    batch_start = start
+    while batch_start < end:
+        batch_end = min(batch_start + time_delta, end)
+        df = dataset.get_data(batch_start, batch_end, **{id_field: ids})
+        frames.append(df)
+        batch_start = batch_end
+    return pd.concat(frames) if frames else pd.DataFrame()
+
+import pandas as pd
+ds = Dataset('EDRVOL_PERCENT_V1_STANDARD')
+coverage = ds.get_coverage()
+ids = coverage['assetId'].tolist()[:10]   # first 10 assets
+
+df = query_in_batches(ds, ids, dt.date(2024, 1, 1), dt.date(2025, 3, 19), id_field='assetId')
+```
+
+### Uploading Data
+
+You can write data back to a dataset you own:
+
+```python
+import pandas as pd
+
+data = [
+    {'date': '2025-03-19', 'city': 'London', 'maxTemperature': 14.0, 'minTemperature': 7.0},
+    {'date': '2025-03-19', 'city': 'New York', 'maxTemperature': 18.0, 'minTemperature': 9.0},
+]
+ds = Dataset('MY_CUSTOM_DATASET')
+ds.upload_data(data)                     # accepts list of dicts or a DataFrame
+```
+
+### Common Pitfalls
+
+- **Wrong dimension name** — each dataset has its own symbol dimension (`bbid`, `assetId`,
+  `ticker`, `ric`, etc.). Check the Marquee catalog page. Passing the wrong kwarg silently
+  returns an empty DataFrame.
+- **Query size limits** — very wide queries (many assets × long date range) will time out
+  or be rejected. Iterate in batches as shown above.
+- **Entitlements** — if `get_data` returns an empty DataFrame unexpectedly, your session
+  may not have the required entitlement scope (e.g. `read_product_data`). Ensure your
+  `GsSession` was initialised with the appropriate scopes.
+- **Intraday vs daily** — some datasets are indexed by `datetime` (intraday); others by
+  `date` (EOD). Pass `dt.datetime` objects for intraday datasets and `dt.date` for EOD.

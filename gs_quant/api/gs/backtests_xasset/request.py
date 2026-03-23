@@ -29,7 +29,7 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes impo
     TransactionCostConfig,
     StrategyHedge,
 )
-from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import Strategy
+from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import decode_strategy
 from gs_quant.base import EnumBase
 from gs_quant.common import RiskMeasure
 from gs_quant.json_convertors import decode_optional_date, decode_date_tuple, encode_date_tuple
@@ -42,6 +42,30 @@ class RiskProviderEnum(EnumBase, Enum):
     Default = "Default"
     DataSetProvider = "DataSetProvider"
     EqVolRiskProvider = "EqVolRiskProvider"
+
+
+def _decode_dates(data):
+    """Decode dates as either a DateConfig dict or a tuple of date strings."""
+    if data is None:
+        return None
+    if isinstance(data, DateConfig):
+        return data
+    if isinstance(data, dict):
+        return DateConfig.from_dict(data)
+    if isinstance(data, (list, tuple)):
+        return tuple(dt.date.fromisoformat(d) if isinstance(d, str) else d for d in data)
+    return data
+
+
+def _decode_configuration(data):
+    """Decode configuration from a camelCase dict into a Configuration object."""
+    if data is None:
+        return None
+    if isinstance(data, Configuration):
+        return data
+    if isinstance(data, dict):
+        return Configuration.from_dict(data)
+    return data
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -81,6 +105,6 @@ class BasicBacktestRequest:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class GenericBacktestRequest:
-    strategy: Strategy
-    dates: Union[DateConfig, Tuple[dt.date, ...]]
-    configuration: Optional[Configuration] = None
+    strategy: object = field(default=None, metadata=config(decoder=decode_strategy))
+    dates: Union[DateConfig, Tuple[dt.date, ...]] = field(default=None, metadata=config(decoder=_decode_dates))
+    configuration: Optional[Configuration] = field(default=None, metadata=config(decoder=_decode_configuration))

@@ -16,10 +16,18 @@ under the License.
 
 import dataclasses
 
-from gs_quant.api.gs.backtests_xasset.response import RiskResponse, BasicBacktestResponse, GenericBacktestResponse
+from gs_quant.api.gs.backtests_xasset.response import (
+    RiskResponse,
+    BacktestResponse,
+    BasicBacktestResponse,
+    GenericBacktestResponse,
+)
 
 
 def test_response_types():
-    cls = (RiskResponse, BasicBacktestResponse, GenericBacktestResponse)
+    cls = (RiskResponse, BacktestResponse, BasicBacktestResponse, GenericBacktestResponse)
     for c in cls:
         assert dataclasses.is_dataclass(c)
+    # Verify backward compatibility aliases
+    assert BasicBacktestResponse is BacktestResponse
+    assert GenericBacktestResponse is BacktestResponse

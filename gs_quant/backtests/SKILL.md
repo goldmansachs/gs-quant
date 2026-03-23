@@ -1,4 +1,4 @@
-yea---
+---
 name: gs-quant-backtesting
 description: Guide to the gs_quant backtesting framework — engines, triggers, actions, strategies, and result extraction. Covers GenericEngine (multi-asset OTC), EquityVolEngine, and PredefinedAssetEngine.
 ---

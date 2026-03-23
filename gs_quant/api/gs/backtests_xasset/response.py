@@ -50,7 +50,7 @@ class RiskResponse:
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class BasicBacktestResponse:
+class BacktestResponse:
     measures: Dict[FlowVolBacktestMeasure, Dict[dt.date, RiskResultWithData]] = field(
         default=None, metadata=config(decoder=decode_basic_bt_measure_dict)
     )
@@ -66,7 +66,7 @@ class BasicBacktestResponse:
     def from_dict_custom(cls, data: Any, decode_instruments: bool = True):
         if decode_instruments:
             return cls.from_dict(data)
-        return BasicBacktestResponse(
+        return BacktestResponse(
             measures=decode_basic_bt_measure_dict(data['measures']),
             portfolio=decode_daily_portfolio(data['portfolio'], decode_instruments),
             transactions=decode_basic_bt_transactions(data['transactions'], decode_instruments),
@@ -76,7 +76,6 @@ class BasicBacktestResponse:
         )
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class GenericBacktestResponse:
-    pass
+# Backward compatibility aliases
+BasicBacktestResponse = BacktestResponse
+GenericBacktestResponse = BacktestResponse
