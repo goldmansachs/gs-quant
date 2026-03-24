@@ -791,16 +791,16 @@ class PerformanceReport(Report):
             return {aum_point.date.strftime('%Y-%m-%d'): aum_point.aum for aum_point in aum}
         if aum_source == RiskAumSource.Long:
             aum = self.get_long_exposure(start_date=start_date, end_date=end_date)
-            return {row['date']: row['longExposure'] for index, row in aum.iterrows()}
+            return dict(zip(aum['date'], aum['longExposure']))
         if aum_source == RiskAumSource.Short:
             aum = self.get_short_exposure(start_date=start_date, end_date=end_date)
-            return {row['date']: row['shortExposure'] for index, row in aum.iterrows()}
+            return dict(zip(aum['date'], aum['shortExposure']))
         if aum_source == RiskAumSource.Gross:
             aum = self.get_gross_exposure(start_date=start_date, end_date=end_date)
-            return {row['date']: row['grossExposure'] for index, row in aum.iterrows()}
+            return dict(zip(aum['date'], aum['grossExposure']))
         if aum_source == RiskAumSource.Net:
             aum = self.get_net_exposure(start_date=start_date, end_date=end_date)
-            return {row['date']: row['netExposure'] for index, row in aum.iterrows()}
+            return dict(zip(aum['date'], aum['netExposure']))
 
     def upload_custom_aum(self, aum_data: List[CustomAUMDataPoint], clear_existing_data: bool = None):
         """

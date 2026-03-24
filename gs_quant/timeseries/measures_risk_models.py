@@ -34,6 +34,7 @@ from gs_quant.target.risk_models import (
     RiskModelUniverseIdentifierRequest,
 )
 from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
+from gs_quant.timeseries.helper import FREQ_HOUR
 from .statistics import percentile
 from gs_quant.timeseries.measures import _extract_series_from_df
 import datetime as dt
@@ -374,7 +375,9 @@ def factor_returns_percentile(
     # Return the percentile value as pandas series for the entire time range from start_time to end_time
     return pd.Series(
         percentile_value,
-        index=pd.date_range(start=DataContext.current.start_time, end=DataContext.current.end_time, freq='2h'),
+        index=pd.date_range(
+            start=DataContext.current.start_time, end=DataContext.current.end_time, freq=f'2{FREQ_HOUR}'
+        ),
     )
 
 

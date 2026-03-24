@@ -24,6 +24,8 @@ from itertools import chain
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 
 import pandas as pd
+from more_itertools import unique_everseen
+
 from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_instance_or_iterable, is_iterable, Scenario
 from gs_quant.common import RiskMeasure
 from gs_quant.config import DisplayOptions
@@ -38,7 +40,6 @@ from gs_quant.risk import (
     aggregate_results,
 )
 from gs_quant.risk.transform import Transformer
-from more_itertools import unique_everseen
 
 _logger = logging.getLogger(__name__)
 

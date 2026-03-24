@@ -22,9 +22,10 @@ from copy import copy
 from dataclasses import dataclass, fields
 from typing import Iterable, Optional, Union, Tuple, Dict, Callable, List
 
-import gs_quant
 import pandas as pd
 from dataclasses_json import dataclass_json
+
+import gs_quant
 from gs_quant.base import RiskKey
 from gs_quant.config import DisplayOptions
 from gs_quant.datetime import point_sort_order
@@ -133,8 +134,12 @@ class UnsupportedValue(ResultInfo):
     @staticmethod
     def compose(components: Iterable):
         dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
+        is_datetime = isinstance(dates[0], dt.datetime)
         return SeriesWithInfo(
-            pd.Series(index=pd.DatetimeIndex(dates).date, data=values), risk_key=risk_key, unit=unit, error=errors
+            pd.Series(index=pd.DatetimeIndex(dates).date if not is_datetime else pd.DatetimeIndex(dates), data=values),
+            risk_key=risk_key,
+            unit=unit,
+            error=errors,
         )
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
@@ -169,8 +174,12 @@ class ScalarWithInfo(ResultInfo, metaclass=ABCMeta):
     @staticmethod
     def compose(components: Iterable):
         dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
+        is_datetime = isinstance(dates[0], dt.datetime)
         return SeriesWithInfo(
-            pd.Series(index=pd.DatetimeIndex(dates).date, data=values), risk_key=risk_key, unit=unit, error=errors
+            pd.Series(index=pd.DatetimeIndex(dates).date if not is_datetime else pd.DatetimeIndex(dates), data=values),
+            risk_key=risk_key,
+            unit=unit,
+            error=errors,
         )
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
@@ -338,8 +347,12 @@ class SeriesWithInfo(pd.Series, ResultInfo):
     @staticmethod
     def compose(components: Iterable):
         dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
+        is_datetime = isinstance(dates[0], dt.datetime)
         return SeriesWithInfo(
-            pd.Series(index=pd.DatetimeIndex(dates).date, data=values), risk_key=risk_key, unit=unit, error=errors
+            pd.Series(index=pd.DatetimeIndex(dates).date if not is_datetime else pd.DatetimeIndex(dates), data=values),
+            risk_key=risk_key,
+            unit=unit,
+            error=errors,
         )
 
     def _to_records(self, extra_dict, display_options: DisplayOptions = None):
@@ -410,7 +423,10 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
     @staticmethod
     def compose(components: Iterable):
         dates, values, errors, risk_key, unit = ResultInfo.composition_info(components)
-        df = pd.concat(v.assign(date=d) for d, v in zip(dates, values)).set_index('date')
+        if isinstance(dates[0], dt.datetime):
+            df = pd.concat(v.assign(timestamp=d) for d, v in zip(dates, values)).set_index('timestamp')
+        else:
+            df = pd.concat(v.assign(date=d) for d, v in zip(dates, values)).set_index('date')
 
         return DataFrameWithInfo(df, risk_key=risk_key, unit=unit, error=errors)
 

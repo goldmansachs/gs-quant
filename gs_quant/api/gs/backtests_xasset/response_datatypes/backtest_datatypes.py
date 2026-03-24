@@ -17,7 +17,6 @@ under the License.
 import dataclasses
 import datetime as dt
 from abc import abstractmethod
-
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, Tuple, Dict, Union, Any
@@ -28,16 +27,18 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import (
     decode_daily_portfolio,
 )
+from gs_quant.common import Currency, CurrencyName, PricingLocation
 from gs_quant.instrument import Instrument
 from gs_quant.interfaces.algebra import AlgebraicType
 from gs_quant.json_convertors import (
-    decode_optional_date,
     encode_date_tuple,
     decode_date_tuple,
     decode_dict_date_key_or_float,
+    decode_optional_date_or_time,
+    encode_timedelta,
+    decode_timedelta,
 )
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
-from gs_quant.common import Currency, CurrencyName, PricingLocation
 
 
 class TransactionCostModel(Enum):
@@ -134,9 +135,15 @@ class AdditionalResults:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class DateConfig:
-    start_date: dt.date = field(default=None, metadata=config(decoder=decode_optional_date))
-    end_date: dt.date = field(default=None, metadata=config(decoder=decode_optional_date))
-    frequency: str = '1b'
+    start_date: Optional[Union[dt.date, dt.datetime]] = field(
+        default=None, metadata=config(decoder=decode_optional_date_or_time)
+    )
+    end_date: Optional[Union[dt.date, dt.datetime]] = field(
+        default=None, metadata=config(decoder=decode_optional_date_or_time)
+    )
+    frequency: Optional[Union[str, dt.timedelta]] = field(
+        default='1b', metadata=config(encoder=encode_timedelta, decoder=decode_timedelta)
+    )
     holiday_calendar: Optional[str] = None
 
 

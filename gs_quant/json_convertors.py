@@ -38,6 +38,16 @@ def encode_date_or_str(value: Optional[Union[str, dt.date]]) -> Optional[str]:
     return value.isoformat() if isinstance(value, dt.date) else value
 
 
+def decode_optional_date_or_time(value: Optional[str]) -> Optional[Union[dt.date, dt.datetime]]:
+    if value is None or isinstance(value, dt.date) or isinstance(value, dt.datetime):
+        return value
+    elif isinstance(value, str):
+        if len(value) > 10:
+            return decode_datetime(value)
+        return decode_optional_date(value)
+    raise ValueError(f'Cannot convert {value} to date or time')
+
+
 def decode_optional_date(value: Optional[str]) -> Optional[dt.date]:
     # from dataclasses-json 0.6.5 onwards the global config for type T will be applied to Optional[T]
     # So this decoder would become redundant, to allow any version we simply return if it's already a date
@@ -70,9 +80,28 @@ def decode_date_tuple(blob: Tuple[str, ...]):
     return tuple(decode_optional_date(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
+def decode_date_or_time_tuple(blob: Tuple[str, ...]):
+    return tuple(decode_optional_date_or_time(s) for s in blob) if isinstance(blob, (tuple, list)) else None
+
+
 def encode_date_tuple(values: Tuple[Optional[Union[str, dt.date]], ...]):
     return (
         tuple(encode_date_or_str(value) if isinstance(value, (str, dt.date)) else None for value in values)
+        if values is not None
+        else None
+    )
+
+
+def encode_date_or_time_tuple(values: Tuple[Optional[Union[str, dt.date, dt.datetime]], ...]):
+    return (
+        tuple(
+            encode_date_or_str(value)
+            if isinstance(value, (str, dt.date))
+            else tuple(encode_datetime())
+            if isinstance(value, dt.datetime)
+            else None
+            for value in values
+        )
         if values is not None
         else None
     )
@@ -347,3 +376,52 @@ def dc_decode(*classes, name_field='class_type', allow_missing=False):
     mappings = ((_get_dc_type(cls, name_field, allow_missing), cls) for cls in classes)
     type_to_cls_map = dict((k, v) for k, v in mappings if k is not None)
     return _value_decoder(type_to_cls_map, None)
+
+
+def encode_timedelta(value: Optional[Union[str, dt.timedelta]]) -> Optional[str]:
+    if value is None or isinstance(value, str):
+        return value
+    total = int(value.total_seconds())
+    days, remainder = divmod(total, 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    parts = []
+    if days:
+        parts.append(f'{days}d')
+    if hours:
+        parts.append(f'{hours}h')
+    if minutes:
+        parts.append(f'{minutes}m')
+    if seconds or not parts:
+        parts.append(f'{seconds}s')
+    return ''.join(parts)
+
+
+_TIMEDELTA_PATTERN = re.compile(
+    r'(?:(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours))?\s*'
+    r'(?:(\d+(?:\.\d+)?)\s*(?:m|min|mins|minute|minutes))?\s*'
+    r'(?:(\d+(?:\.\d+)?)\s*(?:s|sec|secs|second|seconds))?\s*$',
+    re.IGNORECASE,
+)
+_FREQUENCY_PATTERN = re.compile(r'^\s*(?:(\d+(?:\.\d+)?)\s*(?:d|day|days|b))?\s*', re.IGNORECASE)
+
+
+def decode_timedelta(value: Optional[Union[int, float, str, dt.timedelta]]) -> Optional[Union[str, dt.timedelta]]:
+    if value is None or isinstance(value, dt.timedelta):
+        return value
+    if isinstance(value, str) and _FREQUENCY_PATTERN.match(value):
+        return value
+    if isinstance(value, (int, float)):
+        return dt.timedelta(seconds=value)
+    if isinstance(value, str):
+        # try plain number string first
+        try:
+            return dt.timedelta(seconds=float(value))
+        except ValueError:
+            pass
+        m = _TIMEDELTA_PATTERN.match(value)
+        if m and any(m.groups()):
+            days, hours, minutes, seconds = (float(v) if v else 0.0 for v in m.groups())
+            return dt.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
+        raise ValueError(f'Cannot parse {value!r} as a timedelta. Examples: 3600, "60m", "2h", "90s", "1d12h30m"')
+    raise TypeError(f'Cannot convert {value!r} to timedelta')

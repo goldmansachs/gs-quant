@@ -44,7 +44,11 @@ from gs_quant.errors import MqValueError, MqTypeError
 from gs_quant.markets.securities import Asset, AssetIdentifier, AssetType as SecAssetType, SecurityMaster, Stock
 from gs_quant.timeseries import Basket, RelativeDate, Returns, Window, sqrt, volatility
 from gs_quant.timeseries.helper import (
+    FREQ_DAY,
     FREQ_MONTH_END,
+    FREQ_MONTH_START,
+    FREQ_PERIOD_QUARTER,
+    FREQ_YEAR_START,
     _month_to_tenor,
     _split_where_conditions,
     _tenor_to_month,
@@ -1156,7 +1160,7 @@ def implied_correlation(
 
 
 def _calculate_implied_correlation(index_mqid, vol_df, constituents_weights, request_id):
-    full_index = pd.date_range(start=vol_df.index.min(), end=vol_df.index.max(), freq='D')
+    full_index = pd.date_range(start=vol_df.index.min(), end=vol_df.index.max(), freq=FREQ_DAY)
 
     w = constituents_weights.reindex(full_index, method='ffill')
 
@@ -5297,12 +5301,16 @@ def commodity_forecast_time_series(
     elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.MONTHLY.value:
         periods = [
             f"{date.year}M{date.month}"
-            for date in pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="MS")
+            for date in pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq=FREQ_MONTH_START)
         ]
     elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.QUARTERLY.value:
-        periods = pd.period_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="Q").strftime("%YQ%q")
+        periods = pd.period_range(
+            start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq=FREQ_PERIOD_QUARTER
+        ).strftime("%YQ%q")
     elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.ANNUAL.value:
-        periods = pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="YS").strftime("%Y")
+        periods = pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq=FREQ_YEAR_START).strftime(
+            "%Y"
+        )
     else:
         raise ValueError(
             "Invalid forecastFrequency. Must be one of '3/6/12-Month Rolling', 'Monthly', 'Quarterly', 'Annual'."

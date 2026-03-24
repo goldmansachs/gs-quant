@@ -15,10 +15,9 @@ under the License.
 """
 
 import datetime as dt
-
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from dataclasses_json import dataclass_json, LetterCase
 
@@ -39,7 +38,7 @@ class RiskResults:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class RiskResultsByDate(RiskResults):
-    result: Dict[dt.date, RiskResultWithData]
+    result: Dict[Union[dt.date, dt.datetime], RiskResultWithData]
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

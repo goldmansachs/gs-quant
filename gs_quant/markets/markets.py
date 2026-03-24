@@ -193,18 +193,24 @@ class TimestampedMarket(Market):
     and timestamp
     """
 
-    def __init__(self, timestamp: dt.datetime, location: Optional[Union[str, PricingLocation]] = None):
+    def __init__(
+        self,
+        timestamp: dt.datetime,
+        location: Optional[Union[str, PricingLocation]] = None,
+        base_date: Optional[dt.date] = None,
+    ):
         self.__timestamp = timestamp
         self.__location = (
             location if isinstance(location, PricingLocation) or location is None else PricingLocation(location)
         )
+        self.__base_date = base_date
 
     def __repr__(self):
         return f'{self.__timestamp} ({self.location.value})'
 
     @property
     def market(self):
-        return _TimestampedMarket(timestamp=self.__timestamp, location=self.location)
+        return _TimestampedMarket(timestamp=self.__timestamp, location=self.location, base_date=self.__base_date)
 
     @property
     def location(self) -> PricingLocation:

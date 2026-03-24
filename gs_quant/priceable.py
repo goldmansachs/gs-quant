@@ -111,20 +111,17 @@ class PriceableImpl(Priceable, ABC):
             location = PricingContext.current.market_data_location
 
             def extract_market_data(this_result: DataFrameWithInfo):
-                market_data = {}
-
-                for _, row in this_result.iterrows():
+                def process_row(row):
                     coordinate_values = {p: row.get(p) for p in properties}
                     mkt_point = coordinate_values.get('mkt_point')
                     if mkt_point is not None:
                         coordinate_values['mkt_point'] = tuple(coordinate_values['mkt_point'].split(';'))
-
-                    # return 'redacted' as coordinate value if its a redacted coordinate
-                    market_data[MarketDataCoordinate.from_dict(coordinate_values)] = (
-                        row['value'] if row['permissions'] == 'Granted' else 'redacted'
+                    return (
+                        MarketDataCoordinate.from_dict(coordinate_values),
+                        row['value'] if row['permissions'] == 'Granted' else 'redacted',
                     )
 
-                return market_data
+                return {coord: val for coord, val in this_result.apply(process_row, axis=1).items()}
 
             if is_historical:
                 return {

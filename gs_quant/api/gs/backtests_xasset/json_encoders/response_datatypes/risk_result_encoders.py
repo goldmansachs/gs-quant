@@ -69,7 +69,12 @@ def decode_risk_result_with_data(r: dict) -> RiskResultWithData:
 def decode_risk_result(d: dict) -> RiskResults:
     refs = {RefType(k): v for k, v in d['refs'].items()}
     if 'result' in d:
-        result = {dt.date.fromisoformat(k): decode_risk_result_with_data(v) for k, v in d['result'].items()}
+        # detect datetime keys by length (datetime ISO strings are longer than 10 chars)
+        first_key = next(iter(d['result']), None)
+        if first_key is not None and len(first_key) > 10:
+            result = {dt.datetime.fromisoformat(k): decode_risk_result_with_data(v) for k, v in d['result'].items()}
+        else:
+            result = {dt.date.fromisoformat(k): decode_risk_result_with_data(v) for k, v in d['result'].items()}
         return RiskResultsByDate(refs, result)
     else:
         return RiskResultsError(refs, d['error'], d['trace_id'])

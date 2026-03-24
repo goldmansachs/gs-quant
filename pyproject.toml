@@ -59,6 +59,9 @@ notebook = [
     "seaborn",
     "treelib",
 ]
+internal = [
+    "gs-quant-internal",
+]
 test = [
     "pytest",
     "pytest-cov",

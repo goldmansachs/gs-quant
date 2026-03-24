@@ -374,7 +374,8 @@ class Portfolio(PriceableImpl):
         mappings = mappings or {}
         data = data.replace({np.nan: None})
 
-        for row in (r for _, r in data.iterrows() if any(v for v in r.values if v is not None)):
+        filtered_data = data[data.notnull().any(axis=1)]
+        for _, row in filtered_data.iterrows():
             instrument = None
             for init_keys in (('asset_class', 'type'), ('$type',)):
                 init_values = tuple(filter(None, (get_value(row, k) for k in init_keys)))

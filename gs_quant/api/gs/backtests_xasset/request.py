@@ -32,7 +32,13 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes impo
 from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import decode_strategy
 from gs_quant.base import EnumBase
 from gs_quant.common import RiskMeasure
-from gs_quant.json_convertors import decode_optional_date, decode_date_tuple, encode_date_tuple
+from gs_quant.json_convertors import (
+    decode_timedelta,
+    encode_timedelta,
+    decode_optional_date_or_time,
+    decode_date_or_time_tuple,
+    encode_date_or_time_tuple,
+)
 from gs_quant.json_convertors_common import encode_risk_measure_tuple, decode_risk_measure_tuple
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.backtests import FlowVolBacktestMeasure
@@ -71,10 +77,17 @@ def _decode_configuration(data):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskRequest:
-    start_date: Optional[dt.date] = field(default=None, metadata=config(decoder=decode_optional_date))
-    end_date: Optional[dt.date] = field(default=None, metadata=config(decoder=decode_optional_date))
-    additional_dates: Optional[Tuple[dt.date, ...]] = field(
-        default=None, metadata=config(encoder=encode_date_tuple, decoder=decode_date_tuple)
+    start_date: Optional[Union[dt.date, dt.datetime]] = field(
+        default=None, metadata=config(decoder=decode_optional_date_or_time)
+    )
+    end_date: Optional[Union[dt.date, dt.datetime]] = field(
+        default=None, metadata=config(decoder=decode_optional_date_or_time)
+    )
+    frequency: Optional[Union[str, dt.timedelta]] = field(
+        default=None, metadata=config(encoder=encode_timedelta, decoder=decode_timedelta)
+    )
+    additional_dates: Optional[Tuple[Union[dt.date, dt.datetime], ...]] = field(
+        default=None, metadata=config(encoder=encode_date_or_time_tuple, decoder=decode_date_or_time_tuple)
     )
     legs: Optional[Tuple[PriceableImpl, ...]] = field(
         default=None, metadata=config(encoder=legs_encoder, decoder=legs_decoder)

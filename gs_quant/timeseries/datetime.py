@@ -27,6 +27,7 @@ from .helper import (
     Interpolate,
     plot_function,
     requires_session,
+    FREQ_DAY,
     FREQ_MONTH_END,
     FREQ_QUARTER_END,
     FREQ_YEAR_END,
@@ -758,7 +759,7 @@ def day_countdown(end_date: dt.date, start_date: dt.date = None, business_days: 
         end_day = np.datetime64(end_date).astype('datetime64[D]')
         values = np.busday_count(start_days, end_day).astype(np.int64)
     else:
-        idx = pd.date_range(start=start_date, end=end_date, freq='D')
+        idx = pd.date_range(start=start_date, end=end_date, freq=FREQ_DAY)
         start_days = idx.values.astype('datetime64[D]')
         end_day = np.datetime64(end_date).astype('datetime64[D]')
         values = (end_day - start_days).astype(np.int64)

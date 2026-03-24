@@ -25,7 +25,7 @@ from gs_quant.data import DataContext, Dataset
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import AssetIdentifier, Asset
 from gs_quant.timeseries import RelativeDate
-from gs_quant.timeseries.helper import plot_measure
+from gs_quant.timeseries.helper import FREQ_DAY, plot_measure
 from gs_quant.timeseries.measures import ExtendedSeries
 
 
@@ -1285,7 +1285,7 @@ def factset_fundamentals(
     df = df.reset_index()
     column = 'ff' + metric.name.replace('_', ' ').title().replace(' ', '')
     df = df[['date', column]]
-    date_range = pd.date_range(start=start_new, end=end, freq='D')
+    date_range = pd.date_range(start=start_new, end=end, freq=FREQ_DAY)
     date_df = pd.DataFrame({'date': date_range})
     df = pd.merge(date_df, df, on='date', how='left')
     df[column] = df[column].ffill()

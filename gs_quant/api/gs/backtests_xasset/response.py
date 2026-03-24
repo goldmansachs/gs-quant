@@ -15,7 +15,6 @@ under the License.
 """
 
 import datetime as dt
-
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Tuple, Any
 
@@ -34,9 +33,9 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.response_encoders import (
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction, AdditionalResults
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import RiskResults
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
+from gs_quant.common import RiskMeasure
 from gs_quant.instrument import Instrument
 from gs_quant.priceable import PriceableImpl
-from gs_quant.common import RiskMeasure
 from gs_quant.target.backtests import FlowVolBacktestMeasure
 
 
@@ -46,6 +45,13 @@ class RiskResponse:
     legRefs: Dict[str, PriceableImpl] = field(default=None, metadata=config(decoder=decode_leg_refs))
     riskMeasureRefs: Dict[str, RiskMeasure] = field(default=None, metadata=config(decoder=decode_risk_measure_refs))
     results: Tuple[RiskResults, ...] = field(default=None, metadata=config(decoder=decode_result_tuple))
+
+    def serializable(self):
+        self.legRefs = {
+            k: {**v.to_dict(), 'properties': {**v.to_dict().get('properties', {}), 'name': v.name}}
+            for k, v in self.legRefs.items()
+        }
+        return self
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

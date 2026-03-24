@@ -14,11 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.api.gs.backtests_xasset.json_encoders.response_encoders import decode_basic_bt_transactions
+import datetime as dt
+
+from gs_quant.api.gs.backtests_xasset.json_encoders.response_encoders import (
+    decode_basic_bt_transactions,
+)
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import TransactionDirection
 from gs_quant.common import Currency
 from gs_quant.instrument import EqOption
-import datetime as dt
 
 
 def test_decode_basic_bt_transactions():

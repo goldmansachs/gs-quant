@@ -38,23 +38,35 @@ _PD_VERSION_MATCH = re.match(r'^(\d+)\.(\d+)', pd.__version__)
 _PD_VERSION = (int(_PD_VERSION_MATCH.group(1)), int(_PD_VERSION_MATCH.group(2))) if _PD_VERSION_MATCH else (0, 0)
 
 if _PD_VERSION >= (2, 2):
+    FREQ_DAY = 'D'
+    FREQ_MONTH_START = 'MS'
     FREQ_MONTH_END = 'ME'
+    FREQ_QUARTER_START = 'QS'
     FREQ_QUARTER_END = 'QE'
+    FREQ_YEAR_START = 'YS'
     FREQ_YEAR_END = 'YE'
     FREQ_HOUR = 'h'
     FREQ_SECOND = 's'
     FREQ_BUSINESS_MONTH_END = 'BME'
     FREQ_BUSINESS_QUARTER_END = 'BQE'
     FREQ_BUSINESS_YEAR_END = 'BYE'
+    # For period_range (which has different freq requirements)
+    FREQ_PERIOD_QUARTER = 'Q'
 else:  # pragma: no cover
+    FREQ_DAY = 'D'
+    FREQ_MONTH_START = 'MS'
     FREQ_MONTH_END = 'M'
+    FREQ_QUARTER_START = 'QS'
     FREQ_QUARTER_END = 'Q'
+    FREQ_YEAR_START = 'YS'
     FREQ_YEAR_END = 'Y'
     FREQ_HOUR = 'H'
     FREQ_SECOND = 'S'
     FREQ_BUSINESS_MONTH_END = 'BM'
     FREQ_BUSINESS_QUARTER_END = 'BQ'
     FREQ_BUSINESS_YEAR_END = 'BY'
+    # For period_range (which has different freq requirements)
+    FREQ_PERIOD_QUARTER = 'Q'
 
 ENABLE_DISPLAY_NAME = 'GSQ_ENABLE_MEASURE_DISPLAY_NAME'
 USE_DISPLAY_NAME = os.environ.get(ENABLE_DISPLAY_NAME) == "1"

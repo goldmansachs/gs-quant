@@ -15,9 +15,9 @@ under the License.
 """
 
 import datetime as dt
-import pandas as pd
-
 from typing import Dict, Any, Tuple, Union
+
+import pandas as pd
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import (
     decode_inst_tuple,
