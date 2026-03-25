@@ -74,6 +74,56 @@ def _decode_configuration(data):
     return data
 
 
+def _decode_measures(data):
+    """Decode measures as an optional tuple of RiskMeasure objects."""
+    if data is None:
+        return None
+    return decode_risk_measure_tuple(data)
+
+
+def _encode_measures(data):
+    """Encode measures, handling None for optional field."""
+    if data is None:
+        return None
+    return encode_risk_measure_tuple(data)
+
+
+def _decode_pnl_attribute(data):
+    """Decode a single PnlAttribute from a dict, handling nested RiskMeasure fields."""
+
+    from gs_quant.backtests.backtest_objects import PnlAttribute
+    from gs_quant.json_convertors_common import decode_risk_measure
+
+    if isinstance(data, PnlAttribute):
+        return data
+    if isinstance(data, dict):
+        attr_metric = data.get('attribute_metric')
+        mkt_metric = data.get('market_data_metric')
+        return PnlAttribute(
+            attribute_name=data['attribute_name'],
+            attribute_metric=decode_risk_measure(attr_metric) if isinstance(attr_metric, dict) else attr_metric,
+            market_data_metric=decode_risk_measure(mkt_metric) if isinstance(mkt_metric, dict) else mkt_metric,
+            scaling_factor=data['scaling_factor'],
+            second_order=data.get('second_order', False),
+        )
+    return data
+
+
+def _decode_pnl_definition(data):
+    """Decode pnl_explain_def from a dict into a PnlDefinition object."""
+    if data is None:
+        return None
+    from gs_quant.backtests.backtest_objects import PnlDefinition
+
+    if isinstance(data, PnlDefinition):
+        return data
+    if isinstance(data, dict):
+        attrs = data.get('attributes', [])
+        decoded_attrs = [_decode_pnl_attribute(a) for a in attrs]
+        return PnlDefinition(attributes=decoded_attrs)
+    return data
+
+
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskRequest:
@@ -121,3 +171,7 @@ class GenericBacktestRequest:
     strategy: object = field(default=None, metadata=config(decoder=decode_strategy))
     dates: Union[DateConfig, Tuple[dt.date, ...]] = field(default=None, metadata=config(decoder=_decode_dates))
     configuration: Optional[Configuration] = field(default=None, metadata=config(decoder=_decode_configuration))
+    measures: Optional[Tuple[RiskMeasure, ...]] = field(
+        default=None, metadata=config(encoder=_encode_measures, decoder=_decode_measures)
+    )
+    pnl_explain_def: Optional[object] = field(default=None, metadata=config(decoder=_decode_pnl_definition))

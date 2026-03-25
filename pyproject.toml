@@ -46,7 +46,7 @@ dependencies = [
     "scipy>=1.2.0",
     "statsmodels>=0.13.0",
     "tqdm",
-    "websockets",
+    "websockets"
 ]
 
 [project.optional-dependencies]

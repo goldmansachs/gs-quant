@@ -499,22 +499,24 @@ class GsSecurityMasterApi:
         @param id_type: identifier type
         @return: dict
         """
+        limit = 250
         response = cls._get_capital_structure(
             id_value=id_value,
             id_type=id_type,
             type_=type_,
             is_primary=is_primary,
             effective_date=effective_date,
+            limit=limit,
             offset_key=None,
         )
         if "offsetKey" not in response:
             return response
 
         asset_types_total = response["assetTypesTotal"]
-        batch_count = math.floor(sum(asset_types_total.values()) / 100)
+        batch_count = math.floor(sum(asset_types_total.values()) / limit)
         results = response["results"]
         offset_key = response["offsetKey"]
-        fn = partial(cls._get_capital_structure, id_value, id_type, type_, is_primary, effective_date)
+        fn = partial(cls._get_capital_structure, id_value, id_type, type_, is_primary, effective_date, limit)
 
         results.extend(cls.__fetch_all(fn, offset_key, total_batches=batch_count))
         aggregated_results, total_results = cls.__capital_structure_aggregate(asset_types_total, results)
@@ -551,9 +553,10 @@ class GsSecurityMasterApi:
         type_,
         is_primary,
         effective_date,
+        limit: int,
         offset_key: Union[str, None],
     ):
-        params = {id_type.value: id_value}
+        params = {id_type.value: id_value, "limit": limit}
         cls.prepare_params(params, is_primary, offset_key, type_, effective_date)
         payload = json.loads(json.dumps(params, cls=JSONEncoder))
         r = GsSession.current.sync.get("/markets/capitalstructure", payload=payload)

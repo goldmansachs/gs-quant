@@ -438,7 +438,15 @@ class GsSession(ContextBase):
             self._session = None
         if self._session_async:
             try:
-                asyncio.run(self._close_async())
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+            try:
+                if loop and loop.is_running():
+                    # We're inside a running event loop — schedule the close without blocking
+                    loop.create_task(self._close_async())
+                else:
+                    asyncio.run(self._close_async())
             except Exception:
                 pass
 
@@ -462,6 +470,12 @@ class GsSession(ContextBase):
                 return tuple(cls(**r) for r in results)
             else:
                 return cls(**results)
+
+    def refresh_token(self):
+        pass
+
+    async def refresh_token_async(self):
+        pass
 
     def _build_url(self, domain: Optional[str], path: str, include_version: Optional[bool]):
         if not domain:
@@ -578,6 +592,7 @@ class GsSession(ContextBase):
         url = self._build_url(domain, path, include_version)
         tracer = Tracer(url) if span and span.is_recording() else nullcontext()
         with tracer as scope:
+            self.refresh_token()
             kwargs = self._build_request_params(
                 method, path, url, payload, request_headers, timeout, use_body, "data", scope
             )
@@ -629,6 +644,7 @@ class GsSession(ContextBase):
         url = self._build_url(domain, path, include_version)
         tracer = Tracer(f'http:/{path}') if span and span.is_recording() else nullcontext()
         with tracer as scope:
+            await self.refresh_token_async()
             kwargs = self._build_request_params(
                 method, path, url, payload, request_headers, timeout, use_body, "content", scope
             )
@@ -862,9 +878,11 @@ class GsSession(ContextBase):
         domain: Optional[str] = None,
         **kwargs: Any,
     ):
+        self._init_async()
         span = Tracer.active_span()
         trace = Tracer(f'wss:/{path}') if span and span.is_recording() else nullcontext()
         with trace as scope:
+            await self.refresh_token_async()
             tracing_headers = {}
             Tracer.inject(tracing_headers)
             headers = {**headers, **tracing_headers} if headers else tracing_headers
@@ -882,6 +900,7 @@ class GsSession(ContextBase):
         headers: Optional[dict] = None,
         include_version=True,
         domain: Optional[str] = None,
+        try_auth: Optional[bool] = True,
         **kwargs: Any,
     ):
         import websockets
@@ -896,13 +915,20 @@ class GsSession(ContextBase):
             ws_library_headers = {"additional_headers": extra_headers}
         else:
             ws_library_headers = {"extra_headers": extra_headers, "read_limit": 2**32}
-        return websockets.connect(
-            url,
-            max_size=2**32,
-            ssl=CustomHttpAdapter.ssl_context() if url.startswith('wss') else None,
-            **ws_library_headers,
-            **kwargs,
-        )
+        try:
+            return websockets.connect(
+                url,
+                max_size=2**32,
+                ssl=CustomHttpAdapter.ssl_context() if url.startswith('wss') else None,
+                **ws_library_headers,
+                **kwargs,
+            )
+        except websockets.exceptions.SecurityError:
+            if try_auth:
+                self._authenticate_all_sessions()
+                return self._connect_websocket_raw(
+                    path=path, headers=headers, include_version=include_version, domain=domain, try_auth=False, **kwargs
+                )
 
     def _headers(self):
         headers = []
@@ -1301,8 +1327,7 @@ try:
             if domain == Domain.MDS_WEB:
                 env_config = self._config_for_environment(environment_or_domain)
                 selected_domain = env_config[domain]
-            self.mq_login_token = mq_login_token
-            self.jwt_token = jwt_token
+            MQLoginMixin.__init__(self, mq_login_token=mq_login_token, jwt_token=jwt_token)
             GsSession.__init__(
                 self,
                 selected_domain,
@@ -1314,11 +1339,6 @@ try:
                 application_version=application_version,
             )
             self._orig_domain = domain
-
-        def _authenticate(self):
-            if self.jwt_token:
-                self._session.headers.update({'Authorization': 'Bearer {}'.format(self.jwt_token)})
-            super()._authenticate()
 
 except ModuleNotFoundError:
     pass
