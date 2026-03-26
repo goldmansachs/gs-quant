@@ -24,12 +24,12 @@ from gs_quant.markets.markets import LiveMarket, TimestampedMarket
 
 
 class TestRealtimePricingContextValidation:
-    def test_start_end_must_be_datetime(self):
-        with pytest.raises(ValueError, match='start and end must be datetime instances'):
+    def test_either_start_end_or_timestamps(self):
+        with pytest.raises(ValueError, match='Must supply start or timestamps, not both'):
             RealtimePricingContext(
-                start=dt.date(2025, 3, 18),
-                end=dt.date(2025, 3, 18),
+                start=dt.datetime(2025, 3, 18, 16, 0),
                 interval=dt.timedelta(minutes=30),
+                timestamps=(dt.datetime(2025, 3, 18, 16, 0),),
             )
 
     def test_start_must_be_before_end(self):
@@ -124,9 +124,9 @@ class TestMarketForTimestamp:
             # Close to now but not last → TimestampedMarket
             (dt.datetime(2025, 3, 18, 12, 0), False, TimestampedMarket),
             # Close to now and last → LiveMarket
-            (dt.datetime(2025, 3, 18, 12, 0), True, LiveMarket),
+            (dt.datetime(2025, 3, 18, 12, 0, tzinfo=dt.timezone.utc), True, LiveMarket),
             # Far from now even if last → TimestampedMarket
-            (dt.datetime(2025, 3, 18, 10, 0), True, TimestampedMarket),
+            (dt.datetime(2025, 3, 18, 10, 0, tzinfo=dt.timezone.utc), True, TimestampedMarket),
         ],
     )
     def test_market_for_timestamp(self, timestamp, is_last, expected_type):

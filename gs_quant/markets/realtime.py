@@ -15,15 +15,15 @@ under the License.
 """
 
 import datetime as dt
-from typing import Optional, Tuple, Type
+from typing import Optional, Tuple, Type, Iterable
 
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.common import RiskMeasure
-from gs_quant.datetime.date import prev_business_date
 from gs_quant.risk.results import PricingFuture, HistoricalPricingFuture
 from .historical import HistoricalPricingContext
-from .markets import LiveMarket, TimestampedMarket
+from .markets import LiveMarket, TimestampedMarket, close_market_date
 from ..api.risk import GenericRiskApi
+from ..datetime import location_to_tz_mapping
 
 
 class RealtimePricingContext(HistoricalPricingContext):
@@ -41,9 +41,10 @@ class RealtimePricingContext(HistoricalPricingContext):
 
     def __init__(
         self,
-        start: dt.datetime,
-        end: dt.datetime,
-        interval: dt.timedelta,
+        start: Optional[dt.datetime] = None,
+        end: Optional[dt.datetime] = None,
+        interval: Optional[dt.timedelta] = dt.timedelta(minutes=60),
+        timestamps: Optional[Iterable[dt.datetime]] = None,
         is_async: bool = None,
         is_batch: bool = None,
         use_cache: bool = None,
@@ -87,22 +88,28 @@ class RealtimePricingContext(HistoricalPricingContext):
         >>>
         >>> price_series = price_f.result()
         """
-        if not isinstance(start, dt.datetime) or not isinstance(end, dt.datetime):
-            raise ValueError('start and end must be datetime instances')
-
-        if start >= end:
-            raise ValueError('start must be before end')
-
         if interval < self._MIN_INTERVAL:
             raise ValueError(f'interval must be at least {self._MIN_INTERVAL}')
 
         if interval >= self._MAX_INTERVAL:
             raise ValueError('interval must be less than 1 day; use HistoricalPricingContext for daily intervals')
 
+        if start is not None:
+            if end is not None and start >= end:
+                raise ValueError('start must be before end')
+            if not isinstance(start, dt.datetime):
+                raise ValueError('start and end must be datetime instances')
+            if timestamps is not None:
+                raise ValueError('Must supply start or timestamps, not both')
+            if end is None:
+                end = dt.datetime.now(tz=dt.timezone.utc)
+            self.__timestamps = self._build_timestamps(start, end, interval)
+        elif timestamps is not None:
+            self.__timestamps = tuple(timestamps)
+
         self.__start = start
         self.__end = end
         self.__interval = interval
-        self.__timestamps = self._build_timestamps(start, end, interval)
 
         # Use the start date as pricing_date for the parent context
         dates = [ts.date() for ts in self.__timestamps]
@@ -131,15 +138,20 @@ class RealtimePricingContext(HistoricalPricingContext):
             current += interval
         return tuple(timestamps)
 
+    @staticmethod
+    def _roll_back_weekend(in_date: dt.date):
+        weekend_days = max(in_date.isoweekday() - 5, 0)
+        return in_date - dt.timedelta(weekend_days)
+
     def _market_for_timestamp(self, timestamp: dt.datetime, location, *, is_last: bool = False):
         if is_last:
-            now = dt.datetime.now(dt.timezone.utc).replace(tzinfo=None)
+            now = dt.datetime.now(dt.timezone.utc)
             if abs(timestamp - now) < self._LIVE_THRESHOLD:
                 return LiveMarket(location=location)
 
-        base_date = timestamp.date()
-        if base_date == dt.date.today():
-            base_date = prev_business_date(base_date)
+        timestamp_date = timestamp.astimezone(tz=location_to_tz_mapping.get(location)).date()
+        base_date = self._roll_back_weekend(timestamp_date)
+        base_date = close_market_date(self.market_data_location, base_date)
 
         return TimestampedMarket(timestamp=timestamp, location=location, base_date=base_date)
 
