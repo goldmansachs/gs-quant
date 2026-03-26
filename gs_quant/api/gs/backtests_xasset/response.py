@@ -31,6 +31,7 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.response_encoders import (
     decode_basic_bt_transactions,
 )
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction, AdditionalResults
+from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import decode_strategy
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import RiskResults
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
 from gs_quant.common import RiskMeasure
@@ -66,6 +67,7 @@ class BacktestResponse:
     transactions: Dict[dt.date, Tuple[Transaction, ...]] = field(
         default=None, metadata=config(decoder=decode_basic_bt_transactions)
     )
+    strategy: Optional[object] = field(default=None, metadata=config(decoder=decode_strategy))
     additional_results: Optional[AdditionalResults] = field(default=None)
 
     @classmethod
@@ -76,6 +78,7 @@ class BacktestResponse:
             measures=decode_basic_bt_measure_dict(data['measures']),
             portfolio=decode_daily_portfolio(data['portfolio'], decode_instruments),
             transactions=decode_basic_bt_transactions(data['transactions'], decode_instruments),
+            strategy=decode_strategy(data['strategy']) if data.get('strategy') is not None else None,
             additional_results=AdditionalResults.from_dict_custom(data['additional_results'], decode_instruments)
             if data['additional_results'] is not None
             else None,

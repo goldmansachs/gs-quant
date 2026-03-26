@@ -15,8 +15,10 @@ under the License.
 """
 
 
-def decode_strategy(data: dict):
+def decode_strategy(data):
     """Decode a strategy dict into a gs_quant.backtests.strategy.Strategy instance."""
+    if data is None:
+        return None
     from gs_quant.backtests.strategy import Strategy
 
     if isinstance(data, Strategy):
