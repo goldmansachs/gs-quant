@@ -15,6 +15,7 @@ under the License.
 """
 
 from abc import ABCMeta
+from bisect import insort
 import datetime as dt
 from collections import defaultdict, namedtuple
 from itertools import zip_longest
@@ -671,3 +672,45 @@ class AddWeightedTradeActionImpl(OrderBasedActionImpl):
                 tce.calculate_unit_cost()
 
         return backtest
+
+
+class EarlyExitPositionLimitScaledActionImpl(AddScaledTradeActionImpl):
+    def get_base_orders_for_states(self, states: Collection[dt.date], **kwargs):
+        trigger_infos = kwargs.get("trigger_infos")
+        orders = {}
+        dated_priceables = getattr(self.action, 'dated_priceables', {}) or {}
+        with PricingContext():
+            for s in states:
+                active_portfolio = dated_priceables.get(s) or self.action.priceables
+                with PricingContext(pricing_date=s):
+                    orders[s] = Portfolio(active_portfolio).calc(tuple(self._order_valuations))
+        cur_no_pos = 0
+        future_exits = []
+        for s in sorted(states):
+            num_exit_pos = len([d for d in future_exits if d <= s])
+            cur_no_pos -= num_exit_pos
+            future_exits = future_exits[num_exit_pos:]
+            if (
+                self.action.max_concurrent_pos is not None
+                and cur_no_pos + len(orders[s].portfolio) > self.action.max_concurrent_pos
+            ):
+                del orders[s]
+                continue
+            for inst in orders[s].portfolio:
+                resolved_inst = orders[s][inst]
+                if len(self._order_valuations) > 1:
+                    resolved_inst = resolved_inst[ResolvedInstrumentValues]
+                info = trigger_infos.get(s) if trigger_infos else None
+                inst_exit_date = self.get_instrument_final_date(resolved_inst, s, info)
+                insort(future_exits, inst_exit_date)
+                cur_no_pos += 1
+        return orders
+
+    def get_instrument_final_date(self, inst: Instrument, order_date: dt.date, info: namedtuple):
+        final_date = get_final_date(inst, order_date, self.action.trade_duration, self.action.holiday_calendar, info)
+        if self.action.early_exits is None:
+            return final_date
+        future_exits = [d for d in sorted(self.action.early_exits) if d > order_date]
+        if future_exits:
+            final_date = min(final_date, next(iter(future_exits)))
+        return final_date

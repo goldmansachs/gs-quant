@@ -492,3 +492,19 @@ class RebalanceAction(Action):
                 self.priceable = self.priceable.clone(name=f'{self.name}_{self.priceable.name}')
         if self.transaction_cost_exit is None:
             self.transaction_cost_exit = self.transaction_cost
+
+
+@dataclass_json
+@dataclass
+class EarlyExitPositionLimitScaledAction(AddScaledTradeAction):
+    """
+    Subclass of AddScaledTradeAction that holds information on early exits to precompute its trade final dates.
+    It also holds a limit on the number of positions that can be held at the time and filters orders accordingly.
+
+    :param early_exits: list of dates when the action portfolio is exit early
+    :param max_concurrent_pos: maximum number of positions that can be held a time - a portfolio is added as a whole
+    """
+
+    early_exits: Optional[Iterable[dt.date]] = None
+    max_concurrent_pos: Optional[int] = None
+    class_type: str = static_field('early_exit_position_limit_scaled_action')

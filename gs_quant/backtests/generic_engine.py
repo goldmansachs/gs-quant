@@ -32,6 +32,7 @@ from gs_quant.backtests.actions import (
     ExitAllPositionsAction,
     AddScaledTradeAction,
     AddWeightedTradeAction,
+    EarlyExitPositionLimitScaledAction,
 )
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_objects import BackTest, CashPayment, PnlDefinition
@@ -43,6 +44,7 @@ from gs_quant.backtests.generic_engine_action_impls import (
     ExitTradeActionImpl,
     RebalanceActionImpl,
     AddWeightedTradeActionImpl,
+    EarlyExitPositionLimitScaledActionImpl,
 )
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.common import Currency, ParameterisedRiskMeasure, RiskMeasure
@@ -75,6 +77,7 @@ class GenericEngineActionFactory(ActionHandlerBaseFactory):
             RebalanceAction: RebalanceActionImpl,
             AddScaledTradeAction: AddScaledTradeActionImpl,
             AddWeightedTradeAction: AddWeightedTradeActionImpl,
+            EarlyExitPositionLimitScaledAction: EarlyExitPositionLimitScaledActionImpl,
         } | (action_impl_map or {})
 
     def get_action_handler(self, action: Action) -> ActionHandler:

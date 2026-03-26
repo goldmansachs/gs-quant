@@ -16,6 +16,7 @@ under the License.
 
 import datetime as dt
 import json
+import pathlib
 from unittest.mock import patch
 
 import numpy as np
@@ -28,6 +29,7 @@ from gs_quant.backtests.actions import (
     ScalingActionType,
     ExitAllPositionsAction,
     AddWeightedTradeAction,
+    EarlyExitPositionLimitScaledAction,
 )
 from gs_quant.backtests.backtest_objects import (
     ScaledTransactionModel,
@@ -38,6 +40,7 @@ from gs_quant.backtests.backtest_objects import (
 )
 from gs_quant.backtests.data_sources import GenericDataSource, MissingDataStrategy, GsDataSource
 from gs_quant.backtests.generic_engine import GenericEngine
+from gs_quant.backtests.generic_engine_action_impls import EarlyExitPositionLimitScaledActionImpl
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.triggers import (
     TriggerDirection,
@@ -1091,3 +1094,38 @@ def test_add_weighted_trade_action(mocker):
         assert len(strategy.triggers) == 1
         assert len(strategy.triggers[0].actions) == 1
         assert isinstance(strategy.triggers[0].actions[0], AddWeightedTradeAction)
+
+
+def test_early_exit_pos_limit_scaled_action(mocker):
+    mocked_context = MockCalc(mocker, save_files=False, paths=pathlib.Path(__file__).parents[1])
+
+    c = FXOption('EURUSD', expiration_date='3m', option_type=OptionType.Call)
+    p = FXOption('EURUSD', expiration_date='1m', option_type=OptionType.Put)
+    priceables = [c, p]
+    # 2024-02-16 early exit should have no effect, 2024-03-20 should exit both
+    early_exits = [dt.date(2024, 2, 15), dt.date(2024, 2, 16), dt.date(2024, 3, 20)]
+    action = EarlyExitPositionLimitScaledAction(
+        priceables, '2m', early_exits=early_exits, max_concurrent_pos=len(priceables)
+    )
+    action_impl = EarlyExitPositionLimitScaledActionImpl(action)
+    # 2024-02-14 should have no effect as we are still holding the call (early exit has not happened yet)
+    # 2024-03-11 should enter as the "2m" action duration should have exit both positions on 2024-03-08
+    trigger_dates = (dt.date(2024, 1, 8), dt.date(2024, 2, 14), dt.date(2024, 2, 15), dt.date(2024, 3, 11))
+    with mocked_context:
+        orders = action_impl.get_base_orders_for_states(trigger_dates)
+    assert len(orders) == 3
+    for d in (dt.date(2024, 1, 8), dt.date(2024, 2, 15), dt.date(2024, 3, 11)):
+        assert d in orders
+        assert len(orders[d]) == 2
+
+    # no early exits, no priceable limit
+    action = EarlyExitPositionLimitScaledAction(priceables, '2m')
+    action_impl = EarlyExitPositionLimitScaledActionImpl(action)
+    # all trigger dates should now apply
+    trigger_dates = (dt.date(2024, 1, 8), dt.date(2024, 2, 14), dt.date(2024, 2, 15), dt.date(2024, 3, 11))
+    with mocked_context:
+        orders = action_impl.get_base_orders_for_states(trigger_dates)
+    assert len(orders) == len(trigger_dates)
+    for d in trigger_dates:
+        assert d in orders
+        assert len(orders[d]) == 2
