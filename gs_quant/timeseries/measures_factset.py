@@ -16,10 +16,12 @@ under the License.
 
 import datetime as dt
 from enum import Enum
+from functools import partial
 from typing import Union, Optional
 
 import pandas as pd
 
+from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.common import AssetClass, AssetType
 from gs_quant.data import DataContext, Dataset
 from gs_quant.errors import MqValueError
@@ -1084,6 +1086,125 @@ class FiscalPeriod:
         return FiscalPeriod(y=obj.get('y'), p=obj.get('p'))
 
 
+class GIREstimateItem(Enum):
+    ACC_PAY_GQ = 'Accounts Payable'
+    ACQ = 'Acquisitions'
+    ASSOCIATE = 'Income Loss from Unconsolidated Subs and Associates'
+    BVPS = 'Book Value per Share'
+    CAPEX = 'Capital Expenditures'
+    CAPI = 'Market Cap'
+    CASH_EQ = 'Cash and Cash Equivalents'
+    CFPS = 'Cash Flow Per Share'
+    CF_FIN = 'Cash Flow from Financing'
+    CF_INC_MINORITY = 'Minority Interest Add Back'
+    CF_INV = 'Cash Flow from Investing'
+    CF_NI_PRE_PREF = 'Net income pre Preferred Dividends'
+    CF_OPS = 'Cash Flow from Operating Activities'
+    CHG_LT_DEBT = 'Change in Total Debt'
+    COST_GD_SD = 'Cost of Goods Sold'
+    CROCI_INCL_LEASES_NOM = 'CROCI Nominal'
+    CUR_ASS = 'Total Current Assets'
+    DA = 'Depreciation and Amortization '
+    DAYS_INV_OUT = 'Days Inventory Outstanding'
+    DAYS_PAY_OUT = 'Days Payable Outstanding'
+    DAYS_RECVB_OUT = 'Days Receivable Outstanding'
+    DEBTORS = 'Accounts Receivable'
+    DEPR_AMORT = 'Depreciation and Amortization Add Back'
+    DILUTE_SHARES = 'Diluted Average Shares Outstanding'
+    DIV_PAID = 'Dividends Paid'
+    DIV_PAYOUT_PRE = 'Dividend Payout Ratio'
+    DIVEST = 'Divestitures'
+    DPS = 'Dividend Per Share'
+    DPS_ORDINARY_YIELD = 'Dividend Yield'
+    EBIT = 'EBIT'
+    EBIT_PUB = 'EBIT Pub'
+    EBIT_SALES_Q = 'EBIT Margin'
+    EBITDA = 'EBITDA'
+    EBITDA_PUB = 'EBITDA Pub'
+    EPS = 'EPS'
+    EPS_EX_ESO_D = 'EPS Excluding Exceptionals'
+    EPS_FUL_DIL = 'EPS Diluted'
+    EPS_PUB = 'EPS Pub'
+    EV_CF = 'EV to DACF'
+    EV_PUB_PRICE_EXCL_LEASES = 'Enterprise Value'
+    EV_SALES_EXCL_LEASES = 'EV to Sales'
+    EVL_EBITDAL = 'EV to EBITDA'
+    FCF = 'Free Cash Flow'
+    FR_CF_PS = 'Free Cash Flow per Share'
+    FR_CF_PS_YLD = 'FCF Yield'
+    GROSS_MARGIN = 'Gross margin'
+    GRTH_DPS = 'DPS Growth'
+    GRTH_EBITDA_CALC = 'EBITDA Growth'
+    GRTH_EPS_PUB = 'EPS Pub Grwoth'
+    GRTH_SALES = 'Sales Growth'
+    INC_MINORITY = 'Minority Interest'
+    INT_COVERAGE = 'Financial Interest Cover'
+    LT_DEBT = 'Long Term Debt'
+    LT_LEASE_LIAB = 'Non Current Lease Liabilities'
+    NET_EARNING = 'Net Income Pre Exceptionals'
+    NET_FIX_ASS = 'Net PPE'
+    NET_INC = 'Net Income'
+    NET_INT_EXP = 'Net Interest Income or Expense'
+    NET_INTANG = 'Net Intangible Assets '
+    NETDEBT_EBITDA = 'Net Debt to EBITDA'
+    NETDEBT_EQ = 'Net Debt to Equity'
+    ORD_SH_FUND = 'Total Common Equity'
+    OTH_CUR_ASS = 'Other Current Assets'
+    OTH_CUR_LIABS = 'Other Current Liabilities'
+    OTH_FIN_CF = 'Other Financing Cash Flow Items'
+    OTH_INV_CF = 'Other Investing Cash Flow Items'
+    OTH_LT_ASS = 'Other Long Term Assets'
+    OTH_LT_CRED_GQ = 'Other Long Term Liabilities'
+    OTH_OP_CF = 'Other Operating Cash Flow Items'
+    OTH_OP_INC_EXP = 'Other Operating Income or Expense'
+    PE_PUB = 'Price to Earnings'
+    PREF_DIV = 'Preferred Dividends'
+    PREF_SH = 'Preferred Shares'
+    PROV_INC_TAX = 'Provision for Income Tax'
+    PT_PROF = 'Pre Tax Profit'
+    RD_EXP = 'Research Development Expense'
+    REVS_PUB = 'Sales Pub'
+    ROE = 'ROE'
+    SALES = 'Sales'
+    SEL_GL_AD = 'Selling General and Administrative Expense'
+    SH_REPUR = 'Common Stock Issuance'
+    SharesHisto = 'Weighted Average Shares Outstanding'
+    SHORT_T_DEBT = 'Short Term Debt'
+    SHORT_TERM_LIABS = 'Total Current Liabilities'
+    ST_LEASE_LIAB = 'Current Lease Liabilities'
+    STOCKS = 'Inventory'
+    TOT_ASSET = 'Total Assets'
+    TOT_CF = 'Total Cash Flow'
+    TOT_INV_CALC = 'Total Investments'
+    TOT_LIAB = 'Total Liabilities'
+    TOT_LIAB_EQ = 'Total Liabilities and Equity'
+    TOT_LT_LIAB = 'Total Long Term Liabilities'
+    WORK_CAP = 'Change in Working Capital'
+
+
+class GIREstimateBasis(Enum):
+    ANN = 'Annual'
+    QTR = 'Quarterly'
+
+
+class EVItem(Enum):
+    COMMON_STOCK = 'Basic Shares Outstanding'
+    MARKET_CAP = 'Market Cap'
+    DILUTED_SHARES = 'Fully Diluted Shares Outstanding'
+    DILUTED_MARKET_CAP = 'Fully Diluted Market Cap'
+    CONSOLIDATED_DEBT = 'Consolidated Debt'
+    CONVERTIBLE_DEBT = 'In-the-Money Convertible Debt'
+    CAPIRAL_LEASES = 'Capital Leases'
+    CASH = 'Cash & Equivalents'
+    MARKETABLE_SECURITIES = 'Long Term Marketable Securities'
+    TOTAL_PREFERRED = 'Total Preferred'
+    CONVERTIBLE_PREFERRED = 'Convertible Preferred'
+    UNCONSOLIDATED_SUBS = 'Investments in Unconsolidated Subs'
+    NON_CONTROLLING_INTEREST = 'Non-Controlling Interest'
+    PENSION_LIABILITIES = 'Pension Liabilities'
+    ENTERPRISE_VALUE = 'Enterprise Value'
+
+
 BASIC_MEASURES = [
     EstimateItem.EPS,
     EstimateItem.EPS_C,
@@ -1128,6 +1249,24 @@ RATING_TO_FIELD = {
     RatingType.NONE: 'feNoRec',
     RatingType.TOTAL: 'feTotal',
     RatingType.SCORE: 'feMark',
+}
+
+EV_ITEM_TO_COLUMN = {
+    EVItem.COMMON_STOCK: 'sharesOutstanding',
+    EVItem.MARKET_CAP: 'marketCap',
+    EVItem.DILUTED_SHARES: 'fullyDilutedSharesOutstanding',
+    EVItem.DILUTED_MARKET_CAP: 'fullyDilutedMarketCap',
+    EVItem.CONSOLIDATED_DEBT: 'consolidatedDebt',
+    EVItem.CONVERTIBLE_DEBT: 'convertibleDebt',
+    EVItem.CAPIRAL_LEASES: 'capLease',
+    EVItem.CASH: 'cashAndEquivalents',
+    EVItem.MARKETABLE_SECURITIES: 'longTermMarketableSecurity',
+    EVItem.TOTAL_PREFERRED: 'totalPreferred',
+    EVItem.CONVERTIBLE_PREFERRED: 'convertiblePreferred',
+    EVItem.UNCONSOLIDATED_SUBS: 'investmentInUnconsolidatedSubs',
+    EVItem.NON_CONTROLLING_INTEREST: 'nonControllingInterest',
+    EVItem.PENSION_LIABILITIES: 'pensionLiabilities',
+    EVItem.ENTERPRISE_VALUE: 'enterpriseValue',
 }
 
 
@@ -1334,4 +1473,206 @@ def factset_ratings(
     series.index = _idx.as_unit('ns') if hasattr(_idx, 'as_unit') else _idx
     series.dataset_ids = ds.id
 
+    return series
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
+def gir_estimates(
+    asset: Asset,
+    metric: GIREstimateItem = GIREstimateItem.EPS,
+    report_basis: GIREstimateBasis = GIREstimateBasis.ANN,
+    period: Union[int, FiscalPeriod, None] = 1,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
+    """
+    GIR estimates for single stocks.
+
+    :param asset: asset object loaded from security master
+    :param metric: metric for estimate e.g. EPS
+    :param report_basis: reporting basis of the estimate e.g. Annual
+    :param period: rolling window for the estimate e.g. 1 period ahead or fixed non-rolling window e.g.
+            FiscalPeriod(2025, 2)
+    :return: GIR Estimates
+    """
+    if not isinstance(report_basis, GIREstimateBasis):
+        raise MqValueError('Invalid Estimate Basis argument')
+
+    if not isinstance(period, (int, FiscalPeriod)):
+        raise MqValueError('Period must be an integer (relative) or a FiscalPeriod (absolute)')
+
+    if isinstance(period, FiscalPeriod):
+        if period.y is None:
+            raise MqValueError('FiscalPeriod year (y) must be specified')
+        if report_basis == GIREstimateBasis.QTR:
+            if period.p is None:
+                raise MqValueError(
+                    'Please specify the period as an integer between 1 and 4 like FiscalPeriod(2022, 4) '
+                    'for 2022Q4 estimate'
+                )
+            if isinstance(period.p, int) and period.p not in [1, 2, 3, 4]:
+                raise MqValueError('Period number has to be one of 1, 2, 3 or 4 for quarterly basis')
+
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    ds_id = 'GIR_EQUITY_ANALYST_FORECASTS_V1'
+    bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    if bbid is None:
+        raise MqValueError(f'Could not resolve Bloomberg ID for asset {asset.name}')
+
+    period_type = 'A' if report_basis == GIREstimateBasis.ANN else 'Q'
+    current = end
+    tasks = []
+    as_of_dates = []
+    if isinstance(period, int):
+        period_str = f'+{(period + 1)}y' if report_basis == GIREstimateBasis.ANN else f'+{(period + 1) * 3}m'
+        period_check_str = f'+{period}y' if report_basis == GIREstimateBasis.ANN else f'+{(period * 3)}m'
+        while current >= start:
+            as_of_dates.append(current)
+            query_args = {
+                'asOfTime': pd.Timestamp(dt.datetime.combine(current, dt.time(23, 59, 0))).tz_localize('UTC'),
+                'bbid': bbid,
+                'metricName': metric.name,
+                'start': RelativeDate('-3m', base_date=current).apply_rule(),
+                'end': RelativeDate(period_str, base_date=current).apply_rule(),
+                'periodType': period_type,
+            }
+            tasks.append(partial(Dataset(ds_id).get_data, **query_args))
+            current = RelativeDate('-1b', base_date=current).apply_rule()
+        try:
+            responses = ThreadPoolManager.run_async(tasks)
+        except Exception as e:
+            raise MqValueError(f'Could not query dataset {ds_id} because of {e}')
+        for df, date in zip(responses, as_of_dates):
+            df['as_of_date'] = date
+        df = pd.concat(responses)
+        if df.empty:
+            raise MqValueError(f'No data found for {metric.value} for {bbid}')
+        df = df[~df['metricValueNumeric'].isnull()]
+        if df.empty:
+            raise MqValueError(f'No numeric data found for {metric.value} for {bbid}')
+        df.reset_index(inplace=True)
+        df['relative_date'] = df['as_of_date'].apply(lambda x: RelativeDate(period_check_str, base_date=x).apply_rule())
+        df = df[df['date'] >= df['relative_date']]
+        if df.empty:
+            raise MqValueError(f'No data found for {metric.value} for {bbid} within the requested period')
+    else:
+        if report_basis == GIREstimateBasis.ANN:
+            fiscal_period_start = dt.datetime(period.y, 1, 1)
+            fiscal_period_end = dt.datetime(period.y, 12, 31)
+        else:
+            fiscal_period_start = dt.datetime(period.y, (period.p - 1) * 3 + 1, 1)
+            fiscal_period_end = fiscal_period_start + pd.DateOffset(months=3) - pd.DateOffset(days=1)
+            fiscal_period_end = pd.to_datetime(fiscal_period_end)
+        while current >= start:
+            as_of_dates.append(current)
+            query_args = {
+                'asOfTime': pd.Timestamp(dt.datetime.combine(current, dt.time(23, 59, 0))).tz_localize('UTC'),
+                'bbid': bbid,
+                'metricName': metric.name,
+                'start': fiscal_period_start.date(),
+                'end': fiscal_period_end.date(),
+                'periodType': period_type,
+            }
+            tasks.append(partial(Dataset(ds_id).get_data, **query_args))
+            current = RelativeDate('-1b', base_date=current).apply_rule()
+        try:
+            responses = ThreadPoolManager.run_async(tasks)
+        except Exception as e:
+            raise MqValueError(f'Could not query dataset {ds_id} because of {e}')
+        for df, date in zip(responses, as_of_dates):
+            df['as_of_date'] = date
+        df = pd.concat(responses)
+        if df.empty:
+            raise MqValueError(f'No data found for {metric.value} for {bbid}')
+        df = df[~df['metricValueNumeric'].isnull()]
+        if df.empty:
+            raise MqValueError(f'No numeric data found for {metric.value} for {bbid}')
+        df.reset_index(inplace=True)
+
+    df.sort_values(by='date', inplace=True)
+    df = df.drop_duplicates(subset=['as_of_date'], keep='first')
+    df.rename({'date': 'fe_end', 'as_of_date': 'date'}, axis='columns', inplace=True)
+    df = df[['date', 'metricValueNumeric']]
+    df.sort_values(by='date', inplace=True)
+    df.set_index('date', inplace=True)
+    series = ExtendedSeries(df['metricValueNumeric'], name=metric.value)
+    series.dataset_ids = ds_id
+
+    return series
+
+
+@plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
+def factset_enterprise_value(
+    asset: Asset,
+    metric: EVItem = EVItem.ENTERPRISE_VALUE,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
+    """
+    Daily enterprise value or market cap from FactSet.
+
+    :param asset: asset object loaded from security master
+    :param metric: enterprise value or any intermediate metric
+    """
+    if not isinstance(metric, EVItem):
+        raise MqValueError('Invalid EV metric')
+
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+    start_new = RelativeDate('-1y', base_date=start).apply_rule()
+    ds_id = 'FACTSET_EQ_CAPITAL_STRUCTURE'
+    bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
+    bcid = asset.get_identifier(AssetIdentifier.BLOOMBERG_COMPOSITE_ID)
+    if bbid is None:
+        raise MqValueError(f'Could not resolve Bloomberg ID for asset {asset.name}')
+    if bcid is None:
+        raise MqValueError(f'Could not resolve Bloomberg Composite ID for asset {asset.name}')
+
+    ds = Dataset(ds_id)
+    try:
+        df = ds.get_data(bbid=bcid, start=start, end=end)
+    except Exception as e:
+        raise MqValueError(f'Could not query dataset {ds_id} because of {e}')
+    if df.empty:
+        raise MqValueError(f'No data found in {ds_id} for {asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)}')
+
+    df = df.sort_index().drop_duplicates().reset_index()
+    df = df.drop(columns=['date'])
+    df = df.sort_values(by=['mvPricingDate'])
+
+    fundamentals_ds_id = 'FF_ADVANCED_AF_GLOBAL'
+    fundamentals_ds = Dataset(fundamentals_ds_id)
+    try:
+        fund = fundamentals_ds.get_data(bbid=bbid, start=start_new, end=end)
+    except Exception as e:
+        raise MqValueError(f'Could not query dataset {fundamentals_ds_id} because of {e}')
+
+    if fund.empty or 'ffDebtOthCapl' not in fund.columns or fund['ffDebtOthCapl'].dropna().empty:
+        op_lease = False
+    else:
+        op_lease = fund['ffDebtOthCapl'].iloc[0] > 0
+
+    df['capLease'] = df['capLease'] if op_lease else 0
+    df['pensionLiabilities'] = df['pensionLiabilities'].clip(lower=0)
+    df['enterpriseValue'] = (
+        df['fullyDilutedMarketCap']
+        + df['consolidatedDebt']
+        - df['convertibleDebt']
+        + df['capLease']
+        - df['cashAndEquivalents']
+        - df['longTermMarketableSecurity']
+        + df['totalPreferred']
+        - df['convertiblePreferred']
+        - df['investmentInUnconsolidatedSubs']
+        + df['nonControllingInterest']
+        + df['pensionLiabilities']
+    )
+    df.rename({'mvPricingDate': 'date'}, axis='columns', inplace=True)
+    df = df[['date', EV_ITEM_TO_COLUMN[metric]]]
+    df.set_index('date', inplace=True)
+    series = ExtendedSeries(df[EV_ITEM_TO_COLUMN[metric]], name=metric.value)
+    series.dataset_ids = ds.id
     return series
