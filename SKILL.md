@@ -1,13 +1,6 @@
 ---
 name: gs-quant
-description: This document covers the core workflows for using the `gs_quant` library: establishing a session, constructing and resolving instruments, building portfolios, pricing historically, and extracting results. For backtesting, see the dedicated guide at `gs_quant/backtests/SKILL.md`.
-
-# SKILL.md — gs_quant Usage Guide
-
-This document covers the core workflows for using the `gs_quant` library: establishing a session, constructing and resolving instruments, building portfolios, pricing historically, and extracting results.
-
-> **Backtesting:** For a comprehensive guide to the backtesting framework (engines, triggers, actions, strategies, and result extraction), see [`gs_quant/backtests/SKILL.md`](gs_quant/backtests/SKILL.md).
-
+description: "This document covers the core workflows for using the `gs_quant` library: establishing a session, constructing and resolving instruments, building portfolios, pricing historically, and extracting results."
 ---
 
 ## 1. Creating a Session with `GsSession.use`
@@ -918,9 +911,9 @@ For datasets with many assets or long date ranges, break the query into smaller 
 to avoid API limits:
 
 ```python
-from datetime import timedelta
+import datetime as dt
 
-def query_in_batches(dataset, ids, start, end, id_field='bbid', time_delta=timedelta(days=30)):
+def query_in_batches(dataset, ids, start, end, id_field='bbid', time_delta=dt.timedelta(days=30)):
     """Fetch data in time batches for a list of symbol IDs."""
     frames = []
     batch_start = start
