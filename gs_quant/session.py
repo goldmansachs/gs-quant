@@ -26,6 +26,7 @@ from abc import abstractmethod
 from configparser import ConfigParser
 from contextlib import asynccontextmanager
 from enum import Enum, auto, unique
+from http.cookies import SimpleCookie
 from typing import Optional, Union, Iterable, Any
 
 import backoff
@@ -415,7 +416,7 @@ class GsSession(ContextBase):
         if self.__close_on_exit:
             self._session = None
 
-    def init(self):
+    def init(self, cookies=None):
         if not self._session:
             self._session = requests.Session()
             if self.http_adapter is not None:
@@ -1047,6 +1048,7 @@ class GsSession(ContextBase):
         application_version: str = APP_VERSION,
         domain: Domain = Domain.APP,
         is_jwt_login: bool = False,
+        cookies: SimpleCookie = None,
     ) -> 'GsSession':
         """Return an instance of the appropriate session type for the given credentials"""
 
@@ -1080,6 +1082,7 @@ class GsSession(ContextBase):
                         api_version=api_version,
                         application=application,
                         http_adapter=http_adapter,
+                        cookies=cookies,
                     )
                 except NameError:
                     raise MqUninitialisedError('This option requires gs_quant_auth to be installed')
@@ -1276,6 +1279,7 @@ try:
             application=DEFAULT_APPLICATION,
             http_adapter=None,
             csrf_token=None,
+            cookies=None,
         ):
             domain, verify = self.domain_and_verify(environment)
             GsSession.__init__(
@@ -1287,9 +1291,11 @@ try:
                 verify=verify,
                 http_adapter=http_adapter,
             )
-
             self.token = token
             self.csrf_token = csrf_token
+            self.marquee_login = None
+            self.authorization = None
+            self._parse_cookies(cookies)
 
         def _authenticate(self):
             if not (self.token and self.csrf_token):
@@ -1304,6 +1310,31 @@ try:
                 )
                 self._session.cookies.set_cookie(cookie)
                 self._session.headers.update({'X-MARQUEE-CSRF-TOKEN': self.csrf_token})
+            if self.marquee_login:
+                cookie = requests.cookies.create_cookie(domain='.gs.com', name='MarqueeLogin', value=self.marquee_login)
+                self._session.cookies.set_cookie(cookie)
+            if self.authorization:
+                self._session.headers.update({'Authorization': f"Bearer {self.authorization}"})
+
+        def _parse_cookies(self, cookies):
+            if cookies:
+                csrf_token = cookies.get('MARQUEE-CSRF-TOKEN')
+                if csrf_token:
+                    self.csrf_token = csrf_token.value
+                marquee_login = cookies.get('MarqueeLogin')
+                if marquee_login:
+                    self.marquee_login = marquee_login.value
+                authorization = cookies.get('Authorization')
+                if authorization:
+                    self.authorization = authorization.value
+
+        def init(self, cookies=None):
+            if cookies and self._session:
+                self._parse_cookies(cookies)
+                self._authenticate_all_sessions()
+            else:
+                super().init(cookies)
+
 
 except ModuleNotFoundError:
     pass
