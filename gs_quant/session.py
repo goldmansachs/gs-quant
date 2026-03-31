@@ -394,7 +394,10 @@ class GsSession(ContextBase):
     def _init_async(self):
         if not self._has_async_session():
             self._session_async = httpx.AsyncClient(
-                follow_redirects=True, verify=CustomHttpAdapter.ssl_context(), mounts=self.mounts
+                follow_redirects=True,
+                verify=CustomHttpAdapter.ssl_context(),
+                mounts=self.mounts,
+                timeout=DEFAULT_TIMEOUT,
             )
             self._session_async.headers.update({'X-Application': self.application})
             self._session_async.headers.update({'X-Version': self.application_version})
