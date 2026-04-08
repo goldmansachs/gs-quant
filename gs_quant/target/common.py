@@ -4520,11 +4520,10 @@ class ReturnType(EnumBase, Enum):
     """Sum or Product of periodic return, relevant only if paying at maturity"""
 
     Sum = 'Sum'
-    Product = 'Product'    
+    Product = 'Product'
 
 
-class RiskMeasureType(EnumBase, Enum):    
-    
+class RiskMeasureType(EnumBase, Enum):
     """The type of measure to perform risk on. e.g. Greeks"""
 
     Annual_ATM_Implied_Volatility = 'Annual ATM Implied Volatility'
@@ -4570,9 +4569,12 @@ class RiskMeasureType(EnumBase, Enum):
     FX_BF_25_Vol = 'FX BF 25 Vol'
     FX_Calculated_Delta = 'FX Calculated Delta'
     FX_Calculated_Delta_No_Premium_Adjustment = 'FX Calculated Delta No Premium Adjustment'
+    FX_Delta_Local_Ccy = 'FX Delta Local Ccy'
     FX_Discount_Factor_Over = 'FX Discount Factor Over'
     FX_Discount_Factor_Under = 'FX Discount Factor Under'
+    FX_Gamma_Local_Ccy = 'FX Gamma Local Ccy'
     FX_Hedge_Delta = 'FX Hedge Delta'
+    FX_Hedge_Delta_Local_Ccy = 'FX Hedge Delta Local Ccy'
     FX_Premium = 'FX Premium'
     FX_Premium_Pct = 'FX Premium Pct'
     FX_Premium_Pct_Flat_Fwd = 'FX Premium Pct Flat Fwd'
@@ -4580,6 +4582,8 @@ class RiskMeasureType(EnumBase, Enum):
     FX_Quoted_Vega = 'FX Quoted Vega'
     FX_Quoted_Vega_Bps = 'FX Quoted Vega Bps'
     FX_RR_25_Vol = 'FX RR 25 Vol'
+    FX_Theta_Local_Ccy = 'FX Theta Local Ccy'
+    FX_Vega_Local_Ccy = 'FX Vega Local Ccy'
     FXSpotVal = 'FXSpotVal'
     Price = 'Price'
     Gamma = 'Gamma'
@@ -4639,7 +4643,7 @@ class RiskMeasureType(EnumBase, Enum):
     VegaLocalCcy = 'VegaLocalCcy'
     Volga = 'Volga'
     Volatility = 'Volatility'
-    XccyDelta = 'XccyDelta'    
+    XccyDelta = 'XccyDelta'
 
 
 class RiskMeasureUnit(EnumBase, Enum):    

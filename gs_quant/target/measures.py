@@ -361,6 +361,12 @@ FXDelta.__doc__ = "Dollar Price sensitivity of the instrument to a move in the u
 FXDeltaHedge = RiskMeasure(name="FXDeltaHedge", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Hedge Delta"))
 FXDeltaHedge.__doc__ = "Size of the spot trade in the underlying currency needed to hedge the USD delta on a per-cross basis"
 
+FXDeltaHedgeLocalCcy = RiskMeasureWithCurrencyParameter(name="FXDeltaHedgeLocalCcy", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Hedge Delta Local Ccy"))
+FXDeltaHedgeLocalCcy.__doc__ = "Size of the hedge trade in premium currency needed to delta-hedge an FX instrument"
+
+FXDeltaLocalCcy = RiskMeasureWithCurrencyParameter(name="FXDeltaLocalCcy", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Delta Local Ccy"))
+FXDeltaLocalCcy.__doc__ = "Dollar delta of an FX instrument in premium currency"
+
 FXDiscountFactorOver = RiskMeasure(name="FXDiscountFactorOver", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Discount Factor Over"))
 FXDiscountFactorOver.__doc__ = "Discount Factor to Maturity in the Over Currency of the FX Pair"
 
@@ -372,6 +378,9 @@ FXFwd.__doc__ = "FXFwd"
 
 FXGamma = RiskMeasure(name="FXGamma", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Gamma"))
 FXGamma.__doc__ = "FXDelta sensitivity of the instrument to a move in the underlying spot such that dSpot * FXGamma = dDelta"
+
+FXGammaLocalCcy = RiskMeasureWithCurrencyParameter(name="FXGammaLocalCcy", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Gamma Local Ccy"))
+FXGammaLocalCcy.__doc__ = "FXDelta sensitivity of an FX instrument in premium currency"
 
 FXImpliedCorrelation = RiskMeasure(name="FXImpliedCorrelation", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Correlation"))
 FXImpliedCorrelation.__doc__ = "Correlation and Vol information"
@@ -409,8 +418,14 @@ FXSpotVal.__doc__ = "FXSpot in trade cross convention"
 FXStrikePts = RiskMeasure(name="FXStrikePts", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("StrikePts"))
 FXStrikePts.__doc__ = "FXPoints in trade cross convention"
 
+FXThetaLocalCcy = RiskMeasureWithCurrencyParameter(name="FXThetaLocalCcy", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Theta Local Ccy"))
+FXThetaLocalCcy.__doc__ = "Quoted theta of an FX instrument in premium currency terms representing daily time decay"
+
 FXVega = RiskMeasureWithFiniteDifferenceParameter(name="FXVega", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("Vega"))
 FXVega.__doc__ = "Change in Dollar Price due to a 1 vol move in the implied volatility of ATM instruments used to build the volatility surface"
+
+FXVegaLocalCcy = RiskMeasureWithCurrencyParameter(name="FXVegaLocalCcy", asset_class=AssetClass("FX"), measure_type=RiskMeasureType("FX Vega Local Ccy"))
+FXVegaLocalCcy.__doc__ = "Change in Dollar Price of an FX instrument in premium currency terms due to a 1 vol move in implied volatility"
 
 FairPremium = RiskMeasureWithCurrencyParameter(name="FairPremium", measure_type=RiskMeasureType("FairPremium"))
 FairPremium.__doc__ = "Fair Premium is the instrument present value discounted to the premium settlement date"
@@ -466,13 +481,13 @@ IRGammaParallelLocalCcy.__doc__ = "Interest Rate Parallel Gamma (Local Ccy)"
 IRSpotRate = RiskMeasure(name="IRSpotRate", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Spot Rate"), unit=RiskMeasureUnit("Percent"))
 IRSpotRate.__doc__ = "Interest rate at-the-money spot rate (in percent)"
 
-IRVanna = RiskMeasure(name="IRVanna", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Vanna"))
+IRVanna = RiskMeasureWithFiniteDifferenceParameter(name="IRVanna", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Vanna"))
 IRVanna.__doc__ = "Interest Rate Vanna (USD)"
 
 IRVega = RiskMeasureWithFiniteDifferenceParameter(name="IRVega", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Vega"))
 IRVega.__doc__ = "Change in Dollar Price (USD present value) due to individual 1bp moves in the implied volatility (IRAnnualImpliedVol) of instruments used to build the volatility surface"
 
-IRVolga = RiskMeasure(name="IRVolga", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Volga"))
+IRVolga = RiskMeasureWithFiniteDifferenceParameter(name="IRVolga", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("Volga"))
 IRVolga.__doc__ = "Interest Rate Volga (USD)"
 
 IRXccyDelta = RiskMeasureWithFiniteDifferenceParameter(name="IRXccyDelta", asset_class=AssetClass("Rates"), measure_type=RiskMeasureType("XccyDelta"))

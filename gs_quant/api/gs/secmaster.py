@@ -16,18 +16,25 @@ under the License.
 
 import datetime as dt
 import json
+import logging
 import math
 from enum import Enum
-from functools import partial
+from functools import partial, update_wrapper
 from itertools import groupby
 from typing import Union, Iterable, Dict, Optional
 
+import backoff
 import tqdm
+
+from gs_quant.errors import MqRequestError
+
 
 from gs_quant.data.utilities import SecmasterXrefFormatter
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.session import GsSession
 from gs_quant.target.secmaster import SecMasterAssetType
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_SCROLL_PAGE_SIZE = 500
 
@@ -431,9 +438,21 @@ class GsSecurityMasterApi:
             if total_batches is None
             else tqdm.tqdm(range(total_batches), desc="Processing", unit=" batch", ascii=True)
         )
+        update_wrapper(fetch_fn, fetch_fn.func)
+        fetch_fn_with_backoff = backoff.on_exception(
+            backoff.expo,
+            MqRequestError,
+            max_tries=7,
+            max_time=30,
+            factor=2,
+            giveup=lambda e: e.status != 429,
+            on_backoff=lambda details: logger.debug(
+                'Rate limited (429). Retry %d in %.1fs...', details['tries'], details['wait']
+            ),
+        )(fetch_fn)
         while True:
             progress_info.update(1)
-            data = fetch_fn(offset_key=offset)
+            data = fetch_fn_with_backoff(offset_key=offset)
             if data is not None:
                 if extract_results is True:
                     accumulator.extend(data['results'])
