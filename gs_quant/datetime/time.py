@@ -68,7 +68,7 @@ def time_difference_as_string(time_delta: np.timedelta64, resolution: str = 'Sec
     time_strings = ['Year', 'Week', 'Day', 'Hour', 'Minute', 'Second']
 
     if resolution not in time_strings:
-        raise MqValueError('incorrect resolution passed in "s"' % resolution)
+        raise MqValueError('incorrect resolution passed in "%s"' % resolution)
 
     times_mapped = zip(times, time_strings)
 

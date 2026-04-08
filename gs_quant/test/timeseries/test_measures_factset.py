@@ -645,43 +645,27 @@ def test_fiscal_period():
 # ---------- GIR Estimates helpers ----------
 
 
-def _mock_gir_dataset_get_data(**kwargs):
-    """Return a small DataFrame that looks like GIR_EQUITY_ANALYST_FORECASTS_V1 rows."""
-    d = {
-        'date': [kwargs.get('end', dt.date(2027, 1, 1))],
-        'metricName': [kwargs.get('metricName', 'EPS')],
-        'metricValueNumeric': [3.14],
-        'periodType': [kwargs.get('periodType', 'A')],
-        'bbid': [kwargs.get('bbid', 'AAPL UW')],
-    }
-    return MarketDataResponseFrame(data=d)
+def _mock_gir_query_dates_parallel_factory(value=3.14):
+    """Return a mock _query_dates_parallel that maps every queried date to *value*."""
+
+    def _mock(ds_id, dates, bbid, metric, period_type, period, report_basis, start_override=None, end_override=None):
+        return {d: value for d in dates}
+
+    return _mock
 
 
-def _mock_gir_dataset_get_data_empty(**kwargs):
-    return MarketDataResponseFrame()
+def _mock_gir_query_dates_parallel_empty(
+    ds_id, dates, bbid, metric, period_type, period, report_basis, start_override=None, end_override=None
+):
+    """Every queried date returns None (simulates empty dataset responses)."""
+    return {d: None for d in dates}
 
 
-def _mock_gir_dataset_get_data_null_numeric(**kwargs):
-    d = {
-        'date': [kwargs.get('end', dt.date(2027, 1, 1))],
-        'metricName': [kwargs.get('metricName', 'EPS')],
-        'metricValueNumeric': [None],
-        'periodType': [kwargs.get('periodType', 'A')],
-        'bbid': [kwargs.get('bbid', 'AAPL UW')],
-    }
-    return MarketDataResponseFrame(data=d)
-
-
-def _mock_gir_dataset_get_data_old_date(**kwargs):
-    """Return data whose date is BEFORE the relative_date so the filter removes it."""
-    d = {
-        'date': [dt.date(2020, 1, 1)],
-        'metricName': [kwargs.get('metricName', 'EPS')],
-        'metricValueNumeric': [3.14],
-        'periodType': [kwargs.get('periodType', 'A')],
-        'bbid': [kwargs.get('bbid', 'AAPL UW')],
-    }
-    return MarketDataResponseFrame(data=d)
+def _mock_gir_query_dates_parallel_raise(
+    ds_id, dates, bbid, metric, period_type, period, report_basis, start_override=None, end_override=None
+):
+    """Simulate a network / dataset error."""
+    raise RuntimeError('network error')
 
 
 def test_gir_estimates_invalid_basis():
@@ -767,15 +751,8 @@ def test_gir_estimates_rolling_annual():
     # Use a single-day range so only one task is created
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
         replace(
-            'gs_quant.api.utils.ThreadPoolManager.run_async',
-            lambda cls, tasks: [
-                _mock_gir_dataset_get_data(
-                    start=dt.date(2025, 3, 25),
-                    metricName='EPS',
-                    periodType='A',
-                    bbid='AAPL UW',
-                )
-            ],
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_factory(3.14),
         )
 
         actual = tm.gir_estimates(
@@ -799,15 +776,8 @@ def test_gir_estimates_rolling_quarterly():
 
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
         replace(
-            'gs_quant.api.utils.ThreadPoolManager.run_async',
-            lambda cls, tasks: [
-                _mock_gir_dataset_get_data(
-                    start=dt.date(2025, 3, 25),
-                    metricName='EPS',
-                    periodType='Q',
-                    bbid='AAPL UW',
-                )
-            ],
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_factory(3.14),
         )
 
         actual = tm.gir_estimates(
@@ -830,15 +800,8 @@ def test_gir_estimates_fixed_annual():
 
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
         replace(
-            'gs_quant.api.utils.ThreadPoolManager.run_async',
-            lambda cls, tasks: [
-                _mock_gir_dataset_get_data(
-                    start=dt.date(2025, 1, 1),
-                    metricName='EPS',
-                    periodType='A',
-                    bbid='AAPL UW',
-                )
-            ],
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_factory(3.14),
         )
 
         actual = tm.gir_estimates(
@@ -861,15 +824,8 @@ def test_gir_estimates_fixed_quarterly():
 
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
         replace(
-            'gs_quant.api.utils.ThreadPoolManager.run_async',
-            lambda cls, tasks: [
-                _mock_gir_dataset_get_data(
-                    start=dt.date(2025, 4, 1),
-                    metricName='EPS',
-                    periodType='Q',
-                    bbid='AAPL UW',
-                )
-            ],
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_factory(3.14),
         )
 
         actual = tm.gir_estimates(
@@ -885,15 +841,15 @@ def test_gir_estimates_fixed_quarterly():
 
 
 def test_gir_estimates_empty_response():
-    """Empty concatenated response raises MqValueError."""
+    """All-None responses (empty dataset) raises MqValueError."""
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
 
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
         replace(
-            'gs_quant.api.utils.ThreadPoolManager.run_async',
-            lambda cls, tasks: [_mock_gir_dataset_get_data_empty()],
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_empty,
         )
 
         with pytest.raises(MqValueError, match='No data found'):
@@ -903,15 +859,20 @@ def test_gir_estimates_empty_response():
 
 
 def test_gir_estimates_null_numeric():
-    """All-null metricValueNumeric raises MqValueError."""
+    """All-NaN metricValueNumeric raises MqValueError."""
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
 
+    def _mock_nan(
+        ds_id, dates, bbid, metric, period_type, period, report_basis, start_override=None, end_override=None
+    ):
+        return {d: float('nan') for d in dates}
+
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
         replace(
-            'gs_quant.api.utils.ThreadPoolManager.run_async',
-            lambda cls, tasks: [_mock_gir_dataset_get_data_null_numeric()],
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_nan,
         )
 
         with pytest.raises(MqValueError, match='No numeric data found'):
@@ -921,15 +882,20 @@ def test_gir_estimates_null_numeric():
 
 
 def test_gir_estimates_null_numeric_fixed_period():
-    """All-null metricValueNumeric in fixed period branch raises MqValueError."""
+    """All-NaN metricValueNumeric in fixed period branch raises MqValueError."""
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
 
+    def _mock_nan(
+        ds_id, dates, bbid, metric, period_type, period, report_basis, start_override=None, end_override=None
+    ):
+        return {d: float('nan') for d in dates}
+
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
         replace(
-            'gs_quant.api.utils.ThreadPoolManager.run_async',
-            lambda cls, tasks: [_mock_gir_dataset_get_data_null_numeric()],
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_nan,
         )
 
         with pytest.raises(MqValueError, match='No numeric data found'):
@@ -939,15 +905,15 @@ def test_gir_estimates_null_numeric_fixed_period():
 
 
 def test_gir_estimates_empty_response_fixed_period():
-    """Empty response in fixed FiscalPeriod branch raises MqValueError."""
+    """All-None response in fixed FiscalPeriod branch raises MqValueError."""
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
 
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
         replace(
-            'gs_quant.api.utils.ThreadPoolManager.run_async',
-            lambda cls, tasks: [_mock_gir_dataset_get_data_empty()],
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_empty,
         )
 
         with pytest.raises(MqValueError, match='No data found'):
@@ -957,16 +923,16 @@ def test_gir_estimates_empty_response_fixed_period():
 
 
 def test_gir_estimates_threadpool_exception():
-    """ThreadPoolManager exception is wrapped in MqValueError."""
+    """_query_dates_parallel exception is wrapped in MqValueError."""
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
 
-    def _raise(_cls, _tasks):
-        raise RuntimeError('network error')
-
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
-        replace('gs_quant.api.utils.ThreadPoolManager.run_async', _raise)
+        replace(
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_raise,
+        )
 
         with pytest.raises(MqValueError, match='Could not query dataset'):
             tm.gir_estimates(mock_asset, period=1)
@@ -975,16 +941,16 @@ def test_gir_estimates_threadpool_exception():
 
 
 def test_gir_estimates_threadpool_exception_fixed():
-    """ThreadPoolManager exception in fixed-period branch."""
+    """_query_dates_parallel exception in fixed-period branch."""
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
 
-    def _raise(_cls, _tasks):
-        raise RuntimeError('network error')
-
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
-        replace('gs_quant.api.utils.ThreadPoolManager.run_async', _raise)
+        replace(
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_raise,
+        )
 
         with pytest.raises(MqValueError, match='Could not query dataset'):
             tm.gir_estimates(mock_asset, period=FiscalPeriod(2025))
@@ -993,18 +959,371 @@ def test_gir_estimates_threadpool_exception_fixed():
 
 
 def test_gir_estimates_no_data_within_period():
-    """Rolling period where data dates are before relative_date filter raises MqValueError."""
+    """Rolling period where all queried dates return None raises MqValueError."""
     replace = Replacer()
     bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
     bbid_mock.return_value = 'AAPL UW'
 
     with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
         replace(
-            'gs_quant.api.utils.ThreadPoolManager.run_async',
-            lambda cls, tasks: [_mock_gir_dataset_get_data_old_date()],
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_empty,
         )
 
-        with pytest.raises(MqValueError, match='No data found .* within the requested period'):
+        with pytest.raises(MqValueError, match='No data found'):
+            tm.gir_estimates(mock_asset, period=1)
+
+    replace.restore()
+
+
+# ---------- Unit tests for _build_query_args, _extract_value, _query_single_date, _query_dates_parallel ----------
+
+
+def test_build_query_args_with_start_end_override():
+    """_build_query_args with start_override and end_override returns fixed date window (lines 1516-1525)."""
+    from gs_quant.timeseries.measures_factset import _build_query_args
+
+    result = _build_query_args(
+        ds_id='DS',
+        bbid='AAPL UW',
+        metric=GIREstimateItem.EPS,
+        period_type='A',
+        as_of_date=dt.date(2025, 3, 25),
+        period=FiscalPeriod(2025),
+        report_basis=GIREstimateBasis.ANN,
+        start_override=dt.date(2025, 1, 1),
+        end_override=dt.date(2025, 12, 31),
+    )
+    assert result['bbid'] == 'AAPL UW'
+    assert result['metricName'] == GIREstimateItem.EPS.name
+    assert result['start'] == dt.date(2025, 1, 1)
+    assert result['end'] == dt.date(2025, 12, 31)
+    assert result['periodType'] == 'A'
+    assert result['asOfTime'].tzinfo is not None  # UTC-aware
+
+
+def test_build_query_args_rolling_annual():
+    """_build_query_args with int period and ANN basis (lines 1526-1535)."""
+    from gs_quant.timeseries.measures_factset import _build_query_args
+
+    result = _build_query_args(
+        ds_id='DS',
+        bbid='AAPL UW',
+        metric=GIREstimateItem.SALES,
+        period_type='A',
+        as_of_date=dt.date(2025, 6, 15),
+        period=1,
+        report_basis=GIREstimateBasis.ANN,
+    )
+    assert result['bbid'] == 'AAPL UW'
+    assert result['metricName'] == GIREstimateItem.SALES.name
+    assert result['periodType'] == 'A'
+    # period=1, ANN → '+2y' from as_of_date
+    from gs_quant.timeseries import RelativeDate
+
+    expected_end = RelativeDate('+2y', base_date=dt.date(2025, 6, 15)).apply_rule()
+    expected_start = RelativeDate('-3m', base_date=dt.date(2025, 6, 15)).apply_rule()
+    assert result['start'] == expected_start
+    assert result['end'] == expected_end
+
+
+def test_build_query_args_rolling_quarterly():
+    """_build_query_args with int period and QTR basis (line 1527 else branch)."""
+    from gs_quant.timeseries.measures_factset import _build_query_args
+
+    result = _build_query_args(
+        ds_id='DS',
+        bbid='AAPL UW',
+        metric=GIREstimateItem.EPS,
+        period_type='Q',
+        as_of_date=dt.date(2025, 6, 15),
+        period=2,
+        report_basis=GIREstimateBasis.QTR,
+    )
+    # period=2, QTR → '+9m'  ((2+1)*3 = 9)
+    from gs_quant.timeseries import RelativeDate
+
+    expected_end = RelativeDate('+9m', base_date=dt.date(2025, 6, 15)).apply_rule()
+    assert result['end'] == expected_end
+
+
+def test_extract_value_empty_df():
+    """_extract_value returns None for empty DataFrame (line 1543-1544)."""
+    from gs_quant.timeseries.measures_factset import _extract_value
+
+    df = pd.DataFrame()
+    assert _extract_value(df, dt.date(2025, 3, 25), 1, GIREstimateBasis.ANN) is None
+
+
+def test_extract_value_all_null_metric():
+    """_extract_value returns None when metricValueNumeric is all NaN (lines 1545-1547)."""
+    from gs_quant.timeseries.measures_factset import _extract_value
+
+    df = pd.DataFrame(
+        {'metricValueNumeric': [float('nan'), float('nan')]},
+        index=pd.DatetimeIndex([dt.date(2025, 3, 20), dt.date(2025, 3, 25)]),
+    )
+    assert _extract_value(df, dt.date(2025, 3, 25), 1, GIREstimateBasis.ANN) is None
+
+
+def test_extract_value_with_int_period_no_matching_date():
+    """_extract_value with int period filters and returns None if no data after period date (lines 1548-1553)."""
+    from gs_quant.timeseries.measures_factset import _extract_value
+
+    # period=1, ANN → check_str '+1y'  → relative_date = 2026-03-25
+    # all data dates are before 2026-03-25 → empty after filter → None
+    df = pd.DataFrame(
+        {'metricValueNumeric': [5.0]},
+        index=pd.DatetimeIndex([dt.date(2025, 3, 20)]),
+    )
+    assert _extract_value(df, dt.date(2025, 3, 25), 1, GIREstimateBasis.ANN) is None
+
+
+def test_extract_value_with_int_period_quarterly():
+    """_extract_value with int period and QTR basis returns correct value (lines 1549-1555)."""
+    from gs_quant.timeseries.measures_factset import _extract_value
+
+    # period=0, QTR → check_str '+0m' → relative_date = 2025-03-25
+    # Data at 2025-03-25 passes filter
+    df = pd.DataFrame(
+        {'metricValueNumeric': [7.5, 8.0]},
+        index=pd.DatetimeIndex([dt.date(2025, 3, 25), dt.date(2025, 6, 25)]),
+    )
+    val = _extract_value(df, dt.date(2025, 3, 25), 0, GIREstimateBasis.QTR)
+    assert val == 7.5
+
+
+def test_extract_value_with_int_period_returns_first_sorted():
+    """_extract_value sorts and returns iloc[0] (line 1554-1555)."""
+    from gs_quant.timeseries.measures_factset import _extract_value
+
+    # period=0, ANN → check_str '+0y' → relative_date = 2025-03-25
+    df = pd.DataFrame(
+        {'metricValueNumeric': [9.0, 3.0]},
+        index=pd.DatetimeIndex([dt.date(2026, 1, 1), dt.date(2025, 6, 1)]),
+    )
+    val = _extract_value(df, dt.date(2025, 3, 25), 0, GIREstimateBasis.ANN)
+    # Sorted by index: 2025-06-01(3.0) comes first
+    assert val == 3.0
+
+
+def test_extract_value_non_int_period():
+    """_extract_value with non-int period (e.g. FiscalPeriod) skips period filtering (line 1548 else)."""
+    from gs_quant.timeseries.measures_factset import _extract_value
+
+    df = pd.DataFrame(
+        {'metricValueNumeric': [42.0]},
+        index=pd.DatetimeIndex([dt.date(2025, 3, 20)]),
+    )
+    val = _extract_value(df, dt.date(2025, 3, 25), FiscalPeriod(2025), GIREstimateBasis.ANN)
+    assert val == 42.0
+
+
+def test_query_single_date():
+    """_query_single_date delegates to Dataset.get_data (line 1539)."""
+    from gs_quant.timeseries.measures_factset import _query_single_date
+
+    mock_df = pd.DataFrame({'metricValueNumeric': [1.0]})
+    replace = Replacer()
+    replace(
+        'gs_quant.timeseries.measures_factset.Dataset', Mock(return_value=Mock(get_data=Mock(return_value=mock_df)))
+    )
+    result = _query_single_date('DS_ID', {'bbid': 'AAPL UW'})
+    assert result.equals(mock_df)
+    replace.restore()
+
+
+def test_query_dates_parallel():
+    """_query_dates_parallel builds tasks and aggregates results (lines 1561-1570)."""
+    from gs_quant.timeseries.measures_factset import _query_dates_parallel
+
+    replace = Replacer()
+
+    # Mock Dataset so that _query_single_date returns a dataframe
+    mock_ds_instance = Mock()
+    mock_ds_instance.get_data.return_value = pd.DataFrame(
+        {'metricValueNumeric': [10.0]},
+        index=pd.DatetimeIndex([dt.date(2026, 6, 1)]),
+    )
+    replace('gs_quant.timeseries.measures_factset.Dataset', Mock(return_value=mock_ds_instance))
+
+    # Mock ThreadPoolManager.run_async to just call each task sequentially
+    replace(
+        'gs_quant.timeseries.measures_factset.ThreadPoolManager.run_async',
+        classmethod(lambda cls, tasks: [t() for t in tasks]),
+    )
+
+    dates = [dt.date(2025, 3, 25), dt.date(2025, 4, 1)]
+    result = _query_dates_parallel(
+        'DS',
+        dates,
+        'AAPL UW',
+        GIREstimateItem.EPS,
+        'A',
+        0,
+        GIREstimateBasis.ANN,
+    )
+    assert set(result.keys()) == set(dates)
+
+    replace.restore()
+
+
+def test_gir_estimates_scaled_metric():
+    """Metric NOT in NOT_SCALED_METRICS triggers division by 1_000_000 (line 1712)."""
+    replace = Replacer()
+    bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
+    bbid_mock.return_value = 'AAPL UW'
+
+    # SALES is NOT in NOT_SCALED_METRICS → should be divided by 1_000_000
+    with DataContext(start=dt.date(2025, 3, 25), end=dt.date(2025, 3, 25)):
+        replace(
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_factory(5_000_000.0),
+        )
+        actual = tm.gir_estimates(
+            mock_asset,
+            metric=GIREstimateItem.SALES,
+            report_basis=GIREstimateBasis.ANN,
+            period=1,
+        )
+        assert len(actual) == 1
+        assert actual.iloc[0] == 5_000_000.0 / 1_000_000
+
+    replace.restore()
+
+
+def test_gir_estimates_end_date_appended():
+    """When end date is not in monthly_dates, it gets appended (line 1634)."""
+    replace = Replacer()
+    bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
+    bbid_mock.return_value = 'AAPL UW'
+
+    # Use a date range where end is mid-month (not a BMS date)
+    with DataContext(start=dt.date(2025, 3, 1), end=dt.date(2025, 3, 15)):
+        replace(
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_factory(2.0),
+        )
+        actual = tm.gir_estimates(
+            mock_asset,
+            metric=GIREstimateItem.EPS,
+            report_basis=GIREstimateBasis.ANN,
+            period=1,
+        )
+        # Should return values for all business days in [Mar 1, Mar 15]
+        expected_bdays = len(pd.bdate_range(start=dt.date(2025, 3, 1), end=dt.date(2025, 3, 15)))
+        assert len(actual) == expected_bdays
+
+    replace.restore()
+
+
+def _mock_gir_query_dates_parallel_with_change(
+    ds_id, dates, bbid, metric, period_type, period, report_basis, start_override=None, end_override=None
+):
+    """Simulate a value change mid-range to trigger weekly and daily drill-down (lines 1648-1690)."""
+    result = {}
+    for d in dates:
+        # Before March 15: value = 1.0, after: value = 2.0
+        if d < dt.date(2025, 3, 15):
+            result[d] = 1.0
+        else:
+            result[d] = 2.0
+    return result
+
+
+def test_gir_estimates_weekly_and_daily_drill_down():
+    """Value change between monthly samples triggers weekly then daily drill-down (lines 1648-1690)."""
+    replace = Replacer()
+    bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
+    bbid_mock.return_value = 'AAPL UW'
+
+    # Use a 2-month range so there are multiple monthly checkpoints with a value change
+    with DataContext(start=dt.date(2025, 3, 1), end=dt.date(2025, 4, 30)):
+        replace(
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_gir_query_dates_parallel_with_change,
+        )
+        actual = tm.gir_estimates(
+            mock_asset,
+            metric=GIREstimateItem.EPS,
+            report_basis=GIREstimateBasis.ANN,
+            period=1,
+        )
+        # We should get values for all business days in the range
+        expected_bdays = len(pd.bdate_range(start=dt.date(2025, 3, 1), end=dt.date(2025, 4, 30)))
+        assert len(actual) == expected_bdays
+        # The transition should be visible: early dates = 1.0, later dates = 2.0
+        assert actual.iloc[0] == 1.0
+        assert actual.iloc[-1] == 2.0
+
+    replace.restore()
+
+
+def test_gir_estimates_weekly_drill_exception():
+    """Exception during weekly drill-down phase raises MqValueError (lines 1661-1666)."""
+    replace = Replacer()
+    bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
+    bbid_mock.return_value = 'AAPL UW'
+
+    call_count = [0]
+
+    def _mock_with_error(
+        ds_id, dates, bbid, metric, period_type, period, report_basis, start_override=None, end_override=None
+    ):
+        call_count[0] += 1
+        if call_count[0] == 1:
+            # First call (monthly): return values with a change to trigger weekly drill
+            result = {}
+            for d in dates:
+                result[d] = 1.0 if d < dt.date(2025, 3, 15) else 2.0
+            return result
+        # Second call (weekly drill): raise
+        raise RuntimeError('weekly drill error')
+
+    with DataContext(start=dt.date(2025, 3, 1), end=dt.date(2025, 4, 30)):
+        replace(
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_with_error,
+        )
+        with pytest.raises(MqValueError, match='Could not query dataset'):
+            tm.gir_estimates(mock_asset, period=1)
+
+    replace.restore()
+
+
+def test_gir_estimates_daily_drill_exception():
+    """Exception during daily drill-down phase raises MqValueError (lines 1684-1689)."""
+    replace = Replacer()
+    bbid_mock = replace('gs_quant.markets.securities.Asset.get_identifier', Mock())
+    bbid_mock.return_value = 'AAPL UW'
+
+    call_count = [0]
+
+    def _mock_with_error(
+        ds_id, dates, bbid, metric, period_type, period, report_basis, start_override=None, end_override=None
+    ):
+        call_count[0] += 1
+        if call_count[0] == 1:
+            # Monthly: return values with a change
+            result = {}
+            for d in dates:
+                result[d] = 1.0 if d < dt.date(2025, 3, 15) else 2.0
+            return result
+        if call_count[0] == 2:
+            # Weekly drill: return values with a change to trigger daily drill
+            result = {}
+            for d in dates:
+                result[d] = 1.0 if d < dt.date(2025, 3, 12) else 2.0
+            return result
+        # Third call (daily drill): raise
+        raise RuntimeError('daily drill error')
+
+    with DataContext(start=dt.date(2025, 3, 1), end=dt.date(2025, 4, 30)):
+        replace(
+            'gs_quant.timeseries.measures_factset._query_dates_parallel',
+            _mock_with_error,
+        )
+        with pytest.raises(MqValueError, match='Could not query dataset'):
             tm.gir_estimates(mock_asset, period=1)
 
     replace.restore()

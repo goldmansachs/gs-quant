@@ -1193,14 +1193,14 @@ class EVItem(Enum):
     DILUTED_SHARES = 'Fully Diluted Shares Outstanding'
     DILUTED_MARKET_CAP = 'Fully Diluted Market Cap'
     CONSOLIDATED_DEBT = 'Consolidated Debt'
-    CONVERTIBLE_DEBT = 'In-the-Money Convertible Debt'
+    CONVERTIBLE_DEBT = 'In the Money Convertible Debt'
     CAPIRAL_LEASES = 'Capital Leases'
-    CASH = 'Cash & Equivalents'
+    CASH = 'Cash and Equivalents'
     MARKETABLE_SECURITIES = 'Long Term Marketable Securities'
     TOTAL_PREFERRED = 'Total Preferred'
     CONVERTIBLE_PREFERRED = 'Convertible Preferred'
     UNCONSOLIDATED_SUBS = 'Investments in Unconsolidated Subs'
-    NON_CONTROLLING_INTEREST = 'Non-Controlling Interest'
+    NON_CONTROLLING_INTEREST = 'Non Controlling Interest'
     PENSION_LIABILITIES = 'Pension Liabilities'
     ENTERPRISE_VALUE = 'Enterprise Value'
 
@@ -1219,6 +1219,40 @@ BASIC_MEASURES = [
 ]
 
 LT_MEASURES = [EstimateItem.PRICE_TGT, EstimateItem.EPS_LTG]
+
+NOT_SCALED_METRICS = [
+    GIREstimateItem.BVPS,
+    GIREstimateItem.CFPS,
+    GIREstimateItem.CROCI_INCL_LEASES_NOM,
+    GIREstimateItem.DAYS_INV_OUT,
+    GIREstimateItem.DAYS_PAY_OUT,
+    GIREstimateItem.DAYS_RECVB_OUT,
+    GIREstimateItem.DILUTE_SHARES,
+    GIREstimateItem.DIV_PAYOUT_PRE,
+    GIREstimateItem.DPS,
+    GIREstimateItem.DPS_ORDINARY_YIELD,
+    GIREstimateItem.EBIT_SALES_Q,
+    GIREstimateItem.EPS,
+    GIREstimateItem.EPS_EX_ESO_D,
+    GIREstimateItem.EPS_FUL_DIL,
+    GIREstimateItem.EPS_PUB,
+    GIREstimateItem.EV_CF,
+    GIREstimateItem.EV_SALES_EXCL_LEASES,
+    GIREstimateItem.EVL_EBITDAL,
+    GIREstimateItem.FR_CF_PS,
+    GIREstimateItem.FR_CF_PS_YLD,
+    GIREstimateItem.GROSS_MARGIN,
+    GIREstimateItem.GRTH_DPS,
+    GIREstimateItem.GRTH_EBITDA_CALC,
+    GIREstimateItem.GRTH_EPS_PUB,
+    GIREstimateItem.GRTH_SALES,
+    GIREstimateItem.INT_COVERAGE,
+    GIREstimateItem.NETDEBT_EBITDA,
+    GIREstimateItem.NETDEBT_EQ,
+    GIREstimateItem.PE_PUB,
+    GIREstimateItem.ROE,
+    GIREstimateItem.SharesHisto,
+]
 
 BASIS_TO_DATASET = {
     EstimateBasis.ANN: 'AF',
@@ -1476,6 +1510,66 @@ def factset_ratings(
     return series
 
 
+def _build_query_args(
+    ds_id, bbid, metric, period_type, as_of_date, period, report_basis, start_override=None, end_override=None
+):
+    as_of_ts = pd.Timestamp(dt.datetime.combine(as_of_date, dt.time(23, 59, 0))).tz_localize('UTC')
+    if start_override is not None and end_override is not None:
+        return {
+            'asOfTime': as_of_ts,
+            'bbid': bbid,
+            'metricName': metric.name,
+            'start': start_override,
+            'end': end_override,
+            'periodType': period_type,
+        }
+    elif isinstance(period, int):
+        period_str = f'+{(period + 1)}y' if report_basis == GIREstimateBasis.ANN else f'+{(period + 1) * 3}m'
+        return {
+            'asOfTime': as_of_ts,
+            'bbid': bbid,
+            'metricName': metric.name,
+            'start': RelativeDate('-3m', base_date=as_of_date).apply_rule(),
+            'end': RelativeDate(period_str, base_date=as_of_date).apply_rule(),
+            'periodType': period_type,
+        }
+
+
+def _query_single_date(ds_id, query_args):
+    return Dataset(ds_id).get_data(**query_args)
+
+
+def _extract_value(df, as_of_date, period, report_basis):
+    if df.empty:
+        return None
+    df = df[~df['metricValueNumeric'].isnull()]
+    if df.empty:
+        return None
+    if isinstance(period, int):
+        period_check_str = f'+{period}y' if report_basis == GIREstimateBasis.ANN else f'+{period * 3}m'
+        relative_date = RelativeDate(period_check_str, base_date=as_of_date).apply_rule()
+        df = df[df.index >= pd.Timestamp(relative_date)]
+        if df.empty:
+            return None
+    df = df.sort_index()
+    return df['metricValueNumeric'].iloc[0]
+
+
+def _query_dates_parallel(
+    ds_id, dates, bbid, metric, period_type, period, report_basis, start_override=None, end_override=None
+):
+    tasks = []
+    for d in dates:
+        qa = _build_query_args(ds_id, bbid, metric, period_type, d, period, report_basis, start_override, end_override)
+        tasks.append(partial(_query_single_date, ds_id, qa))
+    responses = ThreadPoolManager.run_async(tasks)
+    result = {}
+    for d, resp in zip(dates, responses):
+        val = _extract_value(resp, d, period, report_basis)
+        result[d] = val
+    return result
+
+
 @plot_measure((AssetClass.Equity,), (AssetType.Single_Stock,))
 def gir_estimates(
     asset: Asset,
@@ -1501,105 +1595,122 @@ def gir_estimates(
         raise MqValueError('Invalid Estimate Basis argument')
 
     if not isinstance(period, (int, FiscalPeriod)):
-        raise MqValueError('Period must be an integer (relative) or a FiscalPeriod (absolute)')
-
-    if isinstance(period, FiscalPeriod):
-        if period.y is None:
-            raise MqValueError('FiscalPeriod year (y) must be specified')
-        if report_basis == GIREstimateBasis.QTR:
-            if period.p is None:
-                raise MqValueError(
-                    'Please specify the period as an integer between 1 and 4 like FiscalPeriod(2022, 4) '
-                    'for 2022Q4 estimate'
-                )
-            if isinstance(period.p, int) and period.p not in [1, 2, 3, 4]:
-                raise MqValueError('Period number has to be one of 1, 2, 3 or 4 for quarterly basis')
+        raise MqValueError('Period must be an integer or FiscalPeriod')
 
     start, end = DataContext.current.start_date, DataContext.current.end_date
     ds_id = 'GIR_EQUITY_ANALYST_FORECASTS_V1'
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
     if bbid is None:
         raise MqValueError(f'Could not resolve Bloomberg ID for asset {asset.name}')
-
     period_type = 'A' if report_basis == GIREstimateBasis.ANN else 'Q'
-    current = end
-    tasks = []
-    as_of_dates = []
-    if isinstance(period, int):
-        period_str = f'+{(period + 1)}y' if report_basis == GIREstimateBasis.ANN else f'+{(period + 1) * 3}m'
-        period_check_str = f'+{period}y' if report_basis == GIREstimateBasis.ANN else f'+{(period * 3)}m'
-        while current >= start:
-            as_of_dates.append(current)
-            query_args = {
-                'asOfTime': pd.Timestamp(dt.datetime.combine(current, dt.time(23, 59, 0))).tz_localize('UTC'),
-                'bbid': bbid,
-                'metricName': metric.name,
-                'start': RelativeDate('-3m', base_date=current).apply_rule(),
-                'end': RelativeDate(period_str, base_date=current).apply_rule(),
-                'periodType': period_type,
-            }
-            tasks.append(partial(Dataset(ds_id).get_data, **query_args))
-            current = RelativeDate('-1b', base_date=current).apply_rule()
-        try:
-            responses = ThreadPoolManager.run_async(tasks)
-        except Exception as e:
-            raise MqValueError(f'Could not query dataset {ds_id} because of {e}')
-        for df, date in zip(responses, as_of_dates):
-            df['as_of_date'] = date
-        df = pd.concat(responses)
-        if df.empty:
-            raise MqValueError(f'No data found for {metric.value} for {bbid}')
-        df = df[~df['metricValueNumeric'].isnull()]
-        if df.empty:
-            raise MqValueError(f'No numeric data found for {metric.value} for {bbid}')
-        df.reset_index(inplace=True)
-        df['relative_date'] = df['as_of_date'].apply(lambda x: RelativeDate(period_check_str, base_date=x).apply_rule())
-        df = df[df['date'] >= df['relative_date']]
-        if df.empty:
-            raise MqValueError(f'No data found for {metric.value} for {bbid} within the requested period')
-    else:
+
+    # For FiscalPeriod: pre-compute a fixed date window passed to every query.
+    # For int (rolling): leave as None — _build_query_args computes start/end relative to each as_of_date.
+    start_override, end_override = None, None
+    if isinstance(period, FiscalPeriod):
+        if period.y is None:
+            raise MqValueError('FiscalPeriod year must be specified')
+        if report_basis == GIREstimateBasis.QTR:
+            if period.p is None:
+                raise MqValueError('Please specify the period number for quarterly estimates')
+            if period.p not in (1, 2, 3, 4):
+                raise MqValueError('Period number has to be one of 1, 2, 3, 4')
         if report_basis == GIREstimateBasis.ANN:
-            fiscal_period_start = dt.datetime(period.y, 1, 1)
-            fiscal_period_end = dt.datetime(period.y, 12, 31)
+            start_override = dt.date(period.y, 1, 1)
+            end_override = dt.date(period.y, 12, 31)
         else:
-            fiscal_period_start = dt.datetime(period.y, (period.p - 1) * 3 + 1, 1)
-            fiscal_period_end = fiscal_period_start + pd.DateOffset(months=3) - pd.DateOffset(days=1)
-            fiscal_period_end = pd.to_datetime(fiscal_period_end)
-        while current >= start:
-            as_of_dates.append(current)
-            query_args = {
-                'asOfTime': pd.Timestamp(dt.datetime.combine(current, dt.time(23, 59, 0))).tz_localize('UTC'),
-                'bbid': bbid,
-                'metricName': metric.name,
-                'start': fiscal_period_start.date(),
-                'end': fiscal_period_end.date(),
-                'periodType': period_type,
-            }
-            tasks.append(partial(Dataset(ds_id).get_data, **query_args))
-            current = RelativeDate('-1b', base_date=current).apply_rule()
+            fp_start = dt.datetime(period.y, (period.p - 1) * 3 + 1, 1)
+            fp_end = fp_start + pd.DateOffset(months=3) - pd.DateOffset(days=1)
+            start_override = fp_start.date()
+            end_override = pd.to_datetime(fp_end).date()
+
+    # --- Phase 1: Monthly sampling ---
+    # Pick 1st business day of each month in [start, end]
+    monthly_dates = pd.date_range(start=start, end=end, freq='BMS').date.tolist()  # Business Month Start
+    # Also include start and end themselves to anchor boundaries
+    if start not in monthly_dates:
+        monthly_dates.append(start)
+    if end not in monthly_dates:
+        monthly_dates.append(end)
+    monthly_dates = sorted(set(monthly_dates))
+
+    try:
+        monthly_values = _query_dates_parallel(
+            ds_id, monthly_dates, bbid, metric, period_type, period, report_basis, start_override, end_override
+        )
+    except Exception as e:
+        raise MqValueError(f'Could not query dataset {ds_id} because of {e}')
+
+    # --- Phase 2: Identify months where value changed, drill into weekly ---
+    weekly_drill_dates = []
+    sorted_months = sorted(monthly_values.keys())
+    for i in range(1, len(sorted_months)):
+        prev_val = monthly_values[sorted_months[i - 1]]
+        curr_val = monthly_values[sorted_months[i]]
+        if prev_val != curr_val:
+            # Generate weekly dates between these two monthly checkpoints
+            week_start = sorted_months[i - 1]
+            week_end = sorted_months[i]
+            weekly = pd.date_range(start=week_start, end=week_end, freq='W-MON').date.tolist()
+            weekly_drill_dates.extend([d for d in weekly if d not in monthly_values])
+
+    weekly_drill_dates = sorted(set(weekly_drill_dates))
+    all_values = dict(monthly_values)  # start accumulating
+
+    if weekly_drill_dates:
         try:
-            responses = ThreadPoolManager.run_async(tasks)
+            weekly_values = _query_dates_parallel(
+                ds_id, weekly_drill_dates, bbid, metric, period_type, period, report_basis, start_override, end_override
+            )
         except Exception as e:
             raise MqValueError(f'Could not query dataset {ds_id} because of {e}')
-        for df, date in zip(responses, as_of_dates):
-            df['as_of_date'] = date
-        df = pd.concat(responses)
-        if df.empty:
-            raise MqValueError(f'No data found for {metric.value} for {bbid}')
-        df = df[~df['metricValueNumeric'].isnull()]
-        if df.empty:
-            raise MqValueError(f'No numeric data found for {metric.value} for {bbid}')
-        df.reset_index(inplace=True)
+        all_values.update(weekly_values)
 
-    df.sort_values(by='date', inplace=True)
-    df = df.drop_duplicates(subset=['as_of_date'], keep='first')
-    df.rename({'date': 'fe_end', 'as_of_date': 'date'}, axis='columns', inplace=True)
-    df = df[['date', 'metricValueNumeric']]
-    df.sort_values(by='date', inplace=True)
-    df.set_index('date', inplace=True)
-    series = ExtendedSeries(df['metricValueNumeric'], name=metric.value)
+    # --- Phase 3: Identify weeks where value changed, drill into daily ---
+    daily_drill_dates = []
+    all_sorted = sorted(all_values.keys())
+    for i in range(1, len(all_sorted)):
+        prev_val = all_values[all_sorted[i - 1]]
+        curr_val = all_values[all_sorted[i]]
+        # Only drill daily if the gap is > 1 day and values differ
+        gap = (all_sorted[i] - all_sorted[i - 1]).days
+        if prev_val != curr_val and gap > 1:
+            daily = pd.bdate_range(start=all_sorted[i - 1], end=all_sorted[i]).date.tolist()
+            daily_drill_dates.extend([d for d in daily if d not in all_values])
+
+    daily_drill_dates = sorted(set(daily_drill_dates))
+
+    if daily_drill_dates:
+        try:
+            daily_values = _query_dates_parallel(
+                ds_id, daily_drill_dates, bbid, metric, period_type, period, report_basis, start_override, end_override
+            )
+        except Exception as e:
+            raise MqValueError(f'Could not query dataset {ds_id} because of {e}')
+        all_values.update(daily_values)
+
+    # --- Build final series: forward-fill across all business days ---
+    all_bdays = pd.bdate_range(start=start, end=end).date.tolist()
+    sparse_series = pd.Series(all_values).sort_index()
+    sparse_series = sparse_series.dropna()  # drop dates where query returned None
+
+    if sparse_series.empty:
+        # All queries returned empty or null — distinguish the two cases
+        has_any_key = any(v is not None for v in all_values.values())
+        if not has_any_key:
+            raise MqValueError(f'No data found for {bbid} in {ds_id}')
+        raise MqValueError(f'No numeric data found for {bbid} in {ds_id}')
+
+    # Reindex to all business days and forward-fill
+    full_index = pd.DatetimeIndex(all_bdays)
+    sparse_series.index = pd.DatetimeIndex(sparse_series.index)
+    result = sparse_series.reindex(full_index).ffill().dropna()
+    result.index = result.index.date  # back to date objects
+
+    series = ExtendedSeries(result, name=metric.value)
+    if metric not in NOT_SCALED_METRICS:
+        series /= 1000000
     series.dataset_ids = ds_id
-
     return series
 
 
