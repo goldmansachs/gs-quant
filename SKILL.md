@@ -1,6 +1,6 @@
 ---
 name: gs-quant
-description: "This document covers the core workflows for using the `gs_quant` library: establishing a session, constructing and resolving instruments, building portfolios, pricing historically, and extracting results."
+description: "This document covers the core workflows for using the `gs_quant` library: establishing a session, constructing and resolving instruments, building portfolios, pricing historically, pricing with live market data, and extracting results."
 ---
 
 ## 1. Creating a Session with `GsSession.use`
@@ -787,7 +787,65 @@ backtest.result_summary['Total'].plot(title='Performance')
 
 ---
 
-## 8. Accessing Data with `Dataset`
+## 8. Live Market Pricing with `LiveMarket`
+
+By default, `PricingContext` uses close-of-business (end-of-day) market data for pricing. To price against **real-time, live market data** instead, set the `market` parameter of `PricingContext` to a `LiveMarket()` instance. This uses a market snapshot captured at the moment the calculation runs rather than a historical close.
+
+> **Note:** Live market pricing is currently only available for **FX instruments** (e.g. `FXOption`, `FXForward`, `FXBinary`, `FXMultiCrossBinary`).
+
+### Basic Usage
+
+```python
+from gs_quant.instrument import FXOption
+from gs_quant.markets import PricingContext, LiveMarket
+from gs_quant.risk import DollarPrice
+
+option = FXOption(
+    pair='EURUSD',
+    expiration_date='3m',
+    option_type='Call',
+    strike_price='ATMF',
+    notional_amount=10e6,
+    premium=0,
+)
+
+with PricingContext(market=LiveMarket()):
+    price_f = option.dollar_price()
+
+price = price_f.result()  # priced against the live market
+```
+
+### Live Market with Portfolios
+
+Live market pricing works with portfolios of FX instruments in the same way as close-of-business pricing:
+
+```python
+from gs_quant.instrument import FXOption, FXForward
+from gs_quant.markets import PricingContext, LiveMarket
+from gs_quant.markets.portfolio import Portfolio
+from gs_quant.risk import DollarPrice
+
+portfolio = Portfolio([
+    FXOption(pair='EURUSD', expiration_date='3m', option_type='Call',
+             strike_price='ATMF', notional_amount=10e6, premium=0, name='EUR Call'),
+    FXForward(pair='USDJPY', settlement_date='6m', notional_amount=10e6, name='JPY Fwd'),
+])
+
+with PricingContext(market=LiveMarket()):
+    result = portfolio.calc(DollarPrice)
+
+prices = result[DollarPrice]
+```
+
+### Key Points
+
+- **FX only** — `LiveMarket` is currently supported for FX instruments only. Using it with rates or equity instruments will not produce live-market results.
+- **No caching** — results priced against a `LiveMarket` are not cached, since the market state changes continuously.
+- **Combines with other `PricingContext` parameters** — you can still set `csa_term`, `is_async`, `is_batch`, etc. alongside `market=LiveMarket()`.
+
+---
+
+## 9. Accessing Data with `Dataset`
 
 The `Dataset` class in `gs_quant.data` provides access to Marquee datasets — structured,
 time-series collections of market and reference data. Each dataset has a fixed schema, a

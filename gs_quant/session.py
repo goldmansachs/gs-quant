@@ -991,8 +991,6 @@ class GsSession(ContextBase):
         http_adapter: requests.adapters.HTTPAdapter = None,
         use_mds: bool = False,
         domain: Domain = Domain.APP,
-        keytab_path: Optional[str] = None,
-        keytab_principal: Optional[str] = None,
     ) -> None:
         environment_or_domain = (
             environment_or_domain.name if isinstance(environment_or_domain, Environment) else environment_or_domain
@@ -1009,8 +1007,6 @@ class GsSession(ContextBase):
             application=application,
             http_adapter=http_adapter,
             domain=domain,
-            keytab_path=keytab_path,
-            keytab_principal=keytab_principal,
         )
 
         session.init()
@@ -1056,8 +1052,6 @@ class GsSession(ContextBase):
         domain: Domain = Domain.APP,
         is_jwt_login: bool = False,
         cookies: SimpleCookie = None,
-        keytab_path: Optional[str] = None,
-        keytab_principal: Optional[str] = None,
     ) -> 'GsSession':
         """Return an instance of the appropriate session type for the given credentials"""
 
@@ -1104,8 +1098,6 @@ class GsSession(ContextBase):
                     application_version=application_version,
                     application=application,
                     mq_login_token=token,
-                    keytab_path=keytab_path,
-                    keytab_principal=keytab_principal,
                 )
             elif is_jwt_login:
                 return MQLoginSession(
@@ -1136,8 +1128,6 @@ class GsSession(ContextBase):
                     application_version=application_version,
                     application=application,
                     mq_login_token=token,
-                    keytab_path=keytab_path,
-                    keytab_principal=keytab_principal,
                 )
             except NameError:
                 raise MqUninitialisedError(
@@ -1366,20 +1356,12 @@ try:
             application_version: str = APP_VERSION,
             mq_login_token=None,
             jwt_token=None,
-            keytab_path: Optional[str] = None,
-            keytab_principal: Optional[str] = None,
         ):
             selected_domain, verify = self.domain_and_verify(environment_or_domain)
             if domain == Domain.MDS_WEB:
                 env_config = self._config_for_environment(environment_or_domain)
                 selected_domain = env_config[domain]
-            MQLoginMixin.__init__(
-                self,
-                mq_login_token=mq_login_token,
-                jwt_token=jwt_token,
-                keytab_path=keytab_path,
-                keytab_principal=keytab_principal,
-            )
+            MQLoginMixin.__init__(self, mq_login_token=mq_login_token, jwt_token=jwt_token)
             GsSession.__init__(
                 self,
                 selected_domain,
