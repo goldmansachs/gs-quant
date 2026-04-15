@@ -20,7 +20,7 @@ import math
 import pydash
 import random
 from time import sleep
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import pandas as pd
 
@@ -232,14 +232,20 @@ def build_factor_volatility_dataframe(results: List, group_by_name: bool, factor
     return df
 
 
-def get_closest_date_index(date: dt.date, dates: List[str], direction: str) -> int:
+def get_closest_date_index(
+    date: dt.date, dates: Union[List[str], List[dt.date], Tuple[dt.date]], direction: str
+) -> int:
     for i in range(50):
         for index in range(len(dates)):
             if direction == 'before':
-                next_date = (date - dt.timedelta(days=i)).strftime('%Y-%m-%d')
+                next_date = date - dt.timedelta(days=i)
             else:
-                next_date = (date + dt.timedelta(days=i)).strftime('%Y-%m-%d')
-            if next_date == dates[index]:
+                next_date = date + dt.timedelta(days=i)
+            if isinstance(dates[index], str):
+                date_to_compare = dt.datetime.strptime(dates[index], '%Y-%m-%d').date()
+            else:
+                date_to_compare = dates[index]
+            if next_date == date_to_compare:
                 return index
     return -1
 

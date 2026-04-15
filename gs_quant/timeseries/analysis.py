@@ -19,6 +19,7 @@ from enum import Enum
 from numbers import Real
 from typing import Union
 
+import numpy as np
 import pandas as pd
 
 from gs_quant.datetime import relative_date_add
@@ -94,6 +95,84 @@ def smooth_spikes(
             result.iloc[i] = (previous + next_) / 2
 
     return result[1:-1]
+
+
+@plot_function
+def smooth_outliers(x: pd.Series, threshold: float = 0.5) -> pd.Series:
+    """
+    Smooth out anomalous regimes in a series, including prolonged dips or spikes that deviate
+    significantly from the local trend and then revert.
+
+    A point is flagged when its value deviates from a rolling median by more than ``threshold``
+    as a fraction (e.g. 0.5 = 50 %). Flagged regions are replaced by linearly interpolating
+    between the nearest normal neighbours.
+
+    Unlike :func:`smooth_spikes`, this function handles multiple consecutive outliers and
+    prolonged anomalous regimes (e.g. a sustained dip lasting months).
+
+    :param x: timeseries
+    :param threshold: fractional deviation from the rolling median to flag as anomalous
+        (default 0.5, i.e. 50 %). A point is flagged when
+        ``abs(value - rolling_median) / rolling_median > threshold``.
+    :return: timeseries with anomalous regions replaced by linear interpolation
+
+    **Usage**
+
+    Smooth anomalous regimes where the value drops (or spikes) more than 50 % from the local trend.
+
+    **Examples**
+
+    Smooth anomalous dips that deviate more than 50 % from the local level:
+
+    >>> prices = generate_series(100)
+    >>> smooth_outliers(prices, threshold=0.5)
+
+    **See also**
+
+    :func:`smooth_spikes`
+    """
+    if len(x) < 3:
+        return x.copy()
+
+    if threshold <= 0:
+        raise MqValueError('threshold must be positive')
+
+    values = x.astype(float)
+
+    # Use a rolling median over a large window as the "expected" level.
+    # The window must be large enough that the anomalous region doesn't
+    # dominate it.  We use the full series length (global median) as default,
+    # then iteratively refine: after removing flagged points the median
+    # becomes cleaner, which may reveal more of the anomalous region.
+    result = values.copy()
+    ever_outlier = pd.Series(False, index=x.index)
+
+    for _ in range(10):
+        # Build the expected-level series from clean (non-flagged) points,
+        # interpolating across gaps, then smoothing with a large rolling
+        # median so that the natural trend is preserved while the anomalous
+        # region (which is the minority of the data) does not dominate.
+        expected = values.copy()
+        expected[ever_outlier] = np.nan
+        expected = expected.interpolate(method='index').ffill().bfill()
+        win = max(len(x) * 3 // 4, min(len(x), 30))
+        expected = expected.rolling(window=win, center=True, min_periods=1).median()
+
+        # Flag points that deviate from the expected level by more than threshold
+        safe_expected = expected.replace(0, np.nan)
+        pct_dev = ((values - expected) / safe_expected).abs()
+        is_outlier = pct_dev > threshold
+
+        new_outliers = is_outlier & ~ever_outlier
+        if not new_outliers.any():
+            break
+
+        ever_outlier |= new_outliers
+        result = values.copy()
+        result[ever_outlier] = np.nan
+        result = result.interpolate(method='index').ffill().bfill()
+
+    return result
 
 
 @plot_function
@@ -330,6 +409,11 @@ class LagMode(Enum):
     EXTEND = "extend"
 
 
+class SignDirection(str, Enum):
+    POSITIVE = "positive"
+    NEGATIVE = "negative"
+
+
 @plot_function
 def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.EXTEND) -> pd.Series:
     """
@@ -405,3 +489,54 @@ def lag(x: pd.Series, obs: Union[Window, int, str] = 1, mode: LagMode = LagMode.
         if hasattr(x.index, 'as_unit'):
             x.index = x.index.as_unit('ns')
     return x.shift(obs)
+
+
+@plot_function
+def consecutive(x: pd.Series, direction: SignDirection = SignDirection.POSITIVE) -> pd.Series:
+    """
+    Count the number of consecutive points that are positive or negative.
+
+    :param x: timeseries
+    :param direction: whether to count consecutive positive or negative values
+        (default: positive)
+    :return: timeseries where each point shows the running count of consecutive
+        values matching the chosen direction; resets to 0 when the condition breaks
+
+    **Usage**
+
+    For each date, count how many consecutive prior values (including the current one)
+    satisfy the sign condition. The counter resets to 0 whenever the condition is not met.
+
+    When ``direction`` is ``positive``, a point is counted when :math:`X_t > 0`.
+    When ``direction`` is ``negative``, a point is counted when :math:`X_t < 0`.
+
+    **Examples**
+
+    Count consecutive positive values:
+
+    >>> series = generate_series(100)
+    >>> pos_run = consecutive(series, SignDirection.POSITIVE)
+
+    Count consecutive negative values:
+
+    >>> series = generate_series(100)
+    >>> neg_run = consecutive(series, SignDirection.NEGATIVE)
+
+    **See also**
+
+    :func:`count`
+    """
+    if x.empty:
+        return x.copy()
+
+    if direction == SignDirection.POSITIVE:
+        condition = x > 0
+    else:
+        condition = x < 0
+
+    # Build a running count that resets to 0 when the condition is False.
+    # groupby on the cumulative sum of ~condition creates groups of consecutive True runs.
+    groups = (~condition).cumsum()
+    result = condition.groupby(groups).cumsum().astype(int)
+
+    return pd.Series(result, index=x.index)

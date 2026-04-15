@@ -312,16 +312,19 @@ class GsAssetApi:
             return response['results']
 
     @classmethod
-    @_cached
+    @_cached_async
     async def get_many_assets_data_async(
-        cls, fields: IdList = None, as_of: dt.datetime = None, limit: int = None, **kwargs
+        cls, fields: IdList = None, as_of: dt.datetime = None, limit: int = None, source: Optional[str] = None, **kwargs
     ) -> dict:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets_data_async') if span and span.is_recording() else nullcontext()
         with tracer as scope:
             cls._set_tags(scope, kwargs)
             query = cls.__create_query(fields, as_of, limit, **kwargs)
-            response = await GsSession.current.async_.post('/assets/data/query', payload=query)
+            request_headers = {'X-Application': 'Studio'} if source == "Basket" else None
+            response = await GsSession.current.async_.post(
+                '/assets/data/query', payload=query, request_headers=request_headers
+            )
             return response['results']
 
     @classmethod

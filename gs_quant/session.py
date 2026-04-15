@@ -92,7 +92,7 @@ class _SyncSessionAPI:
     """Synchronous HTTP interface for GsSession. Access via ``GsSession.current.sync``."""
 
     def __init__(self, session: 'GsSession'):
-        self._session = session
+        self._gs_session = session
 
     def get(
         self,
@@ -105,7 +105,7 @@ class _SyncSessionAPI:
         return_request_id: Optional[bool] = False,
         domain: Optional[str] = None,
     ) -> Union['Base', tuple, dict]:
-        return self._session._get(
+        return self._gs_session._get(
             path,
             payload=payload,
             request_headers=request_headers,
@@ -127,7 +127,7 @@ class _SyncSessionAPI:
         return_request_id: Optional[bool] = False,
         domain: Optional[str] = None,
     ) -> Union['Base', tuple, dict]:
-        return self._session._post(
+        return self._gs_session._post(
             path,
             payload=payload,
             request_headers=request_headers,
@@ -149,7 +149,7 @@ class _SyncSessionAPI:
         return_request_id: Optional[bool] = False,
         domain: Optional[str] = None,
     ) -> Union['Base', tuple, dict]:
-        return self._session._put(
+        return self._gs_session._put(
             path,
             payload=payload,
             request_headers=request_headers,
@@ -172,7 +172,7 @@ class _SyncSessionAPI:
         use_body: Optional[bool] = False,
         domain: Optional[str] = None,
     ) -> Union['Base', tuple, dict]:
-        return self._session._delete(
+        return self._gs_session._delete(
             path,
             payload=payload,
             request_headers=request_headers,
@@ -189,7 +189,7 @@ class _AsyncSessionAPI:
     """Asynchronous HTTP interface for GsSession. Access via ``GsSession.current.async_``."""
 
     def __init__(self, session: 'GsSession'):
-        self._session = session
+        self._gs_session = session
 
     async def get(
         self,
@@ -202,7 +202,7 @@ class _AsyncSessionAPI:
         return_request_id: Optional[bool] = False,
         domain: Optional[str] = None,
     ) -> Union['Base', tuple, dict]:
-        return await self._session._get_async(
+        return await self._gs_session._get_async(
             path,
             payload=payload,
             request_headers=request_headers,
@@ -224,7 +224,7 @@ class _AsyncSessionAPI:
         return_request_id: Optional[bool] = False,
         domain: Optional[str] = None,
     ) -> Union['Base', tuple, dict]:
-        return await self._session._post_async(
+        return await self._gs_session._post_async(
             path,
             payload=payload,
             request_headers=request_headers,
@@ -246,7 +246,7 @@ class _AsyncSessionAPI:
         return_request_id: Optional[bool] = False,
         domain: Optional[str] = None,
     ) -> Union['Base', tuple, dict]:
-        return await self._session._put_async(
+        return await self._gs_session._put_async(
             path,
             payload=payload,
             request_headers=request_headers,
@@ -269,7 +269,7 @@ class _AsyncSessionAPI:
         use_body: Optional[bool] = False,
         domain: Optional[str] = None,
     ) -> Union['Base', tuple, dict]:
-        return await self._session._delete_async(
+        return await self._gs_session._delete_async(
             path,
             payload=payload,
             request_headers=request_headers,
@@ -290,7 +290,7 @@ class _AsyncSessionAPI:
         domain: Optional[str] = None,
         **kwargs: Any,
     ):
-        async with self._session._connect_websocket(
+        async with self._gs_session._connect_websocket(
             path, headers=headers, include_version=include_version, domain=domain, **kwargs
         ) as ws:
             yield ws
