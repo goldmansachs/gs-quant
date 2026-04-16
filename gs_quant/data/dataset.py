@@ -116,7 +116,7 @@ class Dataset:
 
     @property
     def name(self):
-        pass
+        return None
 
     @property
     def provider(self):
@@ -611,6 +611,9 @@ class Dataset:
 
             batch_number += 1
 
+    def __str__(self):
+        return self.id or self.name or super().__str__()
+
 
 class PTPDataset(Dataset):
     """
@@ -657,7 +660,7 @@ class PTPDataset(Dataset):
         """
         temp_ser = self._series.assign(date=self._series.index.to_series().apply(dt.date.isoformat))
         data = temp_ser.to_dict('records')
-        kwargs = dict(data=data, name=self._name if self._name else 'GSQ Default', fields=list(self._series.columns))
+        kwargs = dict(data=data, name=self.name, fields=list(self._series.columns))
         res = GsSession.current.sync.post('/plots/datasets', payload=kwargs)
         self._fields = {
             key: inflection.underscore(field)
@@ -689,6 +692,10 @@ class PTPDataset(Dataset):
         if open_in_browser:
             webbrowser.open(expression)
         return expression
+
+    @property
+    def name(self):
+        return self._name or 'GSQ Default'
 
 
 class MarqueeDataIngestionLibrary:
