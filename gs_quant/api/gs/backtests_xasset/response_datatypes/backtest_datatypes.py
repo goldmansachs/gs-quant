@@ -27,6 +27,7 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import (
     decode_daily_portfolio,
 )
+from gs_quant.base import EnumBase
 from gs_quant.common import Currency, CurrencyName, PricingLocation
 from gs_quant.instrument import Instrument
 from gs_quant.interfaces.algebra import AlgebraicType
@@ -39,6 +40,12 @@ from gs_quant.json_convertors import (
     decode_timedelta,
 )
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
+
+
+class RiskProviderEnum(EnumBase, Enum):
+    Default = "Default"
+    DataSetProvider = "DataSetProvider"
+    EqVolRiskProvider = "EqVolRiskProvider"
 
 
 class TransactionCostModel(Enum):
@@ -62,6 +69,11 @@ class RollDateMode(Enum):
             if member.value.lower() == value.lower():
                 return member
         return None
+
+
+class ExpiryDateMode(EnumBase, Enum):
+    OTC = 'OTC'
+    Listed = 'Listed'
 
 
 class TransactionCostScalingType(Enum):
@@ -298,6 +310,14 @@ class TradingCosts:
 class TransactionCostConfig:
     trade_cost_model: TradingCosts
     hedge_cost_model: Optional[TradingCosts] = None
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class RiskRequestParameters:
+    expiry_date_mode: Optional[ExpiryDateMode] = None
+    market_model: Optional[EquityMarketModel] = None
+    risk_provider: Optional[RiskProviderEnum] = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
