@@ -24,6 +24,7 @@ from gs_quant.common import RiskMeasure, ParameterisedRiskMeasure
 
 from gs_quant import common
 from gs_quant import risk
+from gs_quant.target import measures as target_measures
 
 
 def gsq_rm_for_name(name: str) -> Optional[RiskMeasure]:
@@ -72,8 +73,52 @@ def _decode_gsq_risk_measure(data: dict) -> Optional[RiskMeasure]:
     return None
 
 
+def _lookup_risk_measure_by_fields(data: dict) -> Optional[RiskMeasure]:
+    """Look up a well-known RiskMeasure when 'name' is absent, using value or assetClass+measureType."""
+    # Boltweb measures: extract name from 'boltweb:' value prefix
+    value = data.get('value', '')
+    if isinstance(value, str) and value.startswith('boltweb:'):
+        name = value.split('boltweb:', 1)[1]
+        enriched = {**data, 'name': name}
+        # Try gs_quant.risk lookup first
+        result = _decode_gsq_risk_measure(enriched)
+        if result is not None:
+            return result
+        # Fall through to standard from_dict path with name populated
+        if 'parameters' in data:
+            result = ParameterisedRiskMeasure.from_dict(enriched)
+            result.parameters = _decode_param(data)
+            return result
+        return RiskMeasure(value=value, name=name)
+
+    # Standard measures: match by assetClass + measureType against gs_quant.target.measures
+    asset_class = data.get('assetClass')
+    measure_type = data.get('measureType')
+    if asset_class and measure_type:
+
+        def _str_equal(a, b):
+            return a is not None and b is not None and str(a).lower() == str(b).lower()
+
+        unit = data.get('unit')
+        for attr_name in dir(target_measures):
+            candidate = getattr(target_measures, attr_name)
+            if (
+                isinstance(candidate, RiskMeasure)
+                and _str_equal(asset_class, candidate.asset_class)
+                and _str_equal(measure_type, candidate.measure_type)
+            ):
+                if unit is None or _str_equal(unit, candidate.unit):
+                    return copy.copy(candidate)
+
+    return None
+
+
 def decode_risk_measure(data: Dict) -> RiskMeasure:
     result = _decode_gsq_risk_measure(data)
+    if result is not None:
+        return result
+    # Fallback: try to match by value prefix or assetClass+measureType when name is absent
+    result = _lookup_risk_measure_by_fields(data)
     if result is not None:
         return result
     if 'parameters' in data:

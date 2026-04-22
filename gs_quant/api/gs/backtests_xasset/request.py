@@ -31,6 +31,7 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes impo
     RiskProviderEnum,
 )
 from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import decode_strategy
+from gs_quant.base import exclude_none
 from gs_quant.common import RiskMeasure
 from gs_quant.json_convertors import (
     decode_timedelta,
@@ -122,27 +123,30 @@ def _decode_pnl_definition(data):
 @dataclass(unsafe_hash=True, repr=False)
 class RiskRequest:
     start_date: Optional[Union[dt.date, dt.datetime]] = field(
-        default=None, metadata=config(decoder=decode_optional_date_or_time)
+        default=None, metadata=config(decoder=decode_optional_date_or_time, exclude=exclude_none)
     )
     end_date: Optional[Union[dt.date, dt.datetime]] = field(
-        default=None, metadata=config(decoder=decode_optional_date_or_time)
+        default=None, metadata=config(decoder=decode_optional_date_or_time, exclude=exclude_none)
     )
     frequency: Optional[Union[str, dt.timedelta]] = field(
-        default=None, metadata=config(encoder=encode_timedelta, decoder=decode_timedelta)
+        default=None, metadata=config(encoder=encode_timedelta, decoder=decode_timedelta, exclude=exclude_none)
     )
     additional_dates: Optional[Tuple[Union[dt.date, dt.datetime], ...]] = field(
-        default=None, metadata=config(encoder=encode_date_or_time_tuple, decoder=decode_date_or_time_tuple)
+        default=None,
+        metadata=config(encoder=encode_date_or_time_tuple, decoder=decode_date_or_time_tuple, exclude=exclude_none),
     )
     legs: Optional[Tuple[PriceableImpl, ...]] = field(
-        default=None, metadata=config(encoder=legs_encoder, decoder=legs_decoder)
+        default=None, metadata=config(encoder=legs_encoder, decoder=legs_decoder, exclude=exclude_none)
     )
     measures: Optional[Tuple[RiskMeasure, ...]] = field(
-        default=None, metadata=config(encoder=encode_risk_measure_tuple, decoder=decode_risk_measure_tuple)
+        default=None,
+        metadata=config(encoder=encode_risk_measure_tuple, decoder=decode_risk_measure_tuple, exclude=exclude_none),
     )
     risk_provider: Optional[RiskProviderEnum] = field(
-        default=None, metadata=config(decoder=enum_decode(RiskProviderEnum))
+        default=None, metadata=config(decoder=enum_decode(RiskProviderEnum), exclude=exclude_none)
     )
-    parameters: Optional[RiskRequestParameters] = None
+    parameters: Optional[RiskRequestParameters] = field(default=None, metadata=config(exclude=exclude_none))
+    something_new: str = field(default=None, metadata=config(exclude=exclude_none))
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -151,22 +155,28 @@ class BasicBacktestRequest:
     dates: DateConfig
     trades: Tuple[Trade, ...]
     measures: Tuple[FlowVolBacktestMeasure, ...]
-    delta_hedge_frequency: Optional[str] = None
-    transaction_costs: Optional[TransactionCostConfig] = None
-    configuration: Optional[Configuration] = None
-    hedge: Optional[StrategyHedge] = None
+    delta_hedge_frequency: Optional[str] = field(default=None, metadata=config(exclude=exclude_none))
+    transaction_costs: Optional[TransactionCostConfig] = field(default=None, metadata=config(exclude=exclude_none))
+    configuration: Optional[Configuration] = field(default=None, metadata=config(exclude=exclude_none))
+    hedge: Optional[StrategyHedge] = field(default=None, metadata=config(exclude=exclude_none))
     risk_provider: Optional[RiskProviderEnum] = field(
-        default=None, metadata=config(decoder=enum_decode(RiskProviderEnum))
+        default=None, metadata=config(decoder=enum_decode(RiskProviderEnum), exclude=exclude_none)
     )
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class GenericBacktestRequest:
-    strategy: object = field(default=None, metadata=config(decoder=decode_strategy))
-    dates: Union[DateConfig, Tuple[dt.date, ...]] = field(default=None, metadata=config(decoder=_decode_dates))
-    configuration: Optional[Configuration] = field(default=None, metadata=config(decoder=_decode_configuration))
-    measures: Optional[Tuple[RiskMeasure, ...]] = field(
-        default=None, metadata=config(encoder=_encode_measures, decoder=_decode_measures)
+    strategy: object = field(default=None, metadata=config(decoder=decode_strategy, exclude=exclude_none))
+    dates: Union[DateConfig, Tuple[dt.date, ...]] = field(
+        default=None, metadata=config(decoder=_decode_dates, exclude=exclude_none)
     )
-    pnl_explain_def: Optional[object] = field(default=None, metadata=config(decoder=_decode_pnl_definition))
+    configuration: Optional[Configuration] = field(
+        default=None, metadata=config(decoder=_decode_configuration, exclude=exclude_none)
+    )
+    measures: Optional[Tuple[RiskMeasure, ...]] = field(
+        default=None, metadata=config(encoder=_encode_measures, decoder=_decode_measures, exclude=exclude_none)
+    )
+    pnl_explain_def: Optional[object] = field(
+        default=None, metadata=config(decoder=_decode_pnl_definition, exclude=exclude_none)
+    )

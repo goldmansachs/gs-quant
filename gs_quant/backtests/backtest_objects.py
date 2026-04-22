@@ -40,7 +40,15 @@ from gs_quant.instrument import Cash, IRSwap, Instrument
 from gs_quant.json_convertors import dc_decode
 from gs_quant.markets import PricingContext
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import ErrorValue, Cashflows
+from gs_quant.risk import (
+    ErrorValue,
+    Cashflows,
+    FXAnnualImpliedVol,
+    FXDeltaLocalCcy,
+    FXGammaLocalCcy,
+    FXSpot,
+    FXVegaLocalCcy,
+)
 from gs_quant.risk.transform import Transformer
 from gs_quant.risk.results import PricingFuture, PortfolioRiskResult
 
@@ -979,3 +987,36 @@ class OisFixingCashAccrualModel(CashAccrualModel):
                 )
             ds_accrual_model = DataCashAccrualModel(ois_fixings[currency], True)
             return ds_accrual_model.get_accrued_value(current_value, to_state)
+
+
+def fx_pnl_definition() -> PnlDefinition:
+    """PnlDefinition for FX options that matches BasicBacktestRequest PnL measures.
+
+    Produces cumulative PNL_delta, PNL_gamma, and VegaPnL series equivalent to
+    the hardcoded formulas in GenericEngineBasicBacktestRunner.
+    """
+    return PnlDefinition(
+        attributes=[
+            PnlAttribute(
+                attribute_name='PNL_delta',
+                attribute_metric=FXDeltaLocalCcy,
+                market_data_metric=FXSpot,
+                scaling_factor=1.0,
+                second_order=False,
+            ),
+            PnlAttribute(
+                attribute_name='PNL_gamma',
+                attribute_metric=FXGammaLocalCcy,
+                market_data_metric=FXSpot,
+                scaling_factor=1.0,
+                second_order=True,
+            ),
+            PnlAttribute(
+                attribute_name='VegaPnL',
+                attribute_metric=FXVegaLocalCcy,
+                market_data_metric=FXAnnualImpliedVol,
+                scaling_factor=100.0,
+                second_order=False,
+            ),
+        ]
+    )
