@@ -146,7 +146,6 @@ class RiskRequest:
         default=None, metadata=config(decoder=enum_decode(RiskProviderEnum), exclude=exclude_none)
     )
     parameters: Optional[RiskRequestParameters] = field(default=None, metadata=config(exclude=exclude_none))
-    something_new: str = field(default=None, metadata=config(exclude=exclude_none))
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

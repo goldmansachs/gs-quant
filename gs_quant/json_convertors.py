@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+import importlib
 import re
 from dataclasses import MISSING, fields
 from typing import Optional, Union, Iterable, Dict, Tuple, Any
@@ -425,3 +426,34 @@ def decode_timedelta(value: Optional[Union[int, float, str, dt.timedelta]]) -> O
             return dt.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
         raise ValueError(f'Cannot parse {value!r} as a timedelta. Examples: 3600, "60m", "2h", "90s", "1d12h30m"')
     raise TypeError(f'Cannot convert {value!r} to timedelta')
+
+
+def encode_callable(fn) -> Optional[dict]:
+    if fn is None:
+        return None
+    module = getattr(fn, '__module__', None)
+    qualname = getattr(fn, '__qualname__', None)
+    if not module or not qualname:
+        raise ValueError(f'Cannot serialize anonymous callable: {fn!r}')
+    return {'module': module, 'qualname': qualname}
+
+
+_CALLABLE_ALLOWLIST = {
+    ('builtins', 'min'),
+    ('builtins', 'max'),
+}
+
+
+def decode_callable(value):
+    if value is None:
+        return None
+    if callable(value):
+        return value
+    key = (value['module'], value['qualname'])
+    if key not in _CALLABLE_ALLOWLIST:
+        raise ValueError(f'Callable not in allowlist: {key}')
+    module = importlib.import_module(value['module'])
+    obj = module
+    for attr in value['qualname'].split('.'):
+        obj = getattr(obj, attr)
+    return obj

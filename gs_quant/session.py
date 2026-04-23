@@ -344,7 +344,10 @@ class GsSession(ContextBase):
         elif isinstance(domain, Environment):
             self.environment = domain
         else:
-            self.environment = Environment.DEV
+            if domain and "marquee.gs.com" in domain and "dev" not in domain:
+                self.environment = Environment.PROD
+            else:
+                self.environment = Environment.DEV
         self.api_version = api_version
         self.application = application
         self.verify = verify

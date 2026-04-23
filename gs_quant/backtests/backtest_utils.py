@@ -18,10 +18,12 @@ import datetime as dt
 import pandas as pd
 from enum import Enum
 
-from dataclasses import dataclass
-from dataclasses_json import dataclass_json
+from dataclasses import dataclass, field
+from dataclasses_json import dataclass_json, config
 
 from typing import Callable, Tuple, Union
+
+from gs_quant.json_convertors import encode_callable, decode_callable, encode_timedelta, decode_date_or_str
 
 from gs_quant.common import CurrencyName
 from gs_quant.datetime.relative_date import RelativeDate
@@ -39,10 +41,34 @@ class CalcType(Enum):
 @dataclass
 class CustomDuration:
     durations: Tuple[Union[str, dt.date, dt.timedelta], ...]
-    function: Callable[[Tuple[Union[str, dt.date, dt.timedelta], ...]], Union[str, dt.date, dt.timedelta]]
+    function: Callable[[Tuple[Union[str, dt.date, dt.timedelta], ...]], Union[str, dt.date, dt.timedelta]] = field(
+        default=None, metadata=config(encoder=encode_callable, decoder=decode_callable)
+    )
 
     def __hash__(self):
         return hash((self.durations, self.function))
+
+
+def encode_duration(value):
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, dt.date):
+        return value.isoformat()
+    if isinstance(value, dt.timedelta):
+        return encode_timedelta(value)
+    if isinstance(value, CustomDuration):
+        return value.to_dict()
+    return value
+
+
+def decode_duration(value):
+    if value is None:
+        return value
+    if isinstance(value, dict):
+        return CustomDuration.from_dict(value)
+    if isinstance(value, dt.timedelta):
+        return value
+    return decode_date_or_str(value)
 
 
 def make_list(thing):

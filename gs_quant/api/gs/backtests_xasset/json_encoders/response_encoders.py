@@ -34,6 +34,7 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_resu
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction, TransactionDirection
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
 from gs_quant.common import Currency, CurrencyName, RiskMeasure
+from gs_quant.json_convertors import encode_callable
 from gs_quant.json_convertors_common import encode_risk_measure, decode_risk_measure
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.backtests import FlowVolBacktestMeasure
@@ -46,7 +47,11 @@ def encode_response_obj(data: Any) -> Dict:
         return encode_series_result(data)
     if isinstance(data, pd.DataFrame):
         return encode_dataframe_result(data)
-    return data.to_dict()
+    if callable(data):
+        return encode_callable(data)
+    if hasattr(data, 'to_dict'):
+        return data.to_dict()
+    raise TypeError(f'Type is not JSON serializable: {type(data).__name__}')
 
 
 def decode_leg_refs(d: dict) -> Dict[str, PriceableImpl]:

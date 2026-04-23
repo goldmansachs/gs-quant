@@ -25,7 +25,7 @@ from typing import TypeVar, ClassVar
 from dataclasses_json import config, dataclass_json
 
 from gs_quant.backtests.backtest_objects import ConstantTransactionModel, TransactionModel
-from gs_quant.backtests.backtest_utils import make_list, CalcType, CustomDuration
+from gs_quant.backtests.backtest_utils import make_list, CalcType, CustomDuration, encode_duration, decode_duration
 from gs_quant.base import Priceable, static_field
 from gs_quant.common import RiskMeasure
 from gs_quant.instrument import Instrument
@@ -33,8 +33,9 @@ from gs_quant.json_convertors import (
     decode_named_instrument,
     dc_decode,
     encode_named_instrument,
-    decode_date_or_str,
     decode_dict_date_key_or_float,
+    encode_callable,
+    decode_callable,
 )
 from gs_quant.json_convertors_common import decode_risk_measure, encode_risk_measure
 from gs_quant.markets.portfolio import Portfolio
@@ -133,8 +134,8 @@ class AddTradeAction(Action):
         default=None, metadata=config(decoder=decode_named_instrument, encoder=encode_named_instrument)
     )
     trade_duration: Duration = field(
-        default=None,  # de/encoder doesn't handle timedelta
-        metadata=config(decoder=decode_date_or_str),
+        default=None,
+        metadata=config(encoder=encode_duration, decoder=decode_duration),
     )
     name: str = None
     transaction_cost: TransactionModel = field(
@@ -203,8 +204,8 @@ class AddScaledTradeAction(Action):
         default=None, metadata=config(decoder=decode_named_instrument, encoder=encode_named_instrument)
     )
     trade_duration: Duration = field(
-        default=None,  # de/encoder doesn't handle timedelta
-        metadata=config(decoder=decode_date_or_str),
+        default=None,
+        metadata=config(encoder=encode_duration, decoder=decode_duration),
     )
     name: str = None
     scaling_type: ScalingActionType = ScalingActionType.size
@@ -261,8 +262,8 @@ class AddWeightedTradeAction(Action):
         default=None, metadata=config(decoder=decode_named_instrument, encoder=encode_named_instrument)
     )
     trade_duration: Duration = field(
-        default=None,  # de/encoder doesn't handle timedelta
-        metadata=config(decoder=decode_date_or_str),
+        default=None,
+        metadata=config(encoder=encode_duration, decoder=decode_duration),
     )
     name: str = None
     scaling_risk: RiskMeasure = None
@@ -313,8 +314,8 @@ class EnterPositionQuantityScaledAction(Action):
         default=None, metadata=config(decoder=decode_named_instrument, encoder=encode_named_instrument)
     )
     trade_duration: Duration = field(
-        default=None,  # de/encoder doesn't handle timedelta
-        metadata=config(decoder=decode_date_or_str),
+        default=None,
+        metadata=config(encoder=encode_duration, decoder=decode_duration),
     )
     name: str = None
     trade_quantity: Union[float, dict[dt.date, Union[float, int]]] = field(
@@ -406,8 +407,8 @@ class HedgeAction(Action):
         default=None, metadata=config(decoder=decode_named_instrument, encoder=encode_named_instrument)
     )
     trade_duration: Duration = field(
-        default=None,  # de/encoder doesn't handle timedelta
-        metadata=config(decoder=decode_date_or_str),
+        default=None,
+        metadata=config(encoder=encode_duration, decoder=decode_duration),
     )
     name: str = None
     csa_term: str = None
@@ -471,7 +472,7 @@ class RebalanceAction(Action):
         default=None, metadata=config(decoder=decode_named_instrument, encoder=encode_named_instrument)
     )
     size_parameter: Union[str, float] = None
-    method: Callable = None
+    method: Callable = field(default=None, metadata=config(encoder=encode_callable, decoder=decode_callable))
     transaction_cost: TransactionModel = field(
         default_factory=default_transaction_cost, metadata=config(decoder=dc_decode(ConstantTransactionModel))
     )
