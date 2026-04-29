@@ -27,7 +27,7 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import (
     decode_daily_portfolio,
 )
-from gs_quant.base import EnumBase
+from gs_quant.base import EnumBase, exclude_none
 from gs_quant.common import Currency, CurrencyName, PricingLocation
 from gs_quant.instrument import Instrument
 from gs_quant.interfaces.algebra import AlgebraicType
@@ -315,18 +315,19 @@ class TransactionCostConfig:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class RiskRequestParameters:
-    expiry_date_mode: Optional[ExpiryDateMode] = None
-    market_model: Optional[EquityMarketModel] = None
-    risk_provider: Optional[RiskProviderEnum] = None
+    expiry_date_mode: Optional[ExpiryDateMode] = field(default=None, metadata=config(exclude=exclude_none))
+    market_model: Optional[EquityMarketModel] = field(default=None, metadata=config(exclude=exclude_none))
+    risk_provider: Optional[RiskProviderEnum] = field(default=None, metadata=config(exclude=exclude_none))
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Configuration:
-    market_data_location: Optional[PricingLocation] = None
-    market_model: Optional[EquityMarketModel] = None
+    market_data_location: Optional[PricingLocation] = field(default=None, metadata=config(exclude=exclude_none))
+    market_model: Optional[EquityMarketModel] = field(default=None, metadata=config(exclude=exclude_none))
     cash_accrual: bool = False
-    roll_date_mode: Optional[RollDateMode] = None
+    roll_date_mode: Optional[RollDateMode] = field(default=None, metadata=config(exclude=exclude_none))
+    expiry_date_mode: Optional[ExpiryDateMode] = field(default=None, metadata=config(exclude=exclude_none))
     combine_roll_signal_entries: bool = False
 
 

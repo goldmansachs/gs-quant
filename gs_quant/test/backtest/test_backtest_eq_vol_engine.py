@@ -29,6 +29,7 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes impo
     Configuration,
     RollDateMode,
     StrategyHedge,
+    ExpiryDateMode,
 )
 from gs_quant.backtests.backtest_objects import ConstantTransactionModel
 from gs_quant.backtests.strategy import Strategy
@@ -324,7 +325,6 @@ def test_engine_mapping_basic(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=StrategyHedge(frequency='1b'),
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
@@ -418,7 +418,6 @@ def test_engine_mapping_trade_quantity(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=StrategyHedge(frequency='1b'),
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
@@ -510,7 +509,6 @@ def test_engine_mapping_with_signals(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=None,
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
@@ -603,7 +601,6 @@ def test_engine_mapping_trade_quantity_nav(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=StrategyHedge(frequency='1b'),
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
@@ -693,14 +690,16 @@ def test_engine_mapping_listed_expiry_date(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=StrategyHedge(frequency='1b'),
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
             hedge_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
         ),
         configuration=Configuration(
-            market_model=EquityMarketModel.SFK, cash_accrual=True, combine_roll_signal_entries=False
+            market_model=EquityMarketModel.SFK,
+            cash_accrual=True,
+            combine_roll_signal_entries=False,
+            expiry_date_mode=ExpiryDateMode.Listed,
         ),
     )
 
@@ -851,7 +850,6 @@ def test_engine_mapping_market_model(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=StrategyHedge(frequency='1b'),
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
@@ -949,7 +947,6 @@ def test_engine_mapping_portfolio(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=StrategyHedge(frequency='1b'),
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
@@ -1348,7 +1345,6 @@ def test_engine_mapping_basic_leg_size(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=StrategyHedge(frequency='1b'),
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),
@@ -1425,7 +1421,6 @@ def test_engine_mapping_fixed_expiry(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=None,
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0))
@@ -1528,7 +1523,6 @@ def test_engine_mapping_delta_hedge(mocker):
             ),
         ),
         measures=(FlowVolBacktestMeasure.ALL_MEASURES,),
-        delta_hedge_frequency=None,
         hedge=StrategyHedge(frequency='5b', risk_percentage=50),
         transaction_costs=TransactionCostConfig(
             trade_cost_model=TradingCosts(entry=FixedCostModel(0), exit=FixedCostModel(0)),

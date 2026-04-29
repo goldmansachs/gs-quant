@@ -1081,6 +1081,7 @@ def implied_correlation(
     relative_strike: Real,
     top_n_of_index: Optional[int] = None,
     composition_date: Optional[GENERIC_DATE] = None,
+    parallelize_queries: bool = False,
     *,
     source: str = None,
     real_time: bool = False,
@@ -1096,6 +1097,7 @@ def implied_correlation(
     :param top_n_of_index: the number of top constituents to take into account
     :param composition_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y; defaults to most recent date
         available
+    :param parallelize_queries: send parallel queries to the measures API
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -1146,6 +1148,7 @@ def implied_correlation(
         source=source,
         real_time=real_time,
         request_id=request_id,
+        parallelize_queries=parallelize_queries,
     )
 
     if df.empty:
@@ -1337,6 +1340,7 @@ def average_implied_volatility(
     top_n_of_index: Optional[int] = None,
     composition_date: Optional[GENERIC_DATE] = None,
     weight_threshold: Optional[Real] = None,
+    parallelize_queries: Optional[bool] = False,
     *,
     source: str = None,
     real_time: bool = False,
@@ -1357,6 +1361,7 @@ def average_implied_volatility(
         available
     :param weight_threshold threshold of total constituent weights to drop if data is missing and top_n_of_index is
         passed in
+    :param parallelize_queries: send parallel queries to the measures API
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -1400,6 +1405,7 @@ def average_implied_volatility(
             real_time=real_time,
             request_id=request_id,
             ignore_errors=True,
+            parallelize_queries=parallelize_queries,
         )
 
         if not df.empty:

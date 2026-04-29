@@ -29,6 +29,7 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes impo
     RollDateMode,
     TransactionCostConfig,
     StrategyHedge,
+    ExpiryDateMode,
 )
 from gs_quant.backtests.core import Backtest, TradeInMethod
 from gs_quant.base import get_enum_value, Base
@@ -183,6 +184,7 @@ class StrategySystematic:
             market_model=EquityMarketModel(market_model) if market_model else None,
             cash_accrual=cash_accrual,
             combine_roll_signal_entries=combine_roll_signal_entries,
+            expiry_date_mode=ExpiryDateMode(expiry_date_mode) if expiry_date_mode is not None else None,
         )
 
         backtest_parameters_class: Base = getattr(backtests, self.__backtest_type + 'BacktestParameters')

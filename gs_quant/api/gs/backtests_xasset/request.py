@@ -154,7 +154,6 @@ class BasicBacktestRequest:
     dates: DateConfig
     trades: Tuple[Trade, ...]
     measures: Tuple[FlowVolBacktestMeasure, ...]
-    delta_hedge_frequency: Optional[str] = field(default=None, metadata=config(exclude=exclude_none))
     transaction_costs: Optional[TransactionCostConfig] = field(default=None, metadata=config(exclude=exclude_none))
     configuration: Optional[Configuration] = field(default=None, metadata=config(exclude=exclude_none))
     hedge: Optional[StrategyHedge] = field(default=None, metadata=config(exclude=exclude_none))
