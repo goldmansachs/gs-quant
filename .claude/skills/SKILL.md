@@ -139,3 +139,4 @@ For detailed guidance on specific topics, see these focused skills:
 - **`gs-quant-results`** (`.claude/skills/results.md`) — extracting results (FloatWithInfo, DataFrameWithInfo, PortfolioRiskResult, etc.)
 - **`gs-quant-datasets`** (`.claude/skills/datasets.md`) — accessing market data with the Dataset class
 - **`gs-quant-backtesting`** (`.claude/skills/backtesting.md`) — backtesting framework (triggers, actions, engines, results)
+- **`gs-quant-measures`** (`.claude/skills/measure.md`) — writing custom measures with `@plot_measure` and `@risk_measure` decorators

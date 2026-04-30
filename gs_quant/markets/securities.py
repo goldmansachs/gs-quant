@@ -202,6 +202,8 @@ class AssetType(Enum):
     SAVINGS_PLAN = 'Savings Plan'
     EQUITY_INDEX = 'Equity Index'
     COMMON_STOCK = 'Common Stock'
+    # for assets created for Cognitive Credit data
+    COMPANY = 'Company'
 
 
 class AssetIdentifier(EntityIdentifier):
@@ -1123,6 +1125,23 @@ class Commodity(Asset):
 
     def get_type(self) -> AssetType:
         return AssetType.COMMODITY
+
+
+class Company(Asset):
+    """Commodity
+
+    Represents a commodity.
+
+    """
+
+    def __init__(self, id_: str, asset_class: AssetClass, name: str, entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class=asset_class, name=name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.COMPANY
+
+    def get_ticker(self) -> AssetIdentifier:
+        return self.get_identifier(AssetIdentifier.TICKER)
 
 
 class Bond(Asset):
