@@ -249,7 +249,11 @@ class BackTest(BaseBacktest):
         df[self.TOTAL_COLUMN] = (
             df[self.price_measure] + df[self.CUMULATIVE_CASH_COLUMN] + df[self.TRANSACTION_COSTS_COLUMN]
         )
-        return df[: self.states[-1]]
+        if df.empty:
+            result = df
+        else:
+            result = df.loc[: self.states[-1]]
+        return result
 
     @property
     def risk_summary(self):
