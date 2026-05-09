@@ -69,8 +69,8 @@ class CustomHttpAdapter(requests.adapters.HTTPAdapter):
     def ssl_context(cls) -> ssl.SSLContext:
         if cls.__ssl_ctx is None:
             cls.__ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-            cls.__ssl_ctx.check_hostname = False
-            cls.__ssl_ctx.verify_mode = 0
+            cls.__ssl_ctx.check_hostname = True                # enable hostname verification
+            cls.__ssl_ctx.verify_mode = ssl.CERT_REQUIRED       # require valid certificates
             cls.__ssl_ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
             cls.__ssl_ctx.load_default_certs()
             cls.__ssl_ctx.load_verify_locations(certifi.where())
