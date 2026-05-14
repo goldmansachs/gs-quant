@@ -564,7 +564,7 @@ class GsSession(ContextBase):
             raise error_builder(response.status_code, err_msg, context=f'{request_id}: {method} {url}')
         elif 'Content-Type' in response.headers:
             if 'application/x-msgpack' in response.headers['Content-Type']:
-                ret = msgpack.unpackb(response.content, raw=False)
+                ret = msgpack.unpackb(response.content, raw=False, strict_map_key=False)
             elif 'application/json' in response.headers['Content-Type']:
                 ret = json.loads(response.text)
             else:

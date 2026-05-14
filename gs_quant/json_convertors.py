@@ -379,7 +379,7 @@ def dc_decode(*classes, name_field='class_type', allow_missing=False):
     return _value_decoder(type_to_cls_map, None)
 
 
-def encode_timedelta(value: Optional[Union[str, dt.timedelta]]) -> Optional[str]:
+def encode_timedelta(value: Optional[dt.timedelta]) -> Optional[str]:
     if value is None or isinstance(value, str):
         return value
     total = int(value.total_seconds())
@@ -398,33 +398,43 @@ def encode_timedelta(value: Optional[Union[str, dt.timedelta]]) -> Optional[str]
     return ''.join(parts)
 
 
-_TIMEDELTA_PATTERN = re.compile(
-    r'(?:(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours))?\s*'
-    r'(?:(\d+(?:\.\d+)?)\s*(?:m|min|mins|minute|minutes))?\s*'
-    r'(?:(\d+(?:\.\d+)?)\s*(?:s|sec|secs|second|seconds))?\s*$',
-    re.IGNORECASE,
-)
-_FREQUENCY_PATTERN = re.compile(r'^\s*(?:(\d+(?:\.\d+)?)\s*(?:d|day|days|b))?\s*', re.IGNORECASE)
+def encode_frequency(value: Optional[Union[str, dt.timedelta]]) -> Optional[Union[str, int, float]]:
+    """Encode a timedelta without unit ambiguity.
+
+    - Strings are assumed to be frequency/tenor expressions (e.g. '15m' = 15 months, '1b' = 1 business day)
+      and are returned unchanged.
+    - datetime.timedelta is encoded as total seconds (int when whole seconds, otherwise float).
+
+    This avoids confusion of 'm' as minutes vs months.
+    """
+    if value is None or isinstance(value, str):
+        return value
+
+    seconds = value.total_seconds()
+    as_int = int(seconds)
+    return as_int if seconds == as_int else seconds
 
 
-def decode_timedelta(value: Optional[Union[int, float, str, dt.timedelta]]) -> Optional[Union[str, dt.timedelta]]:
+def decode_frequency(value: Optional[Union[int, float, str, dt.timedelta]]) -> Optional[Union[str, dt.timedelta]]:
+    """Decode a timedelta encoded as seconds.
+
+    - int/float values are interpreted as seconds.
+    - numeric strings are interpreted as seconds.
+    - all other strings are treated as frequency/tenor and returned unchanged
+      (e.g. '1m' is 1 month tenor, not minutes).
+    """
     if value is None or isinstance(value, dt.timedelta):
         return value
-    if isinstance(value, str) and _FREQUENCY_PATTERN.match(value):
-        return value
+
     if isinstance(value, (int, float)):
-        return dt.timedelta(seconds=value)
+        return dt.timedelta(seconds=float(value))
+
     if isinstance(value, str):
-        # try plain number string first
         try:
             return dt.timedelta(seconds=float(value))
         except ValueError:
-            pass
-        m = _TIMEDELTA_PATTERN.match(value)
-        if m and any(m.groups()):
-            days, hours, minutes, seconds = (float(v) if v else 0.0 for v in m.groups())
-            return dt.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
-        raise ValueError(f'Cannot parse {value!r} as a timedelta. Examples: 3600, "60m", "2h", "90s", "1d12h30m"')
+            return value
+
     raise TypeError(f'Cannot convert {value!r} to timedelta')
 
 

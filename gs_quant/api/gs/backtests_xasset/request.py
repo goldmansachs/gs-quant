@@ -34,11 +34,11 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_dataty
 from gs_quant.base import exclude_none
 from gs_quant.common import RiskMeasure
 from gs_quant.json_convertors import (
-    decode_timedelta,
-    encode_timedelta,
     decode_optional_date_or_time,
     decode_date_or_time_tuple,
     encode_date_or_time_tuple,
+    encode_frequency,
+    decode_frequency,
 )
 from gs_quant.json_convertors_common import encode_risk_measure_tuple, decode_risk_measure_tuple
 from gs_quant.priceable import PriceableImpl
@@ -129,7 +129,7 @@ class RiskRequest:
         default=None, metadata=config(decoder=decode_optional_date_or_time, exclude=exclude_none)
     )
     frequency: Optional[Union[str, dt.timedelta]] = field(
-        default=None, metadata=config(encoder=encode_timedelta, decoder=decode_timedelta, exclude=exclude_none)
+        default=None, metadata=config(encoder=encode_frequency, decoder=decode_frequency, exclude=exclude_none)
     )
     additional_dates: Optional[Tuple[Union[dt.date, dt.datetime], ...]] = field(
         default=None,

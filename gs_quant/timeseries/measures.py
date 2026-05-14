@@ -5929,7 +5929,7 @@ def hloc_prices(
 
 @plot_measure(
     (AssetClass.Equity,),
-    (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index, AssetType.ETF),
+    (AssetType.Custom_Basket, AssetType.Research_Basket, AssetType.Index, AssetType.ETF, AssetType.Risk_Premia),
     [QueryType.THEMATIC_MODEL_BETA],
 )
 def thematic_model_exposure(

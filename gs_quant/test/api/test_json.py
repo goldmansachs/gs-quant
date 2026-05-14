@@ -18,7 +18,7 @@ import datetime as dt
 import json
 import zoneinfo
 
-from gs_quant.json_convertors import decode_iso_date_or_datetime
+from gs_quant.json_convertors import decode_iso_date_or_datetime, decode_frequency, encode_frequency
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.workflow import (
     BinaryImageComments,
@@ -82,3 +82,25 @@ def test_custom_comments():
     json_str = report.to_json()
     round_trip = VisualStructuringReport.from_json(json_str)
     assert round_trip == report
+
+
+def test_decode_frequency():
+    assert decode_frequency(None) is None
+    # Strings are treated as frequency/tenor and passed through (e.g. '15m' means 15 months, not minutes)
+    assert decode_frequency('10m') == '10m'
+    assert decode_frequency('1h30m') == '1h30m'
+    assert decode_frequency('1b') == '1b'
+    # Numeric values (and numeric strings) are seconds
+    assert decode_frequency(600) == dt.timedelta(seconds=600)
+    assert decode_frequency('600') == dt.timedelta(seconds=600)
+    assert decode_frequency('invalid') == 'invalid'
+
+
+def test_encode_frequency():
+    assert encode_frequency(None) is None
+    # Strings are passed through
+    assert encode_frequency('10m') == '10m'
+    # Timedeltas encode to seconds to avoid ambiguity
+    assert encode_frequency(dt.timedelta(minutes=10)) == 600
+    assert encode_frequency(dt.timedelta(hours=1, minutes=30)) == 5400
+    assert encode_frequency(dt.timedelta(days=1, seconds=1)) == 86401

@@ -15,19 +15,17 @@ under the License.
 """
 
 import datetime as dt
-import pandas as pd
-from enum import Enum
-
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
-
+from enum import Enum
 from typing import Callable, Tuple, Union
 
-from gs_quant.json_convertors import encode_callable, decode_callable, encode_timedelta, decode_date_or_str
+import pandas as pd
+from dataclasses_json import dataclass_json, config
 
 from gs_quant.common import CurrencyName
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.instrument import Instrument
+from gs_quant.json_convertors import encode_callable, decode_callable, decode_date_or_str, encode_timedelta
 from gs_quant.timeseries import interpolate, Interpolate
 
 

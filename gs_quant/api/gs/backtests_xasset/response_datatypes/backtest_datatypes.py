@@ -36,8 +36,8 @@ from gs_quant.json_convertors import (
     decode_date_tuple,
     decode_dict_date_key_or_float,
     decode_optional_date_or_time,
-    encode_timedelta,
-    decode_timedelta,
+    encode_frequency,
+    decode_frequency,
 )
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
 
@@ -154,7 +154,7 @@ class DateConfig:
         default=None, metadata=config(decoder=decode_optional_date_or_time)
     )
     frequency: Optional[Union[str, dt.timedelta]] = field(
-        default='1b', metadata=config(encoder=encode_timedelta, decoder=decode_timedelta)
+        default='1b', metadata=config(encoder=encode_frequency, decoder=decode_frequency)
     )
     holiday_calendar: Optional[str] = None
 
