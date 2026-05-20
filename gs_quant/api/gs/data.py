@@ -188,6 +188,8 @@ class QueryType(Enum):
     BETA = 'Beta'
     R_SQUARED = 'R Squared'
     CAPTURE_RATIO = 'Capture Ratio'
+    COUPON_SWAP = 'Coupon Swap'
+    BUTTERFLY = 'Butterfly'
 
 
 class GsDataApi(DataApi):

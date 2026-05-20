@@ -114,9 +114,9 @@ class PeriodicTriggerRequirements(TriggerRequirements):
 
     def get_trigger_times(self) -> [dt.date]:
         if not self.trigger_dates:
-            self.trigger_dates = RelativeDateSchedule(self.frequency, self.start_date, self.end_date).apply_rule(
-                holiday_calendar=self.calendar
-            )
+            self.trigger_dates = RelativeDateSchedule(
+                self.frequency.lower(), self.start_date, self.end_date
+            ).apply_rule(holiday_calendar=self.calendar)
         return self.trigger_dates
 
     def has_triggered(self, state: dt.date, backtest: BackTest = None) -> TriggerInfo:

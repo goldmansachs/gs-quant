@@ -240,6 +240,7 @@ class AssetType(EnumBase, Enum):
     Synthetic = 'Synthetic'
     SyntheticDateInfo = 'SyntheticDateInfo'
     Systematic_Hedging = 'Systematic Hedging'
+    TBA = 'TBA'
     Tarf = 'Tarf'
     TarfScheduleLeg = 'TarfScheduleLeg'
     Token = 'Token'

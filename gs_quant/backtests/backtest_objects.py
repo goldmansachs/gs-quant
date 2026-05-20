@@ -970,7 +970,7 @@ class OisFixingCashAccrualModel(CashAccrualModel):
                 start_date = (
                     self.start_date
                     if isinstance(self.start_date, dt.date)
-                    else RelativeDate(self.start_date).apply_rule()
+                    else RelativeDate(self.start_date.lower()).apply_rule()
                 )
                 start_date = start_date - dt.timedelta(days=7)
                 swap = IRSwap(
@@ -979,7 +979,7 @@ class OisFixingCashAccrualModel(CashAccrualModel):
                     effective_date=start_date,
                     termination_date=self.end_date
                     if isinstance(self.end_date, dt.date)
-                    else RelativeDate(self.end_date).apply_rule(),
+                    else RelativeDate(self.end_date.lower()).apply_rule(),
                     floating_rate_option='OIS',
                 )
                 with PricingContext():

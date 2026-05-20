@@ -31,6 +31,7 @@ from .measures_risk_models import *
 from .measures_xccy import *
 from .measures_factset import *
 from .measures_cognitive_credit import *
+from .measures_tba import *
 from .statistics import *
 from .tca import (
     covariance

@@ -109,7 +109,9 @@ def get_final_date(inst, create_date, duration, holiday_calendar=None, trigger_i
             *(get_final_date(inst, create_date, d, holiday_calendar, trigger_info) for d in duration.durations)
         )
 
-    final_date_cache[cache_key] = RelativeDate(duration, create_date).apply_rule(holiday_calendar=holiday_calendar)
+    final_date_cache[cache_key] = RelativeDate(duration.lower(), create_date).apply_rule(
+        holiday_calendar=holiday_calendar
+    )
     return final_date_cache[cache_key]
 
 

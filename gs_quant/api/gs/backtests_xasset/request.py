@@ -142,9 +142,6 @@ class RiskRequest:
         default=None,
         metadata=config(encoder=encode_risk_measure_tuple, decoder=decode_risk_measure_tuple, exclude=exclude_none),
     )
-    risk_provider: Optional[RiskProviderEnum] = field(
-        default=None, metadata=config(decoder=enum_decode(RiskProviderEnum), exclude=exclude_none)
-    )
     parameters: Optional[RiskRequestParameters] = field(default=None, metadata=config(exclude=exclude_none))
 
 

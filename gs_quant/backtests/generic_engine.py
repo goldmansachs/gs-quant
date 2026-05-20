@@ -228,7 +228,7 @@ class GenericEngine(BacktestBaseEngine):
         """
         with self._trace('Relative Schedule'):
             strategy_pricing_dates = (
-                RelativeDateSchedule(frequency, start, end).apply_rule(holiday_calendar=holiday_calendar)
+                RelativeDateSchedule(frequency.lower(), start, end).apply_rule(holiday_calendar=holiday_calendar)
                 if states is None
                 else states
             )

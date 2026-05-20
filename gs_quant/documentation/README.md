@@ -90,6 +90,7 @@ examples providing a searchable library of short specific snippets.
         - 📄 [08_fx_double_touch_trade_construction.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/08_fx_double_touch_trade_construction.ipynb)
         - 📄 [09_fx_delta_measures.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/09_fx_delta_measures.ipynb)
         - 📄 [10_fx_gamma_measures.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/10_fx_gamma_measures.ipynb)
+        - 📄 [11_fx_multi_cross_products.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/02_fx/11_fx_multi_cross_products.ipynb)
       - 📁 03_eq
         - 📄 [01_calc_eq_option_price.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/03_eq/01_calc_eq_option_price.ipynb)
         - 📄 [02_calc_eq_option_risk_measures.ipynb](02_pricing_and_risk/00_instruments_and_measures/examples/03_eq/02_calc_eq_option_risk_measures.ipynb)
@@ -173,7 +174,7 @@ examples providing a searchable library of short specific snippets.
     - 📄 [030007_pnl_explain.ipynb](03_portfolios/examples/030007_pnl_explain.ipynb)
     - 📄 [030008_portflio_from_frame.ipynb](03_portfolios/examples/030008_portflio_from_frame.ipynb)
     - 📄 [030009_portfolio_risk_result_to_frame.ipynb](03_portfolios/examples/030009_portfolio_risk_result_to_frame.ipynb)
-    - 📄 [030010_portfolio_intra_leg_dependencies.ipynb](03_portfolios/examples/030010_portfolio_intra_leg_dependencies.ipynb)
+    - 📄 [030010_portfolio_inter_leg_dependencies.ipynb](03_portfolios/examples/030010_portfolio_inter_leg_dependencies.ipynb)
     - 📄 [030011_portfolio_from_csv.ipynb](03_portfolios/examples/030011_portfolio_from_csv.ipynb)
   - 📁 tutorials
     - 📄 [Create New Portfolio.ipynb](03_portfolios/tutorials/Create%20New%20Portfolio.ipynb)

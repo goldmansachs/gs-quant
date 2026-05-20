@@ -204,6 +204,8 @@ class AssetType(Enum):
     COMMON_STOCK = 'Common Stock'
     # for assets created for Cognitive Credit data
     COMPANY = 'Company'
+    # For Mortgage Class Assets
+    TBA = 'TBA'
 
 
 class AssetIdentifier(EntityIdentifier):
@@ -1286,6 +1288,20 @@ class Swaption(Asset):
         return AssetType.SWAPTION
 
 
+class TBA(Asset):
+    """TBA
+
+    Represents a TBA (To Be Announced) mortgage-backed security.
+
+    """
+
+    def __init__(self, id_: str, asset_class: AssetClass, name: str, entity: Optional[Dict] = None):
+        Asset.__init__(self, id_, asset_class=asset_class, name=name, entity=entity)
+
+    def get_type(self) -> AssetType:
+        return AssetType.TBA
+
+
 class Binary(Asset):
     """Binary
     Represents a binary.
@@ -1501,6 +1517,9 @@ class SecurityMaster:
 
         if asset_type == GsAssetType.Company.value:
             return Company(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
+
+        if asset_type == GsAssetType.TBA.value:
+            return TBA(gs_asset.id, gs_asset.assetClass, gs_asset.name, entity=asset_entity)
 
         raise TypeError(f'unsupported asset type {asset_type}')
 
