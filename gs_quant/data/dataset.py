@@ -33,6 +33,7 @@ from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
 from functools import partial
 from gs_quant.data.utilities import Utilities
+from gs_quant.tracing import Tracer, tag_row_count, tag_dataset_id
 from gs_quant.target.data import (
     DataSetEntity,
     DataSetParameters,
@@ -201,9 +202,13 @@ class Dataset:
         >>> weather_data = weather.get_data(dt.date(2016, 1, 15), dt.date(2016, 1, 16), city=('Boston', 'Austin'))
         """
 
-        query, schema_varies = self._build_data_query(start, end, as_of, since, fields, empty_intervals, **kwargs)
-        data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
-        return self._build_data_frame(data, schema_varies, standard_fields)
+        with Tracer(f'Dataset.get_data/{self.id}') as scope:
+            tag_dataset_id(scope, self.id)
+            query, schema_varies = self._build_data_query(start, end, as_of, since, fields, empty_intervals, **kwargs)
+            data = self.provider.query_data(query, self.id, asset_id_type=asset_id_type)
+            df = self._build_data_frame(data, schema_varies, standard_fields)
+            tag_row_count(scope, df)
+            return df
 
     async def get_data_async(
         self,

@@ -680,6 +680,26 @@ def parse_tracing_line_args(line: str) -> Tuple[Optional[str], bool]:
     return stripped if len(stripped) else None, False
 
 
+def tag_row_count(scope, df) -> None:
+    """Safely tag span with the row count of a DataFrame (or any sized object)."""
+    scope.span.set_tag('row_count', len(df) if df is not None else 0)
+
+
+def tag_dataset_id(scope, dataset_id) -> None:
+    """Tag span with a dataset identifier."""
+    scope.span.set_tag('dataset_id', str(dataset_id) if dataset_id is not None else '')
+
+
+def tag_error(scope) -> None:
+    """Tag span to indicate an error occurred."""
+    scope.span.set_tag('error', True)
+
+
+def tag_request_id(scope, body) -> None:
+    """Safely extract and tag span with requestId from a response body."""
+    scope.span.set_tag('request_id', body.get('requestId') if isinstance(body, dict) else None)
+
+
 try:
     # Attempt to import/register some jupyter magic
     import gs_quant_internal.tracing.jupyter  # noqa

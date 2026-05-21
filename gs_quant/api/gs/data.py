@@ -43,6 +43,7 @@ from gs_quant.target.data import DataQuery, DataQueryResponse, DataSetCatalogEnt
 from .assets import GsIdType
 from ..api_cache import ApiRequestCache
 from ...target.assets import EntityQuery, FieldFilterMap
+from gs_quant.tracing import Tracer, tag_dataset_id, tag_error, tag_request_id, tag_row_count
 
 _logger = logging.getLogger(__name__)
 _REQUEST_HEADERS = "request_headers"
@@ -298,12 +299,14 @@ class GsDataApi(DataApi):
 
     @classmethod
     def execute_query(cls, dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
-        kwargs = {'payload': query}
-        if getattr(query, 'format', None) in (Format.MessagePack, 'MessagePack'):
-            kwargs[_REQUEST_HEADERS] = {'Accept': 'application/msgpack'}
+        with Tracer(f'GsDataApi.execute_query/{dataset_id}') as scope:
+            tag_dataset_id(scope, dataset_id)
+            kwargs = {'payload': query}
+            if getattr(query, 'format', None) in (Format.MessagePack, 'MessagePack'):
+                kwargs[_REQUEST_HEADERS] = {'Accept': 'application/msgpack'}
 
-        domain = cls._check_data_on_cloud(dataset_id)
-        return cls._post_with_cache_check('/data/{}/query'.format(dataset_id), domain=domain, **kwargs)
+            domain = cls._check_data_on_cloud(dataset_id)
+            return cls._post_with_cache_check('/data/{}/query'.format(dataset_id), domain=domain, **kwargs)
 
     @classmethod
     async def execute_query_async(cls, dataset_id: str, query: Union[DataQuery, MDAPIDataQuery]):
@@ -1062,50 +1065,56 @@ class GsDataApi(DataApi):
 
     @classmethod
     def get_market_data(cls, query, request_id=None, ignore_errors: bool = False) -> pd.DataFrame:
-        def validate(body):
+        with Tracer('GsDataApi.get_market_data') as scope:
+
+            def validate(body):
+                for e in body['responses']:
+                    container = e['queryResponse'][0]
+                    if 'errorMessages' in container:
+                        msg = f'measure service request {body["requestId"]} failed: {container["errorMessages"]}'
+                        raise MqValueError(msg)
+                return body
+
+            start = time.perf_counter()
+            try:
+                body = cls._post_with_cache_check(url='/data/measures', validator=validate, payload=query)
+            except Exception as e:
+                tag_error(scope)
+                log_warning(request_id, _logger, f'Market data query {query} failed due to {e}')
+                raise e
+            log_debug(
+                request_id,
+                _logger,
+                'market data query (%s) with payload (%s) ran in %.3f ms',
+                body.get('requestId'),
+                query,
+                (time.perf_counter() - start) * 1000,
+            )
+
+            ids = []
+            parts = []
             for e in body['responses']:
                 container = e['queryResponse'][0]
+                ids.extend(container.get('dataSetIds', ()))
                 if 'errorMessages' in container:
                     msg = f'measure service request {body["requestId"]} failed: {container["errorMessages"]}'
-                    raise MqValueError(msg)
-            return body
+                    if ignore_errors:
+                        log_warning(request_id, _logger, msg)
+                    else:
+                        raise MqValueError(msg)
+                if 'response' in container:
+                    df = MarketDataResponseFrame(container['response']['data'])
+                    df = df.set_index('date' if 'date' in df.columns else 'time')
+                    df.index = pd.to_datetime(df.index)
+                    parts.append(df)
 
-        start = time.perf_counter()
-        try:
-            body = cls._post_with_cache_check(url='/data/measures', validator=validate, payload=query)
-        except Exception as e:
-            log_warning(request_id, _logger, f'Market data query {query} failed due to {e}')
-            raise e
-        log_debug(
-            request_id,
-            _logger,
-            'market data query (%s) with payload (%s) ran in %.3f ms',
-            body.get('requestId'),
-            query,
-            (time.perf_counter() - start) * 1000,
-        )
-
-        ids = []
-        parts = []
-        for e in body['responses']:
-            container = e['queryResponse'][0]
-            ids.extend(container.get('dataSetIds', ()))
-            if 'errorMessages' in container:
-                msg = f'measure service request {body["requestId"]} failed: {container["errorMessages"]}'
-                if ignore_errors:
-                    log_warning(request_id, _logger, msg)
-                else:
-                    raise MqValueError(msg)
-            if 'response' in container:
-                df = MarketDataResponseFrame(container['response']['data'])
-                df = df.set_index('date' if 'date' in df.columns else 'time')
-                df.index = pd.to_datetime(df.index)
-                parts.append(df)
-
-        log_debug(request_id, _logger, f'fetched data from {ids}')
-        df = pd.concat(parts) if len(parts) > 0 else MarketDataResponseFrame()
-        df.dataset_ids = tuple(ids)
-        return df
+            log_debug(request_id, _logger, f'fetched data from {ids}')
+            df = pd.concat(parts) if len(parts) > 0 else MarketDataResponseFrame()
+            df.dataset_ids = tuple(ids)
+            tag_request_id(scope, body)
+            scope.span.set_tag('dataset_ids', str(ids))
+            tag_row_count(scope, df)
+            return df
 
     @classmethod
     def __normalise_coordinate_data(
