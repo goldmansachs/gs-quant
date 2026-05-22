@@ -86,6 +86,8 @@ def moving_average(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -
     :func:`mean`
 
     """
+    if x.empty:
+        return pd.Series(dtype=float)
     w = normalize_window(x, w)
     return apply_ramp(mean(x, Window(w.w, 0)), w)
 

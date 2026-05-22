@@ -66,6 +66,9 @@ def test_moving_average():
     expected = pd.Series([2.5, 2, 2, 4.5], index=dates[2:])
     assert_series_equal(result, expected, obj="Moving average strdate window")
 
+    result = moving_average(pd.Series(dtype=float), "2d")
+    assert result.empty
+
 
 def test_smoothed_moving_average():
     dates = [
