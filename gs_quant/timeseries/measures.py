@@ -46,9 +46,6 @@ from gs_quant.timeseries import Basket, RelativeDate, Returns, Window, sqrt, vol
 from gs_quant.timeseries.helper import (
     FREQ_DAY,
     FREQ_MONTH_END,
-    FREQ_MONTH_START,
-    FREQ_PERIOD_QUARTER,
-    FREQ_YEAR_START,
     _month_to_tenor,
     _split_where_conditions,
     _tenor_to_month,
@@ -5307,41 +5304,36 @@ def commodity_forecast_time_series(
     elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.MONTHLY.value:
         periods = [
             f"{date.year}M{date.month}"
-            for date in pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq=FREQ_MONTH_START)
+            for date in pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="MS")
         ]
     elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.QUARTERLY.value:
-        periods = pd.period_range(
-            start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq=FREQ_PERIOD_QUARTER
-        ).strftime("%YQ%q")
+        periods = pd.period_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="Q").strftime("%YQ%q")
     elif forecastFrequency == _CommodityForecastTimeSeriesPeriodType.ANNUAL.value:
-        periods = pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq=FREQ_YEAR_START).strftime(
-            "%Y"
-        )
+        periods = pd.date_range(start=f"{start_year}-01-01", end=f"{end_year}-01-01", freq="YS").strftime("%Y")
     else:
         raise ValueError(
             "Invalid forecastFrequency. Must be one of '3/6/12-Month Rolling', 'Monthly', 'Quarterly', 'Annual'."
         )
     results = []
-    for period in periods:
-        _logger.debug(
-            'where assetId=%s, forecastPeriod=%s, forecastType=%s, query_type=%s',
-            mqid,
-            period,
-            forecastType,
-            query_type.value,
-        )
 
-        q = GsDataApi.build_market_data_query(
-            [mqid],
-            query_type,
-            where=dict(forecastPeriod=period, forecastType=forecastType),
-            source=source,
-            real_time=real_time,
-        )
-        log_debug(request_id, _logger, 'q %s', q)
+    context_end = dt.date.today()
+    context_start = context_end - dt.timedelta(days=30)
 
-        df = _market_data_timed(q, request_id)
-        if not df.empty:
+    tasks = []
+    with DataContext(context_start, context_end):
+        for period in periods:
+            q = GsDataApi.build_market_data_query(
+                [mqid],
+                query_type,
+                where=dict(forecastPeriod=period, forecastType=forecastType),
+                source=source,
+                real_time=real_time,
+            )
+            tasks.append(partial(_market_data_timed, q, request_id))
+
+    dataframes = ThreadPoolManager.run_async(tasks)
+    for period, df in zip(periods, dataframes):
+        if df is not None and not df.empty:
             last_value = df[col_name].iloc[-1]
             if 'm' in period:
                 months = int(period[:-1])
@@ -5357,6 +5349,7 @@ def commodity_forecast_time_series(
             else:
                 start_of_period = pd.Timestamp(period[:4] + "-01-01")
             results.append({'date': start_of_period.strftime('%Y-%m-%d'), col_name: last_value})
+
     df = pd.DataFrame(results).set_index('date')
     series = _extract_series_from_df(df, query_type)
     return series

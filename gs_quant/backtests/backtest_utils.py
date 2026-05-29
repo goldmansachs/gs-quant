@@ -15,9 +15,10 @@ under the License.
 """
 
 import datetime as dt
+import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Tuple, Union
+from typing import Callable, Tuple, Union, Optional
 
 import pandas as pd
 from dataclasses_json import dataclass_json, config
@@ -151,3 +152,55 @@ def interpolate_signal(signal: dict[dt.date, float], method=Interpolate.STEP) ->
     all_dates = [min_date + dt.timedelta(days=day) for day in range((max_date - min_date).days + 1)]
     signal_curve = interpolate(pd.Series(signal).sort_index(), all_dates, method=method)
     return signal_curve
+
+
+# Used for strict intraday interval parsing (d/h/m/s only)
+_TIMEDELTA_PATTERN = re.compile(
+    r'^(?:(\d+(?:\.\d+)?)\s*(?:d|day|days))?\s*'
+    r'(?:(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours))?\s*'
+    r'(?:(\d+(?:\.\d+)?)\s*(?:m|min|mins|minute|minutes))?\s*'
+    r'(?:(\d+(?:\.\d+)?)\s*(?:s|sec|secs|second|seconds))?\s*$',
+    re.IGNORECASE,
+)
+
+
+def parse_timedelta(value: Optional[Union[int, float, str, dt.timedelta]]) -> Optional[dt.timedelta]:
+    """Decode a string time interval into datetime.timedelta.
+
+    This is for *fixed* time intervals only (intraday intervals). It will:
+
+    - return timedelta values unchanged
+    - interpret numbers (int/float) as seconds
+    - interpret numeric strings as seconds
+    - parse d/h/m/s formatted strings (e.g. '15m', '1h30m', '2d', '90s', '1d12h')
+
+    If the string cannot be parsed as a fixed interval (e.g. '1b', '15m' intended as months, '3M', etc),
+    it raises ValueError.
+
+    Note: use decode_frequency for tenor/frequency strings.
+    """
+    if value is None:
+        return None
+    if isinstance(value, dt.timedelta):
+        return value
+
+    if isinstance(value, (int, float)):
+        return dt.timedelta(seconds=float(value))
+
+    if isinstance(value, str):
+        s = value.strip()
+
+        # numeric string -> seconds
+        try:
+            return dt.timedelta(seconds=float(s))
+        except ValueError:
+            pass
+
+        m = _TIMEDELTA_PATTERN.match(s)
+        if m and any(m.groups()):
+            days, hours, minutes, seconds = (float(v) if v else 0.0 for v in m.groups())
+            return dt.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
+
+        raise ValueError(f'Cannot parse {value!r} as a timedelta. Examples: 3600, "60m", "2h", "90s", "1d12h30m"')
+
+    raise TypeError(f'Cannot convert {value!r} to timedelta')
