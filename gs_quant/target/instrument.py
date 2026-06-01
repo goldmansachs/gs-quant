@@ -327,6 +327,7 @@ class EqBarrier(Instrument):
 @dataclass(unsafe_hash=True, repr=False)
 class EqBinary(Instrument):
     underlier: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    underlier_type: Optional[UnderlierType] = field(default=None, metadata=field_metadata)
     buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
     option_type: Optional[OptionType] = field(default=None, metadata=field_metadata)
     expiration_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)

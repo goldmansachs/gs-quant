@@ -316,8 +316,8 @@ EqAnnualImpliedVol.__doc__ = "Equity Annual Implied Volatility (%)"
 EqDelta = RiskMeasureWithCurrencyParameter(name="EqDelta", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Delta"))
 EqDelta.__doc__ = "Change in Dollar Price (USD present value) due to individual 1% move in the spot price of underlying equity security"
 
-EqForward = RiskMeasure(name="EqForward", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Forward Price"))
-EqForward.__doc__ = "Equity Forward"
+EqForwardSpot = RiskMeasure(name="EqForwardSpot", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Forward Price"))
+EqForwardSpot.__doc__ = "Equity Forward Spot"
 
 EqGamma = RiskMeasureWithCurrencyParameter(name="EqGamma", asset_class=AssetClass("Equity"), measure_type=RiskMeasureType("Gamma"))
 EqGamma.__doc__ = "Change in EqDelta for a 1% move in the price of the underlying equity security"
@@ -564,9 +564,6 @@ RFRFXSprRate.__doc__ = "RFRFXSprRate"
 
 ResolvedInstrumentValues = RiskMeasure(name="ResolvedInstrumentValues", measure_type=RiskMeasureType("Resolved Instrument Values"))
 ResolvedInstrumentValues.__doc__ = "Resolved InstrumentBase Values"
-
-Strike = RiskMeasure(name="Strike", asset_class=AssetClass("Commod"), measure_type=RiskMeasureType("Strike"))
-Strike.__doc__ = "Strike"
 
 Theta = RiskMeasure(name="Theta", measure_type=RiskMeasureType("Theta"))
 Theta.__doc__ = "Theta"
