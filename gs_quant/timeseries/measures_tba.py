@@ -25,6 +25,7 @@ from gs_quant.common import AssetClass, AssetType
 from gs_quant.data import Dataset
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import Asset, AssetIdentifier
+from gs_quant.session import GsSession, Environment
 from gs_quant.timeseries.helper import plot_measure
 from gs_quant.timeseries.measures import ExtendedSeries, ASSET_SPEC, _asset_from_spec, MeasureDependency
 
@@ -83,15 +84,24 @@ class TBAAsset(Enum):
 def _bbid_to_actual_asset(asset_spec: ASSET_SPEC) -> str:
     asset = _asset_from_spec(asset_spec)
     bbid = asset.get_identifier(AssetIdentifier.BLOOMBERG_ID)
-    if bbid == 'FNM':
-        result = 'MA4R2VVY7F1MZ44R'
-    elif bbid == 'FDW':
-        result = 'MAHV2RXBZA55YXVD'
-    elif bbid == 'TSF':
-        result = 'MAMSQK44XNC6Z2D0'
+
+    env = GsSession.current.environment
+    if env == Environment.PROD:
+        mapping = {
+            'FNM': 'MA4R2VVY7F1MZ44R',
+            'FDW': 'MAHV2RXBZA55YXVD',
+            'TSF': 'MAMSQK44XNC6Z2D0',
+        }
     else:
-        return asset.get_marquee_id()
-    return result
+        mapping = {
+            'FNM': 'MA97SYRKJ8WBPHQ7',
+            'FDW': 'MAN48E7VAQT0GSHC',
+            'TSF': 'MAYJPWRM8JMTMFWA',
+        }
+
+    if bbid in mapping:
+        return mapping[bbid]
+    return asset.get_marquee_id()
 
 
 # Allowed coupon values (increments of 0.5)

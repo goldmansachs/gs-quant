@@ -203,7 +203,12 @@ def test_butterfly_invalid_coupon():
 
 
 def test_bbid_to_actual_asset_fnm(mocker):
-    """_bbid_to_actual_asset returns correct Marquee ID for FNM."""
+    """_bbid_to_actual_asset returns correct Marquee ID for FNM in PROD."""
+    mock_session = Mock()
+    mock_session.current = mock_session
+    mock_session.environment = tm_cpn.Environment.PROD
+    mocker.patch.object(tm_cpn, 'GsSession', mock_session)
+
     mock_asset = Mock()
     mock_asset.get_identifier.return_value = 'FNM'
     mocker.patch.object(tm_cpn, '_asset_from_spec', return_value=mock_asset)
@@ -213,7 +218,12 @@ def test_bbid_to_actual_asset_fnm(mocker):
 
 
 def test_bbid_to_actual_asset_fdw(mocker):
-    """_bbid_to_actual_asset returns correct Marquee ID for FDW."""
+    """_bbid_to_actual_asset returns correct Marquee ID for FDW in PROD."""
+    mock_session = Mock()
+    mock_session.current = mock_session
+    mock_session.environment = tm_cpn.Environment.PROD
+    mocker.patch.object(tm_cpn, 'GsSession', mock_session)
+
     mock_asset = Mock()
     mock_asset.get_identifier.return_value = 'FDW'
     mocker.patch.object(tm_cpn, '_asset_from_spec', return_value=mock_asset)
@@ -223,7 +233,12 @@ def test_bbid_to_actual_asset_fdw(mocker):
 
 
 def test_bbid_to_actual_asset_tsf(mocker):
-    """_bbid_to_actual_asset returns correct Marquee ID for TSF."""
+    """_bbid_to_actual_asset returns correct Marquee ID for TSF in PROD."""
+    mock_session = Mock()
+    mock_session.current = mock_session
+    mock_session.environment = tm_cpn.Environment.PROD
+    mocker.patch.object(tm_cpn, 'GsSession', mock_session)
+
     mock_asset = Mock()
     mock_asset.get_identifier.return_value = 'TSF'
     mocker.patch.object(tm_cpn, '_asset_from_spec', return_value=mock_asset)
@@ -234,6 +249,11 @@ def test_bbid_to_actual_asset_tsf(mocker):
 
 def test_bbid_to_actual_asset_unknown(mocker):
     """_bbid_to_actual_asset falls back to get_marquee_id for unknown BBID."""
+    mock_session = Mock()
+    mock_session.current = mock_session
+    mock_session.environment = tm_cpn.Environment.PROD
+    mocker.patch.object(tm_cpn, 'GsSession', mock_session)
+
     mock_asset = Mock()
     mock_asset.get_identifier.return_value = 'UNKNOWN'
     mock_asset.get_marquee_id.return_value = 'MA_FALLBACK'
@@ -241,6 +261,26 @@ def test_bbid_to_actual_asset_unknown(mocker):
 
     result = tm_cpn._bbid_to_actual_asset(mock_asset)
     assert result == 'MA_FALLBACK'
+
+
+def test_bbid_to_actual_asset_qa_env(mocker):
+    """_bbid_to_actual_asset returns QA Marquee IDs when environment is QA."""
+    mock_session = Mock()
+    mock_session.current = mock_session
+    mock_session.environment = tm_cpn.Environment.QA
+    mocker.patch.object(tm_cpn, 'GsSession', mock_session)
+
+    mock_asset = Mock()
+    mocker.patch.object(tm_cpn, '_asset_from_spec', return_value=mock_asset)
+
+    mock_asset.get_identifier.return_value = 'FNM'
+    assert tm_cpn._bbid_to_actual_asset(mock_asset) == 'MA97SYRKJ8WBPHQ7'
+
+    mock_asset.get_identifier.return_value = 'FDW'
+    assert tm_cpn._bbid_to_actual_asset(mock_asset) == 'MAN48E7VAQT0GSHC'
+
+    mock_asset.get_identifier.return_value = 'TSF'
+    assert tm_cpn._bbid_to_actual_asset(mock_asset) == 'MAYJPWRM8JMTMFWA'
 
 
 def test_resolve_tba_asset_name_valid():
