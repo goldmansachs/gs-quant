@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+from inspect import signature
 import re
 from typing import Mapping, Optional, Tuple, Union
 
@@ -186,6 +187,11 @@ class CloseMarket(Market):
             return self.__date
         else:
             return close_market_date(self.location, self.__date, self.roll_hr_and_min)
+
+    def clone(self, **kwargs):
+        clone_kwargs = {k: getattr(self, k, None) for k in signature(self.__init__).parameters.keys()}
+        clone_kwargs.update(kwargs)
+        return self.__class__(**clone_kwargs)
 
 
 class TimestampedMarket(Market):
