@@ -25,6 +25,7 @@ from collections import namedtuple
 from dataclasses import Field, InitVar, MISSING, dataclass, field, fields, replace
 from enum import EnumMeta, Enum
 from functools import update_wrapper
+from inspect import signature
 from typing import Iterable, Mapping, Optional, Union, Tuple
 
 import numpy as np
@@ -654,6 +655,11 @@ class Market(ABC):
 
     def to_dict(self):
         return self.market.to_dict()
+
+    def clone(self, **kwargs):
+        clone_kwargs = {k: getattr(self, k, None) for k in signature(self.__init__).parameters.keys()}
+        clone_kwargs.update(kwargs)
+        return self.__class__(**clone_kwargs)
 
 
 class Sentinel:
