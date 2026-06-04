@@ -30,8 +30,7 @@ from gs_quant.target.assets_screener import (
     AssetScreenerRequestFilterLimits,
     AssetScreenerRequestStringOptions,
 )
-from gs_quant.target.screens import Screen as TargetScreen, ScreenParameters as TargetScreenParameters
-from gs_quant.common import Currency as CurrencyImport
+from gs_quant.target.screens import Screen as TargetScreen, ScreenerQueryBuilder
 
 logging.root.setLevel('INFO')
 
@@ -97,11 +96,6 @@ class Seniority(Enum):
 class Direction(Enum):
     BUY = "Buy"
     SELL = "Sell"
-
-
-@unique
-class Currency(CurrencyImport, Enum):
-    pass
 
 
 class CheckboxFilter:
@@ -413,8 +407,8 @@ class Screen:
 
     def save(self):
         """Create a screen using GsScreenApi if it doesn't exist. Update the report if it does."""
-        parameters = self.__to_target_parameters()
-        target_screen = TargetScreen(name=self.name, parameters=parameters)
+        query_builder = self.__to_target_query_builder()
+        target_screen = TargetScreen(name=self.name, query_builder=query_builder)
         if self.id:
             target_screen.id = self.id
             GsScreenApi.update_screen(target_screen)
@@ -453,43 +447,6 @@ class Screen:
             set_(filters, prop, get(self.__filters, prop))
         return filters
 
-    def __to_target_parameters(self) -> TargetScreenParameters:
-        payload = {}
-        parameters = self.__set_up_parameters()
-
-        for name in parameters:
-            if name == 'face_value' or name == 'direction':
-                payload[name] = parameters[name]
-            elif isinstance(parameters[name], RangeFilter):
-                payload[name] = AssetScreenerRequestFilterLimits(min_=parameters[name].min, max_=parameters[name].max)
-            elif isinstance(parameters[name], CheckboxFilter):
-                if parameters[name].selections and parameters[name].checkbox_type:
-                    payload[name] = parameters[name].selections
-        return TargetScreenParameters(**payload)
-
-    def __set_up_parameters(self) -> dict:
-        filter_to_parameter = {
-            'face_value': 'face_value',
-            'direction': 'direction',
-            'gs_liquidity_score': 'liquidity_score',
-            'gs_charge_bps': 'gs_charge_bps',
-            'gs_charge_dollars': 'gs_charge_dollars',
-            'modified_duration': 'duration',
-            'yield_to_convention': 'yield_',
-            'spread_to_benchmark': 'spread',
-            'z_spread': 'z_spread',
-            'g_spread': 'g_spread',
-            'bval_mid_price': 'mid_price',
-            'maturity': 'maturity',
-            'amount_outstanding': 'amount_outstanding',
-            'rating_standard_and_poors': 'rating',
-            'seniority': 'seniority',
-            'currency': 'currency',
-            'sector': 'sector',
-            'issue_date': 'issue_date',
-        }
-
-        parameters = {}
-        for prop in TargetScreenParameters.properties():
-            set_(parameters, prop, get(self.__filters, filter_to_parameter[prop]))
-        return parameters
+    def __to_target_query_builder(self) -> ScreenerQueryBuilder:
+        filters = self.__set_up_filters()
+        return ScreenerQueryBuilder(filters=filters)

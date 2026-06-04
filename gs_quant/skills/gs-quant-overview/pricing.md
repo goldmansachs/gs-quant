@@ -1,9 +1,6 @@
----
-name: gs-quant-pricing
-description: "Pricing instruments and portfolios in gs_quant: PricingContext, HistoricalPricingContext for historical pricing over date ranges, and LiveMarket for real-time FX pricing. Covers pricing dates, market data location, batch mode, and async patterns."
----
-
 # Pricing in gs_quant
+
+Pricing instruments and portfolios in gs_quant: PricingContext, HistoricalPricingContext for historical pricing over date ranges, and LiveMarket for real-time FX pricing. Covers pricing dates, market data location, batch mode, and async patterns.
 
 ## PricingContext Basics
 
@@ -180,8 +177,7 @@ prices = result[DollarPrice]
 
 ### Key Points
 
-- **FX only** — `LiveMarket` is currently supported for FX instruments only.
 - **No caching** — results are not cached since the market state changes continuously.
 - **Combines with other parameters** — you can still set `csa_term`, `is_async`, `is_batch`, etc. alongside `market=LiveMarket()`.
 
-See `gs-quant-results` for how to extract and work with calculation results.
+See `results.md` for more information on extracting results from pricing calculation (FloatWithInfo, DataFrameWithInfo, PortfolioRiskResult, etc.)

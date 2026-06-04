@@ -1,8 +1,3 @@
----
-name: gs-quant-backtesting
-description: "Guide to the gs_quant backtesting framework: Strategy, triggers (PeriodicTrigger, StrategyRiskTrigger, MktTrigger, DateTrigger, AggregateTrigger, NotTrigger), actions (AddTradeAction, HedgeAction, AddScaledTradeAction, ExitTradeAction), GenericEngine, EquityVolEngine, transaction costs, and result extraction (result_summary, trade_ledger, summary_stats)."
----
-
 # gs_quant Backtesting Guide
 
 ## 1. Architecture Overview

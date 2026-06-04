@@ -1,6 +1,6 @@
 ---
 name: gs-quant-overview
-description: "Quick-start guide for gs_quant: session setup with GsSession, constructing portfolios, resolving instruments. Start here for any gs_quant task."
+description: "Quick-start guide for gs_quant: session setup with GsSession, constructing portfolios, resolving instruments. Start here for any coding task that uses the gs_quant library"
 ---
 
 # gs_quant Quick Start
@@ -24,12 +24,12 @@ GsSession.use(
 
 - **`environment_or_domain`** — `Environment.PROD` (default), `Environment.QA`, or `Environment.DEV`. You can also pass a raw URL string.
 - **`client_id` / `client_secret`** — OAuth2 application credentials. When both are provided the library creates an `OAuth2Session`.
-- **`scopes`** — Optional iterable of `GsSession.Scopes` values. Usually when pricing trade you will need `RUN_ANALYTICS`.
+- **`scopes`** — Optional iterable of `GsSession.Scopes` values. Usually when pricing trade you will need `run_analytics`.
 
 ### Kerberos / SSO (Internal GS)
 
 If no `client_id` is supplied, the library will attempt Kerberos or pass-through authentication automatically:
-This is for internal GS users only and requires appropriate network access and installation of gs_quant_internal.
+This is for internal GS users only and requires appropriate network access and installation of gs-quant-internal.
 
 ```python
 GsSession.use(Environment.PROD)
@@ -132,11 +132,10 @@ results = portfolio.calc([DollarPrice, IRDelta]) # multiple risk measures
 
 ## See Also
 
-For detailed guidance on specific topics, see these focused skills:
+For detailed guidance on specific topics, see these focused files.
 
-- **`gs-quant-instruments`** (`.claude/skills/instruments.md`) — constructing all instrument types (IRSwap, XCcy swaps, FXOption, EqOption, etc.) and FX pitfalls
-- **`gs-quant-pricing`** (`.claude/skills/pricing.md`) — PricingContext, HistoricalPricingContext, LiveMarket
-- **`gs-quant-results`** (`.claude/skills/results.md`) — extracting results (FloatWithInfo, DataFrameWithInfo, PortfolioRiskResult, etc.)
-- **`gs-quant-datasets`** (`.claude/skills/datasets.md`) — accessing market data with the Dataset class
-- **`gs-quant-backtesting`** (`.claude/skills/backtesting.md`) — backtesting framework (triggers, actions, engines, results)
-- **`gs-quant-measures`** (`.claude/skills/measure.md`) — writing custom measures with `@plot_measure` and `@risk_measure` decorators
+- `instruments.md` — Constructing all instrument types (IRSwap, XCcy swaps, FXOption, EqOption, etc.) and FX pitfalls
+- `pricing.md` — Pricing instruments and portfolios in gs_quant: PricingContext, HistoricalPricingContext for historical pricing over date ranges, and LiveMarket for real-time pricing. Covers pricing dates, market data location, batch mode, and async patterns.
+- `datasets.md` — Accessing market and reference data via the gs_quant Dataset class: get_data, get_data_series, get_data_last, get_coverage, uploading data, batching large queries. Covers TREOD for equities, FXIVOL_STANDARD, symbol dimensions, and common pitfalls.
+- `backtesting.md` — Guide to the gs_quant backtesting framework: Strategy, triggers, actions, GenericEngine, EquityVolEngine, transaction costs, and result extraction.
+- `measure.md` — writing custom measures with `@plot_measure` and `@risk_measure` decorators

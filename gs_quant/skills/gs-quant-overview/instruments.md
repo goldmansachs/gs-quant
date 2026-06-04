@@ -1,8 +1,3 @@
----
-name: gs-quant-instruments
-description: "How to construct financial instruments in gs_quant: IRSwap, cross-currency swaps (IRXccySwap, IRXccySwapFltFlt, IRXccySwapFixFlt, IRXccySwapFixFix), IRSwaption, IRCap, FXOption, FXForward, FXBinary, FXMultiCrossBinary, EqOption. Includes FX pitfalls (premium=0, FXMultiCrossBinaryLeg OptionType)."
----
-
 # Constructing Trades with `gs_quant.instrument`
 
 Instruments are the building blocks of gs_quant. Every tradeable product is represented as a dataclass in `gs_quant.instrument`. Construct an instrument by importing its class and supplying the key economic parameters — any parameter you omit will be resolved by the server later.
@@ -126,18 +121,16 @@ swap = IRXccySwap(
     payer_currency=Currency.USD,
     payer_spread=0.0,
     receiver_currency=Currency.EUR,
-    receiver_spread=0.0,                # XCcy basis — resolve at par if omitted
+    receiver_spread=0.0,           # XCcy basis — resolve at par if omitted
     notional_amount=10000,         # payer notional only; receiver resets to FX spot
     principal_exchange=PrincipalExchange.Both,
     # initial_fx_rate=1.10,             # optional: pin the opening FX rate
-    # notional_reset_side=PayReceive.Receive,  # default — receiver resets (standard MTM)
 )
 swap.resolve()
 ```
 
 Key additional parameters vs `IRXccySwapFltFlt`: `initial_fx_rate` (optional, pins the
-opening FX rate), `notional_reset_side` (`PayReceive.Receive` by default — the standard
-convention). `receiver_amount` is absent; do not set it.
+opening FX rate), `notional_reset_side`.
 
 **MTM vs non-MTM at a glance:**
 
@@ -226,22 +219,25 @@ When constructing FX options (FXOption, FXBinary, FXMultiCrossBinary, etc.), if 
 
 **Problem:** If you want to know the cost/value of the option, you'll always get 0.
 
-**Solution:** Always set `premium=0` explicitly when you want `DollarPrice` to return the actual option value:
+**Solution:** Either set `premium=0` explicitly when you want `DollarPrice` to return the actual option present value, or use the risk measure `FairPremium`, `FairPremiumInPercent` which will ignore any premium specified on the instrument.
 
 ```python
+from gs_quant import risk
 from gs_quant.instrument import FXOption, FXBinary
 
 # WRONG - DollarPrice will be ~0 after resolution
-option_wrong = FXOption(
+option = FXOption(
     pair='EURUSD',
     expiration_date='3m',
     option_type='Call',
     strike_price='ATMF',
     notional_amount=10e6,
 )
+option.calc(risk.DollarPrice)
 
 # CORRECT - DollarPrice will be the option value
-option_correct = FXOption(
+# Same applies to FXBinary, FXEuropeanKnockout etc
+option = FXOption(
     pair='EURUSD',
     expiration_date='3m',
     option_type='Call',
@@ -249,18 +245,12 @@ option_correct = FXOption(
     notional_amount=10e6,
     premium=0,  # <-- Important!
 )
+option.calc(risk.DollarPrice)
 
-# Same applies to FXBinary
-binary = FXBinary(
-    pair='EURUSD',
-    buy_sell=BuySell.Buy,
-    option_type=OptionType.Call,
-    strike_price='s',
-    notional_amount=1e6,
-    notional_currency=Currency.USD,
-    expiration_date='3m',
-    premium=0,  # <-- Important!
-)
+# OR make sure to use FairPremium instead of DollarPrice
+# This will also respect the premium settlement date of the option.
+option.calc(risk.FairPremium)
+
 ```
 
 ### 2. FXMultiCrossBinaryLeg Uses Different OptionType Values
@@ -328,5 +318,4 @@ Set the instrument `name` property for easy identification in portfolios and res
 ```python
 swap.name = 'USD 10y Payer'
 ```
-
-See `gs-quant-overview` for resolving instruments and building portfolios. See `gs-quant-pricing` for pricing.
+See `pricing.md` for pricing.

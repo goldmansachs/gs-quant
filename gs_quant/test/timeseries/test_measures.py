@@ -2489,15 +2489,104 @@ def test_basis_swap_spread(mocker):
     replace.restore()
 
 
+def test_get_tpicap_rates_assets_full_coverage():
+    replace = Replacer()
+
+    def _kwargs(
+        effective='1m',
+        termination='5y',
+        location=PricingLocation.LDN,
+        clearing='LCH',
+    ):
+        return dict(
+            asset_parameters_notional_currency='USD',
+            asset_parameters_floating_rate_option='USD-LIBOR-BBA',
+            asset_parameters_floating_rate_designated_maturity='3m',
+            asset_parameters_effective_date=effective,
+            asset_parameters_termination_date=termination,
+            asset_parameters_clearing_house=clearing,
+            pricing_location=location,
+        )
+
+    query_data = replace('gs_quant.timeseries.measures_rates.GsDataApi.query_data', Mock())
+
+    # 1) Standard success path + DataQuery/where construction for non-spot start
+    query_data.return_value = [{'tpicapId': 'AA_LDN.LCH.X'}]
+    out = tm_rates._get_tpicap_rates_assets(**_kwargs(effective='1m', termination='5y'))
+    assert out == 'AA_LDN.LCH.X'
+
+    sent_query = query_data.call_args.kwargs['query']
+    where = sent_query.where
+    assert where['currency'] == 'USD'
+    assert where['paymentFrequencyPeriod1'] == '05Y'
+    assert where['paymentFrequencyPeriod2'] == '01M'
+    assert where['settlementIndex1'] == 'FIXED'
+    assert sent_query.start_date == dt.date(2026, 5, 22)
+    assert sent_query.snapshot is True
+    assert query_data.call_args.kwargs['dataset_id'] == 'SF_TPICAP_SWAPS_REFERENCE_V2_YRBSW3R0'
+
+    # 2) Spot start branch: start='00b' should remove rows containing paymentFrequencyPeriod2
+    query_data.return_value = [
+        {'tpicapId': 'AA_LDN.LCH.X', 'paymentFrequencyPeriod2': '00B'},
+        {'tpicapId': 'BB_LDN.LCH.X'},
+    ]
+    out = tm_rates._get_tpicap_rates_assets(**_kwargs(effective='0b', termination='5y'))
+    assert out == 'BB_LDN.LCH.X'
+
+    # 3) >1 rows: location filter -> clearing filter -> remove SX
+    query_data.return_value = [
+        {'tpicapId': 'AA_NYK.LCH.X'},  # keep
+        {'tpicapId': 'AA_LDN.LCH.X'},  # removed by location
+        {'tpicapId': 'AA_NYK.CME.X'},  # removed by clearing
+        {'tpicapId': 'SX_NYK.LCH.X'},  # removed by SX rule
+    ]
+    out = tm_rates._get_tpicap_rates_assets(**_kwargs(location=PricingLocation.NYC, clearing='LCH'))
+    assert out == 'AA_NYK.LCH.X'
+
+    # 4) Default mapping branches:
+    #    - unknown location -> TPICAPLocation.NYK
+    #    - unsupported clearing house -> TPICAPClearing.BIL
+    query_data.return_value = [
+        {'tpicapId': 'AA_NYK.BIL.X'},  # keep via default BIL
+        {'tpicapId': 'AA_NYK.LCH.X'},  # removed by clearing filter
+    ]
+    out = tm_rates._get_tpicap_rates_assets(**_kwargs(location='UNKNOWN_LOCATION', clearing='NONE'))
+    assert out == 'AA_NYK.BIL.X'
+
+    # 5) Error: still multiple rows after filtering
+    query_data.return_value = [
+        {'tpicapId': 'AA_NYK.LCH.X'},
+        {'tpicapId': 'BB_NYK.LCH.X'},
+    ]
+    with pytest.raises(MqValueError, match='multiple assets'):
+        tm_rates._get_tpicap_rates_assets(**_kwargs(location=PricingLocation.NYC, clearing='LCH'))
+
+    # 6) Error: no rows
+    query_data.return_value = []
+    with pytest.raises(MqValueError, match='did not match any asset'):
+        tm_rates._get_tpicap_rates_assets(**_kwargs())
+
+    replace.restore()
+
+
 def test_swap_rate(mocker):
     replace = Replacer()
     args = dict(swap_tenor='10y', benchmark_type=None, floating_rate_tenor=None, forward_tenor='0b', real_time=False)
 
+    # Unsupported currency branch in _get_swap_data
+    mock_unsupported = Currency('MA891', 'ACU')
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'ACU'
+    with pytest.raises(NotImplementedError):
+        tm_rates.swap_rate(mock_unsupported, '10y')
+
+    # Setup USD asset for remaining tests
     mock_usd = Currency('MAZ7RWC904JYHYPS', 'USD')
     args['asset'] = mock_usd
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'USD'
 
+    # Existing validation branches
     args['swap_tenor'] = '5yr'
     with pytest.raises(MqValueError):
         tm_rates.swap_rate(**args)
@@ -2522,22 +2611,39 @@ def test_swap_rate(mocker):
         tm_rates.swap_rate(**args)
     args['benchmark_type'] = 'fed_funds'
 
-    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
-    xrefs.return_value = 'USD'
-    identifiers = replace('gs_quant.timeseries.measures_rates._get_tdapi_rates_assets', Mock())
-    identifiers.return_value = {'MAZ7RWC904JYHYPS'}
-    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    # GS provider branch + pricing location normalization (USD + HKG -> TKO)
+    tdapi_assets = replace('gs_quant.timeseries.measures_rates._get_tdapi_rates_assets', Mock())
+    tdapi_assets.return_value = 'MAZ7RWC904JYHYPS'
+
+    build_query = replace('gs_quant.timeseries.measures_rates.GsDataApi.build_market_data_query', Mock())
+    build_query.return_value = {'queries': []}
+
+    market_data = replace('gs_quant.timeseries.measures_rates._market_data_timed', Mock())
+    market_data.return_value = mock_curr(None, None)
+
+    args['location'] = PricingLocation.HKG
     actual = tm_rates.swap_rate(**args)
     expected = tm.ExtendedSeries([1, 2, 3], index=_index * 3, name='swapRate')
     expected.dataset_ids = _test_datasets
     assert_series_equal(expected, actual)
     assert actual.dataset_ids == _test_datasets
+    assert build_query.call_args.kwargs['where']['pricingLocation'] == PricingLocation.TKO.value
 
+    # Empty dataframe branch through swap_rate wrapper
+    empty_df = MarketDataResponseFrame()
+    empty_df.dataset_ids = ()
+    market_data.return_value = empty_df
+    actual = tm_rates.swap_rate(**args)
+    assert actual.empty
+    assert actual.dataset_ids == ()
+
+    # EUR + 'estr' alias path in _check_benchmark_type
     xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
     xrefs.return_value = 'EUR'
-    identifiers = replace('gs_quant.timeseries.measures_rates._get_tdapi_rates_assets', Mock())
-    identifiers.return_value = {'MAJNQPFGN1EBDHAE'}
-    mocker.patch.object(GsDataApi, 'get_market_data', return_value=mock_curr(None, None))
+    tdapi_assets = replace('gs_quant.timeseries.measures_rates._get_tdapi_rates_assets', Mock())
+    tdapi_assets.return_value = 'MAJNQPFGN1EBDHAE'
+    market_data.return_value = mock_curr(None, None)
+
     args['asset'] = Currency('MAJNQPFGN1EBDHAE', 'EUR')
     args['benchmark_type'] = 'estr'
     args['location'] = PricingLocation.LDN
@@ -2546,6 +2652,95 @@ def test_swap_rate(mocker):
     expected.dataset_ids = _test_datasets
     assert_series_equal(expected, actual)
     assert actual.dataset_ids == _test_datasets
+
+    # _get_swap_data guard: real_time + query_type != SWAP_RATE
+    with pytest.raises(NotImplementedError):
+        tm_rates._get_swap_data(
+            asset=args['asset'],
+            swap_tenor='10y',
+            benchmark_type='estr',
+            floating_rate_tenor='1y',
+            forward_tenor='0b',
+            real_time=True,
+            query_type=QueryType.SWAP_ANNUITY,
+        )
+
+    # TPICAP provider branch (EOD path: startDate/endDate)
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    args['asset'] = mock_usd
+    args['benchmark_type'] = BenchmarkType.LIBOR
+    args['floating_rate_tenor'] = '3m'
+    args['forward_tenor'] = '0b'
+    args['location'] = PricingLocation.LDN
+    args['data_provider'] = tm_rates.DataProvider.TPICAP
+    args['real_time'] = False
+
+    tpicap_assets = replace('gs_quant.timeseries.measures_rates._get_tpicap_rates_assets', Mock())
+    tpicap_assets.return_value = 'TPICAP_ID'
+
+    query_data = replace('gs_quant.timeseries.measures_rates.GsDataApi.query_data', Mock())
+    query_data.return_value = [{'midPrice': 1.25}]
+
+    tpicap_df = MarketDataResponseFrame({'midPrice': [1.25]}, index=_index)
+    tpicap_df.dataset_ids = _test_datasets2
+    construct_df = replace('gs_quant.timeseries.measures_rates.GsDataApi.construct_dataframe_with_types', Mock())
+    construct_df.return_value = tpicap_df
+
+    with DataContext('2019-01-01', '2019-01-02'):
+        actual = tm_rates.swap_rate(**args)
+
+    expected = tm.ExtendedSeries([1.25], index=_index, name='swapRate')
+    expected.dataset_ids = _test_datasets2
+    assert_series_equal(expected, actual)
+    assert actual.dataset_ids == _test_datasets2
+
+    sent_query = query_data.call_args.kwargs['query']
+    assert sent_query.start_date == dt.date(2019, 1, 1)
+    assert sent_query.end_date == dt.date(2019, 1, 2)
+
+    # TPICAP provider branch (EOD path: interval)
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+    args['asset'] = mock_usd
+    args['benchmark_type'] = BenchmarkType.LIBOR
+    args['floating_rate_tenor'] = '3m'
+    args['forward_tenor'] = '0b'
+    args['location'] = PricingLocation.LDN
+    args['data_provider'] = tm_rates.DataProvider.TPICAP
+    args['real_time'] = False
+
+    tpicap_assets = replace('gs_quant.timeseries.measures_rates._get_tpicap_rates_assets', Mock())
+    tpicap_assets.return_value = 'TPICAP_ID'
+
+    query_data = replace('gs_quant.timeseries.measures_rates.GsDataApi.query_data', Mock())
+    query_data.return_value = [{'midPrice': 1.25}]
+
+    tpicap_df = MarketDataResponseFrame({'midPrice': [1.25]}, index=_index)
+    tpicap_df.dataset_ids = _test_datasets2
+    construct_df = replace('gs_quant.timeseries.measures_rates.GsDataApi.construct_dataframe_with_types', Mock())
+    construct_df.return_value = tpicap_df
+
+    with DataContext(interval='90d'):
+        actual = tm_rates.swap_rate(**args)
+
+    expected = tm.ExtendedSeries([1.25], index=_index, name='swapRate')
+    expected.dataset_ids = _test_datasets2
+    assert_series_equal(expected, actual)
+    assert actual.dataset_ids == _test_datasets2
+
+    # TPICAP provider branch (RT path: startTime/endTime)
+    args['real_time'] = True
+    with DataContext(dt.datetime(2019, 1, 1, 9), dt.datetime(2019, 1, 1, 10)):
+        actual = tm_rates.swap_rate(**args)
+
+    expected = tm.ExtendedSeries([1.25], index=_index, name='swapRate')
+    expected.dataset_ids = _test_datasets2
+    assert_series_equal(expected, actual)
+    sent_query = query_data.call_args.kwargs['query']
+    assert sent_query.start_time is not None
+    assert sent_query.end_time is not None
+
     replace.restore()
 
 

@@ -1,9 +1,6 @@
----
-name: gs-quant-results
-description: "Extracting and working with gs_quant calculation results: FloatWithInfo, SeriesWithInfo, DataFrameWithInfo, ErrorValue, MultipleRiskMeasureResult, PortfolioRiskResult. Covers futures, slicing portfolio results by instrument/measure/date, historical results, to_frame(), error handling, and arithmetic."
----
-
 # Result Extraction
+
+Extracting and working with gs_quant calculation results: FloatWithInfo, SeriesWithInfo, DataFrameWithInfo, ErrorValue, MultipleRiskMeasureResult, PortfolioRiskResult. Covers futures, slicing portfolio results by instrument/measure/date, historical results, to_frame(), error handling, and arithmetic."
 
 Calculation results in gs_quant are rich typed objects that carry metadata (risk key, unit, error info) alongside the actual values.
 

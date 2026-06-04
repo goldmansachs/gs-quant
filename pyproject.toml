@@ -11,10 +11,9 @@ authors = [
 description = "Goldman Sachs Quant"
 readme = "README.md"
 license = {text = "Apache-2.0"}
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -25,7 +24,6 @@ classifiers = [
 dependencies = [
     "aenum",
     "backoff",
-    "backports.zoneinfo; python_version < '3.9'",
     "cachetools",
     "certifi",
     "dataclasses_json",
@@ -45,14 +43,12 @@ dependencies = [
     "httpx>=0.28.1",
     "scipy>=1.2.0",
     "statsmodels>=0.13.0",
+    "pyyaml",
     "tqdm",
     "websockets"
 ]
 
 [project.optional-dependencies]
-turbo = [
-    "quant-extensions",
-]
 notebook = [
     "jupyter",
     "matplotlib",
@@ -85,6 +81,15 @@ develop = [
     "pytest-mock",
     "pytest-order",
     "testfixtures",
+]
+mcp = [
+    "fastmcp>=3.0",
+    "python-dotenv",
+    "uvicorn>=0.47",
+    "typer>=0.25",
+    "prompt_toolkit",
+    "rich",
+    "pydantic",
 ]
 
 [project.urls]
@@ -136,6 +141,7 @@ gs_quant = [
     "guides/*",
     "tutorials/*",
     "docs/*",
+    "skills/*/*.md",
     "_version.py",
 ]
 

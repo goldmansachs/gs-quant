@@ -1,8 +1,3 @@
----
-name: gs-quant-datasets
-description: "Accessing market and reference data via the gs_quant Dataset class: get_data, get_data_series, get_data_last, get_coverage, uploading data, batching large queries. Covers TREOD for equities, FXIVOL_STANDARD, symbol dimensions, and common pitfalls."
----
-
 # Accessing Data with `Dataset`
 
 The `Dataset` class in `gs_quant.data` provides access to Marquee datasets — structured,
@@ -140,7 +135,7 @@ df = query_in_batches(ds, ids, dt.date(2024, 1, 1), dt.date(2025, 3, 19), id_fie
 ```
 
 ## Uploading Data
-
+D
 ```python
 import pandas as pd
 

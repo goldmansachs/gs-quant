@@ -782,6 +782,7 @@ def test_get_default_ois_benchmark(mocker):
     assert tm_rates._get_default_ois_benchmark(CurrencyEnum.USD) == tm_rates.BenchmarkTypeCB.Fed_Funds
     assert tm_rates._get_default_ois_benchmark(CurrencyEnum.EUR) == tm_rates.BenchmarkTypeCB.EUROSTR
     assert tm_rates._get_default_ois_benchmark(CurrencyEnum.GBP) == tm_rates.BenchmarkTypeCB.SONIA
+    assert tm_rates._get_default_ois_benchmark(CurrencyEnum.JPY) == tm_rates.BenchmarkTypeCB.Fed_Funds
 
 
 def test_policy_rate_term_structure(mocker):

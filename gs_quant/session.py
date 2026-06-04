@@ -612,6 +612,7 @@ class GsSession(ContextBase):
                     scope.span.set_tag('error', True)
                 scope.span.set_tag('dash.request.id', request_id)
                 scope.span.set_tag('response.content.type', response.headers.get('Content-Type'))
+                scope.span.set_tag('response.content.length', len(response.content))
         if response.status_code == 401:
             # Expired token or other authorization issue
             if not try_auth:

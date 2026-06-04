@@ -31,6 +31,7 @@ from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import IRSwap
 from gs_quant.markets.securities import AssetIdentifier, Asset
+from gs_quant.target.data import DataQuery, FieldFilterMapDataQuery
 from gs_quant.timeseries import currency_to_default_ois_asset, convert_asset_for_rates_data_set, RatesConversionType
 from gs_quant.timeseries.helper import _to_offset, check_forward_looking, plot_measure, Entitlement
 from gs_quant.timeseries.measures import (
@@ -57,6 +58,63 @@ class _ClearingHouse(Enum):
     NONE = 'NONE'
 
 
+class TPICAPLocation(Enum):
+    BGK = "BGK"  # Bangkok
+    COP = "COP"  # Copenhagen
+    DUB = "DUB"  # Dubai
+    GBL = "GBL"  # Global
+    HKG = "HKG"  # Hong Kong
+    HOU = "HOU"  # Houston
+    IST = "IST"  # Istanbul
+    JHB = "JHB"  # Johannesburg
+    JKT = "JKT"  # Jakarta
+    KLU = "KLU"  # Kuala Lumpur
+    LDN = "LDN"  # London
+    MAN = "MAN"  # Manila
+    MNA = "MNA"  # Manama
+    MUM = "MUM"  # Mumbai
+    NYK = "NYK"  # New York
+    SEO = "SEO"  # Seoul
+    SHG = "SHG"  # Shanghai
+    SNG = "SNG"  # Singapore
+    SYD = "SYD"  # Sydney
+    TOK = "TOK"  # Tokyo
+    TOR = "TOR"  # Toronto
+    WEL = "WEL"  # Wellington
+    ZUR = "ZUR"  # Zurich
+
+
+class TPICAPClearing(Enum):
+    ASX = "ASX"  # ASX Clear
+    BIL = "BIL"  # Bilateral-the default for the current indicative quotes
+    BOJ = "BOJ"  # Bank of Japan
+    CCI = "CCI"  # CCIL - Clearing Corporation of India
+    CDC = "CDC"  # China Government Securities Depository Trust & Clearing Co
+    CDP = "CDP"  # Central Depository (Singapore)
+    CME = "CME"  # CME - Chicago Mercantile Exchange
+    CMU = "CMU"  # Central Moneymarkets Unit (HKMA debt securities settlement system)
+    COM = "COM"  # COMO - CIBC Mellon Trust
+    DTC = "DTC"  # DTC - The Depository Trust Company
+    ECR = "ECR"  # EUROCLEAR - Eurolclear Market
+    EUX = "EUX"  # EUREX - Eurex Exchange
+    FIC = "FIC"  # FICC - Fixed Income Clearing Corporation
+    HKE = "HKE"  # Hong Kong Exchange - OTC Clear
+    JSC = "JSC"  # JSCC - Japan Securities Clearing Corporation
+    KSD = "KSD"  # Korea Securities Depository
+    KSE = "KSE"  # Karachi Stock Exchange
+    LCH = "LCH"  # LCH - London Clearing House
+    LSE = "LSE"  # London Stock Exchange
+    MSC = "MSC"  # Bursa Malaysia Securities Clearing
+    MUL = "MUL"  # Multiple - Clearing through multiple clearing houses
+    NOA = "NOA"  # Not applicable (to be used for benchmarks and indices products)
+    OMX = "OMX"  # Offset Market Exchange
+    PDS = "PDS"  # Philippine Dealing & Exchange Corporation
+    SSE = "SSE"  # Shanghai Stock Exchange
+    SZE = "SZE"  # Shenzhen Stock Exchange
+    TCH = "TCH"  # Thailand Clearing House
+    TDC = "TDC"  # Taiwan Depository & Clearing Corporation
+
+
 class _SwapTenorType(Enum):
     FORWARD_TENOR = 'forward_tenor'
     SWAP_TENOR = 'swap_tenor'
@@ -71,6 +129,11 @@ class EventType(Enum):
 class RateType(Enum):
     ABSOLUTE = 'absolute'
     RELATIVE = 'relative'
+
+
+class DataProvider(Enum):
+    GS = 'Goldman Sachs'
+    TPICAP = 'TPICAP'
 
 
 CCY_TO_CB = {'EUR': 'ecb', 'USD': 'frb', 'GBP': 'mpc'}
@@ -286,6 +349,105 @@ BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS = {
     'USD-SOFR-COMPOUND': '1y',
     'ZAR-JIBAR-SAFEX': '3m',
 }
+
+ICAP_RATE_OPTION_MAPPING = {
+    "AED": {"AEIBOR": {"3M": "AED-AEIBOR 3M"}},
+    "AUD": {
+        "AUD-AONIA-OIS-COMPOUND": {"*": "AUD-AONIA"},
+        "AUD-BBR-BBSW": {"6M": "AUD-BBSW 6M", "3M": "AUD-BBSW 3M", "1M": "AUD-BBSW 1M"},
+    },
+    "CAD": {
+        "CAD-CORRA-OIS-COMP": {"*": "CAD-CORRA"},
+        "BANKERS ACCEPTANCES": {"1M": "CAD-BANKERS ACCEPTANCES 1M", "3M": "CAD-BANKERS ACCEPTANCES 3M"},
+        "CAD-BA-CDOR": {"*": "CAD-CDOR"},
+    },
+    "CHF": {
+        "CHF-LIBOR-BBA": {"6M": "CHF-LIBOR 6M", "12M": "CHF-LIBOR 12M", "1M": "CHF-LIBOR 1M", "3M": "CHF-LIBOR 3M"},
+        "CHF-SARON-OIS-COMPOUND": {"*": "CHF-SARON"},
+    },
+    "CNY": {
+        "LOAN PRIME RATE": {"1Y": "CNY-LOAN PRIME RATE 1Y", "5Y": "CNY-LOAN PRIME RATE 5Y"},
+        "SHIBOR": {"3M": "CNY-SHIBOR 3M"},
+        "CNY-REPO RATE": {"1Y": "CNY-PBOC DEPO 1Y", "1W": "CNY-R007 REPO 7D"},
+    },
+    "COP": {"COP-IBR-ON": {"*": "COP-IBR-OIS-COMPOUND"}},
+    "CZK": {"CZK-PRIBOR-PRBO": {"6M": "CZK-PRIBOR 6M", "3M": "CZK-PRIBOR 3M", "1M": "CZK-PRIBOR 1M"}},
+    "DKK": {
+        "DKK-CIBOR2-DKNA13": {"6M": "DKK-CIBOR 6M", "12M": "DKK-CIBOR 12M", "1M": "DKK-CIBOR 1M", "3M": "DKK-CIBOR 3M"},
+        "CITA": {"*": "DKK-CITA"},
+        "DKK-DKKOIS-OIS-COMPOUND": {"*": "DKK-DESTR"},
+    },
+    "EUR": {
+        "EUR-EUROSTR-COMPOUND": {"*": "EUR-ESTR"},
+        "EUR-EURIBOR-TELERATE": {
+            "6M": "EUR-EURIBOR 6M",
+            "12M": "EUR-EURIBOR 12M",
+            "1M": "EUR-EURIBOR 1M",
+            "3M": "EUR-EURIBOR 3M",
+        },
+        "EUR-EONIA-OIS-COMPOUND": {"*": "EUR-EONIA"},
+    },
+    "GBP": {
+        "GBP-LIBOR-BBA": {"6M": "GBP-LIBOR 6M", "12M": "GBP-LIBOR 12M", "1M": "GBP-LIBOR 1M", "3M": "GBP-LIBOR 3M"},
+        "UK BASE RATE": {"*": "GBP-UK BASE RATE"},
+        "GBP-SONIA-COMPOUND": {"*": "GBP-SONIA"},
+    },
+    "HKD": {"HKD-HIBOR-HKAB": {"1M": "HKD-HIBOR 1M", "3M": "HKD-HIBOR 3M"}, "HONIA": {"*": "HKD-HONIA"}},
+    "HUF": {"HUF-BIBOR-BUB": {"6M": "HUF-BUBOR 6M", "3M": "HUF-BUBOR 3M", "1M": "HUF-BUBOR 1M"}},
+    "ILS": {"SHIR": {"*": "ILS-SHIR"}, "ILS-TELBOR-FCI": {"3M": "ILS-TELBOR 3M"}},
+    "INR": {
+        "MIFOR": {"6M": "INR-MIFOR 6M"},
+        "MODIFIED MIFOR": {"6M": "INR-MODIFIED MIFOR 6M"},
+        "ON MIBOR": {"*": "INR-ON MIBOR"},
+    },
+    "JPY": {"JPY-TONA-OIS-COMPOUND": {"*": "JPY-TONA"}, "JPY-LIBOR-BBA": {"3M": "JPY-LIBOR 3M", "6M": "JPY-LIBOR 6M"}},
+    "MXN": {"MXN-TIIE-FX": {"28D": "MXN-TIIE 28D"}, "MXN-TIIE-F": {"*": "MXN- F TIIE"}},
+    "MYR": {
+        "KLIBOR": {"1M": "MYR-KLIBOR 1M", "3M": "MYR-KLIBOR 3M"},
+        "- MYOR": {"*": "MYR - MYOR"},
+        "BANK NEGARA INTBNK WGHTD AVE": {"*": "MYR-BANK NEGARA INTBNK WGHTD AVE"},
+    },
+    "NOK": {
+        "NOK-NIBOR-BBA": {"6M": "NOK-NIBOR 6M", "3M": "NOK-NIBOR 3M", "1M": "NOK-NIBOR 1M"},
+        "NOK-NOWA-OIS-COMPOUND": {"*": "NOK-NOWA"},
+    },
+    "NZD": {
+        "NZD-BBR-FRA": {"1M": "NZD-BANK BILLS 1M", "3M": "NZD-BANK BILLS 3M"},
+        "NZD-NZIONA-OIS-COMPOUND": {"*": "NZD-NZIONA"},
+    },
+    "PEN": {"TIS": {"*": "PEN-TIS"}},
+    "PLN": {
+        "PLZ-WIBOR-WIBO": {"6M": "PLN-WIBOR 6M", "3M": "PLN-WIBOR 3M", "1M": "PLN-WIBOR 1M"},
+        "POLONIA": {"*": "PLN-POLONIA"},
+    },
+    "RON": {"ROBOR": {"3M": "RON-ROBOR 3M"}},
+    "SAR": {"SAIBOR": {"3M": "SAR-SAIBOR 3M"}},
+    "SEK": {
+        "STINA": {"*": "SEK-STINA"},
+        "SEK-STIBOR-SIDE": {"6M": "SEK-STIBOR 6M", "3M": "SEK-STIBOR 3M", "1M": "SEK-STIBOR 1M"},
+        "SEK-SIOR-OIS-COMPOUND": {"*": "SEK-SWESTR"},
+    },
+    "SGD": {
+        "SGD-SOR-VWAP": {"6M": "SGD-SOR 6M", "3M": "SGD-SOR 3M", "1M": "SGD-SOR 1M"},
+        "SGD-SORA-COMPOUND": {"*": "SGD-SORA"},
+    },
+    "THB": {
+        "THBFIX": {"6M": "THB-THBFIX 6M"},
+        "BIBOR": {"6M": "THB-BIBOR 6M", "3M": "THB-BIBOR 3M", "1M": "THB-BIBOR 1M"},
+        "THB-THOR-COMPOUND": {"*": "THB-THOR"},
+    },
+    "TRY": {"TRLIBOR": {"3M": "TRY-TRLIBOR 3M"}, "TLREF": {"*": "TRY-TLREF"}},
+    "TWD": {"TAIBOR": {"3M": "TWD-TAIBOR 3M"}},
+    "USD": {
+        "USD-LIBOR-BBA": {"6M": "USD-LIBOR 6M", "12M": "USD-LIBOR 12M", "1M": "USD-LIBOR 1M", "3M": "USD-LIBOR 3M"},
+        "SIFMA": {"*": "USD-SIFMA"},
+        "USD-SOFR-COMPOUND": {"*": "USD-SOFR"},
+        "BSBY": {"1M": "USD-BSBY 1M", "3M": "USD-BSBY 3M"},
+        "USD-Federal Funds-H.15-OIS-COMP": {"*": "USD-FEDERAL FUNDS"},
+    },
+    "ZAR": {"ZAR-JIBAR-SAFEX": {"3M": "ZAR-JIBAR 3M"}, "ZARONIA": {"*": "ZAR-ZARONIA"}},
+}
+
 CURRENCY_TO_PRICING_LOCATION = {
     CurrencyEnum.JPY: PricingLocation.TKO,
     CurrencyEnum.USD: PricingLocation.NYC,
@@ -520,6 +682,75 @@ def _get_tdapi_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
         return assets[0].id
 
 
+def _get_tpicap_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
+    # sanitize input for asset query.
+
+    dataset = 'SF_TPICAP_SWAPS_REFERENCE_V2_YRBSW3R0'
+
+    ccy = kwargs['asset_parameters_notional_currency']
+    index = kwargs['asset_parameters_floating_rate_option']
+    tenor = kwargs['asset_parameters_floating_rate_designated_maturity']
+    ro_map = ICAP_RATE_OPTION_MAPPING.get(ccy, {}).get(index, {})
+    icap_rate_option = ro_map.get(tenor, ro_map.get('*', "RateOption Not Mapped"))
+
+    start = (
+        kwargs['asset_parameters_effective_date']
+        if len(kwargs['asset_parameters_effective_date']) > 2
+        else '0' + kwargs['asset_parameters_effective_date']
+    )
+    end = (
+        kwargs['asset_parameters_termination_date']
+        if len(kwargs['asset_parameters_termination_date']) > 2
+        else '0' + kwargs['asset_parameters_termination_date']
+    )
+
+    where = FieldFilterMapDataQuery(
+        currency=ccy.upper(),
+        paymentFrequencyPeriod1=end.upper(),
+        settlementIndex2=icap_rate_option,
+        settlementIndex1='FIXED',
+    )
+    if start != '00b':
+        where['paymentFrequencyPeriod2'] = start.upper()
+    query = DataQuery(where=where, start_date=dt.date(2026, 5, 22), snapshot=True)
+
+    asset_search = GsDataApi.query_data(
+        query=query,
+        dataset_id=dataset,
+    )
+
+    if start == '00b':
+        asset_search = [x for x in asset_search if 'paymentFrequencyPeriod2' not in x]
+
+    # filter by close
+    location = {
+        PricingLocation.LDN: TPICAPLocation.LDN,
+        PricingLocation.HKG: TPICAPLocation.HKG,
+        PricingLocation.NYC: TPICAPLocation.NYK,
+        PricingLocation.TKO: TPICAPLocation.TOK,
+    }.get(kwargs["pricing_location"], TPICAPLocation.NYK)
+
+    clearinghouse = {
+        _ClearingHouse.LCH.value: TPICAPClearing.LCH,
+        _ClearingHouse.CME.value: TPICAPClearing.CME,
+        _ClearingHouse.JSCC.value: TPICAPClearing.JSC,
+    }.get(kwargs['asset_parameters_clearing_house'], TPICAPClearing.BIL)
+
+    if len(asset_search) > 1:
+        asset_search = [x for x in asset_search if x['tpicapId'].find("_" + location.value + ".") != -1]
+    if len(asset_search) > 1:
+        asset_search = [x for x in asset_search if x['tpicapId'].find("." + clearinghouse.value + ".") != -1]
+    if len(asset_search) > 1:
+        asset_search = [x for x in asset_search if not x['tpicapId'].startswith("SX")]
+
+    if len(asset_search) > 1:
+        raise MqValueError('Specified arguments match multiple assets')
+    elif len(asset_search) == 0:
+        raise MqValueError('Specified arguments did not match any asset in the dataset' + str(where))
+    else:
+        return asset_search[0]['tpicapId']
+
+
 def _check_forward_tenor(forward_tenor) -> GENERIC_DATE:
     if isinstance(forward_tenor, dt.date):
         return forward_tenor
@@ -710,6 +941,7 @@ def _get_swap_data(
     source: str = None,
     real_time: bool = False,
     location: PricingLocation = None,
+    data_provider: DataProvider = DataProvider.GS,
     query_type: QueryType = QueryType.SWAP_RATE,
 ) -> pd.DataFrame:
     if real_time and not (query_type == QueryType.SWAP_RATE):
@@ -753,26 +985,64 @@ def _get_swap_data(
         asset_parameters_floating_rate_designated_maturity=defaults['floating_rate_tenor'],
         asset_parameters_effective_date=forward_tenor,
         asset_parameters_notional_currency=currency.name,
+        pricing_location=pricing_location,
     )
 
-    rate_mqid = _get_tdapi_rates_assets(**kwargs)
+    if data_provider.value == DataProvider.TPICAP.value:
+        tpicap_id = _get_tpicap_rates_assets(**kwargs)
+        _logger.debug(
+            'where asset= %s, swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
+            'pricing_location=%s',
+            tpicap_id,
+            swap_tenor,
+            defaults['benchmark_type'],
+            defaults['floating_rate_tenor'],
+            forward_tenor,
+            pricing_location.value,
+        )
+        icap_dataset = "SF_EOD_SNAPS_SWAPS_LONDON415_V3_YRBSW3R0"
+        where = dict(
+            tpicapId=tpicap_id,
+        )
 
-    _logger.debug(
-        'where asset= %s, swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
-        'pricing_location=%s',
-        rate_mqid,
-        swap_tenor,
-        defaults['benchmark_type'],
-        defaults['floating_rate_tenor'],
-        forward_tenor,
-        pricing_location.value,
-    )
+        query = dict(where=where, fields=["midPrice"])
 
-    pricing_location = _pricing_location_normalized(pricing_location, currency)
-    where = dict(pricingLocation=pricing_location.value)
-    q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source, real_time=real_time)
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+        if DataContext.current.interval is not None:
+            query['interval'] = DataContext.current.interval
+        if real_time:
+            query['startTime'] = DataContext.current.start_time
+            query['endTime'] = DataContext.current.end_time
+        else:
+            query['startDate'] = DataContext.current.start_date
+            query['endDate'] = DataContext.current.end_date
+
+        query = DataQuery(**query)
+
+        icap_data = GsDataApi.query_data(
+            query=query,
+            dataset_id=icap_dataset,
+        )
+
+        df = GsDataApi.construct_dataframe_with_types(icap_dataset, [row for row in icap_data], schema_varies=True)
+        df.rename(columns={"midPrice": "swapRate"}, inplace=True)
+
+    else:
+        rate_mqid = _get_tdapi_rates_assets(**kwargs)
+        _logger.debug(
+            'where asset= %s, swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
+            'pricing_location=%s',
+            rate_mqid,
+            swap_tenor,
+            defaults['benchmark_type'],
+            defaults['floating_rate_tenor'],
+            forward_tenor,
+            pricing_location.value,
+        )
+        pricing_location = _pricing_location_normalized(pricing_location, currency)
+        where = dict(pricingLocation=pricing_location.value)
+        q = GsDataApi.build_market_data_query([rate_mqid], query_type, where=where, source=source, real_time=real_time)
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
     return df
 
 
@@ -1636,6 +1906,7 @@ def swap_rate(
     forward_tenor: Optional[GENERIC_DATE] = None,
     clearing_house: _ClearingHouse = None,
     location: PricingLocation = None,
+    data_provider: DataProvider = DataProvider.GS,
     *,
     source: str = None,
     real_time: bool = False,
@@ -1652,6 +1923,7 @@ def swap_rate(
             spot starting swaps, 'imm1' or 'frb1'
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
     :param location: Example - "TKO", "LDN", "NYC"
+    :param data_provider: Example - "Goldman Sachs" or "TPICAP"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swap rate curve
@@ -1667,6 +1939,7 @@ def swap_rate(
         real_time=real_time,
         query_type=QueryType.SWAP_RATE,
         location=location,
+        data_provider=data_provider,
     )
 
     series = ExtendedSeries(dtype=float) if df.empty else ExtendedSeries(df['swapRate'])
@@ -1692,7 +1965,7 @@ def swap_rate_calc(
     real_time: bool = False,
 ) -> pd.Series:
     """
-    GS intra-day Fixed-Floating interest rate swap (IRS) curves across major currencies.
+    GS intraday Fixed-Floating interest rate swap (IRS) curves across major currencies.
     This API runs on-the-fly calculations
 
 
@@ -1751,7 +2024,7 @@ def forward_rate(
     :param csa: Collateral code of curve, e.g. GBP-1. If set to default, default CSA is chosen
     :param close_location: For EOD data, gives location of close
     :param source: name of function caller
-    :param real_time: whether to retrieve intra-day data instead of EOD
+    :param real_time: whether to retrieve intraday data instead of EOD
     :return: annualised instantaneous forward rate
     """
 
@@ -1799,7 +2072,7 @@ def discount_factor(
     :param csa: Collateral code of curve to fetch discount factor, e.g. GBP-1. If not specified, default CSA is chosen
     :param close_location: For EOD data, gives location of close
     :param source: name of function caller
-    :param real_time: whether to retrieve intra-day data instead of EOD
+    :param real_time: whether to retrieve intraday data instead of EOD
     :return: annualised instantaneous forward rate
     """
 
@@ -2392,7 +2665,7 @@ def ois_xccy_ex_spike(asset: Asset, tenor: str = None, *, source: str = None, re
 )
 def non_usd_ois(asset: Asset, tenor: str = None, *, source: str = None, real_time: bool = False) -> pd.Series:
     """
-    GS end-of-day non domestic USD ois rate curve for G10 cross currencies.
+    GS end-of-day non-domestic USD ois rate curve for G10 cross currencies.
 
     :param asset: asset object loaded from security master
     :param tenor: relative date representation of expiration date e.g. 1w
@@ -2517,7 +2790,7 @@ def policy_rate_term_structure(
                     EOY = Forward Expectations at End of Year Dates
     :param rate_type:  One of (absolute, relative), where relative = forward - spot rate to show what
                 hikes/cuts are priced in by the market.
-    :param valuation_date:  reference date on which all future expectations are calculated, Eg. 3m: for 3 months ago,
+    :param valuation_date:  reference date on which all future expectations are calculated, e.g. 3m: for 3 months ago,
                     2022-05-02 : for expectations as of 02May22, Intraday: how expectations are changing intraday.
     :param source: name of function caller: default source = None
     :param real_time: whether to retrieve intraday data instead of EOD: default value = False
@@ -2597,7 +2870,7 @@ def policy_rate_expectation(
     Evolution of OIS/policy rate expectations for a given meeting date or end of year date.
 
     :param asset: asset object loaded from security master
-    :param meeting_date: Actual meeting date eg. Date(2022-04-02) or meeting number standing today : 0 for last,
+    :param meeting_date: Actual meeting date e.g. Date(2022-04-02) or meeting number standing today : 0 for last,
                             1 for next , 2 for meeting after next and so on
     :param rate_type: One of (absolute, relative), where relative = forward - spot rate to show what hikes/cuts are
                     priced in by the market for specified meeting date.
@@ -2689,6 +2962,8 @@ def _get_default_ois_benchmark(currency: CurrencyEnum) -> BenchmarkTypeCB:
         return BenchmarkTypeCB.SONIA
     elif currency == CurrencyEnum.EUR:
         return BenchmarkTypeCB.EUROSTR
+    else:
+        return BenchmarkTypeCB.Fed_Funds
 
 
 def _check_cb_ccy_benchmark_rt(asset: Asset, benchmark_type: BenchmarkTypeCB) -> tuple:
