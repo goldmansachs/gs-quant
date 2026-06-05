@@ -2,7 +2,7 @@
 
 Sphinx-generated documentation for gs-quant codebase
 
-If you're looking for tutorials and other developer docs, check out [the developer-site repo](https://gitlab.gs.com/marquee/aurora/developer-site/).
+If you're looking for tutorials and other developer docs, check out [the gs-quant developer documentation](https://developer.gs.com/docs/gsquant/).
 
 # Important Links
 
