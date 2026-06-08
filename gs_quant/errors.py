@@ -14,9 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import sys
-
-
 class MqError(Exception):
     """Base class for errors in this module"""
 
@@ -43,10 +40,7 @@ class MqRequestError(MqError):
 
     def __str__(self):
         prepend = 'context: {}\n'.format(self.context) if self.context else ''
-        result = '{}status: {}, message: {}'.format(prepend, self.status, self.message)
-        if sys.version_info.major < 3:
-            result = result.encode('ascii', 'ignore')
-        return result
+        return '{}status: {}, message: {}'.format(prepend, self.status, self.message)
 
 
 class MqAuthenticationError(MqRequestError):
