@@ -36,6 +36,7 @@ from gs_quant.timeseries import (
     Frequency,
     seasonally_adjusted,
 )
+from gs_quant.timeseries.technicals import stochastic_oscillator, average_true_range
 
 
 def test_moving_average():
@@ -301,6 +302,100 @@ def test_seasonality_adjusted():
     with pytest.raises(MqValueError):
         x = pd.Series(range(10))
         seasonally_adjusted(x)
+
+
+def test_stochastic_oscillator():
+    dates = [
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
+    ]
+
+    x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+
+    result = stochastic_oscillator(x, 3, 3)
+    assert isinstance(result, pd.DataFrame)
+    assert list(result.columns) == ['pctK', 'pctD']
+    assert len(result) == len(x)
+
+    # %K should be between 0 and 100 (NaN allowed for initial ramp)
+    pct_k = result['pctK'].dropna()
+    assert (pct_k >= 0).all() and (pct_k <= 100).all()
+
+    # When the price is at the high of the window, %K should be 100
+    # At index 5 (value 6.0), over window 3 the values are [1.0, 3.0, 6.0]
+    # %K = (6 - 1) / (6 - 1) * 100 = 100
+    assert result['pctK'].iloc[5] == 100.0
+
+    # When the price is at the low of the window, %K should be 0
+    # At index 3 (value 1.0), over window 3 the values are [2.0, 3.0, 1.0]
+    # %K = (1 - 1) / (3 - 1) * 100 = 0
+    assert result['pctK'].iloc[3] == 0.0
+
+    # Test with empty series
+    result = stochastic_oscillator(pd.Series(dtype=float), 14, 3)
+    assert isinstance(result, pd.DataFrame)
+    assert result.empty
+
+    # Test with flat prices (all same value) - should produce NaN since range is 0
+    flat = pd.Series([5.0, 5.0, 5.0, 5.0], index=dates[:4])
+    result = stochastic_oscillator(flat, 3, 3)
+    assert result['pctK'].iloc[-1] != result['pctK'].iloc[-1]  # NaN check
+
+    # Test with string window
+    dates_dt = pd.date_range('2019-01-01', periods=6, freq='D')
+    x_dt = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates_dt)
+    result = stochastic_oscillator(x_dt, "3d", 3)
+    assert isinstance(result, pd.DataFrame)
+
+
+def test_average_true_range():
+    dates = [
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
+    ]
+
+    x = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates)
+
+    result = average_true_range(x, 3)
+    assert isinstance(result, pd.Series)
+    assert len(result) == len(x)
+
+    # ATR should be non-negative (except for NaN at the start from diff)
+    assert (result.dropna() >= 0).all()
+
+    # The true ranges are: NaN, |2-3|=1, |3-2|=1, |1-3|=2, |3-1|=2, |6-3|=3
+    # ATR(3) at index 5: mean of [2, 2, 3] = 7/3 = 2.333...
+    assert np.isclose(result.iloc[5], 7 / 3, atol=1e-4)
+
+    # ATR(3) at index 4: mean of [1, 2, 2] = 5/3 = 1.666...
+    assert np.isclose(result.iloc[4], 5 / 3, atol=1e-4)
+
+    # Test with empty series
+    result = average_true_range(pd.Series(dtype=float), 14)
+    assert result.empty
+
+    # Test with constant series (no price movement -> ATR should be 0)
+    flat = pd.Series([5.0, 5.0, 5.0, 5.0], index=dates[:4])
+    result = average_true_range(flat, 3)
+    assert result.iloc[-1] == 0.0
+
+    # Test with string window
+    dates_dt = pd.date_range('2019-01-01', periods=6, freq='D')
+    x_dt = pd.Series([3.0, 2.0, 3.0, 1.0, 3.0, 6.0], index=dates_dt)
+    result = average_true_range(x_dt, "3d")
+    assert isinstance(result, pd.Series)
+
+    # Test Window object with ramp
+    result = average_true_range(x, Window(3, 2))
+    assert isinstance(result, pd.Series)
 
 
 if __name__ == "__main__":
