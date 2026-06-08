@@ -299,7 +299,7 @@ class DataGrid:
         if value is None:
             self.__polling_time = 0
         elif value != 0 and value < 5000:
-            raise MqValueError('polling_time must be >= 5000ms.')
+            raise MqValueError('polling_time must be 0 or >= 5000ms.')
         else:
             self.__polling_time = value
 
