@@ -452,6 +452,9 @@ def stochastic_oscillator(x: pd.Series, w: Union[Window, int, str] = 14, s: int 
     :func:`relative_strength_index` :func:`moving_average`
 
     """
+    if not isinstance(s, int) or s <= 0:
+        raise MqValueError('s must be a positive integer.')
+
     w = normalize_window(x, w)
     if x.empty:
         return pd.DataFrame(columns=['pctK', 'pctD'], dtype=float)

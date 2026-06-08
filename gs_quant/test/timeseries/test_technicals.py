@@ -343,7 +343,7 @@ def test_stochastic_oscillator():
     # Test with flat prices (all same value) - should produce NaN since range is 0
     flat = pd.Series([5.0, 5.0, 5.0, 5.0], index=dates[:4])
     result = stochastic_oscillator(flat, 3, 3)
-    assert result['pctK'].iloc[-1] != result['pctK'].iloc[-1]  # NaN check
+    assert pd.isna(result['pctK'].iloc[-1])  # NaN for flat price (zero range)
 
     # Test with string window
     dates_dt = pd.date_range('2019-01-01', periods=6, freq='D')
