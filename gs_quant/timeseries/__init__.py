@@ -19,6 +19,7 @@ from .analysis import *
 from .backtesting import *
 from .datetime import *
 from .econometrics import *
+from .event_study import *
 from .helper import *
 from .measures import *
 from .measures_countries import *
@@ -31,7 +32,6 @@ from .measures_risk_models import *
 from .measures_xccy import *
 from .measures_factset import *
 from .measures_cognitive_credit import *
-from .measures_tba import *
 from .statistics import *
 from .tca import (
     covariance
