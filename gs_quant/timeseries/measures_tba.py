@@ -152,7 +152,7 @@ def _get_tba_prices(asset_name: str) -> pd.Series:
 @plot_measure(
     (AssetClass.Mortgage,),
     (AssetType.TBA,),
-    [MeasureDependency(id_provider=_bbid_to_actual_asset, query_type=QueryType.COUPON_SWAP)],
+    [MeasureDependency(id_provider=_bbid_to_actual_asset, query_type=QueryType.PRICE_3PM_CLOSE)],
 )
 def cpn_swap(
     asset: Asset,
@@ -207,7 +207,7 @@ def cpn_swap(
 @plot_measure(
     (AssetClass.Mortgage,),
     (AssetType.TBA,),
-    [MeasureDependency(id_provider=_bbid_to_actual_asset, query_type=QueryType.BUTTERFLY)],
+    [MeasureDependency(id_provider=_bbid_to_actual_asset, query_type=QueryType.PRICE_3PM_CLOSE)],
 )
 def butterfly(
     asset: Asset,

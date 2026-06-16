@@ -14,14 +14,15 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.api.gs.backtests_xasset.request import RiskRequest, BasicBacktestRequest
-from gs_quant.api.gs.backtests_xasset.response import RiskResponse, BasicBacktestResponse
+from gs_quant.api.gs.backtests_xasset.request import RiskRequest, BasicBacktestRequest, GenericBacktestRequest
+from gs_quant.api.gs.backtests_xasset.response import RiskResponse, BasicBacktestResponse, GenericBacktestResponse
 from gs_quant.session import GsSession
 
 
 class GsBacktestXassetApi:
     HEADERS = {'Accept': 'application/json'}
     TIMEOUT = 90
+    GENERIC_TIMEOUT = 120
 
     @classmethod
     def calculate_risk(cls, risk_request: RiskRequest) -> RiskResponse:
@@ -42,6 +43,19 @@ class GsBacktestXassetApi:
             timeout=cls.TIMEOUT,
         )
         result = BasicBacktestResponse.from_dict_custom(response, decode_instruments)
+        return result
+
+    @classmethod
+    def calculate_generic_backtest(
+        cls, backtest_request: GenericBacktestRequest, decode_instruments: bool = True
+    ) -> GenericBacktestResponse:
+        response = GsSession.current.sync.post(
+            '/backtests/xasset/strategy/generic',
+            backtest_request.to_json(),
+            request_headers=cls.HEADERS,
+            timeout=cls.GENERIC_TIMEOUT,
+        )
+        result = GenericBacktestResponse.from_dict_custom(response, decode_instruments)
         return result
 
 
@@ -65,4 +79,17 @@ class GsBacktestXassetApiAsync(GsBacktestXassetApi):
             timeout=cls.TIMEOUT,
         )
         result = BasicBacktestResponse.from_dict_custom(response, decode_instruments)
+        return result
+
+    @classmethod
+    async def calculate_generic_backtest(
+        cls, backtest_request: GenericBacktestRequest, decode_instruments: bool = True
+    ) -> GenericBacktestResponse:
+        response = await GsSession.current.async_.post(
+            '/backtests/xasset/strategy/generic',
+            backtest_request.to_json(),
+            request_headers=cls.HEADERS,
+            timeout=cls.GENERIC_TIMEOUT,
+        )
+        result = GenericBacktestResponse.from_dict_custom(response, decode_instruments)
         return result

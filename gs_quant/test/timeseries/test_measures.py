@@ -2511,9 +2511,9 @@ def test_get_tpicap_rates_assets_full_coverage():
     query_data = replace('gs_quant.timeseries.measures_rates.GsDataApi.query_data', Mock())
 
     # 1) Standard success path + DataQuery/where construction for non-spot start
-    query_data.return_value = [{'tpicapId': 'AA_LDN.LCH.X'}]
+    query_data.return_value = [{'tpicapId': 'AA_LDN.LCH.QTE.RTM!IC'}]
     out = tm_rates._get_tpicap_rates_assets(**_kwargs(effective='1m', termination='5y'))
-    assert out == 'AA_LDN.LCH.X'
+    assert out == 'AA_LDN.LCH.QTE.RTM!IC'
 
     sent_query = query_data.call_args.kwargs['query']
     where = sent_query.where
@@ -2525,43 +2525,58 @@ def test_get_tpicap_rates_assets_full_coverage():
     assert sent_query.snapshot is True
     assert query_data.call_args.kwargs['dataset_id'] == 'SF_TPICAP_SWAPS_REFERENCE_V2_YRBSW3R0'
 
+    # 1b) Short-tenor zero-padding branch for start/end conversion
+    query_data.return_value = [{'tpicapId': 'AA_LDN.LCH.QTE.RTM!IC'}]
+    tm_rates._get_tpicap_rates_assets(**_kwargs(effective='1b', termination='5b'))
+    sent_query = query_data.call_args.kwargs['query']
+    assert sent_query.where['paymentFrequencyPeriod2'] == '01B'
+    assert sent_query.where['paymentFrequencyPeriod1'] == '05B'
+
     # 2) Spot start branch: start='00b' should remove rows containing paymentFrequencyPeriod2
     query_data.return_value = [
-        {'tpicapId': 'AA_LDN.LCH.X', 'paymentFrequencyPeriod2': '00B'},
-        {'tpicapId': 'BB_LDN.LCH.X'},
+        {'tpicapId': 'AA_LDN.LCH.QTE.RTM!IC', 'paymentFrequencyPeriod2': '00B'},
+        {'tpicapId': 'BB_LDN.LCH.QTE.RTM!IC'},
     ]
     out = tm_rates._get_tpicap_rates_assets(**_kwargs(effective='0b', termination='5y'))
-    assert out == 'BB_LDN.LCH.X'
+    assert out == 'BB_LDN.LCH.QTE.RTM!IC'
 
-    # 3) >1 rows: location filter -> clearing filter -> remove SX
+    # 3) >1 rows: location filter -> clearing filter -> quote filter
     query_data.return_value = [
-        {'tpicapId': 'AA_NYK.LCH.X'},  # keep
-        {'tpicapId': 'AA_LDN.LCH.X'},  # removed by location
-        {'tpicapId': 'AA_NYK.CME.X'},  # removed by clearing
-        {'tpicapId': 'SX_NYK.LCH.X'},  # removed by SX rule
+        {'tpicapId': 'AA_NYK.LCH.QTE.RTM!IC'},  # keep
+        {'tpicapId': 'AA_LDN.LCH.QTE.RTM!IC'},  # removed by location
+        {'tpicapId': 'AA_NYK.CME.QTE.RTM!IC'},  # removed by clearing
+        {'tpicapId': 'AA_NYK.LCH.SX1.RTM!IC'},  # removed by quote filter
     ]
     out = tm_rates._get_tpicap_rates_assets(**_kwargs(location=PricingLocation.NYC, clearing='LCH'))
-    assert out == 'AA_NYK.LCH.X'
+    assert out == 'AA_NYK.LCH.QTE.RTM!IC'
 
-    # 4) Default mapping branches:
-    #    - unknown location -> TPICAPLocation.NYK
+    # 4) Source filter branch: prefer !IC when source differs
+    query_data.return_value = [
+        {'tpicapId': 'AA_NYK.LCH.QTE.RTM!IC'},
+        {'tpicapId': 'AA_NYK.LCH.QTE.RTM!TP'},
+    ]
+    out = tm_rates._get_tpicap_rates_assets(**_kwargs(location=PricingLocation.NYC, clearing='LCH'))
+    assert out == 'AA_NYK.LCH.QTE.RTM!IC'
+
+    # 5) Default mapping branches:
+    #    - unknown location -> TPICAPLocation.GBL
     #    - unsupported clearing house -> TPICAPClearing.BIL
     query_data.return_value = [
-        {'tpicapId': 'AA_NYK.BIL.X'},  # keep via default BIL
-        {'tpicapId': 'AA_NYK.LCH.X'},  # removed by clearing filter
+        {'tpicapId': 'AA_GBL.BIL.QTE.RTM!IC'},
+        {'tpicapId': 'AA_LDN.LCH.QTE.RTM!IC'},
     ]
     out = tm_rates._get_tpicap_rates_assets(**_kwargs(location='UNKNOWN_LOCATION', clearing='NONE'))
-    assert out == 'AA_NYK.BIL.X'
+    assert out == 'AA_GBL.BIL.QTE.RTM!IC'
 
-    # 5) Error: still multiple rows after filtering
+    # 6) Fallback branch: if still >1 after all filters, function picks first element
     query_data.return_value = [
-        {'tpicapId': 'AA_NYK.LCH.X'},
-        {'tpicapId': 'BB_NYK.LCH.X'},
+        {'tpicapId': 'AA_NYK.LCH.QTE.RTM!IC'},
+        {'tpicapId': 'BB_NYK.LCH.QTE.RTM!IC'},
     ]
-    with pytest.raises(MqValueError, match='multiple assets'):
-        tm_rates._get_tpicap_rates_assets(**_kwargs(location=PricingLocation.NYC, clearing='LCH'))
+    out = tm_rates._get_tpicap_rates_assets(**_kwargs(location=PricingLocation.NYC, clearing='LCH'))
+    assert out == 'AA_NYK.LCH.QTE.RTM!IC'
 
-    # 6) Error: no rows
+    # 7) Error: no rows
     query_data.return_value = []
     with pytest.raises(MqValueError, match='did not match any asset'):
         tm_rates._get_tpicap_rates_assets(**_kwargs())
@@ -2682,7 +2697,9 @@ def test_swap_rate(mocker):
     query_data = replace('gs_quant.timeseries.measures_rates.GsDataApi.query_data', Mock())
     query_data.return_value = [{'midPrice': 1.25}]
 
-    tpicap_df = MarketDataResponseFrame({'midPrice': [1.25]}, index=_index)
+    tpicap_df = MarketDataResponseFrame(
+        {'midPrice': [1.25], 'askOrgGoldmansachs': [1.25], 'bidOrgGoldmansachs': [1.25]}, index=_index
+    )
     tpicap_df.dataset_ids = _test_datasets2
     construct_df = replace('gs_quant.timeseries.measures_rates.GsDataApi.construct_dataframe_with_types', Mock())
     construct_df.return_value = tpicap_df
@@ -2716,7 +2733,9 @@ def test_swap_rate(mocker):
     query_data = replace('gs_quant.timeseries.measures_rates.GsDataApi.query_data', Mock())
     query_data.return_value = [{'midPrice': 1.25}]
 
-    tpicap_df = MarketDataResponseFrame({'midPrice': [1.25]}, index=_index)
+    tpicap_df = MarketDataResponseFrame(
+        {'midPrice': [1.25], 'askOrgGoldmansachs': [1.25], 'bidOrgGoldmansachs': [1.25]}, index=_index
+    )
     tpicap_df.dataset_ids = _test_datasets2
     construct_df = replace('gs_quant.timeseries.measures_rates.GsDataApi.construct_dataframe_with_types', Mock())
     construct_df.return_value = tpicap_df
@@ -2740,6 +2759,73 @@ def test_swap_rate(mocker):
     sent_query = query_data.call_args.kwargs['query']
     assert sent_query.start_time is not None
     assert sent_query.end_time is not None
+
+    # TPICAP avg() branch coverage:
+    # 1) mid present -> mid
+    # 2) mid NaN + ask NaN -> bid
+    # 3) mid NaN + ask present + bid present -> ask
+    # 4) mid NaN + ask present + bid NaN -> (ask + bid) / 2 (NaN here)
+    args['real_time'] = False
+    args['data_provider'] = tm_rates.DataProvider.TPICAP
+    args['asset'] = mock_usd
+    args['benchmark_type'] = BenchmarkType.LIBOR
+    args['floating_rate_tenor'] = '3m'
+    args['forward_tenor'] = '0b'
+    args['location'] = PricingLocation.LDN
+
+    xrefs = replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock())
+    xrefs.return_value = 'USD'
+
+    tpicap_assets = replace('gs_quant.timeseries.measures_rates._get_tpicap_rates_assets', Mock())
+    tpicap_assets.return_value = 'TPICAP_ID'
+
+    query_data = replace('gs_quant.timeseries.measures_rates.GsDataApi.query_data', Mock())
+    query_data.return_value = [{'dummy': 1}]
+
+    tpicap_df_avg = MarketDataResponseFrame(
+        data={
+            'midPrice': [1.25, np.nan, np.nan, np.nan, np.nan],
+            'askOrgGoldmansachs': [1.20, np.nan, 1.40, np.nan, 1.10],
+            'bidOrgGoldmansachs': [1.30, 1.35, np.nan, np.nan, 1.50],
+        },
+        index=[pd.Timestamp('2019-01-01')] * 5,
+    )
+    tpicap_df_avg.dataset_ids = _test_datasets2
+
+    construct_df = replace('gs_quant.timeseries.measures_rates.GsDataApi.construct_dataframe_with_types', Mock())
+    construct_df.return_value = tpicap_df_avg
+
+    actual = tm_rates.swap_rate(**args)
+    assert actual.iloc[0] == 1.25
+    assert actual.iloc[1] == 1.35
+    assert actual.iloc[2] == 1.40
+    assert pd.isna(actual.iloc[3])
+    assert actual.iloc[4] == 1.30
+    assert actual.dataset_ids == _test_datasets2
+
+    # _get_swap_data tenor gate: invalid swap_tenor is allowed when forward_tenor is frb*/ecb*.
+    # This covers: re.fullmatch('(frb[1-9]|ecb[1-6])', forward_tenor)
+    args['data_provider'] = tm_rates.DataProvider.GS
+    args['swap_tenor'] = 'badtenor'
+    args['forward_tenor'] = 'frb1'
+    args['benchmark_type'] = BenchmarkType.LIBOR
+    args['floating_rate_tenor'] = '3m'
+    args['location'] = PricingLocation.NYC
+
+    tdapi_assets = replace('gs_quant.timeseries.measures_rates._get_tdapi_rates_assets', Mock())
+    tdapi_assets.return_value = 'MAZ7RWC904JYHYPS'
+
+    build_query = replace('gs_quant.timeseries.measures_rates.GsDataApi.build_market_data_query', Mock())
+    build_query.return_value = {'queries': []}
+
+    market_data = replace('gs_quant.timeseries.measures_rates._market_data_timed', Mock())
+    market_data.return_value = mock_curr(None, None)
+
+    actual = tm_rates.swap_rate(**args)
+    expected = tm.ExtendedSeries([1, 2, 3], index=_index * 3, name='swapRate')
+    expected.dataset_ids = _test_datasets
+    assert_series_equal(expected, actual)
+    assert actual.dataset_ids == _test_datasets
 
     replace.restore()
 

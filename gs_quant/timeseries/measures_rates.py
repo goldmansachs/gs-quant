@@ -273,40 +273,58 @@ SWAPTION_DEFAULTS = {
 swaptions_defaults_provider = TdapiRatesDefaultsProvider(SWAPTION_DEFAULTS)
 
 CURRENCY_TO_SWAP_RATE_BENCHMARK = {
+    'AED': {'AEIBOR': 'AED-EIBOR-NBD'},
     'AUD': OrderedDict([('BBR', 'AUD-BBR-BBSW'), ('AONIA', 'AUD-AONIA-OIS-COMPOUND')]),
     'BRL': {'CDI': 'BRR-CDI-COMPOUNDED'},
     'CAD': OrderedDict([('CDOR', 'CAD-BA-CDOR'), ('CORRA', 'CAD-CORRA-OIS-COMP')]),
     'CHF': OrderedDict([('LIBOR', 'CHF-LIBOR-BBA'), ('SARON', 'CHF-SARON-OIS-COMPOUND')]),
     'CLP': {'TNA': 'CLP-ICP-CAMARA'},
-    'CNY': {'REPO': 'CNY-REPO RATE'},
+    'CNY': OrderedDict([('REPO', 'CNY-REPO RATE'), ('SHIBOR', 'CNY-SHIBOR'), ('LOAN', 'CNY-LOAN')]),
     'COP': {'IBR': 'COP-IBR-ON'},
     'CZK': {'PRIBOR': 'CZK-PRIBOR-PRBO'},
-    'DKK': OrderedDict([('CIBOR', 'DKK-CIBOR2-DKNA13'), ('OIS', 'DKK-DKKOIS-OIS-COMPOUND')]),
+    'DKK': OrderedDict([('CIBOR', 'DKK-CIBOR2-DKNA13'), ('OIS', 'DKK-DKKOIS-OIS-COMPOUND'), ('CITA', 'CITA')]),
     'EUR': OrderedDict(
         [('EURIBOR', 'EUR-EURIBOR-TELERATE'), ('EONIA', 'EUR-EONIA-OIS-COMPOUND'), ('EUROSTR', 'EUR-EUROSTR-COMPOUND')]
     ),
-    'GBP': OrderedDict([('LIBOR', 'GBP-LIBOR-BBA'), ('SONIA', 'GBP-SONIA-COMPOUND')]),
-    'HKD': {'HIBOR': 'HKD-HIBOR-HKAB'},
+    'GBP': OrderedDict(
+        [('LIBOR', 'GBP-LIBOR-BBA'), ('SONIA', 'GBP-SONIA-COMPOUND'), ('UK_BASE_RATE', 'GBP-UK BASE RATE')]
+    ),
+    'HKD': OrderedDict([('HIBOR', 'HKD-HIBOR-HKAB'), ('HONIA', 'HKD-HONIA')]),
     'HUF': {'BIBOR': 'HUF-BIBOR-BUB'},
-    'ILS': {'TELBOR': 'ILS-TELBOR-FCI'},
-    'INR': {'MIBOR': 'INR-MIBOR-OIS-COMPOUND'},
+    'ILS': OrderedDict([('TELBOR', 'ILS-TELBOR-FCI'), ('SHIR', 'ILS-SHIR-OIS-COMPOUND')]),
+    'INR': OrderedDict(
+        [('MIFOR', 'INR-MIFOR'), ('MODIFIED_MIBOR', 'INR-MODIFIED-MIFOR'), ('MIBOR', 'INR-MIBOR-OIS-COMPOUND')]
+    ),
     'JPY': OrderedDict([('LIBOR', 'JPY-LIBOR-BBA'), ('TONA', 'JPY-TONA-OIS-COMPOUND')]),
     'KRW': {'KSDA': 'KRW-CD-KSDA-BLOOMBERG'},
     'MXN': {'TIIE': 'MXN-TIIE-FX'},
+    'MYR': OrderedDict([('KLIBOR', 'MYR-KLIBOR-BNM'), ('MYOR', 'MYR-MYOR-OIS-COMPOUND')]),
     'NOK': OrderedDict([('NIBOR', 'NOK-NIBOR-BBA'), ('NOWA', 'NOK-NOWA-OIS-COMPOUND')]),
     'NZD': OrderedDict([('BBR', 'NZD-BBR-FRA'), ('NZIONA', 'NZD-NZIONA-OIS-COMPOUND')]),
-    'PLN': {'WIBOR': 'PLZ-WIBOR-WIBO'},
+    "PEN": {"TIS": 'PEN-TIS'},
+    'PLN': OrderedDict([('WIBOR', 'PLZ-WIBOR-WIBO'), ('POLONIA', 'PLN-PLNOIS-OIS-COMPOUND')]),
+    "RON": {"ROBOR": 'RON-ROBOR-NBBR'},
     'RUB': {'MOSPRIME': 'RUB-MOSPRIME-NFEA'},
-    'SEK': OrderedDict([('STIBOR', 'SEK-STIBOR-SIDE'), ('SIOR', 'SEK-SIOR-OIS-COMPOUND')]),
+    "SAR": {"SAIBOR": 'SAR-SAIBOR-RIYAL'},
+    'SEK': OrderedDict([('STIBOR', 'SEK-STIBOR-SIDE'), ('SIOR', 'SEK-SIOR-OIS-COMPOUND'), ('STINA', 'STINA')]),
     'SGD': OrderedDict([('SOR', 'SGD-SOR-VWAP'), ('SORA', 'SGD-SORA-COMPOUND')]),
-    'THB': {'THOR': 'THB-THOR-COMPOUND'},
+    'THB': OrderedDict([('THOR', 'THB-THOR-COMPOUND'), ('THBFIX', 'THB-THBFIX-REUTERS'), ('BIBOR', 'BIBOR')]),
+    'TRY': OrderedDict([('TRLIBOR', 'TRY-TRLIBOR-BAT'), ('TLREF', 'TRY-TLREF-OIS-COMPOUND')]),
+    "TWD": {"TAIBOR": 'TWD-TIBOR-TWDIRS'},
     'USD': OrderedDict(
-        [('LIBOR', 'USD-LIBOR-BBA'), ('Fed_Funds', 'USD-Federal Funds-H.15-OIS-COMP'), ('SOFR', 'USD-SOFR-COMPOUND')]
+        [
+            ('LIBOR', 'USD-LIBOR-BBA'),
+            ('Fed_Funds', 'USD-Federal Funds-H.15-OIS-COMP'),
+            ('SOFR', 'USD-SOFR-COMPOUND'),
+            ('SIFMA', 'SIFMA'),
+            ('BSBY', 'BSBY'),
+        ]
     ),
-    'ZAR': {'JIBAR': 'ZAR-JIBAR-SAFEX'},
+    'ZAR': OrderedDict([('JIBAR', 'ZAR-JIBAR-SAFEX'), ('ZARONIA', 'ZAR-ZARONIA-OIS-COMPOUND')]),
 }
 # TODO Join into single object.
 BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS = {
+    'AED-EIBOR-NBD': '3m',
     'BRR-CDI-COMPOUNDED': '1b',
     'AUD-BBR-BBSW': '6m',
     'AUD-AONIA-OIS-COMPOUND': '1y',
@@ -351,7 +369,7 @@ BENCHMARK_TO_DEFAULT_FLOATING_RATE_TENORS = {
 }
 
 ICAP_RATE_OPTION_MAPPING = {
-    "AED": {"AEIBOR": {"3M": "AED-AEIBOR 3M"}},
+    "AED": {"AED-EIBOR-NBD": {"3M": "AED-AEIBOR 3M"}},
     "AUD": {
         "AUD-AONIA-OIS-COMPOUND": {"*": "AUD-AONIA"},
         "AUD-BBR-BBSW": {"6M": "AUD-BBSW 6M", "3M": "AUD-BBSW 3M", "1M": "AUD-BBSW 1M"},
@@ -366,8 +384,8 @@ ICAP_RATE_OPTION_MAPPING = {
         "CHF-SARON-OIS-COMPOUND": {"*": "CHF-SARON"},
     },
     "CNY": {
-        "LOAN PRIME RATE": {"1Y": "CNY-LOAN PRIME RATE 1Y", "5Y": "CNY-LOAN PRIME RATE 5Y"},
-        "SHIBOR": {"3M": "CNY-SHIBOR 3M"},
+        "CNY-LOAN": {"1Y": "CNY-LOAN PRIME RATE 1Y", "5Y": "CNY-LOAN PRIME RATE 5Y"},
+        "CNY-SHIBOR": {"3M": "CNY-SHIBOR 3M"},
         "CNY-REPO RATE": {"1Y": "CNY-PBOC DEPO 1Y", "1W": "CNY-R007 REPO 7D"},
     },
     "COP": {"COP-IBR-ON": {"*": "COP-IBR-OIS-COMPOUND"}},
@@ -389,22 +407,22 @@ ICAP_RATE_OPTION_MAPPING = {
     },
     "GBP": {
         "GBP-LIBOR-BBA": {"6M": "GBP-LIBOR 6M", "12M": "GBP-LIBOR 12M", "1M": "GBP-LIBOR 1M", "3M": "GBP-LIBOR 3M"},
-        "UK BASE RATE": {"*": "GBP-UK BASE RATE"},
+        "GBP-UK BASE RATE": {"*": "GBP-UK BASE RATE"},
         "GBP-SONIA-COMPOUND": {"*": "GBP-SONIA"},
     },
-    "HKD": {"HKD-HIBOR-HKAB": {"1M": "HKD-HIBOR 1M", "3M": "HKD-HIBOR 3M"}, "HONIA": {"*": "HKD-HONIA"}},
+    "HKD": {"HKD-HIBOR-HKAB": {"1M": "HKD-HIBOR 1M", "3M": "HKD-HIBOR 3M"}, "HKD-HONIA": {"*": "HKD-HONIA"}},
     "HUF": {"HUF-BIBOR-BUB": {"6M": "HUF-BUBOR 6M", "3M": "HUF-BUBOR 3M", "1M": "HUF-BUBOR 1M"}},
-    "ILS": {"SHIR": {"*": "ILS-SHIR"}, "ILS-TELBOR-FCI": {"3M": "ILS-TELBOR 3M"}},
+    "ILS": {"ILS-SHIR-OIS-COMPOUND": {"*": "ILS-SHIR"}, "ILS-TELBOR-FCI": {"3M": "ILS-TELBOR 3M"}},
     "INR": {
-        "MIFOR": {"6M": "INR-MIFOR 6M"},
-        "MODIFIED MIFOR": {"6M": "INR-MODIFIED MIFOR 6M"},
-        "ON MIBOR": {"*": "INR-ON MIBOR"},
+        "INR-MIFOR": {"6M": "INR-MIFOR 6M"},
+        "INR-MODIFIED-MIFOR": {"6M": "INR-MODIFIED MIFOR 6M"},
+        "INR-MIBOR-OIS-COMPOUND": {"*": "INR-ON MIBOR"},
     },
     "JPY": {"JPY-TONA-OIS-COMPOUND": {"*": "JPY-TONA"}, "JPY-LIBOR-BBA": {"3M": "JPY-LIBOR 3M", "6M": "JPY-LIBOR 6M"}},
     "MXN": {"MXN-TIIE-FX": {"28D": "MXN-TIIE 28D"}, "MXN-TIIE-F": {"*": "MXN- F TIIE"}},
     "MYR": {
-        "KLIBOR": {"1M": "MYR-KLIBOR 1M", "3M": "MYR-KLIBOR 3M"},
-        "- MYOR": {"*": "MYR - MYOR"},
+        "MYR-KLIBOR-BNM": {"1M": "MYR-KLIBOR 1M", "3M": "MYR-KLIBOR 3M"},
+        "MYR-MYOR-OIS-COMPOUND": {"*": "MYR - MYOR"},
         "BANK NEGARA INTBNK WGHTD AVE": {"*": "MYR-BANK NEGARA INTBNK WGHTD AVE"},
     },
     "NOK": {
@@ -418,10 +436,10 @@ ICAP_RATE_OPTION_MAPPING = {
     "PEN": {"TIS": {"*": "PEN-TIS"}},
     "PLN": {
         "PLZ-WIBOR-WIBO": {"6M": "PLN-WIBOR 6M", "3M": "PLN-WIBOR 3M", "1M": "PLN-WIBOR 1M"},
-        "POLONIA": {"*": "PLN-POLONIA"},
+        "PLN-PLNOIS-OIS-COMPOUND": {"*": "PLN-POLONIA"},
     },
-    "RON": {"ROBOR": {"3M": "RON-ROBOR 3M"}},
-    "SAR": {"SAIBOR": {"3M": "SAR-SAIBOR 3M"}},
+    "RON": {"RON-ROBOR-NBBR": {"3M": "RON-ROBOR 3M"}},
+    "SAR": {"SAR-SAIBOR-RIYAL": {"3M": "SAR-SAIBOR 3M"}},
     "SEK": {
         "STINA": {"*": "SEK-STINA"},
         "SEK-STIBOR-SIDE": {"6M": "SEK-STIBOR 6M", "3M": "SEK-STIBOR 3M", "1M": "SEK-STIBOR 1M"},
@@ -432,12 +450,12 @@ ICAP_RATE_OPTION_MAPPING = {
         "SGD-SORA-COMPOUND": {"*": "SGD-SORA"},
     },
     "THB": {
-        "THBFIX": {"6M": "THB-THBFIX 6M"},
+        "THB-THBFIX-REUTERS": {"6M": "THB-THBFIX 6M"},
         "BIBOR": {"6M": "THB-BIBOR 6M", "3M": "THB-BIBOR 3M", "1M": "THB-BIBOR 1M"},
         "THB-THOR-COMPOUND": {"*": "THB-THOR"},
     },
-    "TRY": {"TRLIBOR": {"3M": "TRY-TRLIBOR 3M"}, "TLREF": {"*": "TRY-TLREF"}},
-    "TWD": {"TAIBOR": {"3M": "TWD-TAIBOR 3M"}},
+    "TRY": {"TRY-TRLIBOR-BAT": {"3M": "TRY-TRLIBOR 3M"}, "TRY-TLREF-OIS-COMPOUND": {"*": "TRY-TLREF"}},
+    "TWD": {"TWD-TIBOR-TWDIRS": {"3M": "TWD-TAIBOR 3M"}},
     "USD": {
         "USD-LIBOR-BBA": {"6M": "USD-LIBOR 6M", "12M": "USD-LIBOR 12M", "1M": "USD-LIBOR 1M", "3M": "USD-LIBOR 3M"},
         "SIFMA": {"*": "USD-SIFMA"},
@@ -691,7 +709,7 @@ def _get_tpicap_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
     index = kwargs['asset_parameters_floating_rate_option']
     tenor = kwargs['asset_parameters_floating_rate_designated_maturity']
     ro_map = ICAP_RATE_OPTION_MAPPING.get(ccy, {}).get(index, {})
-    icap_rate_option = ro_map.get(tenor, ro_map.get('*', "RateOption Not Mapped"))
+    icap_rate_option = ro_map.get(tenor.upper(), ro_map.get('*', "RateOption Not Mapped"))
 
     start = (
         kwargs['asset_parameters_effective_date']
@@ -728,7 +746,7 @@ def _get_tpicap_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
         PricingLocation.HKG: TPICAPLocation.HKG,
         PricingLocation.NYC: TPICAPLocation.NYK,
         PricingLocation.TKO: TPICAPLocation.TOK,
-    }.get(kwargs["pricing_location"], TPICAPLocation.NYK)
+    }.get(kwargs["pricing_location"], TPICAPLocation.GBL)
 
     clearinghouse = {
         _ClearingHouse.LCH.value: TPICAPClearing.LCH,
@@ -736,16 +754,30 @@ def _get_tpicap_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
         _ClearingHouse.JSCC.value: TPICAPClearing.JSC,
     }.get(kwargs['asset_parameters_clearing_house'], TPICAPClearing.BIL)
 
-    if len(asset_search) > 1:
-        asset_search = [x for x in asset_search if x['tpicapId'].find("_" + location.value + ".") != -1]
-    if len(asset_search) > 1:
-        asset_search = [x for x in asset_search if x['tpicapId'].find("." + clearinghouse.value + ".") != -1]
-    if len(asset_search) > 1:
-        asset_search = [x for x in asset_search if not x['tpicapId'].startswith("SX")]
+    pattern = "_(\w{3})\.(\w{3})\.(\w{3})\.(\w{3})\!(\w+)$"
+    matches = [re.search(pattern, x['tpicapId']) for x in asset_search]
 
     if len(asset_search) > 1:
-        raise MqValueError('Specified arguments match multiple assets')
-    elif len(asset_search) == 0:
+        locations_available = set([x.group(1) if x else "" for x in matches])
+        if len(locations_available) > 1:
+            asset_search = [x for x in asset_search if x['tpicapId'].find("_" + location.value + ".") != -1]
+    if len(asset_search) > 1:
+        clearing_available = set([x.group(2) if x else "" for x in matches])
+        if len(clearing_available) > 1:
+            asset_search = [x for x in asset_search if x['tpicapId'].find("." + clearinghouse.value + ".") != -1]
+    if len(asset_search) > 1:
+        quote_available = set([x.group(3) if x else "" for x in matches])
+        if len(quote_available) > 1:
+            asset_search = [x for x in asset_search if x['tpicapId'].find(".QTE.") != -1]
+    if len(asset_search) > 1:
+        source_available = set([x.group(5) if x else "" for x in matches])
+        if len(source_available) > 1:
+            asset_search = [x for x in asset_search if x['tpicapId'].find("!IC") != -1]
+
+    if len(asset_search) > 1:
+        asset_search = [asset_search[0]]
+
+    if len(asset_search) == 0:
         raise MqValueError('Specified arguments did not match any asset in the dataset' + str(where))
     else:
         return asset_search[0]['tpicapId']
@@ -765,38 +797,68 @@ def _check_forward_tenor(forward_tenor) -> GENERIC_DATE:
 
 
 class BenchmarkType(Enum):
-    LIBOR = 'LIBOR'
+    AEIBOR = 'AEIBOR'
+    AONIA = 'AONIA'
+    BA = 'BA'
+    BBR = 'BBR'
+    BIBOR = 'BIBOR'
+    BSBY = 'BSBY'
+    CDI = 'CDI'
+    CDKSDA = 'CDKSDA'
+    CDOR = 'CDOR'
+    CIBOR = 'CIBOR'
+    CORRA = 'CORRA'
+    CITA = 'CITA'
+    EONIA = 'EONIA'
     EURIBOR = 'EURIBOR'
     EUROSTR = 'EUROSTR'
-    STIBOR = 'STIBOR'
-    OIS = 'OIS'
-    CDKSDA = 'CDKSDA'
-    SOFR = 'SOFR'
-    SARON = 'SARON'
-    EONIA = 'EONIA'
-    SONIA = 'SONIA'
-    TONA = 'TONA'
     Fed_Funds = 'Fed_Funds'
-    NIBOR = 'NIBOR'
-    CIBOR = 'CIBOR'
-    BBR = 'BBR'
-    BA = 'BA'
-    KSDA = 'KSDA'
-    REPO = 'REPO'
-    SOR = 'SOR'
     HIBOR = 'HIBOR'
-    MIBOR = 'MIBOR'
-    CDOR = 'CDOR'
-    CDI = 'CDI'
-    TNA = 'TNA'
+    HONIA = 'HONIA'
     IBR = 'IBR'
-    TIIE = 'TIIE'
-    AONIA = 'AONIA'
-    NZIONA = 'NZIONA'
+    JIBAR = 'JIBAR'
+    KLIBOR = 'KLIBOR'
+    KSDA = 'KSDA'
+    LIBOR = 'LIBOR'
+    LOAN = 'LOAN'
+    MIBOR = 'MIBOR'
+    MIBOR_OIS = 'MIBOR_OIS'
+    MODIFIED_MIBOR = 'MODIFIED_MIBOR'
+    MOSPRIME = 'MOSPRIME'
+    MYOR = 'MYOR'
+    NIBOR = 'NIBOR'
     NOWA = 'NOWA'
-    CORRA = 'CORRA'
+    NZIONA = 'NZIONA'
+    OIS = 'OIS'
+    POLONIA = 'POLONIA'
+    PRIBOR = 'PRIBOR'
+    REPO = 'REPO'
+    ROBOR = 'ROBOR'
+    SAIBOR = 'SAIBOR'
+    SARON = 'SARON'
+    SHIBOR = 'SHIBOR'
+    SHIR = 'SHIR'
+    SIFMA = 'SIFMA'
     SIOR = 'SIOR'
+    SOFR = 'SOFR'
+    SONIA = 'SONIA'
+    SOR = 'SOR'
     SORA = 'SORA'
+    STIBOR = 'STIBOR'
+    STINA = 'STINA'
+    TAIBOR = 'TAIBOR'
+    TELBOR = 'TELBOR'
+    THBFIX = 'THBFIX'
+    THOR = 'THOR'
+    TIIE = 'TIIE'
+    TIS = 'TIS'
+    TLREF = 'TLREF'
+    TNA = 'TNA'
+    TONA = 'TONA'
+    TRLIBOR = 'TRLIBOR'
+    UK_BASE_RATE = 'UK_BASE_RATE'
+    WIBOR = 'WIBOR'
+    ZARONIA = 'ZARONIA'
 
 
 def _check_benchmark_type(
@@ -1005,7 +1067,7 @@ def _get_swap_data(
             tpicapId=tpicap_id,
         )
 
-        query = dict(where=where, fields=["midPrice"])
+        query = dict(where=where, fields=["midPrice", 'askOrgGoldmansachs', 'bidOrgGoldmansachs'])
 
         if DataContext.current.interval is not None:
             query['interval'] = DataContext.current.interval
@@ -1024,7 +1086,17 @@ def _get_swap_data(
         )
 
         df = GsDataApi.construct_dataframe_with_types(icap_dataset, [row for row in icap_data], schema_varies=True)
-        df.rename(columns={"midPrice": "swapRate"}, inplace=True)
+
+        def avg(ask, bid, mid):
+            if not pd.isnull(mid):
+                return mid
+            if pd.isnull(ask):
+                return bid
+            if pd.isnull(bid):
+                return ask
+            return (ask + bid) / 2
+
+        df['swapRate'] = list(map(avg, df['askOrgGoldmansachs'], df['bidOrgGoldmansachs'], df['midPrice']))
 
     else:
         rate_mqid = _get_tdapi_rates_assets(**kwargs)

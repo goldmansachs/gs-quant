@@ -576,6 +576,588 @@ def test_implied_volatility_fxvol(mocker):
     replace.restore()
 
 
+def test_flip_fx_smile_reference():
+    assert tm_fxo._flip_fx_smile_reference(VolReference.DELTA_CALL) == VolReference.DELTA_PUT
+    assert tm_fxo._flip_fx_smile_reference(VolReference.DELTA_PUT) == VolReference.DELTA_CALL
+    assert tm_fxo._flip_fx_smile_reference(VolReference.DELTA_NEUTRAL) == VolReference.DELTA_NEUTRAL
+
+
+def test_get_fx_smile_strike_and_option_type():
+    replace = Replacer()
+    preprocess_impl_vol = replace('gs_quant.timeseries.measures_fx_vol._preprocess_implied_vol_strikes_fx', Mock())
+
+    preprocess_impl_vol.return_value = ['delta', 0]
+    assert tm_fxo._get_fx_smile_strike_and_option_type(VolReference.DELTA_NEUTRAL, 0) == ('DN', 'Call')
+
+    preprocess_impl_vol.return_value = ['delta', 25]
+    assert tm_fxo._get_fx_smile_strike_and_option_type(VolReference.DELTA_CALL, 25) == ('25D', 'Call')
+
+    preprocess_impl_vol.return_value = ['delta', -10]
+    assert tm_fxo._get_fx_smile_strike_and_option_type(VolReference.DELTA_PUT, 10) == ('10D', 'Put')
+
+    preprocess_impl_vol.return_value = ['spot', 100]
+    assert tm_fxo._get_fx_smile_strike_and_option_type(VolReference.SPOT, 100) == ('Spot', 'Call')
+
+    preprocess_impl_vol.return_value = ['forward', 100]
+    assert tm_fxo._get_fx_smile_strike_and_option_type(VolReference.FORWARD, 100) == ('ATMF', 'Call')
+
+    preprocess_impl_vol.return_value = ['normalized', 100]
+    with pytest.raises(MqValueError):
+        tm_fxo._get_fx_smile_strike_and_option_type(VolReference.NORMALIZED, 100)
+
+    replace.restore()
+
+
+def test_get_fx_vol_smile_asset_details():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'USDJPY')
+    query_asset = Cross('MATESTQUERYASSET', 'JPYUSD')
+
+    replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock(return_value='USDJPY'))
+    replace('gs_quant.timeseries.measures_fx_vol._cross_stored_direction_helper', Mock(return_value='JPYUSD'))
+    security_master = replace(
+        'gs_quant.timeseries.measures_fx_vol.SecurityMaster.get_asset',
+        Mock(return_value=query_asset),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fxo_defaults',
+        Mock(return_value={'under': 'JPY', 'over': 'USD', 'premiumPaymentDate': 'Fwd Settle'}),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol.GsAssetApi.get_many_assets',
+        Mock(
+            return_value=[
+                GsAsset(
+                    asset_class='FX',
+                    id='resolved-put-25',
+                    type_='Option',
+                    name='Resolved Put 25',
+                    parameters={
+                        'callCurrency': 'JPY',
+                        'putCurrency': 'USD',
+                        'expirationDate': '1m',
+                        'optionType': 'Call',
+                        'premiumPaymentDate': 'Fwd Settle',
+                        'strikePriceRelative': '25D',
+                    },
+                ),
+                GsAsset(
+                    asset_class='FX',
+                    id='resolved-call-10',
+                    type_='Option',
+                    name='Resolved Call 10',
+                    parameters={
+                        'callCurrency': 'USD',
+                        'putCurrency': 'JPY',
+                        'expirationDate': '1m',
+                        'optionType': 'Put',
+                        'premiumPaymentDate': 'Fwd Settle',
+                        'strikePriceRelative': '10D',
+                    },
+                ),
+            ]
+        ),
+    )
+    fallback_lookup = replace(
+        'gs_quant.timeseries.measures_fx_vol.get_fxo_asset',
+        Mock(
+            side_effect=lambda asset, tenor, strike, option_type, premium_payment_date=None: (
+                f'{asset.name}-{tenor}-{strike}-{option_type}-{premium_payment_date}'
+            )
+        ),
+    )
+
+    actual = tm_fxo._get_fx_vol_smile_asset_details(mock_cross, '1m')
+
+    actual_by_signed_strike = {spec['signed_strike']: spec for spec in actual}
+    assert len(actual) == 5
+    assert security_master.call_count == 1
+    assert actual_by_signed_strike[-25]['asset_id'] == 'resolved-put-25'
+    assert actual_by_signed_strike[10]['asset_id'] == 'resolved-call-10'
+    assert actual_by_signed_strike[-10]['asset_id'] == 'JPYUSD-1m-10D-Call-Fwd Settle'
+    assert actual_by_signed_strike[0]['asset_id'] == 'JPYUSD-1m-DN-Call-Fwd Settle'
+    assert actual_by_signed_strike[25]['asset_id'] == 'JPYUSD-1m-25D-Put-Fwd Settle'
+    assert fallback_lookup.call_count == 3
+
+    replace.restore()
+
+
+def test_get_fx_vol_smile_asset_details_badly_setup_cross():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock(return_value=None))
+
+    with pytest.raises(MqValueError):
+        tm_fxo._get_fx_vol_smile_asset_details(mock_cross, '1m')
+
+    replace.restore()
+
+
+def test_get_fx_vol_smile_market_data(mocker):
+    expected = mock_curr(None, None)
+    build_query = mocker.patch.object(GsDataApi, 'build_market_data_query', return_value='test-query')
+    market_data = mocker.patch('gs_quant.timeseries.measures_fx_vol._market_data_timed', return_value=expected)
+
+    actual = tm_fxo._get_fx_vol_smile_market_data(
+        ['asset-put-25', 'asset-call-25'],
+        PricingLocation.LDN,
+        source='test-source',
+        real_time=False,
+    )
+
+    assert actual is expected
+    build_query.assert_called_once_with(
+        ['asset-put-25', 'asset-call-25'],
+        QueryType.IMPLIED_VOLATILITY,
+        where={'pricingLocation': 'LDN'},
+        source='test-source',
+        real_time=False,
+    )
+    market_data.assert_called_once_with('test-query')
+
+
+def test_get_fx_vol_smile_fallback_data_empty():
+    actual = tm_fxo._get_fx_vol_smile_fallback_data(
+        Cross('MAGZMXVM0J282ZTR', 'EURUSD'),
+        '1m',
+        [],
+        PricingLocation.NYC,
+    )
+
+    assert actual == []
+
+
+def test_get_fx_vol_smile_fallback_data_single_point():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    expected = tm.ExtendedSeries([1.23], index=[pd.Timestamp('2021-03-30')], name='impliedVolatility')
+    implied_vol = replace(
+        'gs_quant.timeseries.measures_fx_vol.implied_volatility_fxvol',
+        Mock(return_value=expected),
+    )
+
+    actual = tm_fxo._get_fx_vol_smile_fallback_data(
+        mock_cross,
+        '1m',
+        [{'input_strike_reference': VolReference.DELTA_CALL, 'input_relative_strike': 25}],
+        PricingLocation.LDN,
+        source='test-source',
+        real_time=False,
+    )
+
+    assert actual == [expected]
+    implied_vol.assert_called_once_with(
+        mock_cross,
+        '1m',
+        VolReference.DELTA_CALL,
+        25,
+        location=PricingLocation.LDN,
+        source='test-source',
+        real_time=False,
+    )
+    replace.restore()
+
+
+def test_get_fx_vol_smile_fallback_data_parallel_failure_runs_sequentially():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    expected_a = tm.ExtendedSeries([1.23], index=[pd.Timestamp('2021-03-30')], name='impliedVolatility')
+    expected_b = tm.ExtendedSeries([4.56], index=[pd.Timestamp('2021-03-30')], name='impliedVolatility')
+    implied_vol = replace(
+        'gs_quant.timeseries.measures_fx_vol.implied_volatility_fxvol',
+        Mock(side_effect=[expected_a, expected_b]),
+    )
+    run_async = replace(
+        'gs_quant.timeseries.measures_fx_vol.ThreadPoolManager.run_async',
+        Mock(side_effect=RuntimeError('boom')),
+    )
+
+    actual = tm_fxo._get_fx_vol_smile_fallback_data(
+        mock_cross,
+        '1m',
+        [
+            {'input_strike_reference': VolReference.DELTA_PUT, 'input_relative_strike': 10},
+            {'input_strike_reference': VolReference.DELTA_CALL, 'input_relative_strike': 25},
+        ],
+        PricingLocation.NYC,
+    )
+
+    assert actual == [expected_a, expected_b]
+    assert run_async.call_count == 1
+    assert implied_vol.call_count == 2
+    replace.restore()
+
+
+def test_fx_vol_smile():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    tm_fxo.fx_vol_smile._asset_details_cache = {}
+    replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock(return_value='EURUSD'))
+    smile_specs = [
+        {
+            'signed_strike': -25,
+            'input_strike_reference': VolReference.DELTA_PUT,
+            'input_relative_strike': 25,
+            'asset_id': 'asset-put-25',
+        },
+        {
+            'signed_strike': -10,
+            'input_strike_reference': VolReference.DELTA_PUT,
+            'input_relative_strike': 10,
+            'asset_id': 'asset-put-10',
+        },
+        {
+            'signed_strike': 0,
+            'input_strike_reference': VolReference.DELTA_NEUTRAL,
+            'input_relative_strike': 0,
+            'asset_id': 'asset-atm',
+        },
+        {
+            'signed_strike': 10,
+            'input_strike_reference': VolReference.DELTA_CALL,
+            'input_relative_strike': 10,
+            'asset_id': 'asset-call-10',
+        },
+        {
+            'signed_strike': 25,
+            'input_strike_reference': VolReference.DELTA_CALL,
+            'input_relative_strike': 25,
+            'asset_id': 'asset-call-25',
+        },
+    ]
+    batch_df = MarketDataResponseFrame(
+        data={
+            'assetId': [
+                'asset-put-25',
+                'asset-put-25',
+                'asset-put-10',
+                'asset-put-10',
+                'asset-atm',
+                'asset-atm',
+                'asset-call-10',
+                'asset-call-10',
+                'asset-call-25',
+                'asset-call-25',
+            ],
+            'impliedVolatility': [
+                -24.9,
+                -24.8,
+                -9.9,
+                -9.8,
+                0.1,
+                0.2,
+                10.1,
+                10.2,
+                25.1,
+                25.2,
+            ],
+        },
+        index=[
+            pd.Timestamp('2021-03-29'),
+            pd.Timestamp('2021-03-30'),
+            pd.Timestamp('2021-03-29'),
+            pd.Timestamp('2021-03-30'),
+            pd.Timestamp('2021-03-29'),
+            pd.Timestamp('2021-03-30'),
+            pd.Timestamp('2021-03-29'),
+            pd.Timestamp('2021-03-30'),
+            pd.Timestamp('2021-03-29'),
+            pd.Timestamp('2021-03-30'),
+        ],
+    )
+    batch_df.dataset_ids = _test_datasets
+
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_asset_details',
+        Mock(return_value=smile_specs),
+    )
+    batch_query = replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_market_data',
+        Mock(return_value=batch_df),
+    )
+    fallback_query = replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_fallback_data',
+        Mock(return_value=[]),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._range_from_pricing_date',
+        Mock(return_value=(pd.Timestamp('2021-03-30'), pd.Timestamp('2021-03-30'))),
+    )
+
+    actual = tm_fxo.fx_vol_smile(
+        mock_cross,
+        '1m',
+        pricing_date='5d',
+        location=PricingLocation.LDN,
+        source='test-source',
+    )
+
+    expected = pd.Series(
+        [-24.8, -9.8, 0.2, 10.2, 25.2],
+        index=[-25, -10, 0, 10, 25],
+        name='vol_smile',
+    )
+    assert_series_equal(expected, pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    assert batch_query.call_count == 1
+    assert fallback_query.call_args[0][2] == []
+    replace.restore()
+
+
+def test_fx_vol_smile_partial_batch_fallback_sets_dataset_ids():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    tm_fxo.fx_vol_smile._asset_details_cache = {}
+    replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock(return_value='EURUSD'))
+    smile_specs = [
+        {
+            'signed_strike': -25,
+            'input_strike_reference': VolReference.DELTA_PUT,
+            'input_relative_strike': 25,
+            'asset_id': 'asset-put-25',
+        },
+        {
+            'signed_strike': -10,
+            'input_strike_reference': VolReference.DELTA_PUT,
+            'input_relative_strike': 10,
+            'asset_id': 'asset-put-10',
+        },
+        {
+            'signed_strike': 0,
+            'input_strike_reference': VolReference.DELTA_NEUTRAL,
+            'input_relative_strike': 0,
+            'asset_id': 'asset-atm',
+        },
+        {
+            'signed_strike': 10,
+            'input_strike_reference': VolReference.DELTA_CALL,
+            'input_relative_strike': 10,
+            'asset_id': 'asset-call-10',
+        },
+        {
+            'signed_strike': 25,
+            'input_strike_reference': VolReference.DELTA_CALL,
+            'input_relative_strike': 25,
+            'asset_id': 'asset-call-25',
+        },
+    ]
+    batch_df = MarketDataResponseFrame(
+        data={
+            'assetId': [
+                'asset-put-25',
+                'asset-put-25',
+                'asset-atm',
+                'asset-atm',
+            ],
+            'impliedVolatility': [-24.9, -24.8, 0.1, 0.2],
+        },
+        index=[
+            pd.Timestamp('2021-03-29'),
+            pd.Timestamp('2021-03-30'),
+            pd.Timestamp('2021-03-29'),
+            pd.Timestamp('2021-03-30'),
+        ],
+    )
+    batch_df.dataset_ids = ()
+
+    def mock_get_fx_vol_smile_fallback_data(*args, **kwargs):
+        fallback_specs = args[2]
+        assert [spec['signed_strike'] for spec in fallback_specs] == [-10, 10, 25]
+
+        series_list = []
+        for volatility in (-10.2, 10.2, 25.2):
+            result = tm.ExtendedSeries(
+                [volatility],
+                index=[pd.Timestamp('2021-03-30')],
+                name='impliedVolatility',
+            )
+            result.dataset_ids = _test_datasets
+            series_list.append(result)
+
+        return series_list
+
+    replace('gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_asset_details', Mock(return_value=smile_specs))
+    replace('gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_market_data', Mock(return_value=batch_df))
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_fallback_data',
+        mock_get_fx_vol_smile_fallback_data,
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._range_from_pricing_date',
+        Mock(return_value=(pd.Timestamp('2021-03-30'), pd.Timestamp('2021-03-30'))),
+    )
+
+    actual = tm_fxo.fx_vol_smile(mock_cross, '1m', location=PricingLocation.LDN)
+
+    expected = pd.Series(
+        [-24.8, -10.2, 0.2, 10.2, 25.2],
+        index=[-25, -10, 0, 10, 25],
+        name='vol_smile',
+    )
+    assert_series_equal(expected, pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+    assert actual.result_type == 'term_structure'
+
+    replace.restore()
+
+
+def test_fx_vol_smile_empty():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    tm_fxo.fx_vol_smile._asset_details_cache = {}
+    replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock(return_value='EURUSD'))
+
+    def mock_implied_volatility_fxvol(*args, **kwargs):
+        result = tm.ExtendedSeries(dtype=float)
+        result.dataset_ids = _test_datasets
+        return result
+
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_asset_details',
+        Mock(side_effect=RuntimeError('force sequential fallback')),
+    )
+    replace('gs_quant.timeseries.measures_fx_vol.implied_volatility_fxvol', mock_implied_volatility_fxvol)
+    replace(
+        'gs_quant.timeseries.measures_fx_vol.ThreadPoolManager.run_async',
+        Mock(side_effect=lambda *args: [task() for task in args[-1]]),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._range_from_pricing_date',
+        Mock(return_value=(pd.Timestamp('2021-03-30'), pd.Timestamp('2021-03-30'))),
+    )
+
+    actual = tm_fxo.fx_vol_smile(mock_cross, '1m')
+
+    assert actual.empty
+    assert actual.dataset_ids == _test_datasets
+    assert actual.name == 'vol_smile'
+    replace.restore()
+
+
+def test_fx_vol_smile_realtime():
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+
+    with pytest.raises(NotImplementedError):
+        tm_fxo.fx_vol_smile(mock_cross, '1m', real_time=True)
+
+
+def test_fx_vol_smile_uses_recent_buffer_for_default_pricing_date():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    tm_fxo.fx_vol_smile._asset_details_cache = {}
+    replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock(return_value='EURUSD'))
+    range_from_pricing_date = replace(
+        'gs_quant.timeseries.measures_fx_vol._range_from_pricing_date',
+        Mock(return_value=(pd.Timestamp('2021-03-25'), pd.Timestamp('2021-03-30'))),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol.pd.Timestamp.today',
+        Mock(return_value=pd.Timestamp('2021-03-31')),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_asset_details',
+        Mock(side_effect=RuntimeError('force sequential fallback')),
+    )
+    observed_context = {}
+
+    def mock_implied_volatility_fxvol(*args, **kwargs):
+        observed_context['start'] = DataContext.current.start_date
+        observed_context['end'] = DataContext.current.end_date
+        result = tm.ExtendedSeries([0.2], index=[pd.Timestamp('2021-03-30')], name='impliedVolatility')
+        result.dataset_ids = _test_datasets
+        return result
+
+    replace('gs_quant.timeseries.measures_fx_vol.implied_volatility_fxvol', mock_implied_volatility_fxvol)
+    replace(
+        'gs_quant.timeseries.measures_fx_vol.ThreadPoolManager.run_async',
+        Mock(side_effect=lambda *args: [task() for task in args[-1]]),
+    )
+
+    actual = tm_fxo.fx_vol_smile(mock_cross, '1m')
+
+    assert not actual.empty
+    assert observed_context == {
+        'start': dt.date(2021, 3, 23),
+        'end': dt.date(2021, 3, 30),
+    }
+    range_from_pricing_date.assert_not_called()
+    replace.restore()
+
+
+def test_fx_vol_smile_parallelizes_unresolved_fallback_points():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    tm_fxo.fx_vol_smile._asset_details_cache = {}
+    replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock(return_value='EURUSD'))
+    run_async = replace(
+        'gs_quant.timeseries.measures_fx_vol.ThreadPoolManager.run_async',
+        Mock(side_effect=lambda *args: [task() for task in args[-1]]),
+    )
+
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_asset_details',
+        Mock(side_effect=RuntimeError('force fallback')),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._range_from_pricing_date',
+        Mock(return_value=(pd.Timestamp('2021-03-30'), pd.Timestamp('2021-03-30'))),
+    )
+
+    def mock_implied_volatility_fxvol(*args, **kwargs):
+        result = tm.ExtendedSeries([1.0], index=[pd.Timestamp('2021-03-30')], name='impliedVolatility')
+        result.dataset_ids = _test_datasets
+        return result
+
+    replace('gs_quant.timeseries.measures_fx_vol.implied_volatility_fxvol', mock_implied_volatility_fxvol)
+
+    actual = tm_fxo.fx_vol_smile(mock_cross, '1m')
+
+    assert len(actual) == 5
+    assert run_async.call_count == 1
+    replace.restore()
+
+
+def test_fx_vol_smile_evicts_oldest_cache_entry_when_full():
+    replace = Replacer()
+    mock_cross = Cross('MAGZMXVM0J282ZTR', 'EURUSD')
+    replace('gs_quant.timeseries.measures_fx_vol.Asset.get_identifier', Mock(return_value='EURUSD'))
+    existing_cache = {(f'PAIR{i}', '1m'): [{'asset_id': f'cached-{i}'}] for i in range(32)}
+    tm_fxo.fx_vol_smile._asset_details_cache = dict(existing_cache)
+    smile_specs = [
+        {
+            'signed_strike': -25,
+            'input_strike_reference': VolReference.DELTA_PUT,
+            'input_relative_strike': 25,
+            'asset_id': 'asset-put-25',
+        }
+    ]
+    asset_details = replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_asset_details',
+        Mock(return_value=smile_specs),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_market_data',
+        Mock(return_value=pd.DataFrame()),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._get_fx_vol_smile_fallback_data',
+        Mock(return_value=[]),
+    )
+    replace(
+        'gs_quant.timeseries.measures_fx_vol._range_from_pricing_date',
+        Mock(return_value=(pd.Timestamp('2021-03-30'), pd.Timestamp('2021-03-30'))),
+    )
+
+    tm_fxo.fx_vol_smile(mock_cross, '1m', pricing_date='5d')
+
+    cache = tm_fxo.fx_vol_smile._asset_details_cache
+    assert len(cache) == 32
+    assert ('PAIR0', '1m') not in cache
+    assert ('EURUSD', '1m') in cache
+    asset_details.assert_called_once_with(mock_cross, '1m')
+    replace.restore()
+
+
 if __name__ == '__main__':
     pytest.main(args=["test_measures_fx_vol.py"])
 
