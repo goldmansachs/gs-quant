@@ -1768,6 +1768,7 @@ def factset_enterprise_value(
 
     df['capLease'] = df['capLease'] if op_lease else 0
     df['pensionLiabilities'] = df['pensionLiabilities'].clip(lower=0)
+    df = df.fillna(0)
     df['enterpriseValue'] = (
         df['fullyDilutedMarketCap']
         + df['consolidatedDebt']

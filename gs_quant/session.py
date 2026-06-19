@@ -1305,35 +1305,42 @@ try:
             self._parse_cookies(cookies)
 
         def _authenticate(self):
-            if not (self.token and self.csrf_token):
-                self._handle_cookies(self.token)
-                return
-
-            cookie = requests.cookies.create_cookie(domain='.gs.com', name='GSSSO', value=self.token)
-            self._session.cookies.set_cookie(cookie)
-            if self.csrf_token:
-                cookie = requests.cookies.create_cookie(
-                    domain='.gs.com', name='MARQUEE-CSRF-TOKEN', value=self.csrf_token
-                )
-                self._session.cookies.set_cookie(cookie)
-                self._session.headers.update({'X-MARQUEE-CSRF-TOKEN': self.csrf_token})
             if self.marquee_login:
                 cookie = requests.cookies.create_cookie(domain='.gs.com', name='MarqueeLogin', value=self.marquee_login)
                 self._session.cookies.set_cookie(cookie)
             if self.authorization:
                 self._session.headers.update({'Authorization': f"Bearer {self.authorization}"})
+            if self.token and self.csrf_token:
+                cookie = requests.cookies.create_cookie(domain='.gs.com', name='GSSSO', value=self.token)
+                self._session.cookies.set_cookie(cookie)
+                cookie = requests.cookies.create_cookie(
+                    domain='.gs.com', name='MARQUEE-CSRF-TOKEN', value=self.csrf_token
+                )
+                self._session.cookies.set_cookie(cookie)
+                self._session.headers.update({'X-MARQUEE-CSRF-TOKEN': self.csrf_token})
+            else:
+                self._handle_cookies(self.token)
 
         def _parse_cookies(self, cookies):
             if cookies:
                 csrf_token = cookies.get('MARQUEE-CSRF-TOKEN')
                 if csrf_token:
-                    self.csrf_token = csrf_token.value
+                    if isinstance(csrf_token, str):
+                        self.csrf_token = csrf_token
+                    else:
+                        self.csrf_token = csrf_token.value
                 marquee_login = cookies.get('MarqueeLogin')
                 if marquee_login:
-                    self.marquee_login = marquee_login.value
+                    if isinstance(marquee_login, str):
+                        self.marquee_login = marquee_login
+                    else:
+                        self.marquee_login = marquee_login.value
                 authorization = cookies.get('Authorization')
                 if authorization:
-                    self.authorization = authorization.value
+                    if isinstance(authorization, str):
+                        self.authorization = authorization
+                    else:
+                        self.authorization = authorization.value
 
         def init(self, cookies=None):
             if cookies and self._session:
