@@ -25,6 +25,7 @@ from urllib.parse import quote
 import deprecation
 import numpy as np
 import pandas as pd
+from enum import Enum
 from more_itertools import unique_everseen
 
 from gs_quant.api.gs.assets import GsAssetApi
@@ -461,7 +462,7 @@ class Portfolio(PriceableImpl):
         port_df = self.to_frame(mappings or {})
         port_df = port_df[np.setdiff1d(port_df.columns, ignored_cols or [])]
         port_df = port_df.reset_index(drop=True)
-
+        port_df = port_df.apply(lambda col: col.map(lambda x: x.value if isinstance(x, Enum) else x))
         port_df.to_csv(csv_file)
 
     @property
