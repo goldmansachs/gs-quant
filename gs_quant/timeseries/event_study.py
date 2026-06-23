@@ -169,6 +169,9 @@ def get_asset_events(
     start_date: str = '1y',
     end_date: str = '0d',
     n_events: Optional[int] = None,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
     **kwargs,
 ) -> pd.Series:
     """Return supported asset-scoped event dates as a date-indexed string series.
@@ -190,6 +193,9 @@ def get_asset_events(
     :param start_date: Start of the event search range. Defaults to "1y".
     :param end_date: End of the event search range. Defaults to "0d".
     :param n_events: Optional number of latest matching events to return.
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data (default: False)
+    :param request_id: service request id, if any
     :param kwargs: Unused compatibility placeholders for decorated callers.
                    Supported legacy keys include ``source``, ``real_time``,
                    and ``request_id``.

@@ -16,7 +16,7 @@ under the License.
 
 import logging
 from enum import Enum
-from typing import Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -158,7 +158,9 @@ def cpn_swap(
     asset: Asset,
     coupon: Union[int, float],
     *,
+    source: str = None,
     real_time: bool = False,
+    request_id: Optional[str] = None,
 ) -> pd.Series:
     """Return the price difference between two adjacent coupon TBAs.
 
@@ -168,7 +170,9 @@ def cpn_swap(
 
     :param asset: base asset whose *name* is used as the prefix (e.g. an asset named 'FNM')
     :param coupon: coupon value (e.g. 5 → looks up 'FNM 5.00' and 'FNM 4.50')
+    :param source: name of function caller
     :param real_time: whether to retrieve intraday data (default: False)
+    :param request_id: service request id, if any
     :return: time series of price differences between the two coupon assets
 
     **Usage**
@@ -213,7 +217,9 @@ def butterfly(
     asset: Asset,
     coupon: Union[int, float],
     *,
+    source: str = None,
     real_time: bool = False,
+    request_id: Optional[str] = None,
 ) -> pd.Series:
     """Return the butterfly spread for three adjacent coupon TBAs.
 
@@ -224,7 +230,9 @@ def butterfly(
 
     :param asset: base asset whose *name* is used as the prefix (e.g. 'FNM')
     :param coupon: middle coupon value (e.g. 5 → uses FNM 4.50, FNM 5.00, FNM 5.50)
+    :param source: name of function caller
     :param real_time: whether to retrieve intraday data (default: False)
+    :param request_id: service request id, if any
     :return: time series of butterfly spread values
 
     **Usage**
