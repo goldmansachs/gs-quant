@@ -1159,28 +1159,30 @@ class GsSession(ContextBase):
 class OAuth2Session(GsSession):
     def __init__(
         self,
-        environment,
-        client_id,
-        client_secret,
-        scopes,
+        environment: Union[str, Environment],
+        client_id: str,
+        client_secret: str,
+        scopes=(),
         api_version=API_VERSION,
         application=DEFAULT_APPLICATION,
         http_adapter=None,
         domain=Domain.APP,
     ):
+        if isinstance(environment, Environment):
+            environment = environment.name
         if environment not in (Environment.PROD.name, Environment.QA.name, Environment.DEV.name):
             env_config = self._config_for_environment(Environment.DEV.name)
             url = environment
         else:
             env_config = self._config_for_environment(environment)
             url = env_config[domain]
-
         super().__init__(url, environment, api_version=api_version, application=application, http_adapter=http_adapter)
         self.auth_url = env_config['AuthURL']
         self.client_id = client_id
         self.client_secret = client_secret
         self.scopes = scopes
         self._orig_domain = domain
+        self.token = None
 
         if environment == Environment.DEV.name or (url != env_config['AppDomain'] and not domain == Domain.MDS_US_EAST):
             import urllib3
@@ -1198,9 +1200,9 @@ class OAuth2Session(GsSession):
         reply = self._session.post(self.auth_url, data=auth_data, verify=self.verify)
         if reply.status_code != 200:
             raise MqAuthenticationError(reply.status_code, reply.text, context=self.auth_url)
-
         response = json.loads(reply.text)
-        self._session.headers.update({'Authorization': 'Bearer {}'.format(response['access_token'])})
+        self.token = response['access_token']
+        self._session.headers.update({'Authorization': 'Bearer {}'.format(self.token)})
 
     def _headers(self):
         return [('Authorization', self._session.headers['Authorization'])]

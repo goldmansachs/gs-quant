@@ -17,6 +17,7 @@ under the License.
 import datetime as dt
 import logging
 import re
+import math
 from collections import OrderedDict
 from enum import Enum
 from typing import Optional, Union, Dict, List
@@ -463,7 +464,7 @@ ICAP_RATE_OPTION_MAPPING = {
         "BSBY": {"1M": "USD-BSBY 1M", "3M": "USD-BSBY 3M"},
         "USD-Federal Funds-H.15-OIS-COMP": {"*": "USD-FEDERAL FUNDS"},
     },
-    "ZAR": {"ZAR-JIBAR-SAFEX": {"3M": "ZAR-JIBAR 3M"}, "ZARONIA": {"*": "ZAR-ZARONIA"}},
+    "ZAR": {"ZAR-JIBAR-SAFEX": {"3M": "ZAR-JIBAR 3M"}, "ZAR-ZARONIA-OIS-COMPOUND": {"*": "ZAR-ZARONIA"}},
 }
 
 CURRENCY_TO_PRICING_LOCATION = {
@@ -698,6 +699,112 @@ def _get_tdapi_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
         raise MqValueError('Specified arguments did not match any asset in the dataset' + str(kwargs))
     else:
         return assets[0].id
+
+
+def _get_tpicap_swaption_assets(allow_many=False, **kwargs) -> Union[str, list]:
+    # sanitize input for asset query.
+
+    dataset = 'SF_TPICAP_SWAPTIONS_REFERENCE_V1_YRBSW3R0'
+
+    ccy = kwargs['currency']
+    tenor = kwargs['floating_rate_tenor']
+    if ccy.value not in CURRENCY_TO_SWAP_RATE_BENCHMARK.keys():
+        raise NotImplementedError('Data not available for {} swaption'.format(ccy.value))
+    benchmark_type = _check_benchmark_type(ccy, kwargs['benchmark_type'])
+    index = _get_benchmark_type(ccy, benchmark_type)
+    ro_map = ICAP_RATE_OPTION_MAPPING.get(ccy.value, {}).get(index, {})
+    icap_rate_option = ro_map.get(tenor.upper(), ro_map.get('*', "RateOption Not Mapped"))
+
+    strike = _check_strike_reference(kwargs['strike_reference'])
+    if strike == 'ATM':
+        stub = 'IVSWO'
+        strike = None
+    elif strike.startswith('ATM+'):
+        stub = 'IVSWP'
+        strike = float(strike[4:])
+    elif strike.startswith('ATM-'):
+        stub = 'IVSWR'
+        strike = float(strike[3:])
+    else:
+        stub = 'Unknown'
+        strike = None
+
+    expiry = kwargs['expiration_tenor'] if len(kwargs['expiration_tenor']) > 2 else '0' + kwargs['expiration_tenor']
+    start = kwargs['effective_date'] if len(kwargs['effective_date']) > 2 else '0' + kwargs['effective_date']
+    end = kwargs['termination_tenor'] if len(kwargs['termination_tenor']) > 2 else '0' + kwargs['termination_tenor']
+
+    where = FieldFilterMapDataQuery(
+        currency1=ccy.value.upper(),
+        period1=expiry.upper(),
+        period2=end.upper(),
+        settlementIndex=icap_rate_option,
+        stub=stub,
+    )
+
+    if start != '00b':
+        where['paymentFrequencyPeriod2'] = start.upper()
+
+    query = DataQuery(where=where, start_date=dt.date(2026, 5, 22), end_date=dt.date.today())
+
+    asset_search = GsDataApi.query_data(
+        query=query,
+        dataset_id=dataset,
+    )
+
+    if strike is not None:
+        asset_search = [x for x in asset_search if x['strikePrice'] == strike]
+
+    if start == '00b':
+        asset_search = [x for x in asset_search if 'paymentFrequencyPeriod2' not in x]
+
+    # filter by close
+    location = {
+        PricingLocation.LDN: TPICAPLocation.LDN,
+        PricingLocation.HKG: TPICAPLocation.HKG,
+        PricingLocation.NYC: TPICAPLocation.NYK,
+        PricingLocation.TKO: TPICAPLocation.TOK,
+    }.get(kwargs["pricing_location"], TPICAPLocation.GBL)
+
+    clearinghouse = {
+        _ClearingHouse.LCH.value: TPICAPClearing.LCH,
+        _ClearingHouse.CME.value: TPICAPClearing.CME,
+        _ClearingHouse.JSCC.value: TPICAPClearing.JSC,
+    }.get(kwargs['clearing_house'], TPICAPClearing.BIL)
+
+    pattern = "_(\w{3})\.(\w{3})\.(\w{3})\.(\w{3})\!(\w+)$"
+    matches = [re.search(pattern, x['tpicapId']) for x in asset_search]
+
+    if len(asset_search) > 1:
+        locations_available = set([x.group(1) if x else "" for x in matches])
+        if len(locations_available) > 1:
+            asset_search = [x for x in asset_search if x['tpicapId'].find("_" + location.value + ".") != -1]
+    if len(asset_search) > 1:
+        clearing_available = set([x.group(2) if x else "" for x in matches])
+        if len(clearing_available) > 1:
+            asset_search = [x for x in asset_search if x['tpicapId'].find("." + clearinghouse.value + ".") != -1]
+    if len(asset_search) > 1:
+        quote_available = set([x.group(3) if x else "" for x in matches])
+        if len(quote_available) > 1:
+            asset_search = [x for x in asset_search if x['tpicapId'].find(".QTE.") != -1]
+    if len(asset_search) > 1:
+        source_available = set([x.group(5) if x else "" for x in matches])
+        if len(source_available) > 1:
+            asset_search = [x for x in asset_search if x['tpicapId'].find("!IC") != -1]
+
+    if len(asset_search) > 1:
+        if icap_rate_option == 'USD-LIBOR 3M':  # currently only case where there are multiple options but the currency
+            #  name is not the default
+            asset_search = [x for x in asset_search if x['tpicapId'].startswith(stub + 'USS')]
+        else:
+            asset_search = [x for x in asset_search if x['tpicapId'].startswith(stub + ccy.value.upper())]
+
+    if len(asset_search) > 1:
+        asset_search = [asset_search[0]]
+
+    if len(asset_search) == 0:
+        raise MqValueError('Specified arguments did not match any asset in the dataset' + str(where))
+    else:
+        return asset_search[0]['tpicapId']
 
 
 def _get_tpicap_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
@@ -1053,7 +1160,7 @@ def _get_swap_data(
     if data_provider.value == DataProvider.TPICAP.value:
         tpicap_id = _get_tpicap_rates_assets(**kwargs)
         _logger.debug(
-            'where asset= %s, swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
+            'where icapid=%s asset= %s, swap_tenor=%s, benchmark_type=%s, floating_rate_tenor=%s, forward_tenor=%s, '
             'pricing_location=%s',
             tpicap_id,
             swap_tenor,
@@ -1505,6 +1612,7 @@ def swaption_vol(
     floating_rate_tenor: str = None,
     clearing_house: str = None,
     location: PricingLocation = None,
+    data_provider: DataProvider = DataProvider.GS,
     *,
     source: str = None,
     real_time: bool = False,
@@ -1520,6 +1628,7 @@ def swaption_vol(
     :param floating_rate_tenor: floating index rate
     :param clearing_house: Example - "LCH", "EUREX", "JSCC", "CME"
     :param location: Example - "TKO", "LDN", "NYC"
+    :param data_provider: Example - "Goldman Sachs" or "TPICAP"
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :return: swaption implied normal volatility curve
@@ -1539,6 +1648,7 @@ def swaption_vol(
         start=DataContext.current.start_date,
         end=DataContext.current.end_date,
         location=location,
+        data_provider=data_provider,
     )
     return _extract_series_from_df(df, QueryType.SWAPTION_VOL)
 
@@ -1664,42 +1774,107 @@ def _get_swaption_measure(
     allow_many: bool = False,
     query_type: QueryType = QueryType.SWAPTION_PREMIUM,
     location: PricingLocation = None,
+    data_provider: DataProvider = DataProvider.GS,
 ) -> pd.Series:
     if real_time:
         raise NotImplementedError(f'realtime {query_type.value} not implemented')
     currency = CurrencyEnum(asset.get_identifier(AssetIdentifier.BLOOMBERG_ID))
 
-    if not swaptions_defaults_provider.is_supported(currency):
-        raise NotImplementedError(f'Data not available for {currency.value} {query_type.value}')
+    if data_provider.value == DataProvider.TPICAP.value:
+        tpicap_id = _get_tpicap_swaption_assets(
+            currency=currency,
+            benchmark_type=benchmark_type,
+            expiration_tenor=expiration_tenor,
+            effective_date=effective_date,
+            termination_tenor=termination_tenor,
+            floating_rate_tenor=floating_rate_tenor,
+            strike_reference=strike_reference,
+            pricing_location=location,
+            clearing_house=clearing_house,
+        )
+        _logger.debug(
+            'where icapid=%s asset= %s, benchmark_type=%s, expiry=%s, start=%s, maturity=%s, '
+            'floating_rate_tenor=%s, strike_reference=%s, location=%s',
+            tpicap_id,
+            currency,
+            benchmark_type,
+            expiration_tenor,
+            effective_date,
+            termination_tenor,
+            floating_rate_tenor,
+            strike_reference,
+            location.value,
+        )
+        icap_dataset = "SF_EOD_SNAPS_SWAPTIONS_LONDON415_V2_YRBSW3R0"
+        where = dict(
+            tpicapId=tpicap_id,
+        )
 
-    query = _swaption_build_asset_query(
-        currency,
-        benchmark_type,
-        effective_date,
-        expiration_tenor,
-        floating_rate_tenor,
-        strike_reference,
-        termination_tenor,
-        clearing_house,
-    )
+        fields = ("atmnormalvol",)
+        if not tpicap_id.startswith('IVSWO'):
+            fields += ("normalvol",)
+        query = dict(where=where, fields=fields)
 
-    _logger.debug(query)
+        if DataContext.current.interval is not None:
+            query['interval'] = DataContext.current.interval
+        # if real_time:
+        #    query['startTime'] = DataContext.current.start_time
+        #    query['endTime'] = DataContext.current.end_time
+        else:
+            query['startDate'] = DataContext.current.start_date
+            query['endDate'] = DataContext.current.end_date
 
-    rate_mqid = _get_tdapi_rates_assets(**query, allow_many=allow_many)
-    if isinstance(rate_mqid, str):
-        rate_mqid = [rate_mqid]
+        query = DataQuery(**query)
 
-    if location is None:
-        pricing_location = _default_pricing_location(currency)
+        icap_data = GsDataApi.query_data(
+            query=query,
+            dataset_id=icap_dataset,
+        )
+
+        df = GsDataApi.construct_dataframe_with_types(icap_dataset, [row for row in icap_data], schema_varies=True)
+
+        if df.size == 0:
+            df['swaptionVol'] = pd.Series()
+        elif tpicap_id.startswith('IVSWO'):
+            df['swaptionVol'] = df['atmnormalvol']
+        else:
+            df['swaptionVol'] = df['normalvol'] + df['atmnormalvol']
+
+        df['swaptionVol'] /= math.sqrt(252)
     else:
-        pricing_location = PricingLocation(location)
-    pricing_location = _pricing_location_normalized(pricing_location, currency)
+        if not swaptions_defaults_provider.is_supported(currency):
+            raise NotImplementedError(f'Data not available for {currency.value} {query_type.value}')
 
-    where = dict(pricingLocation=pricing_location.value)
-    with DataContext(start, end):
-        q = GsDataApi.build_market_data_query(rate_mqid, query_type, where=where, source=source, real_time=real_time)
-    _logger.debug('q %s', q)
-    df = _market_data_timed(q)
+        query = _swaption_build_asset_query(
+            currency,
+            benchmark_type,
+            effective_date,
+            expiration_tenor,
+            floating_rate_tenor,
+            strike_reference,
+            termination_tenor,
+            clearing_house,
+        )
+
+        _logger.debug(query)
+
+        rate_mqid = _get_tdapi_rates_assets(**query, allow_many=allow_many)
+        if isinstance(rate_mqid, str):
+            rate_mqid = [rate_mqid]
+
+        if location is None:
+            pricing_location = _default_pricing_location(currency)
+        else:
+            pricing_location = PricingLocation(location)
+        pricing_location = _pricing_location_normalized(pricing_location, currency)
+
+        where = dict(pricingLocation=pricing_location.value)
+        with DataContext(start, end):
+            q = GsDataApi.build_market_data_query(
+                rate_mqid, query_type, where=where, source=source, real_time=real_time
+            )
+        _logger.debug('q %s', q)
+        df = _market_data_timed(q)
     return df
 
 

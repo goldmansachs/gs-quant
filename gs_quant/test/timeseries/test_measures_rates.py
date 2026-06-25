@@ -392,6 +392,86 @@ def test_swaption_vol_smile2_returns_no_data():
     replace.restore()
 
 
+def test_get_swaption_measure_tpicap_full_coverage():
+    replace = Replacer()
+
+    # Ensure _get_swaption_measure resolves a supported currency.
+    replace('gs_quant.timeseries.measures.Asset.get_identifier', Mock()).return_value = 'GBP'
+
+    get_tpicap_asset = replace('gs_quant.timeseries.measures_rates._get_tpicap_swaption_assets', Mock())
+    query_data = replace('gs_quant.timeseries.measures_rates.GsDataApi.query_data', Mock())
+    construct_df = replace('gs_quant.timeseries.measures_rates.GsDataApi.construct_dataframe_with_types', Mock())
+
+    asset = Currency('MA_GBP', 'GBP')
+
+    # Case 0: realtime not supported
+    with pytest.raises(NotImplementedError, match='realtime .* not implemented'):
+        tm_rates._get_swaption_measure(
+            asset,
+            location=PricingLocation.LDN,
+            query_type=QueryType.SWAPTION_VOL,
+            data_provider=tm_rates.DataProvider.TPICAP,
+            real_time=True,
+        )
+
+    # Case 1: IVSWO path -> swaptionVol = atmnormalvol / sqrt(252), date window branch
+    get_tpicap_asset.return_value = 'IVSWO_LDN.LCH.QTE.RTM!IC'
+    query_data.return_value = [{'atmnormalvol': 12.6}]
+    construct_df.return_value = pd.DataFrame({'atmnormalvol': [12.6]})
+
+    with DataContext(dt.date(2024, 1, 2), dt.date(2024, 1, 5)):
+        df = tm_rates._get_swaption_measure(
+            asset,
+            location=PricingLocation.LDN,
+            query_type=QueryType.SWAPTION_VOL,
+            data_provider=tm_rates.DataProvider.TPICAP,
+        )
+
+    assert query_data.call_args.kwargs['dataset_id'] == 'SF_EOD_SNAPS_SWAPTIONS_LONDON415_V2_YRBSW3R0'
+    q = query_data.call_args.kwargs['query']
+    assert q.where == {'tpicapId': 'IVSWO_LDN.LCH.QTE.RTM!IC'}
+    assert q.fields == ('atmnormalvol',)
+    assert q.start_date == dt.date(2024, 1, 2)
+    assert q.end_date == dt.date(2024, 1, 5)
+    assert_allclose(df['swaptionVol'].values, (df['atmnormalvol'] / (252**0.5)).values)
+
+    # Case 2: non-IVSWO path + interval branch
+    get_tpicap_asset.return_value = 'IVSWP_LDN.LCH.QTE.RTM!IC'
+    query_data.return_value = [{'atmnormalvol': 10.0, 'normalvol': 2.0}]
+    construct_df.return_value = pd.DataFrame({'atmnormalvol': [10.0], 'normalvol': [2.0]})
+
+    with DataContext(interval='90d'):
+        df = tm_rates._get_swaption_measure(
+            asset,
+            location=PricingLocation.LDN,
+            query_type=QueryType.SWAPTION_VOL,
+            data_provider=tm_rates.DataProvider.TPICAP,
+        )
+
+    q = query_data.call_args.kwargs['query']
+    assert q.fields == ('atmnormalvol', 'normalvol')
+    assert getattr(q, 'interval', None) == '90d'
+    assert_allclose(df['swaptionVol'].values, ((df['normalvol'] + df['atmnormalvol']) / (252**0.5)).values)
+
+    # Case 3: empty dataframe branch -> creates empty swaptionVol column
+    get_tpicap_asset.return_value = 'IVSWO_LDN.LCH.QTE.RTM!IC'
+    query_data.return_value = []
+    construct_df.return_value = pd.DataFrame()
+
+    with DataContext(dt.date(2024, 1, 2), dt.date(2024, 1, 5)):
+        df = tm_rates._get_swaption_measure(
+            asset,
+            location=PricingLocation.LDN,
+            query_type=QueryType.SWAPTION_VOL,
+            data_provider=tm_rates.DataProvider.TPICAP,
+        )
+
+    assert 'swaptionVol' in df.columns
+    assert df['swaptionVol'].empty
+
+    replace.restore()
+
+
 def test_swaption_vol_smile2_returns_throws():
     with pytest.raises(NotImplementedError):
         tm_rates.swaption_vol_smile(Currency("GBP", name="GBP"), "1m", "1m", real_time=True)
@@ -1328,6 +1408,139 @@ def test_get_cb_meeting_swap(mocker):
         tm_rates.get_cb_meeting_swap(CurrencyEnum.USD, tm_rates.BenchmarkTypeCB.SOFR, '1y', '125y')
 
     assert tm_rates.get_cb_meeting_swap(CurrencyEnum.USD, tm_rates.BenchmarkTypeCB.SOFR, '0b', '1y') == 'MA000SPOT'
+    replace.restore()
+
+
+def test_get_tpicap_swaption_assets_full_coverage():
+    replace = Replacer()
+
+    class _UnsupportedCurrency:
+        value = 'ACU'
+
+    def _kwargs(
+        currency=CurrencyEnum.USD,
+        benchmark=tm_rates.BenchmarkType.LIBOR,
+        effective='1m',
+        expiration='1m',
+        termination='5y',
+        floating='3m',
+        strike='ATM',
+        location=PricingLocation.LDN,
+        clearing='LCH',
+    ):
+        return dict(
+            currency=currency,
+            benchmark_type=benchmark,
+            expiration_tenor=expiration,
+            effective_date=effective,
+            termination_tenor=termination,
+            floating_rate_tenor=floating,
+            strike_reference=strike,
+            pricing_location=location,
+            clearing_house=clearing,
+        )
+
+    query_data = replace('gs_quant.timeseries.measures_rates.GsDataApi.query_data', Mock())
+
+    with pytest.raises(NotImplementedError, match='Data not available'):
+        tm_rates._get_tpicap_swaption_assets(**_kwargs(currency=_UnsupportedCurrency()))
+
+    # Standard path: ATM strike, non-spot start, single matching row.
+    query_data.return_value = [{'tpicapId': 'IVSWO_LDN.LCH.QTE.RTM!IC'}]
+    out = tm_rates._get_tpicap_swaption_assets(**_kwargs())
+    assert out == 'IVSWO_LDN.LCH.QTE.RTM!IC'
+
+    sent_query = query_data.call_args.kwargs['query']
+    where = sent_query.where
+    assert where['currency1'] == 'USD'
+    assert where['period1'] == '01M'
+    assert where['period2'] == '05Y'
+    assert where['paymentFrequencyPeriod2'] == '01M'
+    assert where['settlementIndex'] == 'USD-LIBOR 3M'
+    assert where['stub'] == 'IVSWO'
+    assert sent_query.start_date == dt.date(2026, 5, 22)
+
+    # Spot-start branch removes rows that contain paymentFrequencyPeriod2.
+    query_data.return_value = [
+        {'tpicapId': 'IVSWO_LDN.LCH.QTE.RTM!IC', 'paymentFrequencyPeriod2': '00B'},
+        {'tpicapId': 'IVSWO_LDN.LCH.QTE.RTM!IC'},
+    ]
+    out = tm_rates._get_tpicap_swaption_assets(**_kwargs(effective='0b'))
+    assert out == 'IVSWO_LDN.LCH.QTE.RTM!IC'
+    assert 'paymentFrequencyPeriod2' not in query_data.call_args.kwargs['query'].where
+
+    # Strike filter path for ATM+ and ATM-.
+    query_data.return_value = [
+        {'tpicapId': 'IVSWP_LDN.LCH.QTE.RTM!IC', 'strikePrice': 50.0},
+        {'tpicapId': 'IVSWP_LDN.LCH.QTE.RTM!IC', 'strikePrice': 75.0},
+    ]
+    out = tm_rates._get_tpicap_swaption_assets(**_kwargs(strike='ATM+50'))
+    assert out == 'IVSWP_LDN.LCH.QTE.RTM!IC'
+
+    query_data.return_value = [
+        {'tpicapId': 'IVSWR_LDN.LCH.QTE.RTM!IC', 'strikePrice': -25.0},
+        {'tpicapId': 'IVSWR_LDN.LCH.QTE.RTM!IC', 'strikePrice': 75.0},
+    ]
+    out = tm_rates._get_tpicap_swaption_assets(**_kwargs(strike='ATM-25'))
+    assert out == 'IVSWR_LDN.LCH.QTE.RTM!IC'
+
+    # Multi-row filters: location -> clearing -> quote.
+    query_data.return_value = [
+        {'tpicapId': 'IVSWO_NYK.LCH.QTE.RTM!IC'},
+        {'tpicapId': 'IVSWO_LDN.LCH.QTE.RTM!IC'},
+        {'tpicapId': 'IVSWO_NYK.CME.QTE.RTM!IC'},
+        {'tpicapId': 'IVSWO_NYK.LCH.SX1.RTM!IC'},
+    ]
+    out = tm_rates._get_tpicap_swaption_assets(**_kwargs(location=PricingLocation.NYC, clearing='LCH'))
+    assert out == 'IVSWO_NYK.LCH.QTE.RTM!IC'
+
+    # Source filter prefers !IC over other sources.
+    query_data.return_value = [
+        {'tpicapId': 'IVSWO_NYK.LCH.QTE.RTM!IC'},
+        {'tpicapId': 'IVSWO_NYK.LCH.QTE.RTM!TP'},
+    ]
+    out = tm_rates._get_tpicap_swaption_assets(**_kwargs(location=PricingLocation.NYC, clearing='LCH'))
+    assert out == 'IVSWO_NYK.LCH.QTE.RTM!IC'
+
+    # Default mapping branches: unknown location and unsupported clearing.
+    query_data.return_value = [
+        {'tpicapId': 'IVSWO_GBL.BIL.QTE.RTM!IC'},
+        {'tpicapId': 'IVSWO_LDN.LCH.QTE.RTM!IC'},
+    ]
+    out = tm_rates._get_tpicap_swaption_assets(**_kwargs(location='UNKNOWN_LOCATION', clearing='NONE'))
+    assert out == 'IVSWO_GBL.BIL.QTE.RTM!IC'
+
+    # USD special prefix branch (settlementIndex == "USD-LIBOR 3M"): expects IVSWOUSS*
+    query_data.return_value = [
+        {'tpicapId': 'IVSWOUSS_NYK.LCH.QTE.RTM!IC'},
+        {'tpicapId': 'IVSWOUSS_NYK.LCH.QTE.RTM!IC2'},
+    ]
+    out = tm_rates._get_tpicap_swaption_assets(**_kwargs(location=PricingLocation.NYC, clearing='LCH'))
+    assert out == 'IVSWOUSS_NYK.LCH.QTE.RTM!IC'
+
+    # Non-USD prefix branch: expects IVSWO + ccy (e.g. IVSWOGBP*)
+    query_data.return_value = [
+        {'tpicapId': 'IVSWOGBP_LDN.LCH.QTE.RTM!IC'},
+        {'tpicapId': 'IVSWOXYZ_LDN.LCH.QTE.RTM!IC'},
+    ]
+    out = tm_rates._get_tpicap_swaption_assets(
+        **_kwargs(currency=CurrencyEnum.GBP, benchmark=tm_rates.BenchmarkType.LIBOR, floating='6m')
+    )
+    assert out == 'IVSWOGBP_LDN.LCH.QTE.RTM!IC'
+
+    # Defensive branch: force unknown stub path.
+    strike_ref = replace('gs_quant.timeseries.measures_rates._check_strike_reference', Mock())
+    strike_ref.return_value = 'UNSUPPORTED'
+    query_data.return_value = [{'tpicapId': 'IVSWO_LDN.LCH.QTE.RTM!IC'}]
+    out = tm_rates._get_tpicap_swaption_assets(**_kwargs())
+    assert out == 'IVSWO_LDN.LCH.QTE.RTM!IC'
+    assert query_data.call_args.kwargs['query'].where['stub'] == 'Unknown'
+
+    # Error branch: no rows left.
+    query_data.return_value = []
+    with pytest.raises(MqValueError, match='did not match any asset'):
+        tm_rates._get_tpicap_swaption_assets(**_kwargs())
+
     replace.restore()
 
 
