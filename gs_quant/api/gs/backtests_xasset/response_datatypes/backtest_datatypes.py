@@ -329,6 +329,10 @@ class Configuration:
     roll_date_mode: Optional[RollDateMode] = field(default=None, metadata=config(exclude=exclude_none))
     expiry_date_mode: Optional[ExpiryDateMode] = field(default=None, metadata=config(exclude=exclude_none))
     combine_roll_signal_entries: bool = False
+    # Generic-engine only: override the currency the price measure is returned in.
+    # When omitted, the backtesting service auto-detects from the strategy's instruments
+    # (matching the basic-engine behaviour of using the priceable's premium_currency).
+    result_currency: Optional[Currency] = field(default=None, metadata=config(exclude=exclude_none))
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
