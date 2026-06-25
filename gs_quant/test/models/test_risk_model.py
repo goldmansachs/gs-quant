@@ -1754,5 +1754,34 @@ def test_get_currency_exchange_rate(mocker):
     assert_frame_equal(expected_data_frame, actual_data_frame, check_like=True)
 
 
+def test_get_missing_dates_with_date_objects(mocker):
+    """get_missing_dates must not crash when business_dates contains datetime.date objects (regression for #344)."""
+    from gs_quant.api.gs.risk_models import GsRiskModelApi
+    from gs_quant.target.risk_models import RiskModelCalendar
+
+    model = mock_risk_model(mocker)
+
+    business_dates = (dt.date(2022, 1, 3), dt.date(2022, 1, 4), dt.date(2022, 1, 5))
+    mocker.patch.object(GsRiskModelApi, 'get_risk_model_calendar', return_value=RiskModelCalendar(business_dates))
+    mocker.patch.object(GsRiskModelApi, 'get_risk_model_dates', return_value=['2022-01-03', '2022-01-05'])
+
+    missing = model.get_missing_dates(start_date=dt.date(2022, 1, 3), end_date=dt.date(2022, 1, 5))
+    assert missing == [dt.date(2022, 1, 4)]
+
+
+def test_get_most_recent_date_from_calendar_with_date_objects(mocker):
+    """get_most_recent_date_from_calendar must not crash when business_dates contains datetime.date objects (#344)."""
+    from gs_quant.api.gs.risk_models import GsRiskModelApi
+    from gs_quant.target.risk_models import RiskModelCalendar
+
+    model = mock_risk_model(mocker)
+
+    business_dates = (dt.date(2022, 1, 3), dt.date(2022, 1, 4), dt.date(2022, 1, 5))
+    mocker.patch.object(GsRiskModelApi, 'get_risk_model_calendar', return_value=RiskModelCalendar(business_dates))
+
+    result = model.get_most_recent_date_from_calendar()
+    assert result == dt.date(2022, 1, 5)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
