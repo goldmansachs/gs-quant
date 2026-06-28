@@ -59,6 +59,19 @@ class PayReceive(EnumBase, Enum):
 
 
 class RiskMeasure(__RiskMeasure):
+    def __eq__(self, other):
+        if not isinstance(other, __RiskMeasure):
+            return NotImplemented
+        return (
+            self.measure_type == other.measure_type
+            and self.asset_class == other.asset_class
+            and self.unit == other.unit
+            and self.parameters == other.parameters
+        )
+
+    def __hash__(self):
+        return hash((self.asset_class, self.measure_type, self.unit))
+
     def __lt__(self, other):
         if self.name != other.name:
             return self.name < other.name
