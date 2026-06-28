@@ -26,6 +26,7 @@ from gs_quant.models.risk_model_utils import get_optional_data_as_dataframe, _ma
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.risk_models import (
     RiskModel as Risk_Model,
+    RiskModelCalendar,
     RiskModelCoverage,
     RiskModelTerm,
     RiskModelUniverseIdentifier,
@@ -1752,6 +1753,49 @@ def test_get_currency_exchange_rate(mocker):
     )
 
     assert_frame_equal(expected_data_frame, actual_data_frame, check_like=True)
+
+
+def test_get_missing_dates_accepts_date_objects(mocker):
+    model = FactorRiskModel(
+        'model_id',
+        'Fake Risk Model',
+        RiskModelCoverage.Country,
+        RiskModelTerm.Long,
+        RiskModelUniverseIdentifier.gsid,
+        'GS',
+        1.0,
+    )
+    mocker.patch.object(model, 'get_dates', return_value=[dt.date(2024, 1, 2)])
+    mocker.patch.object(
+        model,
+        'get_calendar',
+        return_value=RiskModelCalendar((dt.date(2024, 1, 1), dt.date(2024, 1, 2), dt.date(2024, 1, 3))),
+    )
+
+    missing = model.get_missing_dates(start_date=dt.date(2024, 1, 1), end_date=dt.date(2024, 1, 3))
+
+    assert missing == [dt.date(2024, 1, 1), dt.date(2024, 1, 3)]
+
+
+def test_get_most_recent_date_from_calendar_accepts_date_objects(mocker):
+    model = FactorRiskModel(
+        'model_id',
+        'Fake Risk Model',
+        RiskModelCoverage.Country,
+        RiskModelTerm.Long,
+        RiskModelUniverseIdentifier.gsid,
+        'GS',
+        1.0,
+    )
+    mocker.patch.object(
+        model,
+        'get_calendar',
+        return_value=RiskModelCalendar((dt.date(2024, 1, 2), dt.date(2024, 1, 3))),
+    )
+
+    most_recent = model.get_most_recent_date_from_calendar()
+
+    assert most_recent == dt.date(2024, 1, 3)
 
 
 if __name__ == "__main__":
