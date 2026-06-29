@@ -367,7 +367,7 @@ class MarqueeRiskModel(RiskModel):
         if not end_date:
             end_date = dt.date.today() - dt.timedelta(days=1)
         calendar = [
-            dt.datetime.strptime(date, "%Y-%m-%d").date()
+            dt.datetime.strptime(date, "%Y-%m-%d").date() if isinstance(date, str) else date
             for date in self.get_calendar(start_date=start_date, end_date=end_date).business_dates
         ]
         return [date for date in calendar if date not in posted_dates]
@@ -376,7 +376,8 @@ class MarqueeRiskModel(RiskModel):
         """Get T-1 date according to risk model calendar"""
         yesterday = dt.date.today() - dt.timedelta(1)
         calendar = self.get_calendar(end_date=yesterday).business_dates
-        return dt.datetime.strptime(calendar[len(calendar) - 1], '%Y-%m-%d').date()
+        latest_date = calendar[len(calendar) - 1]
+        return dt.datetime.strptime(latest_date, '%Y-%m-%d').date() if isinstance(latest_date, str) else latest_date
 
     def save(self):
         """Upload current Risk Model object to Marquee"""
