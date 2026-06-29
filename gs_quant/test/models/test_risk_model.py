@@ -26,6 +26,7 @@ from gs_quant.models.risk_model_utils import get_optional_data_as_dataframe, _ma
 from gs_quant.session import GsSession, Environment
 from gs_quant.target.risk_models import (
     RiskModel as Risk_Model,
+    RiskModelCalendar,
     RiskModelCoverage,
     RiskModelTerm,
     RiskModelUniverseIdentifier,
@@ -204,6 +205,44 @@ def test_update_risk_model(mocker):
     new_model.save()
     mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.type == RiskModelType.Thematic
+
+
+def test_get_missing_dates_handles_date_business_calendar(mocker):
+    model = mock_risk_model(mocker)
+    calendar_dates = (
+        dt.date(2026, 3, 31),
+        dt.date(2026, 4, 1),
+        dt.date(2026, 4, 2),
+    )
+
+    mocker.patch(
+        'gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_calendar',
+        return_value=RiskModelCalendar(calendar_dates),
+    )
+    mocker.patch.object(model, 'get_dates', return_value=[dt.date(2026, 3, 31), dt.date(2026, 4, 2)])
+
+    missing = model.get_missing_dates(start_date=dt.date(2026, 3, 31), end_date=dt.date(2026, 4, 2))
+
+    assert missing == [dt.date(2026, 4, 1)]
+
+
+def test_get_most_recent_date_from_calendar_returns_date_objects(mocker):
+    model = mock_risk_model(mocker)
+    yesterday = dt.date.today() - dt.timedelta(1)
+    calendar_dates = (
+        yesterday - dt.timedelta(days=2),
+        yesterday - dt.timedelta(days=1),
+        yesterday,
+    )
+
+    mocker.patch(
+        'gs_quant.api.gs.risk_models.GsRiskModelApi.get_risk_model_calendar',
+        return_value=RiskModelCalendar(calendar_dates),
+    )
+
+    most_recent = model.get_most_recent_date_from_calendar()
+
+    assert most_recent == yesterday
 
 
 def test_get_r_squared(mocker):
