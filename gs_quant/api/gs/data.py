@@ -1411,7 +1411,7 @@ class GsDataApi(DataApi):
             if dataset_types == {} and standard_fields:
                 dataset_types = cls.get_types(dataset_id)
 
-            df = pd.DataFrame(data, columns={**dataset_types, **incoming_data_data_types})
+            df = pd.DataFrame(data, columns=incoming_data_data_types.keys())
 
             for field_name, type_name in dataset_types.items():
                 if (

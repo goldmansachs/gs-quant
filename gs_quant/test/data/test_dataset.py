@@ -262,6 +262,51 @@ def test_query_data_types(mocker):
     assert data.equals(GsDataApi.construct_dataframe_with_types(str(Dataset.TR.TREOD), test_data))
 
 
+def test_query_data_with_fields_excludes_unrequested_columns(mocker):
+    weather_types = {
+        'date': 'date',
+        'city': 'string',
+        'maxTemperature': 'number',
+        'minTemperature': 'number',
+        'dewPoint': 'number',
+        'windSpeed': 'number',
+        'precipitation': 'number',
+        'snowfall': 'number',
+        'pressure': 'number',
+        'updateTime': 'date-time',
+    }
+    weather_data = [
+        {
+            'date': dt.date(2016, 1, 1),
+            'city': 'Boston',
+            'maxTemperature': 41.0,
+            'minTemperature': 33.0,
+        },
+        {
+            'date': dt.date(2016, 1, 2),
+            'city': 'Boston',
+            'maxTemperature': 40.0,
+            'minTemperature': 31.0,
+        },
+    ]
+
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.query_data", return_value=weather_data)
+    mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=weather_types)
+
+    dataset = Dataset('WEATHER')
+    data = dataset.get_data(
+        dt.date(2016, 1, 1),
+        dt.date(2016, 1, 2),
+        city=['Boston'],
+        fields=['maxTemperature', 'minTemperature'],
+    )
+
+    assert list(data.columns) == ['city', 'maxTemperature', 'minTemperature']
+    assert 'dewPoint' not in data.columns
+    assert 'windSpeed' not in data.columns
+    assert list(data.index) == [pd.Timestamp('2016-01-01'), pd.Timestamp('2016-01-02')]
+
+
 def test_last_data(mocker):
     mocker.patch("gs_quant.api.gs.data.GsDataApi.last_data", return_value=[test_data[-1]])
     mocker.patch("gs_quant.api.gs.data.GsDataApi.get_types", return_value=test_types)
