@@ -408,6 +408,127 @@ def exponential_spread_volatility(x: pd.Series, beta: float = 0.75) -> pd.Series
     return annualize(exponential_std(diff(x, 1), beta))
 
 
+@plot_function
+def stochastic_oscillator(x: pd.Series, w: Union[Window, int, str] = 14, s: int = 3) -> pd.DataFrame:
+    """
+    Stochastic Oscillator (%K and %D)
+
+    :param x: time series of prices
+    :param w: Window or int: lookback period for %K calculation. e.g. Window(14, 10) where 14 is the window size
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Defaults to 14 observations.
+    :param s: smoothing period for %D (simple moving average of %K). Defaults to 3.
+    :return: DataFrame with two columns: 'pctK' and 'pctD'
+
+    **Usage**
+
+    The `Stochastic Oscillator <https://en.wikipedia.org/wiki/Stochastic_oscillator>`_ is a momentum indicator that
+    compares a security's closing price to its price range over a given lookback period. It generates values between
+    0 and 100.
+
+    %K (fast stochastic) is calculated as:
+
+    :math:`\\%K_t = \\frac{X_t - L_w}{H_w - L_w} \\times 100`
+
+    where :math:`X_t` is the current price, :math:`L_w` is the lowest price over window :math:`w`, and :math:`H_w`
+    is the highest price over window :math:`w`.
+
+    %D (slow stochastic) is the simple moving average of %K over :math:`s` periods:
+
+    :math:`\\%D_t = \\frac{1}{s} \\sum_{i=0}^{s-1} \\%K_{t-i}`
+
+    Readings above 80 are generally considered overbought, while readings below 20 are considered oversold.
+    A common trading signal is when %K crosses above or below %D.
+
+    **Examples**
+
+    Generate price series and compute stochastic oscillator with default 14-day lookback:
+
+    >>> prices = generate_series(100)
+    >>> stochastic_oscillator(prices, 14, 3)
+
+    **See also**
+
+    :func:`relative_strength_index` :func:`moving_average`
+
+    """
+    if not isinstance(s, int) or s <= 0:
+        raise MqValueError('s must be a positive integer.')
+
+    w = normalize_window(x, w)
+    if x.empty:
+        return pd.DataFrame(columns=['pctK', 'pctD'], dtype=float)
+
+    if isinstance(w.w, pd.DateOffset):
+        rolling_low = x.rolling(w.w).min()
+        rolling_high = x.rolling(w.w).max()
+    else:
+        rolling_low = x.rolling(w.w, min_periods=1).min()
+        rolling_high = x.rolling(w.w, min_periods=1).max()
+
+    high_low_range = rolling_high - rolling_low
+    # Avoid division by zero when high == low (flat price)
+    high_low_range = high_low_range.replace(0, float('nan'))
+
+    pct_k = ((x - rolling_low) / high_low_range) * 100
+    pct_d = pct_k.rolling(s, min_periods=1).mean()
+
+    pct_k = apply_ramp(pct_k, w)
+    pct_d = apply_ramp(pct_d, w)
+
+    result = pd.concat([pct_k, pct_d], axis=1)
+    result.columns = ['pctK', 'pctD']
+    return result
+
+
+@plot_function
+def average_true_range(x: pd.Series, w: Union[Window, int, str] = 14) -> pd.Series:
+    """
+    Average True Range (ATR)
+
+    :param x: time series of prices
+    :param w: Window or int: size of window and ramp up to use. e.g. Window(14, 10) where 14 is the window size
+              and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
+              Defaults to 14 observations.
+    :return: date-based time series of ATR
+
+    **Usage**
+
+    The `Average True Range <https://en.wikipedia.org/wiki/Average_true_range>`_ is a volatility indicator that
+    measures the degree of price movement for a given period. When only closing prices are available (as opposed
+    to OHLC data), the True Range simplifies to the absolute change between consecutive prices:
+
+    :math:`TR_t = |X_t - X_{t-1}|`
+
+    The ATR is then the moving average of the True Range over the specified window:
+
+    :math:`ATR_t = \\frac{1}{w} \\sum_{i=t-w+1}^{t} TR_i`
+
+    Higher ATR values indicate higher volatility. Unlike percentage-based volatility measures, ATR is expressed
+    in the same units as the price series, making it useful for setting stop-loss levels or position sizing.
+
+    **Examples**
+
+    Generate price series and compute ATR over a 14-day window:
+
+    >>> prices = generate_series(100)
+    >>> average_true_range(prices, 14)
+
+    **See also**
+
+    :func:`bollinger_bands` :func:`exponential_volatility` :func:`moving_average`
+
+    """
+    w = normalize_window(x, w)
+    if x.empty:
+        return pd.Series(dtype=float)
+
+    # True Range: when only close prices are available, TR = |close_t - close_{t-1}|
+    true_range = x.diff().abs()
+
+    return apply_ramp(mean(true_range, Window(w.w, 0)), w)
+
+
 def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEAR):
     """
     Given input series x with a DateTimeIndex and a desired temporal frequency (period), returns x with all NaNs
