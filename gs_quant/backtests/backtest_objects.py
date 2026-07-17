@@ -14,6 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import logging
+
 from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
@@ -51,6 +53,8 @@ from gs_quant.risk import (
 )
 from gs_quant.risk.transform import Transformer
 from gs_quant.risk.results import PricingFuture, PortfolioRiskResult
+
+logger = logging.getLogger(__name__)
 
 
 class BaseBacktest(ABC):
@@ -443,6 +447,7 @@ class BackTest(BaseBacktest):
             ledger = self.trade_ledger()
             num_trades = len(ledger)
         except Exception:
+            logger.warning('unable to compute trade ledger for summary stats; Total Trades set to NaN', exc_info=True)
             num_trades = np.nan
 
         # Annualised return and volatility
@@ -454,9 +459,8 @@ class BackTest(BaseBacktest):
         # Sharpe ratio (excess return over zero risk-free rate)
         sharpe = ann_return / ann_vol if ann_vol != 0 else np.nan
 
-        # Sortino ratio (downside deviation)
-        downside = daily_pnl[daily_pnl < 0]
-        downside_std = np.sqrt((downside**2).mean()) if len(downside) > 0 else 0.0
+        # Sortino ratio (downside deviation: squared below-zero deviations averaged over all periods)
+        downside_std = np.sqrt((np.minimum(daily_pnl, 0) ** 2).mean()) if num_periods > 0 else 0.0
         ann_downside = downside_std * np.sqrt(annualisation_factor)
         sortino = ann_return / ann_downside if ann_downside != 0 else np.nan
 
@@ -899,7 +903,7 @@ class PredefinedAssetBacktest(BaseBacktest):
         costs = defaultdict(float)
         for order in self.orders:
             if isinstance(order, OrderCost):
-                costs[order.execution_end_time().date()] += order.execution_quantity(self.data_handler)
+                costs[order.execution_end_time().date()] += order.execution_quantity()
 
         return pd.Series(costs)
 
@@ -965,7 +969,9 @@ class OisFixingCashAccrualModel(CashAccrualModel):
     class_type: str = static_field('ois_fixing_cash_accrual_model')
 
     def get_accrued_value(self, current_value, to_state) -> dict:
-        for currency in current_value[0].keys():
+        new_value = {}
+        from_state = current_value[1]
+        for currency, value in current_value[0].items():
             if currency not in ois_fixings:
                 start_date = (
                     self.start_date
@@ -990,7 +996,9 @@ class OisFixingCashAccrualModel(CashAccrualModel):
                     MissingDataStrategy.fill_forward,
                 )
             ds_accrual_model = DataCashAccrualModel(ois_fixings[currency], True)
-            return ds_accrual_model.get_accrued_value(current_value, to_state)
+            accrued = ds_accrual_model.get_accrued_value(({currency: value}, from_state), to_state)
+            new_value[currency] = accrued[currency]
+        return new_value
 
 
 def fx_pnl_definition() -> PnlDefinition:

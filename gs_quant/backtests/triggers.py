@@ -359,18 +359,18 @@ class MeanReversionTriggerRequirements(TriggerRequirements):
             if abs((current_price - rolling_mean) / rolling_std) > self.z_score_bound:
                 if current_price > rolling_mean:
                     self.current_position = -1
-                    return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=-1)})
+                    return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=-1, next_schedule=None)})
                 else:
                     self.current_position = 1
-                    return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=1)})
+                    return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=1, next_schedule=None)})
         elif self.current_position == 1:
             if current_price > rolling_mean:
-                self._current_position = 0
-                return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=-1)})
-        elif self.current_position == -1:
-            if current_price > rolling_mean:
                 self.current_position = 0
-                return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=1)})
+                return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=-1, next_schedule=None)})
+        elif self.current_position == -1:
+            if current_price < rolling_mean:
+                self.current_position = 0
+                return TriggerInfo(True, {AddTradeAction: AddTradeActionInfo(scaling=1, next_schedule=None)})
         else:
             raise RuntimeWarning(f'unexpected current position: {self.current_position}')
         return TriggerInfo(False)

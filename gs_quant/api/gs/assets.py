@@ -363,9 +363,11 @@ class GsAssetApi:
         identifier: [str],
         fields: IdList = [],
         limit: int = 100,
-        as_of: dt.datetime = dt.datetime.today(),
+        as_of: Optional[dt.datetime] = None,
         **kwargs,
     ) -> Tuple[dict, ...]:
+        if as_of is None:
+            as_of = dt.datetime.today()
         where = dict(identifier=identifier, **kwargs)
         query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
         return GsSession.current.sync.post('/positions/resolver', payload=query)
@@ -376,9 +378,11 @@ class GsAssetApi:
         identifier: [str],
         fields: IdList = [],
         limit: int = 100,
-        as_of: dt.datetime = dt.datetime.today(),
+        as_of: Optional[dt.datetime] = None,
         **kwargs,
     ) -> Tuple[dict, ...]:
+        if as_of is None:
+            as_of = dt.datetime.today()
         where = dict(identifier=identifier, **kwargs)
         query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
 

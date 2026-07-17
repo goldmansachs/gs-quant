@@ -122,6 +122,11 @@ class GenericDataSource(DataSource):
     def get_data(self, state: Union[dt.date, dt.datetime, Iterable]):
         """
         Get the value of the dataset at a time or date.  If a list of dates or times is provided return list of values
+        If the requested date or time is missing from the dataset the missing_data_strategy determines the result:
+        MissingDataStrategy.fill_forward returns the last observation at or before the requested date (causal, no
+        future data is used).  MissingDataStrategy.interpolate linearly interpolates using the surrounding
+        observations, including subsequent (future) ones, and is therefore not suitable for causal backtesting;
+        prefer fill_forward for backtests.  The underlying dataset is never modified.
         :param state: a date, datetime or a list of dates or datetimes
         :return: float value
         """
@@ -139,23 +144,17 @@ class GenericDataSource(DataSource):
         elif state in self.data_set or self.missing_data_strategy == MissingDataStrategy.fail:
             return self.data_set[state]
         else:
-            if isinstance(self.data_set.index, pd.DatetimeIndex):
-                self.data_set.at[pd.to_datetime(state)] = np.nan
-                self.data_set = self.data_set.sort_index()
-            else:
-                self.data_set.at[state] = np.nan
-            self.data_set.sort_index()
+            lookup_key = pd.to_datetime(state) if isinstance(self.data_set.index, pd.DatetimeIndex) else state
+            sorted_data = self.data_set.sort_index()
             if self.missing_data_strategy == MissingDataStrategy.interpolate:
-                self.data_set = self.data_set.interpolate()
+                interpolated = sorted_data.copy()
+                interpolated.at[lookup_key] = np.nan
+                return interpolated.sort_index().interpolate()[lookup_key]
             elif self.missing_data_strategy == MissingDataStrategy.fill_forward:
-                self.data_set = self.data_set.ffill()
+                # last observation at or before the requested date; no look-ahead
+                return sorted_data.asof(lookup_key)
             else:
                 raise RuntimeError(f'unrecognised missing data strategy: {str(self.missing_data_strategy)}')
-            return (
-                self.data_set[pd.to_datetime(state)]
-                if isinstance(self.data_set.index, pd.DatetimeIndex)
-                else self.data_set[state]
-            )
 
     def get_data_range(self, start: Union[dt.date, dt.datetime], end: Union[dt.date, dt.datetime, int]):
         """

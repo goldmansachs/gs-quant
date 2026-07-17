@@ -520,13 +520,17 @@ def annualize(x: pd.Series) -> pd.Series:
     """
     Annualize series based on sample observation frequency
 
-    :param x: time series of prices
+    :param x: time series of volatility-dimension quantities (e.g. realized volatility or standard deviation of
+              returns)
     :return: date-based time series of annualized values
 
     **Usage**
 
-    Based on number of days between observations, will determine an annualization factor and then adjust values
-    accordingly. Useful for annualizing daily or monthly returns
+    Based on number of days between observations, will determine an annualization factor and then scale values by the
+    square root of that factor. This square-root scaling is appropriate for volatility-dimension quantities (e.g.
+    standard deviation of daily or monthly returns). Note: annualizing mean returns requires multiplying by the
+    factor itself (or geometric compounding), not by its square root, so this function is not suitable for that
+    purpose
 
     :math:`Y_t = X_t * \\sqrt{F}`
 
@@ -545,14 +549,14 @@ def annualize(x: pd.Series) -> pd.Series:
 
     **Examples**
 
-    Annualize daily returns series:
+    Annualize a rolling standard deviation of daily returns:
 
     >>> prices = generate_series(100)
-    >>> ann = annualize(returns(prices))
+    >>> ann_vol = annualize(std(returns(prices), 22))
 
     **See also**
 
-    :func:`returns`
+    :func:`returns` :func:`volatility`
     """
 
     factor: int = _get_annualization_factor(x)

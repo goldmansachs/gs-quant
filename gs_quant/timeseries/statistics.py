@@ -1536,9 +1536,9 @@ class SEIRModel(SIRModel):
         self.sigma_init = sigma
         self.fit = fit
         self.fit_period = fit_period
-        self.beta_fixed = not (self.fit or (self.beta is None))
-        self.gamma_fixed = not (self.fit or (self.gamma is None))
-        self.sigma_fixed = not (self.fit or (self.sigma is None))
+        self.beta_fixed = not (self.fit or (self.beta_init is None))
+        self.gamma_fixed = not (self.fit or (self.gamma_init is None))
+        self.sigma_fixed = not (self.fit or (self.sigma_init is None))
 
         lens = [len(x) for x in (self.s, self.e, self.i, self.r)]
         dtype = float if max(lens) == min(lens) else object
