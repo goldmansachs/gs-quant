@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import math
 from enum import Enum, auto
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Optional, Tuple, Union
 import pandas as pd
 import numpy as np
 import logging
@@ -595,8 +595,8 @@ class MarqueeRiskModel(RiskModel):
 
     def get_intraday_factor_data(
         self,
-        start_time: dt.datetime = dt.datetime.now() - dt.timedelta(hours=3),
-        end_time: dt.datetime = dt.datetime.now(),
+        start_time: Optional[dt.datetime] = None,
+        end_time: Optional[dt.datetime] = None,
         factors: List[str] = None,
         factor_ids: List[str] = None,
         data_source: Union[IntradayFactorDataSource, str] = None,
@@ -663,6 +663,10 @@ class MarqueeRiskModel(RiskModel):
 
         :func:`get_many_factors :func:`get_factor_returns_by_name`
         """
+        if start_time is None:
+            start_time = dt.datetime.now() - dt.timedelta(hours=3)
+        if end_time is None:
+            end_time = dt.datetime.now()
         factor_categories = category_filter if category_filter else []
         intraday_factor_data = GsFactorRiskModelApi.get_risk_model_factor_data_intraday(
             self.id,
