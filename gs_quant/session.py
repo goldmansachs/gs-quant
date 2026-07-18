@@ -12,6 +12,8 @@ software distributed under the License is distributed on ans
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Dipesh Pandit. Licensed under Apache 2.0 license
 """
 
 import asyncio
@@ -1210,6 +1212,17 @@ class OAuth2Session(GsSession):
         }
         reply = self._session.post(self.auth_url, data=auth_data, verify=self.verify)
         if reply.status_code != 200:
+            try:
+                error = json.loads(reply.text)
+            except (ValueError, TypeError):
+                error = {}
+            if error.get('error') == 'invalid_scope':
+                message = (
+                    'Your application account is not authorized for one or more of the requested '
+                    'scopes: {}. Please ask your Marquee administrator to grant these scopes to '
+                    'your application account.'.format(', '.join(self.scopes))
+                )
+                raise MqAuthenticationError(reply.status_code, message, context=self.auth_url)
             raise MqAuthenticationError(reply.status_code, reply.text, context=self.auth_url)
         response = json.loads(reply.text)
         self.token = response['access_token']
