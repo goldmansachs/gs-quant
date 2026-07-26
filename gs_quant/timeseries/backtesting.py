@@ -84,19 +84,21 @@ def backtest_basket(
     costs = pd.concat([pd.Series(c, index=cal) for c in costs], axis=1)
 
     if rebal_freq == RebalFreq.DAILY:
-        rebal_dates = cal
+        rebal_dates = set(cal)
     else:
         if rebal_freq == RebalFreq.WEEKLY:
             # Get hypothetical weekly rebalances
             num_rebals = ((cal[-1] - cal[0]).days) // 7
-            rebal_dates = [cal[0] + i * rdelta(weeks=1) for i in range(num_rebals + 1)]
+            hypothetical_dates = [cal[0] + i * rdelta(weeks=1) for i in range(num_rebals + 1)]
         else:
             # Get hypothetical monthly rebalances
             num_rebals = (cal[-1].year - cal[0].year) * 12 + cal[-1].month - cal[0].month
-            rebal_dates = [cal[0] + i * rdelta(months=1) for i in range(num_rebals + 1)]
+            hypothetical_dates = [cal[0] + i * rdelta(months=1) for i in range(num_rebals + 1)]
 
         # Convert the hypothetical weekly/monthly rebalance dates to actual calendar days
-        rebal_dates = [min(cal[cal >= date]) for date in rebal_dates if date < max(cal)]
+        valid_dates = [d for d in hypothetical_dates if d < cal[-1]]
+        indices = cal.searchsorted(valid_dates)
+        rebal_dates = set(cal[indices[indices < len(cal)]])
 
     n = len(cal)
     output_arr = np.zeros(n)
