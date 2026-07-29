@@ -14,6 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import concurrent.futures
+from gs_quant.api.utils import ThreadPoolManager
 import asyncio
 import datetime as dt
 import json
@@ -332,32 +334,44 @@ class DataGrid:
             cell.updated_time = get_utc_now()
 
     def _resolve_rdates(self, rule_cache: Dict = None):
-        # TODO: Thread this...
         rule_cache = rule_cache or {}
         # Default to no calendar for rdate for external and oauth
         calendar = [] if not GsSession.current.is_internal() and isinstance(GsSession.current, OAuth2Session) else None
 
-        for entity_id, rules in self.rdate_entity_map.items():
-            entity = self.entity_map.get(entity_id)
-            currencies = None
-            exchanges = None
-            if isinstance(entity, Entity):
-                entity_dict = entity.get_entity()
-                currency = entity_dict.get("currency")
-                exchange = entity_dict.get("exchange")
-                currencies = [currency] if currency else None
-                exchanges = [exchange] if exchange else None
-            for rule_base_date_tuple in rules:
-                rule, base_date = rule_base_date_tuple[0], rule_base_date_tuple[1]
-                cache_key = get_rdate_cache_key(rule_base_date_tuple[0], rule_base_date_tuple[1], currencies, exchanges)
-                date_value = rule_cache.get(cache_key)
-                if date_value is None:
-                    if base_date:
-                        base_date = dt.datetime.strptime(base_date, "%Y-%m-%d").date()
-                    date_value = RelativeDate(rule, base_date).apply_rule(
-                        currencies=currencies, exchanges=exchanges, holiday_calendar=calendar
-                    )
-                    rule_cache[cache_key] = date_value
+        futures = {}
+        entity_updates = []
+
+        # Setting max_workers ensures bounded executor sizing
+        with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+            for entity_id, rules in self.rdate_entity_map.items():
+                entity = self.entity_map.get(entity_id)
+                currencies = None
+                exchanges = None
+                if isinstance(entity, Entity):
+                    entity_dict = entity.get_entity()
+                    currency = entity_dict.get("currency")
+                    exchange = entity_dict.get("exchange")
+                    currencies = [currency] if currency else None
+                    exchanges = [exchange] if exchange else None
+                for rule_base_date_tuple in rules:
+                    rule, base_date = rule_base_date_tuple[0], rule_base_date_tuple[1]
+                    cache_key = get_rdate_cache_key(rule, base_date, currencies, exchanges)
+                    date_value = rule_cache.get(cache_key)
+                    if date_value is None:
+                        if cache_key not in futures:
+                            _base_date = dt.datetime.strptime(base_date, "%Y-%m-%d").date() if base_date else None
+                            futures[cache_key] = executor.submit(
+                                RelativeDate(rule, _base_date).apply_rule,
+                                currencies=currencies, exchanges=exchanges, holiday_calendar=calendar
+                            )
+                        entity_updates.append((entity_id, rule, base_date, cache_key))
+                    else:
+                        self.rule_cache[get_entity_rdate_key(entity_id, rule, base_date)] = date_value
+
+            for entity_id, rule, base_date, cache_key in entity_updates:
+                # result() propagates exceptions directly up
+                date_value = futures[cache_key].result()
+                rule_cache[cache_key] = date_value
                 self.rule_cache[get_entity_rdate_key(entity_id, rule, base_date)] = date_value
 
     def _resolve_queries(self, availability_cache: Dict = None) -> None:

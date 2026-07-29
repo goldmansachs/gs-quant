@@ -1,2 +1,4 @@
 *.pyc
 gs_quant/.idea/
+build/
+*.egg-info/
