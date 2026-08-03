@@ -15,7 +15,7 @@ under the License.
 """
 
 from dataclasses import dataclass
-from typing import Union, Dict
+from typing import Dict, Union
 
 import pandas as pd
 

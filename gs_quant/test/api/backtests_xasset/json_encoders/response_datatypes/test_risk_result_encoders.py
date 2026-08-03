@@ -15,13 +15,14 @@ under the License.
 """
 
 import datetime as dt
+
 import pandas as pd
-from pandas._testing import assert_series_equal
 import pytest
+from pandas._testing import assert_series_equal
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_encoders import (
-    map_result_to_datatype,
     decode_risk_result,
+    map_result_to_datatype,
 )
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import (
     RefType,
@@ -29,9 +30,9 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import (
 )
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import (
     FloatWithData,
+    MatrixWithData,
     StringWithData,
     VectorWithData,
-    MatrixWithData,
 )
 
 

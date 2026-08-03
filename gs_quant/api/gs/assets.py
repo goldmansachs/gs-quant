@@ -18,9 +18,9 @@ import datetime as dt
 import logging
 import os
 import threading
-from enum import auto, Enum
+from enum import Enum, auto
 from functools import wraps
-from typing import Iterable, List, Optional, Tuple, Union, Callable
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import backoff
 import cachetools
@@ -32,18 +32,18 @@ from requests.exceptions import HTTPError
 from gs_quant.api.api_cache import ApiRequestCache, InMemoryApiRequestCache
 from gs_quant.common import Entitlements, PositionType
 from gs_quant.context_base import nullcontext
-from gs_quant.errors import MqValueError, MqRateLimitedError, MqTimeoutError, MqInternalServerError
+from gs_quant.errors import MqInternalServerError, MqRateLimitedError, MqTimeoutError, MqValueError
 from gs_quant.instrument import Instrument, Security
 from gs_quant.session import GsSession
 from gs_quant.target.assets import (
     Asset as __Asset,
     AssetToInstrumentResponse,
-    TemporalXRef,
-    Position,
     EntityQuery,
+    FieldFilterMap,
+    Position,
     PositionSet,
+    TemporalXRef,
 )
-from gs_quant.target.assets import FieldFilterMap
 from gs_quant.target.reports import Report
 from gs_quant.tracing import Tracer
 

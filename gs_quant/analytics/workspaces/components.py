@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Dict, List, Optional
 
-from pydash import unset, snake_case
+from pydash import snake_case, unset
 
 
 class Selection:

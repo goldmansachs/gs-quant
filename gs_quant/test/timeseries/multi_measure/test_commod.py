@@ -15,17 +15,18 @@ under the License.
 """
 
 import datetime as dt
+
 import pandas as pd
 import pytest
-from gs_quant.timeseries import USE_DISPLAY_NAME
 from pandas.testing import assert_series_equal
 from testfixtures import Replacer
 
+from gs_quant import timeseries as tm
 from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.data import DataContext
 from gs_quant.errors import MqError
 from gs_quant.markets.securities import CommodityNaturalGasHub, Cross
-from gs_quant import timeseries as tm
+from gs_quant.timeseries import USE_DISPLAY_NAME
 
 _test_datasets = ('TEST_DATASET',)
 

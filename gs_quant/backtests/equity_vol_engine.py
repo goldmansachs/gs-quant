@@ -15,45 +15,42 @@ under the License.
 """
 
 import copy
+import datetime as dt
 import re
 import warnings
 from functools import reduce
 from typing import Union
 
-import datetime as dt
 import pandas as pd
 
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
-    TransactionCostConfig,
-    TradingCosts,
-    FixedCostModel,
-    ScaledCostModel,
-    TransactionCostScalingType,
     AggregateCostModel,
     CostAggregationType,
+    FixedCostModel,
+    ScaledCostModel,
+    TradingCosts,
+    TransactionCostConfig,
+    TransactionCostScalingType,
 )
-from gs_quant.backtests import actions as a
-from gs_quant.backtests import triggers as t
+from gs_quant.backtests import actions as a, triggers as t
 from gs_quant.backtests.backtest_objects import (
-    TransactionModel,
+    AggregateTransactionModel,
     ConstantTransactionModel,
     ScaledTransactionModel,
-    AggregateTransactionModel,
+    TransactionModel,
 )
-
-from gs_quant.backtests.strategy_systematic import StrategySystematic, DeltaHedgeParameters, TradeInMethod
+from gs_quant.backtests.strategy_systematic import DeltaHedgeParameters, StrategySystematic, TradeInMethod
 from gs_quant.base import get_enum_value
-from gs_quant.common import OptionType, BuySell
+from gs_quant.common import BuySell, OptionType, TradeAs
 from gs_quant.instrument import EqOption, EqVarianceSwap
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import EqDelta, EqSpot, EqGamma, EqVega
+from gs_quant.risk import EqDelta, EqGamma, EqSpot, EqVega
 from gs_quant.target.backtests import (
     BacktestSignalSeriesItem,
     BacktestTradingQuantityType,
     EquityMarketModel,
     FlowVolBacktestMeasure,
 )
-from gs_quant.common import TradeAs
 
 
 def get_backtest_trading_quantity_type(scaling_type, risk):

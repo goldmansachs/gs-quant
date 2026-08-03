@@ -26,17 +26,17 @@ from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 import pandas as pd
 from more_itertools import unique_everseen
 
-from gs_quant.base import Priceable, RiskKey, Sentinel, InstrumentBase, is_instance_or_iterable, is_iterable, Scenario
+from gs_quant.base import InstrumentBase, Priceable, RiskKey, Scenario, Sentinel, is_instance_or_iterable, is_iterable
 from gs_quant.common import RiskMeasure
 from gs_quant.config import DisplayOptions
 from gs_quant.risk import (
     DataFrameWithInfo,
     ErrorValue,
-    UnsupportedValue,
     FloatWithInfo,
-    SeriesWithInfo,
     ResultInfo,
     ScalarWithInfo,
+    SeriesWithInfo,
+    UnsupportedValue,
     aggregate_results,
 )
 from gs_quant.risk.transform import Transformer

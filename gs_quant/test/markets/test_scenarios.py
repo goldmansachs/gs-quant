@@ -19,9 +19,9 @@ from unittest import mock
 import pytest
 
 from gs_quant.common import Entitlements as TargetEntitlements
-from gs_quant.entities.entitlements import Entitlements, EntitlementBlock
-from gs_quant.markets.scenario import FactorScenario, FactorScenarioType, FactorShockParameters, FactorShock
-from gs_quant.session import GsSession, Environment
+from gs_quant.entities.entitlements import EntitlementBlock, Entitlements
+from gs_quant.markets.scenario import FactorScenario, FactorScenarioType, FactorShock, FactorShockParameters
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.risk import Scenario
 
 default_entitlements = TargetEntitlements(edit=(), view=(), admin=())

@@ -14,8 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import unittest
 import datetime as dt
+import unittest
+
 from gs_quant.data.utilities import SecmasterXrefFormatter
 
 

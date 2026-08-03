@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 import math
-from enum import auto, Enum
+from enum import Enum, auto
 from typing import Dict, Union
 
 import numpy as np
@@ -24,17 +24,17 @@ import pandas as pd
 
 from gs_quant.api.gs.risk_models import (
     GsFactorRiskModelApi,
-    RiskModelDataMeasure,
-    RiskModelDataAssetsRequest,
     IntradayFactorDataSource,
+    RiskModelDataAssetsRequest,
+    RiskModelDataMeasure,
 )
 from gs_quant.data.core import DataContext
 from gs_quant.datetime import date, time
 from gs_quant.models.risk_model_utils import (
-    get_covariance_matrix_dataframe,
-    build_factor_volatility_dataframe,
     build_factor_data_map,
+    build_factor_volatility_dataframe,
     build_pfp_data_dataframe,
+    get_covariance_matrix_dataframe,
 )
 from gs_quant.target.risk_models import RiskModelUniverseIdentifierRequest
 

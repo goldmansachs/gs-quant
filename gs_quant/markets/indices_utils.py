@@ -15,13 +15,13 @@ under the License.
 """
 
 import datetime as dt
-import pandas as pd
-
 from enum import Enum
 from functools import partial, reduce
-from pydash import get
 from time import sleep
 from typing import Dict, List, Optional, Union
+
+import pandas as pd
+from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
@@ -32,7 +32,6 @@ from gs_quant.common import AssetClass
 from gs_quant.datetime.date import prev_business_date
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
-
 
 QUERY_LIMIT = 1000
 

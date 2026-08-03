@@ -14,10 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import pandas as pd
 import datetime as dt
-
 from typing import Optional
+
+import pandas as pd
 from pydash import get
 
 from gs_quant.api.gs.assets import GsAsset, GsAssetApi

@@ -16,11 +16,10 @@ under the License.
 
 import datetime as dt
 import logging
-from typing import Tuple, List, Dict
+from typing import Dict, List, Tuple
 
 from gs_quant.session import GsSession
-from gs_quant.target.hedge import Hedge
-from gs_quant.target.hedge import PerformanceHedgeParameters, ClassificationConstraint, AssetConstraint, Target
+from gs_quant.target.hedge import AssetConstraint, ClassificationConstraint, Hedge, PerformanceHedgeParameters, Target
 
 _logger = logging.getLogger(__name__)
 CALCULATION_TIMEOUT = 180

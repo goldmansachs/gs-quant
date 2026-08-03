@@ -16,7 +16,7 @@ under the License.
 
 import dataclasses
 
-from gs_quant.api.gs.backtests_xasset.request import RiskRequest, BasicBacktestRequest, GenericBacktestRequest
+from gs_quant.api.gs.backtests_xasset.request import BasicBacktestRequest, GenericBacktestRequest, RiskRequest
 
 
 def test_request_types():

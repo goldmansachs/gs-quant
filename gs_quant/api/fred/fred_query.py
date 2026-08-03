@@ -18,10 +18,9 @@ by the Federal Reserve Bank of St. Louis. FRED terms of use
 available at https://research.stlouisfed.org/docs/api/terms_of_use.html
 """
 
-from typing import Union
 import datetime as dt
-
 from dataclasses import dataclass
+from typing import Union
 
 
 @dataclass

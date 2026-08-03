@@ -16,7 +16,7 @@ under the License.
 
 import pytest
 
-from gs_quant.data import Dataset, DataCoordinate, DataMeasure, DataDimension
+from gs_quant.data import DataCoordinate, DataDimension, DataMeasure, Dataset
 
 
 def test_immutability():

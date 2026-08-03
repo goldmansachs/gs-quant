@@ -14,12 +14,13 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import gs_quant
 import pytest
+
+import gs_quant
 from gs_quant.config import DisplayOptions
-from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import IRVega, AggregationLevel
 from gs_quant.instrument import IRSwap
+from gs_quant.markets.portfolio import Portfolio
+from gs_quant.risk import AggregationLevel, IRVega
 from gs_quant.test.utils.mock_calc import MockCalc
 
 

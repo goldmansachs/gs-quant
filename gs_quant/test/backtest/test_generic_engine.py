@@ -21,54 +21,55 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
+
 from gs_quant.backtests.actions import (
-    AddTradeAction,
-    HedgeAction,
-    ExitTradeAction,
     AddScaledTradeAction,
-    ScalingActionType,
-    ExitAllPositionsAction,
+    AddTradeAction,
     AddWeightedTradeAction,
     EarlyExitPositionLimitScaledAction,
+    ExitAllPositionsAction,
+    ExitTradeAction,
+    HedgeAction,
+    ScalingActionType,
 )
 from gs_quant.backtests.backtest_objects import (
-    ScaledTransactionModel,
     AggregateTransactionModel,
-    TransactionAggType,
-    ConstantTransactionModel,
     BackTest,
+    ConstantTransactionModel,
+    ScaledTransactionModel,
+    TransactionAggType,
 )
-from gs_quant.backtests.data_sources import GenericDataSource, MissingDataStrategy, GsDataSource
+from gs_quant.backtests.data_sources import GenericDataSource, GsDataSource, MissingDataStrategy
 from gs_quant.backtests.generic_engine import GenericEngine
 from gs_quant.backtests.generic_engine_action_impls import EarlyExitPositionLimitScaledActionImpl
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.triggers import (
-    TriggerDirection,
-    DateTrigger,
-    DateTriggerRequirements,
-    NotTrigger,
-    RiskTriggerRequirements,
-    StrategyRiskTrigger,
-    PeriodicTriggerRequirements,
-    PeriodicTrigger,
-    MktTrigger,
-    MktTriggerRequirements,
-    IntradayPeriodicTrigger,
-    IntradayTriggerRequirements,
     AggregateTrigger,
     AggregateTriggerRequirements,
-    PortfolioTrigger,
-    PortfolioTriggerRequirements,
+    DateTrigger,
+    DateTriggerRequirements,
+    IntradayPeriodicTrigger,
+    IntradayTriggerRequirements,
     MeanReversionTrigger,
     MeanReversionTriggerRequirements,
+    MktTrigger,
+    MktTriggerRequirements,
+    NotTrigger,
     NotTriggerRequirements,
+    PeriodicTrigger,
+    PeriodicTriggerRequirements,
+    PortfolioTrigger,
+    PortfolioTriggerRequirements,
+    RiskTriggerRequirements,
+    StrategyRiskTrigger,
+    TriggerDirection,
 )
-from gs_quant.common import Currency, PayReceive, OptionType, OptionStyle
-from gs_quant.instrument import FXOption, FXForward, IRSwaption, IRSwap, EqOption
+from gs_quant.common import Currency, OptionStyle, OptionType, PayReceive
+from gs_quant.instrument import EqOption, FXForward, FXOption, IRSwap, IRSwaption
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import Price, FXDelta, DollarPrice, IRDelta
+from gs_quant.risk import DollarPrice, FXDelta, IRDelta, Price
 from gs_quant.target.measures import EqDelta, EqVega
 from gs_quant.test.utils.mock_calc import MockCalc
 

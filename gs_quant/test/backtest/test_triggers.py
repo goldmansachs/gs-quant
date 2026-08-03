@@ -15,13 +15,14 @@ under the License.
 """
 
 import datetime as dt
+
 from gs_quant.backtests.actions import AddTradeAction
 from gs_quant.backtests.triggers import (
-    DateTriggerRequirements,
-    DateTrigger,
-    AggregateTriggerRequirements,
     AggregateTrigger,
+    AggregateTriggerRequirements,
     AggType,
+    DateTrigger,
+    DateTriggerRequirements,
     NotTrigger,
     NotTriggerRequirements,
 )

@@ -14,39 +14,38 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 import logging
+from functools import partial, reduce
+from numbers import Real
 from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
-import datetime as dt
-from functools import partial, reduce
-from numbers import Real
-
 from dateutil.relativedelta import relativedelta as rdelta
 from pydash import chunk
 
-from gs_quant.timeseries.econometrics import volatility, correlation
-
-from gs_quant.timeseries.measures_helper import VolReference, preprocess_implied_vol_strikes_eq
 from gs_quant import timeseries as ts
-from .algebra import sqrt
-from .helper import (
-    _create_enum,
-    _tenor_to_month,
-    _month_to_tenor,
-    requires_session,
-    Returns,
-    plot_function,
-    plot_method,
-    Window,
-)
+from gs_quant.timeseries.econometrics import correlation, volatility
+from gs_quant.timeseries.measures_helper import VolReference, preprocess_implied_vol_strikes_eq
+
 from ..api.gs.assets import GsAssetApi
 from ..api.gs.data import GsDataApi, MarketDataResponseFrame, QueryType
 from ..api.utils import ThreadPoolManager
 from ..data import DataContext
 from ..data.log import log_debug
 from ..errors import MqTypeError, MqValueError
+from .algebra import sqrt
+from .helper import (
+    Returns,
+    Window,
+    _create_enum,
+    _month_to_tenor,
+    _tenor_to_month,
+    plot_function,
+    plot_method,
+    requires_session,
+)
 
 _logger = logging.getLogger(__name__)
 

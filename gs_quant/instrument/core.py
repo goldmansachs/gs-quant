@@ -25,18 +25,18 @@ from dataclasses_json import global_config
 
 from gs_quant.api.gs.parser import GsParserApi
 from gs_quant.api.gs.risk import GsRiskApi
-from gs_quant.base import get_enum_value, InstrumentBase, Priceable, Scenario
-from gs_quant.common import AssetClass, AssetType, XRef, RiskMeasure, MultiScenario
+from gs_quant.base import InstrumentBase, Priceable, Scenario, get_enum_value
+from gs_quant.common import AssetClass, AssetType, MultiScenario, RiskMeasure, XRef
 from gs_quant.markets import HistoricalPricingContext, MarketDataCoordinate, PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import (
-    FloatWithInfo,
-    DataFrameWithInfo,
-    SeriesWithInfo,
-    ResolvedInstrumentValues,
     DEPRECATED_MEASURES,
+    DataFrameWithInfo,
+    FloatWithInfo,
+    ResolvedInstrumentValues,
+    SeriesWithInfo,
 )
-from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, PricingFuture, MultipleScenarioFuture
+from gs_quant.risk.results import ErrorValue, MultipleRiskMeasureFuture, MultipleScenarioFuture, PricingFuture
 
 _logger = logging.getLogger(__name__)
 

@@ -14,12 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from dataclasses import field, dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Union, Tuple, Optional
+from typing import Optional, Tuple, Union
 
 import gs_quant.base as base
-from gs_quant.base import handle_camel_case_args, Base, EnumBase
+from gs_quant.base import Base, EnumBase, handle_camel_case_args
 from gs_quant.instrument.core import Security
 
 

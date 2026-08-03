@@ -16,21 +16,21 @@ under the License.
 
 import datetime as dt
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Tuple, Any
+from typing import Any, Dict, Optional, Tuple
 
-from dataclasses_json import dataclass_json, LetterCase, config
+from dataclasses_json import LetterCase, config, dataclass_json
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import (
     decode_daily_portfolio,
 )
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_encoders import (
-    decode_leg_refs,
-    decode_risk_measure_refs,
-    decode_result_tuple,
     decode_basic_bt_measure_dict,
     decode_basic_bt_transactions,
+    decode_leg_refs,
+    decode_result_tuple,
+    decode_risk_measure_refs,
 )
-from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import Transaction, AdditionalResults
+from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import AdditionalResults, Transaction
 from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import decode_strategy
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import RiskResults
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData

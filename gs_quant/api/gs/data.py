@@ -22,7 +22,7 @@ import time
 from copy import copy, deepcopy
 from enum import Enum
 from itertools import chain
-from typing import Iterable, List, Optional, Tuple, Union, Dict
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import cachetools
 import pandas as pd
@@ -32,7 +32,7 @@ from pydash import get
 
 from gs_quant.api.data import DataApi
 from gs_quant.base import Base
-from gs_quant.common import MarketDataVendor, PricingLocation, Format
+from gs_quant.common import Format, MarketDataVendor, PricingLocation
 from gs_quant.data.core import DataContext, DataFrequency
 from gs_quant.data.log import log_debug, log_warning
 from gs_quant.errors import MqValueError
@@ -40,10 +40,11 @@ from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
 from gs_quant.target.data import DataQuery, DataQueryResponse, DataSetCatalogEntry, DataSetEntity, DataSetFieldEntity
-from .assets import GsIdType
-from ..api_cache import ApiRequestCache
-from ...target.assets import EntityQuery, FieldFilterMap
 from gs_quant.tracing import Tracer, tag_dataset_id, tag_error, tag_request_id, tag_row_count
+
+from ...target.assets import EntityQuery, FieldFilterMap
+from ..api_cache import ApiRequestCache
+from .assets import GsIdType
 
 _logger = logging.getLogger(__name__)
 _REQUEST_HEADERS = "request_headers"

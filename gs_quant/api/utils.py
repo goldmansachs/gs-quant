@@ -17,7 +17,7 @@ under the License.
 import concurrent
 import socket
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import List, Callable, Optional
+from typing import Callable, List, Optional
 
 import requests
 

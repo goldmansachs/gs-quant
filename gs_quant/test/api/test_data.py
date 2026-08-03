@@ -25,10 +25,9 @@ from gs_quant.base import DictBase
 from gs_quant.context_base import ContextMeta
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
-from gs_quant.session import GsSession, Environment
-from gs_quant.target.data import FieldFilterMapDataQuery
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.coordinates import MDAPIDataQuery
-from gs_quant.target.data import MarketDataVendor, DataSetEntity, DataQuery, DataSetFieldEntity
+from gs_quant.target.data import DataQuery, DataSetEntity, DataSetFieldEntity, FieldFilterMapDataQuery, MarketDataVendor
 
 test_coordinates = (
     MarketDataCoordinate(mkt_type='Prime', mkt_quoting_style='price', mkt_asset='335320934'),

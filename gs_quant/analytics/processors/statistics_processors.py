@@ -21,7 +21,7 @@ import pandas as pd
 from gs_quant.analytics.core.processor import BaseProcessor, DataCoordinateOrProcessor, DateOrDatetimeOrRDate
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.timeseries import returns
-from gs_quant.timeseries.statistics import percentiles, percentile, Window, mean, sum_, std, var, cov, zscores
+from gs_quant.timeseries.statistics import Window, cov, mean, percentile, percentiles, std, sum_, var, zscores
 
 
 class PercentilesProcessor(BaseProcessor):

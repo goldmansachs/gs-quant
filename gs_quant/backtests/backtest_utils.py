@@ -18,16 +18,16 @@ import datetime as dt
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Tuple, Union, Optional
+from typing import Callable, Optional, Tuple, Union
 
 import pandas as pd
-from dataclasses_json import dataclass_json, config
+from dataclasses_json import config, dataclass_json
 
 from gs_quant.common import CurrencyName
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.instrument import Instrument
-from gs_quant.json_convertors import encode_callable, decode_callable, decode_date_or_str, encode_timedelta
-from gs_quant.timeseries import interpolate, Interpolate
+from gs_quant.json_convertors import decode_callable, decode_date_or_str, encode_callable, encode_timedelta
+from gs_quant.timeseries import Interpolate, interpolate
 
 
 class CalcType(Enum):

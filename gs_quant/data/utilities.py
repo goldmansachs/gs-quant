@@ -14,18 +14,20 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
+import math
 import os
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import Enum
-from itertools import groupby
 from functools import partial
-from concurrent.futures import ThreadPoolExecutor
-from gs_quant.target.assets import FieldFilterMap, EntityQuery
-from gs_quant.session import GsSession
-import math
+from itertools import groupby
+from typing import Any, Dict, List, Tuple, Union
+
 import pandas as pd
-import datetime as dt
-from typing import Dict, List, Any, Union, Tuple
+
+from gs_quant.session import GsSession
+from gs_quant.target.assets import EntityQuery, FieldFilterMap
 
 
 class Utilities:

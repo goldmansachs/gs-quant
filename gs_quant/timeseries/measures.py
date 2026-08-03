@@ -19,7 +19,7 @@ from collections import namedtuple
 from enum import Enum, auto
 from functools import partial
 from numbers import Real
-from typing import Union, Optional, Tuple, List
+from typing import List, Optional, Tuple, Union
 
 import cachetools.func
 import inflection
@@ -27,20 +27,30 @@ import numpy as np
 import pandas as pd
 from dateutil import tz
 from dateutil.relativedelta import relativedelta
+from pandas.tseries.holiday import (
+    AbstractHolidayCalendar,
+    Holiday,
+    USLaborDay,
+    USMemorialDay,
+    USThanksgivingDay,
+    sunday_to_monday,
+)
+from pydash import chunk, flatten, get
+
 from gs_quant.api.gs.assets import GsAssetApi, GsIdType
-from gs_quant.api.gs.data import MarketDataResponseFrame, QueryType, GsDataApi
+from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame, QueryType
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.common import AssetClass, AssetType, PricingLocation
 from gs_quant.data import Dataset
 from gs_quant.data.core import DataContext, IntervalFrequency
-from gs_quant.data.fields import Fields, DataMeasure
+from gs_quant.data.fields import DataMeasure, Fields
 from gs_quant.data.log import log_debug, log_warning
 from gs_quant.datetime import DAYS_IN_YEAR
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.datetime.point import relative_date_add
 from gs_quant.entities.entity import PositionedEntity
-from gs_quant.errors import MqValueError, MqTypeError
+from gs_quant.errors import MqTypeError, MqValueError
 from gs_quant.markets.securities import Asset, AssetIdentifier, AssetType as SecAssetType, SecurityMaster, Stock
 from gs_quant.timeseries import Basket, RelativeDate, Returns, Window, sqrt, volatility
 from gs_quant.timeseries.helper import (
@@ -57,15 +67,6 @@ from gs_quant.timeseries.helper import (
     plot_measure,
 )
 from gs_quant.timeseries.measures_helper import EdrDataReference, VolReference, preprocess_implied_vol_strikes_eq
-from pandas.tseries.holiday import (
-    AbstractHolidayCalendar,
-    Holiday,
-    USLaborDay,
-    USMemorialDay,
-    USThanksgivingDay,
-    sunday_to_monday,
-)
-from pydash import chunk, flatten, get
 
 GENERIC_DATE = Union[dt.date, str]
 ASSET_SPEC = Union[Asset, str]

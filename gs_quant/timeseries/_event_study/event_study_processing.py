@@ -34,10 +34,10 @@ from typing import Dict, List, Optional, Union
 
 import pandas as pd
 
+from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import Asset
 
 from .event_study_definitions import EVENT_DATE_COLUMN, EventRecord, ResolvedEventDefinition
-from gs_quant.errors import MqValueError
 
 
 def to_float_or_none(value) -> Optional[float]:

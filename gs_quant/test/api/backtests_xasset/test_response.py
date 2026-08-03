@@ -17,10 +17,10 @@ under the License.
 import dataclasses
 
 from gs_quant.api.gs.backtests_xasset.response import (
-    RiskResponse,
     BacktestResponse,
     BasicBacktestResponse,
     GenericBacktestResponse,
+    RiskResponse,
 )
 
 

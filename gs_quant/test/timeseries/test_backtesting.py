@@ -24,7 +24,7 @@ from testfixtures import Replacer
 from testfixtures.mock import Mock
 
 from gs_quant.timeseries import VolReference
-from gs_quant.timeseries.backtesting import Basket, basket_series, MqValueError, MqTypeError, RebalFreq, DataContext
+from gs_quant.timeseries.backtesting import Basket, DataContext, MqTypeError, MqValueError, RebalFreq, basket_series
 
 
 def test_basket_series():

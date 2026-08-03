@@ -25,9 +25,9 @@ from gs_quant.data import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import Asset, AssetIdentifier
 from gs_quant.timeseries.measures_cognitive_credit import (
+    REPORT_TYPE_TO_DATASET,
     CognitiveCreditKPI,
     CognitiveCreditReportType,
-    REPORT_TYPE_TO_DATASET,
 )
 
 

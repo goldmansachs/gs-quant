@@ -20,10 +20,10 @@ import logging
 from copy import deepcopy
 from enum import Enum
 from functools import wraps
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Tuple, Union
 
 import pandas as pd
-from pydash import has, get, set_
+from pydash import get, has, set_
 
 from gs_quant.api.gs.assets import GsAsset, GsAssetApi
 from gs_quant.api.gs.data import GsDataApi
@@ -31,15 +31,15 @@ from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.users import GsUsersApi
 from gs_quant.common import (
-    DateLimit,
-    PositionType,
-    EqBasketBacktestParameters,
-    EqBasketHistoryMethodology,
+    AssetClass,
     BloombergPublishParameters,
     CashReinvestmentTreatment,
     CashReinvestmentTreatmentType,
+    DateLimit,
+    EqBasketBacktestParameters,
+    EqBasketHistoryMethodology,
     EqBasketRebalanceCalendar,
-    AssetClass,
+    PositionType,
 )
 from gs_quant.data.fields import DataMeasure
 from gs_quant.entities.entitlements import Entitlements as BasketEntitlements
@@ -48,28 +48,28 @@ from gs_quant.errors import MqError, MqValueError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets.indices_utils import (
     BasketType,
+    CorporateActionType,
     IndicesDatasets,
     ReturnType,
     WeightingStrategy,
-    CorporateActionType,
 )
 from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.securities import Asset, AssetType as SecAssetType
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
 from gs_quant.target.indices import (
+    CustomBasketRiskParams,
+    CustomBasketsBackcastInputs,
     CustomBasketsCreateInputs,
+    CustomBasketsEditInputs,
     CustomBasketsPricingParameters,
-    PublishParameters,
+    CustomBasketsRebalanceAction,
+    CustomBasketsRebalanceInputs,
+    CustomBasketsResponse,
+    IndicesCurrency,
     IndicesPositionInput,
     IndicesPositionSet,
-    CustomBasketsBackcastInputs,
-    CustomBasketsRebalanceAction,
-    CustomBasketRiskParams,
-    IndicesCurrency,
-    CustomBasketsEditInputs,
-    CustomBasketsResponse,
-    CustomBasketsRebalanceInputs,
+    PublishParameters,
 )
 from gs_quant.target.reports import Report, ReportStatus
 

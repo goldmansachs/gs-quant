@@ -84,22 +84,23 @@ under the License.
 #         +--> event_study_frame.build_event_study_frame
 #         +--> result DataFrame + attrs metadata
 
-import pandas as pd
 import datetime as dt
 from typing import Optional
+
+import pandas as pd
 
 from gs_quant.common import AssetClass
 from gs_quant.entities.entity import EntityType
 from gs_quant.markets.securities import Asset
-
 from gs_quant.timeseries._event_study.event_study_api import get_event_dates_internal
+from gs_quant.timeseries._event_study.event_study_definitions import SupportedEvent, WindowType
+from gs_quant.timeseries._event_study.event_study_frame import build_event_study_frame
 from gs_quant.timeseries._event_study.event_study_impact import (
     CalendarAlignment,
     EventDirection,
     EventMetric,
     build_event_impact_frame,
 )
-from gs_quant.timeseries._event_study.event_study_definitions import SupportedEvent, WindowType
 from gs_quant.timeseries._event_study.event_study_labels import (
     build_asset_event_label,
     build_country_event_label,
@@ -107,10 +108,9 @@ from gs_quant.timeseries._event_study.event_study_labels import (
     resolve_event_series_label,
 )
 from gs_quant.timeseries._event_study.event_study_objects import AssetEvents, CountryEvents
-from gs_quant.timeseries._event_study.event_study_frame import build_event_study_frame
-from .helper import plot_function, plot_measure, plot_measure_entity
-from .helper import Returns
+
 from ..errors import MqValueError
+from .helper import Returns, plot_function, plot_measure, plot_measure_entity
 
 
 @plot_measure_entity(EntityType.COUNTRY)

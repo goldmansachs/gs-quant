@@ -24,10 +24,10 @@ from gs_quant.api.gs.backtests_xasset.json_encoders.response_encoders import (
     encode_response_obj,
 )
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import TransactionDirection
-from gs_quant.backtests.backtest_utils import CustomDuration, encode_duration, decode_duration, make_list
+from gs_quant.backtests.backtest_utils import CustomDuration, decode_duration, encode_duration, make_list
 from gs_quant.common import Currency
 from gs_quant.instrument import EqOption
-from gs_quant.json_convertors import encode_callable, decode_callable
+from gs_quant.json_convertors import decode_callable, encode_callable
 
 
 def test_decode_basic_bt_transactions():

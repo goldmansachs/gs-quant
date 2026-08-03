@@ -16,11 +16,11 @@ under the License.
 
 import datetime as dt
 
-from gs_quant.api.gs.risk_models import GsRiskModelApi, GsFactorRiskModelApi
+from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi
 from gs_quant.session import Environment, GsSession
 from gs_quant.target.risk_models import (
-    RiskModel,
     Factor,
+    RiskModel,
     RiskModelCalendar,
     RiskModelDataAssetsRequest as DataAssetsRequest,
     RiskModelDataMeasure as Measure,

@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import List, Dict
+from typing import Dict, List
 
 from gs_quant.session import GsSession
 from gs_quant.target.groups import Group

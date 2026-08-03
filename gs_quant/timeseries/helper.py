@@ -20,8 +20,8 @@ import logging
 import os
 import re
 from enum import Enum, IntEnum
-from functools import wraps, partial
-from typing import Optional, Union, List, Iterable, Callable
+from functools import partial, wraps
+from typing import Callable, Iterable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -31,7 +31,7 @@ from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.data import DataContext, Dataset
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entity import EntityType
-from gs_quant.errors import MqValueError, MqRequestError
+from gs_quant.errors import MqRequestError, MqValueError
 from gs_quant.timeseries.measure_registry import register_measure
 
 _PD_VERSION_MATCH = re.match(r'^(\d+)\.(\d+)', pd.__version__)

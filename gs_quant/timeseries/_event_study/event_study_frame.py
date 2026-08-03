@@ -38,7 +38,6 @@ import pandas as pd
 from gs_quant.timeseries._event_study.event_study_definitions import WindowType, WindowTypeInput, coerce_window_type
 from gs_quant.timeseries._event_study.event_study_processing import normalize_series, resolve_event_location
 
-
 EVENT_STUDY_INTERNAL_COLUMNS = [
     'date',
     'value',

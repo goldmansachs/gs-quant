@@ -23,9 +23,9 @@ import time
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from enum import auto, Enum
+from enum import Enum, auto
 from functools import partial
-from typing import Tuple, Generator, Iterable, Optional, Dict, List, Union
+from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union
 
 import backoff
 import cachetools
@@ -33,17 +33,17 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 from pydash import get
 
-from gs_quant.api.gs.assets import GsAsset, GsIdType, GsAssetApi
+from gs_quant.api.gs.assets import GsAsset, GsAssetApi, GsIdType
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import get_enum_value
 from gs_quant.common import AssetClass, AssetParameters, AssetType as GsAssetType, Currency, DateLimit
 from gs_quant.context_base import nullcontext
-from gs_quant.data import DataMeasure, DataFrequency, Dataset, AssetMeasure
+from gs_quant.data import AssetMeasure, DataFrequency, DataMeasure, Dataset
 from gs_quant.data.coordinate import DataDimensions, DateOrDatetime
-from gs_quant.data.core import IntervalFrequency, DataAggregationOperator
+from gs_quant.data.core import DataAggregationOperator, IntervalFrequency
 from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, PositionedEntity
-from gs_quant.errors import MqValueError, MqTypeError, MqRequestError
+from gs_quant.errors import MqRequestError, MqTypeError, MqValueError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets

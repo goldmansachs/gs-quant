@@ -24,15 +24,15 @@ from gs_quant.risk import DollarPrice, IRDelta
 swap = IRSwap('Pay', '10y', 'USD')
 
 # Scalar result
-price = swap.dollar_price()       # FloatWithInfo
-print(float(price))               # the numeric value
+price = swap.dollar_price()  # FloatWithInfo
+print(float(price))  # the numeric value
 
 # Local currency price
-local_price = swap.price()        # FloatWithInfo
+local_price = swap.price()  # FloatWithInfo
 
 # Structured result
-delta = swap.calc(IRDelta)        # DataFrameWithInfo — a bucketed delta ladder
-print(delta)                      # displays as a DataFrame with columns like mkt_type, mkt_asset, etc.
+delta = swap.calc(IRDelta)  # DataFrameWithInfo — a bucketed delta ladder
+print(delta)  # displays as a DataFrame with columns like mkt_type, mkt_asset, etc.
 ```
 
 ## Using Futures (Async / Batched)
@@ -46,8 +46,8 @@ with PricingContext():
     price_f = swap.dollar_price()
     delta_f = swap.calc(IRDelta)
 
-price = price_f.result()   # FloatWithInfo
-delta = delta_f.result()   # DataFrameWithInfo
+price = price_f.result()  # FloatWithInfo
+delta = delta_f.result()  # DataFrameWithInfo
 ```
 
 ## Multiple Risk Measures on a Single Instrument
@@ -57,9 +57,9 @@ from gs_quant.risk import DollarPrice, IRDelta, IRVega
 
 result = swap.calc([DollarPrice, IRDelta, IRVega])  # MultipleRiskMeasureResult
 
-price = result[DollarPrice]    # FloatWithInfo
-delta = result[IRDelta]        # DataFrameWithInfo
-vega = result[IRVega]          # DataFrameWithInfo
+price = result[DollarPrice]  # FloatWithInfo
+delta = result[IRDelta]  # DataFrameWithInfo
+vega = result[IRVega]  # DataFrameWithInfo
 ```
 
 ## Portfolio Results
@@ -72,7 +72,7 @@ from gs_quant.risk import DollarPrice, IRDelta
 result = portfolio.calc([DollarPrice, IRDelta])
 
 # Slice by risk measure
-prices = result[DollarPrice]          # PortfolioRiskResult for DollarPrice only
+prices = result[DollarPrice]  # PortfolioRiskResult for DollarPrice only
 
 # Slice by instrument (name or object)
 swap_result = result['USD 10y Payer']  # MultipleRiskMeasureResult for that instrument
@@ -170,13 +170,13 @@ combined = result_a + result_b
 
 ```python
 from gs_quant.risk import (
-    DollarPrice,       # USD present value
-    Price,             # local currency present value
-    IRDelta,           # bucketed rate delta ladder
-    IRDeltaParallel,   # total rate DV01 (1bp parallel shift)
-    IRVega,            # bucketed IR vol sensitivity
-    FXDelta,           # FX delta
-    IRXccyDelta,       # bucketed cross-currency basis delta
+    DollarPrice,  # USD present value
+    Price,  # local currency present value
+    IRDelta,  # bucketed rate delta ladder
+    IRDeltaParallel,  # total rate DV01 (1bp parallel shift)
+    IRVega,  # bucketed IR vol sensitivity
+    FXDelta,  # FX delta
+    IRXccyDelta,  # bucketed cross-currency basis delta
     IRXccyDeltaParallel,  # total cross-currency basis DV01
 )
 ```

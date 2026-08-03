@@ -20,11 +20,18 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-import gs_quant.timeseries.event_study as event_study_module
-import gs_quant.timeseries._event_study.event_study_labels as event_study_labels_module
 
+import gs_quant.timeseries._event_study.event_study_labels as event_study_labels_module
+import gs_quant.timeseries.event_study as event_study_module
 from gs_quant.errors import MqValueError
 from gs_quant.timeseries._event_study.event_study_api import get_event_dates_internal
+from gs_quant.timeseries._event_study.event_study_asset_source import (
+    _extract_identifier_from_asset,
+    _resolve_bbid_from_asset,
+    query_earnings_payload,
+    query_event_payload_with_asset,
+    resolve_sedol_for_bbid,
+)
 from gs_quant.timeseries._event_study.event_study_definitions import (
     AssetEventType,
     EventRecord,
@@ -32,17 +39,25 @@ from gs_quant.timeseries._event_study.event_study_definitions import (
     ResolvedEventDefinition,
     SupportedEvent,
     WindowType,
-    resolve_country_event_definition,
     normalize_country,
     normalize_event,
+    resolve_country_event_definition,
+)
+from gs_quant.timeseries._event_study.event_study_frame import (
+    apply_window_filter,
+    build_event_study_frame,
+    get_event_window,
+    resolve_nearest_date,
+    sorted_unique_dates,
+    to_calendar_date,
 )
 from gs_quant.timeseries._event_study.event_study_impact import (
     CalendarAlignment,
     EventDirection,
     EventMetric,
-    _extract_series_asset_identifier,
     _compute_metric,
     _event_mask,
+    _extract_series_asset_identifier,
     _map_event_dates_to_series,
     _resolve_series_event_label,
     build_event_impact_frame,
@@ -57,21 +72,6 @@ from gs_quant.timeseries._event_study.event_study_processing import (
     normalize_series,
     resolve_event_location,
     to_float_or_none,
-)
-from gs_quant.timeseries._event_study.event_study_asset_source import (
-    _extract_identifier_from_asset,
-    _resolve_bbid_from_asset,
-    query_event_payload_with_asset,
-    query_earnings_payload,
-    resolve_sedol_for_bbid,
-)
-from gs_quant.timeseries._event_study.event_study_frame import (
-    apply_window_filter,
-    build_event_study_frame,
-    get_event_window,
-    resolve_nearest_date,
-    sorted_unique_dates,
-    to_calendar_date,
 )
 from gs_quant.timeseries._event_study.event_study_query import (
     _apply_relative_offset,

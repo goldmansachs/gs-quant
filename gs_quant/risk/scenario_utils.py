@@ -16,9 +16,9 @@ under the License.
 
 import datetime as dt
 
+from gs_quant.data import Dataset
 from gs_quant.markets.securities import AssetIdentifier, SecurityMaster
 from gs_quant.risk.scenarios import MarketDataVolShockScenario
-from gs_quant.data import Dataset
 
 
 def build_eq_vol_scenario_intraday(

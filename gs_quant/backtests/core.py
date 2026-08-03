@@ -14,13 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from enum import Enum
-from typing import Tuple, NamedTuple, Union
 import datetime as dt
+from enum import Enum
+from typing import NamedTuple, Optional, Tuple, Union
+
 from gs_quant.base import EnumBase
 from gs_quant.target.backtests import Backtest as __Backtest, BacktestResult
-from typing import Optional
-
 
 # TODO add these in Studio as a standalone JSON, so they will be generated
 

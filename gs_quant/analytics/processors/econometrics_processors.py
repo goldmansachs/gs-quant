@@ -31,11 +31,17 @@ from gs_quant.data import DataFrequency
 from gs_quant.data.coordinate import DataCoordinate
 from gs_quant.data.query import DataQuery
 from gs_quant.entities.entity import Entity
-from gs_quant.markets.securities import Stock, Cross
-from gs_quant.timeseries import correlation, Window, SeriesType, DataMeasure, DataContext, fx_implied_correlation
-from gs_quant.timeseries import excess_returns_pure
-from gs_quant.timeseries.econometrics import get_ratio_pure, SharpeAssets, change, returns
-from gs_quant.timeseries.econometrics import volatility, Returns, beta
+from gs_quant.markets.securities import Cross, Stock
+from gs_quant.timeseries import (
+    DataContext,
+    DataMeasure,
+    SeriesType,
+    Window,
+    correlation,
+    excess_returns_pure,
+    fx_implied_correlation,
+)
+from gs_quant.timeseries.econometrics import Returns, SharpeAssets, beta, change, get_ratio_pure, returns, volatility
 from gs_quant.timeseries.helper import CurveType
 
 

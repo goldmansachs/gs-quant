@@ -19,24 +19,25 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.testing import assert_series_equal
+
 from gs_quant.errors import MqValueError
 from gs_quant.timeseries import (
+    Interpolate,
+    LagMode,
+    SignDirection,
+    compare,
+    consecutive,
+    count,
+    diff,
     first,
+    lag,
     last,
     last_value,
-    count,
-    Interpolate,
-    compare,
-    diff,
-    lag,
-    LagMode,
     repeat,
     smooth_outliers,
-    consecutive,
-    SignDirection,
 )
 from gs_quant.timeseries.helper import FREQ_SECOND
-from pandas.testing import assert_series_equal
 
 
 def _normalize_index(idx):

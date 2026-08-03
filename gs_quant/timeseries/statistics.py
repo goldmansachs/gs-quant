@@ -17,7 +17,7 @@
 
 import datetime as dt
 from enum import Enum
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -26,21 +26,21 @@ import statsmodels.api as sm
 from scipy.stats import percentileofscore
 from statsmodels.regression.rolling import RollingOLS
 
+from ..data import DataContext
+from ..errors import MqTypeError, MqValueError
+from ..models.epidemiology import SEIR, SIR, EpidemicModel
 from .algebra import ceil, floor
 from .datetime import interpolate
 from .helper import (
-    Window,
-    normalize_window,
-    rolling_offset,
-    apply_ramp,
-    plot_function,
-    rolling_apply,
     Interpolate,
+    Window,
+    apply_ramp,
+    normalize_window,
+    plot_function,
     plot_method,
+    rolling_apply,
+    rolling_offset,
 )
-from ..data import DataContext
-from ..errors import MqValueError, MqTypeError
-from ..models.epidemiology import SIR, SEIR, EpidemicModel
 
 """
 Stats library is for basic arithmetic and statistical operations on timeseries.

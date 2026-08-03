@@ -22,12 +22,12 @@ import sys
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import TimeoutError
 from threading import Thread
-from typing import Iterable, Optional, Union, Tuple, Dict, Any
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 from tqdm import tqdm
 
 from gs_quant.api.api_session import ApiWithCustomSession
-from gs_quant.base import RiskKey, Sentinel, Priceable
+from gs_quant.base import Priceable, RiskKey, Sentinel
 from gs_quant.risk import ErrorValue, RiskRequest
 from gs_quant.risk.result_handlers import result_handlers
 from gs_quant.risk.results import PricingFuture

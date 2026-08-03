@@ -18,16 +18,16 @@ import datetime as dt
 import json
 import zoneinfo
 
-from gs_quant.json_convertors import decode_iso_date_or_datetime, decode_frequency, encode_frequency
+from gs_quant.json_convertors import decode_frequency, decode_iso_date_or_datetime, encode_frequency
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.workflow import (
     BinaryImageComments,
-    ImgType,
+    ChartingParameters,
     Encoding,
     HyperLinkImageComments,
-    VisualStructuringReport,
-    ChartingParameters,
+    ImgType,
     OverlayType,
+    VisualStructuringReport,
 )
 
 

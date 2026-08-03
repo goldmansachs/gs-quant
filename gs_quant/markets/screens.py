@@ -17,10 +17,10 @@ under the License.
 import datetime as dt
 import logging
 from enum import Enum, unique
-from typing import Union, Tuple
+from typing import Tuple, Union
 
 import pandas as pd
-from pydash import set_, get
+from pydash import get, set_
 
 from gs_quant.api.gs.screens import GsScreenApi
 from gs_quant.errors import MqValueError

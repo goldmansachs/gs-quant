@@ -21,16 +21,16 @@ import testfixtures
 
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.common import AssetType
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.indices import (
+    CustomBasketsCreateInputs,
+    CustomBasketsEditInputs,
+    CustomBasketsPricingParameters,
+    CustomBasketsRebalanceAction,
+    CustomBasketsRebalanceInputs,
+    CustomBasketsResponse,
     IndicesCurrency,
     PublishParameters,
-    CustomBasketsPricingParameters,
-    CustomBasketsCreateInputs,
-    CustomBasketsResponse,
-    CustomBasketsEditInputs,
-    CustomBasketsRebalanceInputs,
-    CustomBasketsRebalanceAction,
 )
 
 # values used to build api payloads

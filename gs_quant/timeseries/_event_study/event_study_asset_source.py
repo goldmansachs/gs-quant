@@ -34,7 +34,6 @@ from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityIdentifi
 from .event_study_definitions import ResolvedEventDefinition
 from .event_study_processing import extract_event_payload, normalize_asset_identifier
 
-
 ASSET_EVENT_SOURCE = 'LSEG'
 EARNINGS_DATASET = 'LSEG_CORPORATE_EVENTS'
 EARNINGS_EVENT_NAME = 'Earnings Release'

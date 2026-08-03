@@ -33,10 +33,10 @@ from gs_quant.data import DataContext
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.markets.securities import Bond, Cross, Currency
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import Currency as CurrencyEnum, SecurityMaster, measures as tm
-from gs_quant.timeseries.measures_fx_vol import _currencypair_to_tdapi_fxo_asset, _currencypair_to_tdapi_fxfwd_asset
+from gs_quant.timeseries.measures_fx_vol import _currencypair_to_tdapi_fxfwd_asset, _currencypair_to_tdapi_fxo_asset
 from gs_quant.timeseries.measures_helper import VolReference
 
 _index = [pd.Timestamp('2021-03-30')]
@@ -223,6 +223,8 @@ def mock_curr(_cls, _q):
 
 def mock_fx_spot_carry_3m(*args, **kwargs):
     """Mock Dataset.get_data for 3m tenor with fwdPoints column"""
+    assert 'assetId' in kwargs
+    assert 'asset_id' not in kwargs
     d = pd.DataFrame(
         {
             'spot': [1.18250, 1.18566, 1.18511],
@@ -240,6 +242,8 @@ def mock_fx_spot_carry_3m(*args, **kwargs):
 
 def mock_fx_spot_carry_2y(*args, **kwargs):
     """Mock Dataset.get_data for 2y tenor with fwdPoints column"""
+    assert 'assetId' in kwargs
+    assert 'asset_id' not in kwargs
     d = pd.DataFrame(
         {
             'spot': [1.18250, 1.18566, 1.18511],

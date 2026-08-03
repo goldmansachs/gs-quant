@@ -17,27 +17,27 @@ under the License.
 import datetime as dt
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import ClassVar, List, Optional, Iterable, Union
+from typing import ClassVar, Iterable, List, Optional, Union
 
-from dataclasses_json import dataclass_json, config
+from dataclasses_json import config, dataclass_json
 
 from gs_quant.backtests.actions import (
-    AddTradeAction,
-    AddTradeActionInfo,
+    Action,
     AddScaledTradeAction,
     AddScaledTradeActionInfo,
+    AddTradeAction,
+    AddTradeActionInfo,
     HedgeAction,
     HedgeActionInfo,
-    Action,
 )
 from gs_quant.backtests.backtest_objects import BackTest, PredefinedAssetBacktest
-from gs_quant.backtests.backtest_utils import make_list, CalcType
+from gs_quant.backtests.backtest_utils import CalcType, make_list
 from gs_quant.backtests.data_sources import DataSource, GsDataSource
-from gs_quant.base import field_metadata, exclude_none, static_field
+from gs_quant.base import exclude_none, field_metadata, static_field
 from gs_quant.data import Dataset
 from gs_quant.datetime.relative_date import RelativeDateSchedule
-from gs_quant.json_convertors import decode_iso_date_or_datetime, decode_date_tuple, dc_decode
-from gs_quant.json_convertors_common import encode_risk_measure, decode_risk_measure
+from gs_quant.json_convertors import dc_decode, decode_date_tuple, decode_iso_date_or_datetime
+from gs_quant.json_convertors_common import decode_risk_measure, encode_risk_measure
 from gs_quant.risk import RiskMeasure
 from gs_quant.risk.transform import Transformer
 
@@ -406,6 +406,15 @@ class TradeCountTriggerRequirements(TriggerRequirements):
 class EventTriggerRequirements(TriggerRequirements):
     event_name: str = field(default=None, metadata=field_metadata)
     offset_days: int = 0
+    # Calendar filters. All optional so historical single-arg callers still
+    # work, but strongly recommended: shared eventNames like 'CPI' or
+    # 'Interest Rate Decision' repeat across regions/sources, and an
+    # unfiltered scan of MACRO_EVENTS_CALENDAR from 2000-01-01 times out.
+    country: Optional[str] = field(default=None, metadata=field_metadata)
+    currency: Optional[str] = field(default=None, metadata=field_metadata)
+    source: Optional[str] = field(default=None, metadata=field_metadata)
+    start: Optional[dt.date] = field(default=None, metadata=field_metadata)
+    end: Optional[dt.date] = field(default=None, metadata=field_metadata)
     data_source: DataSource = field(
         default=None, metadata=config(decoder=dc_decode(*DataSource.sub_classes(), allow_missing=True))
     )
@@ -419,6 +428,18 @@ class EventTriggerRequirements(TriggerRequirements):
     def get_trigger_times(self) -> [dt.date]:
         if not self.trigger_dates:
             kwargs = {'eventName': self.event_name}
+            if self.country:
+                kwargs['country'] = self.country
+            if self.currency:
+                kwargs['currency'] = self.currency
+            if self.source:
+                kwargs['source'] = [self.source] if isinstance(self.source, str) else self.source
+            # Window bounds go through get_data's positional (start, end) via
+            # the GsDataSource wrapper. When either bound is set we pass both
+            # so the dataset query is fully constrained.
+            if self.start is not None or self.end is not None:
+                kwargs['start'] = self.start
+                kwargs['end'] = self.end
             self.trigger_dates = [
                 d.date() + dt.timedelta(days=self.offset_days) for d in self.data_source.get_data(None, **kwargs).index
             ]

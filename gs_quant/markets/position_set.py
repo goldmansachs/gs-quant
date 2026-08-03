@@ -18,7 +18,7 @@ import datetime as dt
 import logging
 import math
 from time import time
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -27,15 +27,15 @@ from pydash import get
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.price import GsPriceApi
 from gs_quant.common import (
+    Currency,
+    MarketDataFrequency,
     Position as CommonPosition,
     PositionPriceInput,
     PositionSet as CommonPositionSet,
-    PositionTag as PositionTagTarget,
-    Currency,
     PositionSetWeightingStrategy,
-    MarketDataFrequency,
+    PositionTag as PositionTagTarget,
 )
-from gs_quant.errors import MqValueError, MqRequestError
+from gs_quant.errors import MqRequestError, MqValueError
 from gs_quant.markets.position_set_utils import (
     _get_asset_temporal_xrefs,
     _group_temporal_xrefs_into_discrete_time_ranges,
@@ -43,12 +43,12 @@ from gs_quant.markets.position_set_utils import (
 )
 from gs_quant.models.risk_model_utils import _repeat_try_catch_request
 from gs_quant.target.positions_v2_pricing import (
-    PositionsPricingParameters,
-    PositionsRequest,
     PositionSetRequest,
+    PositionsPricingParameters,
     PositionsPricingRequest,
+    PositionsRequest,
 )
-from gs_quant.target.price import PriceParameters, PositionSetPriceInput, PositionPriceResponse
+from gs_quant.target.price import PositionPriceResponse, PositionSetPriceInput, PriceParameters
 
 _logger = logging.getLogger(__name__)
 

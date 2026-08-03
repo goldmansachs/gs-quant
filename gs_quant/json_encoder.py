@@ -15,8 +15,9 @@ under the License.
 """
 
 import datetime as dt
-from enum import Enum
 import json
+from enum import Enum
+
 import pandas as pd
 
 from gs_quant.base import Base, Market

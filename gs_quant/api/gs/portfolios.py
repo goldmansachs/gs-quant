@@ -15,24 +15,22 @@ under the License.
 """
 
 import datetime as dt
+import logging
+from time import sleep
+from typing import Dict, List, Tuple, Union
 
 import backoff
 import deprecation
-import logging
-from time import sleep
-from typing import Tuple, Union, List, Dict
 
 from gs_quant.api.api_session import ApiWithCustomSession
-
-from gs_quant.common import PositionType, PositionTag
-from gs_quant.common import RiskRequest, Currency
-from gs_quant.errors import MqInternalServerError, MqTimeoutError, MqRateLimitedError
+from gs_quant.common import Currency, PositionTag, PositionType, RiskRequest
+from gs_quant.errors import MqInternalServerError, MqRateLimitedError, MqTimeoutError
 from gs_quant.instrument import Instrument
 from gs_quant.session import GsSession
-from gs_quant.target.portfolios import Portfolio, Position, PositionSet, PortfolioTree
+from gs_quant.target.portfolios import Portfolio, PortfolioTree, Position, PositionSet
 from gs_quant.target.reports import Report
 from gs_quant.target.risk_models import RiskModelTerm as Term
-from gs_quant.workflow import WorkflowPosition, WorkflowPositionsResponse, SaveQuoteRequest
+from gs_quant.workflow import SaveQuoteRequest, WorkflowPosition, WorkflowPositionsResponse
 
 _logger = logging.getLogger(__name__)
 

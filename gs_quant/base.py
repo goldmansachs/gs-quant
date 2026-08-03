@@ -22,32 +22,32 @@ import sys
 import typing
 from abc import ABC, ABCMeta, abstractmethod
 from collections import namedtuple
-from dataclasses import Field, InitVar, MISSING, dataclass, field, fields, replace
-from enum import EnumMeta, Enum
+from dataclasses import MISSING, Field, InitVar, dataclass, field, fields, replace
+from enum import Enum, EnumMeta
 from functools import update_wrapper
 from inspect import signature
-from typing import Iterable, Mapping, Optional, Union, Tuple
+from typing import Iterable, Mapping, Optional, Tuple, Union
 
 import numpy as np
-from dataclasses_json import config, global_config, LetterCase, dataclass_json
+from dataclasses_json import LetterCase, config, dataclass_json, global_config
 from dataclasses_json.core import _decode_generic, _is_supported_generic
 from inflection import camelize, underscore
 
 from gs_quant.context_base import ContextBase, ContextMeta
 from gs_quant.json_convertors import (
-    encode_date_or_str,
+    decode_custom_comment,
+    decode_custom_comments,
     decode_date_or_str,
-    decode_optional_date,
-    encode_datetime,
     decode_datetime,
     decode_float_or_str,
     decode_instrument,
-    encode_dictable,
+    decode_optional_date,
+    decode_optional_time,
     decode_quote_report,
     decode_quote_reports,
-    decode_custom_comment,
-    decode_custom_comments,
-    decode_optional_time,
+    encode_date_or_str,
+    encode_datetime,
+    encode_dictable,
     encode_optional_time,
 )
 

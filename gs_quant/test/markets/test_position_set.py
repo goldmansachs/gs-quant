@@ -15,14 +15,14 @@ under the License.
 """
 
 import datetime as dt
+from copy import deepcopy
 
 import pandas as pd
 import pytest
 
-from gs_quant.errors import MqValueError
-from gs_quant.markets.position_set import PositionSet, Position, GsPriceApi, PositionTag, PositionSetWeightingStrategy
 import gs_quant.markets.position_set as position_set_module
-from copy import deepcopy
+from gs_quant.errors import MqValueError
+from gs_quant.markets.position_set import GsPriceApi, Position, PositionSet, PositionSetWeightingStrategy, PositionTag
 
 
 def test_position_resolve_many(mocker):

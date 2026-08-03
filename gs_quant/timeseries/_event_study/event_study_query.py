@@ -37,7 +37,6 @@ from typing import List, Optional, Tuple, Union
 import pandas as pd
 
 from gs_quant.markets.securities import Asset
-
 from gs_quant.timeseries._event_study.event_study_definitions import (
     AssetEventType,
     CountryEventType,
@@ -47,7 +46,6 @@ from gs_quant.timeseries._event_study.event_study_definitions import (
 from gs_quant.timeseries._event_study.event_study_frame import sorted_unique_dates, to_calendar_date
 from gs_quant.timeseries._event_study.event_study_objects import AssetEvents, CountryEvents
 from gs_quant.timeseries._event_study.event_study_processing import normalize_asset_identifier
-
 
 EVENT_TYPES_REQUIRING_TICKER = frozenset({'EARNINGS', 'REBALANCE'})
 _RELATIVE_DATE_PATTERN = r'^-?(\d+)([dwmy])$'

@@ -14,19 +14,21 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.markets.report import PerformanceReport
-from gs_quant.models.risk_model import (
-    MacroRiskModel,
-    DataAssetsRequest,
-    RiskModelUniverseIdentifierRequest as UniverseIdentifierRequest,
-    FactorType,
-)
-from gs_quant.api.gs.assets import GsAssetApi
-from gs_quant.errors import MqValueError
-from typing import List, Dict
+import datetime as dt
+from typing import Dict, List
+
 import numpy as np
 import pandas as pd
-import datetime as dt
+
+from gs_quant.api.gs.assets import GsAssetApi
+from gs_quant.errors import MqValueError
+from gs_quant.markets.report import PerformanceReport
+from gs_quant.models.risk_model import (
+    DataAssetsRequest,
+    FactorType,
+    MacroRiskModel,
+    RiskModelUniverseIdentifierRequest as UniverseIdentifierRequest,
+)
 
 
 def build_macro_portfolio_exposure_df(

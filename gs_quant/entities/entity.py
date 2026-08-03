@@ -28,44 +28,44 @@ from pydash import get
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.carbon import (
+    CarbonAnalyticsView,
     CarbonCard,
-    GsCarbonApi,
-    CarbonTargetCoverageCategory,
-    CarbonScope,
+    CarbonCoverageCategory,
     CarbonEmissionsAllocationCategory,
     CarbonEmissionsIntensityType,
-    CarbonCoverageCategory,
     CarbonEntityType,
-    CarbonAnalyticsView,
+    CarbonScope,
+    CarbonTargetCoverageCategory,
+    GsCarbonApi,
 )
 from gs_quant.api.gs.data import GsDataApi
-from gs_quant.api.gs.esg import ESGMeasure, GsEsgApi, ESGCard
+from gs_quant.api.gs.esg import ESGCard, ESGMeasure, GsEsgApi
 from gs_quant.api.gs.indices import GsIndexApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
-from gs_quant.api.gs.thematics import ThematicMeasure, GsThematicApi, Region
 from gs_quant.api.gs.scenarios import GsFactorScenarioApi
-from gs_quant.common import DateLimit, PositionType, Currency
+from gs_quant.api.gs.thematics import GsThematicApi, Region, ThematicMeasure
+from gs_quant.common import Currency, DateLimit, PositionType
 from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.data.coordinate import DataDimensions
 from gs_quant.entities.entitlements import Entitlements
+from gs_quant.entities.entity_utils import _explode_data
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.report import (
-    PerformanceReport,
     FactorRiskReport,
+    PerformanceReport,
     Report,
+    ReturnFormat,
     ThematicReport,
     flatten_results_into_df,
     get_thematic_breakdown_as_df,
-    ReturnFormat,
 )
 from gs_quant.markets.scenario import Scenario
 from gs_quant.session import GsSession
 from gs_quant.target.data import DataQuery
 from gs_quant.target.reports import ReportStatus, ReportType
-from gs_quant.entities.entity_utils import _explode_data
 
 _logger = logging.getLogger(__name__)
 
@@ -149,7 +149,7 @@ class Entity(metaclass=ABCMeta):
             endpoint = cls._entity_to_endpoint[EntityType(entity_type)]
 
         if entity_type == 'asset':
-            from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
+            from gs_quant.markets.securities import AssetIdentifier, SecurityMaster
 
             return SecurityMaster.get_asset(id_value, AssetIdentifier.MARQUEE_ID)
 

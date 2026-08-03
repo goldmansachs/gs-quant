@@ -18,15 +18,15 @@ import logging
 from enum import Enum
 from typing import Optional
 
-import pandas as pd
 import inflection
+import pandas as pd
 
-from gs_quant.api.gs.data import QueryType, GsDataApi
+from gs_quant.api.gs.data import GsDataApi, QueryType
 from gs_quant.data import Dataset
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
 from gs_quant.timeseries import plot_measure_entity
-from gs_quant.timeseries.measures import _market_data_timed, _extract_series_from_df, ExtendedSeries
+from gs_quant.timeseries.measures import ExtendedSeries, _extract_series_from_df, _market_data_timed
 
 LOGGER = logging.getLogger(__name__)
 

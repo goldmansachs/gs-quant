@@ -16,7 +16,7 @@ under the License.
 
 import numpy as np
 
-from gs_quant.models.epidemiology import SIR, EpidemicModel, SEIR
+from gs_quant.models.epidemiology import SEIR, SIR, EpidemicModel
 
 
 def test_SIR():

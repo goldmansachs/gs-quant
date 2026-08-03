@@ -18,14 +18,14 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import pandas as pd
-from dataclasses_json import dataclass_json, LetterCase, config
+from dataclasses_json import LetterCase, config, dataclass_json
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import decode_inst
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import (
-    encode_series_result,
+    decode_dataframe_result,
     decode_series_result,
     encode_dataframe_result,
-    decode_dataframe_result,
+    encode_series_result,
 )
 from gs_quant.priceable import PriceableImpl
 

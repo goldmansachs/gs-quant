@@ -17,33 +17,33 @@ under the License.
 import copy
 import datetime as dt
 
+import numpy as np
+import pandas as pd
 import pytest
 
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.carbon import (
-    GsCarbonApi,
-    CarbonTargetCoverageCategory,
-    CarbonScope,
-    CarbonEmissionsAllocationCategory,
-    CarbonEmissionsIntensityType,
     CarbonCard,
     CarbonCoverageCategory,
+    CarbonEmissionsAllocationCategory,
+    CarbonEmissionsIntensityType,
     CarbonEntityType,
+    CarbonScope,
+    CarbonTargetCoverageCategory,
+    GsCarbonApi,
 )
-from gs_quant.api.gs.esg import GsEsgApi, ESGMeasure
+from gs_quant.api.gs.esg import ESGMeasure, GsEsgApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.api.gs.reports import GsReportApi
 from gs_quant.api.gs.scenarios import GsFactorScenarioApi
-from gs_quant.entities.entitlements import Entitlements, User, EntitlementBlock
+from gs_quant.entities.entitlements import EntitlementBlock, Entitlements, User
 from gs_quant.markets.portfolio_manager import PortfolioManager, ScenarioCalculationMeasure
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport
-from gs_quant.markets.scenario import FactorScenario, HistoricalSimulationParameters, FactorScenarioType
-from gs_quant.models.risk_model import MacroRiskModel, FactorType, UniverseIdentifier, CoverageType, Term
-from gs_quant.session import GsSession, Environment
+from gs_quant.markets.scenario import FactorScenario, FactorScenarioType, HistoricalSimulationParameters
+from gs_quant.models.risk_model import CoverageType, FactorType, MacroRiskModel, Term, UniverseIdentifier
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.portfolios import Portfolio as TargetPortfolio
-from gs_quant.target.reports import ReportStatus, PositionSourceType, ReportType, Report
-import pandas as pd
-import numpy as np
+from gs_quant.target.reports import PositionSourceType, Report, ReportStatus, ReportType
 
 esg_data = {
     'pricingDate': '2021-08-25',

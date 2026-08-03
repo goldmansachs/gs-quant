@@ -21,11 +21,11 @@ import os
 from abc import abstractmethod
 from os.path import exists
 from pathlib import Path
-from typing import List, Dict, Tuple, Any, NamedTuple
+from typing import Any, Dict, List, NamedTuple, Tuple
 from unittest import mock
 
 from gs_quant.errors import MqUninitialisedError
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 from gs_quant.test.mock_data_test_utils import log_mock_data_event
 
 logger = logging.getLogger("mock_request")

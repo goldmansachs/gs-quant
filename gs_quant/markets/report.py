@@ -16,27 +16,27 @@ under the License.
 
 import datetime as dt
 from enum import Enum, auto
-import numpy as np
 from time import sleep
-from typing import Tuple, Union, List, Dict, OrderedDict
-import scipy.stats as st
+from typing import Dict, List, OrderedDict, Tuple, Union
 
+import numpy as np
 import pandas as pd
+import scipy.stats as st
 from dateutil.relativedelta import relativedelta
 from inflection import titleize
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
-from gs_quant.api.gs.reports import GsReportApi, FactorRiskTableMode
-from gs_quant.api.gs.thematics import Region, GsThematicApi, ThematicMeasure
-from gs_quant.common import PositionType, ReportParameters, Currency, PositionTag
+from gs_quant.api.gs.reports import FactorRiskTableMode, GsReportApi
+from gs_quant.api.gs.thematics import GsThematicApi, Region, ThematicMeasure
+from gs_quant.common import Currency, PositionTag, PositionType, ReportParameters
 from gs_quant.datetime import business_day_offset, prev_business_date
 from gs_quant.errors import MqValueError
 from gs_quant.markets.report_utils import _get_ppaa_batches
 from gs_quant.target.coordinates import MDAPIDataBatchResponse
 from gs_quant.target.data import DataQuery, DataQueryResponse
-from gs_quant.target.reports import Report as TargetReport, ReportType, PositionSourceType, ReportStatus
 from gs_quant.target.portfolios import RiskAumSource
+from gs_quant.target.reports import PositionSourceType, Report as TargetReport, ReportStatus, ReportType
 
 
 class ReturnFormat(Enum):

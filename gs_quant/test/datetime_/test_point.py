@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+
 from gs_quant.datetime import point_sort_order
 
 

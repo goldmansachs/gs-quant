@@ -14,12 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 from abc import ABCMeta
-from gs_quant.instrument import Instrument, Cash
+
+import numpy as np
+
 from gs_quant.backtests.core import TimeWindow, ValuationFixingType
 from gs_quant.backtests.data_handler import DataHandler
-import numpy as np
-import datetime as dt
+from gs_quant.instrument import Cash, Instrument
 
 
 class OrderBase(metaclass=ABCMeta):

@@ -23,12 +23,12 @@ from gs_quant.common import (
     CloseMarket as _CloseMarket,
     LiveMarket as _LiveMarket,
     OverlayMarket as _OverlayMarket,
+    PricingLocation,
+    RefMarket as _RefMarket,
     RelativeMarket as _RelativeMarket,
     TimestampedMarket as _TimestampedMarket,
-    RefMarket as _RefMarket,
-    PricingLocation,
 )
-from gs_quant.datetime.date import prev_business_date, location_to_tz_mapping
+from gs_quant.datetime.date import location_to_tz_mapping, prev_business_date
 from gs_quant.target.data import (
     MarketDataCoordinate as __MarketDataCoordinate,
     MarketDataCoordinateValue as __MarketDataCoordinateValue,

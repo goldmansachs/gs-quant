@@ -21,7 +21,7 @@ from pydash import get
 
 from gs_quant.analytics.core.processor import BaseProcessor
 from gs_quant.analytics.core.processor_result import ProcessorResult
-from gs_quant.data import DataDimension, DataCoordinate
+from gs_quant.data import DataCoordinate, DataDimension
 from gs_quant.entities.entity import Entity
 
 

@@ -23,38 +23,38 @@ from abc import ABCMeta, abstractmethod
 from concurrent.futures.process import ProcessPoolExecutor
 from dataclasses import dataclass
 from enum import Enum, EnumMeta
-from typing import List, Optional, Union, Dict, get_type_hints, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Union, get_type_hints
 
 import numpy as np
 import pandas as pd
 from pydash import decapitalize, get
 
 from gs_quant.analytics.common import (
-    TYPE,
-    PROCESSOR,
-    PARAMETERS,
     DATA_COORDINATE,
-    ENTITY,
-    VALUE,
     DATE,
     DATETIME,
-    PROCESSOR_NAME,
+    ENTITY,
     ENTITY_ID,
     ENTITY_TYPE,
+    LIST,
     PARAMETER,
+    PARAMETERS,
+    PROCESSOR,
+    PROCESSOR_NAME,
     REFERENCE,
     RELATIVE_DATE,
-    LIST,
+    TYPE,
+    VALUE,
 )
 from gs_quant.analytics.common.enumerators import ScaleShape
-from gs_quant.analytics.common.helpers import is_of_builtin_type, get_entity_rdate_key_from_rdate
+from gs_quant.analytics.common.helpers import get_entity_rdate_key_from_rdate, is_of_builtin_type
 from gs_quant.analytics.core.processor_result import ProcessorResult
 from gs_quant.common import Currency
 from gs_quant.data import DataCoordinate, DataFrequency
 from gs_quant.data.coordinate import DateOrDatetime
 from gs_quant.data.query import DataQuery, DataQueryType
 from gs_quant.entities.entity import Entity
-from gs_quant.timeseries import Window, Returns, RelativeDate
+from gs_quant.timeseries import RelativeDate, Returns, Window
 
 PARSABLE_OBJECT_MAP = {'window': Window, 'returns': Returns, 'currency': Currency, 'scaleShape': ScaleShape}
 

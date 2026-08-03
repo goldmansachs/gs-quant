@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Optional, Union
 
-from dataclasses_json import dataclass_json, LetterCase
+from dataclasses_json import LetterCase, dataclass_json
 
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
 

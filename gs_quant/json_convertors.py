@@ -18,7 +18,7 @@ import datetime as dt
 import importlib
 import re
 from dataclasses import MISSING, fields
-from typing import Optional, Union, Iterable, Dict, Tuple, Any
+from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import pandas as pd
 from dataclasses_json import config

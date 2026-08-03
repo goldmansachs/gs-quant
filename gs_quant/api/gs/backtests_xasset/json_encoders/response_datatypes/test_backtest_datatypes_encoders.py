@@ -17,13 +17,13 @@ under the License.
 import json
 
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
-    TransactionCostConfig,
-    TradingCosts,
-    FixedCostModel,
-    ScaledCostModel,
-    TransactionCostScalingType,
     AggregateCostModel,
     CostAggregationType,
+    FixedCostModel,
+    ScaledCostModel,
+    TradingCosts,
+    TransactionCostConfig,
+    TransactionCostScalingType,
 )
 
 

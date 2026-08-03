@@ -15,7 +15,8 @@ under the License.
 """
 
 import logging
-from typing import Tuple, Dict, Any, List
+from typing import Any, Dict, List, Tuple
+
 from gs_quant.session import GsSession
 from gs_quant.target.base_screener import Screener
 

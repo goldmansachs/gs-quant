@@ -17,16 +17,16 @@ under the License.
 import datetime as dt
 import logging
 from enum import Enum
-from typing import Tuple, Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 import backoff
 
-from gs_quant.errors import MqRateLimitedError, MqTimeoutError, MqInternalServerError
+from gs_quant.errors import MqInternalServerError, MqRateLimitedError, MqTimeoutError
 from gs_quant.session import GsSession
 from gs_quant.target.risk_models import (
+    Factor,
     RiskModel,
     RiskModelCalendar,
-    Factor,
     RiskModelData,
     RiskModelDataAssetsRequest,
     RiskModelDataMeasure,

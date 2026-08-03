@@ -15,7 +15,7 @@ under the License.
 """
 
 import math
-from typing import Union, List, Tuple, Dict
+from typing import Dict, List, Tuple, Union
 
 from gs_quant.analytics.common.enumerators import ScaleShape
 from gs_quant.analytics.core import BaseProcessor

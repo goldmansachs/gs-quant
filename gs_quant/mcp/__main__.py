@@ -16,10 +16,10 @@ under the License.
 
 import asyncio
 import os
-from typing import Annotated, Literal, Callable, Any
+from typing import Annotated, Any, Callable, Literal
 
 import typer
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 from fastmcp import FastMCP
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from rich import print
@@ -27,6 +27,7 @@ from rich.console import Console
 from rich.table import Table
 
 from gs_quant.config.utils import load_model_from_yaml
+from gs_quant.mcp import McpServiceConfig, run_mcp_server
 from gs_quant.mcp.client import (
     build_auth_headers,
     build_gs_session,
@@ -44,8 +45,7 @@ from gs_quant.mcp.client import (
     run_async,
     run_repl,
 )
-from gs_quant.mcp import McpServiceConfig, run_mcp_server
-from gs_quant.mcp.middleware import RemoteUserAuthMiddleware, LocalUserAuthMiddleware
+from gs_quant.mcp.middleware import LocalUserAuthMiddleware, RemoteUserAuthMiddleware
 from gs_quant.mcp.tools import discover_tools as registry_discover_tools, get_registered_tools
 
 app = typer.Typer()

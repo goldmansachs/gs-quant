@@ -15,20 +15,33 @@ A backtest **Engine** runs the strategy over a date range, resolving instruments
 ```python
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.triggers import (
-    PeriodicTrigger, PeriodicTriggerRequirements,
-    StrategyRiskTrigger, RiskTriggerRequirements,
-    MktTrigger, MktTriggerRequirements,
-    AggregateTrigger, AggregateTriggerRequirements,
-    DateTrigger, DateTriggerRequirements,
-    MeanReversionTrigger, MeanReversionTriggerRequirements,
-    PortfolioTrigger, PortfolioTriggerRequirements,
-    NotTrigger, NotTriggerRequirements,
-    TriggerDirection, AggType,
+    PeriodicTrigger,
+    PeriodicTriggerRequirements,
+    StrategyRiskTrigger,
+    RiskTriggerRequirements,
+    MktTrigger,
+    MktTriggerRequirements,
+    AggregateTrigger,
+    AggregateTriggerRequirements,
+    DateTrigger,
+    DateTriggerRequirements,
+    MeanReversionTrigger,
+    MeanReversionTriggerRequirements,
+    PortfolioTrigger,
+    PortfolioTriggerRequirements,
+    NotTrigger,
+    NotTriggerRequirements,
+    TriggerDirection,
+    AggType,
 )
 from gs_quant.backtests.actions import (
-    AddTradeAction, AddScaledTradeAction, HedgeAction,
-    ExitTradeAction, ExitAllPositionsAction,
-    EnterPositionQuantityScaledAction, RebalanceAction,
+    AddTradeAction,
+    AddScaledTradeAction,
+    HedgeAction,
+    ExitTradeAction,
+    ExitAllPositionsAction,
+    EnterPositionQuantityScaledAction,
+    RebalanceAction,
 )
 from gs_quant.backtests.generic_engine import GenericEngine
 from gs_quant.backtests.equity_vol_engine import EquityVolEngine
@@ -52,8 +65,8 @@ Use `GenericEngine` unless you specifically need `EquityVolEngine` performance f
 ## 3. Strategy Construction
 
 ```python
-strategy = Strategy(None, trigger)                    # empty starting portfolio
-strategy = Strategy(initial_instrument, trigger)      # start with an instrument
+strategy = Strategy(None, trigger)  # empty starting portfolio
+strategy = Strategy(initial_instrument, trigger)  # start with an instrument
 strategy = Strategy(None, [trigger_add, trigger_hedge])  # multiple triggers
 ```
 
@@ -67,8 +80,9 @@ strategy = Strategy(None, [trigger_add, trigger_hedge])  # multiple triggers
 from gs_quant.backtests.triggers import PeriodicTrigger, PeriodicTriggerRequirements
 
 trig_req = PeriodicTriggerRequirements(
-    start_date=start_date, end_date=end_date,
-    frequency='1m',         # '1b' (daily), '1w', '1m', '3m', '1y'
+    start_date=start_date,
+    end_date=end_date,
+    frequency='1m',  # '1b' (daily), '1w', '1m', '3m', '1y'
 )
 trigger = PeriodicTrigger(trig_req, action)
 ```
@@ -82,7 +96,9 @@ from gs_quant.common import AggregationLevel
 
 hedge_risk = FXDelta(aggregation_level=AggregationLevel.Type, currency='USD')
 trig_req = RiskTriggerRequirements(
-    risk=hedge_risk, trigger_level=50_000, direction=TriggerDirection.ABOVE,
+    risk=hedge_risk,
+    trigger_level=50_000,
+    direction=TriggerDirection.ABOVE,
 )
 trigger = StrategyRiskTrigger(trig_req, hedge_action)
 ```
@@ -95,7 +111,9 @@ from gs_quant.backtests.data_sources import GenericDataSource, MissingDataStrate
 
 data_source = GenericDataSource(pandas_series, MissingDataStrategy.fill_forward)
 trig_req = MktTriggerRequirements(
-    data_source=data_source, trigger_level=100.0, direction=TriggerDirection.BELOW,
+    data_source=data_source,
+    trigger_level=100.0,
+    direction=TriggerDirection.BELOW,
 )
 trigger = MktTrigger(trig_req, action)
 ```
@@ -118,7 +136,7 @@ from gs_quant.backtests.triggers import AggregateTrigger, AggregateTriggerRequir
 
 agg_req = AggregateTriggerRequirements(
     triggers=[periodic_trigger, risk_trigger],
-    aggregate_type=AggType.ALL_OF,   # ALL_OF (AND) or ANY_OF (OR)
+    aggregate_type=AggType.ALL_OF,  # ALL_OF (AND) or ANY_OF (OR)
 )
 trigger = AggregateTrigger(agg_req, action)
 ```
@@ -141,7 +159,7 @@ trigger = NotTrigger(not_req, action)
 ```python
 action = AddTradeAction(
     priceables=instrument,
-    trade_duration='1m',    # tenor, date, 'expiration_date', 'next schedule', or None (forever)
+    trade_duration='1m',  # tenor, date, 'expiration_date', 'next schedule', or None (forever)
     name='my_trade',
 )
 ```
@@ -168,8 +186,10 @@ action = HedgeAction(
 from gs_quant.backtests.actions import AddScaledTradeAction, ScalingActionType
 
 action = AddScaledTradeAction(
-    priceables=instrument, trade_duration='1m',
-    scaling_type=ScalingActionType.size, scaling_level=1_000_000,
+    priceables=instrument,
+    trade_duration='1m',
+    scaling_type=ScalingActionType.size,
+    scaling_level=1_000_000,
 )
 ```
 
@@ -180,8 +200,10 @@ from gs_quant.backtests.actions import EnterPositionQuantityScaledAction
 from gs_quant.target.backtests import BacktestTradingQuantityType
 
 action = EnterPositionQuantityScaledAction(
-    priceables=eq_option, trade_duration='1m',
-    trade_quantity=1000, trade_quantity_type=BacktestTradingQuantityType.quantity,
+    priceables=eq_option,
+    trade_duration='1m',
+    trade_quantity=1000,
+    trade_quantity_type=BacktestTradingQuantityType.quantity,
 )
 ```
 
@@ -250,6 +272,7 @@ Returns: Start/End Date, Duration, Total PnL, Total Transaction Costs, Total Tra
 ```python
 # Compare two backtests
 import pandas as pd
+
 pd.DataFrame({'A': backtest_a.summary_stats(), 'B': backtest_b.summary_stats()})
 ```
 
@@ -260,7 +283,10 @@ from gs_quant.risk import Price, FXDelta
 from gs_quant.common import AggregationLevel
 
 backtest = GE.run_backtest(
-    strategy, start=start_date, end=end_date, frequency='1b',
+    strategy,
+    start=start_date,
+    end=end_date,
+    frequency='1b',
     risks=[Price, FXDelta(aggregation_level=AggregationLevel.Type, currency='USD')],
 )
 delta_series = backtest.result_summary[FXDelta(aggregation_level=AggregationLevel.Type, currency='USD')]
@@ -277,7 +303,9 @@ Actions accept `transaction_cost` and `transaction_cost_exit` parameters.
 ```python
 from gs_quant.backtests.backtest_objects import ConstantTransactionModel
 
-action = AddTradeAction(instrument, trade_duration='1m',
+action = AddTradeAction(
+    instrument,
+    trade_duration='1m',
     transaction_cost=ConstantTransactionModel(500),
     transaction_cost_exit=ConstantTransactionModel(250),
 )
@@ -292,12 +320,16 @@ from gs_quant.backtests.backtest_objects import ScaledTransactionModel
 from gs_quant.risk import Price
 
 # By notional: cost = notional_amount x 0.0001 (1bp)
-action = AddTradeAction(instrument, trade_duration='1m',
+action = AddTradeAction(
+    instrument,
+    trade_duration='1m',
     transaction_cost=ScaledTransactionModel(scaling_type='notional_amount', scaling_level=0.0001),
 )
 
 # By risk measure: cost = |Price| x 0.01 (1% of premium)
-action = AddTradeAction(instrument, trade_duration='1m',
+action = AddTradeAction(
+    instrument,
+    trade_duration='1m',
     transaction_cost=ScaledTransactionModel(scaling_type=Price, scaling_level=0.01),
 )
 ```
@@ -305,7 +337,11 @@ action = AddTradeAction(instrument, trade_duration='1m',
 ### AggregateTransactionModel — Combine Models
 
 ```python
-from gs_quant.backtests.backtest_objects import AggregateTransactionModel, ConstantTransactionModel, ScaledTransactionModel
+from gs_quant.backtests.backtest_objects import (
+    AggregateTransactionModel,
+    ConstantTransactionModel,
+    ScaledTransactionModel,
+)
 
 # Total cost = fixed $100 + 0.5bp of notional
 combined = AggregateTransactionModel(
@@ -342,12 +378,19 @@ Server-side execution for equity option and variance swap backtests:
 from gs_quant.instrument import EqOption, OptionType, OptionStyle
 from gs_quant.backtests.equity_vol_engine import EquityVolEngine
 
-option = EqOption('.STOXX50E', expiration_date='3m', strike_price='ATM',
-    option_type=OptionType.Call, option_style=OptionStyle.European)
+option = EqOption(
+    '.STOXX50E',
+    expiration_date='3m',
+    strike_price='ATM',
+    option_type=OptionType.Call,
+    option_style=OptionStyle.European,
+)
 
 action = EnterPositionQuantityScaledAction(
-    priceables=option, trade_duration='1m',
-    trade_quantity=1000, trade_quantity_type=BacktestTradingQuantityType.quantity,
+    priceables=option,
+    trade_duration='1m',
+    trade_quantity=1000,
+    trade_quantity_type=BacktestTradingQuantityType.quantity,
 )
 trig_req = PeriodicTriggerRequirements(start_date=start_date, end_date=end_date, frequency='1m')
 trigger = PeriodicTrigger(trig_req, action)

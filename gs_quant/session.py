@@ -27,7 +27,7 @@ from configparser import ConfigParser
 from contextlib import asynccontextmanager
 from enum import Enum, auto, unique
 from http.cookies import SimpleCookie
-from typing import Optional, Union, Iterable, Any
+from typing import Any, Iterable, Optional, Union
 
 import backoff
 import certifi
@@ -42,9 +42,9 @@ import urllib3
 from gs_quant import version as APP_VERSION
 from gs_quant.base import Base
 from gs_quant.context_base import ContextBase, nullcontext
-from gs_quant.errors import MqError, MqRequestError, MqAuthenticationError, MqUninitialisedError, error_builder
+from gs_quant.errors import MqAuthenticationError, MqError, MqRequestError, MqUninitialisedError, error_builder
 from gs_quant.json_encoder import JSONEncoder, encode_default
-from gs_quant.tracing import Tracer, TracingScope, Tags
+from gs_quant.tracing import Tags, Tracer, TracingScope
 
 logger = logging.getLogger(__name__)
 
@@ -526,7 +526,11 @@ class GsSession(ContextBase):
             tracing_scope.span.set_tag('span.kind', 'client')
 
         if method in ('GET', 'DELETE') and not use_body:
-            kwargs['params'] = payload
+            # Only pass params when non-empty: httpx's `params` kwarg *replaces* the URL query string,
+            # whereas requests merges. Passing an empty dict would drop query params encoded in `path`.
+            # Guard against DataFrame truthiness (ambiguous) — DataFrames aren't valid query params anyway.
+            if is_dataframe or payload:
+                kwargs['params'] = payload
             if tracing_scope or request_headers:
                 headers = self._session.headers.copy()
                 if request_headers:

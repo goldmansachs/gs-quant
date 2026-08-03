@@ -29,11 +29,11 @@ from gs_quant.api.gs.data import MarketDataResponseFrame
 from gs_quant.common import ReportParameters, XRef
 from gs_quant.data.core import DataContext
 from gs_quant.errors import MqValueError
-from gs_quant.markets.report import PerformanceReport, ThematicReport, CustomAUMDataPoint
+from gs_quant.markets.report import CustomAUMDataPoint, PerformanceReport, ThematicReport
 from gs_quant.markets.securities import Stock
 from gs_quant.models.risk_model import FactorRiskModel as Factor_Risk_Model
 from gs_quant.target.portfolios import RiskAumSource
-from gs_quant.target.reports import Report, PositionSourceType, ReportType
+from gs_quant.target.reports import PositionSourceType, Report, ReportType
 from gs_quant.target.risk_models import RiskModel, RiskModelCoverage, RiskModelTerm, RiskModelUniverseIdentifier
 
 risk_model = RiskModel(

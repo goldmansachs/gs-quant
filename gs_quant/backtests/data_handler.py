@@ -16,6 +16,7 @@ under the License.
 
 import datetime as dt
 from typing import Union
+
 from gs_quant.backtests.data_sources import DataManager
 
 

@@ -16,13 +16,13 @@ under the License.
 
 import logging
 from abc import ABC
-from typing import Union, Optional
+from typing import Optional, Union
 
 from gs_quant.base import Priceable
 from gs_quant.context_base import nullcontext
-from gs_quant.markets import MarketDataCoordinate, PricingContext, CloseMarket, OverlayMarket
-from gs_quant.risk import DataFrameWithInfo, DollarPrice, FloatWithInfo, Price, SeriesWithInfo, MarketData
-from gs_quant.risk.results import PricingFuture, PortfolioRiskResult, ErrorValue
+from gs_quant.markets import CloseMarket, MarketDataCoordinate, OverlayMarket, PricingContext
+from gs_quant.risk import DataFrameWithInfo, DollarPrice, FloatWithInfo, MarketData, Price, SeriesWithInfo
+from gs_quant.risk.results import ErrorValue, PortfolioRiskResult, PricingFuture
 
 __asset_class_and_type_to_instrument = {}
 _logger = logging.getLogger(__name__)

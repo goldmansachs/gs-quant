@@ -14,18 +14,19 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
+from copy import deepcopy
+from enum import Enum
+from typing import Dict, List, Union
+
+import pandas as pd
+from pydash import get
+
 from gs_quant.api.gs.scenarios import GsFactorScenarioApi
-from gs_quant.markets.factor import Factor
-from gs_quant.target.risk import Scenario as TargetScenario, FactorScenarioType
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.errors import MqValueError
-from enum import Enum
-from typing import List, Union, Dict
-from pydash import get
-from copy import deepcopy
-
-import datetime as dt
-import pandas as pd
+from gs_quant.markets.factor import Factor
+from gs_quant.target.risk import FactorScenarioType, Scenario as TargetScenario
 
 
 class ScenarioCalculationType(Enum):

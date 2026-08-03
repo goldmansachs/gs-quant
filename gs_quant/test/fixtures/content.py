@@ -18,7 +18,7 @@ import datetime as dt
 from base64 import b64encode
 
 from gs_quant.common import Entitlements
-from gs_quant.target.content import GetManyContentsResponse, ContentResponse, Content
+from gs_quant.target.content import Content, ContentResponse, GetManyContentsResponse
 
 
 class ContentFixtures:

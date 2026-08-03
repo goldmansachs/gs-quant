@@ -16,19 +16,19 @@ under the License.
 
 import datetime as dt
 import logging
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 from urllib.parse import urlencode
 
 from gs_quant.common import FieldValueMap
 from gs_quant.errors import MqValueError
-from gs_quant.session import GsSession, DEFAULT_TIMEOUT
+from gs_quant.session import DEFAULT_TIMEOUT, GsSession
 from gs_quant.target.backtests import (
     Backtest,
+    BacktestRefData,
     BacktestResult,
     BacktestRisk,
-    ComparisonBacktestResult,
     BacktestRiskRequest,
-    BacktestRefData,
+    ComparisonBacktestResult,
 )
 
 _logger = logging.getLogger(__name__)

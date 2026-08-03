@@ -15,56 +15,57 @@ under the License.
 """
 
 import datetime as dt
+import logging
 import math
 from enum import Enum, auto
-from typing import List, Dict, Tuple, Union
-import pandas as pd
-import numpy as np
-import logging
+from typing import Dict, List, Tuple, Union
+
 import deprecation
-from gs_quant.common import Currency
+import numpy as np
+import pandas as pd
 
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi, GsRiskModelApi, IntradayFactorDataSource
 from gs_quant.base import EnumBase
+from gs_quant.common import Currency
 from gs_quant.data import DataMeasure
-from gs_quant.errors import MqValueError, MqRequestError
+from gs_quant.errors import MqRequestError, MqValueError
 from gs_quant.markets.factor import Factor
-from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
+from gs_quant.markets.securities import AssetIdentifier, SecurityMaster
 from gs_quant.models.risk_model_utils import (
+    _ALL_ASSET_MEASURES,
+    _PARTIAL_UPDATE_FETCH_BATCH_SIZE,
+    _stitch_asset_data_batches,
+    batch_and_upload_coverage_data,
+    batch_and_upload_partial_data,
+    build_asset_data_map,
+    build_factor_data_map,
+    build_factor_id_to_name_map,
+    build_factor_volatility_dataframe,
     build_pfp_data_dataframe,
     get_closest_date_index,
-    upload_model_data,
+    get_covariance_matrix_dataframe,
     get_optional_data_as_dataframe,
     get_universe_size,
-    get_covariance_matrix_dataframe,
-    build_factor_data_map,
-    build_asset_data_map,
-    build_factor_id_to_name_map,
-    only_factor_data_is_present,
-    batch_and_upload_partial_data,
-    build_factor_volatility_dataframe,
-    batch_and_upload_coverage_data,
     merge_asset_data,
-    _ALL_ASSET_MEASURES,
-    _stitch_asset_data_batches,
-    _PARTIAL_UPDATE_FETCH_BATCH_SIZE,
+    only_factor_data_is_present,
+    upload_model_data,
 )
 from gs_quant.target.risk_models import (
-    RiskModel as RiskModelBuilder,
-    RiskModelEventType,
-    RiskModelData,
-    RiskModelCalendar,
-    RiskModelDataAssetsRequest as DataAssetsRequest,
-    RiskModelDataMeasure as Measure,
-    RiskModelCoverage as CoverageType,
-    RiskModelUniverseIdentifier as UniverseIdentifier,
     Entitlements,
-    RiskModelTerm as Term,
-    RiskModelUniverseIdentifierRequest,
     Factor as RiskModelFactor,
-    RiskModelType,
-    RiskModelDataMeasure,
+    RiskModel as RiskModelBuilder,
+    RiskModelCalendar,
+    RiskModelCoverage as CoverageType,
+    RiskModelData,
     RiskModelDataAssetsRequest,
+    RiskModelDataAssetsRequest as DataAssetsRequest,
+    RiskModelDataMeasure,
+    RiskModelDataMeasure as Measure,
+    RiskModelEventType,
+    RiskModelTerm as Term,
+    RiskModelType,
+    RiskModelUniverseIdentifier as UniverseIdentifier,
+    RiskModelUniverseIdentifierRequest,
 )
 
 

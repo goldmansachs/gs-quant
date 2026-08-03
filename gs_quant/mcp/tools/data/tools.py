@@ -19,7 +19,7 @@ import json
 from typing import Annotated, Optional
 
 from gs_quant.data import Dataset
-from gs_quant.markets.securities import SecurityMaster, AssetIdentifier
+from gs_quant.markets.securities import AssetIdentifier, SecurityMaster
 from gs_quant.mcp.dependencies import depends_user_session
 from gs_quant.mcp.tools import mcp_tool
 from gs_quant.session import GsSession
@@ -76,7 +76,7 @@ def get_last_data(
     if as_of is None:
         as_of = dt.date.today()
     with user_session:
-        df = ds.get_data_last(bbid=bbid, asset_id=asset_id, as_of=as_of)
+        df = ds.get_data_last(bbid=bbid, assetId=asset_id, as_of=as_of)
     return json.loads(df.to_json(orient='table'))
 
 

@@ -17,22 +17,22 @@ under the License.
 import logging
 import webbrowser
 from collections import deque
-from typing import List, Tuple, Union, Dict
+from typing import Dict, List, Tuple, Union
 
 from pydash import get
 
 from gs_quant.analytics.workspaces.components import (
-    Component,
     TYPE_TO_COMPONENT,
-    RelatedLink,
+    Component,
     DataGridComponent,
+    DataScreenerComponent,
     MonitorComponent,
     PlotComponent,
-    DataScreenerComponent,
+    RelatedLink,
 )
 from gs_quant.common import Entitlements as Entitlements_
 from gs_quant.entities.entitlements import Entitlements
-from gs_quant.errors import MqValueError, MqRequestError
+from gs_quant.errors import MqRequestError, MqValueError
 from gs_quant.session import GsSession
 
 _logger = logging.getLogger(__name__)

@@ -19,9 +19,9 @@ import datetime as dt
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Tuple, Dict, Union, Any
+from typing import Any, Dict, Optional, Tuple, Union
 
-from dataclasses_json import dataclass_json, LetterCase, config
+from dataclasses_json import LetterCase, config, dataclass_json
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs_decoder
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import (
@@ -32,12 +32,12 @@ from gs_quant.common import Currency, CurrencyName, PricingLocation
 from gs_quant.instrument import Instrument
 from gs_quant.interfaces.algebra import AlgebraicType
 from gs_quant.json_convertors import (
-    encode_date_tuple,
     decode_date_tuple,
     decode_dict_date_key_or_float,
-    decode_optional_date_or_time,
-    encode_frequency,
     decode_frequency,
+    decode_optional_date_or_time,
+    encode_date_tuple,
+    encode_frequency,
 )
 from gs_quant.target.backtests import BacktestTradingQuantityType, EquityMarketModel
 

@@ -19,10 +19,11 @@ import datetime as dt
 import dateutil.parser as dup
 import pytest
 import testfixtures
-from gs_quant.api.gs.assets import GsAssetApi, GsAsset, GsTemporalXRef, ENABLE_ASSET_CACHING
-from gs_quant.session import Environment, GsSession
+
+from gs_quant.api.gs.assets import ENABLE_ASSET_CACHING, GsAsset, GsAssetApi, GsTemporalXRef
 from gs_quant.common import PositionType, XRef
-from gs_quant.target.assets import FieldFilterMap, Position, PositionSet, EntityQuery
+from gs_quant.session import Environment, GsSession
+from gs_quant.target.assets import EntityQuery, FieldFilterMap, Position, PositionSet
 
 
 def test_get_asset(mocker):

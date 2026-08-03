@@ -207,6 +207,7 @@ import datetime as dt
 
 mcp = FastMCP("MyMCP")
 
+
 @mcp_tool()
 def g3_spot(cross: Literal['GBPUSD', 'EURUSD', 'USDJPY'], user_session: GsSession = depends_user_session) -> dict:
     """Return some data"""
@@ -285,6 +286,7 @@ python -m gs_quant.mcp client \
 Given a simple example tool.
 ```python
 from gs_quant.mcp.tools import mcp_tool
+
 
 @mcp_tool
 def add(a: int, b: int = 1) -> int:

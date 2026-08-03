@@ -15,18 +15,18 @@ under the License.
 """
 
 import datetime as dt
+import math
 import re
 from enum import Enum
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
-import pandas as pd
 import numpy as np
-import math
+import pandas as pd
 import scipy.stats as stats
 from pandas.tseries.offsets import BDay
 from pydash import decapitalize
 
-from gs_quant.api.gs.data import QueryType, GsDataApi, DataQuery
+from gs_quant.api.gs.data import DataQuery, GsDataApi, QueryType
 from gs_quant.data import DataMeasure
 from gs_quant.data.core import DataContext
 from gs_quant.entities.entity import EntityType
@@ -35,18 +35,18 @@ from gs_quant.markets.portfolio_manager import PortfolioManager
 from gs_quant.markets.report import (
     FactorRiskReport,
     PerformanceReport,
-    ThematicReport,
     ReturnFormat,
+    ThematicReport,
     format_aum_for_return_calculation,
-    get_pnl_percent,
     get_factor_pnl_percent_for_single_factor,
+    get_pnl_percent,
 )
 from gs_quant.markets.securities import Bond
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.target.reports import PositionSourceType
-from gs_quant.timeseries import plot_measure_entity, beta, correlation, max_drawdown
+from gs_quant.timeseries import beta, correlation, max_drawdown, plot_measure_entity
 from gs_quant.timeseries.algebra import geometrically_aggregate
-from gs_quant.timeseries.measures import _extract_series_from_df, SecurityMaster, AssetIdentifier
+from gs_quant.timeseries.measures import AssetIdentifier, SecurityMaster, _extract_series_from_df
 
 
 class Unit(Enum):

@@ -15,15 +15,16 @@ under the License.
 """
 
 import datetime as dt
-from typing import Optional, Tuple, Type, Iterable
+from typing import Iterable, Optional, Tuple, Type
 
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.common import RiskMeasure
-from gs_quant.risk.results import PricingFuture, HistoricalPricingFuture
-from .historical import HistoricalPricingContext
-from .markets import LiveMarket, TimestampedMarket, close_market_date
+from gs_quant.risk.results import HistoricalPricingFuture, PricingFuture
+
 from ..api.risk import GenericRiskApi
 from ..datetime import location_to_tz_mapping
+from .historical import HistoricalPricingContext
+from .markets import LiveMarket, TimestampedMarket, close_market_date
 
 
 class RealtimePricingContext(HistoricalPricingContext):

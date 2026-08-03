@@ -24,34 +24,34 @@ from pandas.testing import assert_series_equal
 from scipy.integrate import odeint
 
 from gs_quant.data import DataContext
-from gs_quant.errors import MqTypeError, MqValueError, MqError
-from gs_quant.timeseries import normalize_window, Window, Returns, returns
+from gs_quant.errors import MqError, MqTypeError, MqValueError
+from gs_quant.timeseries import Returns, Window, normalize_window, returns
 from gs_quant.timeseries.statistics import (
     Direction,
     IntradayDirection,
+    LinearRegression,
+    MeanType,
+    RollingLinearRegression,
+    SEIRModel,
+    SIRModel,
+    cov,
+    exponential_std,
     generate_series,
     generate_series_intraday,
-    LinearRegression,
-    RollingLinearRegression,
-    min_,
     max_,
-    range_,
     mean,
     median,
+    min_,
     mode,
-    sum_,
-    product,
-    std,
-    exponential_std,
-    var,
-    cov,
-    zscores,
-    winsorize,
-    percentiles,
     percentile,
-    SIRModel,
-    SEIRModel,
-    MeanType,
+    percentiles,
+    product,
+    range_,
+    std,
+    sum_,
+    var,
+    winsorize,
+    zscores,
 )
 
 

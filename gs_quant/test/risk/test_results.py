@@ -16,19 +16,28 @@ under the License.
 
 import datetime as dt
 
-import gs_quant.risk as risk
 import numpy as np
 import pytest
+
+import gs_quant.risk as risk
 from gs_quant.base import RiskKey
 from gs_quant.common import MarketDataPattern, RiskRequestParameters
-from gs_quant.instrument import IRSwap, IRBasisSwap, IRSwaption, FXMultiCrossBinary, FXMultiCrossBinaryLeg, CommodSwap
-from gs_quant.markets import HistoricalPricingContext, PricingContext, CloseMarket, MarketDataCoordinate
+from gs_quant.instrument import CommodSwap, FXMultiCrossBinary, FXMultiCrossBinaryLeg, IRBasisSwap, IRSwap, IRSwaption
+from gs_quant.markets import CloseMarket, HistoricalPricingContext, MarketDataCoordinate, PricingContext
 from gs_quant.markets.portfolio import Portfolio
-from gs_quant.risk import MultiScenario, ResolvedInstrumentValues
-from gs_quant.risk import Price, RollFwd, CurveScenario, ErrorValue, DataFrameWithInfo, AggregationLevel, PnlExplain
-from gs_quant.risk.core import aggregate_risk, SeriesWithInfo, FloatWithInfo, StringWithInfo
-from gs_quant.risk.results import MultipleScenarioFuture
-from gs_quant.risk.results import MultipleScenarioResult
+from gs_quant.risk import (
+    AggregationLevel,
+    CurveScenario,
+    DataFrameWithInfo,
+    ErrorValue,
+    MultiScenario,
+    PnlExplain,
+    Price,
+    ResolvedInstrumentValues,
+    RollFwd,
+)
+from gs_quant.risk.core import FloatWithInfo, SeriesWithInfo, StringWithInfo, aggregate_risk
+from gs_quant.risk.results import MultipleScenarioFuture, MultipleScenarioResult
 from gs_quant.risk.transform import ResultWithInfoAggregator
 from gs_quant.test.utils.mock_calc import MockCalc
 

@@ -15,14 +15,13 @@ under the License.
 """
 
 import datetime as dt
+from unittest import mock
 from unittest.mock import ANY
 
 import pytest
-from unittest import mock
-
-from gs_quant.session import GsSession, Environment
 
 from gs_quant.models.risk_model_utils import _upload_factor_data_if_present, get_closest_date_index
+from gs_quant.session import Environment, GsSession
 
 
 @pytest.mark.parametrize('total_factors', [100])

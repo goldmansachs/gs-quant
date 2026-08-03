@@ -14,8 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.api.gs.backtests_xasset.request import RiskRequest, BasicBacktestRequest, GenericBacktestRequest
-from gs_quant.api.gs.backtests_xasset.response import RiskResponse, BasicBacktestResponse, GenericBacktestResponse
+from gs_quant.api.gs.backtests_xasset.request import BasicBacktestRequest, GenericBacktestRequest, RiskRequest
+from gs_quant.api.gs.backtests_xasset.response import BasicBacktestResponse, GenericBacktestResponse, RiskResponse
 from gs_quant.session import GsSession
 
 

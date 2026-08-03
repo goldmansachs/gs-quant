@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 from enum import Enum
 from typing import Dict, Optional, Union
 
@@ -29,15 +30,15 @@ from gs_quant.markets.factor import ReturnFormat
 from gs_quant.markets.securities import Asset, AssetIdentifier
 from gs_quant.models.risk_model import FactorRiskModel, MarqueeRiskModel
 from gs_quant.target.risk_models import (
-    RiskModelDataMeasure,
     RiskModelDataAssetsRequest,
+    RiskModelDataMeasure,
     RiskModelUniverseIdentifierRequest,
 )
-from gs_quant.timeseries import plot_measure_entity, plot_measure, prices
+from gs_quant.timeseries import plot_measure, plot_measure_entity, prices
 from gs_quant.timeseries.helper import FREQ_HOUR
-from .statistics import percentile
 from gs_quant.timeseries.measures import _extract_series_from_df
-import datetime as dt
+
+from .statistics import percentile
 
 ModelMeasureStr = {
     'Asset Universe': RiskModelDataMeasure.Asset_Universe,

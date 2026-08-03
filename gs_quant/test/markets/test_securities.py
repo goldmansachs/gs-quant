@@ -21,22 +21,22 @@ from enum import Enum
 
 import pytest
 
-from gs_quant.base import EnumBase
 from gs_quant.api.gs.assets import GsAsset, GsAssetApi
-from gs_quant.errors import MqTypeError, MqValueError, MqRequestError
+from gs_quant.base import EnumBase
+from gs_quant.common import AssetClass, AssetType as GsAssetType
+from gs_quant.errors import MqRequestError, MqTypeError, MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.markets.securities import (
-    SecurityMaster,
+    Asset,
     AssetIdentifier,
     AssetType,
     ExchangeCode,
-    SecurityMasterSource,
-    SecurityIdentifier,
-    Asset,
     SecMasterAsset,
+    SecurityIdentifier,
+    SecurityMaster,
+    SecurityMasterSource,
 )
-from gs_quant.common import AssetClass, AssetType as GsAssetType
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 
 
 def test_get_asset(mocker):

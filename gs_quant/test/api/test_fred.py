@@ -18,14 +18,14 @@ by the Federal Reserve Bank of St. Louis. FRED terms of use
 available at https://research.stlouisfed.org/docs/api/terms_of_use.html
 """
 
+from unittest.mock import Mock
+
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from gs_quant.data import Dataset
 from gs_quant.api.fred.data import FredDataApi
-
-from unittest.mock import Mock
+from gs_quant.data import Dataset
 
 fredAPI = FredDataApi(api_key='')
 fred_data = Dataset('GDP', fredAPI)

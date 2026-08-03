@@ -17,25 +17,24 @@
 import datetime as dt
 from enum import Enum
 from numbers import Real
-from typing import Any, Union, List
+from typing import Any, List, Union
 
 import numpy as np
 import pandas as pd
 
+from ..datetime import GsCalendar
+from ..datetime.date import DayCountConvention, PaymentFrequency, date_range as _date_range, day_count_fraction
+from ..errors import MqTypeError, MqValueError
 from .helper import (
-    _create_enum,
-    Interpolate,
-    plot_function,
-    requires_session,
     FREQ_DAY,
     FREQ_MONTH_END,
     FREQ_QUARTER_END,
     FREQ_YEAR_END,
+    Interpolate,
+    _create_enum,
+    plot_function,
+    requires_session,
 )
-from ..datetime import GsCalendar
-from ..datetime.date import DayCountConvention, PaymentFrequency, day_count_fraction
-from ..datetime.date import date_range as _date_range
-from ..errors import MqValueError, MqTypeError
 
 """
 Date and time manipulation for timeseries, including date or time shifting, calendar operations, curve alignment and

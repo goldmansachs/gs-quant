@@ -23,11 +23,8 @@ import pytest
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.data import Dataset
-from gs_quant.session import GsSession, Environment
-from gs_quant.target.data import Format, DataQuery
-from gs_quant.target.data import DataSetEntity
-from gs_quant.target.data import DataSetParameters
-from gs_quant.target.data import DataSetDimensions
+from gs_quant.session import Environment, GsSession
+from gs_quant.target.data import DataQuery, DataSetDimensions, DataSetEntity, DataSetParameters, Format
 
 test_types = {
     'date': 'date',

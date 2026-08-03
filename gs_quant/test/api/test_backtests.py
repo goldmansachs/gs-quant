@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.api.gs.backtests import GsBacktestApi, Backtest
+from gs_quant.api.gs.backtests import Backtest, GsBacktestApi
 from gs_quant.session import Environment, GsSession
 
 

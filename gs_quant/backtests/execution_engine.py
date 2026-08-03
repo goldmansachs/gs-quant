@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 
 from gs_quant.backtests.data_handler import DataHandler
-from gs_quant.backtests.event import OrderEvent, FillEvent
+from gs_quant.backtests.event import FillEvent, OrderEvent
 from gs_quant.backtests.order import OrderBase
 
 

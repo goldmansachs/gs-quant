@@ -15,8 +15,9 @@ under the License.
 """
 
 import datetime as dt
-import pandas as pd
 from typing import Dict
+
+import pandas as pd
 
 
 def encode_series_result(s: pd.Series) -> Dict:

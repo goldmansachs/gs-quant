@@ -15,14 +15,13 @@ under the License.
 """
 
 import urllib.parse
-from typing import Tuple, Dict
+import webbrowser
+from typing import Dict, Tuple
 
 from pydash import get
 
 from gs_quant.session import GsSession
 from gs_quant.target.workspaces_markets import Workspace
-
-import webbrowser
 
 API = '/workspaces/markets'
 WORKSPACES_MARKETS_HEADERS: Dict[str, str] = {'Content-Type': 'application/json;charset=utf-8'}

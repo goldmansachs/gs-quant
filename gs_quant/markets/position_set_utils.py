@@ -14,13 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.api.gs.assets import GsAssetApi
-from typing import Tuple
-
-import pandas as pd
-import numpy as np
 import datetime as dt
 import math
+from typing import Tuple
+
+import numpy as np
+import pandas as pd
+
+from gs_quant.api.gs.assets import GsAssetApi
 
 
 def _get_asset_temporal_xrefs(position_sets_df: pd.DataFrame) -> Tuple[pd.DataFrame, str]:

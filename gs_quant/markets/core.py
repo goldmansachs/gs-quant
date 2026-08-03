@@ -22,13 +22,13 @@ import weakref
 from abc import ABCMeta
 from concurrent.futures import ThreadPoolExecutor
 from inspect import signature
-from itertools import zip_longest, takewhile
-from typing import Optional, Union, Type
+from itertools import takewhile, zip_longest
+from typing import Optional, Type, Union
 
 from tqdm import tqdm
 
 from gs_quant.base import InstrumentBase, RiskKey, Scenario, get_enum_value
-from gs_quant.common import PricingLocation, RiskMeasure, PricingDateAndMarketDataAsOf
+from gs_quant.common import PricingDateAndMarketDataAsOf, PricingLocation, RiskMeasure
 from gs_quant.context_base import ContextBaseWithDefault
 from gs_quant.datetime.date import business_day_offset, today
 from gs_quant.risk import (
@@ -43,8 +43,9 @@ from gs_quant.risk.results import PricingFuture
 from gs_quant.session import GsSession
 from gs_quant.target.risk import RiskPosition, RiskRequest, RiskRequestParameters
 from gs_quant.tracing import Tracer
-from .markets import CloseMarket, LiveMarket, Market, close_market_date, OverlayMarket, RelativeMarket
+
 from ..api.risk import GenericRiskApi
+from .markets import CloseMarket, LiveMarket, Market, OverlayMarket, RelativeMarket, close_market_date
 
 _logger = logging.getLogger(__name__)
 

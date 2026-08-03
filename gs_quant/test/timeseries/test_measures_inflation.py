@@ -26,18 +26,18 @@ from testfixtures.mock import Mock
 import gs_quant.timeseries.measures_inflation as tm
 from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
-from gs_quant.common import PricingLocation, Currency as CurrEnum
+from gs_quant.common import Currency as CurrEnum, PricingLocation
 from gs_quant.data import DataContext
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.markets.securities import Currency
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import CurrencyEnum, SecurityMaster
 from gs_quant.timeseries.measures_inflation import (
-    _currency_to_tdapi_inflation_swap_rate_asset,
     INFLATION_RATES_DEFAULTS,
     TdapiInflationRatesDefaultsProvider,
+    _currency_to_tdapi_inflation_swap_rate_asset,
 )
 from gs_quant.timeseries.measures_rates import _ClearingHouse
 

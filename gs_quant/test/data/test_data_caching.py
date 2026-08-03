@@ -19,9 +19,9 @@ from unittest.mock import patch
 
 from pandas.testing import assert_frame_equal
 
-from gs_quant.api.api_cache import InMemoryApiRequestCache, CacheEvent
+from gs_quant.api.api_cache import CacheEvent, InMemoryApiRequestCache
 from gs_quant.api.gs.data import GsDataApi, QueryType
-from gs_quant.data import Dataset, DataContext
+from gs_quant.data import DataContext, Dataset
 
 
 class _FakeSyncAPI:

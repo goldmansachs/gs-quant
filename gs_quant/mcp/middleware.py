@@ -18,13 +18,13 @@ import datetime as dt
 import logging
 from typing import Any, Sequence
 
-from fastmcp.server.middleware import Middleware, MiddlewareContext, CallNext
-from fastmcp.tools import ToolResult, Tool
+from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
+from fastmcp.tools import Tool, ToolResult
 from mcp import types as mt
 from rich import print
 
 from gs_quant.mcp.session_utils import extract_from_starlette_request
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 
 _logger = logging.getLogger('middleware.auth')
 

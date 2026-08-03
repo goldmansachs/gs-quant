@@ -18,19 +18,17 @@ by the Federal Reserve Bank of St. Louis. FRED terms of use
 available at https://research.stlouisfed.org/docs/api/terms_of_use.html
 """
 
+import datetime as dt
+import textwrap
+from dataclasses import asdict, replace
 from typing import Iterable, Optional, Union
 
 import pandas as pd
-import datetime as dt
-import textwrap
-from gs_quant.api.utils import handle_proxy
-
 from requests.exceptions import HTTPError
-
-from dataclasses import asdict, replace
 
 from gs_quant.api.data import DataApi
 from gs_quant.api.fred.fred_query import FredQuery
+from gs_quant.api.utils import handle_proxy
 
 """
 Fred Data API that provides functions to query the Fred dataset.

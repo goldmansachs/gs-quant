@@ -21,15 +21,13 @@ import math
 from enum import Enum
 from functools import partial, update_wrapper
 from itertools import groupby
-from typing import Union, Iterable, Dict, Optional
+from typing import Dict, Iterable, Optional, Union
 
 import backoff
 import tqdm
 
-from gs_quant.errors import MqRequestError
-
-
 from gs_quant.data.utilities import SecmasterXrefFormatter
+from gs_quant.errors import MqRequestError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.session import GsSession
 from gs_quant.target.secmaster import SecMasterAssetType

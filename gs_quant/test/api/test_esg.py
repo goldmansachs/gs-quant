@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 
-from gs_quant.api.gs.esg import GsEsgApi, ESGCard, ESGMeasure
+from gs_quant.api.gs.esg import ESGCard, ESGMeasure, GsEsgApi
 from gs_quant.session import Environment, GsSession
 
 

@@ -18,13 +18,13 @@ import datetime as dt
 import logging
 from enum import Enum, EnumMeta
 from threading import Lock
-from typing import Tuple, Union, List
+from typing import List, Tuple, Union
 
 import numpy as np
 from cachetools import TTLCache, cached
 from cachetools.keys import hashkey
 
-from gs_quant.common import PricingLocation, Currency
+from gs_quant.common import Currency, PricingLocation
 from gs_quant.data import Dataset
 from gs_quant.errors import MqRequestError
 

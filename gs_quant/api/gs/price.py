@@ -16,7 +16,7 @@ under the License.
 
 import backoff
 
-from gs_quant.errors import MqRateLimitedError, MqTimeoutError, MqInternalServerError
+from gs_quant.errors import MqInternalServerError, MqRateLimitedError, MqTimeoutError
 from gs_quant.session import GsSession
 from gs_quant.target.positions_v2_pricing import PositionsPricingRequest
 from gs_quant.target.price import PositionSetPriceInput, PositionSetPriceResponse
@@ -36,9 +36,8 @@ class GsPriceApi:
     def price_many_positions(cls, pricing_request: PositionsPricingRequest) -> dict:
         url = '/positions/price/bulk'
         GsSession.current.api_version = "v2"
-        pricing_response = GsSession.current.sync.post(url, payload=pricing_request)
-        GsSession.current.api_version = "v1"
-
-        positions = pricing_response.get("positions")
-
-        return positions
+        try:
+            pricing_response = GsSession.current.sync.post(url, payload=pricing_request)
+            return pricing_response.get("positions")
+        finally:
+            GsSession.current.api_version = "v1"

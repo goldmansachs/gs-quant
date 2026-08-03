@@ -23,19 +23,19 @@ from pandas._testing import assert_frame_equal
 from gs_quant.common import Currency
 from gs_quant.models.risk_model import FactorRiskModel, MacroRiskModel, ReturnFormat, Unit
 from gs_quant.models.risk_model_utils import (
-    get_optional_data_as_dataframe,
     _map_measure_to_field_name,
+    get_optional_data_as_dataframe,
     merge_asset_data,
 )
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.risk_models import (
     RiskModel as Risk_Model,
     RiskModelCoverage,
-    RiskModelTerm,
-    RiskModelUniverseIdentifier,
-    RiskModelType,
     RiskModelDataAssetsRequest as DataAssetsRequest,
     RiskModelDataMeasure as Measure,
+    RiskModelTerm,
+    RiskModelType,
+    RiskModelUniverseIdentifier,
     RiskModelUniverseIdentifierRequest as UniverseIdentifier,
 )
 

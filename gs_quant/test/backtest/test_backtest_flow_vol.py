@@ -19,14 +19,13 @@ from unittest import mock
 
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
-from gs_quant.backtests.core import Backtest
-from gs_quant.backtests.core import TradeInMethod
+from gs_quant.backtests.core import Backtest, TradeInMethod
 from gs_quant.backtests.strategy_systematic import StrategySystematic
 from gs_quant.base import Base
 from gs_quant.common import AssetClass, Currency
 from gs_quant.instrument import EqOption
 from gs_quant.session import Environment, GsSession
-from gs_quant.target.backtests import DeltaHedgeParameters, BacktestTradingQuantityType, BacktestRisk
+from gs_quant.target.backtests import BacktestRisk, BacktestTradingQuantityType, DeltaHedgeParameters
 
 underlierList = [
     EqOption("MA4B66MW5E27U8P32SB", "3m", 3000, 'Call', 'European'),

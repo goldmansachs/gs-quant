@@ -20,12 +20,12 @@ import pandas as pd
 
 from gs_quant.target.risk import (
     MarketDataPattern,
-    MarketDataShock,
     MarketDataPatternAndShock,
+    MarketDataShock,
     MarketDataShockBasedScenario as __MarketDataShockBasedScenario,
+    MarketDataShockType,
     MarketDataVolShockScenario as __MarketDataVolShockScenario,
     MarketDataVolSlice,
-    MarketDataShockType,
 )
 
 

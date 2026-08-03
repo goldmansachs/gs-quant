@@ -17,40 +17,39 @@ under the License.
 import copy
 import datetime as dt
 import logging
-
 from collections import defaultdict
 from functools import reduce
-from typing import Union, Iterable, Optional
+from typing import Iterable, Optional, Union
 
-from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
+from gs_quant.backtests.action_handler import ActionHandler, ActionHandlerBaseFactory
 from gs_quant.backtests.actions import (
     Action,
-    AddTradeAction,
-    HedgeAction,
-    ExitTradeAction,
-    RebalanceAction,
-    ExitAllPositionsAction,
     AddScaledTradeAction,
+    AddTradeAction,
     AddWeightedTradeAction,
     EarlyExitPositionLimitScaledAction,
+    ExitAllPositionsAction,
+    ExitTradeAction,
+    HedgeAction,
+    RebalanceAction,
 )
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_objects import BackTest, CashPayment, PnlDefinition
-from gs_quant.backtests.backtest_utils import make_list, CalcType, get_final_date, map_ccy_name_to_ccy
+from gs_quant.backtests.backtest_utils import CalcType, get_final_date, make_list, map_ccy_name_to_ccy
 from gs_quant.backtests.generic_engine_action_impls import (
-    AddTradeActionImpl,
     AddScaledTradeActionImpl,
-    HedgeActionImpl,
-    ExitTradeActionImpl,
-    RebalanceActionImpl,
+    AddTradeActionImpl,
     AddWeightedTradeActionImpl,
     EarlyExitPositionLimitScaledActionImpl,
+    ExitTradeActionImpl,
+    HedgeActionImpl,
+    RebalanceActionImpl,
 )
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.common import Currency, ParameterisedRiskMeasure, RiskMeasure
 from gs_quant.context_base import nullcontext
 from gs_quant.datetime.relative_date import RelativeDateSchedule
-from gs_quant.markets import PricingContext, HistoricalPricingContext
+from gs_quant.markets import HistoricalPricingContext, PricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import Price
 from gs_quant.risk.results import PortfolioRiskResult

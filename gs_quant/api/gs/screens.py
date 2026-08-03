@@ -15,11 +15,11 @@ under the License.
 """
 
 import logging
-from typing import Tuple, List
+from typing import List, Tuple
 
 from gs_quant.session import GsSession
-from gs_quant.target.screens import Screen
 from gs_quant.target.assets_screener import AssetScreenerRequest
+from gs_quant.target.screens import Screen
 
 _logger = logging.getLogger(__name__)
 

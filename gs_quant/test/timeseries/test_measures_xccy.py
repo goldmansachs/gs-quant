@@ -25,17 +25,17 @@ from testfixtures.mock import Mock
 import gs_quant.timeseries.measures_xccy as tm
 from gs_quant.api.gs.assets import GsAsset
 from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
-from gs_quant.common import PricingLocation, Currency as CurrEnum
+from gs_quant.common import Currency as CurrEnum, PricingLocation
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.markets.securities import Bond, Cross, Currency
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries import CurrencyEnum, SecurityMaster, CrossCurrencyRateOptionType
+from gs_quant.timeseries import CrossCurrencyRateOptionType, CurrencyEnum, SecurityMaster
 from gs_quant.timeseries.measures_xccy import (
-    _currency_to_tdapi_crosscurrency_swap_rate_asset,
     CROSSCURRENCY_RATES_DEFAULTS,
     TdapiCrossCurrencyRatesDefaultsProvider,
+    _currency_to_tdapi_crosscurrency_swap_rate_asset,
 )
 
 _index = [pd.Timestamp('2021-03-30')]

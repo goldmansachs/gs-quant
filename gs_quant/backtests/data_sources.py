@@ -14,13 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
 import datetime as dt
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import ClassVar, Iterable, List, Union
+
 import numpy as np
 import pandas as pd
-from typing import Union, Iterable, ClassVar, List
+from dataclasses_json import config, dataclass_json
 
 from gs_quant.backtests.core import ValuationFixingType
 from gs_quant.base import field_metadata, static_field

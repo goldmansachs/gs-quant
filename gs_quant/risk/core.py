@@ -20,7 +20,7 @@ from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from copy import copy
 from dataclasses import dataclass, fields
-from typing import Iterable, Optional, Union, Tuple, Dict, Callable, List
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 from dataclasses_json import dataclass_json

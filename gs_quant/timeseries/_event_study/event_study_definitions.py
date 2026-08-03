@@ -61,7 +61,6 @@ import pandas as pd
 from gs_quant.errors import MqValueError
 from gs_quant.target.countries import Country, CountryXref
 
-
 MACRO_EVENT_SOURCE = "TradingEconomics"
 EVENT_DATE_COLUMN = "event_date"
 

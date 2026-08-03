@@ -15,6 +15,7 @@ under the License.
 """
 
 import datetime as dt
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -22,19 +23,19 @@ from pandas.testing import assert_series_equal
 
 from gs_quant.errors import MqValueError
 from gs_quant.timeseries import (
-    moving_average,
-    Window,
-    smoothed_moving_average,
-    macd,
-    bollinger_bands,
-    relative_strength_index,
-    exponential_moving_average,
-    exponential_volatility,
-    exponential_spread_volatility,
-    trend,
-    SeasonalModel,
     Frequency,
+    SeasonalModel,
+    Window,
+    bollinger_bands,
+    exponential_moving_average,
+    exponential_spread_volatility,
+    exponential_volatility,
+    macd,
+    moving_average,
+    relative_strength_index,
     seasonally_adjusted,
+    smoothed_moving_average,
+    trend,
 )
 
 

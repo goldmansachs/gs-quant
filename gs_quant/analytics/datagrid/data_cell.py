@@ -16,7 +16,7 @@ under the License.
 
 import copy
 import uuid
-from typing import List, Optional, Dict, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 

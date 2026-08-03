@@ -16,9 +16,9 @@ under the License.
 
 import pytest
 
-from gs_quant.api.gs.carbon import GsCarbonApi, CarbonCard
+from gs_quant.api.gs.carbon import CarbonCard, GsCarbonApi
 from gs_quant.common import Currency
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 
 
 def test_get_carbon_data(mocker):

@@ -16,25 +16,24 @@ under the License.
 
 import datetime as dt
 import logging
-from typing import Iterable, Union, Tuple
+from typing import Iterable, Tuple, Union
 
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
 from gs_quant.api.gs.backtests_xasset.apis import GsBacktestXassetApi
 from gs_quant.api.gs.backtests_xasset.request import BasicBacktestRequest
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
-    DateConfig,
-    Trade,
     Configuration,
-    RollDateMode,
-    TransactionCostConfig,
-    StrategyHedge,
+    DateConfig,
     ExpiryDateMode,
+    RollDateMode,
+    StrategyHedge,
+    Trade,
+    TransactionCostConfig,
 )
 from gs_quant.backtests.core import Backtest, TradeInMethod
-from gs_quant.base import get_enum_value, Base
-from gs_quant.common import Currency
-from gs_quant.common import FieldValueMap, AssetClass
+from gs_quant.base import Base, get_enum_value
+from gs_quant.common import AssetClass, Currency, FieldValueMap
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import (
     EqOption,
@@ -44,13 +43,13 @@ from gs_quant.instrument import (
 from gs_quant.target.backtests import (
     BacktestResult,
     BacktestRisk,
-    BacktestTradingQuantityType,
-    DeltaHedgeParameters,
     BacktestSignalSeriesItem,
     BacktestStrategyUnderlier,
     BacktestStrategyUnderlierHedge,
-    EquityMarketModel,
     BacktestTradingParameters,
+    BacktestTradingQuantityType,
+    DeltaHedgeParameters,
+    EquityMarketModel,
     FlowVolBacktestMeasure,
 )
 

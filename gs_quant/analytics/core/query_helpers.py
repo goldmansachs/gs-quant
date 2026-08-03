@@ -14,9 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime as dt
-
 import asyncio
+import datetime as dt
 import logging
 from collections import defaultdict
 from typing import Dict, Tuple, Union

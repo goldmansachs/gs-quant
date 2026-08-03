@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import json
 import os
-from typing import Union, Dict
+from typing import Dict, Union
 from unittest import mock
 from unittest.mock import patch
 
@@ -28,37 +28,36 @@ from numpy.testing import assert_equal
 from pandas.testing import assert_series_equal
 from pandas.tseries.offsets import CustomBusinessDay
 from testfixtures import Replacer
-from testfixtures.mock import Mock, MagicMock
+from testfixtures.mock import MagicMock, Mock
 
 import gs_quant.timeseries.measures as tm
 import gs_quant.timeseries.measures_rates as tm_rates
-from gs_quant.api.gs.assets import GsTemporalXRef, GsAssetApi, GsIdType, IdList, GsAsset
-from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame
-from gs_quant.api.gs.data import QueryType
-from gs_quant.common import AssetType, XRef, PricingLocation, Currency as CurrEnum
+from gs_quant.api.gs.assets import GsAsset, GsAssetApi, GsIdType, GsTemporalXRef, IdList
+from gs_quant.api.gs.data import GsDataApi, MarketDataResponseFrame, QueryType
+from gs_quant.common import AssetType, Currency as CurrEnum, PricingLocation, XRef
 from gs_quant.data.core import DataContext
-from gs_quant.errors import MqError, MqValueError, MqTypeError
+from gs_quant.errors import MqError, MqTypeError, MqValueError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import PricingContext
 from gs_quant.markets.baskets import Basket as CustomBasket
 from gs_quant.markets.index import Index
 from gs_quant.markets.securities import (
     AssetClass,
+    AssetIdentifier,
+    CommodityEUNaturalGasHub,
+    CommodityNaturalGasHub,
+    CommodityPowerAggregatedNodes,
     Cross,
     Currency,
+    DefaultSwap,
+    FutureMarket,
     SecurityMaster,
     Stock,
     Swap,
-    CommodityNaturalGasHub,
-    CommodityEUNaturalGasHub,
-    AssetIdentifier,
-    CommodityPowerAggregatedNodes,
-    FutureMarket,
-    DefaultSwap,
 )
-from gs_quant.session import GsSession, Environment, OAuth2Session
+from gs_quant.session import Environment, GsSession, OAuth2Session
 from gs_quant.test.timeseries.utils import mock_request
-from gs_quant.timeseries import Returns, ExtendedSeries, BenchmarkType
+from gs_quant.timeseries import BenchmarkType, ExtendedSeries, Returns
 
 _index = [pd.Timestamp('2019-01-01')]
 _index2 = [pd.Timestamp('2019-08-02')]
@@ -5269,7 +5268,7 @@ def test_fundamental_metrics():
 
 
 def test_realized_volatility():
-    from gs_quant.timeseries.econometrics import volatility, Returns
+    from gs_quant.timeseries.econometrics import Returns, volatility
     from gs_quant.timeseries.statistics import generate_series
 
     random = generate_series(100).rename('spot')

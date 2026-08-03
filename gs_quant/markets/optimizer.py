@@ -14,26 +14,26 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 import logging
+import math
 from enum import Enum
 from functools import wraps
-from typing import List, Dict, Optional, Union, Final
+from typing import Dict, Final, List, Optional, Union
 
+import numpy as np
+import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-from gs_quant.api.gs.hedges import GsHedgeApi
 from gs_quant.api.gs.assets import GsAssetApi
+from gs_quant.api.gs.hedges import GsHedgeApi
 from gs_quant.errors import MqValueError
 from gs_quant.markets.factor import Factor
-from gs_quant.markets.position_set import PositionSet, Position
+from gs_quant.markets.position_set import Position, PositionSet
 from gs_quant.markets.securities import Asset
 from gs_quant.models.risk_model import FactorRiskModel
 from gs_quant.session import GsSession
 from gs_quant.target.hedge import CorporateActionsTypes
-import pandas as pd
-import numpy as np
-import math
-import datetime as dt
 
 _logger = logging.getLogger(__name__)
 

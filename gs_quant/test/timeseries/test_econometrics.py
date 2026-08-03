@@ -27,33 +27,33 @@ from testfixtures import Replacer
 
 from gs_quant.common import Currency as CurrencyEnum
 from gs_quant.datetime import DayCountConvention
-from gs_quant.errors import MqValueError, MqTypeError, MqError
+from gs_quant.errors import MqError, MqTypeError, MqValueError
 from gs_quant.markets.securities import Cash
 from gs_quant.timeseries import (
-    returns,
-    prices,
-    index,
-    change,
-    annualize,
-    volatility,
-    correlation,
-    beta,
-    max_drawdown,
-    Returns,
-    Window,
-    Direction,
-    generate_series,
-    SeriesType,
-    Interpolate,
     CurveType,
+    Direction,
+    Interpolate,
+    Returns,
+    SeriesType,
+    Window,
+    annualize,
+    beta,
+    change,
+    correlation,
+    generate_series,
+    index,
+    max_drawdown,
+    prices,
+    returns,
+    volatility,
 )
 from gs_quant.timeseries.econometrics import (
-    _get_ratio,
-    excess_returns,
     RiskFreeRateCurrency,
-    sharpe_ratio,
-    excess_returns_,
+    _get_ratio,
     corr_swap_correlation,
+    excess_returns,
+    excess_returns_,
+    sharpe_ratio,
     vol_swap_volatility,
 )
 

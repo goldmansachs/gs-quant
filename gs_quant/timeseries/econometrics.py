@@ -15,8 +15,8 @@
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
 import math
-from enum import IntEnum, Enum
-from typing import Union, Optional
+from enum import Enum, IntEnum
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -24,23 +24,24 @@ import pandas as pd
 from gs_quant.api.gs.data import GsDataApi, QueryType
 from gs_quant.common import Currency
 from gs_quant.markets.securities import Asset
+
+from ..data import DataContext
+from ..datetime import DayCountConvention, day_count_fraction
+from ..errors import MqTypeError, MqValueError
 from .analysis import LagMode, lag
 from .datetime import align, interpolate
 from .helper import (
     CurveType,
     Interpolate,
-    Window,
-    normalize_window,
-    apply_ramp,
-    plot_session_function,
-    plot_function,
     Returns,
     SeriesType,
+    Window,
+    apply_ramp,
+    normalize_window,
+    plot_function,
+    plot_session_function,
 )
-from .statistics import std, product, sum_, mean, MeanType
-from ..data import DataContext
-from ..datetime import DayCountConvention, day_count_fraction
-from ..errors import MqValueError, MqTypeError
+from .statistics import MeanType, mean, product, std, sum_
 
 """
 Econometrics timeseries library is for standard economic and time series analytics operations, including returns,

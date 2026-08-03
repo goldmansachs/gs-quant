@@ -23,13 +23,12 @@ import shlex
 from pathlib import Path
 from typing import Any, Callable
 
+from fastmcp import Client
+from fastmcp.client.transports import StreamableHttpTransport
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.patch_stdout import patch_stdout
-
-from fastmcp import Client
-from fastmcp.client.transports import StreamableHttpTransport
 from rich import print
 from rich.console import Console
 from rich.json import JSON as RichJSON

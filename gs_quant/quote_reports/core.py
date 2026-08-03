@@ -14,18 +14,18 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Dict, Any, Iterable, Union
+from typing import Any, Dict, Iterable, Union
 
 from dataclasses_json.cfg import _GlobalConfig
 
 from gs_quant.base import CustomComments
 from gs_quant.workflow import (
-    VisualStructuringReport,
     BinaryImageComments,
-    HyperLinkImageComments,
     CustomDeltaHedge,
     DeltaHedge,
     HedgeTypes,
+    HyperLinkImageComments,
+    VisualStructuringReport,
 )
 
 global_config = _GlobalConfig()

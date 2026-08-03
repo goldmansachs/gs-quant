@@ -16,7 +16,7 @@ under the License.
 
 import pickle
 
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 
 
 def test_session_pickle():

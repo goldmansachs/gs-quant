@@ -15,9 +15,10 @@ under the License.
 """
 
 import logging
-from typing import Tuple, Dict
+from typing import Dict, Tuple
+
 from gs_quant.session import GsSession
-from gs_quant.target.data_screen import AnalyticsScreen, FilterRequest, DataRow
+from gs_quant.target.data_screen import AnalyticsScreen, DataRow, FilterRequest
 
 _logger = logging.getLogger(__name__)
 

@@ -17,14 +17,14 @@ under the License.
 import datetime as dt
 import logging
 from abc import ABCMeta
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import inflection
 import pandas as pd
 
 from gs_quant.api.api_session import ApiWithCustomSession
 from gs_quant.api.fred.fred_query import FredQuery
-from gs_quant.base import Base
+from gs_quant.base import Base, DictBase
 from gs_quant.target.coordinates import MDAPIDataQuery
 from gs_quant.target.data import DataQuery
 
@@ -100,7 +100,7 @@ class DataApi(ApiWithCustomSession, metaclass=ABCMeta):
             )
 
         query_properties = query.properties()
-        query.where = dict()
+        query.where = DictBase()
         for field, value in kwargs.items():
             snake_case_field = inflection.underscore(field)
             if snake_case_field in query_properties and snake_case_field not in ('name',):

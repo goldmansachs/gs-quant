@@ -14,9 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from unittest.mock import MagicMock, Mock
+
 import pandas as pd
 import pytest
-from unittest.mock import Mock, MagicMock
 
 import gs_quant.timeseries.measures_tba as tm_cpn
 from gs_quant.errors import MqValueError

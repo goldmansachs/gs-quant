@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 from time import sleep
-from unittest.mock import patch, ANY
+from unittest.mock import ANY, patch
 
 import pytest
 from freezegun import freeze_time
@@ -25,11 +25,11 @@ from gs_quant import risk
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.api.risk import RiskApi
 from gs_quant.base import RiskKey
-from gs_quant.common import PayReceive, Currency, PricingLocation
+from gs_quant.common import Currency, PayReceive, PricingLocation
 from gs_quant.datetime import business_day_offset, today
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import EqOption, IRSwap
-from gs_quant.markets import PricingContext, CloseMarket, OverlayMarket, MarketDataCoordinate
+from gs_quant.markets import CloseMarket, MarketDataCoordinate, OverlayMarket, PricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import RollFwd
 from gs_quant.test.utils.mock_calc import MockCalc

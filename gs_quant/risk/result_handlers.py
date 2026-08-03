@@ -19,19 +19,20 @@ import logging
 from typing import Iterable, Optional, Union
 
 from gs_quant.base import InstrumentBase, RiskKey
-from gs_quant.common import RiskMeasure, AssetClass, RiskMeasureType
+from gs_quant.common import AssetClass, RiskMeasure, RiskMeasureType
 from gs_quant.risk.measures import PnlExplain
+
 from .core import (
     DataFrameWithInfo,
+    DictWithInfo,
     ErrorValue,
-    UnsupportedValue,
     FloatWithInfo,
+    MQVSValidatorDefn,
+    MQVSValidatorDefnsWithInfo,
     SeriesWithInfo,
     StringWithInfo,
+    UnsupportedValue,
     sort_values,
-    MQVSValidatorDefnsWithInfo,
-    MQVSValidatorDefn,
-    DictWithInfo,
 )
 
 _logger = logging.getLogger(__name__)

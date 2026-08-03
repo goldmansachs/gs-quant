@@ -21,14 +21,14 @@ import math
 from enum import Enum
 from functools import reduce
 from numbers import Real
-from typing import Union, Optional, List
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
 
+from ..errors import MqTypeError, MqValueError
 from .datetime import align
-from .helper import plot_function, Interpolate
-from ..errors import MqValueError, MqTypeError
+from .helper import Interpolate, plot_function
 
 """
 Algebra library contains basic numerical and algebraic operations, including addition, division, multiplication,

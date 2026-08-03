@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.tracing import Tracer

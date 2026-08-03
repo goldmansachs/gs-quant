@@ -14,29 +14,29 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 import math
 
-import pytest
-import pandas as pd
 import numpy as np
-import datetime as dt
+import pandas as pd
+import pytest
 from pandas.testing import assert_series_equal
 
-from gs_quant.errors import MqValueError, MqError
+from gs_quant.errors import MqError, MqValueError
 from gs_quant.timeseries import (
-    algebra,
-    Interpolate,
-    filter_,
     FilterOperator,
-    smooth_spikes,
+    Interpolate,
     ThresholdType,
-    repeat,
+    algebra,
     and_,
-    or_,
-    not_,
-    if_,
-    weighted_sum,
+    filter_,
     geometrically_aggregate,
+    if_,
+    not_,
+    or_,
+    repeat,
+    smooth_spikes,
+    weighted_sum,
 )
 
 

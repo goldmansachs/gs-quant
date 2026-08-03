@@ -16,7 +16,7 @@ under the License.
 
 from gs_quant.api.gs.data_screen import GsDataScreenApi
 from gs_quant.session import Environment, GsSession
-from gs_quant.target.data_screen import AnalyticsScreen, FilterRequest, DataRow
+from gs_quant.target.data_screen import AnalyticsScreen, DataRow, FilterRequest
 
 
 def test_get_all_screens(mocker):

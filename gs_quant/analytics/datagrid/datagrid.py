@@ -22,39 +22,39 @@ import webbrowser
 from collections import defaultdict
 from dataclasses import asdict
 from numbers import Number
-from typing import List, Dict, Optional, Tuple, Union, Set
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
 from gs_quant.analytics.common import DATAGRID_HELP_MSG
 from gs_quant.analytics.common.helpers import (
-    resolve_entities,
     get_entity_rdate_key,
     get_entity_rdate_key_from_rdate,
     get_rdate_cache_key,
+    resolve_entities,
 )
 from gs_quant.analytics.core.processor import DataQueryInfo, MeasureQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
-from gs_quant.analytics.core.query_helpers import aggregate_queries, fetch_query, build_query_string, valid_dimensions
+from gs_quant.analytics.core.query_helpers import aggregate_queries, build_query_string, fetch_query, valid_dimensions
 from gs_quant.analytics.datagrid.data_cell import DataCell
-from gs_quant.analytics.datagrid.data_column import DataColumn, ColumnFormat, MultiColumnGroup
+from gs_quant.analytics.datagrid.data_column import ColumnFormat, DataColumn, MultiColumnGroup
 from gs_quant.analytics.datagrid.data_row import (
     DataRow,
     DimensionsOverride,
-    ProcessorOverride,
     Override,
-    ValueOverride,
+    ProcessorOverride,
     RowSeparator,
+    ValueOverride,
 )
 from gs_quant.analytics.datagrid.serializers import row_from_dict
 from gs_quant.analytics.datagrid.utils import (
+    DataGridFilter,
     DataGridSort,
+    FilterCondition,
+    FilterOperation,
     SortOrder,
     SortType,
-    DataGridFilter,
-    FilterOperation,
-    FilterCondition,
     get_utc_now,
 )
 from gs_quant.analytics.processors import CoordinateProcessor, EntityProcessor

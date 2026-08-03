@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from typing import Type, Union
 
 import numpy as np
-from lmfit import minimize, Parameters, report_fit
+from lmfit import Parameters, minimize, report_fit
 from scipy.integrate import odeint
 
 """

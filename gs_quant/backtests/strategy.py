@@ -15,15 +15,15 @@ under the License.
 """
 
 from dataclasses import dataclass, field
-from typing import Tuple, Optional, Union, Iterable
+from typing import Iterable, Optional, Tuple, Union
 
-from dataclasses_json import dataclass_json, config
+from dataclasses_json import config, dataclass_json
 
 from gs_quant.backtests.backtest_objects import CashAccrualModel
 from gs_quant.backtests.backtest_utils import make_list
 from gs_quant.backtests.triggers import Trigger
 from gs_quant.base import Priceable
-from gs_quant.json_convertors import decode_named_instrument, encode_named_instrument, dc_decode
+from gs_quant.json_convertors import dc_decode, decode_named_instrument, encode_named_instrument
 
 
 def _backtest_engines():

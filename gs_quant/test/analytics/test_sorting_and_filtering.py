@@ -18,9 +18,9 @@ import numpy as np
 import pytest
 
 from gs_quant.analytics.core.processor_result import ProcessorResult
-from gs_quant.analytics.datagrid import DataGrid, DataColumn
+from gs_quant.analytics.datagrid import DataColumn, DataGrid
 from gs_quant.analytics.datagrid.data_cell import DataCell
-from gs_quant.analytics.datagrid.utils import SortOrder, DataGridSort, DataGridFilter, FilterOperation, FilterCondition
+from gs_quant.analytics.datagrid.utils import DataGridFilter, DataGridSort, FilterCondition, FilterOperation, SortOrder
 from gs_quant.test.utils.datagrid_test_utils import get_test_entity
 
 

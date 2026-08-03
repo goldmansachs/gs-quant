@@ -18,7 +18,7 @@ GsSession.use(
     environment_or_domain=Environment.PROD,
     client_id='my_client_id',
     client_secret='my_client_secret',
-    scopes=('run_analytics',)
+    scopes=('run_analytics',),
 )
 ```
 
@@ -94,10 +94,12 @@ portfolio = Portfolio([swap, swaption], name='My Portfolio')
 From a dictionary (keys become instrument names):
 
 ```python
-portfolio = Portfolio({
-    'USD 10y Payer': IRSwap('Pay', '10y', 'USD'),
-    'EUR 5y Receiver': IRSwap('Receive', '5y', 'EUR'),
-})
+portfolio = Portfolio(
+    {
+        'USD 10y Payer': IRSwap('Pay', '10y', 'USD'),
+        'EUR 5y Receiver': IRSwap('Receive', '5y', 'EUR'),
+    }
+)
 ```
 
 ### Nesting Portfolios
@@ -112,10 +114,10 @@ master = Portfolio([usd_book, eur_book], name='Master Book')
 
 ```python
 portfolio.append(IRSwap('Pay', '2y', 'GBP'))  # add instruments
-first = portfolio[0]                            # access by index
-usd_swap = portfolio['USD 10y Payer']           # access by name
-len(portfolio)                                  # top-level count
-portfolio.all_instruments                       # all instruments across nested portfolios
+first = portfolio[0]  # access by index
+usd_swap = portfolio['USD 10y Payer']  # access by name
+len(portfolio)  # top-level count
+portfolio.all_instruments  # all instruments across nested portfolios
 ```
 
 ### Resolving and Pricing
@@ -123,9 +125,9 @@ portfolio.all_instruments                       # all instruments across nested 
 ```python
 from gs_quant.risk import DollarPrice, IRDelta
 
-portfolio.resolve()                              # resolves all instruments in place
-prices = portfolio.calc(DollarPrice)             # single risk measure
-results = portfolio.calc([DollarPrice, IRDelta]) # multiple risk measures
+portfolio.resolve()  # resolves all instruments in place
+prices = portfolio.calc(DollarPrice)  # single risk measure
+results = portfolio.calc([DollarPrice, IRDelta])  # multiple risk measures
 ```
 
 ---

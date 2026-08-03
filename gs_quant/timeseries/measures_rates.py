@@ -16,37 +16,37 @@ under the License.
 
 import datetime as dt
 import logging
-import re
 import math
+import re
 from collections import OrderedDict
 from enum import Enum
-from typing import Optional, Union, Dict, List
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 
 from gs_quant.api.gs.assets import GsAssetApi
-from gs_quant.api.gs.data import QueryType, GsDataApi
-from gs_quant.common import Currency as CurrencyEnum, AssetClass, AssetType, PricingLocation, SwapClearingHouse
+from gs_quant.api.gs.data import GsDataApi, QueryType
+from gs_quant.common import AssetClass, AssetType, Currency as CurrencyEnum, PricingLocation, SwapClearingHouse
 from gs_quant.data import DataContext, Dataset
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import IRSwap
-from gs_quant.markets.securities import AssetIdentifier, Asset
+from gs_quant.markets.securities import Asset, AssetIdentifier
 from gs_quant.target.data import DataQuery, FieldFilterMapDataQuery
-from gs_quant.timeseries import currency_to_default_ois_asset, convert_asset_for_rates_data_set, RatesConversionType
-from gs_quant.timeseries.helper import _to_offset, check_forward_looking, plot_measure, Entitlement
+from gs_quant.timeseries import RatesConversionType, convert_asset_for_rates_data_set, currency_to_default_ois_asset
+from gs_quant.timeseries.helper import Entitlement, _to_offset, check_forward_looking, plot_measure
 from gs_quant.timeseries.measures import (
+    ASSET_SPEC,
+    GENERIC_DATE,
+    ExtendedSeries,
+    MeasureDependency,
+    SwaptionTenorType,
+    _asset_from_spec,
+    _extract_series_from_df,
+    _get_custom_bd,
+    _logger,
     _market_data_timed,
     _range_from_pricing_date,
-    _get_custom_bd,
-    ExtendedSeries,
-    SwaptionTenorType,
-    _extract_series_from_df,
-    GENERIC_DATE,
-    _asset_from_spec,
-    ASSET_SPEC,
-    MeasureDependency,
-    _logger,
 )
 
 

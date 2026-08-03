@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import logging
 from enum import Enum
-from typing import List, Dict
+from typing import Dict, List
 
 from gs_quant.session import GsSession
 

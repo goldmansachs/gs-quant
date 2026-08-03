@@ -14,43 +14,43 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 from abc import ABCMeta
 from bisect import insort
-import datetime as dt
 from collections import defaultdict, namedtuple
 from itertools import zip_longest
-from typing import Union, Iterable, Optional, Dict, Collection
+from typing import Collection, Dict, Iterable, Optional, Union
 
+from gs_quant.backtests.action_handler import ActionHandler
 from gs_quant.backtests.actions import (
     Action,
-    AddTradeAction,
-    HedgeAction,
-    AddTradeActionInfo,
-    HedgeActionInfo,
-    ExitTradeAction,
-    ExitTradeActionInfo,
-    RebalanceAction,
-    RebalanceActionInfo,
     AddScaledTradeAction,
-    ScalingActionType,
     AddScaledTradeActionInfo,
+    AddTradeAction,
+    AddTradeActionInfo,
     AddWeightedTradeAction,
     AddWeightedTradeActionInfo,
+    ExitTradeAction,
+    ExitTradeActionInfo,
+    HedgeAction,
+    HedgeActionInfo,
+    RebalanceAction,
+    RebalanceActionInfo,
+    ScalingActionType,
 )
-from gs_quant.backtests.action_handler import ActionHandler
 from gs_quant.backtests.backtest_objects import (
     BackTest,
-    ScalingPortfolio,
     CashPayment,
     Hedge,
+    ScalingPortfolio,
     TransactionCostEntry,
     WeightedScalingPortfolio,
     WeightedTrade,
 )
-from gs_quant.backtests.backtest_utils import make_list, get_final_date, interpolate_signal
+from gs_quant.backtests.backtest_utils import get_final_date, interpolate_signal, make_list
 from gs_quant.common import RiskMeasure
 from gs_quant.instrument import Instrument
-from gs_quant.markets import PricingContext, HistoricalPricingContext
+from gs_quant.markets import HistoricalPricingContext, PricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk.results import PortfolioRiskResult
 from gs_quant.target.measures import ResolvedInstrumentValues

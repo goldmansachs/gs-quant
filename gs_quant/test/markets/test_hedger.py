@@ -14,19 +14,20 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import pytest
 import datetime as dt
+
+import pytest
 
 from gs_quant.api.gs.hedges import GsHedgeApi
 from gs_quant.markets.hedge import (
-    HedgeExclusions,
-    HedgeConstraints,
     Constraint,
     Hedge,
+    HedgeConstraints,
+    HedgeExclusions,
     PerformanceHedge,
     PerformanceHedgeParameters,
 )
-from gs_quant.markets.position_set import PositionSet, Position
+from gs_quant.markets.position_set import Position, PositionSet
 
 mock_hedge = PerformanceHedge(parameters=None)
 

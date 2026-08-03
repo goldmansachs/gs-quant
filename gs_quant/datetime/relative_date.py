@@ -15,10 +15,9 @@ under the License.
 """
 
 import datetime as dt
-
 import logging
 from copy import copy
-from typing import Union, Optional, List
+from typing import List, Optional, Union
 
 import pandas as pd
 

@@ -20,11 +20,12 @@ from typing import Union
 import pandas as pd
 import statsmodels.tsa.seasonal
 
-from gs_quant.timeseries import diff, annualize, returns
-from .algebra import subtract
-from .helper import Window, plot_function, normalize_window, apply_ramp
-from .statistics import mean, std, exponential_std
+from gs_quant.timeseries import annualize, diff, returns
+
 from ..errors import MqValueError
+from .algebra import subtract
+from .helper import Window, apply_ramp, normalize_window, plot_function
+from .statistics import exponential_std, mean, std
 
 """
 Technicals library is for technical analysis functions on timeseries, including moving averages,

@@ -17,18 +17,19 @@ under the License.
 import datetime as dt
 from unittest import mock
 
-import gs_quant.risk as risk
 import numpy as np
 import pandas as pd
+
+import gs_quant.risk as risk
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.common import PositionSet
 from gs_quant.datetime import business_day_offset
-from gs_quant.instrument import IRSwap, IRSwaption, CurveScenario
+from gs_quant.instrument import CurveScenario, IRSwap, IRSwaption
 from gs_quant.markets import (
+    BackToTheFuturePricingContext,
     HistoricalPricingContext,
     PricingContext,
-    BackToTheFuturePricingContext,
     historical_risk_key,
 )
 from gs_quant.markets.portfolio import Portfolio

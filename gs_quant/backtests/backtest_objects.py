@@ -14,18 +14,18 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, config
 from enum import Enum
 from queue import Queue as FifoQueue
-from typing import Iterable, TypeVar, Optional, Union, Callable, Tuple, ClassVar
+from typing import Callable, ClassVar, Iterable, Optional, Tuple, TypeVar, Union
 
-import datetime as dt
 import numpy as np
 import pandas as pd
+from dataclasses_json import config, dataclass_json
 
 from gs_quant.backtests.backtest_utils import make_list
 from gs_quant.backtests.core import ValuationMethod
@@ -36,21 +36,21 @@ from gs_quant.backtests.order import OrderBase, OrderCost
 from gs_quant.base import field_metadata, static_field
 from gs_quant.common import RiskMeasure
 from gs_quant.datetime.relative_date import RelativeDate
-from gs_quant.instrument import Cash, IRSwap, Instrument
+from gs_quant.instrument import Cash, Instrument, IRSwap
 from gs_quant.json_convertors import dc_decode
 from gs_quant.markets import PricingContext
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import (
-    ErrorValue,
     Cashflows,
+    ErrorValue,
     FXAnnualImpliedVol,
     FXDeltaLocalCcy,
     FXGammaLocalCcy,
     FXSpot,
     FXVegaLocalCcy,
 )
+from gs_quant.risk.results import PortfolioRiskResult, PricingFuture
 from gs_quant.risk.transform import Transformer
-from gs_quant.risk.results import PricingFuture, PortfolioRiskResult
 
 
 class BaseBacktest(ABC):

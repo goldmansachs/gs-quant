@@ -15,10 +15,11 @@ under the License.
 """
 
 import datetime as dt
-import pytest
 import time
+
 import numpy as np
 import pandas as pd
+import pytest
 
 from gs_quant.timeseries.helper import rolling_offset
 

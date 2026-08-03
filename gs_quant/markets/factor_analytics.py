@@ -16,12 +16,13 @@ under the License.
 
 import logging
 from typing import Dict, List
+
 import pandas as pd
 import plotly.graph_objects as go
 
 from gs_quant.api.gs.risk import GsRiskApi
-from gs_quant.markets.position_set import PositionSet
 from gs_quant.errors import MqValueError
+from gs_quant.markets.position_set import PositionSet
 
 _logger = logging.getLogger(__name__)
 

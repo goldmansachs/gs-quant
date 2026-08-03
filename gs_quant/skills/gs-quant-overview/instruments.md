@@ -8,10 +8,10 @@ Instruments are the building blocks of gs_quant. Every tradeable product is repr
 from gs_quant.instrument import IRSwap
 
 swap = IRSwap(
-    pay_or_receive='Pay',       # 'Pay' or 'Receive' the fixed leg
-    termination_date='10y',     # tenor or explicit date
-    notional_currency='USD',    # currency
-    fixed_rate=0.03,            # optional — leave None to resolve at market
+    pay_or_receive='Pay',  # 'Pay' or 'Receive' the fixed leg
+    termination_date='10y',  # tenor or explicit date
+    notional_currency='USD',  # currency
+    fixed_rate=0.03,  # optional — leave None to resolve at market
 )
 ```
 
@@ -26,11 +26,11 @@ from gs_quant.common import Currency, PrincipalExchange
 
 swap = IRXccySwapFixFix(
     termination_date='5y',
-    effective_date='0b',                # spot start
+    effective_date='0b',  # spot start
     payer_currency=Currency.USD,
-    payer_rate=0.04,                    # 4.00% fixed USD coupon
+    payer_rate=0.04,  # 4.00% fixed USD coupon
     receiver_currency=Currency.EUR,
-    receiver_rate=0.025,                # 2.50% fixed EUR coupon
+    receiver_rate=0.025,  # 2.50% fixed EUR coupon
     notional_amount=10e6,
     principal_exchange=PrincipalExchange.Both,
 )
@@ -54,11 +54,11 @@ from gs_quant.instrument import IRXccySwapFixFlt
 from gs_quant.common import Currency, PrincipalExchange, PayReceive
 
 swap = IRXccySwapFixFlt(
-    pay_or_receive=PayReceive.Pay,      # pay fixed USD, receive floating EUR
+    pay_or_receive=PayReceive.Pay,  # pay fixed USD, receive floating EUR
     termination_date='5y',
     effective_date='0b',
     fixed_rate_currency=Currency.USD,
-    fixed_rate=0.04,                    # 4.00% fixed USD rate
+    fixed_rate=0.04,  # 4.00% fixed USD rate
     floating_rate_currency=Currency.EUR,
     floating_rate_spread=0.0,
     notional_amount=10000,
@@ -92,7 +92,7 @@ swap = IRXccySwapFltFlt(
     payer_currency=Currency.USD,
     payer_spread=0.0,
     receiver_currency=Currency.EUR,
-    receiver_spread=0.0,                # XCcy basis spread — resolve at par if omitted
+    receiver_spread=0.0,  # XCcy basis spread — resolve at par if omitted
     notional_amount=10000,
     principal_exchange=PrincipalExchange.Both,
 )
@@ -121,8 +121,8 @@ swap = IRXccySwap(
     payer_currency=Currency.USD,
     payer_spread=0.0,
     receiver_currency=Currency.EUR,
-    receiver_spread=0.0,           # XCcy basis — resolve at par if omitted
-    notional_amount=10000,         # payer notional only; receiver resets to FX spot
+    receiver_spread=0.0,  # XCcy basis — resolve at par if omitted
+    notional_amount=10000,  # payer notional only; receiver resets to FX spot
     principal_exchange=PrincipalExchange.Both,
     # initial_fx_rate=1.10,             # optional: pin the opening FX rate
 )
@@ -250,7 +250,6 @@ option.calc(risk.DollarPrice)
 # OR make sure to use FairPremium instead of DollarPrice
 # This will also respect the premium settlement date of the option.
 option.calc(risk.FairPremium)
-
 ```
 
 ### 2. FXMultiCrossBinaryLeg Uses Different OptionType Values

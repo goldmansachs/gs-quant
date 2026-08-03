@@ -15,15 +15,12 @@ under the License.
 """
 
 import copy
-
 from enum import Enum
-from typing import Tuple, Dict, Optional, Union
+from typing import Dict, Optional, Tuple, Union
 
+from gs_quant import common, risk
 from gs_quant.base import RiskMeasureParameter
-from gs_quant.common import RiskMeasure, ParameterisedRiskMeasure
-
-from gs_quant import common
-from gs_quant import risk
+from gs_quant.common import ParameterisedRiskMeasure, RiskMeasure
 from gs_quant.target import measures as target_measures
 
 

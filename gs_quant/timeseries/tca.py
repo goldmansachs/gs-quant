@@ -20,7 +20,7 @@ import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
 from gs_quant.common import AssetClass
-from gs_quant.data import Dataset, DataContext
+from gs_quant.data import DataContext, Dataset
 from gs_quant.markets.securities import Asset
 from gs_quant.timeseries import plot_measure
 from gs_quant.timeseries.measures import _extract_series_from_df

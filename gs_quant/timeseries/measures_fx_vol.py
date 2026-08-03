@@ -15,30 +15,36 @@ under the License.
 """
 
 import logging
-from functools import partial
 from enum import Enum
+from functools import partial
 from numbers import Real
-from typing import Union, Optional
+from typing import Optional, Union
 
 import pandas as pd
 
 from gs_quant.api.gs.assets import GsAssetApi
-from gs_quant.api.gs.data import QueryType, GsDataApi
+from gs_quant.api.gs.data import GsDataApi, QueryType
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.common import AssetClass, AssetType, PricingLocation
 from gs_quant.data import DataContext, Dataset
 from gs_quant.errors import MqValueError
-from gs_quant.markets.securities import AssetIdentifier, Asset, SecurityMaster
-from gs_quant.timeseries import ASSET_SPEC, plot_measure, MeasureDependency, FXSpotCarry
-from gs_quant.timeseries import ExtendedSeries, measures_rates as tm_rates
+from gs_quant.markets.securities import Asset, AssetIdentifier, SecurityMaster
+from gs_quant.timeseries import (
+    ASSET_SPEC,
+    ExtendedSeries,
+    FXSpotCarry,
+    MeasureDependency,
+    measures_rates as tm_rates,
+    plot_measure,
+)
 from gs_quant.timeseries.measures import (
+    GENERIC_DATE,
     _asset_from_spec,
-    _market_data_timed,
     _cross_stored_direction_helper,
+    _market_data_timed,
     _preprocess_implied_vol_strikes_fx,
     _range_from_pricing_date,
     _tenor_month_to_year,
-    GENERIC_DATE,
 )
 from gs_quant.timeseries.measures_helper import VolReference
 
@@ -1258,7 +1264,7 @@ def spot_carry(
     ds = Dataset(dataset_ids[0])
     location = pricing_location if pricing_location else PricingLocation.NYC
     start, end = DataContext.current.start_date, DataContext.current.end_date
-    mq_df = ds.get_data(asset_id=mqid, start=start, end=end, pricingLocation=location.value)
+    mq_df = ds.get_data(assetId=mqid, start=start, end=end, pricingLocation=location.value)
     if mq_df.empty:
         return pd.Series(dtype=float)
     mq_df = mq_df.reset_index()

@@ -163,11 +163,20 @@ from gs_quant.markets import PricingContext, LiveMarket
 from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import DollarPrice
 
-portfolio = Portfolio([
-    FXOption(pair='EURUSD', expiration_date='3m', option_type='Call',
-             strike_price='ATMF', notional_amount=10e6, premium=0, name='EUR Call'),
-    FXForward(pair='USDJPY', settlement_date='6m', notional_amount=10e6, name='JPY Fwd'),
-])
+portfolio = Portfolio(
+    [
+        FXOption(
+            pair='EURUSD',
+            expiration_date='3m',
+            option_type='Call',
+            strike_price='ATMF',
+            notional_amount=10e6,
+            premium=0,
+            name='EUR Call',
+        ),
+        FXForward(pair='USDJPY', settlement_date='6m', notional_amount=10e6, name='JPY Fwd'),
+    ]
+)
 
 with PricingContext(market=LiveMarket()):
     result = portfolio.calc(DollarPrice)

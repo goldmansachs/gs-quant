@@ -14,9 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import List, Dict
+from typing import Dict, List
 
-from gs_quant.analytics.datagrid.data_row import RowSeparator, DataRow, ROW_SEPARATOR
+from gs_quant.analytics.datagrid.data_row import ROW_SEPARATOR, DataRow, RowSeparator
 
 
 def row_from_dict(row: Dict, reference_list: List):

@@ -23,9 +23,10 @@ import numpy as np
 import pandas as pd
 
 from gs_quant.datetime import relative_date_add
-from . import align
-from .helper import plot_function, Window, Interpolate
+
 from ..errors import MqValueError
+from . import align
+from .helper import Interpolate, Window, plot_function
 
 """
 Timeseries analysis library contains functions used to analyze properties of timeseries, including laging, differencing,

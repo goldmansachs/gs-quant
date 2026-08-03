@@ -18,7 +18,8 @@ import datetime as dt
 import re
 import webbrowser
 from enum import Enum
-from typing import Iterable, Optional, Union, List, Dict, Callable
+from functools import partial
+from typing import Callable, Dict, Iterable, List, Optional, Union
 from urllib.parse import quote
 
 import inflection
@@ -29,20 +30,19 @@ from pydash import camel_case, snake_case
 from gs_quant.api.data import DataApi
 from gs_quant.api.gs.users import GsUsersApi
 from gs_quant.data.fields import Fields
+from gs_quant.data.utilities import Utilities
 from gs_quant.errors import MqValueError
 from gs_quant.session import GsSession
-from functools import partial
-from gs_quant.data.utilities import Utilities
-from gs_quant.tracing import Tracer, tag_row_count, tag_dataset_id
 from gs_quant.target.data import (
-    DataSetEntity,
-    DataSetParameters,
     DataSetDimensions,
-    FieldColumnPair,
+    DataSetEntity,
     DataSetFieldEntity,
-    DBConfig,
+    DataSetParameters,
     DataSetType,
+    DBConfig,
+    FieldColumnPair,
 )
+from gs_quant.tracing import Tracer, tag_dataset_id, tag_row_count
 
 
 class InvalidInputException(Exception):

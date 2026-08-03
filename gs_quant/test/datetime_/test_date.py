@@ -17,8 +17,9 @@ under the License.
 import datetime as dt
 
 from pytest import approx
-from gs_quant.datetime import DayCountConvention, day_count_fraction, has_feb_29, today, PaymentFrequency
+
 from gs_quant.common import PricingLocation
+from gs_quant.datetime import DayCountConvention, PaymentFrequency, day_count_fraction, has_feb_29, today
 
 
 def test_has_feb_29():

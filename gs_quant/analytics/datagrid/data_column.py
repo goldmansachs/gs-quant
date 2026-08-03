@@ -14,8 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from dataclasses import dataclass, asdict, fields, field
+from dataclasses import asdict, dataclass, field, fields
 from typing import Dict, List, Union
+
 from gs_quant.analytics.core.processor import BaseProcessor
 
 DEFAULT_WIDTH = 100

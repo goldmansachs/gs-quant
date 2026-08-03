@@ -14,30 +14,30 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 from unittest import mock
 
-import datetime as dt
 import pandas as pd
 
-from gs_quant.datetime.time import to_zulu_string
 import gs_quant.risk as risk
 from gs_quant.api.gs.risk import GsRiskApi
 from gs_quant.base import Priceable
 from gs_quant.common import AssetClass
+from gs_quant.datetime.time import to_zulu_string
 from gs_quant.instrument import (
     CommodSwap,
     EqForward,
     EqOption,
     FXOption,
     IRBasisSwap,
-    IRSwap,
-    IRSwaption,
     IRCap,
     IRFloor,
+    IRSwap,
+    IRSwaption,
 )
 from gs_quant.markets import PricingContext
 from gs_quant.session import Environment, GsSession
-from gs_quant.target.risk import PricingDateAndMarketDataAsOf, RiskPosition, RiskRequestParameters, OptimizationRequest
+from gs_quant.target.risk import OptimizationRequest, PricingDateAndMarketDataAsOf, RiskPosition, RiskRequestParameters
 
 priceables = (
     CommodSwap('Electricity', '1y'),

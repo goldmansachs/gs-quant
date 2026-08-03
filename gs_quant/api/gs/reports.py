@@ -18,13 +18,13 @@ import datetime as dt
 import logging
 import urllib.parse
 from enum import Enum
-from typing import Tuple, List, Dict
+from typing import Dict, List, Tuple
 
 import backoff
 
 from gs_quant.base import EnumBase
 from gs_quant.common import Currency, PositionTag
-from gs_quant.errors import MqTimeoutError, MqInternalServerError, MqRateLimitedError
+from gs_quant.errors import MqInternalServerError, MqRateLimitedError, MqTimeoutError
 from gs_quant.session import GsSession
 from gs_quant.target.reports import Report
 
@@ -230,10 +230,11 @@ class GsReportApi:
         )
 
         GsSession.current.api_version = "v2"
-        url = f'/factor/risk/{risk_report_id}/views?{query_string}'
-        response = GsSession.current.sync.get(url)
-        GsSession.current.api_version = "v1"
-        return response
+        try:
+            url = f'/factor/risk/{risk_report_id}/views?{query_string}'
+            return GsSession.current.sync.get(url)
+        finally:
+            GsSession.current.api_version = "v1"
 
     @classmethod
     def get_factor_risk_report_table(
@@ -247,23 +248,24 @@ class GsReportApi:
         end_date: dt.date = None,
     ) -> dict:
         GsSession.current.api_version = "v2"
-        url = f'/factor/risk/{risk_report_id}/tables?'
-        if mode is not None:
-            url += f'&mode={mode.value}'
-        if unit is not None:
-            url += f'&unit={unit}'
-        if currency is not None:
-            url += f'&currency={currency.value}'
-        if date is not None:
-            url += f'&date={date.strftime("%Y-%m-%d")}'
-        if start_date is not None:
-            url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
-        if end_date is not None:
-            url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
+        try:
+            url = f'/factor/risk/{risk_report_id}/tables?'
+            if mode is not None:
+                url += f'&mode={mode.value}'
+            if unit is not None:
+                url += f'&unit={unit}'
+            if currency is not None:
+                url += f'&currency={currency.value}'
+            if date is not None:
+                url += f'&date={date.strftime("%Y-%m-%d")}'
+            if start_date is not None:
+                url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
+            if end_date is not None:
+                url += f'&endDate={end_date.strftime("%Y-%m-%d")}'
 
-        response = GsSession.current.sync.get(url)
-        GsSession.current.api_version = "v1"
-        return response
+            return GsSession.current.sync.get(url)
+        finally:
+            GsSession.current.api_version = "v1"
 
     @classmethod
     def get_brinson_attribution_results(

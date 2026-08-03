@@ -40,7 +40,7 @@ The primary method. Returns a `pandas.DataFrame` with one row per data point.
 df = ds.get_data(
     start=dt.date(2025, 1, 2),
     end=dt.date(2025, 3, 19),
-    bbid=['EURUSD', 'USDJPY'],      # filter by symbol dimension — passed as kwargs
+    bbid=['EURUSD', 'USDJPY'],  # filter by symbol dimension — passed as kwargs
 )
 ```
 
@@ -66,9 +66,7 @@ df = ds.get_data(dt.date(2025, 1, 2), dt.date(2025, 3, 19), bbid='EURUSD')
 df = ds.get_data(dt.date(2025, 1, 2), dt.date(2025, 3, 19), bbid=['EURUSD', 'GBPUSD'])
 
 # Restrict to specific fields
-df = ds.get_data(dt.date(2025, 1, 2), dt.date(2025, 3, 19),
-                 bbid=['EURUSD'],
-                 fields=['impliedVolatility', 'tenor'])
+df = ds.get_data(dt.date(2025, 1, 2), dt.date(2025, 3, 19), bbid=['EURUSD'], fields=['impliedVolatility', 'tenor'])
 
 # Query specific dates rather than a range
 df = ds.get_data(dates=[dt.date(2025, 1, 15), dt.date(2025, 3, 19)], bbid=['EURUSD'])
@@ -116,6 +114,7 @@ For datasets with many assets or long date ranges, break queries into smaller ch
 ```python
 import pandas as pd
 
+
 def query_in_batches(dataset, ids, start, end, id_field='bbid', time_delta=dt.timedelta(days=30)):
     """Fetch data in time batches for a list of symbol IDs."""
     frames = []
@@ -126,6 +125,7 @@ def query_in_batches(dataset, ids, start, end, id_field='bbid', time_delta=dt.ti
         frames.append(df)
         batch_start = batch_end
     return pd.concat(frames) if frames else pd.DataFrame()
+
 
 ds = Dataset('EDRVOL_PERCENT_V1_STANDARD')
 coverage = ds.get_coverage()
@@ -144,7 +144,7 @@ data = [
     {'date': '2025-03-19', 'city': 'New York', 'maxTemperature': 18.0, 'minTemperature': 9.0},
 ]
 ds = Dataset('MY_CUSTOM_DATASET')
-ds.upload_data(data)                     # accepts list of dicts or a DataFrame
+ds.upload_data(data)  # accepts list of dicts or a DataFrame
 ```
 
 ## Common Pitfalls

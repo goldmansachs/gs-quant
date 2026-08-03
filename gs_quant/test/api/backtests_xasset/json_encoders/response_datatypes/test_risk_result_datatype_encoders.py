@@ -15,15 +15,16 @@ under the License.
 """
 
 import datetime as dt
+
 import numpy as np
 import pandas as pd
-from pandas._testing import assert_series_equal, assert_frame_equal  # noqa
+from pandas._testing import assert_frame_equal, assert_series_equal  # noqa
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import (
-    encode_series_result,
-    encode_dataframe_result,
-    decode_series_result,
     decode_dataframe_result,
+    decode_series_result,
+    encode_dataframe_result,
+    encode_series_result,
 )
 
 

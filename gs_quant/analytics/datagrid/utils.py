@@ -14,10 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from dataclasses import dataclass, fields
 import datetime as dt
+from dataclasses import dataclass, fields
 from enum import Enum
-from typing import Union, List
+from typing import List, Union
 
 
 def get_utc_now() -> str:

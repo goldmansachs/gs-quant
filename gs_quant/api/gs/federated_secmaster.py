@@ -14,14 +14,15 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
+import json
 from enum import Enum
-from gs_quant.target.secmaster import SecMasterAssetType
-from gs_quant.common import AssetType, AssetClass
-from typing import Union, Iterable, Dict, Optional
+from typing import Dict, Iterable, Optional, Union
+
+from gs_quant.common import AssetClass, AssetType
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.session import GsSession
-import json
-import datetime as dt
+from gs_quant.target.secmaster import SecMasterAssetType
 
 SECURITIES_FEDERATED = '/markets/securities/federated'
 

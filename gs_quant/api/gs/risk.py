@@ -21,11 +21,11 @@ import json
 import logging
 import math
 import os
+import re
 import sys
 import time
 from socket import gaierror
 from typing import Iterable, Optional, Union
-import re
 
 import msgpack
 from websockets import ConnectionClosed

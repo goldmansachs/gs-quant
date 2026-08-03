@@ -31,13 +31,18 @@ from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.portfolios import GsPortfolioApi
 from gs_quant.base import InstrumentBase
 from gs_quant.common import RiskMeasure, RiskPosition
-from gs_quant.instrument import Instrument, AssetType
-from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PricingContext, PositionContext
+from gs_quant.instrument import AssetType, Instrument
+from gs_quant.markets import HistoricalPricingContext, OverlayMarket, PositionContext, PricingContext
 from gs_quant.priceable import PriceableImpl
 from gs_quant.risk import ResolvedInstrumentValues
-from gs_quant.risk.results import CompositeResultFuture, PortfolioRiskResult, PortfolioPath, PricingFuture
-from gs_quant.target.portfolios import Portfolio as MarqueePortfolio
-from gs_quant.target.portfolios import Position, PositionSet, RiskRequest, PricingDateAndMarketDataAsOf
+from gs_quant.risk.results import CompositeResultFuture, PortfolioPath, PortfolioRiskResult, PricingFuture
+from gs_quant.target.portfolios import (
+    Portfolio as MarqueePortfolio,
+    Position,
+    PositionSet,
+    PricingDateAndMarketDataAsOf,
+    RiskRequest,
+)
 
 _logger = logging.getLogger(__name__)
 

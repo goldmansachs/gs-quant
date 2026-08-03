@@ -14,20 +14,19 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import datetime as dt
-
 import calendar
+import datetime as dt
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
-from dateutil.relativedelta import relativedelta, FR, SA, SU, TH, TU, WE, MO
 import numpy as np
 import pandas as pd
+from dateutil.relativedelta import FR, MO, SA, SU, TH, TU, WE, relativedelta
 
+from gs_quant.common import Currency
 from gs_quant.datetime.gscalendar import GsCalendar
 from gs_quant.markets.securities import ExchangeCode
-from gs_quant.common import Currency
 
 _logger = logging.getLogger(__name__)
 

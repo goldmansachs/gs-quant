@@ -19,24 +19,23 @@ import logging
 import traceback
 from contextlib import ContextDecorator
 from enum import Enum
-from typing import Tuple, Optional, Sequence, Mapping, Union, Callable
+from typing import Callable, Mapping, Optional, Sequence, Tuple, Union
 
 import pandas as pd
-from opentelemetry import trace, context
+from opentelemetry import context, trace
 from opentelemetry.context import Context
 from opentelemetry.propagate import extract, inject, set_global_textmap
 from opentelemetry.propagators.textmap import TextMapPropagator
 from opentelemetry.sdk.trace import (
-    TracerProvider,
-    SynchronousMultiSpanProcessor,
+    Event,
     ReadableSpan,
     Span,
-    Event,
     SpanProcessor,
+    SynchronousMultiSpanProcessor,
+    TracerProvider,
 )
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor, SpanExporter
-from opentelemetry.trace import Tracer as OtelTracer, SpanContext, INVALID_SPAN
-from opentelemetry.trace import format_trace_id, format_span_id
+from opentelemetry.trace import INVALID_SPAN, SpanContext, Tracer as OtelTracer, format_span_id, format_trace_id
 
 from gs_quant.errors import MqWrappedError
 
@@ -705,8 +704,8 @@ try:
     import gs_quant_internal.tracing.jupyter  # noqa
 except ImportError:
     try:
-        from IPython.core.magic import register_cell_magic
         from IPython import get_ipython
+        from IPython.core.magic import register_cell_magic
 
         @register_cell_magic("trace")
         def trace_ipython_cell(line, cell):

@@ -16,7 +16,7 @@ under the License.
 
 import numpy as np
 
-from gs_quant.datetime import time_difference_as_string, SECS_IN_YEAR
+from gs_quant.datetime import SECS_IN_YEAR, time_difference_as_string
 
 
 def test_time_difference_as_string():

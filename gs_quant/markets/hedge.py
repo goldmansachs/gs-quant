@@ -18,7 +18,7 @@ import datetime as dt
 import logging
 from collections import defaultdict
 from enum import Enum
-from typing import Union, List, Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -29,7 +29,7 @@ from gs_quant.api.gs.hedges import GsHedgeApi
 from gs_quant.errors import MqValueError
 from gs_quant.markets.position_set import PositionSet
 from gs_quant.session import GsSession
-from gs_quant.target.hedge import HedgeObjective, CorporateActionsTypes
+from gs_quant.target.hedge import CorporateActionsTypes, HedgeObjective
 
 _logger = logging.getLogger(__name__)
 

@@ -14,15 +14,14 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import datetime as dt
 from collections.abc import Iterable
-from typing import Tuple, Union, Sequence
+from typing import Sequence, Tuple, Union
 
+from gs_quant.common import TimeFilter
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.session import GsSession
 from gs_quant.target.charts import Chart, ChartShare
-import datetime as dt
-
-from gs_quant.common import TimeFilter
 
 
 class GsPlotApi:

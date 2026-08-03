@@ -14,8 +14,9 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from gs_quant.instrument import Instrument, IRSwap
 import datetime as dt
+
+from gs_quant.instrument import Instrument, IRSwap
 
 
 def test_from_dict():

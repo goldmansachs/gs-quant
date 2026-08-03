@@ -16,7 +16,7 @@ under the License.
 
 import pytest
 
-from gs_quant.analytics.workspaces import PlotComponent, WorkspaceRow, Workspace, WorkspaceColumn
+from gs_quant.analytics.workspaces import PlotComponent, Workspace, WorkspaceColumn, WorkspaceRow
 
 
 def test_layout_creation():

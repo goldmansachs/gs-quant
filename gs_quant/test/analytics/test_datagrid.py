@@ -17,12 +17,12 @@ under the License.
 import datetime as dt
 
 import pytest
-from gs_quant.session import GsSession, Environment
 
-from gs_quant.analytics.datagrid import DataGrid, DataColumn, DataRow
-from gs_quant.analytics.processors import EntityProcessor, ChangeProcessor, AppendProcessor
-from gs_quant.data import DataCoordinate, DataMeasure, DataFrequency
+from gs_quant.analytics.datagrid import DataColumn, DataGrid, DataRow
+from gs_quant.analytics.processors import AppendProcessor, ChangeProcessor, EntityProcessor
+from gs_quant.data import DataCoordinate, DataFrequency, DataMeasure
 from gs_quant.datetime.relative_date import RelativeDate
+from gs_quant.session import Environment, GsSession
 from gs_quant.test.utils.datagrid_test_utils import get_test_entity
 
 

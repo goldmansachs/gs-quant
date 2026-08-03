@@ -16,10 +16,11 @@ under the License.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from dataclasses_json import dataclass_json
-from typing import Generic, Callable, Sequence, Any, TypeVar, Iterable, Union, Optional
+from typing import Any, Callable, Generic, Iterable, Optional, Sequence, TypeVar, Union
 
-from gs_quant.risk.core import ResultType, DataFrameWithInfo, SeriesWithInfo, FloatWithInfo
+from dataclasses_json import dataclass_json
+
+from gs_quant.risk.core import DataFrameWithInfo, FloatWithInfo, ResultType, SeriesWithInfo
 
 _InputT = TypeVar('_InputT')
 _ResultT = TypeVar('_ResultT')

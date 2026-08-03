@@ -28,17 +28,17 @@ from gs_quant.data import DataContext
 from gs_quant.errors import MqValueError
 from gs_quant.markets.index import Index
 from gs_quant.timeseries.measures_factset import (
+    EstimateBasis,
     EstimateItem,
     EstimateStatistic,
-    EstimateBasis,
-    FiscalPeriod,
-    FundamentalMetric,
-    FundamentalFormat,
-    FundamentalBasis,
-    RatingType,
-    GIREstimateItem,
-    GIREstimateBasis,
     EVItem,
+    FiscalPeriod,
+    FundamentalBasis,
+    FundamentalFormat,
+    FundamentalMetric,
+    GIREstimateBasis,
+    GIREstimateItem,
+    RatingType,
 )
 
 _index = [pd.Timestamp('2021-03-30')]

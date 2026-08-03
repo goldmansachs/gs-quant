@@ -14,10 +14,11 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from aenum import Enum, extend_enum
-from typing import Optional
-from dataclasses_json import LetterCase, dataclass_json
 from dataclasses import dataclass, field
+from typing import Optional
+
+from aenum import Enum, extend_enum
+from dataclasses_json import LetterCase, dataclass_json
 
 
 class DataMeasure(Enum):

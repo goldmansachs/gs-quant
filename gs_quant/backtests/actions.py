@@ -17,25 +17,24 @@ under the License.
 import datetime as dt
 import warnings
 from collections import namedtuple
-from dataclasses import field, dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Iterable, Union, Callable
-from typing import TypeVar, ClassVar
+from typing import Callable, ClassVar, Iterable, List, Optional, TypeVar, Union
 
 from dataclasses_json import config, dataclass_json
 
 from gs_quant.backtests.backtest_objects import ConstantTransactionModel, TransactionModel
-from gs_quant.backtests.backtest_utils import make_list, CalcType, CustomDuration, encode_duration, decode_duration
+from gs_quant.backtests.backtest_utils import CalcType, CustomDuration, decode_duration, encode_duration, make_list
 from gs_quant.base import Priceable, static_field
 from gs_quant.common import RiskMeasure
 from gs_quant.instrument import Instrument
 from gs_quant.json_convertors import (
-    decode_named_instrument,
     dc_decode,
-    encode_named_instrument,
-    decode_dict_date_key_or_float,
-    encode_callable,
     decode_callable,
+    decode_dict_date_key_or_float,
+    decode_named_instrument,
+    encode_callable,
+    encode_named_instrument,
 )
 from gs_quant.json_convertors_common import decode_risk_measure, encode_risk_measure
 from gs_quant.markets.portfolio import Portfolio

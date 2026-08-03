@@ -21,7 +21,7 @@ from typing import Mapping
 import cachetools
 from starlette.requests import Request
 
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 
 __session_cache = cachetools.LRUCache(50)
 

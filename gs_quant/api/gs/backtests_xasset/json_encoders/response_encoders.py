@@ -15,17 +15,17 @@ under the License.
 """
 
 import datetime as dt
-from typing import Dict, Any, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 import pandas as pd
 
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.generic_datatype_encoders import (
-    decode_inst_tuple,
     decode_inst,
+    decode_inst_tuple,
 )
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_datatype_encoders import (
-    encode_series_result,
     encode_dataframe_result,
+    encode_series_result,
 )
 from gs_quant.api.gs.backtests_xasset.json_encoders.response_datatypes.risk_result_encoders import (
     decode_risk_result,
@@ -35,7 +35,7 @@ from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes impo
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import RiskResultWithData
 from gs_quant.common import Currency, CurrencyName, RiskMeasure
 from gs_quant.json_convertors import encode_callable
-from gs_quant.json_convertors_common import encode_risk_measure, decode_risk_measure
+from gs_quant.json_convertors_common import decode_risk_measure, encode_risk_measure
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.backtests import FlowVolBacktestMeasure
 

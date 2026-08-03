@@ -15,12 +15,12 @@ under the License.
 """
 
 import logging
-from typing import List, Dict
+from typing import Dict, List
 
-from gs_quant.analytics.common import TYPE, DATA_ROW, PROCESSOR, REFERENCE, PARAMETER, ENTITY_ID, ENTITY_TYPE
+from gs_quant.analytics.common import DATA_ROW, ENTITY_ID, ENTITY_TYPE, PARAMETER, PROCESSOR, REFERENCE, TYPE
 from gs_quant.datetime.relative_date import RelativeDate
 from gs_quant.entities.entity import Entity
-from gs_quant.errors import MqValueError, MqRequestError
+from gs_quant.errors import MqRequestError, MqValueError
 
 _logger = logging.getLogger(__name__)
 

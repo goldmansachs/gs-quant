@@ -15,20 +15,21 @@ under the License.
 """
 
 import dataclasses
+
 import pytest
 
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
-    Transaction,
     AdditionalResults,
-    DateConfig,
-    Trade,
+    AggregateCostModel,
     Configuration,
-    TransactionCostConfig,
+    CostAggregationType,
+    DateConfig,
     FixedCostModel,
     ScaledCostModel,
+    Trade,
+    Transaction,
+    TransactionCostConfig,
     TransactionCostScalingType,
-    AggregateCostModel,
-    CostAggregationType,
 )
 
 

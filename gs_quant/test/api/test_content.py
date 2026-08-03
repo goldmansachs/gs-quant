@@ -20,7 +20,7 @@ from unittest import mock
 import pytest
 
 from gs_quant.api.gs.content import GsContentApi, OrderBy
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 from gs_quant.target.content import GetManyContentsResponse
 from gs_quant.test.fixtures.content import ContentFixtures
 

@@ -19,13 +19,13 @@ import json
 import uuid
 from abc import ABCMeta
 from enum import Enum
-from typing import Union, Dict, Tuple, Optional, List
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
-from .core import DataContext, DataFrequency, DataAggregationOperator
+from .core import DataAggregationOperator, DataContext, DataFrequency
 from .dataset import Dataset
-from .fields import DataMeasure, DataDimension
+from .fields import DataDimension, DataMeasure
 
 DataDimensions = Dict[Union[DataDimension, str], Union[str, float]]
 DateOrDatetime = Union[dt.date, dt.datetime]

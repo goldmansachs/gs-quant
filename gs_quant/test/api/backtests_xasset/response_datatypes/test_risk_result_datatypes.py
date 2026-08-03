@@ -19,11 +19,11 @@ import dataclasses
 import pytest
 
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import (
-    RiskResultWithData,
     FloatWithData,
+    MatrixWithData,
+    RiskResultWithData,
     StringWithData,
     VectorWithData,
-    MatrixWithData,
 )
 
 

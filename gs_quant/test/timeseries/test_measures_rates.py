@@ -26,15 +26,15 @@ from testfixtures.mock import Mock
 
 import gs_quant.timeseries.measures as tm
 import gs_quant.timeseries.measures_rates as tm_rates
-from gs_quant.api.gs.assets import GsTemporalXRef, GsAssetApi
+from gs_quant.api.gs.assets import GsAssetApi, GsTemporalXRef
 from gs_quant.api.gs.data import MarketDataResponseFrame, QueryType
 from gs_quant.common import PricingLocation, XRef
-from gs_quant.data import Fields, Dataset
+from gs_quant.data import Dataset, Fields
 from gs_quant.data.core import DataContext
-from gs_quant.errors import MqValueError, MqError
+from gs_quant.errors import MqError, MqValueError
 from gs_quant.markets import PricingContext
 from gs_quant.markets.securities import Cross, Currency
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 from gs_quant.test.timeseries.test_measures import (
     _test_datasets,
     map_identifiers_default_mocker,
@@ -42,18 +42,18 @@ from gs_quant.test.timeseries.test_measures import (
 )
 from gs_quant.test.timeseries.utils import mock_request
 from gs_quant.timeseries import (
-    TdapiRatesDefaultsProvider,
     SWAPTION_DEFAULTS,
     CurrencyEnum,
-    SecurityMaster,
     ExtendedSeries,
+    SecurityMaster,
+    TdapiRatesDefaultsProvider,
 )
 from gs_quant.timeseries.measures_rates import (
-    _swaption_build_asset_query,
-    _currency_to_tdapi_swaption_rate_asset,
     _check_strike_reference,
-    _pricing_location_normalized,
+    _currency_to_tdapi_swaption_rate_asset,
     _default_pricing_location,
+    _pricing_location_normalized,
+    _swaption_build_asset_query,
 )
 
 _index = [pd.Timestamp('2019-01-01')]

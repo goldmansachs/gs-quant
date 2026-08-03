@@ -14,7 +14,8 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Callable, Any
+from typing import Any, Callable
+
 from fastmcp.tools import tool
 
 # Static registry - module-level dict that holds all registered tools

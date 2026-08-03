@@ -28,8 +28,8 @@ from gs_quant.common import (
     AssetClass,
     AssetType,
     Entitlements as TargetEntitlements,
-    PositionSet as TargetPositionSet,
     Position as TargetPosition,
+    PositionSet as TargetPositionSet,
     ReportParameters,
     XRef,
 )
@@ -38,8 +38,8 @@ from gs_quant.errors import MqError
 from gs_quant.markets.baskets import Basket, ErrorMessage
 from gs_quant.markets.indices_utils import ReturnType
 from gs_quant.markets.position_set import Position, PositionSet
-from gs_quant.session import GsSession, Environment
-from gs_quant.target.indices import CustomBasketsResponse, CustomBasketRiskParams
+from gs_quant.session import Environment, GsSession
+from gs_quant.target.indices import CustomBasketRiskParams, CustomBasketsResponse
 from gs_quant.target.reports import Report, User as TargetUser
 
 # Helper mock value constants

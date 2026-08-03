@@ -25,29 +25,29 @@ from pandas.testing import assert_series_equal
 from gs_quant.data import Dataset
 from gs_quant.datetime import DayCountConvention, GsCalendar
 from gs_quant.datetime.relative_date import RelativeDate
-from gs_quant.errors import MqValueError, MqTypeError
+from gs_quant.errors import MqTypeError, MqValueError
 from gs_quant.test.api.test_risk import set_session
 from gs_quant.timeseries import (
+    AggregateFunction,
+    AggregatePeriod,
     Interpolate,
     align,
-    interpolate,
-    value,
-    day,
-    weekday,
-    quarter,
-    year,
-    date_range,
-    day_count_fractions,
-    append,
-    prepend,
-    union,
-    bucketize,
-    AggregateFunction,
-    day_count,
     align_calendar,
-    AggregatePeriod,
-    month,
+    append,
+    bucketize,
+    date_range,
+    day,
+    day_count,
+    day_count_fractions,
     day_countdown,
+    interpolate,
+    month,
+    prepend,
+    quarter,
+    union,
+    value,
+    weekday,
+    year,
 )
 
 

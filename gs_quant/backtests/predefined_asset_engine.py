@@ -18,25 +18,24 @@ import datetime as dt
 from collections import deque
 from functools import reduce
 from itertools import compress
-from typing import Union, Tuple
+from typing import Tuple, Union
 
 import pandas as pd
 from pandas.tseries.offsets import BDay  # noqa
 from tqdm import tqdm
 
 from gs_quant.backtests import ValuationFixingType
-from gs_quant.backtests.action_handler import ActionHandlerBaseFactory, ActionHandler
+from gs_quant.backtests.action_handler import ActionHandler, ActionHandlerBaseFactory
 from gs_quant.backtests.actions import Action, AddTradeAction, AddTradeActionInfo
 from gs_quant.backtests.backtest_engine import BacktestBaseEngine
 from gs_quant.backtests.backtest_objects import PredefinedAssetBacktest
 from gs_quant.backtests.core import ValuationMethod
 from gs_quant.backtests.data_handler import DataHandler
 from gs_quant.backtests.data_sources import DataManager
-from gs_quant.backtests.event import ValuationEvent, OrderEvent, MarketEvent
+from gs_quant.backtests.event import MarketEvent, OrderEvent, ValuationEvent
 from gs_quant.backtests.execution_engine import SimulatedExecutionEngine
 from gs_quant.backtests.order import OrderAtMarket
-from gs_quant.datetime import is_business_day, prev_business_date, business_day_offset
-
+from gs_quant.datetime import business_day_offset, is_business_day, prev_business_date
 
 # Action Implementations
 

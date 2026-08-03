@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 from enum import Enum
 from functools import partial
-from typing import Union, Optional
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -25,7 +25,7 @@ from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.common import AssetClass, AssetType
 from gs_quant.data import DataContext, Dataset
 from gs_quant.errors import MqValueError
-from gs_quant.markets.securities import AssetIdentifier, Asset
+from gs_quant.markets.securities import Asset, AssetIdentifier
 from gs_quant.timeseries import RelativeDate
 from gs_quant.timeseries.helper import FREQ_DAY, plot_measure
 from gs_quant.timeseries.measures import ExtendedSeries

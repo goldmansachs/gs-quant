@@ -20,19 +20,19 @@ from typing import Any, Type
 import pandas as pd
 
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result import (
-    RiskResultsByDate,
     RefType,
-    RiskResultsError,
     RiskResults,
+    RiskResultsByDate,
+    RiskResultsError,
 )
 from gs_quant.api.gs.backtests_xasset.response_datatypes.risk_result_datatypes import (
-    FloatWithData,
-    StringWithData,
-    VectorWithData,
-    MatrixWithData,
-    RiskResultWithData,
     DefnValuesWithData,
     DictsWithData,
+    FloatWithData,
+    MatrixWithData,
+    RiskResultWithData,
+    StringWithData,
+    VectorWithData,
 )
 from gs_quant.priceable import PriceableImpl
 

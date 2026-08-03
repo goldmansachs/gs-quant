@@ -37,12 +37,12 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 import pandas as pd
 
-from gs_quant.timeseries._event_study.event_study_processing import normalize_series
+from gs_quant.errors import MqValueError
 from gs_quant.timeseries._event_study.event_study_frame import build_event_study_frame
+from gs_quant.timeseries._event_study.event_study_processing import normalize_series
 from gs_quant.timeseries.analysis import LagMode, lag
 from gs_quant.timeseries.econometrics import returns
 from gs_quant.timeseries.helper import Returns
-from gs_quant.errors import MqValueError
 
 
 class EventDirection(Enum):

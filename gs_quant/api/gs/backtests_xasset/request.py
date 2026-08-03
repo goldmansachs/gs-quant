@@ -16,31 +16,31 @@ under the License.
 
 import datetime as dt
 from dataclasses import dataclass, field
-from typing import Optional, Union, Tuple
+from typing import Optional, Tuple, Union
 
-from dataclasses_json import dataclass_json, LetterCase, config
+from dataclasses_json import LetterCase, config, dataclass_json
 
-from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import legs_encoder, legs_decoder, enum_decode
+from gs_quant.api.gs.backtests_xasset.json_encoders.request_encoders import enum_decode, legs_decoder, legs_encoder
 from gs_quant.api.gs.backtests_xasset.response_datatypes.backtest_datatypes import (
-    DateConfig,
-    Trade,
     Configuration,
-    TransactionCostConfig,
-    StrategyHedge,
-    RiskRequestParameters,
+    DateConfig,
     RiskProviderEnum,
+    RiskRequestParameters,
+    StrategyHedge,
+    Trade,
+    TransactionCostConfig,
 )
 from gs_quant.api.gs.backtests_xasset.response_datatypes.generic_backtest_datatypes import decode_strategy
 from gs_quant.base import exclude_none
 from gs_quant.common import RiskMeasure
 from gs_quant.json_convertors import (
-    decode_optional_date_or_time,
     decode_date_or_time_tuple,
+    decode_frequency,
+    decode_optional_date_or_time,
     encode_date_or_time_tuple,
     encode_frequency,
-    decode_frequency,
 )
-from gs_quant.json_convertors_common import encode_risk_measure_tuple, decode_risk_measure_tuple
+from gs_quant.json_convertors_common import decode_risk_measure_tuple, encode_risk_measure_tuple
 from gs_quant.priceable import PriceableImpl
 from gs_quant.target.backtests import FlowVolBacktestMeasure
 

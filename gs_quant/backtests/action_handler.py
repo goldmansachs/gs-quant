@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 from abc import abstractmethod
-from typing import Union, Iterable, Any, TypeVar
+from typing import Any, Iterable, TypeVar, Union
 
 from gs_quant.backtests.actions import TAction
 from gs_quant.backtests.backtest_objects import TBaseBacktest

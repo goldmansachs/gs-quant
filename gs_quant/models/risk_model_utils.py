@@ -17,18 +17,17 @@ under the License.
 import datetime as dt
 import logging
 import math
-import pydash
 import random
 from time import sleep
-from typing import List, Union, Tuple
+from typing import List, Tuple, Union
 
 import pandas as pd
+import pydash
 
 from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.risk_models import GsFactorRiskModelApi
 from gs_quant.errors import MqRequestError, MqValueError
-from gs_quant.target.risk_models import RiskModelData, RiskModelType as Type
-from gs_quant.target.risk_models import RiskModelDataMeasure as Measure
+from gs_quant.target.risk_models import RiskModelData, RiskModelDataMeasure as Measure, RiskModelType as Type
 
 
 def _map_measure_to_field_name(measure: Measure):

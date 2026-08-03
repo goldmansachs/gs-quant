@@ -22,12 +22,12 @@ import pandas as pd
 
 from gs_quant.api.gs.data import QueryType
 from gs_quant.common import AssetClass, AssetType
-from gs_quant.data import Dataset, DataContext
+from gs_quant.data import DataContext, Dataset
 from gs_quant.errors import MqValueError
 from gs_quant.markets.securities import Asset, AssetIdentifier
-from gs_quant.session import GsSession, Environment
+from gs_quant.session import Environment, GsSession
 from gs_quant.timeseries.helper import plot_measure
-from gs_quant.timeseries.measures import ExtendedSeries, ASSET_SPEC, _asset_from_spec, MeasureDependency
+from gs_quant.timeseries.measures import ASSET_SPEC, ExtendedSeries, MeasureDependency, _asset_from_spec
 
 _logger = logging.getLogger(__name__)
 
