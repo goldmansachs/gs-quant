@@ -16,13 +16,12 @@ under the License.
 
 import datetime as dt
 import math
-from typing import List
 
 import pandas as pd
 from pandas.tseries.offsets import BDay
 
 
-def _get_ppaa_batches(asset_count: pd.DataFrame, max_row_limit: int) -> List[List[dt.date]]:
+def _get_ppaa_batches(asset_count: pd.DataFrame, max_row_limit: int) -> list[list[dt.date]]:
     start_row = asset_count.iloc[0]
     end_row = asset_count.iloc[-1]
     avg_positions = start_row['assetCount'] + end_row['assetCount'] / 2
@@ -33,7 +32,7 @@ def _get_ppaa_batches(asset_count: pd.DataFrame, max_row_limit: int) -> List[Lis
     return _batch_dates(start_date, end_date, days_per_batch)
 
 
-def _batch_dates(start_date: dt.date, end_date: dt.date, batch_size: int) -> List[List[dt.date]]:
+def _batch_dates(start_date: dt.date, end_date: dt.date, batch_size: int) -> list[list[dt.date]]:
     if (start_date - end_date).days < batch_size:
         return [[start_date, end_date]]
     date_list = []

@@ -20,7 +20,7 @@ import logging
 from copy import deepcopy
 from enum import Enum
 from functools import wraps
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import pandas as pd
 from pydash import get, has, set_
@@ -287,7 +287,7 @@ class Basket(Asset, PositionedEntity):
         return response.as_dict()
 
     @_validate(ErrorMessage.UNINITIALIZED, ErrorMessage.NON_ADMIN)
-    def upload_position_history(self, position_sets: List[PositionSet]) -> dict:
+    def upload_position_history(self, position_sets: list[PositionSet]) -> dict:
         """
         Upload basket composition history
 
@@ -463,7 +463,7 @@ class Basket(Asset, PositionedEntity):
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
         end: dt.date = dt.date.today() + dt.timedelta(days=10),
-        ca_type: List[CorporateActionType] = CorporateActionType.to_list(),
+        ca_type: list[CorporateActionType] = CorporateActionType.to_list(),
     ) -> pd.DataFrame:
         """
         Retrieve corporate actions for a basket across a date range
@@ -503,7 +503,7 @@ class Basket(Asset, PositionedEntity):
         end: dt.date = dt.date.today(),
         period: DataMeasure = DataMeasure.ONE_YEAR.value,
         direction: DataMeasure = DataMeasure.FORWARD.value,
-        metrics: List[DataMeasure] = DataMeasure.list_fundamentals(),
+        metrics: list[DataMeasure] = DataMeasure.list_fundamentals(),
     ) -> pd.DataFrame:
         """
         Retrieve fundamentals data for a basket across a date range
@@ -602,7 +602,7 @@ class Basket(Asset, PositionedEntity):
         end: dt.date = dt.date.today(),
         position_type: PositionType = PositionType.CLOSE,
         source: str = "Basket",
-    ) -> List[PositionSet]:
+    ) -> list[PositionSet]:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
             if len(response) == 0:
@@ -1105,7 +1105,7 @@ class Basket(Asset, PositionedEntity):
         )
         return get(report, '0')
 
-    def __get_updates(self) -> Tuple[Optional[CustomBasketsEditInputs], Optional[CustomBasketsRebalanceInputs]]:
+    def __get_updates(self) -> tuple[Optional[CustomBasketsEditInputs], Optional[CustomBasketsRebalanceInputs]]:
         """Compares initial and current basket state to determine if updates require edit/rebalance"""
         edit_inputs, eligible_for_edit = {}, False
         rebal_inputs, eligible_for_rebal = {}, False

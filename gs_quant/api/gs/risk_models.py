@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import logging
 from enum import Enum
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 import backoff
 
@@ -64,16 +64,16 @@ class GsRiskModelApi:
     @classmethod
     def get_risk_models(
         cls,
-        ids: List[str] = None,
+        ids: list[str] = None,
         limit: int = None,
         offset: int = None,
-        terms: List[str] = None,
-        versions: List[str] = None,
-        vendors: List[str] = None,
-        names: List[str] = None,
-        types: List[str] = None,
-        coverages: List[str] = None,
-    ) -> Tuple[RiskModel, ...]:
+        terms: list[str] = None,
+        versions: list[str] = None,
+        vendors: list[str] = None,
+        names: list[str] = None,
+        types: list[str] = None,
+        coverages: list[str] = None,
+    ) -> tuple[RiskModel, ...]:
         url = '/risk/models?'
         if limit:
             url += f'&limit={limit}'
@@ -100,7 +100,7 @@ class GsRiskModelApi:
         return GsSession.current.sync.put(f'/risk/models/{model.id}', model, cls=RiskModel)
 
     @classmethod
-    def delete_risk_model(cls, model_id: str) -> Dict:
+    def delete_risk_model(cls, model_id: str) -> dict:
         return GsSession.current.sync.delete(f'/risk/models/{model_id}')
 
     @classmethod
@@ -118,7 +118,7 @@ class GsRiskModelApi:
     @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
     def get_risk_model_dates(
         cls, model_id: str, start_date: dt.date = None, end_date: dt.date = None, event_type: RiskModelEventType = None
-    ) -> List:
+    ) -> list:
         url = f'/risk/models/{model_id}/dates?'
         if start_date is not None:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
@@ -134,7 +134,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         super().__init__()
 
     @classmethod
-    def get_risk_model_factors(cls, model_id: str) -> Tuple[Factor, ...]:
+    def get_risk_model_factors(cls, model_id: str) -> tuple[Factor, ...]:
         return GsSession.current.sync.get(f'/risk/models/{model_id}/factors', cls=Factor)['results']
 
     @classmethod
@@ -151,7 +151,7 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         return GsSession.current.sync.put(url, factor, cls=Factor)
 
     @classmethod
-    def delete_risk_model_factor(cls, model_id: str, factor_id: str) -> Dict:
+    def delete_risk_model_factor(cls, model_id: str, factor_id: str) -> dict:
         return GsSession.current.sync.delete(f'/risk/models/{model_id}/factors/{factor_id}')
 
     @classmethod
@@ -162,11 +162,11 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         model_id: str,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        identifiers: List[str] = None,
+        identifiers: list[str] = None,
         include_performance_curve: bool = False,
-        factor_categories: List[str] = None,
-        names: List[str] = None,
-    ) -> List[Dict]:
+        factor_categories: list[str] = None,
+        names: list[str] = None,
+    ) -> list[dict]:
         url = f'/risk/models/{model_id}/factors/data?'
         if start_date is not None:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
@@ -192,11 +192,11 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         model_id: str,
         start_time: dt.datetime = None,
         end_time: dt.datetime = None,
-        factor_ids: List[str] = None,
-        factor_categories: List[str] = None,
-        factors: List[str] = None,
+        factor_ids: list[str] = None,
+        factor_categories: list[str] = None,
+        factors: list[str] = None,
         data_source: Union[IntradayFactorDataSource, str] = None,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         url = f'/risk/models/{model_id}/factors/data/intraday?'
         if start_time is not None:
             url += f'&startTime={start_time.strftime("%Y-%m-%dT%H:%M:%SZ")}'
@@ -216,8 +216,8 @@ class GsFactorRiskModelApi(GsRiskModelApi):
 
     @classmethod
     def get_risk_model_coverage(
-        cls, asset_ids: List[str] = None, as_of_date: dt.datetime = None, sort_by_term: RiskModelTerm = None
-    ) -> List[Dict]:
+        cls, asset_ids: list[str] = None, as_of_date: dt.datetime = None, sort_by_term: RiskModelTerm = None
+    ) -> list[dict]:
         query = {}
         if asset_ids is not None:
             query['assetIds'] = asset_ids
@@ -231,11 +231,12 @@ class GsFactorRiskModelApi(GsRiskModelApi):
     def upload_risk_model_data(
         cls,
         model_id: str,
-        model_data: Union[Dict, RiskModelData],
+        model_data: Union[dict, RiskModelData],
         partial_upload: bool = False,
         target_universe_size: float = None,
         final_upload: bool = None,
         aws_upload: bool = False,
+        asset_data_patches: bool = None,
     ) -> str:
         url = f'/risk/models/data/{model_id}'
         if partial_upload:
@@ -247,9 +248,16 @@ class GsFactorRiskModelApi(GsRiskModelApi):
                 url += f'&finalUpload={final_upload_flag}'
             if aws_upload:
                 url += '&awsUpload=true'
+            if asset_data_patches:
+                url += '&assetDataPatches=true'
         else:
+            params = []
             if aws_upload:
-                url += '?awsUpload=true'
+                params.append('awsUpload=true')
+            if asset_data_patches:
+                params.append('assetDataPatches=true')
+            if params:
+                url += '?' + '&'.join(params)
         return GsSession.current.sync.post(url, model_data, timeout=200)
 
     @classmethod
@@ -261,10 +269,10 @@ class GsFactorRiskModelApi(GsRiskModelApi):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: RiskModelDataAssetsRequest = None,
-        measures: List[RiskModelDataMeasure] = None,
+        measures: list[RiskModelDataMeasure] = None,
         factors: list = None,
         limit_factors: bool = None,
-    ) -> Dict:
+    ) -> dict:
         end_date = cls.get_risk_model_dates(model_id)[-1] if not end_date else end_date.strftime('%Y-%m-%d')
         query = {'startDate': start_date.strftime('%Y-%m-%d'), 'endDate': end_date}
         if assets is not None:

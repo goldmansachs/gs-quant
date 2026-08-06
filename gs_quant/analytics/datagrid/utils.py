@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 from dataclasses import dataclass, fields
 from enum import Enum
-from typing import List, Union
+from typing import Union
 
 
 def get_utc_now() -> str:
@@ -72,7 +72,7 @@ class DataGridSort:
 class DataGridFilter:
     columnName: str
     operation: FilterOperation
-    value: Union[float, str, List[float], List[str]]
+    value: Union[float, str, list[float], list[str]]
     condition: FilterCondition = FilterCondition.AND
 
     def __post_init__(self):

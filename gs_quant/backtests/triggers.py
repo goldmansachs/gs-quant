@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import ClassVar, Iterable, List, Optional, Union
+from typing import ClassVar, Iterable, Optional, Union
 
 from dataclasses_json import config, dataclass_json
 
@@ -56,7 +56,7 @@ class AggType(Enum):
 @dataclass_json
 @dataclass
 class TriggerRequirements:
-    __sub_classes: ClassVar[List[type]] = []
+    __sub_classes: ClassVar[list[type]] = []
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -475,7 +475,7 @@ class Trigger:
     actions: Union[Action, Iterable[Action]] = field(
         default=None, metadata=config(decoder=dc_decode(*Action.sub_classes(), allow_missing=True))
     )
-    __sub_classes: ClassVar[List[type]] = []
+    __sub_classes: ClassVar[list[type]] = []
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

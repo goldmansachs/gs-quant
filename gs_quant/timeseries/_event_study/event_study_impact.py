@@ -33,7 +33,7 @@ under the License.
 #     - forward-response metadata and summary assembly
 
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Optional, Sequence, Union
 
 import pandas as pd
 
@@ -171,7 +171,7 @@ def _normalize_calendar_alignment(
     raise MqValueError("calendar_alignment must be one of 'intersect', 'previous', 'next', or 'same'")
 
 
-def _normalize_response_horizons(response_horizons: Sequence[Union[int, str]]) -> List[Union[int, str]]:
+def _normalize_response_horizons(response_horizons: Sequence[Union[int, str]]) -> list[Union[int, str]]:
     """Normalize the requested response horizons into a concrete non-empty list.
 
     :param response_horizons: Sequence of integer or tenor-like forward horizons, or None.
@@ -232,7 +232,7 @@ def _map_event_dates_to_series(
     series: pd.Series,
     event_dates: Sequence[pd.Timestamp],
     how: CalendarAlignment,
-) -> List[pd.Timestamp]:
+) -> list[pd.Timestamp]:
     """Map detected event dates onto the calendar of a target response series.
 
     :param series: Response series whose index defines the target calendar.
@@ -243,7 +243,7 @@ def _map_event_dates_to_series(
     """
     series = normalize_series(series)
     index = series.index
-    resolved_dates: List[pd.Timestamp] = []
+    resolved_dates: list[pd.Timestamp] = []
 
     for event_date in event_dates:
         current = pd.Timestamp(event_date)
@@ -263,7 +263,7 @@ def _map_event_dates_to_series(
         else:
             raise MqValueError(f'Unsupported calendar alignment: {how}')
 
-    deduped: List[pd.Timestamp] = []
+    deduped: list[pd.Timestamp] = []
     seen = set()
     for resolved_date in resolved_dates:
         if resolved_date not in seen:
@@ -298,7 +298,7 @@ def _build_forward_response_metadata(
     response_horizons: Sequence[Union[int, str]],
     returns_type: Returns,
     response_anchor: int,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build per-horizon response samples and summary statistics.
 
     :param asset_series: Response asset series used to compute forward metrics.
@@ -309,8 +309,8 @@ def _build_forward_response_metadata(
     :param response_anchor: Optional forward shift applied before sampling event responses.
     :return: Dictionary containing per-horizon response DataFrames and summary statistics.
     """
-    forward_returns: Dict[str, pd.DataFrame] = {}
-    horizon_summary: Dict[str, Dict[str, Optional[float]]] = {}
+    forward_returns: dict[str, pd.DataFrame] = {}
+    horizon_summary: dict[str, dict[str, Optional[float]]] = {}
 
     for response_horizon in response_horizons:
         response_key = str(response_horizon)

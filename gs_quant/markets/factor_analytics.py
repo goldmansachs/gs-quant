@@ -15,7 +15,6 @@ under the License.
 """
 
 import logging
-from typing import Dict, List
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -45,7 +44,7 @@ class FactorAnalytics:
         self.currency = currency
         self.participation_rate = participation_rate
 
-    def get_factor_analysis(self, position_set: PositionSet) -> Dict:
+    def get_factor_analysis(self, position_set: PositionSet) -> dict:
         """
         Get style factor analysis for a position set using the liquidity endpoint.
         Returns risk metrics and style factor exposures.
@@ -130,7 +129,7 @@ class FactorAnalytics:
             _logger.error(f"Factor analysis failed: {str(e)}")
             raise
 
-    def convert_hedge_factor_exposures(self, style_factors: List) -> Dict:
+    def convert_hedge_factor_exposures(self, style_factors: list) -> dict:
         """
         Convert hedge result style factor exposures to factor analysis format.
         This allows reusing visualization methods with data from the hedge API.
@@ -153,7 +152,7 @@ class FactorAnalytics:
             'riskBuckets': [],
         }
 
-    def create_exposure_bar_chart(self, exposures: Dict[str, float], title: str, horizontal: bool = True) -> go.Figure:
+    def create_exposure_bar_chart(self, exposures: dict[str, float], title: str, horizontal: bool = True) -> go.Figure:
         """
         Create a bar chart for style factor exposures with color coding.
         Note: This method is intended for style factors only.
@@ -211,7 +210,7 @@ class FactorAnalytics:
         return fig
 
     def create_style_factor_chart(
-        self, factor_analysis: Dict, rows: int = None, title: str = "Style Factor Exposures"
+        self, factor_analysis: dict, rows: int = None, title: str = "Style Factor Exposures"
     ) -> go.Figure:
         """
         Create a bar chart showing positive and negative style factor exposures.
@@ -262,7 +261,7 @@ class FactorAnalytics:
 
         return self.create_exposure_bar_chart(selected_factors, subset_title, horizontal=True)
 
-    def create_exposure_summary_table(self, factor_analysis: Dict) -> pd.DataFrame:
+    def create_exposure_summary_table(self, factor_analysis: dict) -> pd.DataFrame:
         """
         Create a summary table of key portfolio metrics.
 
@@ -325,7 +324,7 @@ class FactorAnalytics:
         return fig
 
     def create_dynamic_performance_chart(
-        self, factor_analysis: Dict, title: str = "Portfolio Performance Metrics"
+        self, factor_analysis: dict, title: str = "Portfolio Performance Metrics"
     ) -> go.Figure:
         """
         Create a dynamic chart with toggleable performance metrics from timeseriesData.
@@ -442,7 +441,7 @@ class FactorAnalytics:
         return fig
 
     def create_factor_heatmap_comparison(
-        self, initial_analysis: Dict, hedged_analysis: Dict, title: str = "Style Factor Comparison: Initial vs Hedged"
+        self, initial_analysis: dict, hedged_analysis: dict, title: str = "Style Factor Comparison: Initial vs Hedged"
     ) -> go.Figure:
         """
         Create a grouped bar chart comparing style factor exposures.

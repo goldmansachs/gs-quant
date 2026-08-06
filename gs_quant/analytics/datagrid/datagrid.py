@@ -22,7 +22,7 @@ import webbrowser
 from collections import defaultdict
 from dataclasses import asdict
 from numbers import Number
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -68,7 +68,7 @@ from gs_quant.session import GsSession, OAuth2Session
 _logger = logging.getLogger(__name__)
 
 API = '/data/grids'
-DATAGRID_HEADERS: Dict[str, str] = {'Content-Type': 'application/json;charset=utf-8'}
+DATAGRID_HEADERS: dict[str, str] = {'Content-Type': 'application/json;charset=utf-8'}
 
 
 class DataGrid:
@@ -122,15 +122,15 @@ class DataGrid:
     def __init__(
         self,
         name: str,
-        rows: List[Union[DataRow, RowSeparator]],
-        columns: List[DataColumn],
+        rows: list[Union[DataRow, RowSeparator]],
+        columns: list[DataColumn],
         *,
         id_: str = None,
         entitlements: Union[Entitlements, Entitlements_] = None,
         polling_time: int = None,
-        sorts: Optional[List[DataGridSort]] = None,
-        filters: Optional[List[DataGridFilter]] = None,
-        multiColumnGroups: Optional[List[MultiColumnGroup]] = None,
+        sorts: Optional[list[DataGridSort]] = None,
+        filters: Optional[list[DataGridFilter]] = None,
+        multiColumnGroups: Optional[list[MultiColumnGroup]] = None,
         **kwargs,
     ):
         self.id_ = id_
@@ -145,18 +145,18 @@ class DataGrid:
 
         # store the graph, data queries to leaf processors and results
         self._primary_column_index: int = kwargs.get('primary_column_index', 0)
-        self._cells: List[DataCell] = []
-        self._data_queries: List[Union[DataQueryInfo, MeasureQueryInfo]] = []
-        self._entity_cells: List[DataCell] = []
-        self._coord_processor_cells: List[DataCell] = []
-        self._value_cells: List[DataCell] = []
-        self.entity_map: Dict[str, Entity] = {}
+        self._cells: list[DataCell] = []
+        self._data_queries: list[Union[DataQueryInfo, MeasureQueryInfo]] = []
+        self._entity_cells: list[DataCell] = []
+        self._coord_processor_cells: list[DataCell] = []
+        self._value_cells: list[DataCell] = []
+        self.entity_map: dict[str, Entity] = {}
 
         # RDate Mappings
-        self.rdate_entity_map: Dict[str, Set[Tuple]] = defaultdict(set)
-        self.rule_cache: Dict[str, dt.date] = {}
+        self.rdate_entity_map: dict[str, set[tuple]] = defaultdict(set)
+        self.rule_cache: dict[str, dt.date] = {}
 
-        self.results: List[List[DataCell]] = []
+        self.results: list[list[DataCell]] = []
         self.is_initialized: bool = False
         print(DATAGRID_HELP_MSG)
 
@@ -173,8 +173,8 @@ class DataGrid:
 
         Upon providing data to a leaf, the leaf processor is calculated and propagated up the graph to the cell level.
         """
-        all_queries: List[Union[DataQueryInfo, MeasureQueryInfo]] = []
-        entity_cells: List[DataCell] = []
+        all_queries: list[Union[DataQueryInfo, MeasureQueryInfo]] = []
+        entity_cells: list[DataCell] = []
         current_row_group = None
 
         # Loop over rows, columns
@@ -187,7 +187,7 @@ class DataGrid:
                 self.entity_map[entity.get_marquee_id()] = entity
             else:
                 self.entity_map[''] = entity
-            cells: List[DataCell] = []
+            cells: list[DataCell] = []
             row_overrides = row.overrides
 
             for column_index, column in enumerate(self.columns):
@@ -331,7 +331,7 @@ class DataGrid:
 
             cell.updated_time = get_utc_now()
 
-    def _resolve_rdates(self, rule_cache: Dict = None):
+    def _resolve_rdates(self, rule_cache: dict = None):
         # TODO: Thread this...
         rule_cache = rule_cache or {}
         # Default to no calendar for rdate for external and oauth
@@ -360,7 +360,7 @@ class DataGrid:
                     rule_cache[cache_key] = date_value
                 self.rule_cache[get_entity_rdate_key(entity_id, rule, base_date)] = date_value
 
-    def _resolve_queries(self, availability_cache: Dict = None) -> None:
+    def _resolve_queries(self, availability_cache: dict = None) -> None:
         """Resolves the dataset_id for each data query
         This is used to query data thereafter
         """
@@ -397,7 +397,7 @@ class DataGrid:
                     try:
                         raw_availability = availability_cache.get(entity_id)
                         if raw_availability is None:
-                            raw_availability: Dict = GsSession.current.sync.get(
+                            raw_availability: dict = GsSession.current.sync.get(
                                 f'/data/measures/{entity_id}/availability'
                             )
                             availability_cache[entity.get_marquee_id()] = raw_availability
@@ -589,7 +589,7 @@ class DataGrid:
         return self._post_process()
 
     @classmethod
-    def from_dict(cls, obj, reference_list: Optional[List] = None):
+    def from_dict(cls, obj, reference_list: Optional[list] = None):
         id_ = obj.get('id', None)
         name = obj.get('name', '')
         parameters = obj.get('parameters', {})
@@ -657,7 +657,7 @@ class DataGrid:
         """
         self._primary_column_index = index
 
-    def set_sorts(self, sorts: List[DataGridSort]):
+    def set_sorts(self, sorts: list[DataGridSort]):
         """
         Set the sorts parameter of the grid response
         :param sorts: value of grid sorts
@@ -677,7 +677,7 @@ class DataGrid:
         else:
             self.sorts.append(sort)
 
-    def set_filters(self, filters: List[DataGridFilter]):
+    def set_filters(self, filters: list[DataGridFilter]):
         """
         Set the filters parameter of the grid response
         :param filters: value of grid sorts
@@ -702,8 +702,8 @@ class DataGrid:
 
 
 def _get_overrides(
-    row_overrides: List[Override], column_name: str
-) -> Tuple[List[DimensionsOverride], Optional[ValueOverride], Optional[ProcessorOverride]]:
+    row_overrides: list[Override], column_name: str
+) -> tuple[list[DimensionsOverride], Optional[ValueOverride], Optional[ProcessorOverride]]:
     if not row_overrides:
         return [], None, None
 

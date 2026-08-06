@@ -18,7 +18,6 @@ import datetime as dt
 import logging
 import urllib.parse
 from enum import Enum
-from typing import Dict, List, Tuple
 
 import backoff
 
@@ -68,9 +67,9 @@ class GsReportApi:
         status: str = None,
         report_type: str = None,
         order_by: str = None,
-        tags: Dict = None,
+        tags: dict = None,
         scroll: str = None,
-    ) -> Tuple[Report, ...]:
+    ) -> tuple[Report, ...]:
         def build_url(scroll_id=None):
             url = f'/reports?limit={limit}'
             if scroll:
@@ -126,11 +125,11 @@ class GsReportApi:
         return GsSession.current.sync.post('/reports/{id}/schedule'.format(id=report_id), report_schedule_request)
 
     @classmethod
-    def get_report_status(cls, report_id: str) -> Tuple[dict, ...]:
+    def get_report_status(cls, report_id: str) -> tuple[dict, ...]:
         return GsSession.current.sync.get('/reports/{id}/status'.format(id=report_id))
 
     @classmethod
-    def get_report_jobs(cls, report_id: str) -> Tuple[dict, ...]:
+    def get_report_jobs(cls, report_id: str) -> tuple[dict, ...]:
         return GsSession.current.sync.get('/reports/{id}/jobs'.format(id=report_id))['results']
 
     @classmethod
@@ -162,7 +161,7 @@ class GsReportApi:
         return GsSession.current.sync.get(url)['data']
 
     @classmethod
-    def upload_custom_aum(cls, report_id: str, aum_data: List[dict], clear_existing_data: bool = None) -> dict:
+    def upload_custom_aum(cls, report_id: str, aum_data: list[dict], clear_existing_data: bool = None) -> dict:
         url = f'/reports/{report_id}/aum'
         payload = {'data': aum_data}
         if clear_existing_data:
@@ -176,8 +175,8 @@ class GsReportApi:
         cls,
         risk_report_id: str,
         view: str = None,
-        factors: List[str] = None,
-        factor_categories: List[str] = None,
+        factors: list[str] = None,
+        factor_categories: list[str] = None,
         currency: Currency = None,
         start_date: dt.date = None,
         end_date: dt.date = None,

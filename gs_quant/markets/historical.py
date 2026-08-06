@@ -15,7 +15,7 @@ under the License.
 """
 
 import datetime as dt
-from typing import Iterable, Optional, Tuple, Type, Union
+from typing import Iterable, Optional, Union
 
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.common import RiskMeasure
@@ -37,7 +37,7 @@ class HistoricalPricingContext(PricingContext):
         self,
         start: Optional[Union[int, dt.date]] = None,
         end: Optional[Union[int, dt.date]] = None,
-        calendars: Union[str, Tuple] = (),
+        calendars: Union[str, tuple] = (),
         dates: Optional[Iterable[dt.date]] = None,
         is_async: bool = None,
         is_batch: bool = None,
@@ -49,7 +49,7 @@ class HistoricalPricingContext(PricingContext):
         timeout: Optional[int] = None,
         show_progress: Optional[bool] = None,
         use_server_cache: Optional[bool] = None,
-        provider: Optional[Type[GenericRiskApi]] = None,
+        provider: Optional[type[GenericRiskApi]] = None,
     ):
         """
         A context for producing valuations over multiple dates
@@ -138,7 +138,7 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
         self,
         start: Optional[Union[int, dt.date]] = None,
         end: Optional[Union[int, dt.date]] = None,
-        calendars: Union[str, Tuple] = (),
+        calendars: Union[str, tuple] = (),
         dates: Optional[Iterable[dt.date]] = None,
         roll_to_fwds: bool = True,
         is_async: bool = None,
@@ -150,7 +150,7 @@ class BackToTheFuturePricingContext(HistoricalPricingContext):
         timeout: Optional[int] = None,
         show_progress: Optional[bool] = None,
         name: Optional[str] = None,
-        provider: Optional[Type[GenericRiskApi]] = None,
+        provider: Optional[type[GenericRiskApi]] = None,
     ):
         """
         A context for producing valuations over multiple dates

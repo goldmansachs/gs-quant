@@ -17,7 +17,7 @@ under the License.
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # ------------------------------------------------------------------
 # Enums
@@ -57,11 +57,11 @@ class DashboardEntitlements:
     :param admin: Tokens that grant admin access.
     """
 
-    view: List[str] = field(default_factory=list)
-    edit: List[str] = field(default_factory=list)
-    admin: List[str] = field(default_factory=list)
+    view: list[str] = field(default_factory=list)
+    edit: list[str] = field(default_factory=list)
+    admin: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {'view': self.view, 'edit': self.edit, 'admin': self.admin}
 
 
@@ -81,10 +81,10 @@ class RelatedLink:
     title: Optional[str] = None
     summary: Optional[str] = None
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    authors: Optional[List[str]] = None
+    authors: Optional[list[str]] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {'id': self.id, 'link': self.link}
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {'id': self.id, 'link': self.link}
         if self.title is not None:
             d['title'] = self.title
         if self.summary is not None:
@@ -114,13 +114,13 @@ class DashboardChild:
     entity_id: Optional[str] = None
     type: DashboardChildType = DashboardChildType.WIDGET
     rank: int = 1
-    parameters: List[Dict] = field(default_factory=list)
+    parameters: list[dict] = field(default_factory=list)
     configuration_id: Optional[str] = None
     contributed_by: Optional[str] = None
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
             'id': self.id,
             'type': self.type.value,
             'rank': self.rank,
@@ -150,12 +150,12 @@ class DashboardSection:
 
     title: str
     description: Optional[str] = None
-    children: List[str] = field(default_factory=list)
+    children: list[str] = field(default_factory=list)
     rank: Optional[int] = None
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {'id': self.id, 'title': self.title, 'children': self.children}
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {'id': self.id, 'title': self.title, 'children': self.children}
         if self.description is not None:
             d['description'] = self.description
         if self.rank is not None:
@@ -197,17 +197,17 @@ class DashboardCreateRequest:
     alias: Optional[str] = None
     namespace: Optional[str] = None
     description: Optional[str] = None
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     entitlements: Optional[DashboardEntitlements] = None
-    children: List[DashboardChild] = field(default_factory=list)
-    sections: List[DashboardSection] = field(default_factory=list)
-    related_links: List[RelatedLink] = field(default_factory=list)
+    children: list[DashboardChild] = field(default_factory=list)
+    sections: list[DashboardSection] = field(default_factory=list)
+    related_links: list[RelatedLink] = field(default_factory=list)
     copy_from_id: Optional[str] = None
     add_tags_from_children: bool = False
     is_requestable: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {
             'children': [c.to_dict() for c in self.children],
             'sections': [s.to_dict() for s in self.sections],
             'relatedLinks': [r.to_dict() for r in self.related_links],
@@ -255,16 +255,16 @@ class DashboardUpdateRequest:
     title: Optional[str] = None
     description: Optional[str] = None
     alias: Optional[str] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[list[str]] = None
     entitlements: Optional[DashboardEntitlements] = None
-    children: Optional[List[DashboardChild]] = None
-    sections: Optional[List[DashboardSection]] = None
-    related_links: Optional[List[RelatedLink]] = None
+    children: Optional[list[DashboardChild]] = None
+    sections: Optional[list[DashboardSection]] = None
+    related_links: Optional[list[RelatedLink]] = None
     add_tags_from_children: Optional[bool] = None
     is_requestable: Optional[bool] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {}
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {}
         if self.title is not None:
             d['title'] = self.title
         if self.description is not None:
@@ -306,8 +306,8 @@ class SectionWidgetEntry:
     widget_id: str
     configuration_id: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {'widgetId': self.widget_id}
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {'widgetId': self.widget_id}
         if self.configuration_id is not None:
             d['configurationId'] = self.configuration_id
         return d
@@ -326,11 +326,11 @@ class SectionChildrenRequest:
         to add. Widgets not yet on the dashboard are auto-added.
     """
 
-    child_ids: Optional[List[str]] = None
-    widgets: Optional[List[SectionWidgetEntry]] = None
+    child_ids: Optional[list[str]] = None
+    widgets: Optional[list[SectionWidgetEntry]] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        d: Dict[str, Any] = {}
+    def to_dict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {}
         if self.child_ids is not None:
             d['childIds'] = self.child_ids
         if self.widgets is not None:
@@ -350,7 +350,7 @@ class SectionCopyRequest:
     source_dashboard_id: str
     source_section_id: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'sourceDashboardId': self.source_dashboard_id,
             'sourceSectionId': self.source_section_id,
@@ -366,7 +366,7 @@ class SectionReorderRequest:
         All existing section IDs must be included exactly once.
     """
 
-    section_ids: List[str]
+    section_ids: list[str]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {'sectionIds': self.section_ids}

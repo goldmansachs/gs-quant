@@ -15,7 +15,6 @@ under the License.
 """
 
 import logging
-from typing import Dict, List
 
 import pandas as pd
 from pydash import get
@@ -84,7 +83,7 @@ class User:
 
     @classmethod
     def get_many(
-        cls, user_ids: List[str] = None, names: List[str] = None, emails: List[str] = None, companies: List[str] = None
+        cls, user_ids: list[str] = None, names: list[str] = None, emails: list[str] = None, companies: list[str] = None
     ):
         """
         Resolve requested parameters into a list of User objects
@@ -117,7 +116,7 @@ class User:
 
 
 class Group:
-    def __init__(self, group_id: str, name: str, entitlements=None, description: str = None, tags: List = None):
+    def __init__(self, group_id: str, name: str, entitlements=None, description: str = None, tags: list = None):
         self.__id = group_id
         self.__name = name
         self.__entitlements = entitlements
@@ -163,7 +162,7 @@ class Group:
         return self.__tags
 
     @tags.setter
-    def tags(self, value: List):
+    def tags(self, value: list):
         self.__tags = value
 
     @classmethod
@@ -189,7 +188,7 @@ class Group:
         )
 
     @classmethod
-    def get_many(cls, group_ids: List[str] = None, names: List[str] = None):
+    def get_many(cls, group_ids: list[str] = None, names: list[str] = None):
         """
         Resolve requested parameters into a list of Group objects
 
@@ -255,7 +254,7 @@ class Group:
         GsGroupsApi.delete_group(self.id)
         _logger.info(f'Group "{self.id}" deleted from Marquee.')
 
-    def get_users(self) -> List[User]:
+    def get_users(self) -> list[User]:
         """
         Get a list of all users in this group
         """
@@ -265,7 +264,7 @@ class Group:
             for user in users
         ]
 
-    def add_users(self, users: List[User]):
+    def add_users(self, users: list[User]):
         """
         Add a list of users to a group
         :param users: List of User objects
@@ -274,7 +273,7 @@ class Group:
         GsGroupsApi.add_users_to_group(group_id=self.id, user_ids=user_ids)
         _logger.info(f'Users added to "{self.name}".')
 
-    def delete_users(self, users: List[User]):
+    def delete_users(self, users: list[User]):
         """
         Remove a list of users to a group
         :param users: List of User objects
@@ -311,10 +310,10 @@ class Group:
 class EntitlementBlock:
     def __init__(
         self,
-        users: List[User] = None,
-        groups: List[Group] = None,
-        roles: List[str] = None,
-        unconverted_tokens: List[str] = None,
+        users: list[User] = None,
+        groups: list[Group] = None,
+        roles: list[str] = None,
+        unconverted_tokens: list[str] = None,
     ):
         self.__users = list(set(users)) if users else []
         self.__groups = list(set(groups)) if groups else []
@@ -335,7 +334,7 @@ class EntitlementBlock:
         return self.__users
 
     @users.setter
-    def users(self, value: List[User]):
+    def users(self, value: list[User]):
         self.__users = list(set(value))
 
     @property
@@ -343,7 +342,7 @@ class EntitlementBlock:
         return self.__groups
 
     @groups.setter
-    def groups(self, value: List[Group]):
+    def groups(self, value: list[Group]):
         self.__groups = list(set(value))
 
     @property
@@ -351,11 +350,11 @@ class EntitlementBlock:
         return self.__roles
 
     @roles.setter
-    def roles(self, value: List[str]):
+    def roles(self, value: list[str]):
         self.__roles = list(set(value))
 
     @property
-    def unconverted_tokens(self) -> List[str]:
+    def unconverted_tokens(self) -> list[str]:
         return self.__unconverted_tokens
 
     def is_empty(self):
@@ -547,7 +546,7 @@ class Entitlements:
             target_entitlements.view = self.view.to_list(include_all_tokens=include_all_tokens)
         return target_entitlements
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """
         Return Entitlement object as a dictionary
         :return: Entitlements as a dictionary
@@ -580,7 +579,7 @@ class Entitlements:
         return cls.from_dict(entitlements.as_dict())
 
     @classmethod
-    def from_dict(cls, entitlements: Dict):
+    def from_dict(cls, entitlements: dict):
         """
         Create an Entitlement object from a dictionary object
         :param entitlements: Entitlements as a dictionary object

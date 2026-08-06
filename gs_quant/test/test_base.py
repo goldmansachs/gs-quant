@@ -16,7 +16,7 @@ under the License.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import gs_quant.base as base
 from gs_quant.base import Base, EnumBase, handle_camel_case_args
@@ -33,10 +33,10 @@ class TestEnum(EnumBase, Enum):
 class BaseSubclass(Base):
     instance_attr: str = field(default=None)
     attr_1: Optional[str] = field(default=None)
-    attr_2: Tuple[Union[float, str], ...] = field(default=())
-    attr_3: Union[Tuple[Optional[str], ...], str] = field(default=None)
-    attr_4: Tuple[int] = field(default=None)
-    attr_5: Tuple[int, str] = field(default=None)
+    attr_2: tuple[Union[float, str], ...] = field(default=())
+    attr_3: Union[tuple[Optional[str], ...], str] = field(default=None)
+    attr_4: tuple[int] = field(default=None)
+    attr_5: tuple[int, str] = field(default=None)
     attr_6: TestEnum = field(default=None)
 
 

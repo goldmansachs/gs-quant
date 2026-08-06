@@ -18,7 +18,7 @@ import datetime as dt
 import logging
 from enum import Enum, EnumMeta
 from threading import Lock
-from typing import List, Tuple, Union
+from typing import Union
 
 import numpy as np
 from cachetools import TTLCache, cached
@@ -34,7 +34,7 @@ _calendar_cache = TTLCache(maxsize=128, ttl=600)
 _coverage_cache = TTLCache(maxsize=128, ttl=3600)
 
 
-def _split_list(items, predicate) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
+def _split_list(items, predicate) -> tuple[tuple[str, ...], tuple[str, ...]]:
     true_res = []
     false_res = []
     for item in items:
@@ -51,7 +51,7 @@ class GsCalendar:
     DATE_HIGH_LIMIT = dt.date(2052, 12, 31)
     DEFAULT_WEEK_MASK = '1111100'  # Default to Sat, Sun weekend days
 
-    def __init__(self, calendars: Union[str, PricingLocation, Currency, Tuple[str, ...]] = (), skip_valid_check=True):
+    def __init__(self, calendars: Union[str, PricingLocation, Currency, tuple[str, ...]] = (), skip_valid_check=True):
         if isinstance(calendars, (str, PricingLocation, Currency)):
             calendars = (calendars,)
         if calendars is None:
@@ -61,14 +61,14 @@ class GsCalendar:
         self._skip_valid_check = skip_valid_check
 
     @staticmethod
-    def get(calendars: Union[str, Tuple], skip_valid_check=True):
+    def get(calendars: Union[str, tuple], skip_valid_check=True):
         return GsCalendar(calendars, skip_valid_check)
 
     @staticmethod
     def reset():
         _calendar_cache.clear()
 
-    def calendars(self) -> Tuple:
+    def calendars(self) -> tuple:
         return self.__calendars
 
     @staticmethod
@@ -89,7 +89,7 @@ class GsCalendar:
         coverage = set() if coverage_df.empty else set(coverage_df[query_key])
         return coverage
 
-    def holidays_from_dataset(self, dataset: Dataset, query_key: str, query_values: Tuple[str, ...]) -> List[dt.date]:
+    def holidays_from_dataset(self, dataset: Dataset, query_key: str, query_values: tuple[str, ...]) -> list[dt.date]:
         if not len(query_values):
             return []
         coverage = self._get_dataset_coverage(dataset, query_key)
@@ -111,7 +111,7 @@ class GsCalendar:
 
     @property
     @cached(_calendar_cache, key=lambda s: hashkey(str(s.__calendars)), lock=Lock())
-    def holidays(self) -> Tuple[dt.date, ...]:
+    def holidays(self) -> tuple[dt.date, ...]:
         currencies, exchanges = _split_list(self.__calendars, GsCalendar.is_currency)
         holidays = self.holidays_from_dataset(Dataset(Dataset.GS.HOLIDAY), 'exchange', exchanges)
         holidays = holidays + self.holidays_from_dataset(Dataset(Dataset.GS.HOLIDAY_CURRENCY), 'currency', currencies)

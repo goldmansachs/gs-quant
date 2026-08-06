@@ -15,6 +15,7 @@ under the License.
 """
 
 import setuptools
+
 import versioneer
 
 setuptools.setup(

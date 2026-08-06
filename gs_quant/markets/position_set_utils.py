@@ -16,7 +16,6 @@ under the License.
 
 import datetime as dt
 import math
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -24,7 +23,7 @@ import pandas as pd
 from gs_quant.api.gs.assets import GsAssetApi
 
 
-def _get_asset_temporal_xrefs(position_sets_df: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
+def _get_asset_temporal_xrefs(position_sets_df: pd.DataFrame) -> tuple[pd.DataFrame, str]:
     """Helper function to get temporal xrefs for assets in a position set"""
     universe = list(set(position_sets_df['identifier'].tolist()))
     batches = np.array_split(universe, math.ceil(len(universe) / 500))

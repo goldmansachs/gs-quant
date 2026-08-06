@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 from copy import deepcopy
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Union
 
 import pandas as pd
 from pydash import get
@@ -75,7 +75,7 @@ class FactorShock:
 
 
 class FactorShockParameters:
-    def __init__(self, factor_shocks: List[FactorShock] = None, propagate_shocks: bool = None, risk_model: str = None):
+    def __init__(self, factor_shocks: list[FactorShock] = None, propagate_shocks: bool = None, risk_model: str = None):
         self.__factor_shocks = factor_shocks
         self.__propagate_shocks = propagate_shocks
         self.__risk_model = risk_model
@@ -99,18 +99,18 @@ class FactorShockParameters:
         )
 
     @property
-    def factor_shocks(self) -> List[FactorShock]:
+    def factor_shocks(self) -> list[FactorShock]:
         return self.__factor_shocks
 
     @factor_shocks.setter
-    def factor_shocks(self, factor_shocks: Union[List[FactorShock], Dict, pd.DataFrame]):
+    def factor_shocks(self, factor_shocks: Union[list[FactorShock], dict, pd.DataFrame]):
         if isinstance(factor_shocks, pd.DataFrame):
             factor_shocks_as_dict = factor_shocks.to_dict(orient='split')
             self.__factor_shocks = [
                 FactorShock(factor=f, shock=s)
                 for f, s in zip(factor_shocks_as_dict.get('columns'), factor_shocks_as_dict.get('data'))
             ]
-        elif isinstance(factor_shocks, Dict):
+        elif isinstance(factor_shocks, dict):
             self.__factor_shocks = [FactorShock(factor=k, shock=v) for k, v in factor_shocks.items()]
         else:
             self.__factor_shocks = factor_shocks
@@ -128,14 +128,14 @@ class FactorShockParameters:
         return self.__risk_model
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> 'FactorShockParameters':
+    def from_dict(cls, obj: dict) -> 'FactorShockParameters':
         return cls(
             factor_shocks=[FactorShock.from_dict(f_shock) for f_shock in obj.get('factorShocks')],
             risk_model=obj.get("riskModel"),
             propagate_shocks=obj.get("propagateShocks"),
         )
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "riskModel": self.risk_model,
             "propagateShocks": self.propagate_shocks,
@@ -174,13 +174,13 @@ class HistoricalSimulationParameters:
         self.__end_date = end_date
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> 'HistoricalSimulationParameters':
+    def from_dict(cls, obj: dict) -> 'HistoricalSimulationParameters':
         return cls(
             start_date=dt.datetime.strptime(obj.get('startDate'), "%Y-%m-%d").date(),
             end_date=dt.datetime.strptime(obj.get('endDate'), "%Y-%m-%d").date(),
         )
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {"startDate": self.start_date, "endDate": self.end_date}
 
 
@@ -194,11 +194,11 @@ class FactorScenario:
         self,
         name: str,
         type: Union[str, FactorScenarioType],
-        parameters: Union[Dict, HistoricalSimulationParameters, FactorShockParameters],
-        entitlements: Union[Dict, Entitlements] = None,
+        parameters: Union[dict, HistoricalSimulationParameters, FactorShockParameters],
+        entitlements: Union[dict, Entitlements] = None,
         id_: str = None,
         description: str = None,
-        tags: List[str] = None,
+        tags: list[str] = None,
     ):
         self.__id = id_
         self.__name = name
@@ -275,19 +275,19 @@ class FactorScenario:
         return self.__entitlements
 
     @entitlements.setter
-    def entitlements(self, entitlements: Union[Dict, Entitlements]):
+    def entitlements(self, entitlements: Union[dict, Entitlements]):
         self.__entitlements = entitlements
 
     @property
-    def tags(self) -> List[str]:
+    def tags(self) -> list[str]:
         return self.__tags
 
     @tags.setter
-    def tags(self, tags: List[str]):
+    def tags(self, tags: list[str]):
         self.__tags = tags
 
     @classmethod
-    def from_dict(cls, scenario_as_dict: Dict) -> 'FactorScenario':
+    def from_dict(cls, scenario_as_dict: dict) -> 'FactorScenario':
         scenario_data = {
             "name": scenario_as_dict.get('name'),
             "description": scenario_as_dict.get('description'),
@@ -349,18 +349,18 @@ class FactorScenario:
     @classmethod
     def get_many(
         cls,
-        ids: List[str] = None,
-        names: List[str] = None,
+        ids: list[str] = None,
+        names: list[str] = None,
         type: Union[str, FactorScenarioType] = None,
         risk_model: str = None,
-        shocked_factors: List[str] = None,
-        shocked_factor_categories: List[str] = None,
+        shocked_factors: list[str] = None,
+        shocked_factor_categories: list[str] = None,
         propagated_shocks: bool = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        tags: List[str] = None,
+        tags: list[str] = None,
         limit: int = 100,
-    ) -> List['FactorScenario']:
+    ) -> list['FactorScenario']:
         """
         Get many factor scenarios from Marquee
 

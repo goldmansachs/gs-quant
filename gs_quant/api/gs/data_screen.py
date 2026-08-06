@@ -15,7 +15,6 @@ under the License.
 """
 
 import logging
-from typing import Dict, Tuple
 
 from gs_quant.session import GsSession
 from gs_quant.target.data_screen import AnalyticsScreen, DataRow, FilterRequest
@@ -25,7 +24,7 @@ _logger = logging.getLogger(__name__)
 
 class GsDataScreenApi:
     @classmethod
-    def get_screens(cls) -> Tuple[AnalyticsScreen, ...]:
+    def get_screens(cls) -> tuple[AnalyticsScreen, ...]:
         """
         Retrieves screen information about all screens accessible to the current user.
 
@@ -45,7 +44,7 @@ class GsDataScreenApi:
         return GsSession.current.sync.get('/data/screens/{id}'.format(id=screen_id), cls=AnalyticsScreen)
 
     @classmethod
-    def get_column_info(cls, screen_id: str) -> Dict[str, Dict]:
+    def get_column_info(cls, screen_id: str) -> dict[str, dict]:
         """
         Retrieves information about each column in the screen with id corresponding to screen_id. This column
         information can be used to create filters on the screen.
@@ -85,7 +84,7 @@ class GsDataScreenApi:
         )
 
     @classmethod
-    def filter_screen(cls, screen_id: str, filter_request: FilterRequest) -> Tuple[DataRow, ...]:
+    def filter_screen(cls, screen_id: str, filter_request: FilterRequest) -> tuple[DataRow, ...]:
         """
         Returns filtered data from the screen associated with this screen_id. The filters applied to the data are
         contained in the filters parameter. Any filters previously applied to the relevant screen will be temporarily

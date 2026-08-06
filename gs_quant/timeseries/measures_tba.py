@@ -16,7 +16,7 @@ under the License.
 
 import logging
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional
 
 import pandas as pd
 
@@ -158,7 +158,7 @@ def _get_tba_prices(asset_name: str) -> pd.Series:
 )
 def cpn_swap(
     asset: Asset,
-    coupon: Union[int, float],
+    coupon: float,
     *,
     source: str = None,
     real_time: bool = False,
@@ -217,7 +217,7 @@ def cpn_swap(
 )
 def butterfly(
     asset: Asset,
-    coupon: Union[int, float],
+    coupon: float,
     *,
     source: str = None,
     real_time: bool = False,

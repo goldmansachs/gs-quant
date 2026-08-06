@@ -180,7 +180,7 @@ combine-as-imports = true
 # Pin an explicit rule selection so lint scope is deterministic across ruff versions.
 # Relying on the implicit default is fragile: stock ruff defaults to E/F, while the
 # internal-mirror ruff ships a much broader baked-in default.
-select = ["E4", "E7", "E9", "F", "I"]
+select = ["E4", "E7", "E9", "F", "I", "PIE808", "PYI041", "G201", "UP006"]
 # We add the tidy import selection to pickup banned-api
 extend-select = [
     "TID251", # see flake8-tidy-imports.banned-api below

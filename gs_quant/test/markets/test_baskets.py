@@ -15,7 +15,6 @@ under the License.
 """
 
 import datetime as dt
-from typing import Dict
 from unittest import mock
 
 import pytest
@@ -94,7 +93,7 @@ def mock_response(mocker, mock_object, mock_fn, mock_response):
         mocker.patch.object(mock_object, mock_fn, return_value=mock_response)
 
 
-def mock_basket_init(mocker, user: Dict, existing: bool = True):
+def mock_basket_init(mocker, user: dict, existing: bool = True):
     """Mock basket initialization helper"""
     if existing:
         mock_response(mocker, GsAssetApi, 'resolve_assets', resolved_asset)

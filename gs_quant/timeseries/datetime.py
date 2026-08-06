@@ -17,7 +17,7 @@
 import datetime as dt
 from enum import Enum
 from numbers import Real
-from typing import Any, List, Union
+from typing import Any, Union
 
 import numpy as np
 import pandas as pd
@@ -74,7 +74,7 @@ def __interpolate_step(x: pd.Series, dates: pd.Series = None) -> pd.Series:
 @plot_function
 def align(
     x: Union[pd.Series, Real], y: Union[pd.Series, Real], method: Interpolate = Interpolate.INTERSECT
-) -> Union[List[pd.Series], List[Real]]:
+) -> Union[list[pd.Series], list[Real]]:
     """
     Align dates of two series or scalars
 
@@ -150,7 +150,7 @@ def align(
 @plot_function
 def interpolate(
     x: pd.Series,
-    dates: Union[List[dt.date], List[dt.time], pd.Series] = None,
+    dates: Union[list[dt.date], list[dt.time], pd.Series] = None,
     method: Interpolate = Interpolate.INTERSECT,
 ) -> pd.Series:
     """
@@ -422,7 +422,7 @@ def weekday(x: pd.Series) -> pd.Series:
 
 @plot_function
 def day_count_fractions(
-    dates: Union[List[dt.date], pd.Series],
+    dates: Union[list[dt.date], pd.Series],
     convention: DayCountConvention = DayCountConvention.ACTUAL_360,
     frequency: PaymentFrequency = PaymentFrequency.MONTHLY,
 ) -> pd.Series:
@@ -542,7 +542,7 @@ def date_range(
 
 
 @plot_function
-def append(series: List[pd.Series]) -> pd.Series:
+def append(series: list[pd.Series]) -> pd.Series:
     """
     Append data series
 
@@ -578,7 +578,7 @@ def append(series: List[pd.Series]) -> pd.Series:
 
 
 @plot_function
-def prepend(x: List[pd.Series]) -> pd.Series:
+def prepend(x: list[pd.Series]) -> pd.Series:
     """
     Prepend data series
 
@@ -620,7 +620,7 @@ def prepend(x: List[pd.Series]) -> pd.Series:
 
 
 @plot_function
-def union(x: List[pd.Series]) -> pd.Series:
+def union(x: list[pd.Series]) -> pd.Series:
     """
     Fill in missing dates or times of one series with another
 

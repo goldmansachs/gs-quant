@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 from dataclasses_json import LetterCase, config, dataclass_json
 
@@ -131,14 +131,14 @@ class RiskRequest:
     frequency: Optional[Union[str, dt.timedelta]] = field(
         default=None, metadata=config(encoder=encode_frequency, decoder=decode_frequency, exclude=exclude_none)
     )
-    additional_dates: Optional[Tuple[Union[dt.date, dt.datetime], ...]] = field(
+    additional_dates: Optional[tuple[Union[dt.date, dt.datetime], ...]] = field(
         default=None,
         metadata=config(encoder=encode_date_or_time_tuple, decoder=decode_date_or_time_tuple, exclude=exclude_none),
     )
-    legs: Optional[Tuple[PriceableImpl, ...]] = field(
+    legs: Optional[tuple[PriceableImpl, ...]] = field(
         default=None, metadata=config(encoder=legs_encoder, decoder=legs_decoder, exclude=exclude_none)
     )
-    measures: Optional[Tuple[RiskMeasure, ...]] = field(
+    measures: Optional[tuple[RiskMeasure, ...]] = field(
         default=None,
         metadata=config(encoder=encode_risk_measure_tuple, decoder=decode_risk_measure_tuple, exclude=exclude_none),
     )
@@ -149,8 +149,8 @@ class RiskRequest:
 @dataclass(unsafe_hash=True, repr=False)
 class BasicBacktestRequest:
     dates: DateConfig
-    trades: Tuple[Trade, ...]
-    measures: Tuple[FlowVolBacktestMeasure, ...]
+    trades: tuple[Trade, ...]
+    measures: tuple[FlowVolBacktestMeasure, ...]
     transaction_costs: Optional[TransactionCostConfig] = field(default=None, metadata=config(exclude=exclude_none))
     configuration: Optional[Configuration] = field(default=None, metadata=config(exclude=exclude_none))
     hedge: Optional[StrategyHedge] = field(default=None, metadata=config(exclude=exclude_none))
@@ -163,13 +163,13 @@ class BasicBacktestRequest:
 @dataclass(unsafe_hash=True, repr=False)
 class GenericBacktestRequest:
     strategy: object = field(default=None, metadata=config(decoder=decode_strategy, exclude=exclude_none))
-    dates: Union[DateConfig, Tuple[dt.date, ...]] = field(
+    dates: Union[DateConfig, tuple[dt.date, ...]] = field(
         default=None, metadata=config(decoder=_decode_dates, exclude=exclude_none)
     )
     configuration: Optional[Configuration] = field(
         default=None, metadata=config(decoder=_decode_configuration, exclude=exclude_none)
     )
-    measures: Optional[Tuple[RiskMeasure, ...]] = field(
+    measures: Optional[tuple[RiskMeasure, ...]] = field(
         default=None, metadata=config(encoder=_encode_measures, decoder=_decode_measures, exclude=exclude_none)
     )
     pnl_explain_def: Optional[object] = field(

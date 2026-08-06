@@ -14,12 +14,10 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Dict, List
-
 from gs_quant.analytics.datagrid.data_row import ROW_SEPARATOR, DataRow, RowSeparator
 
 
-def row_from_dict(row: Dict, reference_list: List):
+def row_from_dict(row: dict, reference_list: list):
     if row.get('type') == ROW_SEPARATOR:
         return RowSeparator.from_dict(row)
     else:

@@ -14,8 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Dict, List
-
 from gs_quant.session import GsSession
 from gs_quant.target.groups import Group
 
@@ -24,18 +22,18 @@ class GsGroupsApi:
     @classmethod
     def get_groups(
         cls,
-        ids: List[str] = None,
-        names: List[str] = None,
-        oe_ids: List[str] = None,
-        owner_ids: List[str] = None,
-        tags: List[str] = None,
-        user_ids: List[str] = None,
+        ids: list[str] = None,
+        names: list[str] = None,
+        oe_ids: list[str] = None,
+        owner_ids: list[str] = None,
+        tags: list[str] = None,
+        user_ids: list[str] = None,
         scroll_id: str = None,
         scroll_time: str = None,
         limit: int = 100,
         offset: int = 0,
         order_by: str = None,
-    ) -> List:
+    ) -> list:
         url = f'/groups?limit={limit}&offset={offset}'
         if ids:
             url += f'&id={"&id=".join(ids)}'
@@ -58,7 +56,7 @@ class GsGroupsApi:
         return GsSession.current.sync.get(url, cls=Group)['results']
 
     @classmethod
-    def create_group(cls, group: Group) -> Dict:
+    def create_group(cls, group: Group) -> dict:
         return GsSession.current.sync.post('/groups', group, cls=Group)
 
     @classmethod
@@ -82,14 +80,14 @@ class GsGroupsApi:
     def get_users_in_group(
         cls,
         group_id: str,
-        fields: List[str] = None,
+        fields: list[str] = None,
         limit: int = None,
         offset: int = None,
-        order_by: List[str] = None,
+        order_by: list[str] = None,
         show_members_count: bool = None,
         scroll_id: str = None,
         scroll_time: str = None,
-    ) -> List:
+    ) -> list:
         url = f'/groups/{group_id}/users?'
         if fields:
             url += f'&fields={"&fields=".join(fields)}'
@@ -108,9 +106,9 @@ class GsGroupsApi:
         return GsSession.current.sync.get(url).get('users', [])
 
     @classmethod
-    def add_users_to_group(cls, group_id: str, user_ids: List[str]):
+    def add_users_to_group(cls, group_id: str, user_ids: list[str]):
         GsSession.current.sync.post(f'/groups/{group_id}/users', {'userIds': user_ids})
 
     @classmethod
-    def delete_users_from_group(cls, group_id: str, user_ids: List[str]):
+    def delete_users_from_group(cls, group_id: str, user_ids: list[str]):
         GsSession.current.sync.delete(f'/groups/{group_id}/users', {'userIds': user_ids}, use_body=True)

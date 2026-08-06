@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from itertools import groupby
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Union
 
 import pandas as pd
 
@@ -32,17 +32,17 @@ from gs_quant.target.assets import EntityQuery, FieldFilterMap
 
 class Utilities:
     class AssetApi:
-        IdList = Union[Tuple[str, ...], List]
+        IdList = Union[tuple[str, ...], list]
 
         @classmethod
         def __create_query(
             cls,
-            fields: Union[List, Tuple] = None,
+            fields: Union[list, tuple] = None,
             as_of: dt.datetime = None,
             limit: int = None,
             scroll: str = None,
             scroll_id: str = None,
-            order_by: List[str] = None,
+            order_by: list[str] = None,
             **kwargs,
         ) -> EntityQuery:
             keys = set(kwargs.keys())
@@ -281,7 +281,7 @@ class SecmasterXrefFormatter:
     class Event:
         date: str
         event_type: 'SecmasterXrefFormatter.EventType'
-        record: Dict[str, Any]
+        record: dict[str, Any]
 
         def __post_init__(self):
             # For end events, we want them to be processed after start events on the same date
@@ -292,7 +292,7 @@ class SecmasterXrefFormatter:
     INFINITY_MARKER = "9999-99-99"
 
     @staticmethod
-    def convert(data: Dict[str, Any]) -> Dict[str, Dict[str, List[Dict[str, Any]]]]:
+    def convert(data: dict[str, Any]) -> dict[str, dict[str, list[dict[str, Any]]]]:
         results = {}
         for entity_key, records in data.items():
             xrefs = SecmasterXrefFormatter._convert_entity_records(records)
@@ -300,7 +300,7 @@ class SecmasterXrefFormatter:
         return results
 
     @staticmethod
-    def _convert_entity_records(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _convert_entity_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Converts records using sweep-line algorithm for optimal time complexity.
         """
@@ -328,7 +328,7 @@ class SecmasterXrefFormatter:
         return SecmasterXrefFormatter._process_events(events)
 
     @staticmethod
-    def _create_events(records: List[Dict[str, Any]]) -> List[Event]:
+    def _create_events(records: list[dict[str, Any]]) -> list[Event]:
         """
         Creates start and end events for each record.
         """
@@ -355,7 +355,7 @@ class SecmasterXrefFormatter:
         return events
 
     @staticmethod
-    def _process_events(events: List[Event]) -> List[Dict[str, Any]]:
+    def _process_events(events: list[Event]) -> list[dict[str, Any]]:
         """
         Processes events using sweep-line algorithm to generate time periods.
         """

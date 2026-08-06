@@ -16,7 +16,6 @@ under the License.
 
 import datetime as dt
 import logging
-from typing import Dict, List, Tuple
 
 from gs_quant.session import GsSession
 from gs_quant.target.risk import Scenario
@@ -37,8 +36,8 @@ class GsScenarioApi:
 
     @classmethod
     def get_many_scenarios(
-        cls, ids: List[str] = None, names: List[str] = None, limit: int = 100, **kwargs
-    ) -> Tuple[Scenario, ...]:
+        cls, ids: list[str] = None, names: list[str] = None, limit: int = 100, **kwargs
+    ) -> tuple[Scenario, ...]:
         url = f'/risk/scenarios?limit={limit}'
         if ids:
             url += f'&id={"&id=".join(ids)}'
@@ -64,15 +63,15 @@ class GsScenarioApi:
             return ret['results'][0]
 
     @classmethod
-    def update_scenario(cls, scenario: Scenario) -> Dict:
+    def update_scenario(cls, scenario: Scenario) -> dict:
         return GsSession.current.sync.put(f'/risk/scenarios/{scenario.id_}', scenario, cls=Scenario)
 
     @classmethod
-    def delete_scenario(cls, scenario_id: str) -> Dict:
+    def delete_scenario(cls, scenario_id: str) -> dict:
         return GsSession.current.sync.delete(f'/risk/scenarios/{scenario_id}')
 
     @classmethod
-    def calculate_scenario(cls, request: Dict) -> Dict:
+    def calculate_scenario(cls, request: dict) -> dict:
         return GsSession.current.sync.post('/scenarios/calculate', request)
 
 
@@ -83,17 +82,17 @@ class GsFactorScenarioApi(GsScenarioApi):
     @classmethod
     def get_many_scenarios(
         cls,
-        ids: List[str] = None,
-        names: List[str] = None,
+        ids: list[str] = None,
+        names: list[str] = None,
         limit: int = 100,
         type: str = None,
         risk_model: str = None,
-        shocked_factors: List[str] = None,
-        shocked_factor_categories: List[str] = None,
+        shocked_factors: list[str] = None,
+        shocked_factor_categories: list[str] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        tags: List[str] = None,
-    ) -> Tuple[Scenario, ...]:
+        tags: list[str] = None,
+    ) -> tuple[Scenario, ...]:
         factor_scenario_args = {}
         if risk_model:
             factor_scenario_args['riskModel'] = risk_model
@@ -116,5 +115,5 @@ class GsFactorScenarioApi(GsScenarioApi):
         return many_scenarios
 
     @classmethod
-    def calculate_scenario(cls, calculation_request: Dict) -> Dict:
+    def calculate_scenario(cls, calculation_request: dict) -> dict:
         return super().calculate_scenario(request=calculation_request)

@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 import logging
-from typing import Optional, Tuple
+from typing import Optional
 from urllib.parse import urlencode
 
 from gs_quant.common import FieldValueMap
@@ -40,7 +40,7 @@ class GsBacktestApi:
     @classmethod
     def get_many_backtests(
         cls, limit: int = 100, backtest_id: str = None, owner_id: str = None, name: str = None, mq_symbol: str = None
-    ) -> Tuple[Backtest, ...]:
+    ) -> tuple[Backtest, ...]:
         query_string = urlencode(
             dict(
                 filter(
@@ -72,7 +72,7 @@ class GsBacktestApi:
         return GsSession.current.sync.delete('/backtests/{id}'.format(id=backtest_id))
 
     @classmethod
-    def get_results(cls, backtest_id: str) -> Tuple[BacktestResult, ...]:
+    def get_results(cls, backtest_id: str) -> tuple[BacktestResult, ...]:
         return GsSession.current.sync.get('/backtests/results?id={id}'.format(id=backtest_id))['backtestResults']
 
     @classmethod
@@ -86,7 +86,7 @@ class GsBacktestApi:
         owner_id: str = None,
         name: str = None,
         mq_symbol: str = None,
-    ) -> Tuple[Tuple[BacktestResult, ...], Tuple[ComparisonBacktestResult, ...]]:
+    ) -> tuple[tuple[BacktestResult, ...], tuple[ComparisonBacktestResult, ...]]:
         query_string = urlencode(
             dict(
                 filter(

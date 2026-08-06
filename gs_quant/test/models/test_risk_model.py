@@ -2088,7 +2088,7 @@ def test_update_partial_data_batches_large_partial_universe(mocker):
     partial = {
         'assetData': {
             'universe': partial_universe,
-            'specificRisk': [999.0] * len(partial_universe),
+            'predictedBeta': [999.0] * len(partial_universe),
         }
     }
     result = model.update_partial_data(date, partial)
@@ -2097,9 +2097,10 @@ def test_update_partial_data_batches_large_partial_universe(mocker):
 
     # Upload contains only the partial universe — the same count we sent in
     assert len(merged['universe']) == len(partial_universe)
-    # All specificRisk come from partial (999.0)
-    assert all(v == 999.0 for v in merged['specificRisk'])
-    # factorExposure preserved from existing
+    # All predictedBeta come from partial (999.0)
+    assert all(v == 999.0 for v in merged['predictedBeta'])
+    # specificRisk and factorExposure preserved from existing
+    assert merged['specificRisk'] == [1.0] * len(partial_universe)
     assert merged['factorExposure'] == [{'1': 0.1}] * len(partial_universe)
 
     # Two query calls (2 data batches), no extra universe-only fetch

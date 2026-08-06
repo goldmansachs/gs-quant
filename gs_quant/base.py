@@ -26,7 +26,7 @@ from dataclasses import MISSING, Field, InitVar, dataclass, field, fields, repla
 from enum import Enum, EnumMeta
 from functools import update_wrapper
 from inspect import signature
-from typing import Iterable, Mapping, Optional, Tuple, Union
+from typing import Iterable, Mapping, Optional, Union
 
 import numpy as np
 from dataclasses_json import LetterCase, config, dataclass_json, global_config
@@ -179,7 +179,7 @@ class EnumBase:
 
 class HashableDict(dict):
     @staticmethod
-    def hashables(in_dict) -> Tuple:
+    def hashables(in_dict) -> tuple:
         hashables = []
         for it in in_dict.items():
             if isinstance(it[1], dict):
@@ -728,8 +728,8 @@ global_config.decoders[Optional[Union[float, str]]] = decode_float_or_str
 global_config.decoders[InstrumentBase] = decode_instrument
 global_config.decoders[Optional[InstrumentBase]] = decode_instrument
 global_config.decoders[QuoteReport] = decode_quote_report
-global_config.decoders[Optional[Tuple[QuoteReport, ...]]] = decode_quote_reports
+global_config.decoders[Optional[tuple[QuoteReport, ...]]] = decode_quote_reports
 global_config.decoders[CustomComments] = decode_custom_comment
-global_config.decoders[Optional[Tuple[CustomComments, ...]]] = decode_custom_comments
+global_config.decoders[Optional[tuple[CustomComments, ...]]] = decode_custom_comments
 global_config.encoders[Market] = encode_dictable
 global_config.encoders[Optional[Market]] = encode_dictable

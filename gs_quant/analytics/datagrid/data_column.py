@@ -15,7 +15,7 @@ under the License.
 """
 
 from dataclasses import asdict, dataclass, field, fields
-from typing import Dict, List, Union
+from typing import Union
 
 from gs_quant.analytics.core.processor import BaseProcessor
 
@@ -62,7 +62,7 @@ class MultiColumnGroup:
     """
 
     id: Union[int, str] = 0
-    columnIndices: List[int] = field(default_factory=list)
+    columnIndices: list[int] = field(default_factory=list)
     groupAll: bool = False
     heatMapColorRange: HeatMapColorRange = None
 
@@ -173,7 +173,7 @@ class DataColumn:
         return column
 
     @classmethod
-    def from_dict(cls, obj: Dict, reference_list: List):
+    def from_dict(cls, obj: dict, reference_list: list):
         processor = BaseProcessor.from_dict(obj, reference_list)
 
         return DataColumn(

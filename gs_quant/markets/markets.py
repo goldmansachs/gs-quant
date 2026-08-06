@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 import re
-from typing import Mapping, Optional, Tuple, Union
+from typing import Mapping, Optional, Union
 
 from gs_quant.base import Market, RiskKey
 from gs_quant.common import (
@@ -60,7 +60,7 @@ def market_location(location: Optional[PricingLocation] = None) -> PricingLocati
 def close_market_date(
     location: Optional[Union[PricingLocation, str]] = None,
     date: Optional[dt.date] = None,
-    roll_hr_and_min: Tuple[int, int] = (24, 0),
+    roll_hr_and_min: tuple[int, int] = (24, 0),
 ) -> dt.date:
     """Determine market data date based on current location (to infer calendar)
     and current pricing date
@@ -118,7 +118,7 @@ class MarketDataCoordinateValue(__MarketDataCoordinateValue):
         return f'{self.coordinate} --> {self.value}'
 
 
-Coordinates = Tuple[MarketDataCoordinate, ...]
+Coordinates = tuple[MarketDataCoordinate, ...]
 MarketDataMap = Mapping[MarketDataCoordinate, float]
 
 
@@ -276,7 +276,7 @@ class OverlayMarket(Market):
         return f'Overlay ({id(self)}): {repr(self.__base_market)}'
 
     @property
-    def market_data(self) -> Tuple[MarketDataCoordinateValue, ...]:
+    def market_data(self) -> tuple[MarketDataCoordinateValue, ...]:
         return tuple(MarketDataCoordinateValue(coordinate=c, value=v) for c, v in self.__market_data.items())
 
     @property

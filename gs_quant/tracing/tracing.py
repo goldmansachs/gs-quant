@@ -19,7 +19,7 @@ import logging
 import traceback
 from contextlib import ContextDecorator
 from enum import Enum
-from typing import Callable, Mapping, Optional, Sequence, Tuple, Union
+from typing import Callable, Mapping, Optional, Sequence, Union
 
 import pandas as pd
 from opentelemetry import context, trace
@@ -213,7 +213,7 @@ class TracingSpan:
     def events(self) -> Sequence[TracingEvent]:
         return tuple(TracingEvent(event) for event in self._span.events)
 
-    def set_tag(self, key: Union[Enum, str], value: Union[bool, str, bytes, int, float, dt.date]) -> 'TracingSpan':
+    def set_tag(self, key: Union[Enum, str], value: Union[bool, str, bytes, float, dt.date]) -> 'TracingSpan':
         if value is None:
             return self
         if isinstance(value, dt.date):
@@ -351,7 +351,7 @@ class TransportableSpan(TracingSpan):
     def events(self) -> Sequence[TracingEvent]:
         return self._events
 
-    def set_tag(self, key: Union[Enum, str], value: Union[bool, str, bytes, int, float, dt.date]) -> 'TracingSpan':
+    def set_tag(self, key: Union[Enum, str], value: Union[bool, str, bytes, float, dt.date]) -> 'TracingSpan':
         return self
 
     def add_event(
@@ -479,14 +479,14 @@ class Tracer(ContextDecorator):
             try:
                 inject(carrier)
             except Exception:
-                _logger.error("Error injecting trace context", exc_info=True)
+                _logger.exception("Error injecting trace context")
 
     @staticmethod
     def extract(carrier) -> TracingContext:
         try:
             return TracingContext(extract(carrier))
         except Exception:
-            _logger.error("Error extracting trace context", exc_info=True)
+            _logger.exception("Error extracting trace context")
 
     @staticmethod
     def activate_span(span: TracingSpan = None, finish_on_close: bool = False) -> Optional[TracingScope]:
@@ -672,7 +672,7 @@ class Tracer(ContextDecorator):
         return wrapper
 
 
-def parse_tracing_line_args(line: str) -> Tuple[Optional[str], bool]:
+def parse_tracing_line_args(line: str) -> tuple[Optional[str], bool]:
     stripped = tuple(s for s in line.split(' ') if s != '')
     if len(stripped) > 0 and stripped[0] in ('chart', 'plot', 'graph'):
         return tuple(stripped[1:]) if len(stripped[1:]) else None, True

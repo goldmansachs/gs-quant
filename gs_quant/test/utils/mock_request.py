@@ -21,7 +21,7 @@ import os
 from abc import abstractmethod
 from os.path import exists
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Tuple
+from typing import Any, NamedTuple
 from unittest import mock
 
 from gs_quant.errors import MqUninitialisedError
@@ -192,11 +192,11 @@ class MockRequest:
         pass
 
     @staticmethod
-    def get_file_summary() -> Dict[Path, Dict[MockFileKey, Tuple[List[str], Tuple[str, str, str]]]]:
+    def get_file_summary() -> dict[Path, dict[MockFileKey, tuple[list[str], tuple[str, str, str]]]]:
         return MockRequest.__looked_at_files
 
     @classmethod
-    def get_unused_files(cls, log=False) -> Tuple[Dict[str, Any], ...]:
+    def get_unused_files(cls, log=False) -> tuple[dict[str, Any], ...]:
         file_summary = cls.get_file_summary()
         unused_files = []
         for path, files_used in file_summary.items():
@@ -229,7 +229,7 @@ class MockRequest:
                 continue
 
     @classmethod
-    def reindex_test_files(cls, report_only=False, log=False) -> Tuple[str, ...]:
+    def reindex_test_files(cls, report_only=False, log=False) -> tuple[str, ...]:
         reindex_files = []
         file_summary = cls.get_file_summary()
         for path, files_used in file_summary.items():
@@ -283,7 +283,7 @@ class MockRequest:
         self._update_single_file_with_new_tests(self.paths, mock_file_key, test_used, report_only=False, log=True)
 
     @staticmethod
-    def get_saved_files() -> List[str]:
+    def get_saved_files() -> list[str]:
         return list(MockRequest.__saved_files)
 
     @abstractmethod

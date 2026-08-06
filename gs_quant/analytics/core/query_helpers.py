@@ -18,7 +18,7 @@ import asyncio
 import datetime as dt
 import logging
 from collections import defaultdict
-from typing import Dict, Tuple, Union
+from typing import Union
 
 import pandas as pd
 
@@ -80,7 +80,7 @@ def aggregate_queries(query_infos):
     return mappings
 
 
-def fetch_query(query_info: Dict):
+def fetch_query(query_info: dict):
     where = {}
     for key, value in query_info['parameters'].items():
         value_list = list(value)
@@ -121,7 +121,7 @@ def build_query_string(dimensions):
     return output
 
 
-def valid_dimensions(query_dimensions: Tuple[str, Union[str, float, bool]], df: pd.DataFrame) -> bool:
+def valid_dimensions(query_dimensions: tuple[str, Union[str, float, bool]], df: pd.DataFrame) -> bool:
     columns = df.columns
     for query_dimension in query_dimensions:
         dimension = query_dimension[0]

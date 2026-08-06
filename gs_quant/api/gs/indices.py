@@ -15,7 +15,7 @@ under the License.
 """
 
 import datetime as dt
-from typing import Dict, List, Union
+from typing import Union
 
 import backoff
 
@@ -50,7 +50,7 @@ CreateRepsonse = Union[CustomBasketsResponse, DynamicConstructionResponse]
 RebalanceRequest = Union[CustomBasketsRebalanceInputs, ISelectRebalance, ISelectRequest]
 RebalanceResponse = Union[CustomBasketsResponse, ISelectResponse]
 RebalanceCancelRequest = Union[CustomBasketsRebalanceAction, ISelectActionRequest]
-RebalanceCancelResponse = Union[Dict, ISelectResponse]
+RebalanceCancelResponse = Union[dict, ISelectResponse]
 ValidatedRequest = Union[CreateRequest, RebalanceRequest]
 
 
@@ -63,7 +63,7 @@ class GsIndexApi:
         CustomBasketsRebalanceInputs: CustomBasketsResponse,
         ISelectRebalance: ISelectResponse,
         ISelectRequest: ISelectResponse,
-        CustomBasketsRebalanceAction: Dict,
+        CustomBasketsRebalanceAction: dict,
         ISelectActionRequest: ISelectResponse,
     }
 
@@ -96,7 +96,7 @@ class GsIndexApi:
         return GsSession.current.sync.post(url, payload=inputs, cls=response_cls)
 
     @classmethod
-    def last_rebalance_data(cls, id_: str) -> Dict:
+    def last_rebalance_data(cls, id_: str) -> dict:
         """Get latest basket rebalance data"""
         url = f'/indices/{id_}/rebalance/data/last'
         return GsSession.current.sync.get(url)
@@ -108,7 +108,7 @@ class GsIndexApi:
         return GsSession.current.sync.get(url, cls=ApprovalCustomBasketResponse)
 
     @classmethod
-    def initial_price(cls, id_: str, date: dt.date) -> Dict:
+    def initial_price(cls, id_: str, date: dt.date) -> dict:
         """Get initial basket price"""
         url = f'/indices/{id_}/rebalance/initialprice/{date.isoformat()}'
         return GsSession.current.sync.get(url)
@@ -142,7 +142,7 @@ class GsIndexApi:
         end_date: dt.date,
         fields: IdList = None,
         position_type: PositionType = None,
-    ) -> List[dict]:
+    ) -> list[dict]:
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
         url = '/indices/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(
@@ -162,7 +162,7 @@ class GsIndexApi:
         asset_id: str,
         fields: IdList = None,
         position_type: PositionType = None,
-    ) -> List[dict]:
+    ) -> list[dict]:
         url = f'/indices/{asset_id}/positions/last/data'
         params = ''
         if fields is not None:

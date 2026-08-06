@@ -19,7 +19,7 @@ import datetime as dt
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 from dataclasses_json import LetterCase, config, dataclass_json
 
@@ -96,7 +96,7 @@ class HedgeRiskMeasure(Enum):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class Transaction:
-    portfolio: Tuple[Instrument, ...]
+    portfolio: tuple[Instrument, ...]
     portfolio_price: Optional[float] = None
     cost: Optional[float] = None
     currency: Optional[Union[Currency, CurrencyName, str]] = None
@@ -112,22 +112,22 @@ class TradeEvent:
     trade_id: Optional[str] = None
 
 
-def decode_trade_event_tuple_dict(results: dict) -> Dict[dt.date, Tuple[TradeEvent, ...]]:
+def decode_trade_event_tuple_dict(results: dict) -> dict[dt.date, tuple[TradeEvent, ...]]:
     return {dt.date.fromisoformat(k): tuple(TradeEvent.from_dict(e) for e in v) for k, v in results.items()}
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class AdditionalResults:
-    hedges: Optional[Dict[dt.date, Tuple[Instrument, ...]]] = field(
+    hedges: Optional[dict[dt.date, tuple[Instrument, ...]]] = field(
         default=None, metadata=config(decoder=decode_daily_portfolio)
     )
-    hedge_pnl: Optional[Dict[dt.date, float]] = None
+    hedge_pnl: Optional[dict[dt.date, float]] = None
     no_of_calculations: Optional[int] = None
-    trade_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = field(
+    trade_events: Optional[dict[dt.date, tuple[TradeEvent, ...]]] = field(
         default=None, metadata=config(decoder=decode_trade_event_tuple_dict)
     )
-    hedge_events: Optional[Dict[dt.date, Tuple[TradeEvent, ...]]] = field(
+    hedge_events: Optional[dict[dt.date, tuple[TradeEvent, ...]]] = field(
         default=None, metadata=config(decoder=decode_trade_event_tuple_dict)
     )
 
@@ -162,13 +162,13 @@ class DateConfig:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class Trade:
-    legs: Optional[Tuple[Instrument, ...]] = field(default=None, metadata=config(decoder=legs_decoder))
+    legs: Optional[tuple[Instrument, ...]] = field(default=None, metadata=config(decoder=legs_decoder))
     buy_frequency: str = None
-    buy_dates: Optional[Tuple[dt.date, ...]] = field(
+    buy_dates: Optional[tuple[dt.date, ...]] = field(
         default=None, metadata=config(encoder=encode_date_tuple, decoder=decode_date_tuple)
     )
     holding_period: str = None
-    exit_dates: Optional[Tuple[dt.date, ...]] = field(
+    exit_dates: Optional[tuple[dt.date, ...]] = field(
         default=None, metadata=config(encoder=encode_date_tuple, decoder=decode_date_tuple)
     )
     quantity: Optional[Union[float, dict[dt.date, float]]] = field(
@@ -255,7 +255,7 @@ _type_to_basic_model_map = {
 }
 
 
-def basic_tc_tuple_decoder(data: Optional[Tuple[dict, ...]]) -> Optional[Union[FixedCostModel, ScaledCostModel]]:
+def basic_tc_tuple_decoder(data: Optional[tuple[dict, ...]]) -> Optional[Union[FixedCostModel, ScaledCostModel]]:
     if data is None:
         return None
     return tuple(_type_to_basic_model_map[m['type']].from_dict(m) for m in data)
@@ -264,7 +264,7 @@ def basic_tc_tuple_decoder(data: Optional[Tuple[dict, ...]]) -> Optional[Union[F
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class AggregateCostModel(Model):
-    models: Tuple[Union[FixedCostModel, ScaledCostModel], ...] = field(metadata=config(decoder=basic_tc_tuple_decoder))
+    models: tuple[Union[FixedCostModel, ScaledCostModel], ...] = field(metadata=config(decoder=basic_tc_tuple_decoder))
     aggregation_type: CostAggregationType
     type: str = 'AggregateCostModel'
 

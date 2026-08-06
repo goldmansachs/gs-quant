@@ -16,7 +16,7 @@ under the License.
 
 import copy
 import uuid
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -39,7 +39,7 @@ class DataCell:
         name: str,
         processor: BaseProcessor,
         entity: Entity,
-        dimension_overrides: List[Override],
+        dimension_overrides: list[Override],
         column_index: int,
         row_index: int,
         row_group: str = None,
@@ -61,10 +61,10 @@ class DataCell:
         self.value: ProcessorResult = ProcessorResult(False, DATA_CELL_NOT_CALCULATED)
 
         # Store the cell data queries
-        self.data_queries: List[DataQueryInfo] = []
+        self.data_queries: list[DataQueryInfo] = []
 
     def build_cell_graph(
-        self, all_queries: List[Union[DataQueryInfo, MeasureQueryInfo]], rdate_entity_map: Dict[str, Set[Tuple]]
+        self, all_queries: list[Union[DataQueryInfo, MeasureQueryInfo]], rdate_entity_map: dict[str, set[tuple]]
     ) -> None:
         """Generate and store the cell graph and data queries
 
@@ -73,7 +73,7 @@ class DataCell:
         # Set the root processor node parent to data cell
         if self.processor:
             self.processor.parent = self
-            cell_queries: List[DataQueryInfo] = []
+            cell_queries: list[DataQueryInfo] = []
             self.processor.build_graph(self.entity, self, cell_queries, rdate_entity_map, self.dimension_overrides)
 
             self.data_queries = cell_queries

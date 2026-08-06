@@ -17,7 +17,7 @@ under the License.
 import concurrent
 import socket
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 import requests
 
@@ -53,7 +53,7 @@ class ThreadPoolManager:
         cls.__executor = ThreadPoolExecutor(max_workers=max_workers)
 
     @classmethod
-    def run_async(cls, tasks: List[Callable]) -> List:
+    def run_async(cls, tasks: list[Callable]) -> list:
         if not cls.__executor:
             cls.__executor = ThreadPoolExecutor()
 

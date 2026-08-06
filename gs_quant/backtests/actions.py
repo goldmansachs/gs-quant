@@ -19,7 +19,7 @@ import warnings
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, ClassVar, Iterable, List, Optional, TypeVar, Union
+from typing import Callable, ClassVar, Iterable, Optional, TypeVar, Union
 
 from dataclasses_json import config, dataclass_json
 
@@ -66,7 +66,7 @@ class Action(object):
     _transaction_cost = ConstantTransactionModel(0)
     _transaction_cost_exit = None
     name = None
-    __sub_classes: ClassVar[List[type]] = []
+    __sub_classes: ClassVar[list[type]] = []
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

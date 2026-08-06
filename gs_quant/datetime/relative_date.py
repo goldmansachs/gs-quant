@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import logging
 from copy import copy
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -73,9 +73,9 @@ class RelativeDate:
 
     def apply_rule(
         self,
-        currencies: List[Union[Currency, str]] = None,
-        exchanges: List[Union[ExchangeCode, str]] = None,
-        holiday_calendar: List[dt.date] = None,
+        currencies: list[Union[Currency, str]] = None,
+        exchanges: list[Union[ExchangeCode, str]] = None,
+        holiday_calendar: list[dt.date] = None,
         week_mask: str = '1111100',
         **kwargs,
     ) -> dt.date:
@@ -107,7 +107,7 @@ class RelativeDate:
 
         return result
 
-    def _get_rules(self) -> List[str]:
+    def _get_rules(self) -> list[str]:
         rule_list = []
         current_rule = ''
         if not len(self.rule):
@@ -136,9 +136,9 @@ class RelativeDate:
         rule: str,
         result: dt.date,
         week_mask: str,
-        currencies: List[Union[Currency, str]] = None,
-        exchanges: List[Union[ExchangeCode, str]] = None,
-        holiday_calendar: List[dt.date] = None,
+        currencies: list[Union[Currency, str]] = None,
+        exchanges: list[Union[ExchangeCode, str]] = None,
+        holiday_calendar: list[dt.date] = None,
         **kwargs,
     ) -> dt.date:
         sign = "+"
@@ -232,12 +232,12 @@ class RelativeDateSchedule:
 
     def apply_rule(
         self,
-        currencies: List[Union[Currency, str]] = None,
-        exchanges: List[Union[ExchangeCode, str]] = None,
-        holiday_calendar: List[dt.date] = None,
+        currencies: list[Union[Currency, str]] = None,
+        exchanges: list[Union[ExchangeCode, str]] = None,
+        holiday_calendar: list[dt.date] = None,
         week_mask: str = '1111100',
         **kwargs,
-    ) -> List[dt.date]:
+    ) -> list[dt.date]:
         """
         Applies business date logic on the rule using the given holiday calendars for rules that use business
         day logic. week_mask is based off

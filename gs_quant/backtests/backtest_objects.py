@@ -21,7 +21,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import Enum
 from queue import Queue as FifoQueue
-from typing import Callable, ClassVar, Iterable, Optional, Tuple, TypeVar, Union
+from typing import Callable, ClassVar, Iterable, Optional, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -610,7 +610,7 @@ class TransactionCostEntry:
         self._additional_scaling = 1
 
     @property
-    def all_instruments(self) -> Tuple[Instrument, ...]:
+    def all_instruments(self) -> tuple[Instrument, ...]:
         return self._instrument.all_instruments if isinstance(self._instrument, Portfolio) else (self._instrument,)
 
     @property
@@ -682,7 +682,7 @@ class TransactionCostEntry:
             final_costs.append(cost)
         return self.cost_aggregation_func(final_costs) if final_costs else 0
 
-    def get_cost_by_component(self) -> Tuple[float, float]:
+    def get_cost_by_component(self) -> tuple[float, float]:
         fixed_costs = []
         scaled_costs = []
         for m in self.all_transaction_models:

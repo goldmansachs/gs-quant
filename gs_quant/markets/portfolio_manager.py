@@ -18,7 +18,7 @@ import datetime as dt
 import logging
 import traceback
 from time import sleep
-from typing import Dict, List, Union
+from typing import Union
 
 import deprecation
 import numpy as np
@@ -100,7 +100,7 @@ class PortfolioManager(PositionedEntity):
     def portfolio_id(self, value: str):
         self.__portfolio_id = value
 
-    def get_performance_report(self, tags: Dict = None) -> PerformanceReport:
+    def get_performance_report(self, tags: dict = None) -> PerformanceReport:
         """
         Get performance report associated with a portfolio
 
@@ -221,7 +221,7 @@ class PortfolioManager(PositionedEntity):
         backcast: bool = False,
         is_async: bool = True,
         months_per_batch: int = None,
-    ) -> List[Union[pd.DataFrame, ReportJobFuture]]:
+    ) -> list[Union[pd.DataFrame, ReportJobFuture]]:
         """
         Run all reports associated with a portfolio
 
@@ -290,7 +290,7 @@ class PortfolioManager(PositionedEntity):
         portfolio_as_target.entitlements = entitlements_as_target
         GsPortfolioApi.update_portfolio(portfolio_as_target)
 
-    def share(self, emails: List[str], admin: bool = False):
+    def share(self, emails: list[str], admin: bool = False):
         """
         Share a portfolio with a list of emails
 
@@ -323,7 +323,7 @@ class PortfolioManager(PositionedEntity):
         portfolio_as_target.currency = currency
         GsPortfolioApi.update_portfolio(portfolio_as_target)
 
-    def get_tag_name_hierarchy(self) -> List:
+    def get_tag_name_hierarchy(self) -> list:
         """
         Get the list of tags by name by which a portfolio's fund of funds are structured in that order
 
@@ -332,7 +332,7 @@ class PortfolioManager(PositionedEntity):
         portfolio = GsPortfolioApi.get_portfolio(self.portfolio_id)
         return list(portfolio.tag_name_hierarchy) if portfolio.tag_name_hierarchy else None
 
-    def set_tag_name_hierarchy(self, tag_names: List):
+    def set_tag_name_hierarchy(self, tag_names: list):
         """
         Set the list of tags by name by which a portfolio's fund of funds are structured in that order
 
@@ -355,7 +355,7 @@ class PortfolioManager(PositionedEntity):
         """
         return GsPortfolioApi.get_portfolio_tree(self.portfolio_id)
 
-    def get_all_fund_of_fund_tags(self) -> List:
+    def get_all_fund_of_fund_tags(self) -> list:
         """
         If the portfolio is a fund of funds, this function will retrieve a list of dictionaries of all the tag sets
         associated with the sub-portfolios in the portfolio.
@@ -371,7 +371,7 @@ class PortfolioManager(PositionedEntity):
         tag_dicts.sort(key=lambda dictionary: len(dictionary.keys()))
         return tag_dicts
 
-    def get_schedule_dates(self, backcast: bool = False) -> List[dt.date]:
+    def get_schedule_dates(self, backcast: bool = False) -> list[dt.date]:
         """
         Get recommended start and end dates for a portfolio report scheduling job
 
@@ -415,7 +415,7 @@ class PortfolioManager(PositionedEntity):
         details='PortfolioManager.get_custom_aum is now deprecated, please use '
         'PerformanceReport.get_custom_aum instead.',
     )
-    def get_custom_aum(self, start_date: dt.date = None, end_date: dt.date = None) -> List[CustomAUMDataPoint]:
+    def get_custom_aum(self, start_date: dt.date = None, end_date: dt.date = None) -> list[CustomAUMDataPoint]:
         """
         Get AUM data for portfolio
 
@@ -463,7 +463,7 @@ class PortfolioManager(PositionedEntity):
         details='PortfolioManager.upload_custom_aum is now deprecated, please use '
         'PerformanceReport.upload_custom_aum instead.',
     )
-    def upload_custom_aum(self, aum_data: List[CustomAUMDataPoint], clear_existing_data: bool = None):
+    def upload_custom_aum(self, aum_data: list[CustomAUMDataPoint], clear_existing_data: bool = None):
         """
         Add AUM data for portfolio
 
@@ -479,7 +479,7 @@ class PortfolioManager(PositionedEntity):
         "the PerformanceReport class",
     )
     def get_pnl_contribution(
-        self, start_date: dt.date = None, end_date: dt.date = None, currency: Currency = None, tags: Dict = None
+        self, start_date: dt.date = None, end_date: dt.date = None, currency: Currency = None, tags: dict = None
     ) -> pd.DataFrame:
         """
         Get PnL Contribution of your portfolio broken down by constituents
@@ -501,11 +501,11 @@ class PortfolioManager(PositionedEntity):
         model: MacroRiskModel,
         date: dt.date,
         factor_type: FactorType,
-        factor_categories: List[Factor] = [],
+        factor_categories: list[Factor] = [],
         get_factors_by_name: bool = True,
-        tags: Dict = None,
+        tags: dict = None,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """
         Get portfolio and asset exposure to macro factors or macro factor categories
 
@@ -571,12 +571,12 @@ class PortfolioManager(PositionedEntity):
 
     def get_factor_scenario_analytics(
         self,
-        scenarios: List[FactorScenario],
+        scenarios: list[FactorScenario],
         date: dt.date,
-        measures: List[ScenarioCalculationMeasure],
+        measures: list[ScenarioCalculationMeasure],
         risk_model: str = None,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, Union[Dict, pd.DataFrame]]:
+    ) -> Union[dict, pd.DataFrame]:
         """Given a list of factor scenarios (historical simulation and/or custom shocks), return the estimated pnl
         of the given positioned entity.
         :param scenarios: List of factor-based scenarios
@@ -626,7 +626,7 @@ class PortfolioManager(PositionedEntity):
         return super().get_factor_scenario_analytics(scenarios, date, measures, risk_model, return_format)
 
     def get_risk_model_predicted_beta(
-        self, start_date: dt.date, end_date: dt.date, risk_model_id: str, default_beta_value: int = 1, tags: Dict = None
+        self, start_date: dt.date, end_date: dt.date, risk_model_id: str, default_beta_value: int = 1, tags: dict = None
     ) -> pd.DataFrame:
         """
         Get the predicted beta of a portfolio as estimated by the provided risk model.
@@ -657,7 +657,7 @@ class PortfolioManager(PositionedEntity):
         """
         performance_report = self.get_performance_report(tags=tags)
         risk_model = FactorRiskModel.get(risk_model_id)
-        risk_model_dates: List[dt.date] = risk_model.get_dates(start_date=start_date, end_date=end_date)
+        risk_model_dates: list[dt.date] = risk_model.get_dates(start_date=start_date, end_date=end_date)
         batched_dates = get_batched_dates(risk_model_dates, batch_size=10)
         risk_model_predicted_beta_timeseries = pd.DataFrame()
         asset_level_betas = pd.DataFrame()

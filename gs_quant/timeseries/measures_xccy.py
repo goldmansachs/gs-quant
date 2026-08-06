@@ -17,7 +17,7 @@ under the License.
 import logging
 from collections import OrderedDict
 from enum import Enum
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -431,7 +431,7 @@ def _check_crosscurrency_rateoption_type(
 
 def _get_crosscurrency_swap_leg_defaults(
     currency: CurrencyEnum, benchmark_type: CrossCurrencyRateOptionType = None
-) -> Dict:
+) -> dict:
     pricing_location = tm_rates.CURRENCY_TO_PRICING_LOCATION.get(currency, PricingLocation.LDN)
     # default benchmark types
     if benchmark_type is None:

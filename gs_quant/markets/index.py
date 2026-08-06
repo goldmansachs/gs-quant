@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 import json
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import pandas as pd
 from pydash import get
@@ -48,7 +48,7 @@ class Index(Asset, PositionedEntity):
         name: str,
         exchange: Optional[str] = None,
         currency: Optional[Currency] = None,
-        entity: Optional[Dict] = None,
+        entity: Optional[dict] = None,
     ):
         Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
         PositionedEntity.__init__(self, id_, EntityType.ASSET)
@@ -98,7 +98,7 @@ class Index(Asset, PositionedEntity):
         >>> index = Index.get("GSMBXXXX")
         """
         gs_asset = cls.__get_gs_asset(identifier)
-        asset_entity: Dict = json.loads(json.dumps(gs_asset.as_dict(), cls=JSONEncoder))
+        asset_entity: dict = json.loads(json.dumps(gs_asset.as_dict(), cls=JSONEncoder))
         if gs_asset.type.value in STSIndexType.to_list() or gs_asset.type.value == 'Index':
             return cls(
                 gs_asset.id,
@@ -117,7 +117,7 @@ class Index(Asset, PositionedEntity):
         end: dt.date = dt.date.today(),
         period: Optional[DataMeasure] = None,
         direction: DataMeasure = DataMeasure.FORWARD.value,
-        metrics: List[DataMeasure] = DataMeasure.list_fundamentals(),
+        metrics: list[DataMeasure] = DataMeasure.list_fundamentals(),
     ) -> pd.DataFrame:
         """
         Retrieve fundamentals data for an index across a date range. Currently supports STS indices only
@@ -155,7 +155,7 @@ class Index(Asset, PositionedEntity):
         else:
             raise MqValueError('This method currently supports STS indices only')
 
-    def get_latest_close_price(self, price_type: List[PriceType] = None) -> pd.DataFrame:
+    def get_latest_close_price(self, price_type: list[PriceType] = None) -> pd.DataFrame:
         """
         Retrieve latest close prices for an index. Only STS indices support indicative prices.
 
@@ -197,7 +197,7 @@ class Index(Asset, PositionedEntity):
         return prices
 
     def get_close_price_for_date(
-        self, date: dt.date = dt.date.today(), price_type: List[PriceType] = None
+        self, date: dt.date = dt.date.today(), price_type: list[PriceType] = None
     ) -> pd.DataFrame:
         """
         Retrieve close prices for an index. Only STS indices support indicative prices.
@@ -243,7 +243,7 @@ class Index(Asset, PositionedEntity):
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
         end: dt.date = dt.date.today(),
-        price_type: List[PriceType] = None,
+        price_type: list[PriceType] = None,
     ) -> pd.DataFrame:
         """
         Retrieve close prices for an index for a date range. Only STS indices support indicative prices.
@@ -437,7 +437,7 @@ class Index(Asset, PositionedEntity):
 
     def get_constituents(
         self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
-    ) -> List[pd.DataFrame]:
+    ) -> list[pd.DataFrame]:
         """
         Fetch the constituents of the index in a pandas dataframe for the given date range
 
@@ -460,7 +460,7 @@ class Index(Asset, PositionedEntity):
 
         return [position_set.get_positions() for position_set in self.get_position_sets(start, end)]
 
-    def get_latest_constituent_instruments(self) -> Tuple[Instrument, ...]:
+    def get_latest_constituent_instruments(self) -> tuple[Instrument, ...]:
         """
         Fetch the latest constituents of the index as instrument objects.
 
@@ -482,7 +482,7 @@ class Index(Asset, PositionedEntity):
 
         return GsAssetApi.get_instruments_for_positions(self.get_latest_position_set().to_target().positions)
 
-    def get_constituent_instruments_for_date(self, date: dt.date = dt.date.today()) -> Tuple[Instrument, ...]:
+    def get_constituent_instruments_for_date(self, date: dt.date = dt.date.today()) -> tuple[Instrument, ...]:
         """
         Fetch the constituents of the index for a given date as instrument objects.
 
@@ -507,7 +507,7 @@ class Index(Asset, PositionedEntity):
 
     def get_constituent_instruments(
         self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
-    ) -> Tuple[Tuple[Instrument, ...], ...]:
+    ) -> tuple[tuple[Instrument, ...], ...]:
         """
         Fetch the constituents of the index as instrument objects for the given date range
 

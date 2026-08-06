@@ -16,7 +16,7 @@ under the License.
 
 import copy
 from enum import Enum
-from typing import Dict, Optional, Tuple, Union
+from typing import Optional, Union
 
 from gs_quant import common, risk
 from gs_quant.base import RiskMeasureParameter
@@ -30,14 +30,14 @@ def gsq_rm_for_name(name: str) -> Optional[RiskMeasure]:
     return getattr(risk, name)
 
 
-def encode_risk_measure(rm: RiskMeasure) -> Dict:
+def encode_risk_measure(rm: RiskMeasure) -> dict:
     result = rm.as_dict(as_camel_case=True)
     if rm.parameters is not None:
         result['parameters'] = rm.parameters.as_dict(as_camel_case=True)
     return result
 
 
-def encode_risk_measure_tuple(blob: Tuple[RiskMeasure, ...]) -> Tuple[Dict, ...]:
+def encode_risk_measure_tuple(blob: tuple[RiskMeasure, ...]) -> tuple[dict, ...]:
     return tuple(encode_risk_measure(rm) for rm in blob)
 
 
@@ -110,7 +110,7 @@ def _lookup_risk_measure_by_fields(data: dict) -> Optional[RiskMeasure]:
     return None
 
 
-def decode_risk_measure(data: Dict) -> RiskMeasure:
+def decode_risk_measure(data: dict) -> RiskMeasure:
     result = _decode_gsq_risk_measure(data)
     if result is not None:
         return result
@@ -126,5 +126,5 @@ def decode_risk_measure(data: Dict) -> RiskMeasure:
     return result
 
 
-def decode_risk_measure_tuple(blob: Tuple[Dict, ...]) -> Tuple[RiskMeasure, ...]:
+def decode_risk_measure_tuple(blob: tuple[dict, ...]) -> tuple[RiskMeasure, ...]:
     return tuple(decode_risk_measure(s) for s in blob) if isinstance(blob, (tuple, list)) else None

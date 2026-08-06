@@ -15,7 +15,7 @@ under the License.
 """
 
 from dataclasses import dataclass, field
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Union
 
 from dataclasses_json import config, dataclass_json
 
@@ -41,7 +41,7 @@ class Strategy:
     A strategy object on which one may run a backtest
     """
 
-    initial_portfolio: Optional[Union[Tuple[Priceable, ...], dict]] = field(
+    initial_portfolio: Optional[Union[tuple[Priceable, ...], dict]] = field(
         default=None, metadata=config(decoder=decode_named_instrument, encoder=encode_named_instrument)
     )
     triggers: Union[Trigger, Iterable[Trigger]] = field(

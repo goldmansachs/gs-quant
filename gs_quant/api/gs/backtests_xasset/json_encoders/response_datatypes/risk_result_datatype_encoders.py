@@ -15,16 +15,15 @@ under the License.
 """
 
 import datetime as dt
-from typing import Dict
 
 import pandas as pd
 
 
-def encode_series_result(s: pd.Series) -> Dict:
+def encode_series_result(s: pd.Series) -> dict:
     return {'index': tuple(s.index), 'name': s.name, 'values': tuple(s.values)}
 
 
-def encode_dataframe_result(df: pd.DataFrame) -> Dict:
+def encode_dataframe_result(df: pd.DataFrame) -> dict:
     return {'index': tuple(df.index), 'columns': tuple(df.columns), 'values': tuple(tuple(v) for v in df.values)}
 
 

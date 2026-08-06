@@ -19,7 +19,7 @@ import logging
 import math
 from enum import Enum
 from functools import wraps
-from typing import Dict, Final, List, Optional, Union
+from typing import Final, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -39,12 +39,12 @@ _logger = logging.getLogger(__name__)
 
 
 def resolve_assets_in_batches(
-    identifiers: List[str],
-    fields: List[str] = None,
+    identifiers: list[str],
+    fields: list[str] = None,
     as_of_date: dt.date = dt.date.today(),
     batch_size: int = 100,
     **kwargs,
-) -> List[Dict]:
+) -> list[dict]:
     all_fields = ["id", "name", "bbid"]
     if fields:
         all_fields += fields
@@ -100,16 +100,16 @@ class OptimizerObjectiveTerm:
         'risk_type': OptimizerRiskType.VARIANCE,
     }
 
-    def __init__(self, weight: float = 1, params: Dict[str, float] = DEFAULT_RISK_PARAMS):
+    def __init__(self, weight: float = 1, params: dict[str, float] = DEFAULT_RISK_PARAMS):
         self.__weight = weight
         self.__params = {**self.DEFAULT_RISK_PARAMS, **params}
 
     @property
-    def params(self) -> Dict:
+    def params(self) -> dict:
         return self.__params
 
     @params.setter
-    def params(self, params: Dict[str, float]):
+    def params(self, params: dict[str, float]):
         self.__params = {**self.DEFAULT_RISK_PARAMS, **params}
 
     @property
@@ -120,7 +120,7 @@ class OptimizerObjectiveTerm:
     def weight(self, weight: float):
         self.__weight = weight
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         payload = {
             'factorWeight': self.__params['factor_weight'],
             'specificWeight': self.__params['specific_weight'],
@@ -134,7 +134,7 @@ class OptimizerObjectiveParameters:
     def __init__(
         self,
         objective: OptimizerObjective = OptimizerObjective.MINIMIZE_FACTOR_RISK,
-        terms: List[OptimizerObjectiveTerm] = [OptimizerObjectiveTerm.DEFAULT_RISK_PARAMS],
+        terms: list[OptimizerObjectiveTerm] = [OptimizerObjectiveTerm.DEFAULT_RISK_PARAMS],
     ):
         self.__objective = objective
         self.__terms = terms
@@ -152,7 +152,7 @@ class OptimizerObjectiveParameters:
         return self.__terms
 
     @terms.setter
-    def terms(self, terms: List[OptimizerObjectiveTerm]):
+    def terms(self, terms: list[OptimizerObjectiveTerm]):
         self.__terms = terms
 
     def to_dict(self):
@@ -181,7 +181,7 @@ class TurnoverNotionalType(Enum):
 
 
 class AssetUniverse:
-    def __init__(self, identifiers: List[str], asset_ids: List[str] = None, as_of_date: dt.date = dt.date.today()):
+    def __init__(self, identifiers: list[str], asset_ids: list[str] = None, as_of_date: dt.date = dt.date.today()):
         self.__identifiers = identifiers
         self.__as_of_date = as_of_date
         self.__asset_ids = asset_ids
@@ -191,7 +191,7 @@ class AssetUniverse:
         return self.__identifiers
 
     @identifiers.setter
-    def identifiers(self, identifiers: List[str]):
+    def identifiers(self, identifiers: list[str]):
         self.__identifiers = identifiers
 
     @property
@@ -199,7 +199,7 @@ class AssetUniverse:
         return self.__asset_ids
 
     @asset_ids.setter
-    def asset_ids(self, asset_ids: List[str]):
+    def asset_ids(self, asset_ids: list[str]):
         self.__asset_ids = asset_ids
 
     @property
@@ -278,7 +278,7 @@ class AssetConstraint:
     @classmethod
     def build_many_constraints(
         cls,
-        asset_constraints: Union[pd.DataFrame, List[Dict]],
+        asset_constraints: Union[pd.DataFrame, list[dict]],
         as_of_date: dt.date = dt.date.today(),
         fail_on_unresolved_positions: bool = True,
         **kwargs,
@@ -445,7 +445,7 @@ class CountryConstraint:
         }
 
     @classmethod
-    def build_many_constraints(cls, country_constraints: Union[pd.DataFrame, List[Dict]]):
+    def build_many_constraints(cls, country_constraints: Union[pd.DataFrame, list[dict]]):
         """
         Create many country constraints from a dataframe or a list of dictionaries
         :param country_constraints: dataframe or list of dictionaries containing the country constraints
@@ -559,7 +559,7 @@ class SectorConstraint:
         }
 
     @classmethod
-    def build_many_constraints(cls, sector_constraints: Union[pd.DataFrame, List[Dict]]):
+    def build_many_constraints(cls, sector_constraints: Union[pd.DataFrame, list[dict]]):
         """
         Create many sector constraints from a dataframe or a list of dictionaries
         :param sector_constraints: dataframe or list of dictionaries containing the sector constraints
@@ -673,7 +673,7 @@ class IndustryConstraint:
         }
 
     @classmethod
-    def build_many_constraints(cls, industry_constraints: Union[pd.DataFrame, List[Dict]]):
+    def build_many_constraints(cls, industry_constraints: Union[pd.DataFrame, list[dict]]):
         """
         Create many industry constraints from a dataframe or a list of dictionaries
         :param industry_constraints: dataframe or list of dictionaries containing the industry constraints
@@ -752,7 +752,7 @@ class FactorConstraint:
         return {'factor': self.factor.name, 'exposure': self.max_exposure}
 
     @classmethod
-    def build_many_constraints(cls, factor_constraints: Union[pd.DataFrame, List[Dict]], risk_model_id: str):
+    def build_many_constraints(cls, factor_constraints: Union[pd.DataFrame, list[dict]], risk_model_id: str):
         """
         Create many factor constraints from a dataframe or a list of dictionaries
         :param factor_constraints: dataframe or list of dictionaries containing the factor constraints
@@ -803,10 +803,10 @@ class FactorConstraint:
 class OptimizerUniverse:
     def __init__(
         self,
-        assets: Union[List[Asset], AssetUniverse] = None,
+        assets: Union[list[Asset], AssetUniverse] = None,
         explode_composites: bool = True,
         exclude_initial_position_set_assets: bool = True,
-        exclude_corporate_actions_types: List[CorporateActionsTypes] = [],
+        exclude_corporate_actions_types: list[CorporateActionsTypes] = [],
         exclude_hard_to_borrow_assets: bool = False,
         exclude_restricted_assets: bool = False,
         min_market_cap: float = None,
@@ -835,11 +835,11 @@ class OptimizerUniverse:
         self.__max_market_cap = max_market_cap
 
     @property
-    def assets(self) -> List[Asset]:
+    def assets(self) -> list[Asset]:
         return self.__assets
 
     @assets.setter
-    def assets(self, assets: List[Asset]):
+    def assets(self, assets: list[Asset]):
         self.__assets = assets
 
     @property
@@ -859,11 +859,11 @@ class OptimizerUniverse:
         self.__exclude_initial_position_set_assets = value
 
     @property
-    def exclude_corporate_actions_types(self) -> List[CorporateActionsTypes]:
+    def exclude_corporate_actions_types(self) -> list[CorporateActionsTypes]:
         return self.__exclude_corporate_actions_types
 
     @exclude_corporate_actions_types.setter
-    def exclude_corporate_actions_types(self, value: List[CorporateActionsTypes]):
+    def exclude_corporate_actions_types(self, value: list[CorporateActionsTypes]):
         self.__exclude_corporate_actions_types = value
 
     @property
@@ -945,7 +945,7 @@ class MaxFactorProportionOfRiskConstraint:
 class MaxProportionOfRiskByGroupConstraint:
     def __init__(
         self,
-        factors: List[Factor],
+        factors: list[Factor],
         max_factor_proportion_of_risk: float,
         unit: OptimizationConstraintUnit = OptimizationConstraintUnit.PERCENT,
     ):
@@ -965,11 +965,11 @@ class MaxProportionOfRiskByGroupConstraint:
         self.__unit = unit
 
     @property
-    def factors(self) -> List[Factor]:
+    def factors(self) -> list[Factor]:
         return self.__factors
 
     @factors.setter
-    def factors(self, value: List[Factor]):
+    def factors(self, value: list[Factor]):
         self.__factors = value
 
     @property
@@ -987,13 +987,13 @@ class MaxProportionOfRiskByGroupConstraint:
 class OptimizerConstraints:
     def __init__(
         self,
-        asset_constraints: List[AssetConstraint] = [],
-        country_constraints: List[CountryConstraint] = [],
-        sector_constraints: List[SectorConstraint] = [],
-        industry_constraints: List[IndustryConstraint] = [],
-        factor_constraints: List[FactorConstraint] = [],
+        asset_constraints: list[AssetConstraint] = [],
+        country_constraints: list[CountryConstraint] = [],
+        sector_constraints: list[SectorConstraint] = [],
+        industry_constraints: list[IndustryConstraint] = [],
+        factor_constraints: list[FactorConstraint] = [],
         max_factor_proportion_of_risk: MaxFactorProportionOfRiskConstraint = None,
-        max_proportion_of_risk_by_groups: List[MaxProportionOfRiskByGroupConstraint] = None,
+        max_proportion_of_risk_by_groups: list[MaxProportionOfRiskByGroupConstraint] = None,
     ):
         """Set of Constraints for the optimizer
 
@@ -1014,43 +1014,43 @@ class OptimizerConstraints:
         self.__max_proportion_of_risk_by_groups = max_proportion_of_risk_by_groups
 
     @property
-    def asset_constraints(self) -> List[AssetConstraint]:
+    def asset_constraints(self) -> list[AssetConstraint]:
         return self.__asset_constraints
 
     @asset_constraints.setter
-    def asset_constraints(self, value: List[AssetConstraint]):
+    def asset_constraints(self, value: list[AssetConstraint]):
         self.__asset_constraints = value
 
     @property
-    def country_constraints(self) -> List[CountryConstraint]:
+    def country_constraints(self) -> list[CountryConstraint]:
         return self.__country_constraints
 
     @country_constraints.setter
-    def country_constraints(self, value: List[CountryConstraint]):
+    def country_constraints(self, value: list[CountryConstraint]):
         self.__country_constraints = value
 
     @property
-    def sector_constraints(self) -> List[SectorConstraint]:
+    def sector_constraints(self) -> list[SectorConstraint]:
         return self.__sector_constraints
 
     @sector_constraints.setter
-    def sector_constraints(self, value: List[SectorConstraint]):
+    def sector_constraints(self, value: list[SectorConstraint]):
         self.__sector_constraints = value
 
     @property
-    def industry_constraints(self) -> List[IndustryConstraint]:
+    def industry_constraints(self) -> list[IndustryConstraint]:
         return self.__industry_constraints
 
     @industry_constraints.setter
-    def industry_constraints(self, value: List[IndustryConstraint]):
+    def industry_constraints(self, value: list[IndustryConstraint]):
         self.__industry_constraints = value
 
     @property
-    def factor_constraints(self) -> List[FactorConstraint]:
+    def factor_constraints(self) -> list[FactorConstraint]:
         return self.__factor_constraints
 
     @factor_constraints.setter
-    def factor_constraints(self, value: List[FactorConstraint]):
+    def factor_constraints(self, value: list[FactorConstraint]):
         self.__factor_constraints = value
 
     @property
@@ -1062,11 +1062,11 @@ class OptimizerConstraints:
         self.__max_factor_proportion_of_risk = value
 
     @property
-    def max_proportion_of_risk_by_groups(self) -> List[MaxProportionOfRiskByGroupConstraint]:
+    def max_proportion_of_risk_by_groups(self) -> list[MaxProportionOfRiskByGroupConstraint]:
         return self.__max_proportion_of_risk_by_groups
 
     @max_proportion_of_risk_by_groups.setter
-    def max_proportion_of_risk_by_groups(self, value: List[MaxProportionOfRiskByGroupConstraint]):
+    def max_proportion_of_risk_by_groups(self, value: list[MaxProportionOfRiskByGroupConstraint]):
         self.__max_proportion_of_risk_by_groups = value
 
     def to_dict(self):
@@ -1201,7 +1201,7 @@ class ConstraintPriorities:
     def style_factor_exposures(self, value: PrioritySetting):
         self.__style_factor_exposures = value
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         as_dict = (
             {
                 'minSectorWeights': self.min_sector_weights,
@@ -1732,7 +1732,7 @@ class OptimizerStrategy:
             ]
         return {'objective': self.objective.value, 'parameters': parameters}
 
-    def handle_error(self, error_message: str) -> List:
+    def handle_error(self, error_message: str) -> list:
         for key, val in self.VERBOSE_ERROR_MSG.items():
             if error_message.startswith(key):
                 return [val(error_message), True]  # predefined
@@ -1883,7 +1883,7 @@ class OptimizerStrategy:
         return self.__construct_position_set_from_hedge_result('hedgedTarget', by_weight)
 
     @_ensure_completed
-    def get_hedge_exposure_summary(self) -> Dict:
+    def get_hedge_exposure_summary(self) -> dict:
         """
         Get a summary of the hedge exposures including gross, net, long, and short exposures.
 
@@ -1920,7 +1920,7 @@ class OptimizerStrategy:
         if self.__result is None:
             raise MqValueError('Please run the optimization before calling this method')
 
-        def get_exposure_dict(result_key: str) -> Dict:
+        def get_exposure_dict(result_key: str) -> dict:
             """Extract exposure metrics from result"""
             if result_key not in self.__result:
                 return None
@@ -1952,7 +1952,7 @@ class OptimizerStrategy:
         return summary
 
     @_ensure_completed
-    def get_hedge_constituents_by_direction(self) -> Dict:
+    def get_hedge_constituents_by_direction(self) -> dict:
         """
         For bidirectional hedges, split the hedge constituents into long and short positions.
 
@@ -2003,7 +2003,7 @@ class OptimizerStrategy:
 
         return {'long_positions': long_positions, 'short_positions': short_positions, 'summary': summary}
 
-    def get_cumulative_pnl_performance(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
+    def get_cumulative_pnl_performance(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> dict:
         """
         Get the cumulative PnL performance results of the optimization
 
@@ -2019,7 +2019,7 @@ class OptimizerStrategy:
         df['date'] = pd.to_datetime(df['date'])
         return df
 
-    def get_style_factor_exposures(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
+    def get_style_factor_exposures(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> dict:
         """
         Get the style factor exposures from the hedge result
 
@@ -2035,7 +2035,7 @@ class OptimizerStrategy:
         factor_exposures = self.__result.get(target.value).get('factorExposures').get('style', [])
         return factor_exposures
 
-    def get_risk_buckets(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> Dict:
+    def get_risk_buckets(self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET) -> dict:
         """
         Get the risk buckets from the hedge result
 
@@ -2053,7 +2053,7 @@ class OptimizerStrategy:
 
     def get_transaction_and_liquidity_constituents_performance(
         self, target: HedgeTarget = HedgeTarget.HEDGED_TARGET
-    ) -> Dict:
+    ) -> dict:
         """
         Get the constituents performance results of the optimization
 
@@ -2085,7 +2085,7 @@ class OptimizerStrategy:
             filtered_constituents.append(filtered_constituent)
         return pd.DataFrame(filtered_constituents)
 
-    def get_performance_summary(self) -> Dict:
+    def get_performance_summary(self) -> dict:
         """
         Get the performance summary results of the optimization.
 
@@ -2188,11 +2188,11 @@ class OptimizerStrategy:
 
     def build_hedge_payload(
         self,
-        strategy_request: Dict,
-        optimization_response: Dict,
+        strategy_request: dict,
+        optimization_response: dict,
         hedge_name: str = "Custom Hedge",
         group_name: str = "New Hedge Group",
-    ) -> Dict:
+    ) -> dict:
         """
         Build the payload for saving a hedge to Marquee API.
 
@@ -2226,11 +2226,11 @@ class OptimizerStrategy:
 
     def save_to_marquee(
         self,
-        strategy_request: Dict,
-        optimization_response: Dict,
+        strategy_request: dict,
+        optimization_response: dict,
         hedge_name: str = "Custom Hedge",
         group_name: str = "New Hedge Group",
-    ) -> Dict:
+    ) -> dict:
         """
         Save the hedge to Marquee via API POST.
 

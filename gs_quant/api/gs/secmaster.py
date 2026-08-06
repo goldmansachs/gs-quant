@@ -21,7 +21,7 @@ import math
 from enum import Enum
 from functools import partial, update_wrapper
 from itertools import groupby
-from typing import Dict, Iterable, Optional, Union
+from typing import Iterable, Optional, Union
 
 import backoff
 import tqdm
@@ -119,7 +119,7 @@ class GsSecurityMasterApi:
         flatten=False,
         is_primary=None,
         offset_key: str = None,
-        **query_params: Dict[SecMasterIdentifiers, Union[str, Iterable[str]]],
+        **query_params: dict[SecMasterIdentifiers, Union[str, Iterable[str]]],
     ) -> Optional[dict]:
         """
         Get reference data for a single page of a given asset type. Use returned offsetKey to fetch next page.
@@ -652,7 +652,7 @@ class GsSecurityMasterApi:
         return results
 
     @classmethod
-    def get_exchanges(cls, effective_date: dt.date = None, **query_params: Dict[str, Union[str, Iterable[str]]]):
+    def get_exchanges(cls, effective_date: dt.date = None, **query_params: dict[str, Union[str, Iterable[str]]]):
         """
         Returns reference data for exchanges - e.g. MICs, exchange codes, name, listing country.
 

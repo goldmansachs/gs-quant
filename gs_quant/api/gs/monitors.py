@@ -15,7 +15,6 @@ under the License.
 """
 
 import logging
-from typing import Tuple
 from urllib.parse import urlencode
 
 from gs_quant.session import GsSession
@@ -37,7 +36,7 @@ class GsMonitorsApi:
         folder_name: str = None,
         monitor_type: str = None,
         tags: str = None,
-    ) -> Tuple[Monitor, ...]:
+    ) -> tuple[Monitor, ...]:
         query_string = urlencode(
             dict(
                 filter(

@@ -17,7 +17,6 @@ under the License.
 from base64 import b64decode
 from collections import OrderedDict
 from enum import Enum
-from typing import List, Tuple
 from urllib.parse import quote
 
 from gs_quant.session import GsSession
@@ -49,7 +48,7 @@ class GsContentApi:
         offset: int = 0,
         limit: int = 10,
         order_by: dict = {'direction': OrderBy.DESC, 'field': 'createdTime'},
-    ) -> List[ContentResponse]:
+    ) -> list[ContentResponse]:
         """
         Get contents for given parameters
 
@@ -92,7 +91,7 @@ class GsContentApi:
         return contents.data
 
     @staticmethod
-    def get_text(contents: List[ContentResponse]) -> List[Tuple[str, str]]:
+    def get_text(contents: list[ContentResponse]) -> list[tuple[str, str]]:
         """
         Get text for contents
 

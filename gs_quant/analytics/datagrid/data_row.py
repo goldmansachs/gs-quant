@@ -16,14 +16,14 @@ under the License.
 
 from abc import ABC
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 from gs_quant.analytics.core import BaseProcessor
 from gs_quant.data import DataCoordinate
 from gs_quant.data.fields import DataDimension
 from gs_quant.entities.entity import Entity
 
-DataDimensions = Dict[Union[DataDimension, str], Union[str, float]]
+DataDimensions = dict[Union[DataDimension, str], Union[str, float]]
 
 # Override Types
 DIMENSIONS_OVERRIDE = 'dimensionsOverride'
@@ -38,7 +38,7 @@ ROW_SEPARATOR = 'rowSeparator'
 class Override(ABC):
     """Base class for a DataGrid row override"""
 
-    def __init__(self, column_names: List[str]):
+    def __init__(self, column_names: list[str]):
         """Abstract Row Override
 
         :param column_names: column names to override with the specified dimensions
@@ -46,7 +46,7 @@ class Override(ABC):
         self.column_names = column_names
         super().__init__()
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> dict:
         return {'columnNames': self.column_names}
 
     @classmethod
@@ -55,7 +55,7 @@ class Override(ABC):
 
 
 class ValueOverride(Override):
-    def __init__(self, column_names: List[str], value: Union[float, str, bool]):
+    def __init__(self, column_names: list[str], value: Union[float, str, bool]):
         """
         Allows the ability to set a cell to a specific value.
 
@@ -78,7 +78,7 @@ class ValueOverride(Override):
 
 class DimensionsOverride(Override):
     def __init__(
-        self, column_names: List[str], dimensions: DataDimensions, coordinate: DataCoordinate, coordinate_id: str = None
+        self, column_names: list[str], dimensions: DataDimensions, coordinate: DataCoordinate, coordinate_id: str = None
     ):
         """Override dimensions for the given coordinate
 
@@ -121,7 +121,7 @@ class DimensionsOverride(Override):
 
 
 class ProcessorOverride(Override):
-    def __init__(self, column_names: List[str], processor: BaseProcessor):
+    def __init__(self, column_names: list[str], processor: BaseProcessor):
         """Abstract Row Override
 
         :param column_names: column names to override with the specified dimensions
@@ -168,14 +168,14 @@ class RowSeparator:
 class DataRow:
     """Row object for DataGrid"""
 
-    def __init__(self, entity: Entity, overrides: Optional[List[Override]] = None):
+    def __init__(self, entity: Entity, overrides: Optional[list[Override]] = None):
         """Data row
 
         :param entity: Specified entity for the DataRow
         :param overrides: Optional List of DataRowOverride's for retrieving data
         """
         self.entity = entity
-        self.overrides: List[Override] = overrides or []
+        self.overrides: list[Override] = overrides or []
 
     def as_dict(self):
         data_row = {

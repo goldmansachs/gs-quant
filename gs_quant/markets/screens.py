@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import logging
 from enum import Enum, unique
-from typing import Tuple, Union
+from typing import Union
 
 import pandas as pd
 from pydash import get, set_
@@ -101,7 +101,7 @@ class Direction(Enum):
 class CheckboxFilter:
     """Represents asset filters that have multiple enumerated options"""
 
-    def __init__(self, checkbox_type: CheckboxType = None, selections: Tuple[Enum, ...] = None):
+    def __init__(self, checkbox_type: CheckboxType = None, selections: tuple[Enum, ...] = None):
         self.__selections = selections
         self.__checkbox_type = checkbox_type
 
@@ -118,19 +118,19 @@ class CheckboxFilter:
         self.__checkbox_type = value
 
     @property
-    def selections(self) -> Tuple[Enum, ...]:
+    def selections(self) -> tuple[Enum, ...]:
         return self.__selections
 
     @selections.setter
-    def selections(self, value: Tuple[Enum, ...]):
+    def selections(self, value: tuple[Enum, ...]):
         self.__selections = value
 
-    def add(self, new_selections: Tuple[Enum, ...]):
+    def add(self, new_selections: tuple[Enum, ...]):
         new_selections = set(new_selections)
         old_selections = set(self.selections)
         self.selections = tuple(set(new_selections).union(set(old_selections)))
 
-    def remove(self, remove_selections: Tuple[Enum, ...]):
+    def remove(self, remove_selections: tuple[Enum, ...]):
         remove_selections = set(remove_selections)
         old_selections = set(self.selections)
         self.selections = tuple(old_selections.difference(remove_selections))

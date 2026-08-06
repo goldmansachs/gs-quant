@@ -18,7 +18,7 @@ import calendar
 import datetime as dt
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -35,9 +35,9 @@ class RDateRule(ABC):
     result: dt.date
     number: int
     week_mask: str
-    currencies: List[Union[Currency, str]] = None
-    exchanges: List[Union[ExchangeCode, str]] = None
-    holiday_calendar: List[dt.date] = None
+    currencies: list[Union[Currency, str]] = None
+    exchanges: list[Union[ExchangeCode, str]] = None
+    holiday_calendar: list[dt.date] = None
     sign: Optional[str] = None
 
     def __init__(self, result: dt.date, **params):
@@ -60,7 +60,7 @@ class RDateRule(ABC):
         """
         pass
 
-    def _get_holidays(self) -> List[dt.date]:
+    def _get_holidays(self) -> list[dt.date]:
         if self.holiday_calendar is not None:
             if self.usd_calendar is None:
                 return self.holiday_calendar
@@ -86,7 +86,7 @@ class RDateRule(ABC):
             _logger.warning('Unable to fetch holiday calendar. Try passing your own when applying a rule. {}'.format(e))
             return []
 
-    def _apply_business_days_logic(self, holidays: List[dt.date], offset: int = None, roll: str = 'preceding'):
+    def _apply_business_days_logic(self, holidays: list[dt.date], offset: int = None, roll: str = 'preceding'):
         if offset is not None:
             offset_to_use = offset
         else:
@@ -102,7 +102,7 @@ class RDateRule(ABC):
         temp += relativedelta(weeks=self.number - 1)
         return temp
 
-    def add_years(self, holidays: List[dt.date]):
+    def add_years(self, holidays: list[dt.date]):
         self.result = self.result + relativedelta(years=self.number)
         if self.result.isoweekday() in {6, 7}:
             self.result += dt.timedelta(days=self.result.isoweekday() % 5)

@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Optional, Tuple
+from typing import Optional
 
 from dataclasses_json import global_config
 
@@ -23,4 +23,4 @@ from gs_quant.target.workflow_quote import HedgeTypes  # noqa - We need to impor
 
 global_config.decoders[Optional[HedgeTypes]] = decode_hedge_type
 global_config.decoders[HedgeTypes] = decode_hedge_type
-global_config.decoders[Optional[Tuple[HedgeTypes, ...]]] = decode_hedge_types
+global_config.decoders[Optional[tuple[HedgeTypes, ...]]] = decode_hedge_types

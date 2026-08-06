@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 from gs_quant.api.gs.marketview.dashboards import GsMarketviewDashboardsApi
 from gs_quant.api.gs.marketview.widgets import GsMarketviewWidgetsApi
@@ -30,11 +30,11 @@ from gs_quant.session import GsSession
 @mcp_tool(tags={"marketview"})
 def search_dashboards(
     query: Annotated[Optional[str], "Full-text search string. Cannot be combined with ids"] = None,
-    ids: Annotated[Optional[List[str]], "Filter by a list of dashboard IDs. Cannot be combined with query"] = None,
+    ids: Annotated[Optional[list[str]], "Filter by a list of dashboard IDs. Cannot be combined with query"] = None,
     size: Annotated[int, "Number of results to return per page"] = 20,
     page: Annotated[int, "1-based page number"] = 1,
-    dashboard_type: Annotated[Optional[List[str]], "Filter by dashboard type(s), e.g. ['THEMATIC', 'CUSTOM']"] = None,
-    author: Annotated[Optional[List[str]], "Filter by author GUID(s)"] = None,
+    dashboard_type: Annotated[Optional[list[str]], "Filter by dashboard type(s), e.g. ['THEMATIC', 'CUSTOM']"] = None,
+    author: Annotated[Optional[list[str]], "Filter by author GUID(s)"] = None,
     user_session: GsSession = depends_user_session,
 ) -> dict:
     """
@@ -101,11 +101,11 @@ def get_personalized_dashboards(
 @mcp_tool(tags={"marketview"})
 def search_widgets(
     query: Annotated[Optional[str], "Full-text search string. Cannot be combined with ids"] = None,
-    ids: Annotated[Optional[List[str]], "Filter by a list of widget IDs. Cannot be combined with query"] = None,
+    ids: Annotated[Optional[list[str]], "Filter by a list of widget IDs. Cannot be combined with query"] = None,
     limit: Annotated[int, "Maximum number of results to return per page"] = 20,
     offset: Annotated[int, "Number of results to skip"] = 0,
-    author: Annotated[Optional[List[str]], "Filter by author GUID(s)"] = None,
-    tags: Annotated[Optional[List[str]], "Filter by widget tag(s)"] = None,
+    author: Annotated[Optional[list[str]], "Filter by author GUID(s)"] = None,
+    tags: Annotated[Optional[list[str]], "Filter by widget tag(s)"] = None,
     metadata: Annotated[bool, "If true, include full widget metadata in each result"] = False,
     user_session: GsSession = depends_user_session,
 ) -> dict:

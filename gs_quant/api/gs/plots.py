@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 from collections.abc import Iterable
-from typing import Sequence, Tuple, Union
+from typing import Sequence, Union
 
 from gs_quant.common import TimeFilter
 from gs_quant.datetime.relative_date import RelativeDate
@@ -30,11 +30,11 @@ class GsPlotApi:
     # CRUD
 
     @classmethod
-    def get_many_charts(cls, limit: int = 100) -> Tuple[Chart, ...]:
+    def get_many_charts(cls, limit: int = 100) -> tuple[Chart, ...]:
         return GsSession.current.sync.get(f'/charts?limit={limit}', cls=Chart)['results']
 
     @classmethod
-    async def get_many_charts_async(cls, limit: int = 100) -> Tuple[Chart, ...]:
+    async def get_many_charts_async(cls, limit: int = 100) -> tuple[Chart, ...]:
         return (await GsSession.current.async_.get(f'/charts?limit={limit}', cls=Chart))['results']
 
     @classmethod

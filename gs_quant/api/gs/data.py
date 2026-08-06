@@ -22,7 +22,7 @@ import time
 from copy import copy, deepcopy
 from enum import Enum
 from itertools import chain
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Iterable, Optional, Union
 
 import cachetools
 import pandas as pd
@@ -361,7 +361,7 @@ class GsDataApi(DataApi):
     @staticmethod
     def get_results(
         dataset_id: str, response: Union[DataQueryResponse, dict], query: DataQuery
-    ) -> Union[list, Tuple[list, list]]:
+    ) -> Union[list, tuple[list, list]]:
         results, total_pages = GsDataApi._get_results(response)
         if total_pages:
             if query.page is None:
@@ -377,7 +377,7 @@ class GsDataApi(DataApi):
     @staticmethod
     async def get_results_async(
         dataset_id: str, response: Union[DataQueryResponse, dict], query: DataQuery
-    ) -> Union[list, Tuple[list, list]]:
+    ) -> Union[list, tuple[list, list]]:
         results, total_pages = GsDataApi._get_results(response)
         if total_pages and total_pages > 1:
             futures = []
@@ -425,7 +425,7 @@ class GsDataApi(DataApi):
         scroll_id: Optional[str],
         limit: int,
         offset: int,
-        fields: List[str],
+        fields: list[str],
         include_history: bool,
         **kwargs,
     ) -> dict:
@@ -449,10 +449,10 @@ class GsDataApi(DataApi):
         scroll_id: Optional[str] = None,
         limit: int = None,
         offset: int = None,
-        fields: List[str] = None,
+        fields: list[str] = None,
         include_history: bool = False,
         **kwargs,
-    ) -> List[dict]:
+    ) -> list[dict]:
         session = cls.get_session()
         params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
         body = session.sync.get(f'/data/{dataset_id}/coverage', payload=params)
@@ -477,10 +477,10 @@ class GsDataApi(DataApi):
         scroll_id: Optional[str] = None,
         limit: int = None,
         offset: int = None,
-        fields: List[str] = None,
+        fields: list[str] = None,
         include_history: bool = False,
         **kwargs,
-    ) -> List[dict]:
+    ) -> list[dict]:
         session = cls.get_session()
         params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
         body = await session.async_.get(f'/data/{dataset_id}/coverage', payload=params)
@@ -538,7 +538,7 @@ class GsDataApi(DataApi):
         return result
 
     @classmethod
-    def delete_data(cls, dataset_id: str, delete_query: Dict) -> Dict:
+    def delete_data(cls, dataset_id: str, delete_query: dict) -> dict:
         """
         Delete data from dataset. You must have admin access to the dataset to delete data.
         All data deleted is not recoverable.
@@ -564,7 +564,7 @@ class GsDataApi(DataApi):
         offset: int = None,
         scroll: str = DEFAULT_SCROLL,
         scroll_id: Optional[str] = None,
-    ) -> Tuple[DataSetEntity, ...]:
+    ) -> tuple[DataSetEntity, ...]:
         params = dict(
             filter(
                 lambda item: item[1] is not None,
@@ -587,12 +587,12 @@ class GsDataApi(DataApi):
     @classmethod
     def get_catalog(
         cls,
-        dataset_ids: List[str] = None,
+        dataset_ids: list[str] = None,
         limit: int = 100,
         offset: int = None,
         scroll: str = DEFAULT_SCROLL,
         scroll_id: Optional[str] = None,
-    ) -> Tuple[DataSetCatalogEntry, ...]:
+    ) -> tuple[DataSetCatalogEntry, ...]:
         query = f'dataSetId={"&dataSetId=".join(dataset_ids)}' if dataset_ids else ''
         gs_session = cls.get_session()
         if len(query):
@@ -626,11 +626,11 @@ class GsDataApi(DataApi):
         mkt_type: str = None,
         mkt_asset: str = None,
         mkt_class: str = None,
-        mkt_point: Tuple[str, ...] = (),
+        mkt_point: tuple[str, ...] = (),
         *,
         limit: int = 100,
         return_type: type = str,
-    ) -> Union[Tuple[str, ...], Tuple[MarketDataCoordinate, ...]]:
+    ) -> Union[tuple[str, ...], tuple[MarketDataCoordinate, ...]]:
         where = FieldFilterMap(
             mkt_type=mkt_type.upper() if mkt_type is not None else None,
             mkt_asset=mkt_asset.upper() if mkt_asset is not None else None,
@@ -935,9 +935,9 @@ class GsDataApi(DataApi):
 
     @staticmethod
     def _get_market_data_filters(
-        asset_ids: List[str],
+        asset_ids: list[str],
         query_type: Union[QueryType, str],
-        where: Union[FieldFilterMap, Dict] = None,
+        where: Union[FieldFilterMap, dict] = None,
         source: Union[str] = None,
         real_time: bool = False,
         measure='Curve',
@@ -957,14 +957,14 @@ class GsDataApi(DataApi):
 
     @staticmethod
     def build_interval_chunked_market_data_queries(
-        asset_ids: List[str],
+        asset_ids: list[str],
         query_type: Union[QueryType, str],
-        where: Union[FieldFilterMap, Dict] = None,
+        where: Union[FieldFilterMap, dict] = None,
         source: Union[str] = None,
         real_time: bool = False,
         measure='Curve',
         vendor: str = '',
-    ) -> List[dict]:
+    ) -> list[dict]:
         parallel_interval = 365  # chunk over a year
 
         def chunk_time(start, end) -> tuple:
@@ -996,15 +996,15 @@ class GsDataApi(DataApi):
 
     @staticmethod
     def build_market_data_query(
-        asset_ids: List[str],
+        asset_ids: list[str],
         query_type: Union[QueryType, str],
-        where: Union[FieldFilterMap, Dict] = None,
+        where: Union[FieldFilterMap, dict] = None,
         source: Union[str] = None,
         real_time: bool = False,
         measure='Curve',
         parallelize_queries: bool = False,
         vendor: str = '',
-    ) -> Union[dict, List[dict]]:
+    ) -> Union[dict, list[dict]]:
         if parallelize_queries:
             return GsDataApi.build_interval_chunked_market_data_queries(
                 asset_ids, query_type, where, source, real_time, measure, vendor
@@ -1022,7 +1022,7 @@ class GsDataApi(DataApi):
         return {'queries': [inner]}
 
     @classmethod
-    def get_data_providers(cls, entity_id: str, availability: Optional[Dict] = None) -> Dict:
+    def get_data_providers(cls, entity_id: str, availability: Optional[dict] = None) -> dict:
         """Return daily and real-time data providers
 
         :param entity_id: identifier of entity i.e. asset, country, subdivision
@@ -1147,8 +1147,8 @@ class GsDataApi(DataApi):
 
     @classmethod
     def __normalise_coordinate_data(
-        cls, data: Iterable[Union[MDAPIDataQueryResponse, Dict]], fields: Optional[Tuple[MDAPIQueryField, ...]] = None
-    ) -> Iterable[Iterable[Dict]]:
+        cls, data: Iterable[Union[MDAPIDataQueryResponse, dict]], fields: Optional[tuple[MDAPIQueryField, ...]] = None
+    ) -> Iterable[Iterable[dict]]:
         ret = []
         for response in data:
             coord_data = []
@@ -1175,7 +1175,7 @@ class GsDataApi(DataApi):
 
     @classmethod
     def __df_from_coordinate_data(
-        cls, data: Iterable[Dict], *, use_datetime_index: Optional[bool] = True
+        cls, data: Iterable[dict], *, use_datetime_index: Optional[bool] = True
     ) -> pd.DataFrame:
         df = cls._sort_coordinate_data(pd.DataFrame.from_records(data))
         index_field = next((f for f in ('time', 'date') if f in df.columns), None)
@@ -1188,7 +1188,7 @@ class GsDataApi(DataApi):
     def _sort_coordinate_data(
         cls,
         df: pd.DataFrame,
-        by: Tuple[str, ...] = (
+        by: tuple[str, ...] = (
             'date',
             'time',
             'mktType',
@@ -1234,7 +1234,7 @@ class GsDataApi(DataApi):
         as_dataframe: bool = False,
         pricing_location: Optional[PricingLocation] = None,
         timeout: int = None,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """
         Get last value of coordinates data
 
@@ -1299,9 +1299,9 @@ class GsDataApi(DataApi):
         vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
         as_multiple_dataframes: bool = False,
         pricing_location: Optional[PricingLocation] = None,
-        fields: Optional[Tuple[MDAPIQueryField, ...]] = None,
+        fields: Optional[tuple[MDAPIQueryField, ...]] = None,
         **kwargs,
-    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame]]:
+    ) -> Union[pd.DataFrame, tuple[pd.DataFrame]]:
         """
         Get coordinates data
 
@@ -1349,7 +1349,7 @@ class GsDataApi(DataApi):
         vendor: MarketDataVendor = MarketDataVendor.Goldman_Sachs,
         pricing_location: Optional[PricingLocation] = None,
         **kwargs,
-    ) -> Union[pd.Series, Tuple[pd.Series]]:
+    ) -> Union[pd.Series, tuple[pd.Series]]:
         """
         Get coordinates data series
 
@@ -1399,7 +1399,7 @@ class GsDataApi(DataApi):
         raise RuntimeError(f"Unable to get Dataset schema for {dataset_id}")
 
     @classmethod
-    def get_field_types(cls, field_names: Union[str, List[str]]):
+    def get_field_types(cls, field_names: Union[str, list[str]]):
         try:
             fields = cls.get_dataset_fields(names=field_names, limit=len(field_names))
         except Exception:
@@ -1417,7 +1417,7 @@ class GsDataApi(DataApi):
 
     @classmethod
     def construct_dataframe_with_types(
-        cls, dataset_id: str, data: Union[Base, List, Tuple], schema_varies=False, standard_fields=False
+        cls, dataset_id: str, data: Union[Base, list, tuple], schema_varies=False, standard_fields=False
     ) -> pd.DataFrame:
         """
         Constructs a dataframe with correct date types.
@@ -1468,10 +1468,10 @@ class GsDataApi(DataApi):
     @classmethod
     def get_dataset_fields(
         cls,
-        ids: Union[str, List[str]] = None,
-        names: Union[str, List[str]] = None,
+        ids: Union[str, list[str]] = None,
+        names: Union[str, list[str]] = None,
         limit: int = 10,
-    ) -> Union[Tuple[DataSetFieldEntity, ...], Tuple[dict, ...]]:
+    ) -> Union[tuple[DataSetFieldEntity, ...], tuple[dict, ...]]:
         """
         Get many dataset fields
 
@@ -1494,8 +1494,8 @@ class GsDataApi(DataApi):
 
     @classmethod
     def create_dataset_fields(
-        cls, fields: List[DataSetFieldEntity]
-    ) -> Union[Tuple[DataSetFieldEntity, ...], Tuple[dict, ...]]:
+        cls, fields: list[DataSetFieldEntity]
+    ) -> Union[tuple[DataSetFieldEntity, ...], tuple[dict, ...]]:
         """
         Create many dataset fields
 
@@ -1519,8 +1519,8 @@ class GsDataApi(DataApi):
 
     @classmethod
     def update_dataset_fields(
-        cls, fields: List[DataSetFieldEntity]
-    ) -> Union[Tuple[DataSetFieldEntity, ...], Tuple[dict, ...]]:
+        cls, fields: list[DataSetFieldEntity]
+    ) -> Union[tuple[DataSetFieldEntity, ...], tuple[dict, ...]]:
         """
         Update many dataset fields
 

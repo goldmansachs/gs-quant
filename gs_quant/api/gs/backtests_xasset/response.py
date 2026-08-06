@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from dataclasses_json import LetterCase, config, dataclass_json
 
@@ -43,9 +43,9 @@ from gs_quant.target.backtests import FlowVolBacktestMeasure
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class RiskResponse:
-    legRefs: Dict[str, PriceableImpl] = field(default=None, metadata=config(decoder=decode_leg_refs))
-    riskMeasureRefs: Dict[str, RiskMeasure] = field(default=None, metadata=config(decoder=decode_risk_measure_refs))
-    results: Tuple[RiskResults, ...] = field(default=None, metadata=config(decoder=decode_result_tuple))
+    legRefs: dict[str, PriceableImpl] = field(default=None, metadata=config(decoder=decode_leg_refs))
+    riskMeasureRefs: dict[str, RiskMeasure] = field(default=None, metadata=config(decoder=decode_risk_measure_refs))
+    results: tuple[RiskResults, ...] = field(default=None, metadata=config(decoder=decode_result_tuple))
 
     def serializable(self):
         self.legRefs = {
@@ -58,13 +58,13 @@ class RiskResponse:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class BacktestResponse:
-    measures: Dict[FlowVolBacktestMeasure, Dict[dt.date, RiskResultWithData]] = field(
+    measures: dict[FlowVolBacktestMeasure, dict[dt.date, RiskResultWithData]] = field(
         default=None, metadata=config(decoder=decode_basic_bt_measure_dict)
     )
-    portfolio: Dict[dt.date, Tuple[Instrument, ...]] = field(
+    portfolio: dict[dt.date, tuple[Instrument, ...]] = field(
         default=None, metadata=config(decoder=decode_daily_portfolio)
     )
-    transactions: Dict[dt.date, Tuple[Transaction, ...]] = field(
+    transactions: dict[dt.date, tuple[Transaction, ...]] = field(
         default=None, metadata=config(decoder=decode_basic_bt_transactions)
     )
     strategy: Optional[object] = field(default=None, metadata=config(decoder=decode_strategy))

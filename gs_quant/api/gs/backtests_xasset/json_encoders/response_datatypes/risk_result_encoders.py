@@ -15,7 +15,7 @@ under the License.
 """
 
 import datetime as dt
-from typing import Any, Type
+from typing import Any
 
 import pandas as pd
 
@@ -46,7 +46,7 @@ _type_to_datatype_map = {
 }
 
 
-def map_result_to_datatype(data: Any) -> Type[RiskResultWithData]:
+def map_result_to_datatype(data: Any) -> type[RiskResultWithData]:
     if isinstance(data, (float, int)):
         return FloatWithData
     if isinstance(data, str):

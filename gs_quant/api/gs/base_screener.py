@@ -15,7 +15,7 @@ under the License.
 """
 
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from gs_quant.session import GsSession
 from gs_quant.target.base_screener import Screener
@@ -25,7 +25,7 @@ _logger = logging.getLogger(__name__)
 
 class GsBaseScreenerApi:
     @classmethod
-    def get_screeners(cls) -> Tuple[Screener, ...]:
+    def get_screeners(cls) -> tuple[Screener, ...]:
         """
         Retrieves screener information about all screeners accessible to the current user.
 
@@ -91,7 +91,7 @@ class GsBaseScreenerApi:
         )
 
     @classmethod
-    def publish_to_screener(cls, screener_id: str, data: Dict[str, List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    def publish_to_screener(cls, screener_id: str, data: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
         """
         Permanently publishes additional data specified in screener_rows to the existing screener
         with ID screener_id. Although this function returns a dictionary of all published data,
@@ -112,7 +112,7 @@ class GsBaseScreenerApi:
         )['data']
 
     @classmethod
-    def clear_screener(cls, screener_id: str) -> Dict[str, Any]:
+    def clear_screener(cls, screener_id: str) -> dict[str, Any]:
         """
         Permanently clears all data from a screener with the corresponding screener_id,
         but does not delete the screener. This function leaves the schema of the screener

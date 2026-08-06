@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 from enum import Enum
-from typing import NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple, Optional, Union
 
 from gs_quant.base import EnumBase
 from gs_quant.target.backtests import Backtest as __Backtest, BacktestResult
@@ -29,7 +29,7 @@ class TradeInMethod(EnumBase, Enum):
 
 
 class Backtest(__Backtest):
-    def get_results(self) -> Tuple[BacktestResult, ...]:
+    def get_results(self) -> tuple[BacktestResult, ...]:
         from gs_quant.api.gs.backtests import GsBacktestApi
 
         return GsBacktestApi.get_results(backtest_id=self.id)

@@ -19,7 +19,7 @@ from collections import namedtuple
 from enum import Enum, auto
 from functools import partial
 from numbers import Real
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import cachetools.func
 import inflection
@@ -2187,7 +2187,7 @@ def forward_vol_term(
     return series
 
 
-def _get_skew_strikes(asset: Asset, strike_reference: SkewReference, distance: Real) -> Tuple[list, int]:
+def _get_skew_strikes(asset: Asset, strike_reference: SkewReference, distance: Real) -> tuple[list, int]:
     """
     Calculates strike references necessary for calculating skew.
 
@@ -5694,7 +5694,7 @@ def fx_implied_correlation(
 
 
 def get_last_for_measure(
-    asset_ids: List[str],
+    asset_ids: list[str],
     query_type,
     where,
     *,
@@ -5724,7 +5724,7 @@ def get_last_for_measure(
     return None
 
 
-def merge_dataframes(dataframes: List[pd.DataFrame]):
+def merge_dataframes(dataframes: list[pd.DataFrame]):
     if dataframes is None:
         return pd.DataFrame()
     result = pd.concat(dataframes)
@@ -5736,7 +5736,7 @@ def merge_dataframes(dataframes: List[pd.DataFrame]):
 
 
 def append_last_for_measure(
-    df: pd.DataFrame, asset_ids: List[str], query_type, where, *, source: str = None, request_id: Optional[str] = None
+    df: pd.DataFrame, asset_ids: list[str], query_type, where, *, source: str = None, request_id: Optional[str] = None
 ):
     df_l = get_last_for_measure(asset_ids, query_type, where, source=source, request_id=request_id)
     if df_l is None:
@@ -5750,7 +5750,7 @@ def append_last_for_measure(
 
 
 def get_market_data_tasks(
-    asset_ids: List[str],
+    asset_ids: list[str],
     query_type,
     where: dict,
     *,
@@ -5778,7 +5778,7 @@ def get_market_data_tasks(
 
 
 def get_historical_and_last_for_measure(
-    asset_ids: List[str],
+    asset_ids: list[str],
     query_type,
     where: dict,
     *,

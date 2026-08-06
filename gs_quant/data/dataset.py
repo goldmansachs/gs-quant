@@ -19,7 +19,7 @@ import re
 import webbrowser
 from enum import Enum
 from functools import partial
-from typing import Callable, Dict, Iterable, List, Optional, Union
+from typing import Callable, Iterable, Optional, Union
 from urllib.parse import quote
 
 import inflection
@@ -255,7 +255,7 @@ class Dataset:
         end: Union[dt.date, dt.datetime],
         as_of: dt.datetime,
         since: dt.datetime,
-        dates: List[dt.date],
+        dates: list[dt.date],
         **kwargs,
     ):
         field_value = field if isinstance(field, str) else field.value
@@ -291,7 +291,7 @@ class Dataset:
         end: Optional[Union[dt.date, dt.datetime]] = None,
         as_of: Optional[dt.datetime] = None,
         since: Optional[dt.datetime] = None,
-        dates: Optional[List[dt.date]] = None,
+        dates: Optional[list[dt.date]] = None,
         standard_fields: Optional[bool] = False,
         **kwargs,
     ) -> pd.Series:
@@ -330,7 +330,7 @@ class Dataset:
         end: Optional[Union[dt.date, dt.datetime]] = None,
         as_of: Optional[dt.datetime] = None,
         since: Optional[dt.datetime] = None,
-        dates: Optional[List[dt.date]] = None,
+        dates: Optional[list[dt.date]] = None,
         standard_fields: Optional[bool] = False,
         **kwargs,
     ) -> pd.Series:
@@ -398,7 +398,7 @@ class Dataset:
         self,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         include_history: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
@@ -428,7 +428,7 @@ class Dataset:
         self,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
         include_history: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
@@ -454,7 +454,7 @@ class Dataset:
 
         return pd.DataFrame(coverage)
 
-    def delete(self) -> Dict:
+    def delete(self) -> dict:
         """
         Delete dataset definition.
 
@@ -467,7 +467,7 @@ class Dataset:
         """
         return self.provider.delete_dataset(self.id)
 
-    def undelete(self) -> Dict:
+    def undelete(self) -> dict:
         """
         Un-delete dataset definition.
 
@@ -480,7 +480,7 @@ class Dataset:
         """
         return self.provider.undelete_dataset(self.id)
 
-    def delete_data(self, delete_query: Dict):
+    def delete_data(self, delete_query: dict):
         """
         Delete data from dataset. You must have admin access to the dataset to delete data.
         All data deleted is not recoverable.
@@ -495,7 +495,7 @@ class Dataset:
         """
         return self.provider.delete_data(self.id, delete_query)
 
-    def upload_data(self, data: Union[pd.DataFrame, list, tuple]) -> Dict:
+    def upload_data(self, data: Union[pd.DataFrame, list, tuple]) -> dict:
         """
         Upload data to this DataSet
 
@@ -752,7 +752,7 @@ class MarqueeDataIngestionLibrary:
         parameters.snowflake_config.id_column = self.to_upper_underscore(symbol_dimension)
         return parameters
 
-    def _check_and_create_field(self, fieldMap: Dict[str, str], dataframe: pd.DataFrame) -> None:
+    def _check_and_create_field(self, fieldMap: dict[str, str], dataframe: pd.DataFrame) -> None:
         fields_to_create = []
         for column, field_name in fieldMap.items():
             if not (self.provider.get_dataset_fields(names=field_name)):
@@ -772,8 +772,8 @@ class MarqueeDataIngestionLibrary:
         data: pd.DataFrame,
         symbol_dimension: str,
         time_dimension: str,
-        dimensions: Optional[List[str]],
-        measures: List[str],
+        dimensions: Optional[list[str]],
+        measures: list[str],
         internal_user: bool,
     ) -> DataSetDimensions:
         """
@@ -835,7 +835,7 @@ class MarqueeDataIngestionLibrary:
         dataset_id: str,
         symbol_dimension: str,
         time_dimension: str,
-        dimensions: Optional[List[str]] = [],
+        dimensions: Optional[list[str]] = [],
     ) -> DataSetEntity:
         """
         Create a dataset using the provided data and metadata.

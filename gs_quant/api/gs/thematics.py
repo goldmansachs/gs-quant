@@ -17,7 +17,6 @@ under the License.
 import datetime as dt
 import json
 from enum import Enum
-from typing import List
 
 from gs_quant.session import GsSession
 
@@ -55,13 +54,13 @@ class GsThematicApi:
     def get_thematics(
         cls,
         entity_id: str,
-        basket_ids: List[str] = None,
-        regions: List[Region] = None,
+        basket_ids: list[str] = None,
+        regions: list[Region] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        measures: List[ThematicMeasure] = None,
+        measures: list[ThematicMeasure] = None,
         notional: float = None,
-    ) -> List:
+    ) -> list:
         payload = {
             'id': entity_id,
         }

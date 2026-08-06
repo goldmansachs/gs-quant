@@ -19,7 +19,7 @@ from abc import ABCMeta
 from bisect import insort
 from collections import defaultdict, namedtuple
 from itertools import zip_longest
-from typing import Collection, Dict, Iterable, Optional, Union
+from typing import Collection, Iterable, Optional, Union
 
 from gs_quant.backtests.action_handler import ActionHandler
 from gs_quant.backtests.actions import (
@@ -281,7 +281,7 @@ class AddScaledTradeActionImpl(OrderBasedActionImpl):
         self,
         state_list: Collection[dt.date],
         price_measure: RiskMeasure,
-        trigger_infos: Dict[dt.date, Optional[Union[AddScaledTradeActionInfo, Iterable[AddScaledTradeActionInfo]]]],
+        trigger_infos: dict[dt.date, Optional[Union[AddScaledTradeActionInfo, Iterable[AddScaledTradeActionInfo]]]],
     ):
         if self.action.scaling_type == ScalingActionType.risk_measure:
             self._order_valuations.append(self.action.scaling_risk)

@@ -15,7 +15,6 @@ under the License.
 """
 
 import logging
-from typing import Dict, List
 
 from gs_quant.analytics.common import DATA_ROW, ENTITY_ID, ENTITY_TYPE, PARAMETER, PROCESSOR, REFERENCE, TYPE
 from gs_quant.datetime.relative_date import RelativeDate
@@ -29,7 +28,7 @@ def is_of_builtin_type(obj):
     return type(obj).__module__ in ('builtins', '__builtin__')
 
 
-def resolve_entities(reference_list: List[Dict], entity_cache: Dict = None):
+def resolve_entities(reference_list: list[dict], entity_cache: dict = None):
     """
     Utility function to fetch entities (assets, countries, etc.). Allows us to split functionality that requires data
     fetching.
@@ -64,7 +63,7 @@ def resolve_entities(reference_list: List[Dict], entity_cache: Dict = None):
             data_query_info.entity = entity
 
 
-def get_rdate_cache_key(rule: str, base_date: str, currencies: List[str], exchanges: List[str]) -> str:
+def get_rdate_cache_key(rule: str, base_date: str, currencies: list[str], exchanges: list[str]) -> str:
     return f'{rule}::{base_date}::{currencies}::{exchanges}'
 
 

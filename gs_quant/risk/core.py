@@ -20,7 +20,7 @@ from abc import ABCMeta, abstractmethod
 from concurrent.futures import Future
 from copy import copy
 from dataclasses import dataclass, fields
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Iterable, Optional, Union
 
 import pandas as pd
 from dataclasses_json import dataclass_json
@@ -472,32 +472,32 @@ class DataFrameWithInfo(pd.DataFrame, ResultInfo):
 class MQVSValidationTarget:
     env: Optional[str] = None
     operator: Optional[str] = None
-    mqGroups: Optional[Tuple[str, ...]] = None
-    users: Optional[Tuple[str, ...]] = None
-    assetClasses: Optional[Tuple[str, ...]] = None
-    assets: Optional[Tuple[str, ...]] = None
-    legTypes: Optional[Tuple[str, ...]] = None
-    legFields: Optional[Dict[str, str]] = None
+    mqGroups: Optional[tuple[str, ...]] = None
+    users: Optional[tuple[str, ...]] = None
+    assetClasses: Optional[tuple[str, ...]] = None
+    assets: Optional[tuple[str, ...]] = None
+    legTypes: Optional[tuple[str, ...]] = None
+    legFields: Optional[dict[str, str]] = None
 
 
 @dataclass_json
 @dataclass
 class MQVSValidatorDefn:
     validatorType: str
-    targets: Tuple[MQVSValidationTarget, ...]
-    args: Dict[str, str]
+    targets: tuple[MQVSValidationTarget, ...]
+    args: dict[str, str]
     groupId: Optional[str] = None
     groupIndex: Optional[int] = None
     groupMethod: Optional[str] = None
 
 
 class MQVSValidatorDefnsWithInfo(ResultInfo):
-    validators: Tuple[MQVSValidatorDefn, ...]
+    validators: tuple[MQVSValidatorDefn, ...]
 
     def __init__(
         self,
         risk_key: RiskKey,
-        value: Union[MQVSValidatorDefn, Tuple[MQVSValidatorDefn, ...]],
+        value: Union[MQVSValidatorDefn, tuple[MQVSValidatorDefn, ...]],
         unit: Optional[dict] = None,
         error: Optional[Union[str, dict]] = None,
         request_id: Optional[str] = None,
@@ -648,9 +648,9 @@ def subtract_risk(left: DataFrameWithInfo, right: DataFrameWithInfo) -> pd.DataF
     return aggregate_risk((left, right_negated))
 
 
-def sort_values(data: Iterable, columns: Tuple[str, ...], by: Tuple[str, ...]) -> Iterable:
+def sort_values(data: Iterable, columns: tuple[str, ...], by: tuple[str, ...]) -> Iterable:
     indices = tuple(columns.index(c) for c in by if c in columns)
-    fns: List[Optional[Callable[[any], Optional[float]]]] = [None] * len(columns)
+    fns: list[Optional[Callable[[any], Optional[float]]]] = [None] * len(columns)
     for idx in indices:
         fns[idx] = __column_sort_fns.get(columns[idx])
 
@@ -660,7 +660,7 @@ def sort_values(data: Iterable, columns: Tuple[str, ...], by: Tuple[str, ...]) -
     return sorted(data, key=cmp)
 
 
-def sort_risk(df: pd.DataFrame, by: Tuple[str, ...] = __risk_columns) -> pd.DataFrame:
+def sort_risk(df: pd.DataFrame, by: tuple[str, ...] = __risk_columns) -> pd.DataFrame:
     """
     Sort bucketed risk
 

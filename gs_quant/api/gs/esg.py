@@ -17,7 +17,6 @@ under the License.
 import datetime as dt
 import logging
 from enum import Enum
-from typing import Dict, List
 
 from gs_quant.session import GsSession
 
@@ -68,9 +67,9 @@ class GsEsgApi:
         entity_id: str,
         benchmark_id: str = None,
         pricing_date: dt.date = None,
-        measures: List[ESGMeasure] = [],
-        cards: List[ESGCard] = [],
-    ) -> Dict:
+        measures: list[ESGMeasure] = [],
+        cards: list[ESGCard] = [],
+    ) -> dict:
         url = f'/esg/{entity_id}?'
         if pricing_date:
             url += f'&date={pricing_date.strftime("%Y-%m-%d")}'

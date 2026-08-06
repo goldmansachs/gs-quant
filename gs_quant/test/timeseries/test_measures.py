@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import json
 import os
-from typing import Dict, Union
+from typing import Union
 from unittest import mock
 from unittest.mock import patch
 
@@ -6065,7 +6065,7 @@ def test_thematic_model_beta():
 
 def test_thematic_model_beta_single_stock():
     mock_asset = GsAsset(asset_class='Equity', id='MA4B66MW5E27U9VBB94', type_='Single Stock', name='test')
-    mock_asset_entity: Dict = json.loads(json.dumps(mock_asset.as_dict(), cls=JSONEncoder))
+    mock_asset_entity: dict = json.loads(json.dumps(mock_asset.as_dict(), cls=JSONEncoder))
     mock_stock = Stock(
         mock_asset.id, mock_asset.name, mock_asset.exchange, mock_asset.currency, entity=mock_asset_entity
     )

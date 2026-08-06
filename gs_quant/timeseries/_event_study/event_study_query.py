@@ -32,7 +32,7 @@ under the License.
 #         --> normalized event-date list for public wrappers
 
 import datetime as dt
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -122,7 +122,7 @@ def validate_date_range(start_dt: pd.Timestamp, end_dt: pd.Timestamp) -> None:
         raise ValueError(f'start_date ({start_dt.date()}) must be before end_date ({end_dt.date()})')
 
 
-def resolve_query_event(event_type: str, country: Optional[str]) -> Tuple[str, Optional[str], str]:
+def resolve_query_event(event_type: str, country: Optional[str]) -> tuple[str, Optional[str], str]:
     """Resolve a public event request to canonical gs_quant loading inputs.
 
     :param event_type: Raw public event identifier.
@@ -159,7 +159,7 @@ def load_real_event_dates(
     start_dt: pd.Timestamp,
     end_dt: pd.Timestamp,
     ticker: Optional[Union[Asset, str]] = None,
-) -> List[pd.Timestamp]:
+) -> list[pd.Timestamp]:
     """Load normalized event dates from the live gs_quant event loaders.
 
     :param event_type: Canonical query event label.

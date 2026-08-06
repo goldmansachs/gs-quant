@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Any, Dict, Iterable, Union
+from typing import Any, Iterable, Union
 
 from dataclasses_json.cfg import _GlobalConfig
 
@@ -31,7 +31,7 @@ from gs_quant.workflow import (
 global_config = _GlobalConfig()
 
 
-def quote_report_from_dict(quote_report_dict: Union[Dict[str, Any], VisualStructuringReport]):
+def quote_report_from_dict(quote_report_dict: Union[dict[str, Any], VisualStructuringReport]):
     if quote_report_dict is not None:
         if isinstance(quote_report_dict, VisualStructuringReport):
             return quote_report_dict
@@ -42,7 +42,7 @@ def quote_report_from_dict(quote_report_dict: Union[Dict[str, Any], VisualStruct
     return None
 
 
-def quote_reports_from_dicts(quote_report_dicts: Iterable[Dict[str, Any]]):
+def quote_reports_from_dicts(quote_report_dicts: Iterable[dict[str, Any]]):
     if quote_report_dicts is not None:
         reports = []
         for quote_report_dict in quote_report_dicts:
@@ -52,7 +52,7 @@ def quote_reports_from_dicts(quote_report_dicts: Iterable[Dict[str, Any]]):
     return None
 
 
-def custom_comment_from_dict(in_dict: Union[Dict[str, Any], CustomComments]):
+def custom_comment_from_dict(in_dict: Union[dict[str, Any], CustomComments]):
     if in_dict is not None:
         if isinstance(in_dict, CustomComments):
             return in_dict
@@ -66,7 +66,7 @@ def custom_comment_from_dict(in_dict: Union[Dict[str, Any], CustomComments]):
     return None
 
 
-def custom_comments_from_dicts(in_dicts: Iterable[Dict[str, Any]]):
+def custom_comments_from_dicts(in_dicts: Iterable[dict[str, Any]]):
     if in_dicts is not None:
         comments = []
         for in_dict in in_dicts:
@@ -76,7 +76,7 @@ def custom_comments_from_dicts(in_dicts: Iterable[Dict[str, Any]]):
     return None
 
 
-def hedge_type_from_dict(hedge_type_dict: Union[Dict[str, Any], HedgeTypes]):
+def hedge_type_from_dict(hedge_type_dict: Union[dict[str, Any], HedgeTypes]):
     if hedge_type_dict is not None:
         if isinstance(hedge_type_dict, HedgeTypes):
             return hedge_type_dict
@@ -90,7 +90,7 @@ def hedge_type_from_dict(hedge_type_dict: Union[Dict[str, Any], HedgeTypes]):
     return None
 
 
-def hedge_type_from_dicts(in_dicts: Iterable[Dict[str, Any]]):
+def hedge_type_from_dicts(in_dicts: Iterable[dict[str, Any]]):
     if in_dicts is not None:
         hedge_types = []
         for in_dict in in_dicts:

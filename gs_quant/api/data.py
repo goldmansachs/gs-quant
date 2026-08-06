@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import logging
 from abc import ABCMeta
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import inflection
 import pandas as pd
@@ -62,7 +62,7 @@ class DataApi(ApiWithCustomSession, metaclass=ABCMeta):
         since: Optional[dt.datetime] = None,
         restrict_fields: bool = False,
         format: str = 'MessagePack',
-        dates: List[dt.date] = None,
+        dates: list[dt.date] = None,
         empty_intervals: Optional[bool] = None,
         **kwargs,
     ):

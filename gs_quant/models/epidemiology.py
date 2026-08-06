@@ -15,7 +15,7 @@ under the License.
 """
 
 from abc import ABC, abstractmethod
-from typing import Type, Union
+from typing import Union
 
 import numpy as np
 from lmfit import Parameters, minimize, report_fit
@@ -543,7 +543,7 @@ class EpidemicModel:
 
     def __init__(
         self,
-        model: Type[CompartmentalModel],
+        model: type[CompartmentalModel],
         parameters: tuple = None,
         data: np.array = None,
         initial_conditions: list = None,

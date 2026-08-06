@@ -18,7 +18,7 @@ import calendar as cal
 import datetime as dt
 import zoneinfo
 from enum import Enum, IntEnum
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Union
 
 import numpy as np
 
@@ -81,8 +81,8 @@ class DayCountConvention(Enum):
 
 
 def is_business_day(
-    dates: DateOrDates, calendars: Union[str, Tuple[str, ...]] = (), week_mask: Optional[str] = None
-) -> Union[bool, Tuple[bool, ...]]:
+    dates: DateOrDates, calendars: Union[str, tuple[str, ...]] = (), week_mask: Optional[str] = None
+) -> Union[bool, tuple[bool, ...]]:
     """
     Determine whether each date in dates is a business day
 
@@ -106,7 +106,7 @@ def business_day_offset(
     dates: DateOrDates,
     offsets: Union[int, Iterable[int]],
     roll: str = 'raise',
-    calendars: Union[str, Tuple[str, ...]] = (),
+    calendars: Union[str, tuple[str, ...]] = (),
     week_mask: Optional[str] = None,
 ) -> DateOrDates:
     """
@@ -130,7 +130,7 @@ def business_day_offset(
 
 
 def prev_business_date(
-    dates: DateOrDates = dt.date.today(), calendars: Union[str, Tuple[str, ...]] = (), week_mask: Optional[str] = None
+    dates: DateOrDates = dt.date.today(), calendars: Union[str, tuple[str, ...]] = (), week_mask: Optional[str] = None
 ) -> DateOrDates:
     """
     Returns the previous business date for a given date or date series, defaulting to today.
@@ -151,9 +151,9 @@ def prev_business_date(
 def business_day_count(
     begin_dates: DateOrDates,
     end_dates: DateOrDates,
-    calendars: Union[str, Tuple[str, ...]] = (),
+    calendars: Union[str, tuple[str, ...]] = (),
     week_mask: Optional[str] = None,
-) -> Union[int, Tuple[int, ...]]:
+) -> Union[int, tuple[int, ...]]:
     """
     Determine the number of business days between begin_dates and end_dates
 
@@ -177,7 +177,7 @@ def business_day_count(
 def date_range(
     begin: Union[int, dt.date],
     end: Union[int, dt.date],
-    calendars: Union[str, Tuple[str, ...]] = (),
+    calendars: Union[str, tuple[str, ...]] = (),
     week_mask: Optional[str] = None,
 ) -> Iterable[dt.date]:
     """

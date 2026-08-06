@@ -20,7 +20,7 @@ import os
 import threading
 from enum import Enum, auto
 from functools import wraps
-from typing import Callable, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Iterable, Optional, Union
 
 import backoff
 import cachetools
@@ -48,7 +48,7 @@ from gs_quant.target.reports import Report
 from gs_quant.tracing import Tracer
 
 _logger = logging.getLogger(__name__)
-IdList = Union[Tuple[str, ...], List]
+IdList = Union[tuple[str, ...], list]
 ENABLE_ASSET_CACHING = 'GSQ_SEC_MASTER_CACHE'
 
 
@@ -196,12 +196,12 @@ class GsAssetApi:
     @classmethod
     def __create_query(
         cls,
-        fields: Union[List, Tuple] = None,
+        fields: Union[list, tuple] = None,
         as_of: dt.datetime = None,
         limit: int = None,
         scroll: str = None,
         scroll_id: str = None,
-        order_by: List[str] = None,
+        order_by: list[str] = None,
         **kwargs,
     ) -> EntityQuery:
         keys = set(kwargs.keys())
@@ -242,9 +242,9 @@ class GsAssetApi:
         as_of: dt.datetime = None,
         limit: int = 100,
         return_type: Optional[type] = GsAsset,
-        order_by: List[str] = None,
+        order_by: list[str] = None,
         **kwargs,
-    ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
+    ) -> Union[tuple[GsAsset, ...], tuple[dict, ...]]:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets') if span and span.is_recording() else nullcontext()
         with tracer as scope:
@@ -261,9 +261,9 @@ class GsAssetApi:
         as_of: dt.datetime = None,
         limit: int = 100,
         return_type: Optional[type] = GsAsset,
-        order_by: List[str] = None,
+        order_by: list[str] = None,
         **kwargs,
-    ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
+    ) -> Union[tuple[GsAsset, ...], tuple[dict, ...]]:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets_async') if span and span.is_recording() else nullcontext()
         with tracer as scope:
@@ -281,9 +281,9 @@ class GsAssetApi:
         as_of: dt.datetime = None,
         limit: int = 1000,
         return_type: Optional[type] = GsAsset,
-        order_by: List[str] = None,
+        order_by: list[str] = None,
         **kwargs,
-    ) -> Union[Tuple[GsAsset, ...], Tuple[dict, ...]]:
+    ) -> Union[tuple[GsAsset, ...], tuple[dict, ...]]:
         span = Tracer.active_span()
         tracer = Tracer('GsAsset.get_many_assets_scroll') if span and span.is_recording() else nullcontext()
         with tracer as scope:
@@ -365,7 +365,7 @@ class GsAssetApi:
         limit: int = 100,
         as_of: dt.datetime = dt.datetime.today(),
         **kwargs,
-    ) -> Tuple[dict, ...]:
+    ) -> tuple[dict, ...]:
         where = dict(identifier=identifier, **kwargs)
         query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
         return GsSession.current.sync.post('/positions/resolver', payload=query)
@@ -378,7 +378,7 @@ class GsAssetApi:
         limit: int = 100,
         as_of: dt.datetime = dt.datetime.today(),
         **kwargs,
-    ) -> Tuple[dict, ...]:
+    ) -> tuple[dict, ...]:
         where = dict(identifier=identifier, **kwargs)
         query = dict(where=where, limit=limit, fields=fields, asOfTime=as_of.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
@@ -386,12 +386,12 @@ class GsAssetApi:
 
     @classmethod
     @_cached
-    def get_asset_xrefs(cls, asset_id: str) -> Tuple[GsTemporalXRef, ...]:
+    def get_asset_xrefs(cls, asset_id: str) -> tuple[GsTemporalXRef, ...]:
         response = GsSession.current.sync.get('/assets/{id}/xrefs'.format(id=asset_id))
         return tuple(GsTemporalXRef.from_dict(x) for x in response.get('xrefs', ()))
 
     @classmethod
-    def put_asset_xrefs(cls, asset_id: str, xrefs: List[TemporalXRef]):
+    def put_asset_xrefs(cls, asset_id: str, xrefs: list[TemporalXRef]):
         return GsSession.current.sync.put(f'/assets/{asset_id}/xrefs', payload=xrefs)
 
     @classmethod
@@ -431,7 +431,7 @@ class GsAssetApi:
         return GsSession.current.sync.delete(f'/assets/{asset_id}')
 
     @staticmethod
-    def get_position_dates(asset_id: str) -> Tuple[dt.date, ...]:
+    def get_position_dates(asset_id: str) -> tuple[dt.date, ...]:
         position_dates = GsSession.current.sync.get(f'/assets/{asset_id}/positions/dates')['results']
         return tuple(dt.datetime.strptime(d, '%Y-%m-%d').date() for d in position_dates)
 
@@ -440,7 +440,7 @@ class GsAssetApi:
         asset_id: str,
         position_date: dt.date,
         position_type: PositionType = None,
-    ) -> Tuple[PositionSet, ...]:
+    ) -> tuple[PositionSet, ...]:
         position_date_str = position_date.isoformat()
         url = f'/assets/{asset_id}/positions/{position_date_str}'
 
@@ -456,7 +456,7 @@ class GsAssetApi:
         start_date: dt.date,
         end_date: dt.date,
         position_type: PositionType = PositionType.CLOSE,
-    ) -> Tuple[PositionSet, ...]:
+    ) -> tuple[PositionSet, ...]:
         position_type = position_type if isinstance(position_type, str) else position_type.value
         position_sets = []
         periods = (end_date - start_date).days // 30
@@ -506,15 +506,15 @@ class GsAssetApi:
         return results['id']
 
     @staticmethod
-    def get_instruments_for_asset_ids(asset_ids: Tuple[str, ...]) -> Tuple[Optional[Union[Instrument, Security]]]:
+    def get_instruments_for_asset_ids(asset_ids: tuple[str, ...]) -> tuple[Optional[Union[Instrument, Security]]]:
         instrument_infos = GsSession.current.sync.post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
         instrument_lookup = {i.assetId: i.instrument for i in instrument_infos if i}
-        ret: Tuple[Optional[Union[Instrument, Security]], ...] = tuple(instrument_lookup.get(a) for a in asset_ids)
+        ret: tuple[Optional[Union[Instrument, Security]], ...] = tuple(instrument_lookup.get(a) for a in asset_ids)
 
         return ret
 
     @staticmethod
-    def get_instruments_for_positions(positions: Iterable[Position]) -> Tuple[Optional[Union[Instrument, Security]]]:
+    def get_instruments_for_positions(positions: Iterable[Position]) -> tuple[Optional[Union[Instrument, Security]]]:
         asset_ids = tuple(filter(None, (p.asset_id for p in positions)))
         instrument_infos = (
             GsSession.current.sync.post('/assets/instruments', asset_ids, cls=AssetToInstrumentResponse)
@@ -552,7 +552,7 @@ class GsAssetApi:
         end_date: dt.date,
         fields: IdList = None,
         position_type: PositionType = None,
-    ) -> List[dict]:
+    ) -> list[dict]:
         start_date_str = start_date.isoformat()
         end_date_str = end_date.isoformat()
         url = '/assets/{id}/positions/data?startDate={start_date}&endDate={end_date}'.format(
@@ -577,7 +577,7 @@ class GsAssetApi:
         return results
 
     @classmethod
-    def get_reports(cls, asset_id: str) -> Tuple[Report, ...]:
+    def get_reports(cls, asset_id: str) -> tuple[Report, ...]:
         return GsSession.current.sync.get(f'/assets/{asset_id}/reports', cls=Report)['results']
 
     @classmethod

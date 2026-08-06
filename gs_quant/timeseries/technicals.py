@@ -245,7 +245,7 @@ def relative_strength_index(x: pd.Series, w: Union[Window, int, str] = 14) -> pd
     rsi = moving_avg_gains.copy()
     rsi *= 0
 
-    for index in range(0, rsi_len):
+    for index in range(rsi_len):
         if moving_avg_losses.iloc[index] == 0:
             rsi.iloc[index] = 100
         else:

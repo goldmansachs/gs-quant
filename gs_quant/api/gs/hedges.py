@@ -16,7 +16,6 @@ under the License.
 
 import datetime as dt
 import logging
-from typing import Dict, List, Tuple
 
 from gs_quant.session import GsSession
 from gs_quant.target.hedge import AssetConstraint, ClassificationConstraint, Hedge, PerformanceHedgeParameters, Target
@@ -29,7 +28,7 @@ class GsHedgeApi:
     """GS Hedge API client implementation"""
 
     @classmethod
-    def get_many_hedges(cls, ids: List[str] = None, names: List[str] = None, limit: int = 100):
+    def get_many_hedges(cls, ids: list[str] = None, names: list[str] = None, limit: int = 100):
         url = f'/hedges?limit={limit}'
         if ids:
             url += f'&id={"&id=".join(ids)}'
@@ -38,7 +37,7 @@ class GsHedgeApi:
         return GsSession.current.sync.get(url, cls=Hedge)
 
     @classmethod
-    def create_hedge(cls, hedge: Dict) -> Hedge:
+    def create_hedge(cls, hedge: dict) -> Hedge:
         return GsSession.current.sync.post('/hedges', hedge, cls=Hedge)
 
     @classmethod
@@ -46,7 +45,7 @@ class GsHedgeApi:
         return GsSession.current.sync.get(f'/hedges/{hedge_id}', cls=Hedge)
 
     @classmethod
-    def get_hedge_data(cls, ids: List[str] = None, names: List[str] = None, limit: int = 100) -> List[Dict]:
+    def get_hedge_data(cls, ids: list[str] = None, names: list[str] = None, limit: int = 100) -> list[dict]:
         url = f'/hedges/data?limit={limit}'
         if ids:
             url += f'&id={"&id=".join(ids)}'
@@ -55,7 +54,7 @@ class GsHedgeApi:
         return GsSession.current.sync.get(url, cls=Hedge)['results']
 
     @classmethod
-    def get_hedge_results(cls, hedge_id: str, start_date: dt.date = None, end_date: dt.date = None) -> Dict:
+    def get_hedge_results(cls, hedge_id: str, start_date: dt.date = None, end_date: dt.date = None) -> dict:
         url = f'/hedges/results?id={hedge_id}'
         if start_date is not None:
             url += f'&startDate={start_date.strftime("%Y-%m-%d")}'
@@ -75,7 +74,7 @@ class GsHedgeApi:
     def construct_performance_hedge_query(
         cls,
         hedge_target: str,
-        universe: Tuple[str, ...],
+        universe: tuple[str, ...],
         notional: float,
         observation_start_date: dt.date,
         observation_end_date: dt.date,
@@ -90,11 +89,11 @@ class GsHedgeApi:
         max_weight: float = 100,
         min_market_cap: float = None,
         max_market_cap: float = None,
-        asset_constraints: Tuple[AssetConstraint, ...] = None,
-        benchmarks: Tuple[str, ...] = None,
-        classification_constraints: Tuple[ClassificationConstraint, ...] = None,
+        asset_constraints: tuple[AssetConstraint, ...] = None,
+        benchmarks: tuple[str, ...] = None,
+        classification_constraints: tuple[ClassificationConstraint, ...] = None,
         exclude_corporate_actions: bool = False,
-        exclude_corporate_actions_types: Tuple = None,
+        exclude_corporate_actions_types: tuple = None,
         exclude_hard_to_borrow_assets: bool = False,
         exclude_restricted_assets: bool = False,
         exclude_target_assets: bool = True,
@@ -202,13 +201,13 @@ class GsHedgeApi:
     def share_hedge_group(
         cls,
         hedge_group_id: str,
-        strategy_request: Dict,
-        optimization_response: Dict,
+        strategy_request: dict,
+        optimization_response: dict,
         hedge_name: str = "Custom Hedge",
         group_name: str = "New Hedge Group",
-        view_emails: List[str] = None,
-        admin_emails: List[str] = None,
-    ) -> Dict:
+        view_emails: list[str] = None,
+        admin_emails: list[str] = None,
+    ) -> dict:
         """
         Share a saved hedge group with other users by updating entitlements using email addresses.
 

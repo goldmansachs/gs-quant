@@ -19,7 +19,7 @@ import logging
 import re
 from dataclasses import dataclass
 from itertools import chain
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Union
 from urllib.parse import quote
 
 import deprecation
@@ -180,7 +180,7 @@ class Portfolio(PriceableImpl):
         return self.__quote_id
 
     @property
-    def priceables(self) -> Tuple[PriceableImpl, ...]:
+    def priceables(self) -> tuple[PriceableImpl, ...]:
         return self.__priceables
 
     @priceables.setter
@@ -198,20 +198,20 @@ class Portfolio(PriceableImpl):
         self.__priceables_by_name = None
 
     @property
-    def instruments(self) -> Tuple[Instrument, ...]:
+    def instruments(self) -> tuple[Instrument, ...]:
         return tuple(unique_everseen(i for i in self.__priceables if isinstance(i, Instrument)))
 
     @property
-    def all_instruments(self) -> Tuple[Instrument, ...]:
+    def all_instruments(self) -> tuple[Instrument, ...]:
         instr = chain(self.instruments, chain.from_iterable(p.all_instruments for p in self.all_portfolios))
         return tuple(unique_everseen(instr))
 
     @property
-    def portfolios(self) -> Tuple[PriceableImpl, ...]:
+    def portfolios(self) -> tuple[PriceableImpl, ...]:
         return tuple(i for i in self.__priceables if isinstance(i, Portfolio))
 
     @property
-    def all_portfolios(self) -> Tuple[PriceableImpl, ...]:
+    def all_portfolios(self) -> tuple[PriceableImpl, ...]:
         stack = list(self.portfolios)
         portfolios = list(unique_everseen(stack))
 
@@ -470,7 +470,7 @@ class Portfolio(PriceableImpl):
         port_df.to_csv(csv_file)
 
     @property
-    def all_paths(self) -> Tuple[PortfolioPath, ...]:
+    def all_paths(self) -> tuple[PortfolioPath, ...]:
         paths = ()
         stack = [(None, self)]
         while stack:
@@ -485,7 +485,7 @@ class Portfolio(PriceableImpl):
 
         return paths
 
-    def paths(self, key: Union[str, PriceableImpl]) -> Tuple[PortfolioPath, ...]:
+    def paths(self, key: Union[str, PriceableImpl]) -> tuple[PortfolioPath, ...]:
         if not isinstance(key, (str, Instrument, Portfolio)):
             raise ValueError('key must be a name or Instrument or Portfolio')
 

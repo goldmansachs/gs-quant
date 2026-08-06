@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 from enum import Enum
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 from pydash import decapitalize
@@ -382,7 +382,7 @@ def factor_returns_percentile(
     )
 
 
-def __format_plot_measure_results(time_series: Dict, query_type: QueryType, multiplier=1, handle_missing_column=False):
+def __format_plot_measure_results(time_series: dict, query_type: QueryType, multiplier=1, handle_missing_column=False):
     """Create and return panda series expected for a plot measure"""
     col_name = query_type.value.replace(' ', '')
     col_name = decapitalize(col_name)

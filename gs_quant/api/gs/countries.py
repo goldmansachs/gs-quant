@@ -14,8 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Tuple
-
 from gs_quant.session import GsSession
 from gs_quant.target.countries import Country, Subdivision
 
@@ -24,11 +22,11 @@ class GsCountryApi:
     """GS Country API client implementation"""
 
     @classmethod
-    def get_many_countries(cls, limit: int = 100) -> Tuple[Country, ...]:
+    def get_many_countries(cls, limit: int = 100) -> tuple[Country, ...]:
         return GsSession.current.sync.get('/countries?limit={limit}'.format(limit=limit), cls=Country)['results']
 
     @classmethod
-    async def get_many_countries_async(cls, limit: int = 100) -> Tuple[Country, ...]:
+    async def get_many_countries_async(cls, limit: int = 100) -> tuple[Country, ...]:
         response = await GsSession.current.async_.get('/countries', payload={"limit": limit}, cls=Country)
         return response.get("results")
 
@@ -54,7 +52,7 @@ class GsCountryApi:
         return GsSession.current.sync.delete('/countries/{id}'.format(id=country_id))
 
     @classmethod
-    def get_many_subdivisions(cls, limit: int = 100) -> Tuple[Subdivision, ...]:
+    def get_many_subdivisions(cls, limit: int = 100) -> tuple[Subdivision, ...]:
         return GsSession.current.sync.get('/countries/subdivisions?limit={limit}'.format(limit=limit), cls=Subdivision)[
             'results'
         ]

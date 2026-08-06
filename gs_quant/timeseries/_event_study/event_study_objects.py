@@ -48,7 +48,7 @@ under the License.
 #         --> EventRecord list
 
 from dataclasses import replace
-from typing import List, Union
+from typing import Union
 
 import pandas as pd
 
@@ -106,7 +106,7 @@ class CountryEvents:
         """Expose the normalized country for this country-scoped event loader."""
         return self.definition.country
 
-    def get_data(self, start_time: pd.Timestamp, end_time: pd.Timestamp) -> List[EventRecord]:
+    def get_data(self, start_time: pd.Timestamp, end_time: pd.Timestamp) -> list[EventRecord]:
         """Load event records for a query window.
 
         :param start_time: Start timestamp for the query window.
@@ -167,7 +167,7 @@ class AssetEvents:
         start_time: pd.Timestamp,
         end_time: pd.Timestamp,
         ticker: Union[Asset, str],
-    ) -> List[EventRecord]:
+    ) -> list[EventRecord]:
         """Load asset-scoped event records for a query window.
 
         :param start_time: Start timestamp for the query window.

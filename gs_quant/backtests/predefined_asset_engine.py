@@ -18,7 +18,7 @@ import datetime as dt
 from collections import deque
 from functools import reduce
 from itertools import compress
-from typing import Tuple, Union
+from typing import Union
 
 import pandas as pd
 from pandas.tseries.offsets import BDay  # noqa
@@ -116,7 +116,7 @@ class PredefinedAssetEngine(BacktestBaseEngine):
     def __init__(
         self,
         data_mgr: DataManager = DataManager(),
-        calendars: Union[str, Tuple[str, ...]] = None,
+        calendars: Union[str, tuple[str, ...]] = None,
         tz: dt.timezone = dt.timezone.utc,
         valuation_method: ValuationMethod = ValuationMethod(ValuationFixingType.PRICE),
         action_impl_map=None,

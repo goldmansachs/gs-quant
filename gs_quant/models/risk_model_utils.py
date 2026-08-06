@@ -19,7 +19,7 @@ import logging
 import math
 import random
 from time import sleep
-from typing import List, Tuple, Union
+from typing import Union
 
 import pandas as pd
 import pydash
@@ -76,7 +76,7 @@ def _map_measure_to_field_name(measure: Measure):
     return measure_to_field.get(measure, '')
 
 
-def build_factor_id_to_name_map(results: List) -> dict:
+def build_factor_id_to_name_map(results: list) -> dict:
     risk_model_factor_data = {}
     for row in results:
         for factor in row.get('factorData', []):
@@ -87,7 +87,7 @@ def build_factor_id_to_name_map(results: List) -> dict:
 
 
 def build_asset_data_map(
-    results: List, requested_universe: tuple, requested_measure: Measure, factor_map: dict
+    results: list, requested_universe: tuple, requested_measure: Measure, factor_map: dict
 ) -> dict:
     if not results:
         return {}
@@ -110,7 +110,7 @@ def build_asset_data_map(
 
 
 def build_factor_data_map(
-    results: List, identifier: str, risk_model_id: str, requested_measure: Measure, factors: List[str] = []
+    results: list, identifier: str, risk_model_id: str, requested_measure: Measure, factors: list[str] = []
 ) -> Union[dict, pd.DataFrame]:
     field_name = _map_measure_to_field_name(requested_measure)
     if not field_name:
@@ -143,7 +143,7 @@ def build_factor_data_map(
 
 
 def build_pfp_data_dataframe(
-    results: List, return_df: bool = True, get_factors_by_name: bool = True
+    results: list, return_df: bool = True, get_factors_by_name: bool = True
 ) -> Union[pd.DataFrame, list]:
     factor_data_df = pd.DataFrame(results)[["date", "factorData"]]
     factor_data_df = factor_data_df.explode('factorData')
@@ -181,7 +181,7 @@ def build_pfp_data_dataframe(
     return results.set_index("date")
 
 
-def get_optional_data_as_dataframe(results: List, optional_data_key: str) -> pd.DataFrame:
+def get_optional_data_as_dataframe(results: list, optional_data_key: str) -> pd.DataFrame:
     cov_list = []
     date_list = []
     for row in results:
@@ -193,7 +193,7 @@ def get_optional_data_as_dataframe(results: List, optional_data_key: str) -> pd.
 
 
 def get_covariance_matrix_dataframe(
-    results: List[dict], covariance_matrix_key: str = 'covarianceMatrix'
+    results: list[dict], covariance_matrix_key: str = 'covarianceMatrix'
 ) -> pd.DataFrame:
     cov_list = []
     date_list = []
@@ -208,7 +208,7 @@ def get_covariance_matrix_dataframe(
     return results
 
 
-def build_factor_volatility_dataframe(results: List, group_by_name: bool, factors: List[str]) -> pd.DataFrame:
+def build_factor_volatility_dataframe(results: list, group_by_name: bool, factors: list[str]) -> pd.DataFrame:
     data = []
     dates = []
     for row in results:
@@ -232,7 +232,7 @@ def build_factor_volatility_dataframe(results: List, group_by_name: bool, factor
 
 
 def get_closest_date_index(
-    date: dt.date, dates: Union[List[str], List[dt.date], Tuple[dt.date]], direction: str
+    date: dt.date, dates: Union[list[str], list[dt.date], tuple[dt.date]], direction: str
 ) -> int:
     for i in range(50):
         for index in range(len(dates)):
@@ -540,7 +540,7 @@ def merge_asset_data(existing: dict, partial: dict) -> dict:
     return result
 
 
-def _stitch_asset_data_batches(batches: List[dict]) -> dict:
+def _stitch_asset_data_batches(batches: list[dict]) -> dict:
     """Stitch a list of assetData batch dicts into one full assetData dict.
 
     Takes the union of all field names across every batch so that a measure

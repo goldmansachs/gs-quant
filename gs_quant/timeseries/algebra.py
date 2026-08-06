@@ -21,7 +21,7 @@ import math
 from enum import Enum
 from functools import reduce
 from numbers import Real
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -625,7 +625,7 @@ def filter_(x: pd.Series, operator: Optional[FilterOperator] = None, value: Opti
 
 @plot_function
 def filter_dates(
-    x: pd.Series, operator: Optional[FilterOperator] = None, dates: Union[List[dt.date], dt.date] = None
+    x: pd.Series, operator: Optional[FilterOperator] = None, dates: Union[list[dt.date], dt.date] = None
 ) -> pd.Series:
     """
     Removes dates where comparison with the operator and dates combination results in true, defaults to removing
@@ -775,7 +775,7 @@ def if_(flags: pd.Series, x: Union[pd.Series, float], y: Union[pd.Series, float]
 
 
 @plot_function
-def weighted_sum(series: List[pd.Series], weights: list) -> pd.Series:
+def weighted_sum(series: list[pd.Series], weights: list) -> pd.Series:
     """
     Calculate a weighted sum.
 

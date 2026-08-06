@@ -31,7 +31,7 @@ under the License.
 #         --> build_event_study_frame
 #         --> public DataFrame
 
-from typing import Iterable, List, Optional, Sequence
+from typing import Iterable, Optional, Sequence
 
 import pandas as pd
 
@@ -62,7 +62,7 @@ def to_calendar_date(value) -> pd.Timestamp:
     return timestamp.normalize()
 
 
-def sorted_unique_dates(event_dates: Iterable[pd.Timestamp]) -> List[pd.Timestamp]:
+def sorted_unique_dates(event_dates: Iterable[pd.Timestamp]) -> list[pd.Timestamp]:
     """Normalize, de-duplicate, and sort event dates.
 
     :param event_dates: Iterable of event timestamps.

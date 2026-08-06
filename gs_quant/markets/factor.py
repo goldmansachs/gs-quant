@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import math
 from enum import Enum, auto
-from typing import Dict, Union
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -105,7 +105,7 @@ class Factor:
         start_date: date = DataContext.current.start_date,
         end_date: date = DataContext.current.end_date,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Retrieve a Dataframe or Dictionary of date->covariance values between this factor and another for a date
         range"""
         covariance_data_raw = GsFactorRiskModelApi.get_risk_model_data(
@@ -135,7 +135,7 @@ class Factor:
         start_date: date = DataContext.current.start_date,
         end_date: date = DataContext.current.end_date,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Retrieve a Dataframe or Dictionary of date->variance values for a factor over a date range"""
         variance_raw_data = self.covariance(self, start_date, end_date, ReturnFormat.DATA_FRAME).rename(
             columns={"covariance": "variance"}
@@ -151,7 +151,7 @@ class Factor:
         start_date: date = DataContext.current.start_date,
         end_date: date = DataContext.current.end_date,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Retrieve a Dataframe or Dictionary of date->volatility values for a factor over a date range"""
         volatility_raw_data = GsFactorRiskModelApi.get_risk_model_data(
             self.risk_model_id,
@@ -178,7 +178,7 @@ class Factor:
         start_date: date = DataContext.current.start_date,
         end_date: date = DataContext.current.end_date,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Retrieve a Dataframe or Dictionary of date->correlation values between this factor and another for a date
         range"""
 
@@ -213,7 +213,7 @@ class Factor:
         start_date: date = DataContext.current.start_date,
         end_date: date = DataContext.current.end_date,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Retrieve a Dataframe or Dictionary of date->factor return values for a date range"""
         factor_returns_raw = GsFactorRiskModelApi.get_risk_model_data(
             self.risk_model_id,
@@ -244,7 +244,7 @@ class Factor:
         end_time: time = DataContext.current.end_time,
         data_source: Union[IntradayFactorDataSource, str] = IntradayFactorDataSource.GS_FMP,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Retrieve a Dataframe or Dictionary of timestamp->factor return values for a time range"""
 
         max_interval = dt.timedelta(hours=23, minutes=59, seconds=59)

@@ -23,7 +23,7 @@ from abc import ABCMeta, abstractmethod
 from concurrent.futures.process import ProcessPoolExecutor
 from dataclasses import dataclass
 from enum import Enum, EnumMeta
-from typing import Dict, List, Optional, Set, Tuple, Union, get_type_hints
+from typing import Optional, Union, get_type_hints
 
 import numpy as np
 import pandas as pd
@@ -86,8 +86,8 @@ class BaseProcessor(metaclass=ABCMeta):
         self.value: ProcessorResult = ProcessorResult(False, 'Value not set')
         self.parent: Optional[Union[BaseProcessor]] = None
         self.parent_attr: Optional[str] = None
-        self.children: Dict[str, Union[DataCoordinateOrProcessor, DataQueryInfo]] = {}
-        self.children_data: Dict[str, ProcessorResult] = {}
+        self.children: dict[str, Union[DataCoordinateOrProcessor, DataQueryInfo]] = {}
+        self.children_data: dict[str, ProcessorResult] = {}
         self.data_cell = None
         self.last_value = kwargs.get('last_value', False)
         self.measure_processor = kwargs.get('measure_processor', False)
@@ -107,7 +107,7 @@ class BaseProcessor(metaclass=ABCMeta):
             ):
                 self.value.data = self.value.data.iloc[-1:]
 
-    def __handle_date_range(self, result, rdate_entity_map: Dict[str, dt.date]):
+    def __handle_date_range(self, result, rdate_entity_map: dict[str, dt.date]):
         """
         Applies a date/datetime mask on the result using the start/end parameters on a processor
         :param result:
@@ -148,7 +148,7 @@ class BaseProcessor(metaclass=ABCMeta):
         self,
         attribute: str,
         result: ProcessorResult,
-        rdate_entity_map: Dict[str, dt.date],
+        rdate_entity_map: dict[str, dt.date],
         pool: ProcessPoolExecutor = None,
         query_info: Union[DataQueryInfo, MeasureQueryInfo] = None,
     ):
@@ -190,7 +190,7 @@ class BaseProcessor(metaclass=ABCMeta):
         """Returns a plot expression used to go from grid to plottool"""
         pass
 
-    def __add_required_rdates(self, entity: Entity, rdate_entity_map: Dict[str, Set[Tuple]]):
+    def __add_required_rdates(self, entity: Entity, rdate_entity_map: dict[str, set[tuple]]):
         start, end = get(self, 'start'), get(self, 'end')
         entity_id = entity.get_marquee_id() if isinstance(entity, Entity) else ''
 
@@ -205,9 +205,9 @@ class BaseProcessor(metaclass=ABCMeta):
         self,
         entity: Entity,
         cell,
-        queries: List[Union[DataQueryInfo, MeasureQueryInfo]],
-        rdate_entity_map: Dict[str, Set[Tuple]],
-        overrides: Optional[List],
+        queries: list[Union[DataQueryInfo, MeasureQueryInfo]],
+        rdate_entity_map: dict[str, set[tuple]],
+        overrides: Optional[list],
     ):
         """Generates the nested cell graph and keeps a map of leaf data queries to processors"""
         self.data_cell = cell
@@ -257,7 +257,7 @@ class BaseProcessor(metaclass=ABCMeta):
         self,
         attribute: str,
         result: ProcessorResult,
-        rdate_entity_map: Dict[str, dt.date],
+        rdate_entity_map: dict[str, dt.date],
         pool: ProcessPoolExecutor = None,
         query_info: Union[DataQueryInfo, MeasureQueryInfo] = None,
     ):
@@ -284,7 +284,7 @@ class BaseProcessor(metaclass=ABCMeta):
                     self.data_cell.value = value  # Put the error on the data cell
                     self.data_cell.updated_time = f'{dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z'
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> dict:
         """
         Create a dictionary representation of the processor. Used for eventually turning the processor into json for
         API usage. Allows for nested processors.
@@ -360,7 +360,7 @@ class BaseProcessor(metaclass=ABCMeta):
         return default_params
 
     @classmethod
-    def from_dict(cls, obj: Dict, reference_list: List):
+    def from_dict(cls, obj: dict, reference_list: list):
         processor_name: str = obj.get(PROCESSOR_NAME, 'None')
         # Dynamically import the processor to for instantiation.
         processor = getattr(__import__('gs_quant.analytics.processors', fromlist=['']), processor_name, None)

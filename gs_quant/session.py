@@ -578,10 +578,36 @@ class GsSession(ContextBase):
             err_msg = reason if response.headers.get('Content-Type') == 'text/html' else f'{reason}: {response.text}'
             raise error_builder(response.status_code, err_msg, context=f'{request_id}: {method} {url}')
         elif 'Content-Type' in response.headers:
-            if 'application/x-msgpack' in response.headers['Content-Type']:
+            content_type = response.headers['Content-Type']
+            # Normalize: strip parameters (e.g. "; charset=utf-8") and lowercase for matching
+            ct_main = content_type.split(';', 1)[0].strip().lower()
+            if 'application/x-msgpack' in ct_main:
                 ret = msgpack.unpackb(response.content, raw=False, strict_map_key=False)
-            elif 'application/json' in response.headers['Content-Type']:
+            elif 'application/json' in ct_main or ct_main.endswith('+json'):
+                # covers application/json, application/vnd.api+json, application/problem+json, etc.
                 ret = json.loads(response.text)
+            elif (
+                ct_main.startswith('text/')  # text/plain, text/html, text/markdown, text/csv, text/xml, text/yaml, ...
+                or ct_main
+                in (
+                    'application/markdown',
+                    'application/xml',
+                    'application/yaml',
+                    'application/x-yaml',
+                    'application/x-ndjson',
+                    'application/javascript',
+                )
+                or ct_main.endswith('+xml')  # application/vnd.foo+xml, application/atom+xml, etc.
+            ):
+                ret = response.text
+                return (ret, request_id) if return_request_id else ret
+            elif (
+                ct_main == 'application/octet-stream'
+                or ct_main.startswith(('image/', 'audio/', 'video/'))
+                or ct_main == 'application/pdf'
+            ):
+                ret = response.content
+                return (ret, request_id) if return_request_id else ret
             else:
                 ret = {'raw': response}
             if cls and ret:

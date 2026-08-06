@@ -18,7 +18,7 @@ import datetime as dt
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, Optional, Tuple, Union
+from typing import Callable, Optional, Union
 
 import pandas as pd
 from dataclasses_json import config, dataclass_json
@@ -39,8 +39,8 @@ class CalcType(Enum):
 @dataclass_json
 @dataclass
 class CustomDuration:
-    durations: Tuple[Union[str, dt.date, dt.timedelta], ...]
-    function: Callable[[Tuple[Union[str, dt.date, dt.timedelta], ...]], Union[str, dt.date, dt.timedelta]] = field(
+    durations: tuple[Union[str, dt.date, dt.timedelta], ...]
+    function: Callable[[tuple[Union[str, dt.date, dt.timedelta], ...]], Union[str, dt.date, dt.timedelta]] = field(
         default=None, metadata=config(encoder=encode_callable, decoder=decode_callable)
     )
 

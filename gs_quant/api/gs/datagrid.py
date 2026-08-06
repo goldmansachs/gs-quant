@@ -16,7 +16,6 @@ under the License.
 
 import json
 import urllib.parse
-from typing import List
 
 from pydash import get
 
@@ -29,7 +28,7 @@ class GsDataGridApi:
     """GS DataGrids API implementation"""
 
     @classmethod
-    def get_datagrids(cls, limit: int = 10, **kwargs) -> List[DataGrid]:
+    def get_datagrids(cls, limit: int = 10, **kwargs) -> list[DataGrid]:
         raw_datagrids = get(
             GsSession.current.sync.get(
                 f'{API}?limit={limit}&orderBy=>lastUpdatedTime&{urllib.parse.urlencode(kwargs)}'
@@ -40,7 +39,7 @@ class GsDataGridApi:
         return [DataGrid.from_dict(raw_datagrid) for raw_datagrid in raw_datagrids]
 
     @classmethod
-    def get_my_datagrids(cls, limit: int = 10, **kwargs) -> List[DataGrid]:
+    def get_my_datagrids(cls, limit: int = 10, **kwargs) -> list[DataGrid]:
         user_id = GsSession.current.sync.get('/users/self')['id']
         raw_datagrids = get(
             GsSession.current.sync.get(

@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydash import get
 
@@ -43,13 +43,13 @@ class GsUsersApi:
     @classmethod
     def get_users(
         cls,
-        user_ids: List[str] = None,
-        user_emails: List[str] = None,
-        user_names: List[str] = None,
-        user_companies: List[str] = None,
+        user_ids: list[str] = None,
+        user_emails: list[str] = None,
+        user_names: list[str] = None,
+        user_companies: list[str] = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> List:
+    ) -> list:
         url = '/users?'
         if user_ids:
             url += f'&id={"&id=".join(user_ids)}'
@@ -66,7 +66,7 @@ class GsUsersApi:
         return f"guid:{GsSession.current.sync.get('/users/self')['id']}"
 
     @classmethod
-    def get_current_user_info(cls) -> Dict[str, Any]:
+    def get_current_user_info(cls) -> dict[str, Any]:
         """
         Gets user
         :return: user
@@ -74,15 +74,15 @@ class GsUsersApi:
         return GsSession.current.sync.get('/users/self')
 
     @classmethod
-    def get_current_app_managers(cls) -> List[str]:
+    def get_current_app_managers(cls) -> list[str]:
         return [f"guid:{manager}" for manager in get(GsSession.current.sync.get('/users/self'), 'appManagers', [])]
 
     @classmethod
-    def sync_user(cls, user_id: str) -> Dict[str, Any]:
+    def sync_user(cls, user_id: str) -> dict[str, Any]:
         return GsSession.current.sync.get(f'/users/{user_id}/sync')
 
     @classmethod
-    def get_many(cls, key_type: str, keys: List[str], fields: Optional[List[str]] = None) -> dict:
+    def get_many(cls, key_type: str, keys: list[str], fields: Optional[list[str]] = None) -> dict:
         users_by_key = {}
         chunk_size = 100
         glue = "&" + key_type + "="
@@ -99,8 +99,8 @@ class GsUsersApi:
 
     @classmethod
     def search(
-        cls, query: str, fields: Optional[List[str]] = None, where: Optional[Dict[str, any]] = None
-    ) -> Dict[str, Any]:
+        cls, query: str, fields: Optional[list[str]] = None, where: Optional[dict[str, any]] = None
+    ) -> dict[str, Any]:
         payload = {
             "q": query,
             "fields": fields or DEFAULT_SEARCH_FIELDS,

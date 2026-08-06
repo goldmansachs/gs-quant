@@ -25,7 +25,7 @@ from collections import defaultdict
 from copy import deepcopy
 from enum import Enum, auto
 from functools import partial
-from typing import Dict, Generator, Iterable, List, Optional, Tuple, Union
+from typing import Generator, Iterable, Optional, Union
 
 import backoff
 import cachetools
@@ -270,7 +270,7 @@ class Asset(Entity, metaclass=ABCMeta):
         exchange: Optional[str] = None,
         currency: Optional[str] = None,
         parameters: AssetParameters = None,
-        entity: Optional[Dict] = None,
+        entity: Optional[dict] = None,
     ):
         super().__init__(id_, EntityType.ASSET, entity=entity)
         self.__id = id_
@@ -399,7 +399,7 @@ class Asset(Entity, metaclass=ABCMeta):
         ids = self.get_identifiers(as_of=as_of)
         return ids.get(id_type.value)
 
-    def get_asset_measures(self) -> List[AssetMeasure]:
+    def get_asset_measures(self) -> list[AssetMeasure]:
         """
         Get asset measures
 
@@ -442,7 +442,7 @@ class Asset(Entity, metaclass=ABCMeta):
         frequency: Optional[DataFrequency] = None,
         start: Optional[DateOrDatetime] = None,
         end: Optional[DateOrDatetime] = None,
-        dates: List[dt.date] = None,
+        dates: list[dt.date] = None,
         operator: DataAggregationOperator = None,
     ) -> pd.Series:
         """
@@ -659,7 +659,7 @@ class SecMasterAsset(Asset):
         exchange: Optional[str] = None,
         currency: Optional[str] = None,
         parameters: AssetParameters = None,
-        entity: Optional[Dict] = None,
+        entity: Optional[dict] = None,
     ):
         Asset.__init__(
             self,
@@ -755,7 +755,7 @@ class SecMasterAsset(Asset):
         frequency: Optional[DataFrequency] = None,
         start: Optional[DateOrDatetime] = None,
         end: Optional[DateOrDatetime] = None,
-        dates: List[dt.date] = None,
+        dates: list[dt.date] = None,
         operator: DataAggregationOperator = None,
     ) -> pd.Series:
         """
@@ -895,7 +895,7 @@ class Stock(Asset):
         name: str,
         exchange: Optional[str] = None,
         currency: Optional[Currency] = None,
-        entity: Optional[Dict] = None,
+        entity: Optional[dict] = None,
     ):
         Asset.__init__(self, id_, AssetClass.Equity, name, exchange, currency, entity=entity)
 
@@ -942,7 +942,7 @@ class Cross(Asset):
         self,
         id_: str,
         name: str,
-        entity: Optional[Dict] = None,
+        entity: Optional[dict] = None,
         asset_class: Optional[Union[AssetClass, str]] = AssetClass.FX,
     ):
         if isinstance(asset_class, str):
@@ -967,7 +967,7 @@ class Future(Asset):
         asset_class: Union[AssetClass, str],
         name: str,
         currency: Optional[Currency] = None,
-        entity: Optional[Dict] = None,
+        entity: Optional[dict] = None,
     ):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
@@ -989,7 +989,7 @@ class Currency(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Cash, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1004,7 +1004,7 @@ class Rate(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Rates, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1019,7 +1019,7 @@ class Cash(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Cash, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1034,7 +1034,7 @@ class WeatherIndex(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1049,7 +1049,7 @@ class CommodityReferencePrice(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1063,7 +1063,7 @@ class CommodityNaturalGasHub(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1077,7 +1077,7 @@ class CommodityEUNaturalGasHub(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1091,7 +1091,7 @@ class Cryptocurrency(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1105,7 +1105,7 @@ class CommodityPowerNode(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1119,7 +1119,7 @@ class CommodityPowerAggregatedNodes(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1133,7 +1133,7 @@ class Commodity(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Commod, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1147,7 +1147,7 @@ class Company(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: AssetClass, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: AssetClass, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, asset_class=asset_class, name=name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1164,7 +1164,7 @@ class Bond(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, asset_class: AssetClass = AssetClass.Credit, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, asset_class: AssetClass = AssetClass.Credit, entity: Optional[dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1176,7 +1176,7 @@ class Fund(Asset):
     Represents a fund.
     """
 
-    def __init__(self, id_: str, name: str, asset_class: AssetClass, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, asset_class: AssetClass, entity: Optional[dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1190,7 +1190,7 @@ class FutureMarket(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
         Asset.__init__(self, id_, asset_class, name, entity=entity)
@@ -1206,7 +1206,7 @@ class FutureContract(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
         Asset.__init__(self, id_, asset_class, name, entity=entity)
@@ -1222,7 +1222,7 @@ class Swap(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
@@ -1239,7 +1239,7 @@ class Option(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
@@ -1250,7 +1250,7 @@ class Option(Asset):
 
 
 class Forward(Asset):
-    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: Union[AssetClass, str], name: str, entity: Optional[dict] = None):
         if isinstance(asset_class, str):
             asset_class = get_enum_value(AssetClass, asset_class)
 
@@ -1273,7 +1273,7 @@ class ETF(Asset, PositionedEntity):
         name: str,
         exchange: Optional[str] = None,
         currency: Optional[Currency] = None,
-        entity: Optional[Dict] = None,
+        entity: Optional[dict] = None,
     ):
         Asset.__init__(self, id_, asset_class, name, exchange, currency, entity=entity)
         PositionedEntity.__init__(self, id_, EntityType.ASSET)
@@ -1292,7 +1292,7 @@ class Swaption(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Rates, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1306,7 +1306,7 @@ class TBA(Asset):
 
     """
 
-    def __init__(self, id_: str, asset_class: AssetClass, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, asset_class: AssetClass, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, asset_class=asset_class, name=name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1318,7 +1318,7 @@ class Binary(Asset):
     Represents a binary.
     """
 
-    def __init__(self, id_: str, name: str, asset_class: AssetClass, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, asset_class: AssetClass, entity: Optional[dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1332,7 +1332,7 @@ class DefaultSwap(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Credit, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1346,7 +1346,7 @@ class XccySwapMTM(Asset):
 
     """
 
-    def __init__(self, id_: str, name: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, entity: Optional[dict] = None):
         Asset.__init__(self, id_, AssetClass.Rates, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1359,7 +1359,7 @@ class MutualFund(Asset):
     Represents a mutual fund asset.
     """
 
-    def __init__(self, id_: str, name: str, asset_class: AssetClass, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, name: str, asset_class: AssetClass, entity: Optional[dict] = None):
         Asset.__init__(self, id_, asset_class, name, entity=entity)
 
     def get_type(self) -> AssetType:
@@ -1374,7 +1374,7 @@ class SecurityMasterSource(Enum):
 # Bidirectional mapping between AssetIdentifier (Asset Service) and SecurityIdentifier (Security Master)
 # for identifier types that exist in both enums. Used to normalize identifier types so that callers
 # may pass either enum regardless of the configured SecurityMaster source.
-_ASSET_TO_SECURITY_IDENTIFIER: Dict['AssetIdentifier', 'SecurityIdentifier'] = {
+_ASSET_TO_SECURITY_IDENTIFIER: dict['AssetIdentifier', 'SecurityIdentifier'] = {
     AssetIdentifier.MARQUEE_ID: SecurityIdentifier.ASSET_ID,
     AssetIdentifier.REUTERS_ID: SecurityIdentifier.RIC,
     AssetIdentifier.BLOOMBERG_ID: SecurityIdentifier.BBID,
@@ -1385,7 +1385,7 @@ _ASSET_TO_SECURITY_IDENTIFIER: Dict['AssetIdentifier', 'SecurityIdentifier'] = {
     AssetIdentifier.TICKER: SecurityIdentifier.TICKER,
     AssetIdentifier.GSID: SecurityIdentifier.GSID,
 }
-_SECURITY_TO_ASSET_IDENTIFIER: Dict['SecurityIdentifier', 'AssetIdentifier'] = {
+_SECURITY_TO_ASSET_IDENTIFIER: dict['SecurityIdentifier', 'AssetIdentifier'] = {
     v: k for k, v in _ASSET_TO_SECURITY_IDENTIFIER.items()
 }
 
@@ -1431,7 +1431,7 @@ class SecurityMaster:
     @classmethod
     def __gs_asset_to_asset(cls, gs_asset: GsAsset) -> Asset:
         asset_type = gs_asset.type.value
-        asset_entity: Dict = json.loads(json.dumps(gs_asset.as_dict(), cls=JSONEncoder))
+        asset_entity: dict = json.loads(json.dumps(gs_asset.as_dict(), cls=JSONEncoder))
 
         if asset_type in (GsAssetType.Single_Stock.value,):
             return Stock(gs_asset.id, gs_asset.name, gs_asset.exchange, gs_asset.currency, entity=asset_entity)
@@ -1554,7 +1554,7 @@ class SecurityMaster:
         raise TypeError(f'unsupported asset type {asset_type}')
 
     @classmethod
-    def __asset_type_to_gs_types(cls, asset_type: AssetType) -> Tuple[GsAssetType, ...]:
+    def __asset_type_to_gs_types(cls, asset_type: AssetType) -> tuple[GsAssetType, ...]:
         asset_map = {
             AssetType.STOCK: (GsAssetType.Single_Stock,),
             AssetType.INDEX: (
@@ -1614,12 +1614,12 @@ class SecurityMaster:
     @classmethod
     def get_asset_query(
         cls,
-        id_value: Union[str, List[str]],
+        id_value: Union[str, list[str]],
         id_type: Union[AssetIdentifier, SecurityIdentifier],
         as_of: Union[dt.date, dt.datetime] = None,
         exchange_code: ExchangeCode = None,
         asset_type: AssetType = None,
-    ) -> Tuple[Dict, dt.datetime]:
+    ) -> tuple[dict, dt.datetime]:
         if not as_of:
             current = PricingContext.current
             if not current.is_entered:
@@ -1649,7 +1649,7 @@ class SecurityMaster:
         return None
 
     @classmethod
-    def _get_many_assets_results(cls, results) -> List[Asset]:
+    def _get_many_assets_results(cls, results) -> list[Asset]:
         if results is not None:
             return [cls.__gs_asset_to_asset(result) for result in results]
         return []
@@ -1663,7 +1663,7 @@ class SecurityMaster:
         exchange_code: ExchangeCode = None,
         asset_type: AssetType = None,
         sort_by_rank: bool = True,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
     ) -> Asset:
         """
         Get an asset by identifier and identifier type
@@ -1729,7 +1729,7 @@ class SecurityMaster:
         exchange_code: ExchangeCode = None,
         asset_type: AssetType = None,
         sort_by_rank: bool = True,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
     ) -> Asset:
         """
         Get an asset by identifier and identifier type
@@ -1789,13 +1789,13 @@ class SecurityMaster:
     @classmethod
     def get_many_assets(
         cls,
-        id_values: List[str],
+        id_values: list[str],
         id_type: Union[AssetIdentifier, SecurityIdentifier],
         limit: int = 100,
         as_of: Union[dt.date, dt.datetime] = None,
         exchange_code: ExchangeCode = None,
         sort_by_rank: bool = True,
-    ) -> List[Asset]:
+    ) -> list[Asset]:
         """
         Get an asset by identifier and identifier type
 
@@ -1848,13 +1848,13 @@ class SecurityMaster:
     @classmethod
     async def get_many_assets_async(
         cls,
-        id_values: List[str],
+        id_values: list[str],
         id_type: Union[AssetIdentifier, SecurityIdentifier],
         limit: int = 100,
         as_of: Union[dt.date, dt.datetime] = None,
         exchange_code: ExchangeCode = None,
         sort_by_rank: bool = True,
-    ) -> List[Asset]:
+    ) -> list[Asset]:
         """
         Get an asset by identifier and identifier type
 
@@ -1912,7 +1912,7 @@ class SecurityMaster:
         id_value: str,
         id_type: SecurityIdentifier,
         as_of: Union[dt.date, dt.datetime] = None,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
     ) -> dict:
         type_ = id_type.value
         params = {type_: id_value}
@@ -1959,7 +1959,7 @@ class SecurityMaster:
         id_value: str,
         id_type: SecurityIdentifier,
         as_of: Union[dt.date, dt.datetime] = None,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
     ) -> SecMasterAsset:
         params = cls._get_security_master_asset_params(id_value, id_type, as_of, fields)
         response = GsSession.current.sync.get('/markets/securities', payload=params)
@@ -1971,7 +1971,7 @@ class SecurityMaster:
         id_value: str,
         id_type: SecurityIdentifier,
         as_of: Union[dt.date, dt.datetime] = None,
-        fields: Optional[List[str]] = None,
+        fields: Optional[list[str]] = None,
     ) -> SecMasterAsset:
         params = cls._get_security_master_asset_params(id_value, id_type, as_of, fields)
         response = await GsSession.current.async_.get('/markets/securities', payload=params)
@@ -1980,7 +1980,7 @@ class SecurityMaster:
     @classmethod
     def get_identifiers(
         cls,
-        id_values: List[str],
+        id_values: list[str],
         id_type: SecurityIdentifier,
         as_of: dt.datetime = None,
         start: dt.datetime = None,
@@ -2041,7 +2041,7 @@ class SecurityMaster:
     def get_all_identifiers_gen(
         cls,
         class_: AssetClass = None,
-        types: Optional[List[AssetType]] = None,
+        types: Optional[list[AssetType]] = None,
         as_of: dt.datetime = None,
         *,
         id_type: SecurityIdentifier = SecurityIdentifier.ID,
@@ -2109,13 +2109,13 @@ class SecurityMaster:
     def get_all_identifiers(
         cls,
         class_: AssetClass = None,
-        types: Optional[List[AssetType]] = None,
+        types: Optional[list[AssetType]] = None,
         as_of: dt.datetime = None,
         *,
         id_type: SecurityIdentifier = SecurityIdentifier.ID,
         use_offset_key=True,
         sleep=0.5,
-    ) -> Dict[str, dict]:
+    ) -> dict[str, dict]:
         """
         Get identifiers for all matching assets.
 
@@ -2146,7 +2146,7 @@ class SecurityMaster:
         start_date: dt.date = None,
         end_date: dt.date = None,
         as_of_date: dt.date = None,
-    ) -> Dict[dt.date, dict]:
+    ) -> dict[dt.date, dict]:
         """
         Map to other identifier types, from given IDs.
 

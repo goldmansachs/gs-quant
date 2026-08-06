@@ -19,7 +19,7 @@ import inspect
 import logging
 import warnings
 from copy import deepcopy
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Union
 
 from dataclasses_json import global_config
 
@@ -122,7 +122,7 @@ class Instrument(PriceableImpl, InstrumentBase):
         PriceableImpl,
         PricingFuture,
         SeriesWithInfo,
-        Tuple[MarketDataCoordinate, ...],
+        tuple[MarketDataCoordinate, ...],
     ]:
         """
         Calculate the value of the risk_measure
@@ -270,7 +270,7 @@ class Instrument(PriceableImpl, InstrumentBase):
             raise ValueError('Invalid instrument specification')
 
     @classmethod
-    def from_asset_ids(cls, asset_ids: Tuple[str, ...]) -> Tuple[InstrumentBase, ...]:
+    def from_asset_ids(cls, asset_ids: tuple[str, ...]) -> tuple[InstrumentBase, ...]:
         from gs_quant.api.gs.assets import GsAssetApi
 
         instruments = GsAssetApi.get_instruments_for_asset_ids(asset_ids)

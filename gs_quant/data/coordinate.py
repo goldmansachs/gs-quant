@@ -19,7 +19,7 @@ import json
 import uuid
 from abc import ABCMeta
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -27,7 +27,7 @@ from .core import DataAggregationOperator, DataContext, DataFrequency
 from .dataset import Dataset
 from .fields import DataDimension, DataMeasure
 
-DataDimensions = Dict[Union[DataDimension, str], Union[str, float]]
+DataDimensions = dict[Union[DataDimension, str], Union[str, float]]
 DateOrDatetime = Union[dt.date, dt.datetime]
 
 
@@ -51,7 +51,7 @@ class BaseDataCoordinate(metaclass=ABCMeta):
         return self.__measure
 
     @property
-    def dimensions(self) -> Dict:
+    def dimensions(self) -> dict:
         return dict(self.__dimensions)
 
     def get_series(self, start: Optional[DateOrDatetime] = None, end: Optional[DateOrDatetime] = None):
@@ -136,7 +136,7 @@ class DataCoordinate(BaseDataCoordinate):
         other_measure = other.measure if isinstance(other.measure, str) else other.measure.value
         return (self.dataset_id, measure, self.dimensions) == (other.dataset_id, other_measure, other.dimensions)
 
-    def get_dimensions(self) -> Tuple:
+    def get_dimensions(self) -> tuple:
         return tuple(self.dimensions.items())
 
     def __hash__(self):
@@ -151,7 +151,7 @@ class DataCoordinate(BaseDataCoordinate):
 
     def get_range(
         self, start: Optional[DateOrDatetime] = None, end: Optional[DateOrDatetime] = None
-    ) -> Tuple[Optional[DateOrDatetime], Optional[DateOrDatetime]]:
+    ) -> tuple[Optional[DateOrDatetime], Optional[DateOrDatetime]]:
         if start is None:
             start = (
                 DataContext.current.start_time
@@ -172,7 +172,7 @@ class DataCoordinate(BaseDataCoordinate):
         self,
         start: Optional[DateOrDatetime] = None,
         end: Optional[DateOrDatetime] = None,
-        dates: List[dt.date] = None,
+        dates: list[dt.date] = None,
         operator: DataAggregationOperator = None,
     ) -> Union[pd.Series, None]:
         """Get timeseries of coordinate"""

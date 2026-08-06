@@ -17,7 +17,7 @@ under the License.
 import logging
 import webbrowser
 from collections import deque
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 from pydash import get
 
@@ -42,7 +42,7 @@ HEADERS = {'Content-Type': 'application/json;charset=utf-8'}
 
 
 class WorkspaceCallToAction:
-    def __init__(self, actions: List[RelatedLink], text: str, name: str = None):
+    def __init__(self, actions: list[RelatedLink], text: str, name: str = None):
         """
         Call to action displayed on the top right of the page.
         :param actions: link to external/internal pages, embed a mail to link, anchor links within page or notifications
@@ -69,7 +69,7 @@ class WorkspaceCallToAction:
     def from_dict(cls, obj):
         actions = []
         for action in obj['actions']:
-            if isinstance(action, Dict):
+            if isinstance(action, dict):
                 actions.append(RelatedLink.from_dict(action))
             else:
                 actions.append(action)
@@ -95,7 +95,7 @@ class WorkspaceTab:
 
 
 class WorkspaceColumn:
-    def __init__(self, components: List[Union[Component, 'WorkspaceRow']], width: int = None):
+    def __init__(self, components: list[Union[Component, 'WorkspaceRow']], width: int = None):
         """
         :param components: List of components in the same row
         """
@@ -196,7 +196,7 @@ class WorkspaceRow:
     Wrapper on a list of components in the same row.
     """
 
-    def __init__(self, components: List[Union[Component, WorkspaceColumn]]):
+    def __init__(self, components: list[Union[Component, WorkspaceColumn]]):
         """
         :param components: List of components in the same row
         """
@@ -229,7 +229,7 @@ class WorkspaceRow:
             )
         self.__components = value
 
-    def get_layout(self, count: int) -> Tuple[str, int]:
+    def get_layout(self, count: int) -> tuple[str, int]:
         layout = 'r('
         width_sum = 0
         for component in self.__components:
@@ -310,16 +310,16 @@ class Workspace:
     def __init__(
         self,
         name: str,
-        rows: List[WorkspaceRow] = None,
+        rows: list[WorkspaceRow] = None,
         alias: str = None,
         description: str = None,
         entitlements: Union[Entitlements, Entitlements_] = None,
-        tabs: List[WorkspaceTab] = None,
-        selector_components: List[Component] = None,
+        tabs: list[WorkspaceTab] = None,
+        selector_components: list[Component] = None,
         disclaimer: str = None,
-        maintainers: List[str] = None,
-        call_to_action: Union[WorkspaceCallToAction, Dict] = None,
-        tags: List[str] = None,
+        maintainers: list[str] = None,
+        call_to_action: Union[WorkspaceCallToAction, dict] = None,
+        tags: list[str] = None,
     ):
         self.__id = None
         self.__name = name
@@ -407,11 +407,11 @@ class Workspace:
         self.__alias = value
 
     @property
-    def rows(self) -> List[WorkspaceRow]:
+    def rows(self) -> list[WorkspaceRow]:
         return self.__rows
 
     @rows.setter
-    def rows(self, value: List[WorkspaceRow]):
+    def rows(self, value: list[WorkspaceRow]):
         self.__rows = value
 
     @property
@@ -483,7 +483,7 @@ class Workspace:
         return self.__id
 
     @classmethod
-    def _parse(cls, layout: str, workspace_components: List[Dict]):
+    def _parse(cls, layout: str, workspace_components: list[dict]):
         current_str = ''
         outside_components = []
         stack = deque()
@@ -610,7 +610,7 @@ class Workspace:
         return dict_
 
     @classmethod
-    def __delete_components(cls, components: List[Component]):
+    def __delete_components(cls, components: list[Component]):
         for component in components:
             if isinstance(component, (WorkspaceRow, WorkspaceColumn)):
                 cls.__delete_components(component.components)

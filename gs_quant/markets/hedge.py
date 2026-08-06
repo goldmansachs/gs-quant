@@ -18,7 +18,7 @@ import datetime as dt
 import logging
 from collections import defaultdict
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -57,11 +57,11 @@ class HedgeExclusions:
 
     def __init__(
         self,
-        assets: List[str] = None,
-        countries: List[str] = None,
-        regions: List[str] = None,
-        sectors: List[str] = None,
-        industries: List[str] = None,
+        assets: list[str] = None,
+        countries: list[str] = None,
+        regions: list[str] = None,
+        sectors: list[str] = None,
+        industries: list[str] = None,
     ):
         self.__assets = assets
         self.__countries = countries
@@ -70,43 +70,43 @@ class HedgeExclusions:
         self.__industries = industries
 
     @property
-    def assets(self) -> List[str]:
+    def assets(self) -> list[str]:
         return self.__assets
 
     @assets.setter
-    def assets(self, value: List[str]):
+    def assets(self, value: list[str]):
         self.__assets = value
 
     @property
-    def countries(self) -> List[str]:
+    def countries(self) -> list[str]:
         return self.__countries
 
     @countries.setter
-    def countries(self, value: List[str]):
+    def countries(self, value: list[str]):
         self.__countries = value
 
     @property
-    def regions(self) -> List[str]:
+    def regions(self) -> list[str]:
         return self.__regions
 
     @regions.setter
-    def regions(self, value: List[str]):
+    def regions(self, value: list[str]):
         self.__regions = value
 
     @property
-    def sectors(self) -> List[str]:
+    def sectors(self) -> list[str]:
         return self.__sectors
 
     @sectors.setter
-    def sectors(self, value: List[str]):
+    def sectors(self, value: list[str]):
         self.__sectors = value
 
     @property
-    def industries(self) -> List[str]:
+    def industries(self) -> list[str]:
         return self.__industries
 
     @industries.setter
-    def industries(self, value: List[str]):
+    def industries(self, value: list[str]):
         self.__industries = value
 
     def to_dict(self):
@@ -127,7 +127,7 @@ class HedgeExclusions:
         return response
 
     @staticmethod
-    def _get_exclusions(exclusions_list: List, constraint_type: ConstraintType):
+    def _get_exclusions(exclusions_list: list, constraint_type: ConstraintType):
         return [
             Constraint(constraint_name=exclusion, constraint_type=constraint_type, minimum=0, maximum=0).to_dict()
             for exclusion in exclusions_list
@@ -180,7 +180,7 @@ class Constraint:
         self.__constraint_type = value
 
     @classmethod
-    def from_dict(cls, as_dict: Dict):
+    def from_dict(cls, as_dict: dict):
         if as_dict.get('type') is not None:
             constraint_type = ConstraintType(as_dict.get('type'))
         elif as_dict.get('assetId') is not None:
@@ -212,12 +212,12 @@ class HedgeConstraints:
 
     def __init__(
         self,
-        assets: List[Constraint] = None,
-        countries: List[Constraint] = None,
-        regions: List[Constraint] = None,
-        sectors: List[Constraint] = None,
-        industries: List[Constraint] = None,
-        esg: List[Constraint] = None,
+        assets: list[Constraint] = None,
+        countries: list[Constraint] = None,
+        regions: list[Constraint] = None,
+        sectors: list[Constraint] = None,
+        industries: list[Constraint] = None,
+        esg: list[Constraint] = None,
     ):
         for con in assets or []:
             con.constraint_type = ConstraintType.ASSET
@@ -239,51 +239,51 @@ class HedgeConstraints:
         self.__esg = esg
 
     @property
-    def assets(self) -> List[Constraint]:
+    def assets(self) -> list[Constraint]:
         return self.__assets
 
     @assets.setter
-    def assets(self, value: List[Constraint]):
+    def assets(self, value: list[Constraint]):
         self.__assets = value
 
     @property
-    def countries(self) -> List[Constraint]:
+    def countries(self) -> list[Constraint]:
         return self.__countries
 
     @countries.setter
-    def countries(self, value: List[Constraint]):
+    def countries(self, value: list[Constraint]):
         self.__countries = value
 
     @property
-    def regions(self) -> List[Constraint]:
+    def regions(self) -> list[Constraint]:
         return self.__regions
 
     @regions.setter
-    def regions(self, value: List[Constraint]):
+    def regions(self, value: list[Constraint]):
         self.__regions = value
 
     @property
-    def sectors(self) -> List[Constraint]:
+    def sectors(self) -> list[Constraint]:
         return self.__sectors
 
     @sectors.setter
-    def sectors(self, value: List[Constraint]):
+    def sectors(self, value: list[Constraint]):
         self.__sectors = value
 
     @property
-    def industries(self) -> List[Constraint]:
+    def industries(self) -> list[Constraint]:
         return self.__industries
 
     @industries.setter
-    def industries(self, value: List[Constraint]):
+    def industries(self, value: list[Constraint]):
         self.__industries = value
 
     @property
-    def esg(self) -> List[Constraint]:
+    def esg(self) -> list[Constraint]:
         return self.__esg
 
     @esg.setter
-    def esg(self, value: List[Constraint]):
+    def esg(self, value: list[Constraint]):
         self.__esg = value
 
     def to_dict(self):
@@ -313,7 +313,7 @@ class PerformanceHedgeParameters:
     def __init__(
         self,
         initial_portfolio: PositionSet,
-        universe: List[str],
+        universe: list[str],
         exclusions: Optional[HedgeExclusions] = None,
         constraints: Optional[HedgeConstraints] = None,
         observation_start_date: dt.date = None,
@@ -322,7 +322,7 @@ class PerformanceHedgeParameters:
         percentage_in_cash: Optional[float] = None,
         explode_universe: bool = True,
         exclude_target_assets: bool = True,
-        exclude_corporate_actions_types: Optional[List[Union[CorporateActionsTypes, str]]] = None,
+        exclude_corporate_actions_types: Optional[list[Union[CorporateActionsTypes, str]]] = None,
         exclude_hard_to_borrow_assets: bool = False,
         exclude_restricted_assets: bool = False,
         max_adv_percentage: float = 15,
@@ -333,7 +333,7 @@ class PerformanceHedgeParameters:
         market_participation_rate: float = 10,
         lasso_weight: float = 0,
         ridge_weight: float = 0,
-        benchmarks: List[str] = None,
+        benchmarks: list[str] = None,
     ):
         self.__initial_portfolio = initial_portfolio
         self.__universe = universe
@@ -368,13 +368,13 @@ class PerformanceHedgeParameters:
         self.__initial_portfolio = value
 
     @property
-    def universe(self) -> List[str]:
+    def universe(self) -> list[str]:
         """A list of asset identifiers (asset IDs, bloomberg IDs, tickers, SEDOLs, etc) that make up the universe,
         which are resolved as of the observation end date."""
         return self.__universe
 
     @universe.setter
-    def universe(self, value: List[str]):
+    def universe(self, value: list[str]):
         self.__universe = value
 
     @property
@@ -451,12 +451,12 @@ class PerformanceHedgeParameters:
         self.__exclude_target_assets = value
 
     @property
-    def exclude_corporate_actions_types(self) -> Optional[List[Union[CorporateActionsTypes, str]]]:
+    def exclude_corporate_actions_types(self) -> Optional[list[Union[CorporateActionsTypes, str]]]:
         """Set of of corporate actions to be excluded in the hedge"""
         return self.__exclude_corporate_actions_types
 
     @exclude_corporate_actions_types.setter
-    def exclude_corporate_actions_types(self, value: List[Union[CorporateActionsTypes, str]]):
+    def exclude_corporate_actions_types(self, value: list[Union[CorporateActionsTypes, str]]):
         self.__exclude_corporate_actions_types = value
 
     @property
@@ -536,12 +536,12 @@ class PerformanceHedgeParameters:
         self.__market_participation_rate = value
 
     @property
-    def benchmarks(self) -> List[str]:
+    def benchmarks(self) -> list[str]:
         """Marquee unique identifiers of assets to be used as benchmarks."""
         return self.__benchmarks
 
     @benchmarks.setter
-    def benchmarks(self, value: List[str]):
+    def benchmarks(self, value: list[str]):
         self.__benchmarks = value
 
     @property
@@ -706,10 +706,10 @@ class Hedge:
         return self.__objective
 
     @property
-    def result(self) -> Dict:
+    def result(self) -> dict:
         return self.__result
 
-    def calculate(self) -> Dict:
+    def calculate(self) -> dict:
         """
         Calculates the hedge
         :return: a dictionary with calculation results
@@ -877,7 +877,7 @@ class Hedge:
         return opt_dict
 
     @staticmethod
-    def construct_portfolio_weights_and_asset_numbers(results: dict) -> Union[dict, List]:
+    def construct_portfolio_weights_and_asset_numbers(results: dict) -> Union[dict, list]:
         """
         Function used to retrieve the constructed portfolio from a performance hedge, sort it, then calculate the
         weights for all assets and total number of assets and return these results.

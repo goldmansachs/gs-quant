@@ -15,7 +15,7 @@ under the License.
 """
 
 import datetime as dt
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Union
 
 import pandas as pd
 
@@ -40,7 +40,7 @@ from gs_quant.priceable import PriceableImpl
 from gs_quant.target.backtests import FlowVolBacktestMeasure
 
 
-def encode_response_obj(data: Any) -> Dict:
+def encode_response_obj(data: Any) -> dict:
     if isinstance(data, RiskMeasure):
         return encode_risk_measure(data)
     if isinstance(data, pd.Series):
@@ -54,11 +54,11 @@ def encode_response_obj(data: Any) -> Dict:
     raise TypeError(f'Type is not JSON serializable: {type(data).__name__}')
 
 
-def decode_leg_refs(d: dict) -> Dict[str, PriceableImpl]:
+def decode_leg_refs(d: dict) -> dict[str, PriceableImpl]:
     return {k: decode_inst(v) for k, v in d.items()}
 
 
-def decode_risk_measure_refs(d: dict) -> Dict[str, RiskMeasure]:
+def decode_risk_measure_refs(d: dict) -> dict[str, RiskMeasure]:
     return {k: decode_risk_measure(v) for k, v in d.items()}
 
 
@@ -66,7 +66,7 @@ def decode_result_tuple(results: tuple):
     return tuple(decode_risk_result(r) for r in results)
 
 
-def decode_basic_bt_measure_dict(results: dict) -> Dict[FlowVolBacktestMeasure, Dict[dt.date, RiskResultWithData]]:
+def decode_basic_bt_measure_dict(results: dict) -> dict[FlowVolBacktestMeasure, dict[dt.date, RiskResultWithData]]:
     return {
         FlowVolBacktestMeasure(k): {dt.date.fromisoformat(d): decode_risk_result_with_data(r) for d, r in v.items()}
         for k, v in results.items()
@@ -75,7 +75,7 @@ def decode_basic_bt_measure_dict(results: dict) -> Dict[FlowVolBacktestMeasure, 
 
 def decode_basic_bt_transactions(
     results: dict, decode_instruments: bool = True
-) -> Dict[dt.date, Tuple[Transaction, ...]]:
+) -> dict[dt.date, tuple[Transaction, ...]]:
     def to_ccy(s: str) -> Union[Currency, CurrencyName, str]:
         if s in [x.value for x in Currency]:
             return Currency(s)

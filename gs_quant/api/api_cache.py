@@ -16,7 +16,7 @@ under the License.
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Tuple
+from typing import Any
 
 import cachetools
 import pandas as pd
@@ -58,7 +58,7 @@ class InMemoryApiRequestCache(ApiRequestCache):
         self._cache = cachetools.TTLCache(max_size, ttl_in_seconds)
         self._records = []
 
-    def get_events(self) -> Tuple[Tuple[CacheEvent, Any], ...]:
+    def get_events(self) -> tuple[tuple[CacheEvent, Any], ...]:
         return tuple(self._records)
 
     def clear_events(self):

@@ -16,7 +16,6 @@ under the License.
 
 import urllib.parse
 import webbrowser
-from typing import Dict, Tuple
 
 from pydash import get
 
@@ -24,14 +23,14 @@ from gs_quant.session import GsSession
 from gs_quant.target.workspaces_markets import Workspace
 
 API = '/workspaces/markets'
-WORKSPACES_MARKETS_HEADERS: Dict[str, str] = {'Content-Type': 'application/json;charset=utf-8'}
+WORKSPACES_MARKETS_HEADERS: dict[str, str] = {'Content-Type': 'application/json;charset=utf-8'}
 
 
 class GsWorkspacesMarketsApi:
     """GS Workspaces Markets API implementation"""
 
     @classmethod
-    def get_workspaces(cls, limit: int = 10, **kwargs) -> Tuple[Workspace, ...]:
+    def get_workspaces(cls, limit: int = 10, **kwargs) -> tuple[Workspace, ...]:
         return GsSession.current.sync.get(f'{API}?limit={limit}&{urllib.parse.urlencode(kwargs)}', cls=Workspace)[
             'results'
         ]
@@ -60,7 +59,7 @@ class GsWorkspacesMarketsApi:
         )
 
     @classmethod
-    def delete_workspace(cls, workspace_id: str) -> Dict:
+    def delete_workspace(cls, workspace_id: str) -> dict:
         return GsSession.current.sync.delete(f'{API}/{workspace_id}')
 
     @classmethod

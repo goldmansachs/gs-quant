@@ -18,7 +18,7 @@ import datetime as dt
 import math
 import re
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -1614,7 +1614,7 @@ def _get_risk_free_rate(risk_free_id, start_date, end_date):
 
 
 def _replay_historical_factor_moves_on_latest_positions(
-    report_id: str, factors: List[str]
+    report_id: str, factors: list[str]
 ) -> Union[pd.Series, pd.DataFrame]:
     start_date = DataContext.current.start_time.date()
     end_date = DataContext.current.end_time.date()

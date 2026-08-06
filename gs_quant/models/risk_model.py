@@ -18,7 +18,7 @@ import datetime as dt
 import logging
 import math
 from enum import Enum, auto
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 import deprecation
 import numpy as np
@@ -139,7 +139,7 @@ class MarqueeRiskModel(RiskModel):
         universe_identifier: UniverseIdentifier,
         term: Term,
         universe_size: int = None,
-        entitlements: Union[Dict, Entitlements] = None,
+        entitlements: Union[dict, Entitlements] = None,
         description: str = None,
         expected_update_time: dt.time = None,
     ):
@@ -155,7 +155,7 @@ class MarqueeRiskModel(RiskModel):
             entitlements
             if entitlements and isinstance(entitlements, Entitlements)
             else Entitlements.from_dict(entitlements)
-            if entitlements and isinstance(entitlements, Dict)
+            if entitlements and isinstance(entitlements, dict)
             else None
         )
         self.__description: str = description
@@ -242,7 +242,7 @@ class MarqueeRiskModel(RiskModel):
         return self.__entitlements
 
     @entitlements.setter
-    def entitlements(self, entitlements: Union[Entitlements, Dict]):
+    def entitlements(self, entitlements: Union[Entitlements, dict]):
         """Set risk model entitlements"""
         self.__entitlements = entitlements
 
@@ -262,7 +262,7 @@ class MarqueeRiskModel(RiskModel):
 
     def get_dates(
         self, start_date: dt.date = None, end_date: dt.date = None, event_type: RiskModelEventType = None
-    ) -> List[dt.date]:
+    ) -> list[dt.date]:
         """Get dates between start_date and end_date for which risk model data is present
 
         :param start_date: List returned including and after start_date
@@ -338,7 +338,7 @@ class MarqueeRiskModel(RiskModel):
         """
         return GsRiskModelApi.upload_risk_model_calendar(self.id, calendar)
 
-    def get_missing_dates(self, start_date: dt.date = None, end_date: dt.date = None) -> List[dt.date]:
+    def get_missing_dates(self, start_date: dt.date = None, end_date: dt.date = None) -> list[dt.date]:
         """Get any dates where data is not published according to expected days returned from the risk model calendar
 
         :param start_date: Date to truncate missing dates at
@@ -420,7 +420,7 @@ class MarqueeRiskModel(RiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get asset universe data for existing risk model
 
         :param start_date: Start date for data request. Must be equal to end_date if universe array
@@ -503,10 +503,10 @@ class MarqueeRiskModel(RiskModel):
         self,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        factor_names: List[str] = None,
-        factor_ids: List[str] = None,
+        factor_names: list[str] = None,
+        factor_ids: list[str] = None,
         factor_type: FactorType = None,
-    ) -> List[Factor]:
+    ) -> list[Factor]:
         """Get risk model factors
         :param start_date: Start date of when to search for factors (optional, default to last month)
         :param end_date: End date of when to search for factors
@@ -598,12 +598,12 @@ class MarqueeRiskModel(RiskModel):
         self,
         start_time: dt.datetime = dt.datetime.now() - dt.timedelta(hours=3),
         end_time: dt.datetime = dt.datetime.now(),
-        factors: List[str] = None,
-        factor_ids: List[str] = None,
+        factors: list[str] = None,
+        factor_ids: list[str] = None,
         data_source: Union[IntradayFactorDataSource, str] = None,
-        category_filter: List[str] = None,
+        category_filter: list[str] = None,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get intraday factor data for existing risk model
 
         :param start_time: Start time for data request
@@ -683,13 +683,13 @@ class MarqueeRiskModel(RiskModel):
         self,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        identifiers: List[str] = None,
+        identifiers: list[str] = None,
         include_performance_curve: bool = False,
-        category_filter: List[str] = None,
-        name_filter: List[str] = None,
+        category_filter: list[str] = None,
+        name_filter: list[str] = None,
         factor_type: FactorType = None,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get factor data for existing risk model
 
         :param start_date: Start date for data request
@@ -796,9 +796,9 @@ class MarqueeRiskModel(RiskModel):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
-        factors: List[str] = [],
+        factors: list[str] = [],
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Get factor return data for existing risk model keyed by name
 
         :param start_date: Start date for data request
@@ -835,9 +835,9 @@ class MarqueeRiskModel(RiskModel):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
-        factors: List[str] = [],
+        factors: list[str] = [],
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Get factor return data for existing risk model keyed by factor id
 
         :param start_date: Start date for data request
@@ -879,9 +879,9 @@ class MarqueeRiskModel(RiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
         factors_by_name=True,
-        factors: List[str] = [],
+        factors: list[str] = [],
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         limit_factors = False
         measures = [requested_measure, Measure.Factor_Name, Measure.Factor_Id]
         if assets:
@@ -901,7 +901,7 @@ class MarqueeRiskModel(RiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         results = self.get_data(
             start_date=start_date,
             end_date=end_date,
@@ -919,10 +919,10 @@ class MarqueeRiskModel(RiskModel):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
-        factors: List[Union[str, Factor]] = None,
+        factors: list[Union[str, Factor]] = None,
         get_factors_by_name: bool = False,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get universe factor exposure data for existing risk model
 
         :param start_date: Start date for data request
@@ -980,7 +980,7 @@ class MarqueeRiskModel(RiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get specific risk data for existing risk model
 
         :param start_date: Start date for data request
@@ -1017,10 +1017,10 @@ class MarqueeRiskModel(RiskModel):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
-        factors: List[str] = [],
+        factors: list[str] = [],
         factors_by_name: bool = True,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get factor standard deviation data for existing risk model keyed by name or id
 
         :param start_date: start date for data request
@@ -1062,10 +1062,10 @@ class MarqueeRiskModel(RiskModel):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
-        factors: List[str] = [],
+        factors: list[str] = [],
         factors_by_name: bool = True,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get factor mean data for existing risk model keyed by name or id
 
         :param start_date: start date for data request
@@ -1106,10 +1106,10 @@ class MarqueeRiskModel(RiskModel):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
-        factors: List[str] = [],
+        factors: list[str] = [],
         factors_by_name: bool = True,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> (Union)[List[Dict], pd.DataFrame]:
+    ) -> (Union)[list[dict], pd.DataFrame]:
         """ Get factor cross-sectional mean data for existing risk model keyed by name or id
 
         :param start_date: start date for data request
@@ -1151,10 +1151,10 @@ class MarqueeRiskModel(RiskModel):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
-        factors: List[str] = [],
+        factors: list[str] = [],
         factors_by_name: bool = True,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get factor cross-sectional standard deviation data for existing risk model keyed by name or id
 
         :param start_date: start date for data request
@@ -1200,13 +1200,13 @@ class MarqueeRiskModel(RiskModel):
 
     def get_data(
         self,
-        measures: List[Measure],
+        measures: list[Measure],
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
-        factors: List[Union[str, Factor]] = None,
+        factors: list[Union[str, Factor]] = None,
         limit_factors: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """Get data for multiple measures for existing risk model
 
         :param measures: list of measures for general risk model data request
@@ -1244,7 +1244,13 @@ class MarqueeRiskModel(RiskModel):
                 )
             raise e
 
-    def upload_data(self, data: Union[RiskModelData, Dict], max_asset_batch_size: int = 10000, aws_upload: bool = True):
+    def upload_data(
+        self,
+        data: Union[RiskModelData, dict],
+        max_asset_batch_size: int = 10000,
+        aws_upload: bool = True,
+        asset_data_patches: bool = None,
+    ):
         """Upload risk model data to existing risk model in Marquee
 
         :param data: complete or partial risk model data for uploading on given date
@@ -1257,6 +1263,8 @@ class MarqueeRiskModel(RiskModel):
             consider batching with a smaller max asset batch size
         If upload universe is over max_asset_batch_size, will batch data in chunks of max_asset_batch_size assets
         :param aws_upload: If true, uploads risk model data to AWS
+        :param asset_data_patches: If true, signals to the endpoint that the request patches optional asset
+            fields rather than uploading full risk model data for the date
         This function takes risk model data, and if partial requests are necessary, will upload data by
             1. factor data (includes covariance matrix if factor model)
             2. asset data in batches of max_asset_batch_size
@@ -1274,18 +1282,20 @@ class MarqueeRiskModel(RiskModel):
         if target_universe_size:
             logging.info(f'Target universe size for upload: {target_universe_size}')
         if make_partial_request:
-            batch_and_upload_partial_data(self.id, data, max_asset_batch_size, aws_upload=aws_upload)
+            batch_and_upload_partial_data(
+                self.id, data, max_asset_batch_size, aws_upload=aws_upload, asset_data_patches=asset_data_patches
+            )
         else:
             logging.info('Uploading model data in one request')
-            upload_model_data(self.id, data, aws_upload=aws_upload)
+            upload_model_data(self.id, data, aws_upload=aws_upload, asset_data_patches=asset_data_patches)
 
     def update_partial_data(
         self,
         date: dt.date,
-        data: Union[RiskModelData, Dict],
+        data: Union[RiskModelData, dict],
         max_asset_batch_size: int = 10000,
         aws_upload: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """Patch asset data for a single date by merging data over what is already stored.
 
         Only the assets listed in data['assetData']['universe'] are fetched, merged,
@@ -1331,6 +1341,10 @@ class MarqueeRiskModel(RiskModel):
         if 'factorExposure' in asset_data:
             raise MqValueError(
                 "please use upload_data to update factor exposure, it is not allowed in update_partial_data"
+            )
+        if 'specificRisk' in asset_data:
+            raise MqValueError(
+                "please use upload_data to update specific risk, it is not allowed in update_partial_data"
             )
 
         universe = list(asset_data.get('universe', []))
@@ -1428,7 +1442,9 @@ class MarqueeRiskModel(RiskModel):
         logging.info(
             f'Uploading {len(merged_asset_data.get("universe", []))} asset(s) for {date_str} on model {self.id}...'
         )
-        self.upload_data(upload_payload, max_asset_batch_size=max_asset_batch_size, aws_upload=aws_upload)
+        self.upload_data(
+            upload_payload, max_asset_batch_size=max_asset_batch_size, aws_upload=aws_upload, asset_data_patches=True
+        )
         logging.info(f'Upload complete for model {self.id} on {date_str}.')
 
         return upload_payload
@@ -1490,7 +1506,7 @@ class MarqueeRiskModel(RiskModel):
         )
 
     @classmethod
-    def from_many_targets(cls, models: Tuple[RiskModelBuilder, ...]):
+    def from_many_targets(cls, models: tuple[RiskModelBuilder, ...]):
         return [cls.from_target(model) for model in models]
 
     def __str__(self):
@@ -1534,7 +1550,7 @@ class FactorRiskModel(MarqueeRiskModel):
         vendor: str,
         version: float,
         universe_size: int = None,
-        entitlements: Union[Dict, Entitlements] = None,
+        entitlements: Union[dict, Entitlements] = None,
         description: str = None,
         expected_update_time: dt.time = None,
     ):
@@ -1591,11 +1607,11 @@ class FactorRiskModel(MarqueeRiskModel):
     @classmethod
     def get_many(
         cls,
-        ids: List[str] = None,
-        terms: List[str] = None,
-        vendors: List[str] = None,
-        names: List[str] = None,
-        coverages: List[str] = None,
+        ids: list[str] = None,
+        terms: list[str] = None,
+        vendors: list[str] = None,
+        names: list[str] = None,
+        coverages: list[str] = None,
         limit: int = None,
     ) -> list:
         """Get many factor risk models from Marquee
@@ -1626,7 +1642,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get total risk data for existing risk model
 
         :param start_date: start date for data request
@@ -1664,7 +1680,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get historical beta data for existing risk model
 
         :param start_date: start date for data request
@@ -1702,7 +1718,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get predicted beta data for an existing risk model
 
         :param start_date: start date for data request
@@ -1740,7 +1756,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get global predicted beta data for an existing risk model
 
         :param start_date: start date for data request
@@ -1778,7 +1794,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get daily asset total return data
 
         :param start_date: Start date for data request
@@ -1814,7 +1830,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get specific return data for existing risk model
 
         :param start_date: Start date for data request
@@ -1851,7 +1867,7 @@ class FactorRiskModel(MarqueeRiskModel):
         days: int = 0,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get bid ask spread data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -1893,7 +1909,7 @@ class FactorRiskModel(MarqueeRiskModel):
         days: int = 0,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get trading volume data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -1935,7 +1951,7 @@ class FactorRiskModel(MarqueeRiskModel):
         days: int = 30,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get traded value data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -1977,7 +1993,7 @@ class FactorRiskModel(MarqueeRiskModel):
         days: int = 0,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get composite volume data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -2019,7 +2035,7 @@ class FactorRiskModel(MarqueeRiskModel):
         days: int = 30,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get composite value data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -2060,7 +2076,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get issuer market capitalization for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -2096,7 +2112,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get asset price data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -2132,7 +2148,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get asset capitalization data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -2168,7 +2184,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get currency data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -2204,7 +2220,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get asset unadjusted specific risk data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -2240,7 +2256,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get dividend yield data for assets covered by the risk model
 
         :param start_date: Start date for data request
@@ -2275,10 +2291,10 @@ class FactorRiskModel(MarqueeRiskModel):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
-        factors: List[Union[str, Factor]] = None,
+        factors: list[Union[str, Factor]] = None,
         get_factors_by_name: bool = False,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get universe factor exposure data for existing risk model
 
         :param start_date: start date for data request
@@ -2322,7 +2338,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         measure_to_field_name_map = {
             Measure.Covariance_Matrix: 'covarianceMatrix',
             Measure.Unadjusted_Covariance_Matrix: 'unadjustedCovarianceMatrix',
@@ -2350,7 +2366,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """ Get covariance matrix data for existing risk model
 
         :param start_date: start date for data request
@@ -2388,7 +2404,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """ Get covariance matrix data for existing risk model
 
         :param start_date: start date for data request
@@ -2428,7 +2444,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """ Get covariance matrix data for existing risk model
 
         :param start_date: start date for data request
@@ -2463,8 +2479,8 @@ class FactorRiskModel(MarqueeRiskModel):
         )
 
     def _build_currency_rates_data(
-        self, rows: List[Dict], currencies: List[Currency], rates_key: str, format: ReturnFormat
-    ) -> Union[Dict, pd.DataFrame]:
+        self, rows: list[dict], currencies: list[Currency], rates_key: str, format: ReturnFormat
+    ) -> Union[dict, pd.DataFrame]:
         currency_rates_key = "currencyRatesData"
         currency_rates_df = get_optional_data_as_dataframe(rows, currency_rates_key)
         if currencies:
@@ -2479,9 +2495,9 @@ class FactorRiskModel(MarqueeRiskModel):
         self,
         start_date: dt.date,
         end_date: dt.date = None,
-        currencies: List[Currency] = [],
+        currencies: list[Currency] = [],
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Get risk-free rates for existing risk model
 
         :param start_date: start date for data request
@@ -2521,9 +2537,9 @@ class FactorRiskModel(MarqueeRiskModel):
         self,
         start_date: dt.date,
         end_date: dt.date = None,
-        currencies: List[Currency] = [],
+        currencies: list[Currency] = [],
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """Get currency exchange rates for existing risk model
 
         :param start_date: start date for data request
@@ -2563,10 +2579,10 @@ class FactorRiskModel(MarqueeRiskModel):
         self,
         start_date: dt.date,
         end_date: dt.date = None,
-        factors: List[str] = None,
+        factors: list[str] = None,
         get_factors_by_name: bool = True,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """ Get factor volatility data for existing risk model
 
         :param start_date: start date for data request
@@ -2617,7 +2633,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """ Get estimation universe data for existing risk model
 
            :param start_date: Start date for data request. Must be equal to end_date if universe array
@@ -2658,7 +2674,7 @@ class FactorRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """ Get issuer specific covariance data for existing risk model
 
         :param start_date: start date for data request
@@ -2704,11 +2720,11 @@ class FactorRiskModel(MarqueeRiskModel):
         self,
         start_date: dt.date,
         end_date: dt.date = None,
-        factors: List[str] = None,
+        factors: list[str] = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         get_factors_by_name: bool = False,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """ Get factor portfolios data for existing risk model
 
         :param start_date: start date for data request
@@ -2828,7 +2844,7 @@ class FactorRiskModel(MarqueeRiskModel):
         annualized_factor_rmctr_sum = np.sum(annualized_rmctr)
 
         final_results = []
-        for i in range(0, len(mctr)):
+        for i in range(len(mctr)):
             final_results.append(
                 {
                     'Factor': factors[i]['factorName'] if get_factors_by_name else factors[i]['factorId'],
@@ -2960,7 +2976,7 @@ class MacroRiskModel(MarqueeRiskModel):
         vendor: str,
         version: float,
         universe_size: int = None,
-        entitlements: Union[Dict, Entitlements] = None,
+        entitlements: Union[dict, Entitlements] = None,
         description: str = None,
         expected_update_time: dt.time = None,
     ):
@@ -3016,11 +3032,11 @@ class MacroRiskModel(MarqueeRiskModel):
     @classmethod
     def get_many(
         cls,
-        ids: List[str] = None,
-        terms: List[str] = None,
-        vendors: List[str] = None,
-        names: List[str] = None,
-        coverages: List[str] = None,
+        ids: list[str] = None,
+        terms: list[str] = None,
+        vendors: list[str] = None,
+        names: list[str] = None,
+        coverages: list[str] = None,
         limit: int = None,
     ):
         """Get many Macro risk models from Marquee
@@ -3055,7 +3071,7 @@ class MacroRiskModel(MarqueeRiskModel):
         factor_type: FactorType = FactorType.Factor,
         get_factors_by_name: bool = False,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get universe factor or factor category sensitivity data for existing macro risk model
 
         :param start_date: start date for data request
@@ -3138,7 +3154,7 @@ class MacroRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """Get R Squared data for existing macro risk model
 
         :param start_date: start date for data request
@@ -3178,7 +3194,7 @@ class MacroRiskModel(MarqueeRiskModel):
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         fair_value_gap_unit: Unit = Unit.STANDARD_DEVIATION,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get fair value gap data for a list of assets between start date and end date
 
         :param start_date: The start date for data request.
@@ -3233,10 +3249,10 @@ class MacroRiskModel(MarqueeRiskModel):
         start_date: dt.date,
         end_date: dt.date = None,
         assets: DataAssetsRequest = None,
-        factors: List[str] = [],
+        factors: list[str] = [],
         factors_by_name: bool = True,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get factor z score data for existing risk model keyed by name or id
 
         :param start_date: start date for data request
@@ -3278,7 +3294,7 @@ class MacroRiskModel(MarqueeRiskModel):
         end_date: dt.date = None,
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """ Get model price data for existing risk model
 
         :param start_date: Start date for data request
@@ -3344,7 +3360,7 @@ class ThematicRiskModel(MarqueeRiskModel):
         vendor: str,
         version: float,
         universe_size: int = None,
-        entitlements: Union[Dict, Entitlements] = None,
+        entitlements: Union[dict, Entitlements] = None,
         description: str = None,
         expected_update_time: dt.time = None,
     ):
@@ -3401,11 +3417,11 @@ class ThematicRiskModel(MarqueeRiskModel):
     @classmethod
     def get_many(
         cls,
-        ids: List[str] = None,
-        terms: List[str] = None,
-        vendors: List[str] = None,
-        names: List[str] = None,
-        coverages: List[str] = None,
+        ids: list[str] = None,
+        terms: list[str] = None,
+        vendors: list[str] = None,
+        names: list[str] = None,
+        coverages: list[str] = None,
         limit: int = None,
     ):
         """Get a Thematic risk model from Marquee
@@ -3437,7 +3453,7 @@ class ThematicRiskModel(MarqueeRiskModel):
         assets: DataAssetsRequest = DataAssetsRequest(RiskModelUniverseIdentifierRequest.gsid, []),
         get_factors_by_name: bool = False,
         format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[List[Dict], pd.DataFrame]:
+    ) -> Union[list[dict], pd.DataFrame]:
         """Get universe sensitivity data for existing thematic risk model
 
         :param start_date: start date for data request

@@ -18,7 +18,7 @@ import datetime as dt
 import logging
 import math
 from time import time
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -55,7 +55,7 @@ _logger = logging.getLogger(__name__)
 
 class PositionTag(PositionTagTarget):
     @classmethod
-    def from_dict(cls, tag_dict: Dict):
+    def from_dict(cls, tag_dict: dict):
         if len(tag_dict) > 1:
             raise MqValueError('PositionTag.from_dict only accepts a single key-value pair')
         return cls(name=list(tag_dict.keys())[0], value=list(tag_dict.values())[0])
@@ -70,7 +70,7 @@ class Position:
         notional: float = None,
         name: str = None,
         asset_id: str = None,
-        tags: Optional[List[Union[PositionTag, Dict]]] = None,
+        tags: Optional[list[Union[PositionTag, dict]]] = None,
     ):
         self.__identifier = identifier
         self.__weight = weight
@@ -150,11 +150,11 @@ class Position:
         self.__asset_id = value
 
     @property
-    def tags(self) -> List[PositionTag]:
+    def tags(self) -> list[PositionTag]:
         return self.__tags
 
     @tags.setter
-    def tags(self, value: List[PositionTag]):
+    def tags(self, value: list[PositionTag]):
         self.__tags = value
 
     @property
@@ -184,7 +184,7 @@ class Position:
     def tags_as_dict(self):
         return {tag.name: tag.value for tag in self.tags}
 
-    def as_dict(self, tags_as_keys: bool = False) -> Dict:
+    def as_dict(self, tags_as_keys: bool = False) -> dict:
         position_dict = dict(
             identifier=self.identifier,
             weight=self.weight,
@@ -201,7 +201,7 @@ class Position:
         return {k: v for k, v in position_dict.items() if v is not None}
 
     @classmethod
-    def from_dict(cls, position_dict: Dict, add_tags: bool = True):
+    def from_dict(cls, position_dict: dict, add_tags: bool = True):
         fields = [k.lower() for k in position_dict.keys()]
         if 'id' in fields and 'asset_id' in fields:
             raise MqValueError('Position cannot have both id and asset_id')
@@ -239,12 +239,12 @@ class PositionSet:
 
     def __init__(
         self,
-        positions: List[Position],
+        positions: list[Position],
         date: dt.date = dt.date.today(),
         divisor: float = None,
         reference_notional: float = None,
-        unresolved_positions: List[Position] = None,
-        unpriced_positions: List[Position] = None,
+        unresolved_positions: list[Position] = None,
+        unpriced_positions: list[Position] = None,
     ):
         if reference_notional is not None:
             for p in positions:
@@ -272,17 +272,17 @@ class PositionSet:
         positions.sort(key=lambda position: position.asset_id)
         other_positions = other.positions
         other_positions.sort(key=lambda position: position.asset_id)
-        for i in range(0, len(positions)):
+        for i in range(len(positions)):
             if positions[i] != other_positions[i]:
                 return False
         return True
 
     @property
-    def positions(self) -> List[Position]:
+    def positions(self) -> list[Position]:
         return self.__positions
 
     @positions.setter
-    def positions(self, value: List[Position]):
+    def positions(self, value: list[Position]):
         self.__positions = value
 
     @property
@@ -306,11 +306,11 @@ class PositionSet:
         self.__reference_notional = value
 
     @property
-    def unresolved_positions(self) -> List[Position]:
+    def unresolved_positions(self) -> list[Position]:
         return self.__unresolved_positions
 
     @property
-    def unpriced_positions(self) -> List[Position]:
+    def unpriced_positions(self) -> list[Position]:
         return self.__unpriced_positions
 
     def clone(self, keep_reference_notional: bool = False):
@@ -894,7 +894,7 @@ class PositionSet:
                 subset.append(p if not copy else p.clone())
         return PositionSet(positions=subset, date=self.date, reference_notional=self.reference_notional)
 
-    def to_target(self, common: bool = True) -> Union[CommonPositionSet, List[PositionPriceInput]]:
+    def to_target(self, common: bool = True) -> Union[CommonPositionSet, list[PositionPriceInput]]:
         """Returns PostionSet type defined in target file for API payloads"""
         positions = tuple(p.to_target(common) for p in self.positions)
         return CommonPositionSet(positions, self.date) if common else list(positions)
@@ -920,7 +920,7 @@ class PositionSet:
         return cls(converted_positions, position_set.position_date, position_set.divisor)
 
     @classmethod
-    def from_list(cls, positions: List[str], date: dt.date = dt.date.today()):
+    def from_list(cls, positions: list[str], date: dt.date = dt.date.today()):
         """
         Create equally-weighted PostionSet instance from a list of identifiers
 
@@ -948,7 +948,7 @@ class PositionSet:
     @classmethod
     def from_dicts(
         cls,
-        positions: List[Dict],
+        positions: list[dict],
         date: dt.date = dt.date.today(),
         reference_notional: float = None,
         add_tags: bool = False,
@@ -1034,7 +1034,7 @@ class PositionSet:
         return cls(positions_list, date, reference_notional=reference_notional, divisor=divisor)
 
     @staticmethod
-    def __get_tag_columns(positions: pd.DataFrame) -> List[str]:
+    def __get_tag_columns(positions: pd.DataFrame) -> list[str]:
         return [
             c
             for c in positions.columns
@@ -1042,7 +1042,7 @@ class PositionSet:
         ]
 
     @staticmethod
-    def __normalize_position_columns(positions: pd.DataFrame) -> List[str]:
+    def __normalize_position_columns(positions: pd.DataFrame) -> list[str]:
         columns = []
         if 'asset_id' in positions.columns and 'id' not in positions.columns:
             positions = positions.rename(columns={'asset_id': 'id'})
@@ -1055,7 +1055,7 @@ class PositionSet:
         return columns
 
     @staticmethod
-    def __resolve_identifiers(identifiers: List[str], date: dt.date, **kwargs) -> List:
+    def __resolve_identifiers(identifiers: list[str], date: dt.date, **kwargs) -> list:
         unmapped_assets = []
         id_map = {}
         batch_size = 500
@@ -1085,7 +1085,7 @@ class PositionSet:
         return [id_map, unmapped_assets]
 
     @staticmethod
-    def __get_positions_data(mqids: List[str], source: Optional[str] = None) -> Dict:
+    def __get_positions_data(mqids: list[str], source: Optional[str] = None) -> dict:
         response = GsAssetApi.get_many_assets_data(id=mqids, fields=['id', 'name', 'bbid'], source=source)
         data = {}
         for asset in response:
@@ -1094,7 +1094,7 @@ class PositionSet:
 
     @staticmethod
     def __get_default_weighting_strategy(
-        positions: List[Position],
+        positions: list[Position],
         reference_notional: float = None,
         weighting_strategy: Optional[PositionSetWeightingStrategy] = None,
     ) -> PositionSetWeightingStrategy:
@@ -1132,8 +1132,8 @@ class PositionSet:
 
     @staticmethod
     def __convert_positions_for_pricing(
-        positions: List[Position], weighting_strategy: PositionSetWeightingStrategy
-    ) -> List[PositionPriceInput]:
+        positions: list[Position], weighting_strategy: PositionSetWeightingStrategy
+    ) -> list[PositionPriceInput]:
         position_inputs, missing_ids = [], []
         use_quantity = weighting_strategy == PositionSetWeightingStrategy.Quantity
         use_weight = weighting_strategy == PositionSetWeightingStrategy.Weight
@@ -1159,7 +1159,7 @@ class PositionSet:
         return position_inputs
 
     @staticmethod
-    def __hash_position_tag_list(position_tags: List[PositionTag]) -> str:
+    def __hash_position_tag_list(position_tags: list[PositionTag]) -> str:
         hashed_results = ''
         if position_tags is not None:
             for tag in position_tags:
@@ -1167,7 +1167,7 @@ class PositionSet:
         return hashed_results
 
     @staticmethod
-    def to_frame_many(position_sets: List['PositionSet']) -> pd.DataFrame:
+    def to_frame_many(position_sets: list['PositionSet']) -> pd.DataFrame:
         """Returns dataframe of position sets"""
         position_sets = pd.DataFrame(position_sets, columns=["position_sets"])
 
@@ -1217,7 +1217,7 @@ class PositionSet:
         return position
 
     @classmethod
-    def resolve_many(cls, position_sets: List['PositionSet'], **kwargs):
+    def resolve_many(cls, position_sets: list['PositionSet'], **kwargs):
         """
         Resolve positions on each holding date into Marquee assets. Positions sets will be updated inplace.
         Each resolved position will have a unique Marquee ID.
@@ -1343,7 +1343,7 @@ class PositionSet:
     @classmethod
     def price_many(
         cls,
-        position_sets: List['PositionSet'],
+        position_sets: list['PositionSet'],
         currency: Optional[Currency] = Currency.USD,
         weighting_strategy: PositionSetWeightingStrategy = None,
         carryover_positions_for_missing_dates: bool = False,

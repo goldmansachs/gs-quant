@@ -771,9 +771,9 @@ def test_percentile():
         percentile(pd.Series(range(5), index=range(5)), 90, "2d")
 
     for n in range(0, 101, 5):
-        assert percentile(pd.Series(x * 10 for x in range(0, 11)), n) == n
+        assert percentile(pd.Series(x * 10 for x in range(11)), n) == n
 
-    x = percentile(pd.Series(x for x in range(0, 5)), 50, 2)
+    x = percentile(pd.Series(x for x in range(5)), 50, 2)
     assert_series_equal(x, pd.Series([1.5, 2.5, 3.5], index=pd.RangeIndex(2, 5)))
 
     x = percentile(pd.Series(dtype=float), 90, "1d")

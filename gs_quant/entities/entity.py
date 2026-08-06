@@ -20,7 +20,7 @@ import time
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import deprecation
 import pandas as pd
@@ -120,10 +120,10 @@ class Entity(metaclass=ABCMeta):
         EntityType.DATASET: 'data/datasets',
     }
 
-    def __init__(self, id_: str, entity_type: EntityType, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity_type: EntityType, entity: Optional[dict] = None):
         self.__id: str = id_
         self.__entity_type: EntityType = entity_type
-        self.__entity: Dict = entity
+        self.__entity: dict = entity
 
     @property
     @abstractmethod
@@ -161,7 +161,7 @@ class Entity(metaclass=ABCMeta):
             return cls._get_entity_from_type(result, EntityType(entity_type))
 
     @classmethod
-    def _get_entity_from_type(cls, entity: Dict, entity_type: EntityType = None):
+    def _get_entity_from_type(cls, entity: dict, entity_type: EntityType = None):
         id_ = entity.get('id')
         entity_type = entity_type or cls.entity_type()
         if entity_type == EntityType.COUNTRY:
@@ -176,7 +176,7 @@ class Entity(metaclass=ABCMeta):
     def get_marquee_id(self) -> str:
         return self.__id
 
-    def get_entity(self) -> Optional[Dict]:
+    def get_entity(self) -> Optional[dict]:
         return self.__entity
 
     def get_unique_entity_key(self) -> EntityKey:
@@ -193,7 +193,7 @@ class Entity(metaclass=ABCMeta):
         dimensions = dimensions or {}
         dimensions[self.data_dimension] = id_
         measure = measure if isinstance(measure, str) else measure.value
-        available: Dict = GsDataApi.get_data_providers(id_, availability).get(measure, {})
+        available: dict = GsDataApi.get_data_providers(id_, availability).get(measure, {})
 
         if frequency == DataFrequency.DAILY:
             daily_dataset_id = available.get(DataFrequency.DAILY)
@@ -216,7 +216,7 @@ class Country(Entity):
         MARQUEE_ID = 'MQID'
         NAME = 'name'
 
-    def __init__(self, id_: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity: Optional[dict] = None):
         super().__init__(id_, EntityType.COUNTRY, entity)
 
     @property
@@ -264,7 +264,7 @@ class Subdivision(Entity):
         MARQUEE_ID = 'MQID'
         name = 'name'
 
-    def __init__(self, id_: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity: Optional[dict] = None):
         super().__init__(id_, EntityType.SUBDIVISION, entity)
 
     @property
@@ -288,7 +288,7 @@ class KPI(Entity):
         MARQUEE_ID = "MQID"
         name = 'name'
 
-    def __init__(self, id_: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity: Optional[dict] = None):
         super().__init__(id_, EntityType.KPI, entity)
 
     @property
@@ -318,7 +318,7 @@ class RiskModelEntity(Entity):
         MARQUEE_ID = "MQID"
         name = 'name'
 
-    def __init__(self, id_: str, entity: Optional[Dict] = None):
+    def __init__(self, id_: str, entity: Optional[dict] = None):
         super().__init__(id_, EntityType.RISK_MODEL, entity)
 
     @property
@@ -396,7 +396,7 @@ class PositionedEntity(metaclass=ABCMeta):
         start: dt.date = DateLimit.LOW_LIMIT.value,
         end: dt.date = dt.date.today(),
         position_type: PositionType = PositionType.CLOSE,
-    ) -> List[PositionSet]:
+    ) -> list[PositionSet]:
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
             if len(response) == 0:
@@ -408,7 +408,7 @@ class PositionedEntity(metaclass=ABCMeta):
             return [PositionSet.from_target(position_set) for position_set in response]
         raise NotImplementedError
 
-    def update_positions(self, position_sets: List[PositionSet], net_positions: bool = True):
+    def update_positions(self, position_sets: list[PositionSet], net_positions: bool = True):
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             if not position_sets:
                 return
@@ -432,7 +432,7 @@ class PositionedEntity(metaclass=ABCMeta):
         end: dt.date = dt.date.today(),
         fields: [str] = None,
         position_type: PositionType = PositionType.CLOSE,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         if self.positioned_entity_type == EntityType.ASSET:
             return GsIndexApi.get_positions_data(self.id, start, end, fields, position_type)
         if self.positioned_entity_type == EntityType.PORTFOLIO:
@@ -444,7 +444,7 @@ class PositionedEntity(metaclass=ABCMeta):
 
     def get_last_positions_data(
         self, fields: [str] = None, position_type: PositionType = PositionType.CLOSE
-    ) -> List[Dict]:
+    ) -> list[dict]:
         if self.positioned_entity_type == EntityType.ASSET:
             return GsIndexApi.get_last_positions_data(self.id, fields, position_type)
         if self.positioned_entity_type == EntityType.PORTFOLIO:
@@ -454,14 +454,14 @@ class PositionedEntity(metaclass=ABCMeta):
             )
         raise NotImplementedError
 
-    def get_position_dates(self) -> Tuple[dt.date, ...]:
+    def get_position_dates(self) -> tuple[dt.date, ...]:
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             return GsPortfolioApi.get_position_dates(portfolio_id=self.id)
         if self.positioned_entity_type == EntityType.ASSET:
             return GsAssetApi.get_position_dates(asset_id=self.id)
         raise NotImplementedError
 
-    def get_reports(self, tags: Dict = None) -> List[Report]:
+    def get_reports(self, tags: dict = None) -> list[Report]:
         if self.positioned_entity_type == EntityType.PORTFOLIO:
             reports_as_target = GsPortfolioApi.get_reports(portfolio_id=self.id, tags=tags)
         elif self.positioned_entity_type == EntityType.ASSET:
@@ -480,7 +480,7 @@ class PositionedEntity(metaclass=ABCMeta):
                 report_objects.append(Report.from_target(report))
         return report_objects
 
-    def get_status_of_reports(self, tags: Dict = None) -> pd.DataFrame:
+    def get_status_of_reports(self, tags: dict = None) -> pd.DataFrame:
         reports = self.get_reports(tags)
         reports_dict = {
             'Name': [r.name for r in reports],
@@ -493,7 +493,7 @@ class PositionedEntity(metaclass=ABCMeta):
 
         return pd.DataFrame.from_dict(reports_dict)
 
-    def get_factor_risk_reports(self, fx_hedged: bool = None, tags: Dict = None) -> List[FactorRiskReport]:
+    def get_factor_risk_reports(self, fx_hedged: bool = None, tags: dict = None) -> list[FactorRiskReport]:
         if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
             position_source_type = self.positioned_entity_type.value.capitalize()
             reports = GsReportApi.get_reports(
@@ -512,7 +512,7 @@ class PositionedEntity(metaclass=ABCMeta):
         raise NotImplementedError
 
     def get_factor_risk_report(
-        self, risk_model_id: str = None, fx_hedged: bool = None, benchmark_id: str = None, tags: Dict = None
+        self, risk_model_id: str = None, fx_hedged: bool = None, benchmark_id: str = None, tags: dict = None
     ) -> FactorRiskReport:
         position_source_type = self.positioned_entity_type.value.capitalize()
         reports = self.get_factor_risk_reports(fx_hedged=fx_hedged, tags=tags)
@@ -533,7 +533,7 @@ class PositionedEntity(metaclass=ABCMeta):
             )
         return reports[0]
 
-    def get_thematic_report(self, tags: Dict = None) -> ThematicReport:
+    def get_thematic_report(self, tags: dict = None) -> ThematicReport:
         if self.positioned_entity_type in [EntityType.PORTFOLIO, EntityType.ASSET]:
             position_source_type = self.positioned_entity_type.value.capitalize()
             reports = GsReportApi.get_reports(
@@ -587,11 +587,11 @@ class PositionedEntity(metaclass=ABCMeta):
 
     def get_all_esg_data(
         self,
-        measures: List[ESGMeasure] = None,
-        cards: List[ESGCard] = None,
+        measures: list[ESGMeasure] = None,
+        cards: list[ESGCard] = None,
         pricing_date: dt.date = None,
         benchmark_id: str = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Get all ESG Data
         :param measures: list of ESG Measures to include in results
@@ -691,9 +691,9 @@ class PositionedEntity(metaclass=ABCMeta):
         include_estimates: bool = False,
         use_historical_data: bool = False,
         normalize_emissions: bool = False,
-        cards: List[CarbonCard] = [c for c in CarbonCard],
+        cards: list[CarbonCard] = [c for c in CarbonCard],
         analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG,
-    ) -> Dict:
+    ) -> dict:
         return GsCarbonApi.get_carbon_analytics(
             entity_id=self.id,
             benchmark_id=benchmark_id,
@@ -903,8 +903,8 @@ class PositionedEntity(metaclass=ABCMeta):
         self,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        basket_ids: List[str] = None,
-        regions: List[Region] = None,
+        basket_ids: list[str] = None,
+        regions: list[Region] = None,
     ) -> pd.DataFrame:
         results = GsThematicApi.get_thematics(
             entity_id=self.id,
@@ -923,8 +923,8 @@ class PositionedEntity(metaclass=ABCMeta):
         self,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        basket_ids: List[str] = None,
-        regions: List[Region] = None,
+        basket_ids: list[str] = None,
+        regions: list[Region] = None,
     ) -> pd.DataFrame:
         results = GsThematicApi.get_thematics(
             entity_id=self.id,
@@ -943,8 +943,8 @@ class PositionedEntity(metaclass=ABCMeta):
         self,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        basket_ids: List[str] = None,
-        regions: List[Region] = None,
+        basket_ids: list[str] = None,
+        regions: list[Region] = None,
     ) -> pd.DataFrame:
         results = GsThematicApi.get_thematics(
             entity_id=self.id,
@@ -968,12 +968,12 @@ class PositionedEntity(metaclass=ABCMeta):
 
     def get_factor_scenario_analytics(
         self,
-        scenarios: List[Scenario],
+        scenarios: list[Scenario],
         date: dt.date,
-        measures: List[ScenarioCalculationMeasure],
+        measures: list[ScenarioCalculationMeasure],
         risk_model: str = None,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, Union[Dict, pd.DataFrame]]:
+    ) -> Union[dict, pd.DataFrame]:
         """Given a list of factor scenarios (historical simulation and/or custom shocks), return the estimated pnl
         of the given positioned entity.
         :param scenarios: List of factor-based scenarios

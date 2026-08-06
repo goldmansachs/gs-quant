@@ -54,7 +54,7 @@ under the License.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -130,7 +130,7 @@ class CountryEventDefinition:
 
     country: str
     abbreviation: str
-    event_names: Dict[SupportedEvent, str]
+    event_names: dict[SupportedEvent, str]
     gs_country: Country = field(init=False)
 
     def __post_init__(self):
@@ -236,7 +236,7 @@ class ResolvedEventDefinition:
 @dataclass(frozen=True)
 class EventRecord:
     definition: ResolvedEventDefinition
-    payload: Dict[str, object]
+    payload: dict[str, object]
 
     @property
     def event_date(self) -> pd.Timestamp:
@@ -257,7 +257,7 @@ class EventRecord:
         """
         return self.definition.event_type
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         """Return a shallow dictionary copy of the event payload.
 
         :return: Payload dictionary copy.
@@ -265,7 +265,7 @@ class EventRecord:
         return dict(self.payload)
 
 
-EVENT_TYPES: Dict[SupportedEvent, EventType] = {
+EVENT_TYPES: dict[SupportedEvent, EventType] = {
     SupportedEvent.CB: CountryEventType(
         event=SupportedEvent.CB,
         event_type="CB_MEETING",
@@ -298,7 +298,7 @@ EVENT_TYPES: Dict[SupportedEvent, EventType] = {
 }
 
 
-COUNTRY_EVENT_DEFINITIONS: Dict[str, CountryEventDefinition] = {
+COUNTRY_EVENT_DEFINITIONS: dict[str, CountryEventDefinition] = {
     "Australia": CountryEventDefinition(
         country="Australia",
         abbreviation="AU",

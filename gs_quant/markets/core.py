@@ -23,7 +23,7 @@ from abc import ABCMeta
 from concurrent.futures import ThreadPoolExecutor
 from inspect import signature
 from itertools import takewhile, zip_longest
-from typing import Optional, Type, Union
+from typing import Optional, Union
 
 from tqdm import tqdm
 
@@ -100,7 +100,7 @@ class PricingContext(ContextBaseWithDefault):
         market_behaviour: Optional[str] = 'ContraintsBased',
         set_parameters_only: bool = False,
         use_historical_diddles_only: Optional[bool] = None,
-        provider: Optional[Type[GenericRiskApi]] = None,
+        provider: Optional[type[GenericRiskApi]] = None,
     ):
         """
         The methods on this class should not be called directly. Instead, use the methods on the instruments,
@@ -559,7 +559,7 @@ class PricingContext(ContextBaseWithDefault):
         )
 
     @property
-    def provider(self) -> Type[GenericRiskApi]:
+    def provider(self) -> type[GenericRiskApi]:
         return self.__provider if self.__provider is not None else self._inherited_val('provider', None)
 
     @property

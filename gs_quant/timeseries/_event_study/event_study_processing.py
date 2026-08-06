@@ -30,7 +30,7 @@ under the License.
 #         --> event-date alignment
 #         --> framed DataFrame inputs for the public API
 
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -57,7 +57,7 @@ def to_float_or_none(value) -> Optional[float]:
         return None
 
 
-def build_macro_event_payload_dict(row: pd.Series) -> Dict[str, object]:
+def build_macro_event_payload_dict(row: pd.Series) -> dict[str, object]:
     """Normalize a raw dataset row into the event payload shape.
 
     :param row: Raw macro-event dataset row.
@@ -111,7 +111,7 @@ def build_event_record(definition: ResolvedEventDefinition, row: pd.Series) -> E
     return EventRecord(definition=definition, payload=payload)
 
 
-def build_event_records(definition: ResolvedEventDefinition, event_payload: pd.DataFrame) -> List[EventRecord]:
+def build_event_records(definition: ResolvedEventDefinition, event_payload: pd.DataFrame) -> list[EventRecord]:
     """Convert a payload DataFrame into EventRecord objects.
 
     :param definition: Resolved event metadata.

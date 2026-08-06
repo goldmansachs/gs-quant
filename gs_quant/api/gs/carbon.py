@@ -16,7 +16,6 @@ under the License.
 
 import logging
 from enum import Enum
-from typing import Dict, List
 from urllib.parse import urlencode
 
 from gs_quant.common import Currency
@@ -142,9 +141,9 @@ class GsCarbonApi:
         include_estimates: bool = False,
         use_historical_data: bool = False,
         normalize_emissions: bool = False,
-        cards: List[CarbonCard] = [],
+        cards: list[CarbonCard] = [],
         analytics_view: CarbonAnalyticsView = CarbonAnalyticsView.LONG,
-    ) -> Dict:
+    ) -> dict:
         url = f'/carbon/{entity_id}?'
         url += urlencode(
             dict(

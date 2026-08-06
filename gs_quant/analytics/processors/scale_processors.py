@@ -15,7 +15,7 @@ under the License.
 """
 
 import math
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 from gs_quant.analytics.common.enumerators import ScaleShape
 from gs_quant.analytics.core import BaseProcessor
@@ -96,7 +96,7 @@ class BarMarkerProcessor(BaseProcessor):
 SpotOrBarMarker = Union[SpotMarkerProcessor, BarMarkerProcessor]
 
 
-def validate_markers_data(result: Dict, marker_data: Dict) -> Tuple[bool, str]:
+def validate_markers_data(result: dict, marker_data: dict) -> tuple[bool, str]:
     min_val = result['min']
     max_val = result['max']
     if not min_val or math.isnan(min_val):
@@ -135,7 +135,7 @@ def validate_markers_data(result: Dict, marker_data: Dict) -> Tuple[bool, str]:
 
 
 class ScaleProcessor(BaseProcessor):
-    def __init__(self, minimum: BaseProcessor, maximum: BaseProcessor, *, markers: List[SpotOrBarMarker]):
+    def __init__(self, minimum: BaseProcessor, maximum: BaseProcessor, *, markers: list[SpotOrBarMarker]):
         """ScaleProcessor
         A Scale processor can be used to render a scale in a DataGrid Column. It takes in the min value and max value
         processors which should resolve to single values. Additionally it take a list of markers to render within the

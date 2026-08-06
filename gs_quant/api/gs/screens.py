@@ -15,7 +15,6 @@ under the License.
 """
 
 import logging
-from typing import List, Tuple
 
 from gs_quant.session import GsSession
 from gs_quant.target.assets_screener import AssetScreenerRequest
@@ -27,8 +26,8 @@ _logger = logging.getLogger(__name__)
 class GsScreenApi:
     @classmethod
     def get_screens(
-        cls, screen_ids: List[str] = None, screen_names: List[str] = None, limit: int = 100
-    ) -> Tuple[Screen, ...]:
+        cls, screen_ids: list[str] = None, screen_names: list[str] = None, limit: int = 100
+    ) -> tuple[Screen, ...]:
         url = '/screens?'
         if screen_ids:
             url += f'&id={"&id=".join(screen_ids)}'

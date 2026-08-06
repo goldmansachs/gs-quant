@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 import json
 from enum import Enum
-from typing import Dict, Iterable, Optional, Union
+from typing import Iterable, Optional, Union
 
 from gs_quant.common import AssetClass, AssetType
 from gs_quant.json_encoder import JSONEncoder
@@ -85,7 +85,7 @@ class GsSecurityMasterFederatedApi:
         limit: int = 50,
         is_primary=None,
         offset_key: str = None,
-        **query_params: Dict[FederatedIdentifiers, Union[str, Iterable[str]]],
+        **query_params: dict[FederatedIdentifiers, Union[str, Iterable[str]]],
     ) -> Optional[dict]:
         """
         Get reference data for a single page. Use returned offsetKey to fetch next page.
@@ -115,7 +115,7 @@ class GsSecurityMasterFederatedApi:
         limit: int = 50,
         is_primary=None,
         offset_key: str = None,
-        **query_params: Dict[FederatedIdentifiers, Union[str, Iterable[str]]],
+        **query_params: dict[FederatedIdentifiers, Union[str, Iterable[str]]],
     ) -> Optional[dict]:
         """
         Get flattened reference data for a single page. Use returned offsetKey to fetch next page.
@@ -208,7 +208,7 @@ class GsSecurityMasterFederatedApi:
         flatten=False,
         is_primary=None,
         offset_key: str = None,
-        **query_params: Dict[FederatedIdentifiers, Union[str, Iterable[str]]],
+        **query_params: dict[FederatedIdentifiers, Union[str, Iterable[str]]],
     ) -> Optional[dict]:
         if (query_params is None or len(query_params) == 0) and type_ is None:
             raise ValueError("Neither '_type' nor 'query_params' are provided")

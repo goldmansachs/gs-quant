@@ -15,7 +15,6 @@ under the License.
 """
 
 import datetime as dt
-from typing import Dict, Tuple
 
 from gs_quant.instrument import Instrument
 
@@ -24,9 +23,9 @@ def decode_inst(i: dict) -> Instrument:
     return Instrument.from_dict(i)
 
 
-def decode_inst_tuple(t: tuple) -> Tuple[Instrument, ...]:
+def decode_inst_tuple(t: tuple) -> tuple[Instrument, ...]:
     return tuple(decode_inst(i) for i in t)
 
 
-def decode_daily_portfolio(results: dict, decode_instruments: bool = True) -> Dict[dt.date, Tuple[Instrument, ...]]:
+def decode_daily_portfolio(results: dict, decode_instruments: bool = True) -> dict[dt.date, tuple[Instrument, ...]]:
     return {dt.date.fromisoformat(k): decode_inst_tuple(v) if decode_instruments else v for k, v in results.items()}

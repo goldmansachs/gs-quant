@@ -17,7 +17,7 @@
 
 import datetime as dt
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -70,7 +70,7 @@ except ImportError:
         return pd.Series(results, index=index, dtype=np.double)
 
 
-def _concat_series(series: List[pd.Series]):
+def _concat_series(series: list[pd.Series]):
     curves = []
     constants = {}
     k = 0
@@ -84,7 +84,7 @@ def _concat_series(series: List[pd.Series]):
 
 
 @plot_function
-def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
+def min_(x: Union[pd.Series, list[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Minimum value of series over given window
 
@@ -156,7 +156,7 @@ def min_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Wind
 
 
 @plot_function
-def max_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
+def max_(x: Union[pd.Series, list[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Maximum value of series over given window
 
@@ -273,7 +273,7 @@ class MeanType(Enum):
 
 @plot_function
 def mean(
-    x: Union[pd.Series, List[pd.Series]],
+    x: Union[pd.Series, list[pd.Series]],
     w: Union[Window, int, str] = Window(None, 0),
     mean_type: MeanType = MeanType.ARITHMETIC,
 ) -> pd.Series:
@@ -336,7 +336,7 @@ def mean(
         if isinstance(x, pd.Series):
             values = x.rolling(w.w, 0).mean()  # faster than slicing in Python
         else:
-            values = [np.nanmean(x.iloc[max(idx - w.w + 1, 0) : idx + 1]) for idx in range(0, len(x))]
+            values = [np.nanmean(x.iloc[max(idx - w.w + 1, 0) : idx + 1]) for idx in range(len(x))]
     result = pd.Series(values, index=x.index, dtype=np.dtype(float))
     if mean_type is MeanType.QUADRATIC:
         result = np.sqrt(result)
@@ -435,7 +435,7 @@ def mode(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Serie
 
 
 @plot_function
-def sum_(x: Union[pd.Series, List[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
+def sum_(x: Union[pd.Series, list[pd.Series]], w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
     """
     Rolling sum of series over given window
 
@@ -1105,7 +1105,7 @@ class LinearRegression:
 
     """
 
-    def __init__(self, X: Union[pd.Series, List[pd.Series]], y: pd.Series, fit_intercept: bool = True):
+    def __init__(self, X: Union[pd.Series, list[pd.Series]], y: pd.Series, fit_intercept: bool = True):
         if not isinstance(fit_intercept, bool):
             raise MqTypeError('expected a boolean value for "fit_intercept"')
 
@@ -1117,7 +1117,7 @@ class LinearRegression:
         y = y[~y.isin([np.nan, np.inf, -np.inf])]
         df_aligned, y_aligned = df.align(y, 'inner', axis=0)  # align series
 
-        self._index_scope = range(0, len(df.columns)) if fit_intercept else range(1, len(df.columns) + 1)
+        self._index_scope = range(len(df.columns)) if fit_intercept else range(1, len(df.columns) + 1)
         self._res = sm.OLS(y_aligned, df_aligned).fit()
         self._fit_intercept = fit_intercept
 
@@ -1150,7 +1150,7 @@ class LinearRegression:
         return self._res.fittedvalues
 
     @plot_method
-    def predict(self, X_predict: Union[pd.Series, List[pd.Series]]) -> pd.Series:
+    def predict(self, X_predict: Union[pd.Series, list[pd.Series]]) -> pd.Series:
         """
         Use the model for prediction.
 
@@ -1199,7 +1199,7 @@ class RollingLinearRegression:
 
     """
 
-    def __init__(self, X: Union[pd.Series, List[pd.Series]], y: pd.Series, w: int, fit_intercept: bool = True):
+    def __init__(self, X: Union[pd.Series, list[pd.Series]], y: pd.Series, w: int, fit_intercept: bool = True):
         if not isinstance(fit_intercept, bool):
             raise MqTypeError('expected a boolean value for "fit_intercept"')
 

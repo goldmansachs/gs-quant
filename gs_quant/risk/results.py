@@ -21,7 +21,7 @@ import operator as op
 import weakref
 from concurrent.futures import Future
 from itertools import chain
-from typing import Any, Iterable, Mapping, Optional, Tuple, Union
+from typing import Any, Iterable, Mapping, Optional, Union
 
 import pandas as pd
 from more_itertools import unique_everseen
@@ -283,7 +283,7 @@ class CompositeResultFuture(PricingFuture):
         self.set_result([f.result() for f in self.__futures])
 
     @property
-    def futures(self) -> Tuple[PricingFuture, ...]:
+    def futures(self) -> tuple[PricingFuture, ...]:
         return self.__futures
 
 
@@ -383,7 +383,7 @@ class MultipleRiskMeasureResult(dict):
         return self.__instrument
 
     @property
-    def dates(self) -> Tuple[dt.date, ...]:
+    def dates(self) -> tuple[dt.date, ...]:
         dates = set()
         for value in self.values():
             if isinstance(value, (DataFrameWithInfo, SeriesWithInfo)):
@@ -781,11 +781,11 @@ class PortfolioRiskResult(CompositeResultFuture):
         return self.__portfolio
 
     @property
-    def risk_measures(self) -> Tuple[RiskMeasure, ...]:
+    def risk_measures(self) -> tuple[RiskMeasure, ...]:
         return self.__risk_measures
 
     @property
-    def dates(self) -> Tuple[dt.date, ...]:
+    def dates(self) -> tuple[dt.date, ...]:
         dates = set()
         for result in self.__results():
             if isinstance(result, (MultipleRiskMeasureResult, PortfolioRiskResult)):
@@ -923,7 +923,7 @@ class PortfolioRiskResult(CompositeResultFuture):
 
         return pivot_to_frame(ori_df, values, index, columns, aggfunc)
 
-    def __paths(self, items: Union[int, slice, str, Priceable]) -> Tuple[PortfolioPath, ...]:
+    def __paths(self, items: Union[int, slice, str, Priceable]) -> tuple[PortfolioPath, ...]:
         if isinstance(items, int):
             return (PortfolioPath(items),)
         elif isinstance(items, slice):

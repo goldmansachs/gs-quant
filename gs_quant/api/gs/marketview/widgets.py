@@ -15,7 +15,6 @@ under the License.
 """
 
 import logging
-from typing import List
 
 from gs_quant.session import GsSession
 
@@ -39,14 +38,14 @@ class GsMarketviewWidgetsApi:
     @classmethod
     def get_widgets(
         cls,
-        ids: List[str] = None,
+        ids: list[str] = None,
         query: str = None,
         limit: int = 100,
         offset: int = 0,
-        author: List[str] = None,
-        tags: List[str] = None,
+        author: list[str] = None,
+        tags: list[str] = None,
         order_by: str = None,
-        status: List[str] = None,
+        status: list[str] = None,
         state: str = None,
         metadata: bool = False,
     ) -> dict:

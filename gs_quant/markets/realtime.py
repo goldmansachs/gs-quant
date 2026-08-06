@@ -15,7 +15,7 @@ under the License.
 """
 
 import datetime as dt
-from typing import Iterable, Optional, Tuple, Type
+from typing import Iterable, Optional
 
 from gs_quant.base import InstrumentBase, RiskKey
 from gs_quant.common import RiskMeasure
@@ -56,7 +56,7 @@ class RealtimePricingContext(HistoricalPricingContext):
         timeout: Optional[int] = None,
         show_progress: Optional[bool] = None,
         use_server_cache: Optional[bool] = None,
-        provider: Optional[Type[GenericRiskApi]] = None,
+        provider: Optional[type[GenericRiskApi]] = None,
     ):
         """
         A context for producing valuations at multiple intraday timestamps
@@ -131,7 +131,7 @@ class RealtimePricingContext(HistoricalPricingContext):
         )
 
     @staticmethod
-    def _build_timestamps(start: dt.datetime, end: dt.datetime, interval: dt.timedelta) -> Tuple[dt.datetime, ...]:
+    def _build_timestamps(start: dt.datetime, end: dt.datetime, interval: dt.timedelta) -> tuple[dt.datetime, ...]:
         timestamps = []
         current = start
         while current <= end:
@@ -173,7 +173,7 @@ class RealtimePricingContext(HistoricalPricingContext):
         return HistoricalPricingFuture(futures)
 
     @property
-    def timestamps(self) -> Tuple[dt.datetime, ...]:
+    def timestamps(self) -> tuple[dt.datetime, ...]:
         return self.__timestamps
 
     @property

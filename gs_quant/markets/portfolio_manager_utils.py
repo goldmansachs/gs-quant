@@ -15,7 +15,6 @@ under the License.
 """
 
 import datetime as dt
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -34,8 +33,8 @@ from gs_quant.models.risk_model import (
 def build_macro_portfolio_exposure_df(
     df_constituents_and_notional: pd.DataFrame,
     universe_sensitivities_df: pd.DataFrame,
-    factor_dict: Dict,
-    factor_category_dict: Dict,
+    factor_dict: dict,
+    factor_category_dict: dict,
     factors_by_name: bool,
 ) -> pd.DataFrame:
     if factors_by_name:
@@ -183,7 +182,7 @@ def build_portfolio_constituents_df(performance_report: PerformanceReport, date:
 
 
 def build_sensitivity_df(
-    universe: List, model: MacroRiskModel, date: dt.date, factor_type: FactorType, by_name: bool
+    universe: list, model: MacroRiskModel, date: dt.date, factor_type: FactorType, by_name: bool
 ) -> pd.DataFrame:
     universe_sensitivities_df = model.get_universe_sensitivity(
         start_date=date,
@@ -207,7 +206,7 @@ def build_sensitivity_df(
 def build_exposure_df(
     notional_df: pd.DataFrame,
     universe_sensitivities_df: pd.DataFrame,
-    factor_categories: List,
+    factor_categories: list,
     factor_data: pd.DataFrame,
     by_name: bool,
 ) -> pd.DataFrame:
@@ -279,7 +278,7 @@ def build_exposure_df(
     return exposure_df
 
 
-def get_batched_dates(dates: List[dt.date], batch_size: int = 90) -> List[List[dt.date]]:
+def get_batched_dates(dates: list[dt.date], batch_size: int = 90) -> list[list[dt.date]]:
     """
     Split a list of dates into batches of a specified size.
 

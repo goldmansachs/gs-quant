@@ -22,7 +22,7 @@ import sys
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import TimeoutError
 from threading import Thread
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Iterable, Optional, Union
 
 from tqdm import tqdm
 
@@ -43,14 +43,14 @@ class GenericRiskApi(ApiWithCustomSession, metaclass=ABCMeta):
     @classmethod
     @abstractmethod
     def populate_pending_futures(
-        cls, requests: list, session: GsSession, pending: Dict[Tuple[RiskKey, Priceable], PricingFuture], **kwargs
+        cls, requests: list, session: GsSession, pending: dict[tuple[RiskKey, Priceable], PricingFuture], **kwargs
     ): ...
 
     @classmethod
     @abstractmethod
     def build_keyed_results(
         cls, request: RiskRequest, results: Union[Iterable, Exception]
-    ) -> Dict[Tuple[RiskKey, Priceable], Any]: ...
+    ) -> dict[tuple[RiskKey, Priceable], Any]: ...
 
 
 class RiskApi(GenericRiskApi, metaclass=ABCMeta):
@@ -58,7 +58,7 @@ class RiskApi(GenericRiskApi, metaclass=ABCMeta):
 
     @classmethod
     def populate_pending_futures(
-        cls, requests: list, session: GsSession, pending: Dict[Tuple[RiskKey, Priceable], PricingFuture], **kwargs
+        cls, requests: list, session: GsSession, pending: dict[tuple[RiskKey, Priceable], PricingFuture], **kwargs
     ):
         results = queue.Queue()
         done = False
@@ -106,7 +106,7 @@ class RiskApi(GenericRiskApi, metaclass=ABCMeta):
         return {request: cls.calc(request) for request in requests}
 
     @classmethod
-    def __handle_queue_update(cls, q: Union[queue.Queue, asyncio.Queue], first: object) -> Tuple[bool, list]:
+    def __handle_queue_update(cls, q: Union[queue.Queue, asyncio.Queue], first: object) -> tuple[bool, list]:
         if first is cls.__SHUTDOWN_SENTINEL:
             return True, []
 
@@ -126,14 +126,14 @@ class RiskApi(GenericRiskApi, metaclass=ABCMeta):
         return shutdown, ret
 
     @classmethod
-    def drain_queue(cls, q: queue.Queue, timeout: Optional[int] = None) -> Tuple[bool, list]:
+    def drain_queue(cls, q: queue.Queue, timeout: Optional[int] = None) -> tuple[bool, list]:
         try:
             return cls.__handle_queue_update(q, q.get(timeout=timeout))
         except queue.Empty:
             return False, []
 
     @classmethod
-    async def drain_queue_async(cls, q: asyncio.Queue, timeout: Optional[int] = None) -> Tuple[bool, list]:
+    async def drain_queue_async(cls, q: asyncio.Queue, timeout: Optional[int] = None) -> tuple[bool, list]:
         try:
             elem = await asyncio.wait_for(q.get(), timeout=timeout) if timeout else await q.get()
             return cls.__handle_queue_update(q, elem)
@@ -346,7 +346,7 @@ class RiskApi(GenericRiskApi, metaclass=ABCMeta):
     @classmethod
     def build_keyed_results(
         cls, request: RiskRequest, results: Union[Iterable, Exception]
-    ) -> Dict[Tuple[RiskKey, Priceable], Any]:
+    ) -> dict[tuple[RiskKey, Priceable], Any]:
         formatted_results = {}
 
         if isinstance(results, Exception):

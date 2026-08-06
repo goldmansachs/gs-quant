@@ -18,7 +18,7 @@ import datetime as dt
 import importlib
 import re
 from dataclasses import MISSING, fields
-from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from typing import Any, Iterable, Optional, Union
 
 import pandas as pd
 from dataclasses_json import config
@@ -77,15 +77,15 @@ def encode_optional_time(value: Optional[Union[str, dt.time]]) -> Optional[str]:
     return value.isoformat() if isinstance(value, dt.time) else value
 
 
-def decode_date_tuple(blob: Tuple[str, ...]):
+def decode_date_tuple(blob: tuple[str, ...]):
     return tuple(decode_optional_date(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
-def decode_date_or_time_tuple(blob: Tuple[str, ...]):
+def decode_date_or_time_tuple(blob: tuple[str, ...]):
     return tuple(decode_optional_date_or_time(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
-def encode_date_tuple(values: Tuple[Optional[Union[str, dt.date]], ...]):
+def encode_date_tuple(values: tuple[Optional[Union[str, dt.date]], ...]):
     return (
         tuple(encode_date_or_str(value) if isinstance(value, (str, dt.date)) else None for value in values)
         if values is not None
@@ -93,7 +93,7 @@ def encode_date_tuple(values: Tuple[Optional[Union[str, dt.date]], ...]):
     )
 
 
-def encode_date_or_time_tuple(values: Tuple[Optional[Union[str, dt.date, dt.datetime]], ...]):
+def encode_date_or_time_tuple(values: tuple[Optional[Union[str, dt.date, dt.datetime]], ...]):
     return (
         tuple(
             encode_date_or_str(value)
@@ -108,7 +108,7 @@ def encode_date_or_time_tuple(values: Tuple[Optional[Union[str, dt.date, dt.date
     )
 
 
-def decode_iso_date_or_datetime(value: Any) -> Union[Tuple[DateOrDateTime, ...], DateOrDateTime]:
+def decode_iso_date_or_datetime(value: Any) -> Union[tuple[DateOrDateTime, ...], DateOrDateTime]:
     if isinstance(value, (tuple, list)):
         return tuple(decode_iso_date_or_datetime(v) for v in value)
     if isinstance(value, (dt.date, dt.datetime)):
@@ -160,7 +160,7 @@ def decode_dict_date_value(value):
     return {k: dt.date.fromisoformat(d) for k, d in value.items()} if value is not None else None
 
 
-def decode_datetime_tuple(blob: Tuple[str, ...]):
+def decode_datetime_tuple(blob: tuple[str, ...]):
     return tuple(optional_from_isodatetime(s) for s in blob) if isinstance(blob, (tuple, list)) else None
 
 
@@ -238,13 +238,13 @@ def decode_float_or_str(value: Optional[Union[float, int, str]]) -> Optional[Uni
     raise TypeError(f'Cannot convert {value} to float')
 
 
-def decode_instrument(value: Optional[Dict]):
+def decode_instrument(value: Optional[dict]):
     from gs_quant.instrument import Instrument
 
     return Instrument.from_dict(value) if value else None
 
 
-def decode_named_instrument(value: Optional[Union[Iterable[Dict], dict]]):
+def decode_named_instrument(value: Optional[Union[Iterable[dict], dict]]):
     from gs_quant.instrument import Instrument
 
     if isinstance(value, (list, tuple)):
@@ -292,7 +292,7 @@ def decode_quote_report(value: Optional[dict]):
     return quote_report_from_dict(value) if value else None
 
 
-def decode_quote_reports(value: Optional[Iterable[Dict]]):
+def decode_quote_reports(value: Optional[Iterable[dict]]):
     from gs_quant.quote_reports.core import quote_reports_from_dicts
 
     return quote_reports_from_dicts(value) if value else None
@@ -304,7 +304,7 @@ def decode_custom_comment(value: Optional[dict]):
     return custom_comment_from_dict(value) if value else None
 
 
-def decode_custom_comments(value: Optional[Iterable[Dict]]):
+def decode_custom_comments(value: Optional[Iterable[dict]]):
     from gs_quant.quote_reports.core import custom_comments_from_dicts
 
     return custom_comments_from_dicts(value) if value else None
@@ -316,7 +316,7 @@ def decode_hedge_type(value: Optional[dict]):
     return hedge_type_from_dict(value) if value else None
 
 
-def decode_hedge_types(value: Optional[Iterable[Dict]]):
+def decode_hedge_types(value: Optional[Iterable[dict]]):
     from gs_quant.quote_reports.core import hedge_type_from_dicts
 
     return hedge_type_from_dicts(value) if value else None

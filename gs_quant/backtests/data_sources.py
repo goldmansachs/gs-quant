@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import ClassVar, Iterable, List, Union
+from typing import ClassVar, Iterable, Union
 
 import numpy as np
 import pandas as pd
@@ -39,7 +39,7 @@ class MissingDataStrategy(Enum):
 @dataclass_json
 @dataclass
 class DataSource:
-    __sub_classes: ClassVar[List[type]] = []
+    __sub_classes: ClassVar[list[type]] = []
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

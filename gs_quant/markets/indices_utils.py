@@ -18,7 +18,7 @@ import datetime as dt
 from enum import Enum
 from functools import partial, reduce
 from time import sleep
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 from pydash import get
@@ -265,14 +265,14 @@ def get_my_baskets(user_id: str = None) -> Optional[pd.DataFrame]:
 
 
 def __get_baskets(
-    fields: List[str] = [],
-    basket_type: List[BasketType] = BasketType.to_list(),
-    asset_class: List[AssetClass] = [AssetClass.Equity],
-    region: List[Region] = None,
-    styles: List[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
+    fields: list[str] = [],
+    basket_type: list[BasketType] = BasketType.to_list(),
+    asset_class: list[AssetClass] = [AssetClass.Equity],
+    region: list[Region] = None,
+    styles: list[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
     as_of: dt.datetime = None,
     **kwargs,
-) -> Dict:
+) -> dict:
     default_fields = set(['id', 'name', 'ticker', 'region', 'type', 'description', 'styles', 'liveDate', 'assetClass'])
     query, fields = {}, list(set(fields).union(default_fields))
     for k, v in kwargs.items():
@@ -299,11 +299,11 @@ def __get_dataset_id(asset_class: AssetClass, basket_type: BasketType, data_type
 
 
 def get_flagship_baskets(
-    fields: List[str] = [],
-    basket_type: List[BasketType] = BasketType.to_list(),
-    asset_class: List[AssetClass] = [AssetClass.Equity],
-    region: List[Region] = None,
-    styles: List[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
+    fields: list[str] = [],
+    basket_type: list[BasketType] = BasketType.to_list(),
+    asset_class: list[AssetClass] = [AssetClass.Equity],
+    region: list[Region] = None,
+    styles: list[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
     as_of: dt.datetime = None,
     **kwargs,
 ) -> pd.DataFrame:
@@ -348,12 +348,12 @@ def get_flagship_baskets(
 
 
 def get_flagships_with_assets(
-    identifiers: List[str],
-    fields: List[str] = [],
-    basket_type: List[BasketType] = BasketType.to_list(),
-    asset_class: List[AssetClass] = [AssetClass.Equity],
-    region: List[Region] = None,
-    styles: List[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
+    identifiers: list[str],
+    fields: list[str] = [],
+    basket_type: list[BasketType] = BasketType.to_list(),
+    asset_class: list[AssetClass] = [AssetClass.Equity],
+    region: list[Region] = None,
+    styles: list[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
     as_of: dt.datetime = None,
     **kwargs,
 ) -> pd.DataFrame:
@@ -402,11 +402,11 @@ def get_flagships_with_assets(
 
 
 def get_flagships_performance(
-    fields: List[str] = [],
-    basket_type: List[BasketType] = BasketType.to_list(),
-    asset_class: List[AssetClass] = [AssetClass.Equity],
-    region: List[Region] = None,
-    styles: List[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
+    fields: list[str] = [],
+    basket_type: list[BasketType] = BasketType.to_list(),
+    asset_class: list[AssetClass] = [AssetClass.Equity],
+    region: list[Region] = None,
+    styles: list[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
     start: dt.date = None,
     end: dt.date = None,
     **kwargs,
@@ -464,11 +464,11 @@ def get_flagships_performance(
 
 
 def get_flagships_constituents(
-    fields: List[str] = [],
-    basket_type: List[BasketType] = BasketType.to_list(),
-    asset_class: List[AssetClass] = [AssetClass.Equity],
-    region: List[Region] = None,
-    styles: List[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
+    fields: list[str] = [],
+    basket_type: list[BasketType] = BasketType.to_list(),
+    asset_class: list[AssetClass] = [AssetClass.Equity],
+    region: list[Region] = None,
+    styles: list[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
     start: dt.date = None,
     end: dt.date = None,
     **kwargs,

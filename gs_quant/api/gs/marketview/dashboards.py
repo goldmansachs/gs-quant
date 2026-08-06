@@ -15,7 +15,7 @@ under the License.
 """
 
 import logging
-from typing import List, Union
+from typing import Union
 
 from gs_quant.api.gs.marketview.types import (
     DashboardChild,
@@ -50,14 +50,14 @@ class GsMarketviewDashboardsApi:
     @classmethod
     def get_dashboards(
         cls,
-        ids: List[str] = None,
+        ids: list[str] = None,
         query: str = None,
         size: int = 100,
         page: int = 1,
         order_by: str = '>lastUpdatedTime',
         view_as: str = None,
-        dashboard_type: List[str] = None,
-        author: List[str] = None,
+        dashboard_type: list[str] = None,
+        author: list[str] = None,
     ) -> dict:
         """
         Search / list dashboards with optional filters.
@@ -224,7 +224,7 @@ class GsMarketviewDashboardsApi:
         limit: int = 10,
         offset: int = 0,
         action: str = 'opened',
-        order_by: List[str] = None,
+        order_by: list[str] = None,
         public: bool = False,
     ) -> dict:
         """
@@ -248,7 +248,7 @@ class GsMarketviewDashboardsApi:
     # ------------------------------------------------------------------
 
     @classmethod
-    def get_bulk_dashboard_entitlements(cls, user_guid: str, ids: List[str]) -> dict:
+    def get_bulk_dashboard_entitlements(cls, user_guid: str, ids: list[str]) -> dict:
         """
         Check entitlements for a specific user across multiple dashboards in one call.
 
@@ -379,7 +379,7 @@ class GsMarketviewDashboardsApi:
     def add_children(
         cls,
         dashboard_id: str,
-        children: Union[DashboardChild, List[DashboardChild]],
+        children: Union[DashboardChild, list[DashboardChild]],
     ) -> dict:
         """
         Add one or more widget children to a dashboard.
@@ -455,7 +455,7 @@ class GsMarketviewDashboardsApi:
         return GsSession.current.sync.put(f'{API}/{dashboard_id}/sections/{section_id}', section.to_dict())
 
     @classmethod
-    def update_sections(cls, dashboard_id: str, sections: List[DashboardSection]) -> dict:
+    def update_sections(cls, dashboard_id: str, sections: list[DashboardSection]) -> dict:
         """
         Bulk-update multiple sections within a dashboard in a single request.
 

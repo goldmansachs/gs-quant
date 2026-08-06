@@ -20,7 +20,7 @@ import math
 import re
 from collections import OrderedDict
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -1025,7 +1025,7 @@ def _check_tenor_type(tenor_type: _SwapTenorType) -> _SwapTenorType:
         )
 
 
-def _check_term_structure_tenor(tenor_type: _SwapTenorType, tenor: str) -> Dict:
+def _check_term_structure_tenor(tenor_type: _SwapTenorType, tenor: str) -> dict:
     if tenor_type == _SwapTenorType.FORWARD_TENOR:
         tenor = _check_forward_tenor(tenor)
         tenor_to_plot = 'terminationTenor'
@@ -2961,12 +2961,12 @@ class BenchmarkTypeCB(Enum):
     Fed_Funds = 'Fed_Funds'
 
 
-def get_cb_swaps_kwargs(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB) -> Dict:
+def get_cb_swaps_kwargs(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB) -> dict:
     benchmark_type = _check_benchmark_type(currency, benchmark_type)
     clearing_house = _check_clearing_house(None)
     defaults = _get_swap_leg_defaults(currency, benchmark_type)
-    possible_swap_tenors = [f"{CCY_TO_CB[currency.value]}{i}" for i in range(0, 20)]
-    possible_fwd_tenors = [f"{CCY_TO_CB[currency.value]}{i}" for i in range(0, 20)]
+    possible_swap_tenors = [f"{CCY_TO_CB[currency.value]}{i}" for i in range(20)]
+    possible_fwd_tenors = [f"{CCY_TO_CB[currency.value]}{i}" for i in range(20)]
     possible_fwd_tenors.append('0b')
     fixed_rate = 'ATM'
     kwargs = dict(
@@ -2983,7 +2983,7 @@ def get_cb_swaps_kwargs(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB)
     return kwargs
 
 
-def get_cb_meeting_swaps(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB) -> List:
+def get_cb_meeting_swaps(currency: CurrencyEnum, benchmark_type: BenchmarkTypeCB) -> list:
     kwargs = get_cb_swaps_kwargs(currency=currency, benchmark_type=benchmark_type)
     return _get_tdapi_rates_assets(allow_many=True, **kwargs)
 

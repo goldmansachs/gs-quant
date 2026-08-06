@@ -16,7 +16,7 @@ under the License.
 
 import datetime as dt
 import logging
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Union
 
 import gs_quant.target.backtests as backtests
 from gs_quant.api.gs.backtests import GsBacktestApi
@@ -78,8 +78,8 @@ class StrategySystematic:
         name: str = None,
         cost_netting: bool = False,
         currency: Union[Currency, str] = Currency.USD,
-        trade_in_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
-        trade_out_signals: Tuple[BacktestSignalSeriesItem, ...] = None,
+        trade_in_signals: tuple[BacktestSignalSeriesItem, ...] = None,
+        trade_out_signals: tuple[BacktestSignalSeriesItem, ...] = None,
         market_model: Union[EquityMarketModel, str] = EquityMarketModel.SFK,
         roll_date_mode: str = None,
         expiry_date_mode: str = None,

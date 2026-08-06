@@ -17,7 +17,7 @@ under the License.
 import datetime as dt
 from enum import Enum, auto
 from time import sleep
-from typing import Dict, List, OrderedDict, Tuple, Union
+from typing import OrderedDict, Union
 
 import numpy as np
 import pandas as pd
@@ -290,7 +290,7 @@ class Report:
         return self.__percentage_complete
 
     @classmethod
-    def get(cls, report_id: str, acceptable_types: List[ReportType] = None):
+    def get(cls, report_id: str, acceptable_types: list[ReportType] = None):
         return cls.from_target(GsReportApi.get_report(report_id))
 
     @classmethod
@@ -597,7 +597,7 @@ class PerformanceReport(Report):
         self,
         start_date: dt.date,
         end_date: dt.date,
-        asset_metadata_fields: List[str] = ["id", "name", "ticker"],
+        asset_metadata_fields: list[str] = ["id", "name", "ticker"],
         include_all_business_days: bool = True,
         position_type: PositionType = None,
     ) -> pd.DataFrame:
@@ -695,7 +695,7 @@ class PerformanceReport(Report):
         start_date: dt.date = None,
         end_date: dt.date = None,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """
         Get historical portfolio metrics
 
@@ -722,11 +722,11 @@ class PerformanceReport(Report):
 
     def get_many_measures(
         self,
-        measures: Tuple[str, ...] = None,
+        measures: tuple[str, ...] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """
         Get many historical portfolio metrics
 
@@ -763,7 +763,7 @@ class PerformanceReport(Report):
         portfolio.aum_source = aum_source
         GsPortfolioApi.update_portfolio(portfolio)
 
-    def get_custom_aum(self, start_date: dt.date = None, end_date: dt.date = None) -> List[CustomAUMDataPoint]:
+    def get_custom_aum(self, start_date: dt.date = None, end_date: dt.date = None) -> list[CustomAUMDataPoint]:
         """
         Get AUM data for performance report
 
@@ -802,7 +802,7 @@ class PerformanceReport(Report):
             aum = self.get_net_exposure(start_date=start_date, end_date=end_date)
             return dict(zip(aum['date'], aum['netExposure']))
 
-    def upload_custom_aum(self, aum_data: List[CustomAUMDataPoint], clear_existing_data: bool = None):
+    def upload_custom_aum(self, aum_data: list[CustomAUMDataPoint], clear_existing_data: bool = None):
         """
         Add AUM data for portfolio corresponding to the performance report
 
@@ -819,7 +819,7 @@ class PerformanceReport(Report):
         fields: [str] = None,
         include_all_business_days: bool = False,
         position_type: PositionType = None,
-    ) -> List[Dict]:
+    ) -> list[dict]:
         return GsPortfolioApi.get_positions_data(
             self.position_source_id,
             start,
@@ -833,12 +833,12 @@ class PerformanceReport(Report):
 
     def get_portfolio_constituents(
         self,
-        fields: List[str] = None,
+        fields: list[str] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
         prefer_rebalance_positions: bool = False,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """
         Get historical portfolio constituents
 
@@ -902,7 +902,7 @@ class PerformanceReport(Report):
         start_date: dt.date = None,
         end_date: dt.date = None,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """
         Get PnL analytics called Brinson Attribution
 
@@ -966,7 +966,7 @@ class FactorRiskReport(Report):
         latest_execution_time: dt.datetime = None,
         status: Union[str, ReportStatus] = ReportStatus.new,
         percentage_complete: float = None,
-        tags: Tuple[PositionTag, ...] = None,
+        tags: tuple[PositionTag, ...] = None,
         **kwargs,
     ):
         """
@@ -1068,14 +1068,14 @@ class FactorRiskReport(Report):
     def get_results(
         self,
         mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
-        factors: List[str] = None,
-        factor_categories: List[str] = None,
+        factors: list[str] = None,
+        factor_categories: list[str] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
         currency: Currency = None,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
         unit: FactorRiskUnit = FactorRiskUnit.Notional,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """
         Get the raw results associated with the factor risk report
 
@@ -1119,7 +1119,7 @@ class FactorRiskReport(Report):
         end_date: dt.date = None,
         currency: Currency = None,
         unit: FactorRiskUnit = FactorRiskUnit.Notional,
-    ) -> Dict:
+    ) -> dict:
         """
         Get the results associated with the factor risk report as seen on the Marquee user interface
 
@@ -1163,15 +1163,15 @@ class FactorRiskReport(Report):
     def get_table(
         self,
         mode: FactorRiskTableMode,
-        factors: List[str] = None,
-        factor_categories: List[str] = None,
+        factors: list[str] = None,
+        factor_categories: list[str] = None,
         date: dt.date = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
         unit: FactorRiskUnit = None,
         currency: Currency = None,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         """
         Get the results associated with the factor risk report formatted for the asset level table on the interface
 
@@ -1233,8 +1233,8 @@ class FactorRiskReport(Report):
     def get_factor_pnl(
         self,
         mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
-        factor_names: List[str] = None,
-        factor_categories: List[str] = None,
+        factor_names: list[str] = None,
+        factor_categories: list[str] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
         currency: Currency = None,
@@ -1310,8 +1310,8 @@ class FactorRiskReport(Report):
     def get_factor_exposure(
         self,
         mode: FactorRiskResultsMode = FactorRiskResultsMode.Portfolio,
-        factor_names: List[str] = None,
-        factor_categories: List[str] = None,
+        factor_names: list[str] = None,
+        factor_categories: list[str] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
         currency: Currency = None,
@@ -1343,8 +1343,8 @@ class FactorRiskReport(Report):
 
     def get_factor_proportion_of_risk(
         self,
-        factor_names: List[str] = None,
-        factor_categories: List[str] = None,
+        factor_names: list[str] = None,
+        factor_categories: list[str] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
         currency: Currency = None,
@@ -1371,7 +1371,7 @@ class FactorRiskReport(Report):
 
     def get_annual_risk(
         self,
-        factor_names: List[str] = None,
+        factor_names: list[str] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
         currency: Currency = None,
@@ -1396,7 +1396,7 @@ class FactorRiskReport(Report):
 
     def get_daily_risk(
         self,
-        factor_names: List[str] = None,
+        factor_names: list[str] = None,
         start_date: dt.date = None,
         end_date: dt.date = None,
         currency: Currency = None,
@@ -1448,7 +1448,7 @@ class FactorRiskReport(Report):
         return _format_multiple_factor_table(factor_data, 'var')
 
 
-def _format_multiple_factor_table(factor_data: List[Dict], key: str) -> pd.DataFrame:
+def _format_multiple_factor_table(factor_data: list[dict], key: str) -> pd.DataFrame:
     formatted_data = {}
     for data in factor_data:
         date = data['date']
@@ -1559,7 +1559,7 @@ class ThematicReport(Report):
         )
 
     def get_thematic_data(
-        self, start_date: dt.date = None, end_date: dt.date = None, basket_ids: List[str] = None
+        self, start_date: dt.date = None, end_date: dt.date = None, basket_ids: list[str] = None
     ) -> pd.DataFrame:
         """
         Get all results from the thematic report for a date range
@@ -1578,7 +1578,7 @@ class ThematicReport(Report):
         return pd.DataFrame(results).filter(items=['date', 'thematicExposure', 'thematicBeta'])
 
     def get_thematic_exposure(
-        self, start_date: dt.date = None, end_date: dt.date = None, basket_ids: List[str] = None
+        self, start_date: dt.date = None, end_date: dt.date = None, basket_ids: list[str] = None
     ) -> pd.DataFrame:
         """
         Get portfolio historical exposure to GS Flagship Thematic baskets
@@ -1591,7 +1591,7 @@ class ThematicReport(Report):
         return self._get_measures(["thematicExposure"], start_date, end_date, basket_ids)
 
     def get_thematic_betas(
-        self, start_date: dt.date = None, end_date: dt.date = None, basket_ids: List[str] = None
+        self, start_date: dt.date = None, end_date: dt.date = None, basket_ids: list[str] = None
     ) -> pd.DataFrame:
         """
         Get portfolio historical beta to GS Flagship Thematic baskets
@@ -1612,12 +1612,12 @@ class ThematicReport(Report):
 
     def _get_measures(
         self,
-        fields: List,
+        fields: list,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        basket_ids: List[str] = None,
+        basket_ids: list[str] = None,
         return_format: ReturnFormat = ReturnFormat.DATA_FRAME,
-    ) -> Union[Dict, pd.DataFrame]:
+    ) -> Union[dict, pd.DataFrame]:
         where = {'reportId': self.id}
         if basket_ids:
             where['basketId'] = basket_ids
@@ -1634,8 +1634,8 @@ class ThematicReport(Report):
         self,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        basket_ids: List[str] = None,
-        regions: List[Region] = None,
+        basket_ids: list[str] = None,
+        regions: list[Region] = None,
     ) -> pd.DataFrame:
         """
         Get all portfolio thematic analytics for GS Flagshop Thematic baskets
@@ -1660,8 +1660,8 @@ class ThematicReport(Report):
         self,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        basket_ids: List[str] = None,
-        regions: List[Region] = None,
+        basket_ids: list[str] = None,
+        regions: list[Region] = None,
     ) -> pd.DataFrame:
         """
         Get portfolio thematic analytics for the five GS Flagship Thematic baskets with the highest thematic exposures
@@ -1686,8 +1686,8 @@ class ThematicReport(Report):
         self,
         start_date: dt.date = None,
         end_date: dt.date = None,
-        basket_ids: List[str] = None,
-        regions: List[Region] = None,
+        basket_ids: list[str] = None,
+        regions: list[Region] = None,
     ) -> pd.DataFrame:
         """
         Get portfolio thematic analytics for the five GS Flagship Thematic baskets with the lowest thematic exposures
@@ -1749,7 +1749,7 @@ def get_thematic_breakdown_as_df(entity_id: str, date: dt.date, basket_id: str) 
     return pd.DataFrame(formatted_breakdown)
 
 
-def flatten_results_into_df(results: List):
+def flatten_results_into_df(results: list):
     """
     Flatten a list of thematic data into a Pandas DataFrame
 
@@ -1849,7 +1849,7 @@ def __smooth_percent_returns(daily_factor_returns: np.array, daily_total_returns
     return np.cumsum(daily_factor_returns * log_scaling_factor * perturbation_factors * 100)
 
 
-def _filter_table_by_factor_and_category(column_info: Dict, factors: List, factor_categories: List):
+def _filter_table_by_factor_and_category(column_info: dict, factors: list, factor_categories: list):
     if factors is None and factor_categories is None:
         sorted_columns = []
         for column_group in column_info:

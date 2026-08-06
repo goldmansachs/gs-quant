@@ -21,7 +21,7 @@ import os
 import re
 from enum import Enum, IntEnum
 from functools import partial, wraps
-from typing import Callable, Iterable, List, Optional, Union
+from typing import Callable, Iterable, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -245,10 +245,10 @@ def check_forward_looking(pricing_date, source, name="function"):
 def plot_measure(
     asset_class: tuple,
     asset_type: Optional[tuple] = None,
-    dependencies: Optional[List[QueryType]] = tuple(),
+    dependencies: Optional[list[QueryType]] = tuple(),
     asset_type_excluded: Optional[tuple] = None,
     display_name: Optional[str] = None,
-    entitlements: Optional[List[Entitlement]] = [],
+    entitlements: Optional[list[Entitlement]] = [],
 ):
     # Indicates that fn should be exported to plottool as a member function / pseudo-measure.
     # Set category to None for no restrictions, else provide a tuple of allowed values.
@@ -376,7 +376,7 @@ def get_dataset_data_with_retries(
 
 
 def get_dataset_with_many_assets(
-    ds: Dataset, *, assets: List[str], start: dt.date, end: dt.date, batch_limit: int = 100, **kwargs
+    ds: Dataset, *, assets: list[str], start: dt.date, end: dt.date, batch_limit: int = 100, **kwargs
 ) -> pd.DataFrame:
     tasks = [
         partial(ds.get_data, assetId=assets[i : i + batch_limit], start=start, end=end, return_type=None, **kwargs)
