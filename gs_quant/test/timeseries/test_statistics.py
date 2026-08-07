@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Muhammad Mudassir. Licensed under Apache 2.0 license.
 """
 
 import datetime as dt
@@ -817,6 +819,16 @@ def test_regression():
         [pd.Series([2.0, 3.0], index=dates_predict), pd.Series([6.0, 7.0], index=dates_predict)]
     )
     expected = pd.Series([30.0, 34.0], index=dates_predict)
+    assert_series_equal(predicted, expected)
+
+    constant_dates_predict = [dt.date(2019, 2, 3), dt.date(2019, 2, 4)]
+    predicted = regression.predict(
+        [
+            pd.Series([2.0, 2.0], index=constant_dates_predict),
+            pd.Series([6.0, 6.0], index=constant_dates_predict),
+        ]
+    )
+    expected = pd.Series([30.0, 30.0], index=constant_dates_predict)
     assert_series_equal(predicted, expected)
 
     np.testing.assert_almost_equal(regression.standard_deviation_of_errors(), 0)
