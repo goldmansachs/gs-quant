@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Muhammad Mudassir. Licensed under Apache 2.0 license.
 """
 
 import datetime as dt
@@ -77,7 +79,8 @@ class GsDataSource(DataSource):
             elif state is not None:
                 return ds.get_data(state, state, assetId=(self.asset_id,))[self.value_header]
             else:
-                return ds.get_data(dt.datetime(2000, 1, 1), **kwargs)[self.value_header]
+                start = kwargs.pop('start', dt.datetime(2000, 1, 1))
+                return ds.get_data(start, **kwargs)[self.value_header]
         return self.loaded_data[self.value_header].at[pd.to_datetime(state)]
 
     def get_data_range(self, start: Union[dt.date, dt.datetime], end: Union[dt.date, dt.datetime, int], **kwargs):
