@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Ting-Hong Shieh. Licensed under Apache 2.0 license.
 """
 
 import datetime as dt
@@ -899,7 +901,7 @@ class PredefinedAssetBacktest(BaseBacktest):
         costs = defaultdict(float)
         for order in self.orders:
             if isinstance(order, OrderCost):
-                costs[order.execution_end_time().date()] += order.execution_quantity(self.data_handler)
+                costs[order.execution_end_time().date()] += order.execution_quantity()
 
         return pd.Series(costs)
 
