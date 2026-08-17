@@ -20,6 +20,7 @@ from pytest import approx
 
 from gs_quant.common import PricingLocation
 from gs_quant.datetime import DayCountConvention, PaymentFrequency, day_count_fraction, has_feb_29, today
+from gs_quant.datetime.date import humanize_time_delta
 
 
 def test_has_feb_29():
@@ -64,3 +65,42 @@ def test_day_count_fraction():
     assert day_count_fraction(start, end, DayCountConvention.ACTUAL_365L, PaymentFrequency.ANNUALLY) == approx(
         2.087431693989
     )
+
+
+def test_humanize_time_delta_past():
+    assert humanize_time_delta(dt.timedelta(seconds=0)) == "a few seconds ago"
+    assert humanize_time_delta(dt.timedelta(seconds=5)) == "a few seconds ago"
+    assert humanize_time_delta(dt.timedelta(seconds=9)) == "a few seconds ago"
+    assert humanize_time_delta(dt.timedelta(seconds=10)) == "10 seconds ago"
+    assert humanize_time_delta(dt.timedelta(seconds=59)) == "59 seconds ago"
+    assert humanize_time_delta(dt.timedelta(seconds=60)) == "a minute ago"
+    assert humanize_time_delta(dt.timedelta(seconds=119)) == "a minute ago"
+    assert humanize_time_delta(dt.timedelta(minutes=2)) == "2 minutes ago"
+    assert humanize_time_delta(dt.timedelta(minutes=19)) == "19 minutes ago"
+    assert humanize_time_delta(dt.timedelta(minutes=59, seconds=59)) == "59 minutes ago"
+    assert humanize_time_delta(dt.timedelta(hours=1)) == "an hour ago"
+    assert humanize_time_delta(dt.timedelta(hours=1, minutes=59)) == "an hour ago"
+    assert humanize_time_delta(dt.timedelta(hours=2)) == "2 hours ago"
+    assert humanize_time_delta(dt.timedelta(hours=23)) == "23 hours ago"
+    assert humanize_time_delta(dt.timedelta(days=1)) == "a day ago"
+    assert humanize_time_delta(dt.timedelta(days=1, hours=23)) == "a day ago"
+    assert humanize_time_delta(dt.timedelta(days=2)) == "2 days ago"
+    assert humanize_time_delta(dt.timedelta(days=29)) == "29 days ago"
+    assert humanize_time_delta(dt.timedelta(days=30)) == "a month ago"
+    assert humanize_time_delta(dt.timedelta(days=59)) == "a month ago"
+    assert humanize_time_delta(dt.timedelta(days=60)) == "2 months ago"
+    assert humanize_time_delta(dt.timedelta(days=364)) == "12 months ago"
+    assert humanize_time_delta(dt.timedelta(days=365)) == "a year ago"
+    assert humanize_time_delta(dt.timedelta(days=729)) == "a year ago"
+    assert humanize_time_delta(dt.timedelta(days=730)) == "2 years ago"
+    assert humanize_time_delta(dt.timedelta(days=365 * 10)) == "10 years ago"
+
+
+def test_humanize_time_delta_future():
+    assert humanize_time_delta(dt.timedelta(seconds=-5)) == "in a few seconds"
+    assert humanize_time_delta(dt.timedelta(seconds=-30)) == "in 30 seconds"
+    assert humanize_time_delta(dt.timedelta(minutes=-19)) == "in 19 minutes"
+    assert humanize_time_delta(dt.timedelta(hours=-3)) == "in 3 hours"
+    assert humanize_time_delta(dt.timedelta(days=-1)) == "in a day"
+    assert humanize_time_delta(dt.timedelta(days=-5)) == "in 5 days"
+    assert humanize_time_delta(dt.timedelta(days=-365)) == "in a year"
