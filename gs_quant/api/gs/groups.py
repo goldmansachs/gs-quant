@@ -66,10 +66,9 @@ class GsGroupsApi:
     @classmethod
     def update_group(cls, group_id: str, group: Group) -> Group:
         # PUT request for updating a group can't have the group ID in it
-        group_dict = group.to_json()
-        if group_dict.get('entitlements'):
-            group_dict['entitlements'] = group_dict['entitlements'].to_json()
-        group_dict.pop('id')
+        group_dict = group.to_dict()
+        for key in ('id', 'lastUpdatedById', 'createdById'):
+            group_dict.pop(key, None)
         return GsSession.current.sync.put(f'/groups/{group_id}', group_dict, cls=Group)
 
     @classmethod

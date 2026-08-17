@@ -239,6 +239,57 @@ def today(location: Optional[PricingLocation] = None) -> dt.date:
     return dt.datetime.now(tz).date()
 
 
+def humanize_time_delta(delta: dt.timedelta) -> str:
+    """
+    Render a ``timedelta`` as a short human-readable relative-time phrase.
+
+    Positive deltas are rendered as ``"<phrase> ago"`` and negative deltas
+    (i.e. times in the future) as ``"in <phrase>"``.
+
+    :param delta: The time delta to render (typically ``now - some_timestamp``).
+    :return: A human-readable phrase such as ``"a few seconds ago"``,
+        ``"19 minutes ago"``, ``"1 day ago"`` or ``"in 3 hours"``.
+
+    **Examples**
+
+    >>> import datetime as dt
+    >>> humanize_time_delta(dt.timedelta(seconds=5))
+    'a few seconds ago'
+    >>> humanize_time_delta(dt.timedelta(minutes=19))
+    '19 minutes ago'
+    >>> humanize_time_delta(dt.timedelta(days=-1))
+    'in a day'
+    """
+    seconds = int(delta.total_seconds())
+    future = seconds < 0
+    seconds = abs(seconds)
+    if seconds < 10:
+        phrase = "a few seconds"
+    elif seconds < 60:
+        phrase = f"{seconds} seconds"
+    elif seconds < 120:
+        phrase = "a minute"
+    elif seconds < 3600:
+        phrase = f"{seconds // 60} minutes"
+    elif seconds < 7200:
+        phrase = "an hour"
+    elif seconds < 86400:
+        phrase = f"{seconds // 3600} hours"
+    elif seconds < 172800:
+        phrase = "a day"
+    elif seconds < 2592000:
+        phrase = f"{seconds // 86400} days"
+    elif seconds < 5184000:
+        phrase = "a month"
+    elif seconds < 31536000:
+        phrase = f"{seconds // 2592000} months"
+    elif seconds < 63072000:
+        phrase = "a year"
+    else:
+        phrase = f"{seconds // 31536000} years"
+    return f"in {phrase}" if future else f"{phrase} ago"
+
+
 def has_feb_29(start: dt.date, end: dt.date):
     """
     Determine if date range has a leap day (29Feb)
