@@ -21,6 +21,7 @@ from plotly.graph_objs import Figure
 
 from gs_quant.errors import MqError
 from gs_quant.tracing import Tracer
+from gs_quant.tracing.tracing import NOOP_TRACING_SCOPE
 
 
 def make_zero_duration(spans):
@@ -275,3 +276,53 @@ async def test_callback_in_scope():
     assert async_span.parent_id == main_span.span_id
     assert callback_span.parent_id == main_span.span_id
     assert callback_work_span.parent_id == callback_span.span_id
+
+
+def test_tracer_only_if_active_skips_when_no_parent():
+    Tracer.reset()
+    # No enclosing span => no active recording span, so this should be a no-op.
+    with Tracer('Should be skipped', only_if_active=True) as scope:
+        assert scope is NOOP_TRACING_SCOPE
+        # tags/events on the noop scope should not blow up and should not be recorded
+        scope.span.set_tag('user', 'martin')
+
+    assert Tracer.get_spans() == []
+
+
+def test_tracer_only_if_active_creates_span_when_parent_exists():
+    Tracer.reset()
+    with Tracer('Outer'):
+        with Tracer('Inner', only_if_active=True) as inner:
+            assert inner is not NOOP_TRACING_SCOPE
+            inner.span.set_tag('nested', 'yes')
+
+    spans = Tracer.get_spans()
+    assert len(spans) == 2
+    inner_span = next(s for s in spans if s.operation_name == 'Inner')
+    outer_span = next(s for s in spans if s.operation_name == 'Outer')
+    assert inner_span.parent_id == outer_span.span_id
+    assert inner_span.tags['nested'] == 'yes'
+
+
+def test_add_span_consumers_to_existing_provider():
+    from opentelemetry.sdk.trace import TracerProvider
+
+    from gs_quant.tracing.tracing import SpanConsumer, TracerFactory
+
+    provider = TracerProvider()
+    SpanConsumer.reset()
+    added = []
+    original = provider.add_span_processor
+    provider.add_span_processor = lambda p: (added.append(p), original(p))[1]
+
+    TracerFactory.add_span_consumers_to_existing_provider(provider)
+
+    # At least the SpanConsumer processor should have been attached.
+    assert len(added) >= 1
+    # Sanity: a span created via the provider is exported to our SpanConsumer.
+    tracer = provider.get_tracer(__name__)
+    with tracer.start_as_current_span('external-provider-span'):
+        pass
+    provider.force_flush()
+    span_names = [s.operation_name for s in SpanConsumer.get_spans()]
+    assert 'external-provider-span' in span_names

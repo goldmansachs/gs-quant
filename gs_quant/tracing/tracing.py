@@ -399,17 +399,31 @@ class TracerFactory:
 
     def get(self) -> OtelTracer:
         if TracerFactory.__tracer_instance is None:
-            # Define which OpenTelemetry Tracer provider implementation to use.
-            span_processor = SynchronousMultiSpanProcessor()
-            span_processor.add_span_processor(SimpleSpanProcessor(SpanConsumer.get_instance()))
-            for extra_processor in TracerFactory._extra_span_processors:
-                span_processor.add_span_processor(extra_processor)
-            trace.set_tracer_provider(TracerProvider(active_span_processor=span_processor))
+            # OTel's set_tracer_provider will silently no-op (with a warning) if a real
+            # provider has already been set elsewhere. Detect that case and attach our
+            # span consumers to the existing provider instead of trying to replace it.
+            existing_provider = trace.get_tracer_provider()
+            if isinstance(existing_provider, TracerProvider):
+                _logger.debug("TracerProvider already set; attaching span consumers to existing provider")
+                TracerFactory.add_span_consumers_to_existing_provider(existing_provider)
+            else:
+                # Define which OpenTelemetry Tracer provider implementation to use.
+                span_processor = SynchronousMultiSpanProcessor()
+                span_processor.add_span_processor(SimpleSpanProcessor(SpanConsumer.get_instance()))
+                for extra_processor in TracerFactory._extra_span_processors:
+                    span_processor.add_span_processor(extra_processor)
+                trace.set_tracer_provider(TracerProvider(active_span_processor=span_processor))
 
             # Create an OpenTelemetry Tracer.
             otel_tracer = trace.get_tracer(__name__)
             TracerFactory.__tracer_instance = otel_tracer
         return TracerFactory.__tracer_instance
+
+    @staticmethod
+    def add_span_consumers_to_existing_provider(trace_provider: TracerProvider):
+        trace_provider.add_span_processor(SimpleSpanProcessor(SpanConsumer.get_instance()))
+        for extra_processor in TracerFactory._extra_span_processors:
+            trace_provider.add_span_processor(extra_processor)
 
     @staticmethod
     def preregister_span_processor(processor: SpanProcessor):
@@ -428,7 +442,9 @@ class Tracer(ContextDecorator):
         print_on_exit: bool = False,
         threshold: int = None,
         wrap_exceptions=False,
+        *,
         parent_span: Optional[Union[TracingSpan, TracingContext]] = None,
+        only_if_active: bool = False,
     ):
         self.__print_on_exit = print_on_exit
         self.__label = label
@@ -436,10 +452,15 @@ class Tracer(ContextDecorator):
         self.wrap_exceptions = wrap_exceptions
         self._parent_span = parent_span if isinstance(parent_span, TracingSpan) else None
         self._parent_ctx = parent_span if isinstance(parent_span, TracingContext) else None
+        self._only_if_active = only_if_active
 
     def __enter__(self):
+        self.__parent_scope = None
         if self._parent_span:
             self.__parent_scope = Tracer.activate_span(self._parent_span)
+        elif self._only_if_active and not self.active_span().is_recording():
+            self.__scope = NOOP_TRACING_SCOPE
+            return self.__scope
         self.__scope = Tracer.start_active_span(self.__label, child_of=self._parent_ctx)
         return self.__scope
 
@@ -447,7 +468,7 @@ class Tracer(ContextDecorator):
         if exc_value:
             self.record_exception(exc_value, self.__scope.span, exc_tb)
         self.__scope.close()
-        if self._parent_span:
+        if self.__parent_scope:
             self.__parent_scope.close()
         if self.wrap_exceptions and exc_type is not None and not exc_type == MqWrappedError:
             raise MqWrappedError(f'Unable to calculate: {self.__label}') from exc_value
@@ -461,7 +482,7 @@ class Tracer(ContextDecorator):
         Tracer.__factory = factory
 
     @staticmethod
-    def active_span():
+    def active_span() -> TracingSpan:
         current_span = trace.get_current_span()
         if current_span is None or not current_span.is_recording():
             return NonRecordingTracingSpan(INVALID_SPAN)

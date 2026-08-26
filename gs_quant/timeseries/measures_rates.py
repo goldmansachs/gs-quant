@@ -771,7 +771,7 @@ def _get_tpicap_swaption_assets(allow_many=False, **kwargs) -> Union[str, list]:
         _ClearingHouse.JSCC.value: TPICAPClearing.JSC,
     }.get(kwargs['clearing_house'], TPICAPClearing.BIL)
 
-    pattern = "_(\w{3})\.(\w{3})\.(\w{3})\.(\w{3})\!(\w+)$"
+    pattern = r"_(\w{3})\.(\w{3})\.(\w{3})\.(\w{3})\!(\w+)$"
     matches = [re.search(pattern, x['tpicapId']) for x in asset_search]
 
     if len(asset_search) > 1:
@@ -861,7 +861,7 @@ def _get_tpicap_rates_assets(allow_many=False, **kwargs) -> Union[str, list]:
         _ClearingHouse.JSCC.value: TPICAPClearing.JSC,
     }.get(kwargs['asset_parameters_clearing_house'], TPICAPClearing.BIL)
 
-    pattern = "_(\w{3})\.(\w{3})\.(\w{3})\.(\w{3})\!(\w+)$"
+    pattern = r"_(\w{3})\.(\w{3})\.(\w{3})\.(\w{3})\!(\w+)$"
     matches = [re.search(pattern, x['tpicapId']) for x in asset_search]
 
     if len(asset_search) > 1:

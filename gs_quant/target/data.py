@@ -385,7 +385,7 @@ class DataSetDelay(Base):
 class DataSetFieldEntityStringParameters(Base):
     enum: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
     format_: Optional[FieldFormat] = field(default=None, metadata=config(field_name='format', exclude=exclude_none))
-    pattern: Optional[str] = field(default='^[\w ]{1,256}$', metadata=field_metadata)
+    pattern: Optional[str] = field(default=r'^[\w ]{1,256}$', metadata=field_metadata)
     max_length: Optional[int] = field(default=None, metadata=field_metadata)
     min_length: Optional[int] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)

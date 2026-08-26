@@ -45,7 +45,7 @@ def get_config():
     cfg.VCS = "git"
     cfg.style = "pep440"
     cfg.tag_prefix = "release-"
-    cfg.parentdir_prefix = "gs_quant-"
+    cfg.parentdir_prefix = "goldmansachs_gs_quant-"
     cfg.versionfile_source = "gs_quant/_version.py"
     cfg.verbose = False
     return cfg
