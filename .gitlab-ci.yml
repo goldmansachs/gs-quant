@@ -17,6 +17,7 @@ stages:
   - clmscan
   - etch_upload
   - .post
+  - code-quality
   
 cloud_etch_upload:
   stage: etch_upload
@@ -44,3 +45,21 @@ test:py310:
     when: always
     paths:
       - "pytest.xml"
+
+#
+# Publish to SonarQube
+#
+sonar_analysis:
+  stage: code-quality
+  dependencies: [ test:py310 ]
+  image: prod.container-registry.site.gs.com/spr-946250/gs-sonar-scanner-cli:current
+  tags: [ kubernetes, linux, default ]
+  before_script: [] # override global before_script if defined
+  coverage: /SonarQube Coverage ([0-9.]{1,5})%/
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - run-sonar-scanner.sh
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
