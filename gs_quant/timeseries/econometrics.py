@@ -847,6 +847,10 @@ def correlation(
         ret_1 = x
         ret_2 = y
 
+    # handle bad data (duplicate index labels break DataFrame alignment via reindex)
+    ret_1 = ret_1[~ret_1.index.duplicated(keep='first')]
+    ret_2 = ret_2[~ret_2.index.duplicated(keep='first')]
+
     aligned = pd.DataFrame({'r1': ret_1, 'r2': ret_2}).dropna()
     clean_ret1 = aligned['r1']
     clean_ret2 = aligned['r2']
