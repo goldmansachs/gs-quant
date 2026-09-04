@@ -42,7 +42,7 @@ dependencies = [
     "requests",
     "httpx>=0.28.1",
     "scipy>=1.2.0",
-    "statsmodels>=0.14.0",
+    "statsmodels>=0.14.5",
     "pyyaml",
     "tqdm",
     "websockets"
