@@ -19,8 +19,9 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 import pytest
-from pandas.testing import assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
+import gs_quant.timeseries.technicals as technicals
 from gs_quant.errors import MqValueError
 from gs_quant.timeseries import (
     Frequency,
@@ -147,7 +148,14 @@ def test_bollinger_bands():
     assert_series_equal(high, expected_high, check_names=False, obj="Bollinger bands high")
 
     result = bollinger_bands(x, "2d")
-    print(result)
+    expected = pd.DataFrame(
+        {
+            0: [1.085786, -0.828427, -0.828427, 0.257359],
+            1: [3.914214, 4.828427, 4.828427, 8.742641],
+        },
+        index=dates[2:],
+    )
+    assert_frame_equal(result, expected)
 
 
 def test_relative_strength_index():
@@ -213,8 +221,16 @@ def test_relative_strength_index():
     expected = pd.Series(data=np.ones(7) * 100, index=dates[15:])
     result = relative_strength_index(increasing_series, w)
     assert_series_equal(result, expected, check_names=False, obj="Relative Strength Index")
-    result = relative_strength_index(SPX, "2w")
-    print(result)
+
+
+def test_relative_strength_index_date_offset_window():
+    dates = [dt.date(2020, 1, day) for day in range(1, 11)]
+    increasing_series = pd.Series(np.arange(1, 11, dtype=float), index=dates)
+
+    expected = pd.Series(100.0, index=dates[4:])
+    result = relative_strength_index(increasing_series, "3d")
+
+    assert_series_equal(result, expected, check_names=False, obj="Relative Strength Index date offset window")
 
 
 def test_exponential_moving_average():
@@ -288,6 +304,30 @@ def test_trend():
         trend(x)
 
 
+def test_trend_and_seasonally_adjusted_remove_quarterly_pattern():
+    dates = pd.date_range('2020-01-31', periods=24, freq='ME')
+    underlying_trend = pd.Series(np.arange(24, dtype=float) + 100, index=dates)
+
+    additive_pattern = np.array([10.0, 0.0, -10.0] * 8)
+    additive_series = underlying_trend + additive_pattern
+
+    adjusted = seasonally_adjusted(additive_series, SeasonalModel.ADDITIVE, Frequency.QUARTER)
+    extracted_trend = trend(additive_series, SeasonalModel.ADDITIVE, Frequency.QUARTER)
+
+    assert_series_equal(
+        adjusted.dropna(),
+        underlying_trend.loc[adjusted.dropna().index],
+        check_names=False,
+        obj="Seasonally adjusted additive series",
+    )
+    assert_series_equal(
+        extracted_trend.dropna(),
+        underlying_trend.loc[extracted_trend.dropna().index],
+        check_names=False,
+        obj="Trend extracted from additive series",
+    )
+
+
 def test_seasonality_adjusted():
     # Test that correctly runs with different frequencies
     for pfreq in ['B', 'D', 'W', 'ME', 'QE', 'YE']:
@@ -302,6 +342,47 @@ def test_seasonality_adjusted():
     with pytest.raises(MqValueError):
         x = pd.Series(range(10))
         seasonally_adjusted(x)
+
+
+def test_freq_to_period_business_day_and_weekly_conversions():
+    business_dates = pd.bdate_range('2020-01-01', periods=5)
+    business_series = pd.Series([1, 2, 3, 4, 5], index=business_dates)
+
+    weekly_adjusted, weekly_period = technicals._freq_to_period(business_series, Frequency.WEEK)
+    monthly_adjusted, monthly_period = technicals._freq_to_period(business_series, Frequency.MONTH)
+
+    assert weekly_period == 5
+    assert weekly_adjusted.index.freqstr == 'B'
+    assert_series_equal(weekly_adjusted, business_series, check_freq=False)
+
+    expected_monthly = pd.Series(
+        [1, 2, 3, 3, 3, 4, 5],
+        index=pd.date_range('2020-01-01', periods=7, freq='D'),
+    )
+    assert monthly_period == 30
+    assert monthly_adjusted.index.freqstr == 'D'
+    assert_series_equal(monthly_adjusted.head(7), expected_monthly)
+
+
+def test_freq_to_period_incompatible_weekly_and_monthly_requests():
+    weekly_dates = pd.date_range('2020-01-05', periods=8, freq='W')
+    weekly_series = pd.Series(range(8), index=weekly_dates)
+    monthly_dates = pd.date_range('2020-01-31', periods=6, freq='ME')
+    monthly_series = pd.Series(range(1, 7), index=monthly_dates)
+
+    yearly_adjusted, yearly_period = technicals._freq_to_period(weekly_series, Frequency.YEAR)
+    quarterly_adjusted, quarterly_period = technicals._freq_to_period(monthly_series, Frequency.QUARTER)
+
+    assert yearly_period == 52
+    assert yearly_adjusted.index.freqstr == 'W-SUN'
+    assert quarterly_period == 3
+    assert quarterly_adjusted.index.freqstr == 'ME'
+
+    with pytest.raises(MqValueError, match='Frequency week not compatible with series with frequency'):
+        technicals._freq_to_period(weekly_series, Frequency.WEEK)
+
+    with pytest.raises(MqValueError, match='Frequency month not compatible with series with frequency'):
+        technicals._freq_to_period(monthly_series, Frequency.MONTH)
 
 
 if __name__ == "__main__":

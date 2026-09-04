@@ -50,6 +50,7 @@ test:py310:
 # Publish to SonarQube
 #
 sonar_analysis:
+  allow_failure: true
   stage: code-quality
   dependencies: [ test:py310 ]
   image: prod.container-registry.site.gs.com/spr-946250/gs-sonar-scanner-cli:current

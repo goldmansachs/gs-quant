@@ -18,7 +18,8 @@ from enum import Enum
 from typing import Union
 
 import pandas as pd
-import statsmodels.tsa.seasonal
+import statsmodels.tsa.seasonal as seasonal
+import statsmodels.tsa.tsatools as tsatools
 
 from gs_quant.timeseries import annualize, diff, returns
 
@@ -430,48 +431,51 @@ def _freq_to_period(x: pd.Series, freq: Frequency = Frequency.YEAR):
     """
     if not isinstance(x.index, pd.DatetimeIndex):
         raise MqValueError("Series must have a pandas.DateTimeIndex.")
+
     pfreq = getattr(getattr(x, 'index', None), 'inferred_freq', None)
     # Some older versions of statsmodels don't handle some of the newer pandas frequencies, so we manually adjust them
     pfreq = 'MS' if pfreq in ('ME', 'M') else pfreq  # Convert Month[End] into MonthlyStart
     pfreq = 'QS' if pfreq in ('QE-DEC', 'QE') else pfreq  # Convert Quarter[End] into QuarterlyStart
-    period = None if pfreq is None else statsmodels.tsa.seasonal.freq_to_period(pfreq)
-    if period in [7, None]:  # daily
-        x = x.asfreq('D', method='ffill')
-        if freq == Frequency.YEAR:
-            return x, 365
-        elif freq == Frequency.QUARTER:
-            return x, 91
-        elif freq == Frequency.MONTH:
-            return x, 30
-        else:
-            return x, 7
-    elif period == 5:  # business day
-        if freq == Frequency.YEAR:
-            return x.asfreq('D', method='ffill'), 365
-        if freq == Frequency.QUARTER:
-            return x.asfreq('D', method='ffill'), 91
-        elif freq == Frequency.MONTH:
-            return x.asfreq('D', method='ffill'), 30
-        else:  # freq == Frequency.WEEKLY:
-            return x.asfreq('B', method='ffill'), 5
-    elif period == 52:  # weekly frequency
-        x = x.asfreq('W', method='ffill')
-        if freq == Frequency.YEAR:
-            return x, period
-        elif freq == Frequency.QUARTER:
-            return x, 13
-        elif freq == Frequency.MONTH:
-            return x, 4
-        else:
+    period = None if pfreq is None else tsatools.freq_to_period(pfreq)
+
+    if period in (7, None):
+        adjusted = x.asfreq('D', method='ffill')
+        return adjusted, {
+            Frequency.YEAR: 365,
+            Frequency.QUARTER: 91,
+            Frequency.MONTH: 30,
+        }.get(freq, 7)
+
+    if period == 5:
+        target_freq = 'B' if freq == Frequency.WEEK else 'D'
+        adjusted = x.asfreq(target_freq, method='ffill')
+        return adjusted, {
+            Frequency.YEAR: 365,
+            Frequency.QUARTER: 91,
+            Frequency.MONTH: 30,
+        }.get(freq, 5)
+
+    if period == 52:
+        adjusted = x.asfreq('W', method='ffill')
+        compatible_periods = {
+            Frequency.YEAR: period,
+            Frequency.QUARTER: 13,
+            Frequency.MONTH: 4,
+        }
+        if freq not in compatible_periods:
             raise MqValueError(f'Frequency {freq.value} not compatible with series with frequency {pfreq}.')
-    elif period == 12:  # monthly frequency
-        x = x.asfreq('ME', method='ffill')
-        if freq == Frequency.YEAR:
-            return x, period
-        elif freq == Frequency.QUARTER:
-            return x, 3
-        else:
+        return adjusted, compatible_periods[freq]
+
+    if period == 12:
+        adjusted = x.asfreq('ME', method='ffill')
+        compatible_periods = {
+            Frequency.YEAR: period,
+            Frequency.QUARTER: 3,
+        }
+        if freq not in compatible_periods:
             raise MqValueError(f'Frequency {freq.value} not compatible with series with frequency {pfreq}.')
+        return adjusted, compatible_periods[freq]
+
     return x, period
 
 
@@ -480,7 +484,7 @@ def _seasonal_decompose(x: pd.Series, method: SeasonalModel = SeasonalModel.ADDI
     if x.shape[0] < 2 * period:
         # Replace ValueError in seasonal_decompose with more descriptive error
         raise MqValueError(f"Series must have two complete cycles to be analyzed. Series has only {x.shape[0]} dpts.")
-    decompose_obj = statsmodels.tsa.seasonal.seasonal_decompose(x, period=period, model=method.value)
+    decompose_obj = seasonal.seasonal_decompose(x, period=period, model=method.value)
     return decompose_obj
 
 
