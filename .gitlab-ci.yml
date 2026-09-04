@@ -40,7 +40,8 @@ test:py310:
     - pip3 install -i $GS_PYPI_URL --trusted-host $GS_PYPI_HOST --upgrade pip
     - pip3 install -i $GS_PYPI_URL --trusted-host $GS_PYPI_HOST .[test]
   script:
-    - pytest -rsx gs_quant/test --junitxml=pytest.xml
+    - pytest -rsx gs_quant/test --junitxml=pytest.xml --cov=gs_quant --cov-report term-missing
+  coverage: /TOTAL.*\s+(\d+%)$/
   artifacts:
     when: always
     paths:
