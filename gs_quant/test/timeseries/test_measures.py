@@ -4802,6 +4802,27 @@ def test_get_iso_data():
         assert tm._get_iso_data(key)[0] == tz_map[key]
 
 
+def test_weights_for_region_and_bucket_aggregated():
+    start = dt.date(2019, 5, 1)
+    end = dt.date(2019, 5, 31)
+    region = 'CAISO'
+
+    peak = tm._weights_for_region_and_bucket_aggregated(region, start, end, 'PEAK')
+    offpeak = tm._weights_for_region_and_bucket_aggregated(region, start, end, 'OFFPEAK')
+    full_day = tm._weights_for_region_and_bucket_aggregated(region, start, end, '7X24')
+
+    for df, bucket in ((peak, 'PEAK'), (offpeak, 'OFFPEAK'), (full_day, '7X24')):
+        assert list(df.columns) == ['contract', 'weight', 'quantityBucket']
+        assert (df['quantityBucket'] == bucket).all()
+
+    # May 2019 is a single contract month (K19) with 31 days * 24h = 744 total hours,
+    # split exhaustively between PEAK and OFFPEAK.
+    assert full_day.set_index('contract')['weight'].to_dict() == {'K19': 744}
+    peak_hours = peak.set_index('contract')['weight'].to_dict()['K19']
+    offpeak_hours = offpeak.set_index('contract')['weight'].to_dict()['K19']
+    assert peak_hours + offpeak_hours == 744
+
+
 def test_string_to_date_interval():
     assert tm._string_to_date_interval("K20")['start_date'] == dt.date(2020, 5, 1)
     assert tm._string_to_date_interval("K20")['end_date'] == dt.date(2020, 5, 31)

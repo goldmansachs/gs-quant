@@ -3100,19 +3100,12 @@ def _get_qbt_mapping(bucket, region):
     return QBT_mapping[bucket.upper()] if bucket.upper() in QBT_mapping else [bucket.upper()]
 
 
-def _get_weight_for_bucket(asset, start_contract_range, end_contract_range, bucket):
-    # Find contracts and holidays in the date range
-    bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
-    if bbid is None:
-        # Get ISO from parameters
-        region = asset.get_entity()['parameters']['ISO']
-    else:
-        region = bbid.split(" ")[0]
+def _contract_hours_by_subbucket(region, start_contract_range, end_contract_range, bucket):
+    """Number of hours per contract-month for each primitive sub-bucket that makes up `bucket`."""
     timezone = _get_iso_data(region)[0]
     dates_contract_range = get_contract_range(start_contract_range, end_contract_range, timezone)
     holidays = NercCalendar().holidays(start=start_contract_range, end=end_contract_range).date
 
-    # Get number of hours for a given bucket for each contract
     weights = []
     buckets_QBT = _get_qbt_mapping(bucket, region)
     for bucket_QBT in buckets_QBT:
@@ -3122,8 +3115,28 @@ def _get_weight_for_bucket(asset, start_contract_range, end_contract_range, buck
         weights_df['quantityBucket'] = bucket_QBT
         weights.append(weights_df)
 
-    weights = pd.concat(weights)
-    return weights
+    return pd.concat(weights)
+
+
+def _weights_for_region_and_bucket_aggregated(region, start_contract_range, end_contract_range, bucket):
+    """One row per contract, with hours summed across `bucket`'s primitive sub-buckets and labeled
+    with the composite bucket itself, e.g. for data sources that store a single price series per
+    composite bucket (7X16, OFFPEAK, ...) rather than per primitive sub-bucket."""
+    hours = _contract_hours_by_subbucket(region, start_contract_range, end_contract_range, bucket)
+    aggregated = hours.groupby('contract', sort=False)['weight'].sum().reset_index()
+    aggregated['quantityBucket'] = bucket.upper()
+    return aggregated
+
+
+def _get_weight_for_bucket(asset, start_contract_range, end_contract_range, bucket):
+    # Find contracts and holidays in the date range
+    bbid = Asset.get_identifier(asset, AssetIdentifier.BLOOMBERG_ID)
+    if bbid is None:
+        # Get ISO from parameters
+        region = asset.get_entity()['parameters']['ISO']
+    else:
+        region = bbid.split(" ")[0]
+    return _contract_hours_by_subbucket(region, start_contract_range, end_contract_range, bucket)
 
 
 def _filter_by_bucket(df, bucket, holidays, region):
