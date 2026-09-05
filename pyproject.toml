@@ -217,12 +217,6 @@ extend-aliases = { "datetime" = "dt" }
 default-groups = ["test", "dev"]
 native-tls = true
 
-[[tool.uv.index]]
-name = "aws"
-url = "https://pypi.aws.site.gs.com/repository/pypi-group/simple"
-default = true
-
 [tool.uv.pip]
-index-url = "https://pypi.aws.site.gs.com/repository/pypi-group/simple"
 emit-index-url = true
 universal = true
