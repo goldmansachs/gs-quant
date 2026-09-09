@@ -4370,7 +4370,7 @@ def current_constituents_dividend_yield(
     if real_time:
         raise NotImplementedError('real-time current_constituents_dividend_yield not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_dividend_yield not implemented for this basket. Only available for flagship baskets'
         )
@@ -4420,7 +4420,7 @@ def current_constituents_earnings_per_share(
     if real_time:
         raise NotImplementedError('real-time current_constituents_earnings_per_share not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_earnings_per_share not implemented for this basket. '
             'Only available for flagship baskets'
@@ -4470,7 +4470,7 @@ def current_constituents_earnings_per_share_positive(
     if real_time:
         raise NotImplementedError('real-time current_constituents_earnings_per_share_positive not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_earnings_per_share_positive not implemented for this basket. '
             'Only available for flagship baskets'
@@ -4521,7 +4521,7 @@ def current_constituents_net_debt_to_ebitda(
     if real_time:
         raise NotImplementedError('real-time current_constituents_net_debt_to_ebitda not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_net_debt_to_ebitda not implemented for this basket. '
             'Only available for flagship baskets'
@@ -4572,7 +4572,7 @@ def current_constituents_price_to_book(
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_book not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_price_to_book not implemented for this basket. Only available for flagship baskets'
         )
@@ -4622,7 +4622,7 @@ def current_constituents_price_to_cash(
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_cash not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_price_to_cash not implemented for this basket. Only available for flagship baskets'
         )
@@ -4672,7 +4672,7 @@ def current_constituents_price_to_earnings(
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_earnings not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_price_to_earnings not implemented for this basket. '
             'Only available for flagship baskets'
@@ -4723,7 +4723,7 @@ def current_constituents_price_to_earnings_positive(
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_earnings_positive not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_price_to_earnings_positive not implemented for this basket. '
             'Only available for flagship baskets'
@@ -4774,7 +4774,7 @@ def current_constituents_price_to_sales(
     if real_time:
         raise NotImplementedError('real-time current_constituents_price_to_sales not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_price_to_sales not implemented for this basket. Only available for flagship baskets'
         )
@@ -4824,7 +4824,7 @@ def current_constituents_return_on_equity(
     if real_time:
         raise NotImplementedError('real-time current_constituents_return_on_equity not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_return_on_equity not implemented for this basket. Only available for flagship baskets'
         )
@@ -4874,7 +4874,7 @@ def current_constituents_sales_per_share(
     if real_time:
         raise NotImplementedError('real-time current_constituents_sales_per_share not implemented')
 
-    if not asset.get_entity().get('parameters', {'flagship': False}).get('flagship', False):
+    if not (asset.get_entity().get('parameters') or {}).get('flagship', False):
         raise NotImplementedError(
             'current_constituents_sales_per_share not implemented for this basket. Only available for flagship baskets'
         )

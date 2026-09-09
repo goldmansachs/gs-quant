@@ -36,6 +36,7 @@ from gs_quant.json_convertors import (
     decode_dict_date_key_or_float,
     decode_frequency,
     decode_optional_date_or_time,
+    encode_date_or_time,
     encode_date_tuple,
     encode_frequency,
 )
@@ -148,10 +149,10 @@ class AdditionalResults:
 @dataclass(unsafe_hash=True, repr=False)
 class DateConfig:
     start_date: Optional[Union[dt.date, dt.datetime]] = field(
-        default=None, metadata=config(decoder=decode_optional_date_or_time)
+        default=None, metadata=config(encoder=encode_date_or_time, decoder=decode_optional_date_or_time)
     )
     end_date: Optional[Union[dt.date, dt.datetime]] = field(
-        default=None, metadata=config(decoder=decode_optional_date_or_time)
+        default=None, metadata=config(encoder=encode_date_or_time, decoder=decode_optional_date_or_time)
     )
     frequency: Optional[Union[str, dt.timedelta]] = field(
         default='1b', metadata=config(encoder=encode_frequency, decoder=decode_frequency)

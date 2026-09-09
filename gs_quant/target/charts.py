@@ -271,9 +271,6 @@ class ChartAnnotation(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
-ChartControls = dict
-
-
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
@@ -386,7 +383,7 @@ class Chart(Base):
     y_axes_settings_bar: Optional[tuple[YAxisSettings, ...]] = field(default=None, metadata=field_metadata)
     annotations: Optional[tuple[ChartAnnotation, ...]] = field(default=None, metadata=field_metadata)
     template_variables: Optional[DictBase] = field(default=None, metadata=field_metadata)
-    parameters: Optional[ChartControls] = field(default=None, metadata=field_metadata)
+    parameters: Optional[dict] = field(default=None, metadata=field_metadata)
     controls: Optional[Tuple[Union[dict, bool, float, str], ...]] = field(default=None, metadata=field_metadata)
     ai: Optional[str] = field(default=None, metadata=field_metadata)
     ai_user_prompt: Optional[str] = field(default=None, metadata=field_metadata)

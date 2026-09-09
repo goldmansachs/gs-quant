@@ -517,7 +517,7 @@ class Asset(Base):
     key_map: Optional[DictBase] = field(default=None, metadata=field_metadata)
     owner_id: Optional[str] = field(default=None, metadata=field_metadata)
     parameters: Optional[DictBase] = field(default=None, metadata=field_metadata)
-    asset_stats: Optional[Tuple[AssetStats, ...]] = field(default=None, metadata=field_metadata)
+    asset_stats: Optional[tuple[AssetStats, ...]] = field(default=None, metadata=field_metadata)
     people: Optional[People] = field(default=None, metadata=field_metadata)
     people_history: Optional[tuple[TemporalPeople, ...]] = field(default=None, metadata=field_metadata)
     rank: Optional[float] = field(default=None, metadata=field_metadata)

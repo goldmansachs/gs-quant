@@ -51,7 +51,10 @@ class ComponentType(EnumBase, Enum):
     stackedBarChart = 'stackedBarChart'
     treemap = 'treemap'
     video = 'video'
-    webinar = 'webinar'    
+    webinar = 'webinar'
+    marketviewWidget = 'marketviewWidget'
+    marketviewDashboard = 'marketviewDashboard'
+    signalDevops = 'signalDevops'    
 
 
 class WorkspaceType(EnumBase, Enum):    
@@ -98,6 +101,26 @@ class MarketComponentParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class MarketviewDashboardParameters(Base):
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    size: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class MarketviewWidgetParameters(Base):
+    id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    configuration_id: Optional[str] = field(default=None, metadata=field_metadata)
+    height: Optional[str] = field(default=None, metadata=field_metadata)
+    width: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
 NotificationTokenBody = dict
 
 
@@ -121,6 +144,21 @@ class SeparatorComponentParameters(Base):
     name: Optional[str] = field(default=None, metadata=field_metadata)
     size: Optional[str] = field(default=None, metadata=field_metadata)
     show_more_url: Optional[str] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class SignalDevopsComponentParameters(Base):
+    height: Optional[float] = field(default=None, metadata=field_metadata)
+    pivot_endpoint: Optional[str] = field(default=None, metadata=field_metadata)
+    replay_endpoint_template: Optional[str] = field(default=None, metadata=field_metadata)
+    history_endpoint_template: Optional[str] = field(default=None, metadata=field_metadata)
+    refresh_interval_seconds: Optional[float] = field(default=None, metadata=field_metadata)
+    default_columns: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    rag_field: Optional[str] = field(default=None, metadata=field_metadata)
+    enable_replay: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
 @handle_camel_case_args
@@ -395,7 +433,7 @@ class WorkspaceComponent(Base):
     tags: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
     selections: Optional[tuple[ComponentSelection, ...]] = field(default=None, metadata=field_metadata)
     container_ids: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    parameters: Optional[Union[ArticleComponentParameters, AssetPlotComponentParameters, BarChartComponentParameters, ChartComponentParameters, CommentaryComponentParameters, CommentaryPromoComponentParameters, ContainerComponentParameters, DataGridComponentParameters, LegendComponentParameters, MarketComponentParameters, MonitorComponentParameters, PlotComponentParameters, PromoComponentParameters, RelatedLinksComponentParameters, ResearchComponentParameters, ScreenerComponentParameters, SelectorComponentParameters, SeparatorComponentParameters, TreemapComponentParameters, VideoComponentParameters, WebinarComponentParameters]] = field(default=None, metadata=field_metadata)
+    parameters: Optional[Union[ArticleComponentParameters, AssetPlotComponentParameters, BarChartComponentParameters, ChartComponentParameters, CommentaryComponentParameters, CommentaryPromoComponentParameters, ContainerComponentParameters, DataGridComponentParameters, LegendComponentParameters, MarketComponentParameters, MarketviewDashboardParameters, MarketviewWidgetParameters, MonitorComponentParameters, PlotComponentParameters, PromoComponentParameters, RelatedLinksComponentParameters, ResearchComponentParameters, ScreenerComponentParameters, SelectorComponentParameters, SeparatorComponentParameters, SignalDevopsComponentParameters, TreemapComponentParameters, VideoComponentParameters, WebinarComponentParameters]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

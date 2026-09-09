@@ -484,6 +484,7 @@ class CreditCustomBasketCreateInputs(IndicesConstructRequestTypes):
     clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
     hedge_id: Optional[str] = field(default=None, metadata=field_metadata)
     credit_basket_type: Optional[CreditBasketType] = field(default=None, metadata=field_metadata)
+    publicly_visible: Optional[bool] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -504,6 +505,7 @@ class CreditCustomBasketEditInputs(Base):
     position_set: Optional[tuple[PositionPriceInput, ...]] = field(default=None, metadata=field_metadata)
     index_notes: Optional[str] = field(default=None, metadata=field_metadata)
     clone_parent_id: Optional[str] = field(default=None, metadata=field_metadata)
+    publicly_visible: Optional[bool] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args

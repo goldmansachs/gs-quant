@@ -22,22 +22,22 @@ from gs_quant.common import Entitlements as TargetEntitlements
 from gs_quant.entities.entitlements import EntitlementBlock, Entitlements
 from gs_quant.markets.scenario import FactorScenario, FactorScenarioType, FactorShock, FactorShockParameters
 from gs_quant.session import Environment, GsSession
-from gs_quant.target.risk import Scenario
+from gs_quant.target.risk import FactorShock as RiskFactorShock, FactorShockScenarioParameters, Scenario
 
 default_entitlements = TargetEntitlements(edit=(), view=(), admin=())
 
-default_scenario_parameters = {
-    "riskModel": "MODEL_ID",
-    "propagateShocks": True,
-    "factorShocks": [{"factor": "Factor 1", "shock": 5}, {"factor": "Factor 2", "shock": -5}],
-}
+default_scenario_parameters = FactorShockScenarioParameters(
+    risk_model="MODEL_ID",
+    propagate_shocks=True,
+    factor_shocks=(RiskFactorShock(factor="Factor 1", shock=5), RiskFactorShock(factor="Factor 2", shock=-5)),
+)
 
 mock_scenario_obj = Scenario(
     name="Scenario 1",
     description="Scenario 1",
     entitlements=default_entitlements,
     id_="MSCENARIO",
-    parameters=default_scenario_parameters,
+    parameters=default_scenario_parameters.to_dict(),
     type_=FactorScenarioType.Factor_Shock,
 )
 

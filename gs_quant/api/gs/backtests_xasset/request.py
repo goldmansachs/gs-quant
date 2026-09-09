@@ -37,6 +37,7 @@ from gs_quant.json_convertors import (
     decode_date_or_time_tuple,
     decode_frequency,
     decode_optional_date_or_time,
+    encode_date_or_time,
     encode_date_or_time_tuple,
     encode_frequency,
 )
@@ -123,10 +124,12 @@ def _decode_pnl_definition(data):
 @dataclass(unsafe_hash=True, repr=False)
 class RiskRequest:
     start_date: Optional[Union[dt.date, dt.datetime]] = field(
-        default=None, metadata=config(decoder=decode_optional_date_or_time, exclude=exclude_none)
+        default=None,
+        metadata=config(encoder=encode_date_or_time, decoder=decode_optional_date_or_time, exclude=exclude_none),
     )
     end_date: Optional[Union[dt.date, dt.datetime]] = field(
-        default=None, metadata=config(decoder=decode_optional_date_or_time, exclude=exclude_none)
+        default=None,
+        metadata=config(encoder=encode_date_or_time, decoder=decode_optional_date_or_time, exclude=exclude_none),
     )
     frequency: Optional[Union[str, dt.timedelta]] = field(
         default=None, metadata=config(encoder=encode_frequency, decoder=decode_frequency, exclude=exclude_none)

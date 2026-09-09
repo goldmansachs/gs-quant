@@ -205,6 +205,8 @@ class AssetType(EnumBase, Enum):
     MultiCrossDoubleTouchLeg = 'MultiCrossDoubleTouchLeg'
     Mutual_Fund = 'Mutual Fund'
     Native_Asset = 'Native Asset'
+    NDFSwap = 'NDFSwap'
+    NonDeliverableForward = 'NonDeliverableForward'
     Note = 'Note'
     OneTouch = 'OneTouch'
     Option = 'Option'
@@ -217,6 +219,7 @@ class AssetType(EnumBase, Enum):
     PivotScheduleLeg = 'PivotScheduleLeg'
     Preferred_Stock = 'Preferred Stock'
     Physical = 'Physical'
+    PhysicalForwardSeries = 'PhysicalForwardSeries'
     Precious_Metal = 'Precious Metal'
     Precious_Metal_Swap = 'Precious Metal Swap'
     Precious_Metal_RFQ = 'Precious Metal RFQ'
@@ -5430,31 +5433,6 @@ class TimeFilter(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class UserCoverage(Base):
-    name: str = field(default=None, metadata=field_metadata)
-    email: str = field(default=None, metadata=field_metadata)
-    app: Optional[str] = field(default=None, metadata=field_metadata)
-    phone: Optional[str] = field(default=None, metadata=field_metadata)
-    guid: Optional[str] = field(default=None, metadata=field_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class UserTag(Base):
-    name: str = field(default=None, metadata=field_metadata)
-    added_on: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    added_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    removed: Optional[bool] = field(default=None, metadata=field_metadata)
-    removed_on: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
-    removed_by_id: Optional[str] = field(default=None, metadata=field_metadata)
-    removal_reason: Optional[str] = field(default=None, metadata=field_metadata)
-    category: Optional[str] = field(default=None, metadata=field_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class WeightedPosition(Base):
     asset_id: str = field(default=None, metadata=field_metadata)
     weight: float = field(default=None, metadata=field_metadata)
@@ -5906,6 +5884,10 @@ class ISelectNewParameter(Base):
     newinv_vol_cap: Optional[float] = field(default=None, metadata=field_metadata)
     units_scaling_factor: Optional[float] = field(default=None, metadata=field_metadata)
     new_units_scaling_factor: Optional[float] = field(default=None, metadata=field_metadata)
+    index: Optional[str] = field(default=None, metadata=field_metadata)
+    index_units: Optional[float] = field(default=None, metadata=field_metadata)
+    quantity_lot: Optional[float] = field(default=None, metadata=field_metadata)
+    instrument: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -6454,8 +6436,8 @@ class FieldFilterMap(Base):
     last_updated_message: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     trading_restriction: Optional[Union[bool, tuple[bool, ...]]] = field(default=None, metadata=field_metadata)
     rcic: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
-    name_raw: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     status: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
+    name_raw: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     asset_parameters_pay_or_receive: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     domains_data: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     client_name: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
@@ -7193,6 +7175,7 @@ class ReportParameters(Base):
     weighting_strategy: Optional[PositionSetWeightingStrategy] = field(default=None, metadata=field_metadata)
     on_behalf_of: Optional[str] = field(default=None, metadata=field_metadata)
     dependency_report_ids: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    publicly_visible: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

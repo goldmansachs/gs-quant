@@ -195,6 +195,23 @@ class CommodOTCSwapPeriod(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class CommodPhysicalForwardSeries(Instrument):
+    strategy: Optional[str] = field(default=None, metadata=field_metadata)
+    delivery_dates: Optional[tuple[Union[datetime.date, str], ...]] = field(default=None, metadata=field_metadata)
+    underlier_short_names: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    native_quantity_units: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    quantities: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    fixed_price_currencies: Optional[tuple[CurrencyName, ...]] = field(default=None, metadata=field_metadata)
+    product_group: Optional[ProductGroup] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.Commod, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.PhysicalForwardSeries, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class CommodSwapData(Instrument):
     commodity: Optional[str] = field(default=None, metadata=field_metadata)
     quantity: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
@@ -1122,6 +1139,47 @@ class FXMultiCrossDoubleOneTouchLeg(Instrument):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class FXNDFSwap(Instrument):
+    pair: Optional[str] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    notional_amount: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    near_leg_notional_amount: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    notional_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    start_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    end_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    near_rate: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    far_rate: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    start_fixing_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    end_fixing_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    fixing_source: Optional[str] = field(default=None, metadata=field_metadata)
+    settlement_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.FX, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.NDFSwap, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class FXNonDeliverableForward(Instrument):
+    pair: Optional[str] = field(default=None, metadata=field_metadata)
+    settlement_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    forward_rate: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    notional_amount: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    notional_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    notional_amount_in_other_currency: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    fixing_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    fixing_source: Optional[str] = field(default=None, metadata=field_metadata)
+    settlement_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.FX, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.NonDeliverableForward, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class FXOneTouch(Instrument):
     pair: Optional[str] = field(default=None, metadata=field_metadata)
     buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
@@ -1273,6 +1331,25 @@ class FXShiftingBermForward(Instrument):
     premium_payment_date: Optional[str] = field(default=None, metadata=field_metadata)
     asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.FX, metadata=field_metadata)
     type_: Optional[AssetType] = field(init=False, default=AssetType.ShiftingBermForward, metadata=config(field_name='type', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class FXSwap(Instrument):
+    pair: Optional[str] = field(default=None, metadata=field_metadata)
+    notional_amount: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    notional_currency: Optional[Currency] = field(default=None, metadata=field_metadata)
+    buy_sell: Optional[BuySell] = field(default=None, metadata=field_metadata)
+    near_leg_notional_amount: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    start_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    end_date: Optional[Union[datetime.date, str]] = field(default=None, metadata=field_metadata)
+    near_rate: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    far_rate: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    swap_points: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
+    asset_class: Optional[AssetClass] = field(init=False, default=AssetClass.FX, metadata=field_metadata)
+    type_: Optional[AssetType] = field(init=False, default=AssetType.Swap, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 

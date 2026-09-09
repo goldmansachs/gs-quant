@@ -93,6 +93,11 @@ def encode_date_tuple(values: tuple[Optional[Union[str, dt.date]], ...]):
     )
 
 
+def encode_date_or_time(value: Optional[Union[str, dt.date, dt.datetime]]) -> Optional[str]:
+    # datetime is a subclass of date, so it has to be tested first
+    return encode_datetime(value) if isinstance(value, dt.datetime) else encode_date_or_str(value)
+
+
 def encode_date_or_time_tuple(values: tuple[Optional[Union[str, dt.date, dt.datetime]], ...]):
     return (
         tuple(

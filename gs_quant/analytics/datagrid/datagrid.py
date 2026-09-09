@@ -90,7 +90,7 @@ class DataGrid:
     To create a DataGrid, we define two components, rows and columns:
 
     >>> from gs_quant.markets.securities import Asset, AssetIdentifier
-    >>> from gs_quant.data.coordinate import DataMeasure, DataFrequency
+    >>> from gs_quant.data.coordinate import DataMeasure, DataFrequency, DataCoordinate
     >>> from gs_quant.analytics.processors import LastProcessor
     >>>
     >>> GS = Asset.get("GS UN", AssetIdentifier.BLOOMBERG_ID)

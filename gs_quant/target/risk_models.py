@@ -92,7 +92,7 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Factor_Cross_Sectional_Mean = 'Factor Cross Sectional Mean'    
 
 
-class RiskModelEventType(EnumBase, Enum):    
+class RiskModelEventType(EnumBase, Enum):
     
     """Event type for risk model class."""
 
@@ -102,7 +102,9 @@ class RiskModelEventType(EnumBase, Enum):
     Risk_Model_AWS = 'Risk Model AWS'
     Risk_Model_PFP_Data_AWS = 'Risk Model PFP Data AWS'
     Risk_Model_ISC_Data_AWS = 'Risk Model ISC Data AWS'
-    Risk_Model_Rates_AWS = 'Risk Model Rates AWS'    
+    Risk_Model_Rates_AWS = 'Risk Model Rates AWS'
+    Risk_Model_Asset_Patch = 'Risk Model Asset Patch'
+    Risk_Model_Asset_Patch_AWS = 'Risk Model Asset Patch AWS'    
 
 
 class RiskModelLogicalDb(EnumBase, Enum):    
