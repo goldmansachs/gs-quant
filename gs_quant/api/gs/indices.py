@@ -130,7 +130,7 @@ class GsIndexApi:
     def update_risk_reports(cls, _id: str, inputs: CustomBasketRiskParams):
         """Create, modify, or delete a custom basket factor risk report"""
         url = f'/indices/{_id}/risk/reports'
-        inputs = CustomBasketsRiskScheduleInputs(risk_models=inputs)
+        inputs = CustomBasketsRiskScheduleInputs(risk_models=(inputs,))
         return GsSession.current.sync.post(url, payload=inputs)
 
     @staticmethod

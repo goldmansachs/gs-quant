@@ -132,7 +132,9 @@ class RiskModelUniverseIdentifier(EnumBase, Enum):
     bcid = 'bcid'
     cusip = 'cusip'
     gsid = 'gsid'
-    isin = 'isin'    
+    isin = 'isin'
+    ric = 'ric'
+    bbid = 'bbid'
 
 
 class RiskModelUniverseIdentifierRequest(EnumBase, Enum):    

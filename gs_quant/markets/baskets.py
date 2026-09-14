@@ -655,7 +655,7 @@ class Basket(Asset, PositionedEntity):
         :func:`delete_factor_risk_report`
         """
         payload = CustomBasketRiskParams(risk_model=risk_model_id, fx_hedged=fx_hedged)
-        return GsIndexApi.update_risk_reports(payload)
+        return GsIndexApi.update_risk_reports(self.id, payload)
 
     @_validate(ErrorMessage.UNINITIALIZED, ErrorMessage.NON_ADMIN)
     def delete_factor_risk_report(self, risk_model_id: str):
@@ -680,7 +680,7 @@ class Basket(Asset, PositionedEntity):
         :func:`add_factor_risk_report`
         """
         payload = CustomBasketRiskParams(risk_model=risk_model_id, delete=True)
-        return GsIndexApi.update_risk_reports(payload)
+        return GsIndexApi.update_risk_reports(self.id, payload)
 
     @property
     def allow_ca_restricted_assets(self) -> Optional[bool]:

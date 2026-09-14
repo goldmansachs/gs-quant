@@ -321,9 +321,9 @@ def test_update_risk_reports(mocker):
     mock_response(mocker, GsIndexApi, 'update_risk_reports', {})
     basket.add_factor_risk_report('AXUS4M', False)
     payload = CustomBasketRiskParams(risk_model='AXUS4M', fx_hedged=False)
-    GsIndexApi.update_risk_reports.assert_called_with(payload)
+    GsIndexApi.update_risk_reports.assert_called_with(basket.id, payload)
 
     mock_response(mocker, GsIndexApi, 'update_risk_reports', {})
     basket.delete_factor_risk_report('AXUS4M')
     payload = CustomBasketRiskParams(risk_model='AXUS4M', delete=True)
-    GsIndexApi.update_risk_reports.assert_called_with(payload)
+    GsIndexApi.update_risk_reports.assert_called_with(basket.id, payload)
