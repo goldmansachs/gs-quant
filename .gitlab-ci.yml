@@ -31,7 +31,7 @@ cloud_etch_upload:
   
 test:py310:
   image: "registry.aws.site.gs.com:443/dx/py-eng/python-images/python3.10-rhel8-prod:current"
-  stage: test 
+  stage: test
   tags: [ linux, default, kubernetes ]
   before_script:
     - export PYTHONPATH=.
@@ -46,6 +46,46 @@ test:py310:
     when: always
     paths:
       - "pytest.xml"
+
+# Matrix jobs for newer Python releases. These catch regression types that only
+# surface on the modern NumPy/SciPy/pandas stack (e.g. scipy.mode scalar returns,
+# asyncio event-loop defaults on 3.12+).
+.test_matrix: &test_matrix
+  stage: test
+  tags: [ linux, default, kubernetes ]
+  before_script:
+    - export PYTHONPATH=.
+    - export PATH=$NODE:$CURL:$JAVA_HOME/bin:$GITLAB_SERVICES_HOME/scripts:$PATH
+    - python3 -V
+    - pip3 install -i $GS_PYPI_URL --trusted-host $GS_PYPI_HOST --upgrade pip
+    - pip3 install -i $GS_PYPI_URL --trusted-host $GS_PYPI_HOST .[test]
+  script:
+    - pytest -rsx gs_quant/test --junitxml=pytest.xml
+  artifacts:
+    when: always
+    paths:
+      - "pytest.xml"
+
+test:py311:
+  <<: *test_matrix
+  image: "registry.aws.site.gs.com:443/dx/py-eng/python-images/python3.11-rhel8-prod:current"
+
+test:py312:
+  <<: *test_matrix
+  image: "registry.aws.site.gs.com:443/dx/py-eng/python-images/python3.12-rhel8-prod:current"
+
+# Static type checking over the first-party modules declared in [tool.mypy].
+typecheck:mypy:
+  stage: test
+  tags: [ linux, default, kubernetes ]
+  image: "registry.aws.site.gs.com:443/dx/py-eng/python-images/python3.11-rhel8-prod:current"
+  before_script:
+    - export PYTHONPATH=.
+    - export PATH=$NODE:$CURL:$JAVA_HOME/bin:$GITLAB_SERVICES_HOME/scripts:$PATH
+    - pip3 install -i $GS_PYPI_URL --trusted-host $GS_PYPI_HOST --upgrade pip
+    - pip3 install -i $GS_PYPI_URL --trusted-host $GS_PYPI_HOST mypy .[test]
+  script:
+    - mypy gs_quant
 
 #
 # Publish to SonarQube

@@ -15,6 +15,7 @@ under the License.
 """
 
 import logging
+import re
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -105,8 +106,6 @@ class FactorAnalytics:
         except MqValueError as e:
             error_msg = str(e)
             if 'missing in marquee' in error_msg.lower():
-                import re
-
                 asset_ids_match = re.findall(r'MA[A-Z0-9]+', error_msg)
                 if asset_ids_match:
                     problematic_positions = []

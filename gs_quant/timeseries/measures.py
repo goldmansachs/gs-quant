@@ -1315,7 +1315,7 @@ def realized_correlation_with_basket(
     weighted_vols = actual_weights.mul(vols)
     idx_vol = volatility(index_spot['spot'], Window(tenor, tenor)) / 100
     s1 = weighted_vols.sum(axis=1, skipna=False)
-    s2 = weighted_vols.apply(lambda x: x * x).sum(axis=1, skipna=False)
+    s2 = (weighted_vols**2).sum(axis=1, skipna=False)
     values = (idx_vol * idx_vol - s2) / (s1 * s1 - s2) * 100
     series = ExtendedSeries(values)
     series.dataset_ids = dataset_ids
@@ -2129,19 +2129,20 @@ def _process_forward_vol_term(asset: Asset, vol_series: pd.Series, vol_col: str,
             if isinstance(vol_series.attrs['latest'], pd.Timestamp)
             else vol_series.attrs['latest']
         )
-        vol_df['calTimeToExp'] = vol_df.apply(lambda row: (row.name.date() - latest).days / DAYS_IN_YEAR, axis=1)
-        vol_df['timeToExp'] = vol_df.apply(
-            lambda row: np.busday_count(latest, row.name.date(), weekmask=cbd.weekmask, holidays=cbd.holidays) / 252,
-            axis=1,
+        # Vectorised over the index; avoids per-row apply for tenor handling
+        vol_df['calTimeToExp'] = (vol_df.index.normalize() - pd.Timestamp(latest)).days / DAYS_IN_YEAR
+        start_dates = np.full(len(vol_df), np.datetime64(latest), dtype='datetime64[D]')
+        end_dates = vol_df.index.values.astype('datetime64[D]')
+        vol_df['timeToExp'] = (
+            np.busday_count(start_dates, end_dates, weekmask=cbd.weekmask, holidays=cbd.holidays) / 252
         )
         vol_df['multiplier'] = sqrt(vol_df['calTimeToExp'] / vol_df['timeToExp'])
-        vol_df['fwdVol'] = sqrt(
-            (
-                vol_df['timeToExp'] * (vol_df[vol_col] * vol_df['multiplier']) ** 2
-                - vol_df['timeToExp'].shift(1) * (vol_df[vol_col].shift(1) * vol_df['multiplier'].shift(1)) ** 2
-            )
-            / (vol_df['timeToExp'] - vol_df['timeToExp'].shift(1))
-        )
+        # Forward variance can go negative on noisy / non-monotonic tenors; clamp before sqrt
+        fwd_variance = (
+            vol_df['timeToExp'] * (vol_df[vol_col] * vol_df['multiplier']) ** 2
+            - vol_df['timeToExp'].shift(1) * (vol_df[vol_col].shift(1) * vol_df['multiplier'].shift(1)) ** 2
+        ) / (vol_df['timeToExp'] - vol_df['timeToExp'].shift(1))
+        vol_df['fwdVol'] = sqrt(fwd_variance.clip(lower=0))
         ext_series = ExtendedSeries(vol_df['fwdVol'], name=series_name)[
             pd.Timestamp(DataContext.current.start_date) : pd.Timestamp(DataContext.current.end_date)
         ]

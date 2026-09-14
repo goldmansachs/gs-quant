@@ -18,3 +18,6 @@ from .core import PricingCache, PricingContext, PositionContext
 from .historical import HistoricalPricingContext, BackToTheFuturePricingContext
 from .realtime import RealtimePricingContext
 from .markets import *
+from .portfolio_utils import equal_weight as equal_weight  # noqa: F401 (re-exported)
+from .portfolio_utils import from_asset_ids as from_asset_ids  # noqa: F401 (re-exported)
+from .portfolio_utils import market_cap_weighted as market_cap_weighted  # noqa: F401 (re-exported)

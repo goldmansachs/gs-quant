@@ -14,6 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 
+from contextlib import nullcontext  # noqa: F401  (re-exported for gs_quant modules)
 from contextvars import ContextVar
 
 from gs_quant.errors import MqUninitialisedError, MqValueError
@@ -34,11 +35,11 @@ def _get_context_var(key: str) -> ContextVar:
 class ContextMeta(type):
     @property
     def __path_key(cls) -> str:
-        return '{}_path'.format(cls.__name__)
+        return f'{cls.__name__}_path'
 
     @property
     def __default_key(cls) -> str:
-        return '{}_default'.format(cls.__name__)
+        return f'{cls.__name__}_default'
 
     @classmethod
     def default_value(mcs) -> object:
@@ -56,7 +57,7 @@ class ContextMeta(type):
         path = cls.path
         current = cls.__default if not path else next(iter(path))
         if current is None:
-            raise MqUninitialisedError('{} is not initialised'.format(cls.__name__))
+            raise MqUninitialisedError(f'{cls.__name__} is not initialised')
 
         return current
 
@@ -64,13 +65,13 @@ class ContextMeta(type):
     def current(cls, current):
         path = cls.path
         if cls.has_prior:
-            raise MqValueError('Cannot set current while in a nested context {}'.format(cls.__name__))
+            raise MqValueError(f'Cannot set current while in a nested context {cls.__name__}')
 
         if len(path) == 1:
             cur = cls.current
             try:
                 if cur.is_entered:
-                    raise MqValueError('Cannot set current while in a nested context {}'.format(cls.__name__))
+                    raise MqValueError(f'Cannot set current while in a nested context {cls.__name__}')
             except AttributeError:
                 pass
 
@@ -94,7 +95,7 @@ class ContextMeta(type):
     def prior(cls):
         path = cls.path
         if len(path) < 2:
-            raise MqValueError('Current {} has no prior'.format(cls.__name__))
+            raise MqValueError(f'Current {cls.__name__} has no prior')
 
         return path[1]
 
@@ -178,19 +179,3 @@ class ContextBaseWithDefault(ContextBase):
     @classmethod
     def default_value(cls) -> object:
         return cls()
-
-
-try:
-    from contextlib import nullcontext
-except ImportError:
-    from contextlib import AbstractContextManager
-
-    class nullcontext(AbstractContextManager):
-        def __init__(self, enter_result=None):
-            self.enter_result = enter_result
-
-        def __enter__(self):
-            return self.enter_result
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            pass

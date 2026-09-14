@@ -3839,6 +3839,35 @@ def test_forward_vol_term():
         tm.forward_vol_term(..., tm.VolReference.SPOT, 100, real_time=True)
 
 
+def test_forward_vol_term_clips_negative_variance():
+    # A sharp drop in implied vol between adjacent tenors makes the forward
+    # variance negative; the result must be clipped to 0, not NaN.
+    data = {
+        'impliedVolatility': [200.0, 20.0],
+        'date': [dt.date(2023, 2, 1), dt.date(2023, 2, 2)],
+    }
+    out = ExtendedSeries(
+        data=data['impliedVolatility'], name='impliedVolatility', index=pd.to_datetime(data['date'])
+    )
+    out.dataset_ids = _test_datasets
+    out.attrs = dict(latest=dt.date(2023, 1, 31))
+
+    replace = Replacer()
+    market_mock = replace('gs_quant.timeseries.measures.vol_term', Mock())
+    market_mock.return_value = out
+
+    with DataContext('2023-01-31', '2024-07-31'):
+        actual = tm.forward_vol_term(
+            Index('MA123', AssetClass.Equity, '123'), tm.VolReference.SPOT, 100, dt.date(2023, 1, 31)
+        ).sort_index()
+    series = pd.Series(actual)
+    # first row has no predecessor (delta undefined) and is NaN by design; the
+    # second row would otherwise be NaN from a negative radicand - it must be 0.0
+    assert series.iloc[0] is np.nan or pd.isna(series.iloc[0])
+    assert series.iloc[1] == 0.0, f'expected clipped forward vol, got {series.iloc[1]}'
+    replace.restore()
+
+
 def test_get_latest_term_structure_data():
     # Test latest_term_structure_data where no data is returned
     replace = Replacer()

@@ -14,13 +14,12 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import sys
-
 
 class MqError(Exception):
     """Base class for errors in this module"""
 
-    pass
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self})'
 
 
 class MqValueError(MqError, ValueError):
@@ -42,11 +41,8 @@ class MqRequestError(MqError):
         self.context = context
 
     def __str__(self):
-        prepend = 'context: {}\n'.format(self.context) if self.context else ''
-        result = '{}status: {}, message: {}'.format(prepend, self.status, self.message)
-        if sys.version_info.major < 3:
-            result = result.encode('ascii', 'ignore')
-        return result
+        prepend = f'context: {self.context}\n' if self.context else ''
+        return f'{prepend}status: {self.status}, message: {self.message}'
 
 
 class MqAuthenticationError(MqRequestError):
@@ -74,16 +70,16 @@ class MqInternalServerError(MqRequestError):
     pass
 
 
+# Maps HTTP status codes to their corresponding exception classes
+_ERROR_STATUS_MAP = {
+    401: MqAuthenticationError,
+    403: MqAuthorizationError,
+    429: MqRateLimitedError,
+    500: MqInternalServerError,
+    504: MqTimeoutError,
+}
+
+
 def error_builder(status, message, context=None):
-    if status == 401:
-        return MqAuthenticationError(status, message, context)
-    elif status == 403:
-        return MqAuthorizationError(status, message, context)
-    elif status == 429:
-        return MqRateLimitedError(status, message, context)
-    elif status == 500:
-        return MqInternalServerError(status, message, context)
-    elif status == 504:
-        return MqTimeoutError(status, message, context)
-    else:
-        return MqRequestError(status, message, context)
+    error_class = _ERROR_STATUS_MAP.get(status, MqRequestError)
+    return error_class(status, message, context)

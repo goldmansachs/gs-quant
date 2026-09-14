@@ -14,7 +14,6 @@ specific language governing permissions and limitations
 under the License.
 """
 
-import asyncio
 import datetime as dt
 import json
 import logging
@@ -36,7 +35,13 @@ from gs_quant.analytics.common.helpers import (
 )
 from gs_quant.analytics.core.processor import DataQueryInfo, MeasureQueryInfo
 from gs_quant.analytics.core.processor_result import ProcessorResult
-from gs_quant.analytics.core.query_helpers import aggregate_queries, build_query_string, fetch_query, valid_dimensions
+from gs_quant.analytics.core.query_helpers import (
+    aggregate_queries,
+    build_query_string,
+    fetch_query,
+    run_coroutine,
+    valid_dimensions,
+)
 from gs_quant.analytics.datagrid.data_cell import DataCell
 from gs_quant.analytics.datagrid.data_column import ColumnFormat, DataColumn, MultiColumnGroup
 from gs_quant.analytics.datagrid.data_row import (
@@ -428,13 +433,13 @@ class DataGrid:
 
         for query_info in self._data_queries:
             if isinstance(query_info, MeasureQueryInfo):
-                asyncio.get_event_loop().run_until_complete(
+                run_coroutine(
                     query_info.processor.calculate(
                         query_info.attr, ProcessorResult(True, None), self.rule_cache, query_info=query_info
                     )
                 )
             elif query_info.data is None or len(query_info.data) == 0:
-                asyncio.get_event_loop().run_until_complete(
+                run_coroutine(
                     query_info.processor.calculate(
                         query_info.attr,
                         ProcessorResult(False, f'No data found for Coordinate {query_info.query.coordinate}'),
@@ -442,7 +447,7 @@ class DataGrid:
                     )
                 )
             else:
-                asyncio.get_event_loop().run_until_complete(
+                run_coroutine(
                     query_info.processor.calculate(
                         query_info.attr, ProcessorResult(True, query_info.data), self.rule_cache
                     )

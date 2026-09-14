@@ -30,6 +30,33 @@ from gs_quant.session import GsSession
 _logger = logging.getLogger(__name__)
 
 
+def run_coroutine(coro):
+    """Run a coroutine from sync code without disturbing any running event loop.
+
+    - No loop running: drive it with ``asyncio.run``.
+    - Loop already running (e.g. ``DataGrid.poll()`` invoked from async code):
+      run the coroutine on a worker thread with its own loop, so the caller's
+      loop is left untouched (``get_event_loop().run_until_complete`` raises on
+      Python >= 3.12 and ``asyncio.run`` is forbidden on a running loop).
+    """
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+
+    import threading
+
+    result = {}
+
+    def _worker():
+        result['value'] = asyncio.run(coro)
+
+    thread = threading.Thread(target=_worker)
+    thread.start()
+    thread.join()
+    return result.get('value')
+
+
 def aggregate_queries(query_infos):
     mappings = defaultdict(dict)  # DataSet -> start/end
     for query_info in query_infos:
@@ -44,7 +71,7 @@ def aggregate_queries(query_infos):
             series: ProcessorResult = ProcessorResult(
                 False, f'No dataset resolved for measure={coordinate.measure} with dimensions={coordinate.dimensions}'
             )
-            asyncio.get_event_loop().run_until_complete(query_info.processor.calculate(query_info.attr, series, None))
+            run_coroutine(query_info.processor.calculate(query_info.attr, series, None))
             continue
         dataset_mappings.setdefault(
             query_key,
