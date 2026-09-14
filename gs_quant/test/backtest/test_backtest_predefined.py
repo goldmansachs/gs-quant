@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Ting-Hong Shieh. Licensed under Apache 2.0 license.
 """
 
 import datetime as dt
@@ -26,8 +28,9 @@ import gs_quant.datetime
 from gs_quant.backtests.actions import AddTradeAction
 from gs_quant.backtests.backtest_objects import PredefinedAssetBacktest
 from gs_quant.backtests.core import ValuationFixingType
+from gs_quant.backtests.data_handler import DataHandler
 from gs_quant.backtests.data_sources import DataManager
-from gs_quant.backtests.order import OrderMarketOnClose, OrderTWAP, TimeWindow
+from gs_quant.backtests.order import OrderCost, OrderMarketOnClose, OrderTWAP, TimeWindow
 from gs_quant.backtests.predefined_asset_engine import PredefinedAssetEngine
 from gs_quant.backtests.strategy import Strategy
 from gs_quant.backtests.triggers import DateTrigger, DateTriggerRequirements, OrdersGeneratorTrigger
@@ -99,6 +102,14 @@ class FuturesExample(OrdersGeneratorTrigger):
             )
         )
         return orders
+
+
+def test_predefined_asset_backtest_get_costs():
+    execution_time = dt.datetime(2021, 1, 5, 12)
+    backtest = PredefinedAssetBacktest(DataHandler(DataManager(), dt.timezone.utc), initial_value=100)
+    backtest.record_orders([OrderCost('USD', 2.5, 'Test', execution_time)])
+
+    assert backtest.get_costs().to_dict() == {execution_time.date(): 2.5}
 
 
 def test_backtest_predefined_timezone_aware():
