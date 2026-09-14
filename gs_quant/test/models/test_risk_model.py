@@ -20,6 +20,7 @@ from unittest import mock
 import pytest
 from pandas._testing import assert_frame_equal
 
+from gs_quant.api.gs.risk_models import GsRiskModelApi
 from gs_quant.common import Currency
 from gs_quant.models.risk_model import FactorRiskModel, MacroRiskModel, ReturnFormat, Unit
 from gs_quant.models.risk_model_utils import (
@@ -30,6 +31,7 @@ from gs_quant.models.risk_model_utils import (
 from gs_quant.session import Environment, GsSession
 from gs_quant.target.risk_models import (
     RiskModel as Risk_Model,
+    RiskModelCalendar,
     RiskModelCoverage,
     RiskModelDataAssetsRequest as DataAssetsRequest,
     RiskModelDataMeasure as Measure,
@@ -208,6 +210,57 @@ def test_update_risk_model(mocker):
     new_model.save()
     mocker.patch.object(GsSession.current.sync, 'get', return_value=new_model)
     assert new_model.type == RiskModelType.Thematic
+
+
+def test_get_calendar_with_date_objects(mocker):
+    """Regression test: business_dates is a tuple of dt.date objects (#344)."""
+    model = mock_risk_model(mocker)
+    business_dates = (
+        dt.date(2024, 1, 2),
+        dt.date(2024, 1, 3),
+        dt.date(2024, 1, 4),
+        dt.date(2024, 1, 5),
+        dt.date(2024, 1, 8),
+    )
+    mocker.patch.object(
+        GsRiskModelApi, 'get_risk_model_calendar', return_value=RiskModelCalendar(business_dates=business_dates)
+    )
+
+    full_calendar = model.get_calendar()
+    assert full_calendar.business_dates == business_dates
+
+    sliced_calendar = model.get_calendar(start_date=dt.date(2024, 1, 3), end_date=dt.date(2024, 1, 5))
+    assert sliced_calendar.business_dates == business_dates[1:4]
+
+
+def test_get_missing_dates_with_date_objects(mocker):
+    """Regression test: get_missing_dates must not call strptime on dt.date entries (#344)."""
+    model = mock_risk_model(mocker)
+    business_dates = (
+        dt.date(2024, 1, 2),
+        dt.date(2024, 1, 3),
+        dt.date(2024, 1, 4),
+        dt.date(2024, 1, 5),
+    )
+    mocker.patch.object(
+        GsRiskModelApi, 'get_risk_model_calendar', return_value=RiskModelCalendar(business_dates=business_dates)
+    )
+    mocker.patch.object(model, 'get_dates', return_value=[dt.date(2024, 1, 2), dt.date(2024, 1, 4)])
+
+    missing_dates = model.get_missing_dates(start_date=dt.date(2024, 1, 2), end_date=dt.date(2024, 1, 5))
+    assert missing_dates == [dt.date(2024, 1, 3), dt.date(2024, 1, 5)]
+
+
+def test_get_most_recent_date_from_calendar_with_date_objects(mocker):
+    """Regression test: get_most_recent_date_from_calendar must not call strptime on dt.date entries (#344)."""
+    model = mock_risk_model(mocker)
+    yesterday = dt.date.today() - dt.timedelta(1)
+    business_dates = (yesterday - dt.timedelta(2), yesterday - dt.timedelta(1), yesterday)
+    mocker.patch.object(
+        GsRiskModelApi, 'get_risk_model_calendar', return_value=RiskModelCalendar(business_dates=business_dates)
+    )
+
+    assert model.get_most_recent_date_from_calendar() == yesterday
 
 
 def test_get_r_squared(mocker):
