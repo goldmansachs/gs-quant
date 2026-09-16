@@ -2386,6 +2386,167 @@ def test_avg_realized_vol():
     replace.restore()
 
 
+def _mock_spot_frame(asset_id, spots, start):
+    return pd.DataFrame(
+        data={'spot': spots, 'assetId': [asset_id] * len(spots)},
+        index=pd.date_range(start=start, periods=len(spots)),
+    )
+
+
+def test_avg_realized_vol_weight_threshold():
+    replace = Replacer()
+
+    mock_spx = Index('MA890', AssetClass.Equity, 'SPX')
+    replace('gs_quant.api.gs.indices.GsIndexApi.get_positions_data', mock_index_positions_data)
+    last_mock = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    last_mock.return_value = None
+    market_data_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+
+    def set_market_data(*frames):
+        response = MarketDataResponseFrame(pd.concat(frames, join='inner'))
+        response.dataset_ids = _test_datasets
+        market_data_mock.return_value = response
+
+    def realized_vol(**kwargs):
+        return tm.average_realized_volatility(mock_spx, '2d', Returns.SIMPLE, 3, '1d', **kwargs)
+
+    dates_a = pd.to_datetime(['2020-01-03', '2020-01-04'])
+
+    # Dataset A - MA3 (netWeight 0.1) starts a day late, so its vol series starts a day after MA1/MA2.
+    # This is the shape of the reported bug: a constituent whose history has not started yet.
+    df1 = _mock_spot_frame('MA1', [1, 2, 3, 4], '2020-01-01')
+    df2 = _mock_spot_frame('MA2', [2, 3, 4, 5], '2020-01-01')
+    df3 = _mock_spot_frame('MA3', [2, 4, 3], '2020-01-02')
+    set_market_data(df1, df2, df3)
+
+    # default is unchanged: every constituent must have data, so the first date is dropped
+    expected = pd.Series([np.nan, 280.624304], index=dates_a, name='averageRealizedVolatility')
+    assert_series_equal(expected, pd.Series(realized_vol()))
+
+    # opting in recovers the earlier date, renormalized over MA1 and MA2 only (392.874026 / 0.9)
+    expected = pd.Series([436.526695, 280.624304], index=dates_a, name='averageRealizedVolatility')
+    actual = realized_vol(weight_threshold=0.1)
+    assert_series_equal(expected, pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    # a threshold below MA3's weight is an error, not a silently shortened series, so the caller gets
+    # told which constituent to raise the threshold for - same shape as average_implied_volatility
+    with pytest.raises(MqValueError) as exc_info:
+        realized_vol(weight_threshold=0.05)
+    message = str(exc_info.value)
+    assert 'MA3 (0.10)' in message
+    assert 'MA1' not in message and 'MA2' not in message
+    assert 'Try increasing the weight_threshold' in message
+
+    with pytest.raises(MqValueError):
+        realized_vol(weight_threshold=0)
+
+    # Dataset B - MA3 has too few points for the tenor, so its vol series is empty rather than short
+    df1_short = _mock_spot_frame('MA1', [1, 2, 3], '2020-01-01')
+    df2_short = _mock_spot_frame('MA2', [2, 3, 4], '2020-01-01')
+    df4 = _mock_spot_frame('MA3', [2, 2], '2020-01-01')
+    set_market_data(df1_short, df2_short, df4)
+    dates_b = pd.to_datetime(['2020-01-03'])
+
+    # note: an empty constituent vol series contributes a RangeIndex to the concat, so the resulting
+    # index is object dtype rather than a DatetimeIndex. That is pre-existing and unrelated to
+    # weight_threshold - the default path produces the same index - so assert values and index directly.
+    def assert_single_value(series, value):
+        assert series.name == 'averageRealizedVolatility'
+        assert list(series.index) == list(dates_b)
+        np.testing.assert_allclose(series.to_numpy(dtype=float), [value], rtol=1e-6)
+
+    assert realized_vol().dropna().empty
+    assert_single_value(realized_vol(weight_threshold=0.1), 436.526695)
+    with pytest.raises(MqValueError, match='MA3'):
+        realized_vol(weight_threshold=0.05)
+
+    # Dataset C - MA3 is absent from the response entirely. The default path still returns NaN rather
+    # than raising (unlike average_implied_volatility) because default behaviour is unchanged; opting
+    # in to weight_threshold is what makes the missing constituent visible.
+    set_market_data(df1_short, df2_short)
+
+    assert realized_vol().dropna().empty
+    assert_single_value(realized_vol(weight_threshold=0.1), 436.526695)
+    with pytest.raises(MqValueError, match='MA3'):
+        realized_vol(weight_threshold=0.05)
+
+    # Dataset E - MA2 and MA3 both start late, at different times. The threshold is measured against
+    # their combined weight the way average_implied_volatility measures its missing assets, so the
+    # comparison is against 0.3 + 0.1 even though MA1 (0.6) is available throughout.
+    dates_e = pd.date_range(start='2020-01-03', periods=4)
+    set_market_data(
+        _mock_spot_frame('MA1', [1, 2, 3, 4, 5, 6], '2020-01-01'),
+        _mock_spot_frame('MA2', [2, 3, 4, 5, 6], '2020-01-02'),
+        _mock_spot_frame('MA3', [2, 4, 3, 5], '2020-01-03'),
+    )
+
+    with pytest.raises(MqValueError) as exc_info:
+        realized_vol(weight_threshold=0.39)
+    message = str(exc_info.value)
+    assert 'MA2 (0.30)' in message and 'MA3 (0.10)' in message
+    assert 'MA1' not in message
+
+    # at exactly the combined weight the calculation proceeds, each date renormalized over whichever
+    # constituents it has - 2020-01-03 is MA1 alone, so it is MA1's own volatility
+    expected = pd.Series(
+        [561.248608, 187.082869, 224.499443, 153.407953], index=dates_e, name='averageRealizedVolatility'
+    )
+    assert_series_equal(expected, pd.Series(realized_vol(weight_threshold=0.4)))
+
+    # note: the implementation also skips dates where no constituent has data at all, so that an
+    # all-NaN row cannot mark every constituent missing and force an error at any threshold below 1.
+    # That branch is not directly exercised here - volatility() drops its ramp-up rather than NaN-ing
+    # them, so the earliest row of the concat always has at least the earliest-starting constituent.
+
+    replace.restore()
+
+    # Dataset D - the index has fewer constituents than top_n_of_index. The default path can never
+    # satisfy min_count=top_n_of_index, but weight_threshold=0 can, so 0 is not the same as omitting it.
+    two_constituent_mock = replace('gs_quant.api.gs.indices.GsIndexApi.get_positions_data', Mock())
+    two_constituent_mock.return_value = [
+        {
+            'underlyingAssetId': 'MA1',
+            'netWeight': 0.7,
+            'positionType': 'close',
+            'assetId': 'MA890',
+            'positionDate': '2020-01-01',
+        },
+        {
+            'underlyingAssetId': 'MA2',
+            'netWeight': 0.3,
+            'positionType': 'close',
+            'assetId': 'MA890',
+            'positionDate': '2020-01-01',
+        },
+    ]
+    last_mock = replace('gs_quant.timeseries.measures.get_last_for_measure', Mock())
+    last_mock.return_value = None
+    market_data_mock = replace('gs_quant.timeseries.measures.GsDataApi.get_market_data', Mock())
+    set_market_data(df1, df2)
+
+    assert realized_vol().dropna().empty
+    expected = pd.Series([448.998886, 159.020439], index=dates_a, name='averageRealizedVolatility')
+    assert_series_equal(expected, pd.Series(realized_vol(weight_threshold=0)))
+
+    # the new argument does not bypass the existing constituent-count guard
+    with pytest.raises(MqValueError):
+        tm.average_realized_volatility(mock_spx, '1w', Returns.SIMPLE, 201, weight_threshold=0.1)
+
+    # weight_threshold is ignored on the index-level dataset path.
+    market_data_mock.return_value = mock_eq(None, None)
+    actual = tm.average_realized_volatility(mock_spx, '1w', weight_threshold=0.1)
+    expected = pd.Series([5, 1, 2], index=_index * 3, name='averageRealizedVolatility')
+    assert_series_equal(expected, pd.Series(actual))
+    assert actual.dataset_ids == _test_datasets
+
+    for bad_threshold in (-0.1, 1.5):
+        with pytest.raises(MqValueError, match='weight_threshold must be between 0 and 1'):
+            realized_vol(weight_threshold=bad_threshold)
+
+    replace.restore()
+
+
 def test_avg_impl_var():
     replace = Replacer()
     mock_spx = Index('MA890', AssetClass.Equity, 'SPX')

@@ -1536,6 +1536,7 @@ def average_realized_volatility(
     returns_type: Returns = Returns.LOGARITHMIC,
     top_n_of_index: int = None,
     composition_date: Optional[GENERIC_DATE] = None,
+    weight_threshold: Optional[int] = None,
     *,
     source: str = None,
     real_time: bool = False,
@@ -1552,6 +1553,8 @@ def average_realized_volatility(
         is not simple)
     :param composition_date: YYYY-MM-DD or relative days before today e.g. 1d, 1m, 1y; defaults to the most recent date
         available
+    :param weight_threshold: maximum combined weight of the constituents missing data anywhere in the requested
+        window, expressed as a fraction of the top_n_of_index basket (whose weights are renormalized to sum to 1).
     :param source: name of function caller
     :param real_time: whether to retrieve intraday data instead of EOD
     :param request_id: service request id, if any
@@ -1562,6 +1565,9 @@ def average_realized_volatility(
 
     if top_n_of_index is None and composition_date is not None:
         raise MqValueError('Specify top_n_of_index to get the average realized volatility of top constituents')
+
+    if weight_threshold is not None and not 0 <= weight_threshold <= 1:
+        raise MqValueError('weight_threshold must be between 0 and 1')
 
     if top_n_of_index is None and returns_type is not Returns.LOGARITHMIC:
         raise MqValueError(f'top_n_of_index argument must be specified when using returns type {returns_type.value}')
@@ -1592,8 +1598,29 @@ def average_realized_volatility(
             weighted_vols.append(vol * weight)
 
         vol_df = pd.concat(weighted_vols, axis=1).ffill()
+        if weight_threshold is None:
+            total = vol_df.sum(axis=1, min_count=top_n_of_index)
+        else:
+            # weighted_vols entries are already vol * weight, so renormalize by the weight actually present.
+            # weights are applied positionally: vol_df's columns are ints, not asset ids
+            weights = constituents['netWeight'].to_numpy(dtype=float)
+            present = vol_df.notna()
+            evaluable = present.any(axis=1).to_numpy()
+            missing = (~present.loc[evaluable]).any(axis=0).to_numpy()
+            if weights[missing].sum() > weight_threshold + 1e-9:
+                msg = ', '.join(
+                    f'{underlying_id} ({weight:.2f})'
+                    for underlying_id, weight, is_missing in zip(constituents.index, weights, missing)
+                    if is_missing
+                )
+                raise MqValueError(
+                    f'Unable to calculate average_realized_volatility due to missing realized vols for '
+                    f'assets {msg}. Try increasing the weight_threshold to skip these assets.'
+                )
+            present_weight = present.mul(weights, axis=1).sum(axis=1)
+            total = vol_df.sum(axis=1, min_count=1).div(present_weight).where(present_weight > 0)
         series = (
-            ExtendedSeries(vol_df.sum(axis=1, min_count=top_n_of_index), name='averageRealizedVolatility')
+            ExtendedSeries(total, name='averageRealizedVolatility')
             if len(weighted_vols)
             else ExtendedSeries(dtype=float)
         )

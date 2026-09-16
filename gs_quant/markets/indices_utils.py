@@ -471,6 +471,7 @@ def get_flagships_constituents(
     styles: list[Union[CustomBasketStyles, ResearchBasketStyles]] = None,
     start: dt.date = None,
     end: dt.date = None,
+    include_history: bool = True,
     **kwargs,
 ) -> pd.DataFrame:
     """
@@ -484,6 +485,7 @@ def get_flagships_constituents(
     :param styles: Basket style(s)
     :param start: Start date for which to retrieve constituents (defaults to previous business day)
     :param end: End date for which to retrieve constituents (defaults to previous business day)
+    :param include_history: Whether to include historical coverage metadata such as historyStartDate. Set to False if hitting timeouts.
     :return: flagship baskets constituents
 
     **Usage**
@@ -512,7 +514,7 @@ def get_flagships_constituents(
     )
     basket_ids = [b.get('id') for b in response]
     cov_dataset_id = __get_dataset_id(asset_class=asset_class[0], basket_type=basket_type[0], data_type='price')
-    coverage = GsDataApi.get_coverage(dataset_id=cov_dataset_id, fields=basket_fields, include_history=True)
+    coverage = GsDataApi.get_coverage(dataset_id=cov_dataset_id, fields=basket_fields, include_history=include_history)
     basket_map = {b['assetId']: {**b, 'constituents': []} for b in coverage if b['assetId'] in basket_ids}
 
     basket_dataset_query_map, constituents_data, tasks = {}, [], []
