@@ -20,6 +20,7 @@ examples providing a searchable library of short specific snippets.
     - 📁 examples
       - 📄 [0000_charting_data.ipynb](00_data/01_analytics/examples/0000_charting_data.ipynb)
       - 📄 [0001_exporting_data.ipynb](00_data/01_analytics/examples/0001_exporting_data.ipynb)
+      - 📄 [0002_series_risk_and_performance_analytics.ipynb](00_data/01_analytics/examples/0002_series_risk_and_performance_analytics.ipynb)
   - 📁 02_workspaces
     - 📁 examples
       - 📄 [0001_creating_a_workspace.ipynb](00_data/02_workspaces/examples/0001_creating_a_workspace.ipynb)
@@ -176,6 +177,7 @@ examples providing a searchable library of short specific snippets.
     - 📄 [030009_portfolio_risk_result_to_frame.ipynb](03_portfolios/examples/030009_portfolio_risk_result_to_frame.ipynb)
     - 📄 [030010_portfolio_inter_leg_dependencies.ipynb](03_portfolios/examples/030010_portfolio_inter_leg_dependencies.ipynb)
     - 📄 [030011_portfolio_from_csv.ipynb](03_portfolios/examples/030011_portfolio_from_csv.ipynb)
+    - 📄 [030012_create_position_set_from_weights.ipynb](03_portfolios/examples/030012_create_position_set_from_weights.ipynb)
   - 📁 tutorials
     - 📄 [Create New Portfolio.ipynb](03_portfolios/tutorials/Create%20New%20Portfolio.ipynb)
     - 📄 [Portfolios.ipynb](03_portfolios/tutorials/Portfolios.ipynb)

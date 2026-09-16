@@ -37,6 +37,8 @@ def encode_default(o):
         return o.to_dict()
     elif isinstance(o, pd.DataFrame):
         return o.to_json()
+    # Fall through: JSONEncoder.default will raise for unserializable types
+    return None
 
 
 class JSONEncoder(json.JSONEncoder):

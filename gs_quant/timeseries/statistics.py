@@ -48,6 +48,12 @@ These include basic algebraic operations, probability and distribution analysis.
 Generally not finance-specific routines.
 """
 
+
+def _stats_mode(arr):
+    # scipy's mode() return type changed in 1.9 (ndarray -> scalar); normalise both
+    return np.asarray(stats.mode(arr).mode).reshape(-1)[0]
+
+
 try:
     from quant_extensions.timeseries.statistics import rolling_std
 except ImportError:
@@ -425,13 +431,13 @@ def mode(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Serie
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = (
-            rolling_apply(x, w.w, lambda a: stats.mode(a).mode[0])
+            rolling_apply(x, w.w, lambda a: _stats_mode(a))
             if isinstance(x, pd.Series)
-            else [stats.mode(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]).mode[0] for idx in x.index]
+            else [_stats_mode(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]) for idx in x.index]
         )
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
-        return apply_ramp(x.rolling(w.w, 0).apply(lambda y: stats.mode(y).mode, raw=True), w)
+        return apply_ramp(x.rolling(w.w, 0).apply(lambda y: _stats_mode(y), raw=True), w)
 
 
 @plot_function

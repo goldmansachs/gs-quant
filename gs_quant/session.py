@@ -496,9 +496,8 @@ class GsSession(ContextBase):
         pass
 
     def _build_url(self, domain: Optional[str], path: str, include_version: Optional[bool]):
-        if not domain:
-            domain = self.domain
-        url = '{}{}{}'.format(domain, '/' + self.api_version if include_version else '', path)
+        domain = domain or self.domain
+        url = f'{domain}{"/" + self.api_version if include_version else ""}{path}'
         return url
 
     def _build_request_params(
@@ -1135,7 +1134,7 @@ class GsSession(ContextBase):
                 except NameError:
                     raise MqUninitialisedError('This option requires gs_quant_auth to be installed')
             elif is_marquee_login:
-                return MQLoginSession(
+                return MQLoginSession(  # noqa: F821  (resolved lazily via module __getattr__)
                     environment_or_domain,
                     domain=domain,
                     api_version=api_version,
@@ -1145,7 +1144,7 @@ class GsSession(ContextBase):
                     mq_login_token=token,
                 )
             elif is_jwt_login:
-                return MQLoginSession(
+                return MQLoginSession(  # noqa: F821  (resolved lazily via module __getattr__)
                     environment_or_domain,
                     domain=domain,
                     api_version=api_version,
@@ -1243,28 +1242,25 @@ class OAuth2Session(GsSession):
             raise MqAuthenticationError(reply.status_code, reply.text, context=self.auth_url)
         response = json.loads(reply.text)
         self.token = response['access_token']
-        self._session.headers.update({'Authorization': 'Bearer {}'.format(self.token)})
+        self._session.headers.update({'Authorization': f'Bearer {self.token}'})
 
     def _headers(self):
         return [('Authorization', self._session.headers['Authorization'])]
 
 
 class PassThroughSession(GsSession):
-    __config = None
-
     @classmethod
     def domain_and_verify(cls, environment_or_domain: str, domain: Optional[str]):
-        if cls.__config is None:
-            cls.__config = ConfigParser()
-            cls.__config.read(os.path.join(os.path.dirname(inspect.getfile(cls)), 'config.ini'))
-
+        # Reuse GsSession's shared config parser instead of a duplicate instance.
+        # Falls back to the raw string as domain when the section/key is unknown.
         verify = False
         try:
-            domain = cls.__config[environment_or_domain][domain]
+            section = cls._config_for_environment(environment_or_domain)
+            resolved = section[domain]
             verify = True
         except KeyError:
-            domain = environment_or_domain
-        return domain, verify
+            resolved = environment_or_domain
+        return resolved, verify
 
     def __init__(
         self,
@@ -1290,14 +1286,24 @@ class PassThroughSession(GsSession):
         self.token = token
 
     def _authenticate(self):
-        self._session.headers.update({'Authorization': 'Bearer {}'.format(self.token)})
+        self._session.headers.update({'Authorization': f'Bearer {self.token}'})
 
     def _headers(self):
         return [('Authorization', self._session.headers['Authorization'])]
 
 
-try:
-    from gs_quant_auth.kerberos.session_kerberos import KerberosSessionMixin
+def _load_kerberos_session():
+    """Lazily build the gs_quant_auth-backed session classes (Kerberos / GSSSO).
+
+    Importing gs_quant_auth is expensive, so it is deferred until an auth
+    session is actually requested rather than at ``gs_quant.session`` import.
+    Raises NameError when gs_quant_auth is not installed, matching the legacy
+    ``except NameError`` handling in ``GsSession.get``.
+    """
+    try:
+        from gs_quant_auth.kerberos.session_kerberos import KerberosSessionMixin
+    except ModuleNotFoundError as e:
+        raise NameError('gs_quant_auth is not installed') from e
 
     class KerberosSession(KerberosSessionMixin, GsSession):
         def __init__(
@@ -1392,12 +1398,15 @@ try:
             else:
                 super().init(cookies)
 
+    return KerberosSession, PassThroughGSSSOSession
 
-except ModuleNotFoundError:
-    pass
 
-try:
-    from gs_quant_auth.kerberos.session_kerberos import MQLoginMixin
+def _load_mq_login_session():
+    """Lazily build MQLoginSession (Marquee Login / JWT auth)."""
+    try:
+        from gs_quant_auth.kerberos.session_kerberos import MQLoginMixin
+    except ModuleNotFoundError as e:
+        raise NameError('gs_quant_auth is not installed') from e
 
     class MQLoginSession(MQLoginMixin, GsSession):
         def __init__(
@@ -1428,5 +1437,19 @@ try:
             )
             self._orig_domain = domain
 
-except ModuleNotFoundError:
-    pass
+    return MQLoginSession
+
+
+def __getattr__(name: str):
+    # Lazily exposed auth-session classes (PEP 562) to defer the heavy
+    # gs_quant_auth import until an auth path is actually used. Results are
+    # cached back into the module globals so identity/isinstance hold.
+    if name == 'MQLoginSession':
+        cls = _load_mq_login_session()
+    elif name in ('KerberosSession', 'PassThroughGSSSOSession'):
+        kerberos, gssso = _load_kerberos_session()
+        cls = kerberos if name == 'KerberosSession' else gssso
+    else:
+        raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
+    globals()[name] = cls
+    return cls
