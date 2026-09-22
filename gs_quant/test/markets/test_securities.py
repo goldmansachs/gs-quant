@@ -221,6 +221,15 @@ class AssetContext:
         SecurityMaster.set_source(self.previous)
 
 
+class FederatedServiceContext:
+    def __enter__(self):
+        self.previous = SecurityMaster._source
+        SecurityMaster.set_source(SecurityMasterSource.FEDERATED_SERVICE)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        SecurityMaster.set_source(self.previous)
+
+
 def test_get_security(mocker):
     mocker.patch.object(GsSession, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret'))
 
@@ -1935,6 +1944,144 @@ def test_get_security_master_asset_sends_effective_date(mocker):
         SecurityMaster.get_asset('GS UN', SecurityIdentifier.BBID, as_of=dt.date(2024, 5, 1))
     assert captured['payload']['effectiveDate'] == '2024-05-01'
     assert 'asOfDate' not in captured['payload']
+
+
+# ---------------------------------------------------------------------------
+# Tests for FEDERATED_SERVICE source on get_asset / get_many_assets.
+# ---------------------------------------------------------------------------
+
+
+def test_federated_get_asset_returns_secmasterasset(mocker):
+    mock_response = {
+        "requestId": "test-request-id",
+        "SecuritiesMaster": {
+            "count": 1,
+            "results": [
+                {
+                    "id": "GSPD40346204E53",
+                    "name": "FERRARI NV (Borsa Italiana)",
+                    "assetClass": "Equity",
+                    "type": "Common Stock",
+                    "currency": "EUR",
+                    "identifiers": {"assetId": "MA8TDKYARMTMH20D", "bbid": "RACE IM", "gsid": 40346204},
+                    "exchange": {"name": "Borsa Italiana", "identifiers": {"gsExchangeId": 53}},
+                }
+            ],
+        },
+        "AssetService": {"count": 0, "results": []},
+    }
+    mocker.patch(
+        'gs_quant.markets.securities.GsSecurityMasterFederatedApi.get_a_security',
+        return_value=mock_response,
+    )
+
+    with FederatedServiceContext():
+        asset = SecurityMaster.get_asset('GSPD40346204E53', SecurityIdentifier.ID)
+
+    assert isinstance(asset, SecMasterAsset)
+    assert asset.name == 'FERRARI NV (Borsa Italiana)'
+    assert asset.currency == 'EUR'
+    assert asset.exchange == 'Borsa Italiana'
+    assert asset.get_type() == AssetType.COMMON_STOCK
+
+
+def test_federated_get_asset_empty_response_returns_none(mocker):
+    mocker.patch(
+        'gs_quant.markets.securities.GsSecurityMasterFederatedApi.get_a_security',
+        return_value=None,
+    )
+    with FederatedServiceContext():
+        assert SecurityMaster.get_asset('UNKNOWN', SecurityIdentifier.ID) is None
+
+
+def test_federated_get_asset_rejects_exchange_code_and_asset_type():
+    with FederatedServiceContext():
+        with pytest.raises(NotImplementedError) as exc_info:
+            SecurityMaster.get_asset('RACE IM', SecurityIdentifier.BBID, exchange_code=ExchangeCode.NYSE)
+        assert 'Federated Service' in str(exc_info.value)
+
+        with pytest.raises(NotImplementedError) as exc_info:
+            SecurityMaster.get_asset('RACE IM', SecurityIdentifier.BBID, asset_type=AssetType.STOCK)
+        assert 'Federated Service' in str(exc_info.value)
+
+
+def test_federated_get_asset_unknown_type_raises_not_implemented(mocker):
+    mock_response = {
+        "SecuritiesMaster": {
+            "count": 1,
+            "results": [
+                {
+                    "id": "GSPDX",
+                    "name": "Abcdef",
+                    "assetClass": "Equity",
+                    "type": "NotARealType",
+                    "identifiers": {"assetId": "MAX"},
+                }
+            ],
+        },
+        "AssetService": {"count": 0, "results": []},
+    }
+    mocker.patch(
+        'gs_quant.markets.securities.GsSecurityMasterFederatedApi.get_a_security',
+        return_value=mock_response,
+    )
+    with FederatedServiceContext():
+        with pytest.raises(NotImplementedError) as exc_info:
+            SecurityMaster.get_asset('RACE IM', SecurityIdentifier.BBID)
+        assert 'NotARealType' in str(exc_info.value)
+
+
+def test_federated_get_many_assets_returns_secmasterassets(mocker):
+    mock_response = {
+        "SecuritiesMaster": {
+            "count": 1,
+            "results": [
+                {
+                    "id": "GSPD40346204E53",
+                    "name": "FERRARI NV",
+                    "assetClass": "Equity",
+                    "type": "Common Stock",
+                    "currency": "EUR",
+                    "identifiers": {"assetId": "MA8TDKYARMTMH20D", "bbid": "RACE IM"},
+                    "exchange": {"name": "Borsa Italiana", "identifiers": {"gsExchangeId": 53}},
+                }
+            ],
+        },
+        "AssetService": {
+            "count": 1,
+            "results": [
+                {
+                    "id": "GSPD901026E154",
+                    "name": "GOLDMAN SACHS GROUP INC",
+                    "assetClass": "Equity",
+                    "type": "Common Stock",
+                    "currency": "USD",
+                    "identifiers": {"assetId": "MA4B66MW5E27UAHKG34", "bbid": "GS UN"},
+                    "exchange": {"name": "New York Stock", "identifiers": {"gsExchangeId": 154}},
+                }
+            ],
+        },
+    }
+    mocker.patch(
+        'gs_quant.markets.securities.GsSecurityMasterFederatedApi.get_many_securities',
+        return_value=mock_response,
+    )
+
+    with FederatedServiceContext():
+        assets = SecurityMaster.get_many_assets(['RACE IM', 'GS UN'], SecurityIdentifier.BBID)
+
+    assert len(assets) == 2
+    assert all(isinstance(a, SecMasterAsset) for a in assets)
+    # SecuritiesMaster section is flattened before AssetService.
+    assert assets[0].name == 'FERRARI NV'
+    assert assets[1].name == 'GOLDMAN SACHS GROUP INC'
+
+
+def test_federated_get_many_assets_rejects_exchange_code():
+    with FederatedServiceContext():
+        with pytest.raises(NotImplementedError) as exc_info:
+            SecurityMaster.get_many_assets(['RACE IM'], SecurityIdentifier.BBID, exchange_code=ExchangeCode.NYSE)
+        assert 'Federated Service' in str(exc_info.value)
 
 
 if __name__ == "__main__":

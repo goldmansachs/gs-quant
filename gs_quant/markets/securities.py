@@ -35,6 +35,7 @@ from pydash import get
 
 from gs_quant.api.gs.assets import GsAsset, GsAssetApi, GsIdType
 from gs_quant.api.gs.data import GsDataApi
+from gs_quant.api.gs.federated_secmaster import GsSecurityMasterFederatedApi
 from gs_quant.api.utils import ThreadPoolManager
 from gs_quant.base import get_enum_value
 from gs_quant.common import AssetClass, AssetParameters, AssetType as GsAssetType, Currency, DateLimit
@@ -1369,6 +1370,7 @@ class MutualFund(Asset):
 class SecurityMasterSource(Enum):
     ASSET_SERVICE = auto()
     SECURITY_MASTER = auto()
+    FEDERATED_SERVICE = auto()
 
 
 # Bidirectional mapping between AssetIdentifier (Asset Service) and SecurityIdentifier (Security Master)
@@ -1587,7 +1589,11 @@ class SecurityMaster:
         two enums where an equivalent exists so that callers may pass either kind
         regardless of whether the source is Asset Service or Security Master.
         """
-        target_enum = SecurityIdentifier if cls._source == SecurityMasterSource.SECURITY_MASTER else AssetIdentifier
+        target_enum = (
+            SecurityIdentifier
+            if cls._source in (SecurityMasterSource.SECURITY_MASTER, SecurityMasterSource.FEDERATED_SERVICE)
+            else AssetIdentifier
+        )
         cross_map = (
             _ASSET_TO_SECURITY_IDENTIFIER if target_enum is SecurityIdentifier else _SECURITY_TO_ASSET_IDENTIFIER
         )
@@ -1707,6 +1713,11 @@ class SecurityMaster:
             if exchange_code or asset_type:
                 raise NotImplementedError('argument not implemented for Security Master (supported in Asset Service)')
             return cls._get_security_master_asset(id_value, id_type, as_of=as_of, fields=fields)
+
+        if cls._source == SecurityMasterSource.FEDERATED_SERVICE:
+            if exchange_code or asset_type:
+                raise NotImplementedError('argument not implemented for Federated Service (supported in Asset Service)')
+            return cls._get_federated_service_asset(id_value, as_of=as_of)
 
         if id_type is AssetIdentifier.MARQUEE_ID:
             gs_asset = GsAssetApi.get_asset(id_value)
@@ -1838,6 +1849,12 @@ class SecurityMaster:
             id_type = cls._normalize_identifier(id_type)
             if scope and scope.span:
                 scope.span.set_tag(f'request.ids.{id_type.value}', len(id_values) if id_values else 0)
+            if cls._source == SecurityMasterSource.FEDERATED_SERVICE:
+                if exchange_code:
+                    raise NotImplementedError(
+                        'argument not implemented for Federated Service (supported in Asset Service)'
+                    )
+                return cls._get_federated_service_assets(id_values, id_type, as_of=as_of, limit=limit)
             query, as_of = cls.get_asset_query(id_values, id_type, as_of, exchange_code)
             if sort_by_rank:
                 results = GsAssetApi.get_many_assets(as_of=as_of, order_by=['>rank'], limit=limit, **query)
@@ -1976,6 +1993,107 @@ class SecurityMaster:
         params = cls._get_security_master_asset_params(id_value, id_type, as_of, fields)
         response = await GsSession.current.async_.get('/markets/securities', payload=params)
         return cls._get_security_master_asset_response(response)
+
+    @classmethod
+    def _get_federated_service_asset_response(cls, asset_dict: Optional[dict]) -> Optional[SecMasterAsset]:
+        if not asset_dict:
+            return None
+        # Federated endpoint returns an envelope containing 'SecuritiesMaster' and 'AssetService'
+        # sub-responses, each shaped like {'count': N, 'results': [...]}.
+        if 'type' not in asset_dict:
+            for section_key in ('SecuritiesMaster', 'AssetService'):
+                section = asset_dict.get(section_key)
+                if isinstance(section, dict) and section.get('results'):
+                    asset_dict = section['results'][0]
+                    break
+            else:
+                if isinstance(asset_dict.get('results'), list) and asset_dict['results']:
+                    asset_dict = asset_dict['results'][0]
+                elif isinstance(asset_dict.get('result'), dict):
+                    asset_dict = asset_dict['result']
+                else:
+                    return None
+        return cls._dict_to_sec_master_asset(asset_dict)
+
+    @classmethod
+    def _get_federated_service_asset(
+        cls,
+        id_value: str,
+        as_of: Union[dt.date, dt.datetime] = None,
+    ) -> Optional[SecMasterAsset]:
+        effective_date = as_of.date() if isinstance(as_of, dt.datetime) else as_of
+        response = GsSecurityMasterFederatedApi.get_a_security(id_value, effective_date=effective_date)
+        return cls._get_federated_service_asset_response(response)
+
+    @classmethod
+    def _dict_to_sec_master_asset(cls, asset_dict: dict) -> Optional[SecMasterAsset]:
+        """Convert a single federated result dict into a :class:`SecMasterAsset`."""
+        if not asset_dict:
+            return None
+        identifiers = asset_dict.get('identifiers') or {}
+        asset_id = identifiers.get('assetId', None)
+        asset_name = asset_dict.get('name', None)
+        exchange = asset_dict.get('exchange')
+        asset_exchange = exchange.get('name') if isinstance(exchange, dict) else exchange
+        asset_currency = asset_dict.get('currency', None)
+        try:
+            asset_type = AssetType(asset_dict['type'])
+            asset_class = AssetClass(asset_dict['assetClass'])
+            return SecMasterAsset(
+                id_=asset_id,
+                asset_type=asset_type,
+                asset_class=asset_class,
+                name=asset_name,
+                exchange=asset_exchange,
+                currency=asset_currency,
+                entity=asset_dict,
+            )
+        except (KeyError, ValueError):
+            raise NotImplementedError(
+                f"Not yet implemented for AssetType={asset_dict.get('type')}, "
+                f"AssetClass={asset_dict.get('assetClass')}."
+            )
+
+    @classmethod
+    def _get_federated_service_assets_response(cls, response: dict) -> list[SecMasterAsset]:
+        """Flatten a federated multi-security envelope into a list of :class:`SecMasterAsset`."""
+        if not response:
+            return []
+        results: list[dict] = []
+        # Federated endpoint returns an envelope containing 'SecuritiesMaster' and 'AssetService'
+        # sub-responses, each shaped like {'count': N, 'results': [...]}.
+        found_section = False
+        for section_key in ('SecuritiesMaster', 'AssetService'):
+            section = response.get(section_key)
+            if isinstance(section, dict) and section.get('results'):
+                results.extend(section['results'])
+                found_section = True
+        if not found_section:
+            if isinstance(response.get('results'), list):
+                results = response['results']
+            elif isinstance(response.get('result'), dict):
+                results = [response['result']]
+        assets = []
+        for asset_dict in results:
+            asset = cls._dict_to_sec_master_asset(asset_dict)
+            if asset is not None:
+                assets.append(asset)
+        return assets
+
+    @classmethod
+    def _get_federated_service_assets(
+        cls,
+        id_values: list[str],
+        id_type: SecurityIdentifier,
+        as_of: Union[dt.date, dt.datetime] = None,
+        limit: int = 100,
+    ) -> list[SecMasterAsset]:
+        effective_date = as_of.date() if isinstance(as_of, dt.datetime) else as_of
+        query_params = {id_type.value: id_values}
+        response = GsSecurityMasterFederatedApi.get_many_securities(
+            effective_date=effective_date, limit=limit, **query_params
+        )
+        return cls._get_federated_service_assets_response(response)
 
     @classmethod
     def get_identifiers(
