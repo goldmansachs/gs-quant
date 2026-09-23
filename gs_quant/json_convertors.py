@@ -70,7 +70,7 @@ def decode_optional_time(value: Optional[str]) -> Optional[dt.time]:
     elif isinstance(value, str):
         return dt.time.fromisoformat(value)
 
-    raise ValueError(f'Cannot convert {value} to date')
+    raise ValueError(f'Cannot convert {value} to time')
 
 
 def encode_optional_time(value: Optional[Union[str, dt.time]]) -> Optional[str]:
@@ -103,7 +103,7 @@ def encode_date_or_time_tuple(values: tuple[Optional[Union[str, dt.date, dt.date
         tuple(
             encode_date_or_str(value)
             if isinstance(value, (str, dt.date))
-            else tuple(encode_datetime())
+            else encode_datetime(value)
             if isinstance(value, dt.datetime)
             else None
             for value in values
@@ -281,7 +281,7 @@ def encode_named_portfolio(obj):
 
 def encode_pandas_series(obj):
     series_dict = pd.Series.to_dict(obj)
-    if isinstance(next(iter(series_dict)), (dt.date, dt.datetime)):
+    if series_dict and isinstance(next(iter(series_dict)), (dt.date, dt.datetime)):
         series_dict = {k.isoformat(): v for k, v in series_dict.items()}
     return series_dict
 

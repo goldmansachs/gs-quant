@@ -275,7 +275,7 @@ def returns(series: pd.Series, obs: Union[Window, int, str] = 1, type: Returns =
     Calculate returns from price series
 
     :param series: time series of prices
-    :param obs: number of observations or relative date e.g. 3d, 1w, 1m ( relative date should be of pattern \d+[dmywDMYW] ).
+    :param obs: number of observations or relative date e.g. 3d, 1w, 1m ( relative date should be of pattern \\d+[dmywDMYW] ).
     :param type: returns type: simple, logarithmic or absolute
     :return: date-based time series of return
 
@@ -1096,3 +1096,293 @@ def max_drawdown(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> 
         rolling_max = x.rolling(w.w, 0).max()
         result = (x / rolling_max - 1).rolling(w.w, 0).min()
     return apply_ramp(result, w)
+
+
+@plot_function
+def cumulative_returns(series: pd.Series, price: bool = True) -> pd.Series:
+    """
+    Cumulative (product) return series starting at 1.0.
+
+    :param series: time series of prices or returns
+    :param price: whether the input is prices (True) or returns (False), defaults to prices
+    :return: cumulative return series (compounded to 1.0 on the first observation)
+    """
+    r = returns(series) if price else series
+    return (1 + r.fillna(0)).cumprod()
+
+
+@plot_function
+def drawdown(series: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
+    """
+    Running drawdown from the peak to date (not window-rolling, unlike :func:`max_drawdown`).
+
+    :param series: time series of prices or returns
+    :param w: Window, int, or str: size of window and ramp up to use.
+    :return: time series of drawdown (peak-to-date), negative ratio
+    """
+    w = normalize_window(series, w)
+    cummax = series.cummax()
+    dd = series / cummax - 1
+    return apply_ramp(dd, w)
+
+
+@plot_function
+def annualized_volatility(
+    series: pd.Series, window: int = 252, prices: bool = True, w: Union[Window, int, str] = Window(None, 0)
+) -> pd.Series:
+    """
+    Annualized volatility of a return (or price) series.
+
+    :param series: time series of prices or returns
+    :param window: number of periods per year (default 252 for daily data)
+    :param prices: whether the input is prices (True) or returns (False), defaults to prices
+    :param w: Window, int, or str: size of window and ramp up to use.
+    :return: annualized volatility series
+    """
+    r = returns(series) if prices else series
+    w = normalize_window(r, w)
+    vol = r.rolling(w.w, 0).std(ddof=1)
+    return apply_ramp(np.sqrt(window) * vol, w)
+
+
+@plot_function
+def annualized_return(series: pd.Series, window: int = 252, prices: bool = True) -> pd.Series:
+    """
+    Annualized (geometric) return of a series.
+
+    :param series: time series of prices or returns
+    :param window: number of periods per year (default 252 for daily data)
+    :param prices: whether the input is prices (True) or returns (False), defaults to prices
+    :return: annualized return series
+    """
+    r = returns(series) if prices else series
+    total = (1 + r.replace([np.inf, -np.inf], np.nan).dropna()).prod() - 1
+    n = len(r.replace([np.inf, -np.inf], np.nan).dropna())
+    if n == 0:
+        return pd.Series(np.nan, index=series.index)
+    return pd.Series((1 + total) ** (window / n) - 1, index=series.index, dtype=float)
+
+
+@plot_function
+def value_at_risk(
+    series: pd.Series,
+    level: float = 0.95,
+    prices: bool = True,
+    w: Union[Window, int, str] = Window(None, 0),
+) -> pd.Series:
+    """
+    Historical Value-at-Risk: the worst return at the given confidence level.
+
+    :param series: time series of prices or returns
+    :param level: confidence level, e.g. 0.95 = 95% VaR
+    :param prices: whether the input is prices (True) or returns (False), defaults to prices
+    :param w: Window, int, or str: size of window and ramp up to use.
+    :return: VaR series (positive loss, e.g. 0.05 = 5% VaR loss)
+    """
+    r = returns(series) if prices else series
+    w = normalize_window(r, w)
+
+    def _var(window_slice):
+        clean = window_slice.replace([np.inf, -np.inf], np.nan).dropna()
+        if not len(clean):
+            return np.nan
+        return -np.percentile(clean, (1 - level) * 100)
+
+    if isinstance(w.w, pd.DateOffset):
+        result = pd.Series([_var(r.loc[(r.index > (idx - w.w)) & (r.index <= idx)]) for idx in r.index], index=r.index)
+    elif w.w:
+        result = r.rolling(w.w, 0).apply(_var, raw=False)
+    else:
+        result = pd.Series([_var(r) for _ in r.index], index=r.index)
+    return apply_ramp(result, w)
+
+
+@plot_function
+def conditional_value_at_risk(
+    series: pd.Series,
+    level: float = 0.95,
+    prices: bool = True,
+    w: Union[Window, int, str] = Window(None, 0),
+) -> pd.Series:
+    """
+    Conditional Value-at-Risk (CVaR / expected shortfall): average return beyond VaR.
+
+    :param series: time series of prices or returns
+    :param level: confidence level, e.g. 0.95 = 95% CVaR
+    :param prices: whether the input is prices (True) or returns (False), defaults to prices
+    :param w: Window, int, or str: size of window and ramp up to use.
+    :return: CVaR series (positive expected loss)
+    """
+    r = returns(series) if prices else series
+    w = normalize_window(r, w)
+
+    def _cvar(window_slice):
+        clean = window_slice.replace([np.inf, -np.inf], np.nan).dropna()
+        if not len(clean):
+            return np.nan
+        cutoff = np.percentile(clean, (1 - level) * 100)
+        tail = clean[clean <= cutoff]
+        return -tail.mean() if len(tail) else -cutoff
+
+    if isinstance(w.w, pd.DateOffset):
+        result = pd.Series([_cvar(r.loc[(r.index > (idx - w.w)) & (r.index <= idx)]) for idx in r.index], index=r.index)
+    elif w.w:
+        result = r.rolling(w.w, 0).apply(_cvar, raw=False)
+    else:
+        result = pd.Series([_cvar(r) for _ in r.index], index=r.index)
+    return apply_ramp(result, w)
+
+
+@plot_function
+def downside_deviation(
+    series: pd.Series, target: float = 0.0, prices: bool = True, w: Union[Window, int, str] = Window(None, 0)
+) -> pd.Series:
+    """
+    Downside deviation: standard deviation of returns below a target.
+
+    :param series: time series of prices or returns
+    :param target: minimum acceptable return (default 0)
+    :param prices: whether the input is prices (True) or returns (False), defaults to prices
+    :param w: Window, int, or str: size of window and ramp up to use.
+    :return: downside deviation series
+    """
+    r = returns(series) if prices else series
+    w = normalize_window(r, w)
+
+    def _dd(window_slice):
+        clean = window_slice.replace([np.inf, -np.inf], np.nan).dropna()
+        if not len(clean):
+            return np.nan
+        downside = clean[clean < target] - target
+        return np.sqrt(np.mean(downside ** 2)) if len(downside) else 0.0
+
+    if isinstance(w.w, pd.DateOffset):
+        result = pd.Series([_dd(r.loc[(r.index > (idx - w.w)) & (r.index <= idx)]) for idx in r.index], index=r.index)
+    elif w.w:
+        result = r.rolling(w.w, 0).apply(_dd, raw=False)
+    else:
+        result = pd.Series([_dd(r) for _ in r.index], index=r.index)
+    return apply_ramp(result, w)
+
+
+@plot_function
+def tracking_error_of(
+    series: pd.Series,
+    benchmark: pd.Series,
+    prices: bool = True,
+    w: Union[Window, int, str] = Window(None, 0),
+) -> pd.Series:
+    """
+    Tracking error of a return series against a benchmark (standard deviation of the
+    return difference). Named ``tracking_error_of`` to avoid colliding with the
+    report-based ``tracking_error`` in ``measures_reports``.
+
+    :param series: time series of prices or returns
+    :param benchmark: benchmark series (prices or returns, matching ``prices``)
+    :param prices: whether the inputs are prices (True) or returns (False), defaults to prices
+    :param w: Window, int, or str: size of window and ramp up to use.
+    :return: tracking error series
+    """
+    a = returns(series) if prices else series
+    b = returns(benchmark) if prices else benchmark
+    diff = a - b.reindex(a.index)
+    w = normalize_window(diff, w)
+
+    def _te(window_slice):
+        clean = window_slice.replace([np.inf, -np.inf], np.nan).dropna()
+        return clean.std(ddof=1) if len(clean) > 1 else np.nan
+
+    if isinstance(w.w, pd.DateOffset):
+        result = pd.Series(
+            [_te(diff.loc[(diff.index > (idx - w.w)) & (diff.index <= idx)]) for idx in diff.index], index=diff.index
+        )
+    elif w.w:
+        result = diff.rolling(w.w, 0).apply(_te, raw=False)
+    else:
+        result = pd.Series([_te(diff) for _ in diff.index], index=diff.index)
+    return apply_ramp(result, w)
+
+
+@plot_function
+def win_rate(series: pd.Series, prices: bool = True, w: Union[Window, int, str] = Window(None, 0)) -> pd.Series:
+    """
+    Fraction of periods with non-negative return over a rolling window.
+
+    :param series: time series of prices or returns
+    :param prices: whether the input is prices (True) or returns (False), defaults to prices
+    :param w: Window, int, or str: size of window and ramp up to use.
+    :return: win-rate series in [0, 1]
+    """
+    r = returns(series) if prices else series
+    w = normalize_window(r, w)
+    wins = (r >= 0).astype(float)
+
+    def _rate(window_slice):
+        clean = window_slice.replace([np.inf, -np.inf], np.nan).dropna()
+        return clean.mean() if len(clean) else np.nan
+
+    if isinstance(w.w, pd.DateOffset):
+        result = pd.Series(
+            [_rate(wins.loc[(wins.index > (idx - w.w)) & (wins.index <= idx)]) for idx in wins.index], index=wins.index
+        )
+    elif w.w:
+        result = wins.rolling(w.w, 0).apply(_rate, raw=False)
+    else:
+        result = pd.Series([_rate(wins) for _ in wins.index], index=wins.index)
+    return apply_ramp(result, w)
+
+
+@plot_function
+def omega_ratio(series: pd.Series, target: float = 0.0, prices: bool = True) -> pd.Series:
+    """
+    Omega ratio: probability-weighted ratio of gains to losses relative to a threshold.
+
+    :param series: time series of prices or returns
+    :param target: minimum acceptable return (default 0)
+    :param prices: whether the input is prices (True) or returns (False), defaults to prices
+    :return: omega series
+    """
+    r = returns(series) if prices else series
+    r = r.replace([np.inf, -np.inf], np.nan).dropna()
+    if not len(r):
+        return pd.Series(np.nan, index=series.index)
+    gains = (r[r > target] - target).sum()
+    losses = (target - r[r < target]).sum()
+    omega = gains / losses if losses > 0 else np.nan if gains == 0 else np.inf
+    return pd.Series(omega, index=series.index, dtype=float)
+
+
+@plot_function
+def upside_capture(series: pd.Series, benchmark: pd.Series, prices: bool = True) -> pd.Series:
+    """
+    Upside capture ratio: average return in periods the benchmark is up.
+
+    :param series: time series of prices or returns
+    :param benchmark: benchmark series (prices or returns, matching ``prices``)
+    :param prices: whether the inputs are prices (True) or returns (False), defaults to prices
+    :return: upside-capture series
+    """
+    a = returns(series) if prices else series
+    b = returns(benchmark) if prices else benchmark
+    b = b.reindex(a.index)
+    up = b > 0
+    ups = a[up].mean() / b[up].mean() if up.any() and b[up].mean() != 0 else np.nan
+    return pd.Series(ups, index=series.index, dtype=float)
+
+
+@plot_function
+def downside_capture(series: pd.Series, benchmark: pd.Series, prices: bool = True) -> pd.Series:
+    """
+    Downside capture ratio: average return in periods the benchmark is down.
+
+    :param series: time series of prices or returns
+    :param benchmark: benchmark series (prices or returns, matching ``prices``)
+    :param prices: whether the inputs are prices (True) or returns (False), defaults to prices
+    :return: downside-capture series
+    """
+    a = returns(series) if prices else series
+    b = returns(benchmark) if prices else benchmark
+    b = b.reindex(a.index)
+    down = b < 0
+    dns = a[down].mean() / b[down].mean() if down.any() and b[down].mean() != 0 else np.nan
+    return pd.Series(dns, index=series.index, dtype=float)

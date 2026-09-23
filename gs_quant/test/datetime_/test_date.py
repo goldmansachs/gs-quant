@@ -31,6 +31,9 @@ def test_has_feb_29():
     assert not has_feb_29(dt.date(2020, 1, 1), dt.date(2020, 2, 28))
     assert has_feb_29(dt.date(2020, 1, 1), dt.date(2020, 2, 29))  # last date is inclusive
     assert has_feb_29(dt.date(2008, 1, 1), dt.date(2020, 12, 31))
+    # start before two leap-day dates: sweeps leap years between start and end
+    assert has_feb_29(dt.date(2019, 1, 1), dt.date(2021, 1, 1))  # 2020 leap day in range
+    assert not has_feb_29(dt.date(2019, 2, 28), dt.date(2019, 4, 1))  # no leap year crossed
 
 
 def test_today_with_location():

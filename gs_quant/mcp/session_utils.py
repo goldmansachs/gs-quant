@@ -23,7 +23,7 @@ from starlette.requests import Request
 
 from gs_quant.session import Environment, GsSession
 
-__session_cache = cachetools.LRUCache(50)
+__session_cache: cachetools.LRUCache = cachetools.LRUCache(50)
 
 
 async def extract_from_starlette_request(
@@ -31,7 +31,7 @@ async def extract_from_starlette_request(
     environment: Environment = Environment.PROD,
 ) -> tuple[dict, GsSession] | tuple[None, None]:
     cookies = SimpleCookie(http_request.cookies)
-    token, auth_type = _get_auth_token_and_type(SimpleCookie(http_request.cookies), http_request.headers)
+    token, auth_type = _get_auth_token_and_type(cookies, http_request.headers)
     if auth_type == AuthType.UNKNOWN:
         return None, None
     cache_key = (token, auth_type, environment)
@@ -42,11 +42,10 @@ async def extract_from_starlette_request(
         user_profile = await session.async_.get('/users/self')
         __session_cache[cache_key] = (user_profile, session)
         return user_profile, session
-    else:
-        return session_and_profile
+    return session_and_profile
 
 
-_local_config = {}
+_local_config: dict[str, str] = {}
 
 
 def set_session_config(name: str):
@@ -81,7 +80,8 @@ def _get_auth_token_and_type(cookies: SimpleCookie, headers: Mapping[str, str]) 
         authorization = headers[AUTHORIZATION]
         if authorization.upper().startswith(BEARER_PREFIX):
             token = authorization[len(BEARER_PREFIX) :]
-            return token, AuthType.OAUTH
+            # JWT-shaped bearer tokens are classified as JWT (three dot-separated segments)
+            return token, AuthType.JWT if token.count(".") == 2 else AuthType.OAUTH
     return None, AuthType.UNKNOWN
 
 

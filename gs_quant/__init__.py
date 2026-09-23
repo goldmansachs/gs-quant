@@ -14,7 +14,7 @@ specific language governing permissions and limitations
 under the License.
 """
 import sys
-from importlib.metadata import version as get_lib_version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version as get_lib_version
 
 from ._version import get_versions
 
@@ -53,20 +53,28 @@ try:
 except ModuleNotFoundError:
     pass
 
-# Jupyter needs nest_asyncio to avoid event loop issues
+# Jupyter-specific setup (nest_asyncio + tracing). Both are only needed inside
+# a running kernel; guard them behind an active-kernel check so plain Python
+# scripts don't pay the heavy IPython / OpenTelemetry import costs.
+ipython = None
 try:
-    from IPython import get_ipython
+    if 'IPython' in sys.modules or 'ipykernel' in sys.modules:
+        from IPython import get_ipython
 
-    ipython = get_ipython()
-    if ipython and 'IPKernelApp' in get_ipython().config:
+        ipython = get_ipython()
+except ImportError:
+    pass
+
+if ipython and 'IPKernelApp' in ipython.config:
+    try:
+        # Jupyter needs nest_asyncio to avoid event loop issues
         import nest_asyncio
 
         nest_asyncio.apply()
-except ImportError:
-    pass
-
-# Setup tracing for Jupyter
-try:
-    from gs_quant.tracing import tracing  # pylint: disable=unused-import
-except ImportError:
-    pass
+    except ImportError:
+        pass
+    try:
+        # Setup tracing for Jupyter
+        from gs_quant.tracing import tracing  # noqa: F401  pylint: disable=unused-import
+    except ImportError:
+        pass

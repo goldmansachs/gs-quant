@@ -333,18 +333,17 @@ class GsRiskApi(RiskApi):
             return error
 
     @classmethod
-    def create_pretrade_execution_optimization(cls, request: OptimizationRequest) -> str:
+    def create_pretrade_execution_optimization(cls, request: OptimizationRequest) -> dict:
         try:
             response = cls.get_session().sync.post(r'/risk/execution/pretrade', request)
             _logger.info('New optimization is created with id: {}'.format(response.get("optimizationId")))
             return response
         except Exception as e:
-            error = str(e)
-            _logger.error(error)
-            return error
+            _logger.error(str(e))
+            raise  # surface the failure so callers don't mistake an error string for a response dict
 
     @classmethod
-    def get_pretrade_execution_optimization(cls, optimization_id: str, max_attempts: int = 15):
+    def get_pretrade_execution_optimization(cls, optimization_id: str, max_attempts: int = 15) -> dict:
         url = '/risk/execution/pretrade/{}/results'.format(optimization_id)
         attempts = 0
         start = time.perf_counter()
@@ -361,9 +360,8 @@ class GsRiskApi(RiskApi):
                 else:
                     break
             except Exception as e:
-                error = str(e)
-                _logger.error(error)
-                return error
+                _logger.error(str(e))
+                raise  # surface the failure instead of returning an error string
 
         if results.get('status') == 'Running':
             _logger.info('Optimization is still running. Please retry fetching the results.')
@@ -419,41 +417,38 @@ class GsRiskApi(RiskApi):
         if notional is not None:
             payload["notional"] = notional
 
-        try:
-            response = cls.get_session().sync.post('/risk/liquidity', payload)
+        response = cls.get_session().sync.post('/risk/liquidity', payload)
 
-            if isinstance(response, dict) and 'errorMessage' in response:
-                error_msg = response['errorMessage']
+        if isinstance(response, dict) and 'errorMessage' in response:
+            error_msg = response['errorMessage']
 
-                asset_ids_pattern = (
-                    r'Assets with the following ids are missing in marquee:'
-                    r'\s*\[\s*([^\]]+)\s*\]'
+            asset_ids_pattern = (
+                r'Assets with the following ids are missing in marquee:'
+                r'\s*\[\s*([^\]]+)\s*\]'
+            )
+            asset_ids_match = re.search(asset_ids_pattern, error_msg, re.IGNORECASE)
+            if asset_ids_match:
+                clean_error_pattern = (
+                    r'(Assets with the following ids are missing in '
+                    r'marquee:\s*\[[^\]]+\])'
                 )
-                asset_ids_match = re.search(asset_ids_pattern, error_msg, re.IGNORECASE)
-                if asset_ids_match:
-                    clean_error_pattern = (
-                        r'(Assets with the following ids are missing in '
-                        r'marquee:\s*\[[^\]]+\])'
-                    )
-                    clean_error_line = re.search(clean_error_pattern, error_msg, re.IGNORECASE)
-                    if clean_error_line:
-                        clean_message = f"ERROR: liquidity analysis failed\n{clean_error_line.group(1)}"
-                        _logger.error(clean_message)
-                        raise MqValueError(clean_message)
-                    else:
-                        missing_assets = asset_ids_match.group(1).strip()
-                        clean_message = (
-                            f"ERROR: liquidity analysis failed\n"
-                            f"Assets with the following ids are missing in marquee: "
-                            f"[ {missing_assets} ]"
-                        )
-                        _logger.error(clean_message)
-                        raise MqValueError(clean_message)
+                clean_error_line = re.search(clean_error_pattern, error_msg, re.IGNORECASE)
+                if clean_error_line:
+                    clean_message = f"ERROR: liquidity analysis failed\n{clean_error_line.group(1)}"
+                    _logger.error(clean_message)
+                    raise MqValueError(clean_message)
                 else:
-                    _logger.error(f'Liquidity analysis failed: {error_msg}')
-                    raise MqValueError("ERROR: liquidity analysis failed")
+                    missing_assets = asset_ids_match.group(1).strip()
+                    clean_message = (
+                        f"ERROR: liquidity analysis failed\n"
+                        f"Assets with the following ids are missing in marquee: "
+                        f"[ {missing_assets} ]"
+                    )
+                    _logger.error(clean_message)
+                    raise MqValueError(clean_message)
+            else:
+                _logger.error(f'Liquidity analysis failed: {error_msg}')
+                raise MqValueError("ERROR: liquidity analysis failed")
 
-            _logger.info('Liquidity analysis completed successfully')
-            return response
-        except Exception:
-            raise
+        _logger.info('Liquidity analysis completed successfully')
+        return response

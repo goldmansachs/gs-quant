@@ -213,18 +213,15 @@ def date_range(
             return (d for d in f())
         elif isinstance(end, int):
             return (business_day_offset(begin, i, calendars=calendars, week_mask=week_mask) for i in range(end))
-        else:
-            raise ValueError('end must be a date or int')
+        raise ValueError('end must be a date or int')
     elif isinstance(begin, int):
         if isinstance(end, dt.date):
             return (
                 business_day_offset(end, -i, roll='preceding', calendars=calendars, week_mask=week_mask)
                 for i in range(begin)
             )
-        else:
-            raise ValueError('end must be a date if begin is an int')
-    else:
-        raise ValueError('begin must be a date or int')
+        raise ValueError('end must be a date if begin is an int')
+    raise ValueError('begin must be a date or int')
 
 
 def today(location: Optional[PricingLocation] = None) -> dt.date:
@@ -310,12 +307,14 @@ def has_feb_29(start: dt.date, end: dt.date):
     >>> end = date(2020, 3, 15)
     >>> has_feb_29(start, end)
     """
-    feb_29 = False
-    for x in range(1, (end - start).days + 1):
-        date = start + dt.timedelta(days=x)
-        feb_29 = feb_29 | (date.month == 2 and date.day == 29)
-
-    return feb_29
+    # Any leap year in [start.year, end.year] may contribute a 29 Feb. The
+    # range is start-exclusive, end-inclusive, so test membership directly.
+    for year in range(start.year, end.year + 1):
+        if cal.isleap(year):
+            feb_29 = dt.date(year, 2, 29)
+            if start < feb_29 <= end:
+                return True
+    return False
 
 
 def day_count_fraction(
