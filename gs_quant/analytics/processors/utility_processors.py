@@ -169,7 +169,7 @@ class AppendProcessor(BaseProcessor):
         b_data = self.children_data.get('b')
         if isinstance(a_data, ProcessorResult) and isinstance(b_data, ProcessorResult):
             if a_data.success and b_data.success:
-                result = a_data.data.append(b_data.data)
+                result = pd.concat([a_data.data, b_data.data])
                 self.value = ProcessorResult(True, result)
             else:
                 self.value = ProcessorResult(False, "Processor does not have A and B data yet")
