@@ -9,6 +9,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# Portions copyright John Kingola. Licensed under Apache 2.0 license
 #
 #
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
@@ -826,6 +827,7 @@ def correlation(
     :func:`std` :func:`returns`
 
     """
+    window = w
     w = normalize_window(x, w)
 
     if x.size < 1:
@@ -856,6 +858,10 @@ def correlation(
     clean_ret2 = aligned['r2']
 
     if assume_zero_mean:
+        # The default window was sized on the input series. When prices were given the aligned
+        # returns are one observation shorter, so a full-length window would exceed them and
+        # volatility() would return an empty series. Size the window on the cleaned returns.
+        w = normalize_window(clean_ret1, window)
 
         def daily_vols(returns):
             vols = volatility(returns, w, returns_type=None, assume_zero_mean=True)
