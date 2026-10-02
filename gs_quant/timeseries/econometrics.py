@@ -9,6 +9,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# Portions copyright John Kingola. Licensed under Apache 2.0 license
 #
 #
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
@@ -143,12 +144,19 @@ def _annualized_return(
 
 
 def get_ratio_pure(
-    er: pd.Series, w: Union[Window, int, str], interpolation_method: Interpolate = Interpolate.NAN
+    er: pd.Series,
+    w: Union[Window, int, str],
+    interpolation_method: Interpolate = Interpolate.NAN,
+    annualization_factor: Optional[int] = None,
 ) -> pd.Series:
     w = normalize_window(er, w or None)  # continue to support 0 as an input for window
     ann_return = _annualized_return(er, w.w, interpolation_method=interpolation_method)
     long_enough = (er.index[-1] - w.w) >= er.index[0] if isinstance(w.w, pd.DateOffset) else w.w < len(er)
-    ann_vol = volatility(er, w).iloc[1:] if long_enough else volatility(er)
+    ann_vol = (
+        volatility(er, w, annualization_factor=annualization_factor).iloc[1:]
+        if long_enough
+        else volatility(er, annualization_factor=annualization_factor)
+    )
     result = ann_return / ann_vol * 100
     return apply_ramp(result, w)
 
@@ -161,6 +169,7 @@ def _get_ratio(
     day_count_convention: DayCountConvention,
     curve_type: CurveType = CurveType.PRICES,
     interpolation_method: Interpolate = Interpolate.NAN,
+    annualization_factor: Optional[int] = None,
 ) -> pd.Series:
     if curve_type == CurveType.PRICES:
         er = excess_returns(input_series, benchmark_or_rate, day_count_convention=day_count_convention)
@@ -168,7 +177,7 @@ def _get_ratio(
         assert curve_type == CurveType.EXCESS_RETURNS
         er = input_series
 
-    return get_ratio_pure(er, w, interpolation_method)
+    return get_ratio_pure(er, w, interpolation_method, annualization_factor)
 
 
 class RiskFreeRateCurrency(Enum):
@@ -221,6 +230,7 @@ def sharpe_ratio(
     w: Union[Window, int, str] = None,
     curve_type: CurveType = CurveType.PRICES,
     method: Interpolate = Interpolate.NAN,
+    annualization_factor: Optional[int] = None,
 ) -> pd.Series:
     """
     Calculate Sharpe ratio
@@ -230,6 +240,10 @@ def sharpe_ratio(
     :param w: Window or int: size of window and ramp up to use. e.g. Window(22, 10) where 22 is the window size
               and 10 the ramp up value.  If w is a string, it should be a relative date like '1m', '1d', etc.
               Window size defaults to length of series.
+    :param annualization_factor: periods per year used to annualise the volatility in the denominator. If None
+              (default) it is inferred from the spacing of the observations, which maps any daily series, including a
+              seven-day calendar, to 252. The numerator is always annualised by elapsed calendar days, so pass 365
+              for a seven-day series to keep both halves on the same clock.
     :param curve_type: whether input series is of prices or excess returns, defaults to prices
     :param method: interpolation method (default: nan). Used to calculate returns on dates without data (i.e. weekends)
               when window is a relative date. Defaults to no interpolation.
@@ -266,6 +280,7 @@ def sharpe_ratio(
         day_count_convention=DayCountConvention.ACTUAL_360,
         curve_type=curve_type,
         interpolation_method=method,
+        annualization_factor=annualization_factor,
     )
 
 
