@@ -22,6 +22,7 @@ import logging
 import os
 import ssl
 import sys
+import weakref
 from abc import abstractmethod
 from configparser import ConfigParser
 from contextlib import asynccontextmanager
@@ -334,7 +335,8 @@ class GsSession(ContextBase):
     ):
         super().__init__()
         self._session = None
-        self._session_async = None
+        self._async_clients: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
+        self._async_close_tasks = set()
         self._sync_api: Optional['_SyncSessionAPI'] = None
         self._async_api: Optional['_AsyncSessionAPI'] = None
         self.domain = domain
@@ -362,7 +364,6 @@ class GsSession(ContextBase):
             self.http_adapter = http_adapter
         self.application_version = application_version
         self.proxies = proxies
-        self.mounts = {key: httpx.HTTPTransport(proxy=val) for key, val in proxies} if proxies else None
         self.redirect_to_mds = redirect_to_mds
 
     @backoff.on_exception(
@@ -373,11 +374,37 @@ class GsSession(ContextBase):
     def _authenticate(self):
         raise NotImplementedError("Must implement _authenticate")
 
+    def __getstate__(self):
+        # httpx clients and pending close tasks are bound to event loops and can't be pickled
+        state = self.__dict__.copy()
+        state['_async_clients'] = None
+        state['_async_close_tasks'] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._async_clients = weakref.WeakKeyDictionary()
+        self._async_close_tasks = set()
+
+    @property
+    def _session_async(self) -> Optional[httpx.AsyncClient]:
+        """The AsyncClient for the running event loop, if one has been created"""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return None
+        client = self._async_clients.get(loop)
+        return client if client is not None and not client.is_closed else None
+
     def _authenticate_async(self):
-        if self._has_async_session():
-            self._session_async.headers.update([(k, v) for k, v in self._session.headers.items()])
-            for cookie in self._session.cookies:
-                self._session_async.cookies.set(cookie.name, cookie.value, domain=cookie.domain)
+        for client in list(self._async_clients.values()):
+            if not client.is_closed:
+                self._copy_auth_to_async_client(client)
+
+    def _copy_auth_to_async_client(self, client: httpx.AsyncClient):
+        client.headers.update([(k, v) for k, v in self._session.headers.items()])
+        for cookie in self._session.cookies:
+            client.cookies.set(cookie.name, cookie.value, domain=cookie.domain)
 
     def _authenticate_all_sessions(self):
         self._authenticate()
@@ -385,50 +412,65 @@ class GsSession(ContextBase):
 
     def _on_enter(self):
         self.__close_on_exit = self._session is None
-        self.__close_on_exit_async = not self._has_async_session()
         if not self._session:
             self.init()
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
-        if self.__close_on_exit_async:
-            if self._has_async_session():
-                try:
-                    loop = asyncio.get_running_loop()
-                    loop.create_task(self._close_async())
-                except RuntimeError:
-                    asyncio.run(self._close_async())
         if self.__close_on_exit:
+            self._close_async_clients()
             self._session = None
 
     def _has_async_session(self) -> bool:
-        return self._session_async and not self._session_async.is_closed
+        return self._session_async is not None
+
+    def _async_mounts(self) -> Optional[dict]:
+        if not self.proxies:
+            return None
+        return {
+            key if '://' in key else f'{key}://': httpx.AsyncHTTPTransport(
+                proxy=val, verify=CustomHttpAdapter.ssl_context()
+            )
+            for key, val in self.proxies.items()
+        }
 
     def _init_async(self):
-        if not self._has_async_session():
-            self._session_async = httpx.AsyncClient(
+        """Ensure an AsyncClient exists for the running event loop.
+
+        httpx connection pools are bound to the loop that opened them, so a client is kept per loop rather than
+        shared: reusing one from a finished asyncio.run() fails with 'Event loop is closed'.
+        """
+        loop = asyncio.get_running_loop()
+        client = self._async_clients.get(loop)
+        if client is None or client.is_closed:
+            self._discard_async_clients_for_closed_loops()
+            client = httpx.AsyncClient(
                 follow_redirects=True,
                 verify=CustomHttpAdapter.ssl_context(),
-                mounts=self.mounts,
+                mounts=self._async_mounts(),
                 timeout=DEFAULT_TIMEOUT,
             )
-            self._session_async.headers.update({'X-Application': self.application})
-            self._session_async.headers.update({'X-Version': self.application_version})
-            self._authenticate_async()
+            client.headers.update({'X-Application': self.application})
+            client.headers.update({'X-Version': self.application_version})
+            if self._session is not None:
+                self._copy_auth_to_async_client(client)
+            self._async_clients[loop] = client
+        return client
+
+    def _discard_async_clients_for_closed_loops(self):
+        # a closed loop can't run aclose(); dropping the client lets its sockets be garbage collected
+        for loop in [lp for lp in list(self._async_clients.keys()) if lp.is_closed()]:
+            self._async_clients.pop(loop, None)
 
     async def _on_aenter(self):
         self.__close_on_exit = self._session is None
-        self.__close_on_exit_async = not self._has_async_session()
         if self.__close_on_exit:
             self.init()
-        if self.__close_on_exit_async:
-            self._init_async()
+        self._init_async()
 
     async def _on_aexit(self, exc_type, exc_val, exc_tb):
-        if self.__close_on_exit_async:
-            if self._has_async_session():
-                await self._session_async.aclose()
-            self._session_async = None
         if self.__close_on_exit:
+            await self._close_async()
+            self._close_async_clients()
             self._session = None
 
     def init(self, cookies=None):
@@ -452,23 +494,36 @@ class GsSession(ContextBase):
             if self.http_adapter is None:
                 self._session.close()
             self._session = None
-        if self._has_async_session():
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = None
-            if loop and loop.is_running():
-                loop.create_task(self._close_async())
+        self._close_async_clients()
+
+    def _close_async_clients(self):
+        """Close every AsyncClient on the loop that owns it, without blocking on loops running elsewhere"""
+        try:
+            running = asyncio.get_running_loop()
+        except RuntimeError:
+            running = None
+        clients = list(self._async_clients.items())
+        self._async_clients.clear()
+        for loop, client in clients:
+            if client.is_closed or loop.is_closed():
+                continue
+            if loop is running:
+                task = loop.create_task(client.aclose())
+                self._async_close_tasks.add(task)
+                task.add_done_callback(self._async_close_tasks.discard)
+            elif loop.is_running():
+                asyncio.run_coroutine_threadsafe(client.aclose(), loop)
             else:
                 try:
-                    asyncio.run(self._close_async())
+                    loop.run_until_complete(client.aclose())
                 except RuntimeError:
                     pass
 
     async def _close_async(self):
-        if self._session_async:
-            await self._session_async.aclose()
-            self._session_async = None
+        """Close the AsyncClient for the running event loop"""
+        client = self._async_clients.pop(asyncio.get_running_loop(), None)
+        if client is not None and not client.is_closed:
+            await client.aclose()
 
     def __del__(self):
         try:
@@ -688,7 +743,7 @@ class GsSession(ContextBase):
         use_body: bool = False,
         domain: Optional[str] = None,
     ) -> Union[Base, tuple, dict]:
-        self._init_async()
+        client = self._init_async()
         span = Tracer.active_span()
         url = self._build_url(domain, path, include_version)
         tracer = Tracer(f'http:/{path}') if span and span.is_recording() else nullcontext()
@@ -697,7 +752,7 @@ class GsSession(ContextBase):
             kwargs = self._build_request_params(
                 method, path, url, payload, request_headers, timeout, use_body, "content", scope
             )
-            response = await self._session_async.request(method, url, **kwargs)
+            response = await client.request(method, url, **kwargs)
             request_id = response.headers.get('x-dash-requestid')
             if scope:
                 scope.span.set_tag(Tags.HTTP_STATUS_CODE, response.status_code)

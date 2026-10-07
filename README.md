@@ -10,7 +10,7 @@ Please refer to [Goldman Sachs Developer](https://developer.gs.com/docs/gsquant/
 
 ## Requirements
 
-* Python 3.9 or greater
+* Python 3.10 or greater
 * Access to PIP package manager
 
 ## Installation

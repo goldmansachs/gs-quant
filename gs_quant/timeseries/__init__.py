@@ -24,6 +24,7 @@ from .helper import *
 from .measures import *
 from .measures_bonds import *
 from .measures_countries import *
+from .measures_etf import *
 from .measures_fx_vol import *
 from .measures_inflation import *
 from .measures_portfolios import *
