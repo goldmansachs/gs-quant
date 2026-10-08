@@ -19,7 +19,7 @@ import logging
 import traceback
 from contextlib import ContextDecorator
 from enum import Enum
-from typing import Callable, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Mapping, Optional, Sequence, Union
 
 import pandas as pd
 from opentelemetry import context, trace
@@ -105,7 +105,7 @@ class TracingEvent:
         return self._event.timestamp / 1e9
 
     @property
-    def attributes(self) -> Mapping[str, any]:
+    def attributes(self) -> Mapping[str, Any]:
         return self._event.attributes
 
 
@@ -206,7 +206,7 @@ class TracingSpan:
         return format_span_id(parent.span_id) if parent else None
 
     @property
-    def tags(self) -> Mapping[str, any]:
+    def tags(self) -> Mapping[str, Any]:
         return self._span.attributes
 
     @property
@@ -226,13 +226,13 @@ class TracingSpan:
         return self
 
     def add_event(
-        self, name: str, attributes: Optional[Mapping[str, any]] = None, timestamp: Optional[float] = None
+        self, name: str, attributes: Optional[Mapping[str, Any]] = None, timestamp: Optional[float] = None
     ) -> 'TracingSpan':
         converted_timestamp = int(timestamp * 1e9) if timestamp else None
         self._span.add_event(name, attributes, converted_timestamp)
         return self
 
-    def log_kv(self, key_values: Mapping[str, any], timestamp=None) -> 'TracingSpan':
+    def log_kv(self, key_values: Mapping[str, Any], timestamp=None) -> 'TracingSpan':
         converted_timestamp = int(timestamp * 1e9) if timestamp else None
         event_name = "log" if key_values is None or "event" not in key_values else key_values["event"]
         self._span.add_event(event_name, key_values, converted_timestamp)
@@ -256,7 +256,7 @@ class NonRecordingTracingSpan(TracingSpan):
         return None
 
     @property
-    def tags(self) -> Mapping[str, any]:
+    def tags(self) -> Mapping[str, Any]:
         return dict()
 
     @property
@@ -344,7 +344,7 @@ class TransportableSpan(TracingSpan):
         return self._parent_id
 
     @property
-    def tags(self) -> Mapping[str, any]:
+    def tags(self) -> Mapping[str, Any]:
         return self._tags
 
     @property
@@ -355,11 +355,11 @@ class TransportableSpan(TracingSpan):
         return self
 
     def add_event(
-        self, name: str, attributes: Optional[Mapping[str, any]] = None, timestamp: Optional[float] = None
+        self, name: str, attributes: Optional[Mapping[str, Any]] = None, timestamp: Optional[float] = None
     ) -> 'TracingSpan':
         return self
 
-    def log_kv(self, key_values: Mapping[str, any], timestamp=None) -> 'TracingSpan':
+    def log_kv(self, key_values: Mapping[str, Any], timestamp=None) -> 'TracingSpan':
         return self
 
 

@@ -18,7 +18,6 @@ import builtins
 import copy
 import datetime as dt
 import logging
-import sys
 import typing
 from abc import ABC, ABCMeta, abstractmethod
 from collections import namedtuple
@@ -78,19 +77,11 @@ def is_instance_or_iterable(o, t):
 
 
 def _get_underscore(arg):
-    if arg not in _rename_cache:
-        _rename_cache[arg] = underscore(arg)
-
-    return _rename_cache[arg]
+    return _rename_cache.setdefault(arg, underscore(arg))
 
 
 def _get_is_supported_generic(arg):
-    if arg in _is_supported_generic_cache:
-        is_supported_generic = _is_supported_generic_cache[arg]
-    else:
-        is_supported_generic = _is_supported_generic(arg)
-        _is_supported_generic_cache[arg] = is_supported_generic
-    return is_supported_generic
+    return _is_supported_generic_cache.setdefault(arg, _is_supported_generic(arg))
 
 
 def handle_camel_case_args(cls):
@@ -103,7 +94,7 @@ def handle_camel_case_args(cls):
             if not arg.isupper():
                 snake_case_arg = _get_underscore(arg)
                 if snake_case_arg != arg and snake_case_arg in kwargs:
-                    raise ValueError('{} and {} both specified'.format(arg, snake_case_arg))
+                    raise ValueError(f'{arg} and {snake_case_arg} both specified')
 
                 arg = snake_case_arg
 
@@ -279,17 +270,16 @@ class Base(ABC):
 
     @classmethod
     def __is_type_match(cls, tp, val):
-        if sys.version_info >= (3, 9):
-            from types import GenericAlias
+        from types import GenericAlias, UnionType
 
-            is_generic_alias = isinstance(tp, (typing._GenericAlias, GenericAlias))
-            if sys.version_info >= (3, 10) and not is_generic_alias:
-                from types import UnionType
-
-                if isinstance(tp, UnionType):
-                    return any(cls.__is_type_match(arg, val) for arg in tp.__args__)
-        else:
-            is_generic_alias = isinstance(tp, typing._GenericAlias)
+        is_generic_alias = isinstance(tp, (typing._GenericAlias, GenericAlias))
+        if not is_generic_alias and isinstance(tp, UnionType):
+            # PEP-604 union (e.g. float | str): apply the same int->float widening
+            # used for typing.Union so int-valued elements also match float members.
+            args = tuple(int if arg is float else arg for arg in tp.__args__)
+            if float in tp.__args__:
+                args += (float,)
+            return any(cls.__is_type_match(arg, val) for arg in args)
         if not is_generic_alias:
             # Do not convert Enums to strings
             is_enum_to_str = isinstance(val, Enum) and tp is str
@@ -546,7 +536,7 @@ class __ScenarioMeta(ABCMeta, ContextMeta):
 @dataclass
 class Scenario(Base, ContextBase, ABC, metaclass=__ScenarioMeta):
     def __lt__(self, other):
-        if self.__repr__ != other.__repr__:
+        if self.__repr__() != other.__repr__():
             return self.name < other.name
         return False
 
@@ -690,7 +680,7 @@ def get_enum_value(enum_type: EnumMeta, value: Union[EnumBase, str]):
     try:
         enum_value = enum_type(value)
     except ValueError:
-        _logger.warning('Setting value to {}, which is not a valid entry in {}'.format(value, enum_type))
+        _logger.warning(f'Setting value to {value}, which is not a valid entry in {enum_type}')
         enum_value = value
 
     return enum_value

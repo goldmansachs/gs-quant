@@ -326,15 +326,3 @@ class GsHedgeApi:
         except Exception as e:
             print(f"Failed to share hedge: {e}")
             raise
-
-            print("Hedge group shared successfully!")
-            print(f"  Hedge Group ID: {hedge_group_id}")
-            print("\n  Updated Entitlements:")
-            print(f"    View Access: {len(result.get('entitlements', {}).get('view', []))} users/groups")
-            print(f"    Admin Access: {len(result.get('entitlements', {}).get('admin', []))} users/groups")
-
-            return result
-
-        except Exception as e:
-            print(f"✗ Failed to share hedge: {e}")
-            raise

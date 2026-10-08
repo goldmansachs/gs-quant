@@ -147,8 +147,8 @@ def build_pfp_data_dataframe(
 ) -> Union[pd.DataFrame, list]:
     factor_data_df = pd.DataFrame(results)[["date", "factorData"]]
     factor_data_df = factor_data_df.explode('factorData')
-    factor_data_df['factorId'] = factor_data_df['factorData'].apply(lambda x: x.get('factorId'))
-    factor_data_df['factorName'] = factor_data_df['factorData'].apply(lambda x: x.get('factorName'))
+    factor_data_df['factorId'] = factor_data_df['factorData'].map(lambda x: x.get('factorId'))
+    factor_data_df['factorName'] = factor_data_df['factorData'].map(lambda x: x.get('factorName'))
     factor_data_df = factor_data_df.drop(columns='factorData').set_index("date")
 
     pfp_list = []

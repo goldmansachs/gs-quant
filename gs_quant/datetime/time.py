@@ -16,6 +16,7 @@ under the License.
 
 import datetime as dt
 import logging
+from typing import Optional
 
 import numpy as np
 
@@ -41,7 +42,7 @@ SECS_IN_YEAR = SECS_IN_MIN * MINS_IN_HOUR * HOURS_IN_DAY * DAYS_IN_YEAR
 
 
 class Timer:
-    def __init__(self, print_on_exit: bool = True, label: str = 'Execution', threshold: int = None):
+    def __init__(self, print_on_exit: bool = True, label: str = 'Execution', threshold: Optional[int] = None):
         self.__print_on_exit = print_on_exit
         self.__label = label
         self.__threshold = threshold
@@ -52,15 +53,19 @@ class Timer:
     def __exit__(self, *args):
         self.__elapsed = dt.datetime.now() - self.__start
 
-        if self.__print_on_exit:
-            if self.__threshold is None or self.__elapsed.seconds > self.__threshold:
-                _logger.warning(
-                    f'{self.__label} took {self.__elapsed.seconds + self.__elapsed.microseconds / 1000000} seconds'
-                )
+        if self.__print_on_exit and (self.__threshold is None or self.__elapsed.seconds > self.__threshold):
+            _logger.warning(f'{self.__label} took {self.__elapsed.total_seconds()} seconds')
 
 
 def to_zulu_string(time: dt.datetime):
-    return time.isoformat()[:-3] + 'Z'
+    # Millisecond precision, explicit 'Z' UTC marker. Handles naive and
+    # tz-aware datetimes (the old [:-3] truncation corrupted sub-second-less times).
+    iso = time.isoformat(timespec='milliseconds')
+    if iso.endswith('+00:00'):
+        return iso[:-6] + 'Z'  # UTC offset -> Z
+    if time.tzinfo is not None:
+        return iso  # non-UTC offset kept as-is
+    return iso + 'Z'  # naive datetime treated as UTC
 
 
 def time_difference_as_string(time_delta: np.timedelta64, resolution: str = 'Second') -> str:

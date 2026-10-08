@@ -33,15 +33,18 @@ dependencies = [
     "more_itertools",
     "msgpack",
     "nest-asyncio",
-    "numpy>1.17.0,<2.4.0",
+    # numpy 2.4+ ships for Python 3.14; bound on the 2.x major rather than 2.4
+    "numpy>1.22.0,<3",
     "opentelemetry-api",
     "opentelemetry-sdk",
-    "pandas>=1.4",
+    # pandas 2.x is the supported target (pandas 1.4 is end-of-life)
+    "pandas>=2.0",
     "pydash<7.0.0",
     "python-dateutil>=2.7.0",
     "requests",
     "httpx>=0.28.1",
-    "scipy>=1.2.0",
+    # scipy 1.9 changed mode()'s return to a scalar; floor on the modern stack
+    "scipy>=1.9.0",
     "statsmodels>=0.14.5",
     "pyyaml",
     "tqdm",
@@ -133,6 +136,7 @@ include = ["gs_quant*"]
 [tool.setuptools.package-data]
 gs_quant = [
     "config.ini",
+    "py.typed",
     "resources/asset-service.json",
     "resources/data-service.json",
     "resources/risk-service.json",
@@ -212,6 +216,20 @@ extend-aliases = { "datetime" = "dt" }
 #"typing.Tuple".msg = "Use built-in tuple instead of typing.Tuple"
 #"typing.Dict".msg = "Use built-in dict instead of typing.Dict"
 #"typing.Set".msg = "Use built-in set instead of typing.set"
+
+[tool.mypy]
+# Static typing is enabled via gs_quant/py.typed. Third-party libs without
+# stubs are treated as Any so the pass focuses on first-party annotations.
+python_version = "3.10"
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_redundant_casts = true
+# Generated DTOs + optional extra modules are out of scope for now.
+exclude = ["gs_quant/target/", "gs_quant/test/", "gs_quant/mcp/run.py"]
+
+[[tool.mypy.overrides]]
+module = ["gs_quant.datetime.time", "gs_quant.datetime.date", "gs_quant.api.risk", "gs_quant.mcp.session_utils"]
+disallow_untyped_defs = false
 
 [tool.uv]
 default-groups = ["test", "dev"]

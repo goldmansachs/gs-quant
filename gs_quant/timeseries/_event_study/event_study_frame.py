@@ -164,13 +164,10 @@ def get_event_window(
 
     window_df['value'] = window_df['price']
 
+    offsets = [offset_start + i for i in range(len(window_df))]
     return [
-        {
-            'date': date,
-            'day_offset': offset_start + index,
-            'value': row['value'],
-        }
-        for index, (date, row) in enumerate(window_df.iterrows())
+        {'date': date, 'day_offset': day_offset, 'value': value}
+        for date, day_offset, value in zip(window_df.index, offsets, window_df['value'])
     ]
 
 

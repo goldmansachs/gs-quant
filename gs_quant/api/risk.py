@@ -18,7 +18,6 @@ import asyncio
 import itertools
 import logging
 import queue
-import sys
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import TimeoutError
 from threading import Thread
@@ -232,7 +231,7 @@ class RiskApi(GenericRiskApi, metaclass=ABCMeta):
                 return num_risk_jobs(request) * len(request.measures)
 
             is_async = not requests[0].wait_for_results
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             raw_results = asyncio.Queue()
             responses = asyncio.Queue() if is_async else raw_results
             outstanding_requests = queue.Queue()
@@ -318,30 +317,7 @@ class RiskApi(GenericRiskApi, metaclass=ABCMeta):
 
             cls.shutdown_queue_listener(results)
 
-        if sys.version_info >= (3, 7):
-            asyncio.run(run_async(span))
-        else:
-            try:
-                existing_event_loop = asyncio.get_event_loop()
-            except RuntimeError:
-                existing_event_loop = None
-
-            use_existing = existing_event_loop and existing_event_loop.is_running()
-            main_loop = existing_event_loop if use_existing else asyncio.new_event_loop()
-
-            if not use_existing:
-                asyncio.set_event_loop(main_loop)
-
-            try:
-                main_loop.run_until_complete(run_async(span))
-            except Exception:
-                if not use_existing:
-                    main_loop.stop()
-                raise
-            finally:
-                if not use_existing:
-                    main_loop.close()
-                    asyncio.set_event_loop(None)
+        asyncio.run(run_async(span))
 
     @classmethod
     def build_keyed_results(

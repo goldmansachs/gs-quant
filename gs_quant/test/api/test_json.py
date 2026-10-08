@@ -18,7 +18,12 @@ import datetime as dt
 import json
 import zoneinfo
 
-from gs_quant.json_convertors import decode_frequency, decode_iso_date_or_datetime, encode_frequency
+from gs_quant.json_convertors import (
+    decode_frequency,
+    decode_iso_date_or_datetime,
+    encode_date_or_time_tuple,
+    encode_frequency,
+)
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.workflow import (
     BinaryImageComments,
@@ -104,3 +109,12 @@ def test_encode_frequency():
     assert encode_frequency(dt.timedelta(minutes=10)) == 600
     assert encode_frequency(dt.timedelta(hours=1, minutes=30)) == 5400
     assert encode_frequency(dt.timedelta(days=1, seconds=1)) == 86401
+
+
+def test_encode_date_or_time_tuple_datetime():
+    # Regression: encode_datetime() used to be invoked with no argument on dt.datetime
+    # values, raising TypeError. A datetime must encode to its ISO string.
+    self = dt.date(2021, 8, 10)
+    dtime = dt.datetime(2021, 8, 10, 10, 39, 19)
+    encoded = encode_date_or_time_tuple((self, dtime, '10m', None))
+    assert encoded == ('2021-08-10', '2021-08-10T10:39:19', '10m', None)

@@ -37,15 +37,27 @@ from gs_quant.timeseries import (
     SeriesType,
     Window,
     annualize,
+    annualized_return,
+    annualized_volatility,
     beta,
     change,
+    conditional_value_at_risk,
     correlation,
+    cumulative_returns,
+    downside_capture,
+    downside_deviation,
+    drawdown,
     generate_series,
     index,
     max_drawdown,
+    omega_ratio,
     prices,
     returns,
+    tracking_error_of,
+    upside_capture,
+    value_at_risk,
     volatility,
+    win_rate,
 )
 from gs_quant.timeseries.econometrics import (
     RiskFreeRateCurrency,
@@ -793,3 +805,90 @@ def test_sharpe_ratio():
 
 if __name__ == "__main__":
     pytest.main(args=["test_econometrics.py"])
+
+
+_RISK_SERIES = pd.Series(
+    [100.0, 102.0, 99.0, 101.0, 105.0, 103.0],
+    index=pd.date_range('2023-01-01', periods=6),
+)
+_BENCH_SERIES = pd.Series(
+    [100.0, 101.0, 100.0, 102.0, 104.0, 105.0],
+    index=pd.date_range('2023-01-01', periods=6),
+)
+
+
+def test_cumulative_returns():
+    cr = cumulative_returns(_RISK_SERIES)
+    # (103/100) = 1.03 with compounded inter-period returns
+    assert cr.iloc[-1] == pytest.approx(1.03, abs=1e-3)
+    assert cr.iloc[0] == pytest.approx(1.0)
+
+
+def test_drawdown_series():
+    dd = drawdown(_RISK_SERIES)
+    # Running drawdown from running peak: never positive
+    assert (dd <= 0).all()
+    # Peak 105 before 103 -> running drawdown of 103/105 - 1 at the end
+    assert dd.iloc[-1] == pytest.approx(103.0 / 105.0 - 1, abs=1e-6)
+    # Largest drawdown is the 102 -> 99 dip
+    assert dd.min() == pytest.approx(99.0 / 102.0 - 1, abs=1e-6)
+
+
+def test_annualized_volatility():
+    av = annualized_volatility(_RISK_SERIES, window=252)
+    # full-length window -> scalar annualized vol of the return series
+    r = _RISK_SERIES.pct_change().dropna()
+    expected = np.sqrt(252) * r.std(ddof=1)
+    assert pd.isna(av.iloc[0])  # ramp: first period has no return
+    assert av.dropna().iloc[-1] == pytest.approx(expected, rel=1e-3)
+
+
+def test_annualized_return():
+    ar = annualized_return(_RISK_SERIES, window=252)
+    # geometric annualization of total return 3%
+    assert ar.iloc[-1] == pytest.approx(1.03 ** (252 / 5) - 1, rel=1e-3)
+
+
+def test_value_at_risk():
+    var5 = value_at_risk(_RISK_SERIES, level=0.95)
+    # The worst single-day loss is -2/99 (2.02%); VaR must be positive and >= that
+    assert var5.iloc[-1] >= 0
+    assert var5.iloc[-1] == pytest.approx(0.02, abs=0.01)
+
+
+def test_cvar_geq_var():
+    var5 = value_at_risk(_RISK_SERIES, level=0.95).iloc[-1]
+    cvar5 = conditional_value_at_risk(_RISK_SERIES, level=0.95).iloc[-1]
+    # CVaR (expected shortfall) can't be less than VaR at the same level
+    assert cvar5 >= var5 - 1e-6
+
+
+def test_downside_deviation_positive():
+    dd = downside_deviation(_RISK_SERIES)
+    assert dd.iloc[-1] >= 0
+
+
+def test_tracking_error_of():
+    te = tracking_error_of(_RISK_SERIES, _BENCH_SERIES)
+    assert te.iloc[-1] >= 0
+    # identical series -> zero tracking error
+    te0 = tracking_error_of(_RISK_SERIES, _RISK_SERIES)
+    assert te0.iloc[-1] == pytest.approx(0.0, abs=1e-6)
+
+
+def test_win_rate():
+    wr = win_rate(_RISK_SERIES, w=3)
+    # 3-window: [up,up],[up,down,up],... -> last window (up,down,up?) check monotonic
+    assert wr.between(0, 1).all()
+
+
+def test_omega_ratio_positive():
+    omega = omega_ratio(_RISK_SERIES)
+    assert omega.iloc[-1] > 1  # gains outweigh losses for an upward series
+
+
+def test_capture_ratios():
+    up = upside_capture(_RISK_SERIES, _BENCH_SERIES)
+    down = downside_capture(_RISK_SERIES, _BENCH_SERIES)
+    assert up.iloc[-1] > 0
+    assert down.iloc[-1] > 0

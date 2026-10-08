@@ -590,7 +590,7 @@ class Basket(Asset, PositionedEntity):
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_date(self.id, date, position_type)
             if len(response) == 0:
-                _logger.info("No positions available for {}".format(date))
+                _logger.info("No positions available for %s", date)
                 return PositionSet([], date=date)
             return PositionSet.from_target(response[0], source=source)
         raise NotImplementedError
@@ -599,14 +599,15 @@ class Basket(Asset, PositionedEntity):
     def get_position_sets(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = None,
         position_type: PositionType = PositionType.CLOSE,
         source: str = "Basket",
     ) -> list[PositionSet]:
+        end = end or dt.date.today()  # late-bound so the default isn't frozen at import time
         if self.positioned_entity_type == EntityType.ASSET:
             response = GsAssetApi.get_asset_positions_for_dates(self.id, start, end, position_type)
             if len(response) == 0:
-                _logger.info("No positions available in the date range {} - {}".format(start, end))
+                _logger.info("No positions available in the date range %s - %s", start, end)
                 return []
             return [PositionSet.from_target(position_set, source=source) for position_set in response]
         raise NotImplementedError

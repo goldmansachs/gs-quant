@@ -34,6 +34,7 @@ from gs_quant.timeseries.statistics import (
     RollingLinearRegression,
     SEIRModel,
     SIRModel,
+    _stats_mode,
     cov,
     exponential_std,
     generate_series,
@@ -426,6 +427,16 @@ def test_median():
     assert_series_equal(result, expected, obj="Median window 1w")
 
     _rolling_1m_test(median, 'median')
+
+
+def test_stats_mode_normalizes_scalar_and_array():
+    # scipy's mode() returned an ndarray before 1.9 and a scalar since; _stats_mode
+    # must return a plain scalar in both cases.
+    arr = np.asarray([1.0, 2.0, 2.0, 3.0, 3.0, 3.0])
+    result = _stats_mode(arr)
+    assert float(result) == 3.0
+    single = _stats_mode(np.asarray([5.0]))
+    assert float(single) == 5.0
 
 
 def test_mode():

@@ -194,7 +194,7 @@ class QueryType(Enum):
 
 
 class GsDataApi(DataApi):
-    __definitions = {}
+    __definitions = TTLCache(1000, 86400)  # cached definititions expire daily to avoid staleness
     __asset_coordinates_cache = TTLCache(10000, 86400)
     _api_request_cache: ApiRequestCache = None
     DEFAULT_SCROLL = '30s'
@@ -333,7 +333,7 @@ class GsDataApi(DataApi):
     async def _check_data_on_cloud_async(cls, dataset_id: str):
         session = cls.get_session()
         if session.redirect_to_mds and dataset_id != 'coordinates':
-            dataset_data = await cls._get_with_cache_check(f'/data/datasets/{dataset_id}')
+            dataset_data = await cls._get_with_cache_check_async(f'/data/datasets/{dataset_id}')
             database_id_exists = get(dataset_data, 'parameters.databaseId')
 
             if database_id_exists:
@@ -387,6 +387,8 @@ class GsDataApi(DataApi):
                 futures.append(GsDataApi.execute_query_async(dataset_id, query))
             all_responses = await asyncio.gather(*futures, return_exceptions=True)
             for response_crt in all_responses:
+                if isinstance(response_crt, Exception):
+                    raise response_crt  # surface the underlying page-query failure
                 results += GsDataApi._get_results(response_crt)[0]
         return results
 
@@ -1120,7 +1122,7 @@ class GsDataApi(DataApi):
             except Exception as e:
                 tag_error(scope)
                 log_warning(request_id, _logger, f'Market data query {query} failed due to {e}')
-                raise e
+                raise  # bare raise preserves the original traceback
 
             df = cls._parse_market_data_response(
                 body, query, request_id=request_id, ignore_errors=ignore_errors, start=start, scope=scope
@@ -1138,7 +1140,7 @@ class GsDataApi(DataApi):
             except Exception as e:
                 tag_error(scope)
                 log_warning(request_id, _logger, f'Market data query {query} failed due to {e}')
-                raise e
+                raise  # bare raise preserves the original traceback
 
             df = cls._parse_market_data_response(
                 body, query, request_id=request_id, ignore_errors=ignore_errors, start=start, scope=scope
@@ -1402,7 +1404,8 @@ class GsDataApi(DataApi):
     def get_field_types(cls, field_names: Union[str, list[str]]):
         try:
             fields = cls.get_dataset_fields(names=field_names, limit=len(field_names))
-        except Exception:
+        except Exception as e:
+            _logger.warning('Unable to fetch field types for %s: %s', field_names, e)
             return {}
         if fields:
             field_types = {}

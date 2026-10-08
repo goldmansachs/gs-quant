@@ -128,7 +128,12 @@ class Utilities:
             yield iterable[ndx : min(ndx + n, iter_len)]
 
     @staticmethod
-    def fetch_data(dataset, symbols, start=dt.datetime.now(), end=dt.datetime.now(), dimension="assetId", auth=None):
+    def fetch_data(dataset, symbols, start=None, end=None, dimension="assetId", auth=None):
+        now = dt.datetime.now()
+        if start is None:
+            start = now  # late-bound so the default isn't frozen at import time
+        if end is None:
+            end = now
         if auth is not None:
             auth()
         try:

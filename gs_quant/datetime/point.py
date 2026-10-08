@@ -121,7 +121,7 @@ def relative_date_add(date_rule: str, strict: bool = False) -> float:
     return 0
 
 
-@functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=4096)  # bounded: ref_date varies with the pricing date, so don't grow unbounded
 def point_sort_order(point: str, ref_date: Optional[dt.date] = None) -> Optional[float]:
     """
     Calculates a number that can be used to sort Mkt Points by it.

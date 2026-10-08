@@ -19,7 +19,7 @@ from typing import Optional
 from dataclasses_json import global_config
 
 from gs_quant.json_convertors import decode_hedge_type, decode_hedge_types
-from gs_quant.target.workflow_quote import HedgeTypes  # noqa - We need to import this one from target
+from gs_quant.target.workflow_quote import HedgeTypes  # noqa: TID251 - legacy target import required for encoding
 
 global_config.decoders[Optional[HedgeTypes]] = decode_hedge_type
 global_config.decoders[HedgeTypes] = decode_hedge_type

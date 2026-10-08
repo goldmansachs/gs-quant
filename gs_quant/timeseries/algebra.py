@@ -527,7 +527,7 @@ def floor(x: pd.Series, value: float = 0) -> pd.Series:
 
     """
     assert x.index.is_monotonic_increasing
-    return x.apply(lambda y: max(y, value))
+    return np.maximum(x, value)
 
 
 @plot_function
@@ -560,7 +560,7 @@ def ceil(x: pd.Series, value: float = 0) -> pd.Series:
 
     """
     assert x.index.is_monotonic_increasing
-    return x.apply(lambda y: min(y, value))
+    return np.minimum(x, value)
 
 
 @plot_function

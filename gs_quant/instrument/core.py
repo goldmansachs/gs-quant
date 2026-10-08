@@ -108,7 +108,7 @@ class Instrument(PriceableImpl, InstrumentBase):
         if in_place and is_historical:
             raise RuntimeError('Cannot resolve in place under a HistoricalPricingContext')
 
-        if in_place and len([i for i in Scenario.path if isinstance(i, MultiScenario)]):
+        if in_place and any(isinstance(i, MultiScenario) for i in Scenario.path):
             raise RuntimeError('Cannot resolve in place under a MultiScenario Context')
 
         return self.calc(ResolvedInstrumentValues, fn=handle_result)
@@ -189,10 +189,10 @@ class Instrument(PriceableImpl, InstrumentBase):
             return f'{category.__name__}:{msg}'
 
         for measure in (risk_measure,) if single_measure else risk_measure:
-            if measure.name in DEPRECATED_MEASURES.keys():
+            if measure.name in DEPRECATED_MEASURES:
                 message = (
-                    '{0} risk measure is deprecated. Please use {1} instead and pass in arguments to describe '
-                    'risk measure specifics.\n'.format(measure.name, DEPRECATED_MEASURES[measure.name])
+                    f'{measure.name} risk measure is deprecated. Please use {DEPRECATED_MEASURES[measure.name]} '
+                    'instead and pass in arguments to describe risk measure specifics.\n'
                 )
                 warnings.simplefilter('once')
                 warnings.formatwarning = warning_on_one_line
@@ -258,7 +258,7 @@ class Instrument(PriceableImpl, InstrumentBase):
 
         if not asset_class:
             res = GsParserApi.get_instrument_from_text(text)
-            if len(res):  # multiple instruments returned
+            if len(res):  # at least one instrument returned
                 instrument = res.pop(0)
             else:
                 raise ValueError('Could not resolve instrument')
@@ -275,15 +275,17 @@ class Instrument(PriceableImpl, InstrumentBase):
 
         instruments = GsAssetApi.get_instruments_for_asset_ids(asset_ids)
 
+        # Can't validate without a default instance; skip the type check if unavailable
         try:
             inst = cls.default_instance()
-            asset_class = inst.asset_class
-            asset_type = inst.type
-
-            if not all(i.asset_class == asset_class and i.type == asset_type for i in instruments):
-                raise ValueError(f'Instrument(s) not all of type {cls.__name__}')
         except AttributeError:
-            pass
+            return instruments
+
+        asset_class = inst.asset_class
+        asset_type = inst.type
+
+        if not all(i.asset_class == asset_class and i.type == asset_type for i in instruments):
+            raise ValueError(f'Instrument(s) not all of type {cls.__name__}')
 
         return instruments
 

@@ -231,12 +231,11 @@ class FactorScenario:
         return instance_repr
 
     def __str__(self):
-        s = "{}('id={}', 'name={}', 'description={}', 'type={}', 'parameters={}'".format(
-            self.__class__.__name__, self.id, self.name, self.description, self.type.value, self.parameters.__repr__()
+        return (
+            f"{self.__class__.__name__}('id={self.id!r}', 'name={self.name!r}', "
+            f"'description={self.description!r}', 'type={self.type.value!r}', "
+            f"'parameters={self.parameters!r}')"
         )
-
-        s += ")"
-        return s
 
     @property
     def id(self) -> str:

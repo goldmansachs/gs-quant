@@ -240,12 +240,13 @@ class PositionSet:
     def __init__(
         self,
         positions: list[Position],
-        date: dt.date = dt.date.today(),
+        date: dt.date = None,
         divisor: float = None,
         reference_notional: float = None,
         unresolved_positions: list[Position] = None,
         unpriced_positions: list[Position] = None,
     ):
+        date = date or dt.date.today()  # late-bound so the default isn't frozen at import time
         if reference_notional is not None:
             for p in positions:
                 if p.weight is None:
@@ -268,10 +269,9 @@ class PositionSet:
             return False
         if self.reference_notional != other.reference_notional:
             return False
-        positions = self.positions
-        positions.sort(key=lambda position: position.asset_id)
-        other_positions = other.positions
-        other_positions.sort(key=lambda position: position.asset_id)
+        # Sort copies so equality comparisons don't mutate the stored positions
+        positions = sorted(self.positions, key=lambda position: position.asset_id)
+        other_positions = sorted(other.positions, key=lambda position: position.asset_id)
         for i in range(len(positions)):
             if positions[i] != other_positions[i]:
                 return False
@@ -920,7 +920,7 @@ class PositionSet:
         return cls(converted_positions, position_set.position_date, position_set.divisor)
 
     @classmethod
-    def from_list(cls, positions: list[str], date: dt.date = dt.date.today()):
+    def from_list(cls, positions: list[str], date: dt.date = None):
         """
         Create equally-weighted PostionSet instance from a list of identifiers
 
@@ -949,7 +949,7 @@ class PositionSet:
     def from_dicts(
         cls,
         positions: list[dict],
-        date: dt.date = dt.date.today(),
+        date: dt.date = None,
         reference_notional: float = None,
         add_tags: bool = False,
     ):
@@ -980,7 +980,7 @@ class PositionSet:
     def from_frame(
         cls,
         positions: pd.DataFrame,
-        date: dt.date = dt.date.today(),
+        date: dt.date = None,
         reference_notional: float = None,
         divisor: float = None,
         add_tags: bool = False,

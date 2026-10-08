@@ -46,6 +46,9 @@ from gs_quant.target.portfolios import (
 
 _logger = logging.getLogger(__name__)
 
+# Matches column names carrying a version suffix, e.g. "spot.2" (used by from_csv)
+_COLUMN_VERSION_RE = re.compile(r'\.[0-9]')
+
 
 @dataclass
 class Portfolio(PriceableImpl):
@@ -399,9 +402,8 @@ class Portfolio(PriceableImpl):
     @classmethod
     def from_csv(cls, csv_file: str, mappings: Optional[dict] = None):
         data = pd.read_csv(csv_file, skip_blank_lines=True).replace({np.nan: None})
-        reg = re.compile(r'\.[0-9]')
-        dupelist = [re.sub(reg, '', word) for word in data.columns if reg.search(word)]
-        if len(dupelist):
+        dupelist = [re.sub(_COLUMN_VERSION_RE, '', word) for word in data.columns if _COLUMN_VERSION_RE.search(word)]
+        if dupelist:
             raise ValueError(f'Duplicate column values {dupelist}')
         return cls.from_frame(data, mappings)
 

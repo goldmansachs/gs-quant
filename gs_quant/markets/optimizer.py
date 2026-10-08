@@ -1322,7 +1322,7 @@ class OptimizerSettings:
             if self.__gross_notional is not None and self.__net_notional is not None:
                 if abs(self.__net_notional) > self.__gross_notional:
                     raise MqValueError(
-                        "Invalid notional configuration: |net_notional| ({abs(self.__net_notional)}) "
+                        f"Invalid notional configuration: |net_notional| ({abs(self.__net_notional)}) "
                         f"cannot be greater than gross_notional ({self.__gross_notional}). "
                         "Formula: gross_notional = |long| + |short|, net_notional = long - short"
                     )
