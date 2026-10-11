@@ -555,5 +555,20 @@ def test_basket_avg_fwd_vol():
     replace.restore()
 
 
+def test_basket_series_rebalance_vectorization():
+    dates = pd.date_range('2020-01-01', '2025-01-01', freq='B')
+    s1 = pd.Series(np.linspace(100, 200, len(dates)), index=dates)
+    s2 = pd.Series(np.linspace(100, 150, len(dates)), index=dates)
+    
+    monthly_res = basket_series([s1, s2], [0.5, 0.5], rebal_freq=RebalFreq.MONTHLY)
+    weekly_res = basket_series([s1, s2], [0.5, 0.5], rebal_freq=RebalFreq.WEEKLY)
+    
+    assert len(monthly_res) == len(dates)
+    assert len(weekly_res) == len(dates)
+    assert not monthly_res.isna().any()
+    assert not weekly_res.isna().any()
+
+
 if __name__ == '__main__':
     pytest.main(args=[__file__])
+
