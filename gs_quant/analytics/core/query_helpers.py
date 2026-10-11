@@ -53,7 +53,7 @@ def aggregate_queries(query_infos):
                 'parameters': {},
                 'queries': defaultdict(list),
                 'range': {},
-                'realTime': True if coordinate.frequency == DataFrequency.REAL_TIME else False,
+                'realTime': coordinate.frequency == DataFrequency.REAL_TIME,
                 'measures': set(),
             },
         )
