@@ -425,13 +425,21 @@ def mode(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Serie
     assert x.index.is_monotonic_increasing, "series index is monotonic increasing"
     if isinstance(w.w, pd.DateOffset):
         values = (
-            rolling_apply(x, w.w, lambda a: stats.mode(a).mode[0])
+            rolling_apply(x, w.w, lambda a: float(np.asarray(stats.mode(a).mode).flat[0]) if len(a) else np.nan)
             if isinstance(x, pd.Series)
-            else [stats.mode(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]).mode[0] for idx in x.index]
+            else [
+                float(np.asarray(stats.mode(x.loc[(x.index > (idx - w.w).date()) & (x.index <= idx)]).mode).flat[0])
+                for idx in x.index
+            ]
         )
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
-        return apply_ramp(x.rolling(w.w, 0).apply(lambda y: stats.mode(y).mode, raw=True), w)
+        return apply_ramp(
+            x.rolling(w.w, 0).apply(
+                lambda y: float(np.asarray(stats.mode(y).mode).flat[0]) if len(y) else np.nan, raw=True
+            ),
+            w,
+        )
 
 
 @plot_function

@@ -126,7 +126,11 @@ def _compose(lhs: ResultInfo, rhs: ResultInfo) -> ResultInfo:
             if rhs.index.name != 'date':
                 rhs = rhs.assign(date=rhs.risk_key.date).set_index('date')
 
-            return lhs.loc[set(lhs.index) - set(rhs.index)].append(rhs).sort_index()
+            diff_dates = list(set(lhs.index) - set(rhs.index))
+            if not diff_dates:
+                return rhs.sort_index()
+            remaining = lhs.loc[diff_dates]
+            return pd.concat([remaining, rhs]).sort_index()
     elif isinstance(lhs, MultipleRiskMeasureResult):
         if isinstance(rhs, MultipleRiskMeasureResult):
             return lhs + rhs
