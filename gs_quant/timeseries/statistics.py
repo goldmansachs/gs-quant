@@ -431,7 +431,7 @@ def mode(x: pd.Series, w: Union[Window, int, str] = Window(None, 0)) -> pd.Serie
         )
         return apply_ramp(pd.Series(values, index=x.index, dtype=np.dtype(float)), w)
     else:
-        return apply_ramp(x.rolling(w.w, 0).apply(lambda y: stats.mode(y).mode, raw=True), w)
+        return apply_ramp(x.rolling(w.w, 0).apply(lambda y: stats.mode(y).mode[0], raw=True), w)
 
 
 @plot_function

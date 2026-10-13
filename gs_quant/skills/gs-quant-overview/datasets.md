@@ -135,7 +135,7 @@ df = query_in_batches(ds, ids, dt.date(2024, 1, 1), dt.date(2025, 3, 19), id_fie
 ```
 
 ## Uploading Data
-D
+
 ```python
 import pandas as pd
 

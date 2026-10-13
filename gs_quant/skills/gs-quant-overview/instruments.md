@@ -2,6 +2,20 @@
 
 Instruments are the building blocks of gs_quant. Every tradeable product is represented as a dataclass in `gs_quant.instrument`. Construct an instrument by importing its class and supplying the key economic parameters — any parameter you omit will be resolved by the server later.
 
+## Strikes by asset class
+
+A number is an absolute level (rates and spreads as decimals: `0.04` = 4%). Relative strikes use
+each asset class's own syntax:
+
+| Asset class (field) | Reference | Scaled or shifted | Delta | Solve for premium |
+|---|---|---|---|---|
+| Equities (`EqOption.strike_price`) | `'ATMS'` spot, `'ATMF'` forward | `'95%'` of spot, `'1.05*ATMF'` | `'25d'` | `'p=10%'` |
+| FX (`FXOption.strike_price`) | `'s'` spot, `'f'` forward | `'s+1%'`, `'1.05*s'` | `'25d'` | `'p=1%'` |
+| Rates (`IRSwaption.strike`, `IRSwap.fixed_rate`, `IRCap.cap_rate`) | `'ATM'` | `'ATM+25'`, `'ATM-25'` (bp) | `'25d'` | |
+| Credit (`CDIndexOption.strike`) | `'s'` spot spread | `'s+1%'` | `'25d'` | |
+
+Deltas are unsigned; the option type sets the side.
+
 ## Interest Rate Swap
 
 ```python

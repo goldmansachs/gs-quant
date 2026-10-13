@@ -1,16 +1,16 @@
 # Pricing in gs_quant
 
-Pricing instruments and portfolios in gs_quant: PricingContext, HistoricalPricingContext for historical pricing over date ranges, and LiveMarket for real-time FX pricing. Covers pricing dates, market data location, batch mode, and async patterns.
+Pricing instruments and portfolios in gs_quant: PricingContext, HistoricalPricingContext for historical pricing over date ranges, and LiveMarket for real-time FX pricing. Covers which close market is used, market data location, choosing contexts for speed, long calculations and batch mode, relative terms and `resolve()`, and async patterns.
 
 ## PricingContext Basics
 
-All pricing in gs_quant happens within a `PricingContext`. The default context uses today's close-of-business market data.
+All pricing in gs_quant happens within a `PricingContext`. Without `market=`, it prices on a close market; see "Close market and location" below for which close.
 
 ```python
 from gs_quant.markets import PricingContext
 from gs_quant.risk import DollarPrice, IRDelta
 
-# Implicit default context — uses today's close
+# Implicit default context
 price = swap.dollar_price()
 
 # Explicit context with parameters
@@ -27,7 +27,7 @@ delta = delta_f.result()
 | Parameter | Description |
 |---|---|
 | `pricing_date` | Date for pricing (default: today) |
-| `market_data_location` | `'NYC'`, `'LDN'`, or `'HKG'` (default: `'LDN'`) |
+| `market_data_location` | `'NYC'`, `'LDN'`, `'HKG'` or `'TKO'` (default: `'LDN'`) |
 | `market` | Market object (e.g. `CloseMarket()`, `LiveMarket()`) |
 | `csa_term` | CSA term for discounting |
 | `is_batch` | Use batch mode for long-running calculations |
@@ -38,29 +38,74 @@ Inside an entered `PricingContext`, calculations return `PricingFuture` objects.
 
 ---
 
-## Resolving Under a Pricing Context
+## Close market and location: prices differ from other tools, or look a day old
 
-Resolution can be targeted to a specific date or market:
+**Without `market=`, gs_quant prices on the close of the pricing date at `market_data_location`
+(default LDN)**, in both `PricingContext` and `HistoricalPricingContext`. Today is the exception:
+by default gs_quant assumes today's close isn't marketized until midnight in that location, so
+today (the default pricing date) is priced on the previous weekday's close, and so is the last date
+of a `HistoricalPricingContext` ending today. A weekend or holiday you pass as the pricing date is
+not moved to a business day.
 
-```python
-from gs_quant.markets import PricingContext
-import datetime as dt
-
-with PricingContext(pricing_date=dt.date(2025, 1, 15)):
-    resolved = swap.resolve(in_place=False)
-    resolved_swap = resolved.result()
-```
-
-Historical resolution across multiple dates (must use `in_place=False`):
+**Set `market_data_location` to the close you compare against.** NYC and LDN closes are different
+snapshots, so location is a common reason gs_quant disagrees with other tools. Set it on the
+outermost context (inner contexts inherit it), or once for the session, outside any context:
 
 ```python
-from gs_quant.markets import HistoricalPricingContext
-
-with HistoricalPricingContext(dt.date(2025, 1, 1), dt.date(2025, 1, 31)):
-    resolved_by_date = swap.resolve(in_place=False)
-
-# resolved_by_date is a dict of {date: resolved_instrument}
+PricingContext.current = PricingContext(market_data_location='NYC')
 ```
+
+**For live prices, pass a live market:** `PricingContext(market=LiveMarket('NYC'))`.
+
+**To use today's close once it is in**, set the time when you expect the close data to have been
+marketized, in the pricing context's location:
+
+```python
+CloseMarket.roll_hr_and_min = (17, 30)
+```
+
+After that time, if today's close isn't in yet, pricing fails.
+`CloseMarket(date=..., location=..., check=False)` always uses exactly the date you give.
+
+---
+
+## Choosing contexts: slow code, many requests, 504s
+
+**Pick the context by the shape of the job.**
+
+| Job | Use |
+|---|---|
+| Same instrument(s), many dates | one `HistoricalPricingContext` |
+| Many instruments, one date | one `PricingContext` around a `Portfolio` |
+| Instrument terms change per date (strike from that day's spot, expiry from a row, a field that must equal the pricing date) | an outer `PricingContext` with an inner dated one per date |
+| A step needs an earlier result (resolve, then price later; hedge on the previous delta) | separate contexts in sequence, `.result()` in between |
+
+```python
+prices = {}
+with PricingContext(market_data_location='NYC'):  # outer: sends everything on exit
+    for d, inst in instrument_by_date.items():
+        with PricingContext(pricing_date=d):  # inner: sets only the date
+            prices[d] = inst.price()
+prices = {d: f.result() for d, f in prices.items()}
+```
+
+**Don't open and exit a `PricingContext` on every pass of a loop:** each exit sends and waits, so
+requests go one at a time. If you must, set `is_async=True` and call `.result()` only after the loop.
+
+**If you must use a scenario, wrap it in a pricing context.** A scenario is not a pricing context:
+outside a `PricingContext`, each `.calc()` is sent and awaited on its own, even inside
+`with MarketDataShockBasedScenario(...)`. Write `with scenario, PricingContext():`.
+
+**There should be no need to add your own threads.** `PricingContext` already sends requests in
+parallel.
+
+---
+
+## Long calculations: timeouts, `is_batch`
+
+**Set `is_batch=True` on the context for calculations that take more than about 3 minutes.**
+Without it, each request must finish within about 3 minutes or fail; with it, results come back
+over a websocket and each request gets up to 10 minutes. If the websocket drops, see `errors.md`.
 
 ---
 
@@ -113,7 +158,7 @@ with HistoricalPricingContext(dates=dates):
 | `is_batch` | Use batch mode for long-running calculations (avoids timeouts) |
 | `is_async` | Return immediately without blocking |
 | `show_progress` | Display a tqdm progress bar |
-| `market_data_location` | `'NYC'`, `'LDN'`, or `'HKG'` (defaults to `'LDN'`) |
+| `market_data_location` | `'NYC'`, `'LDN'`, `'HKG'` or `'TKO'` (defaults to `'LDN'`) |
 | `csa_term` | CSA term for discounting |
 
 ### Historical Pricing with Portfolios
@@ -124,6 +169,37 @@ with HistoricalPricingContext(dt.date(2025, 1, 2), dt.date(2025, 1, 31)):
 
 # result is a PortfolioRiskResult with a date dimension
 ```
+
+---
+
+## Relative terms and resolve(): marking an entered trade to market
+
+**Relative terms are re-resolved on every pricing date, so they describe a new trade on each
+date** (e.g. `expiry='6m'` means a new 6-month option each day, not one option ageing). To mark an
+entered trade to market, fix its terms on the entry date: resolve it on that date (or give absolute
+dates and levels), then price it on later dates.
+
+```python
+with PricingContext(pricing_date=entry_date, market_data_location='NYC'):
+    trade.resolve()  # fields are filled in when the context exits
+with HistoricalPricingContext(entry_date, end, market_data_location='NYC'):
+    mtm = trade.price()
+mtm = mtm.result()
+```
+
+**If you resolve to read the terms, resolve in the same context you price in.** `resolve()` fixes
+the terms on the market it runs under (the default close if there is no context), so pricing it on
+another market prices a trade struck on the first one, e.g. yesterday's ATM strike under today's
+live market.
+
+**`resolve()` does not raise when it fails.** It logs the error and leaves the field as you wrote
+it (e.g. still the string `'ATM'`); check the resolved fields before using them.
+
+**`resolve(in_place=False)` returns the resolved copy instead of changing the instrument**, like any
+other calculation: a future inside a context, so call `.result()`. Under `HistoricalPricingContext`
+it is the only option, and the result is a dict of resolved copies by date (useful to see, say, the
+strike each date picks). `in_place=True` raises there, because one object can't hold a different set
+of terms for each date.
 
 ---
 

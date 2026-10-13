@@ -236,7 +236,7 @@ trigger = StrategyRiskTrigger(trig_req, [exit_action, add_action])
 | `show_progress` | Show progress bar | True |
 | `initial_value` | Starting cash value | 0 |
 | `result_ccy` | Currency for results | None |
-| `market_data_location` | `'LDN'`, `'NYC'`, `'HKG'` | None |
+| `market_data_location` | `'LDN'`, `'NYC'`, `'HKG'`, `'TKO'` | None |
 | `is_batch` | Use websocket batching | True |
 
 ---
@@ -360,7 +360,7 @@ Transaction costs appear in `backtest.result_summary` as the `'Transaction Costs
 
 ## 9. Best Practices
 
-- **Always set `premium=0` on FX options** — see `gs-quant-instruments` for details
+- **Always set `premium=0` on FX options** — see `instruments.md` for details
 - **Match trade_duration to trigger frequency** for roll strategies (e.g. `'1m'` + `'1m'`)
 - **Use `'expiration_date'`** to hold options until expiry
 - **Order triggers correctly** — entry before hedge: `Strategy(None, [entry_trigger, hedge_trigger])`

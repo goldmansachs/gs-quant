@@ -1,9 +1,11 @@
 ---
 name: gs-quant-overview
-description: "Quick-start guide for gs_quant: session setup with GsSession, constructing portfolios, resolving instruments. Start here for any coding task that uses the gs_quant library"
+description: "Guide to writing gs_quant code: sessions, instruments, portfolios, pricing and risk, results, datasets and backtesting. Use for any coding task that uses the gs_quant library, including slow pricing, timeouts, gs_quant error messages, and prices that differ from other tools or look a day old."
 ---
 
 # gs_quant Quick Start
+
+Before writing code that prices, calculates risk or resolves instruments, read `pricing.md`.
 
 ## 1. Creating a Session with `GsSession.use`
 
@@ -73,6 +75,8 @@ print(swap.fixed_rate)  # e.g. 0.0345
 2. The service computes any missing parameters — par rate, premium, forward points, etc.
 3. By default (`in_place=True`), the instrument is updated in place. Pass `in_place=False` to receive a new resolved copy.
 
+For marking an entered trade to market and reading resolved terms, see "Relative terms and resolve()" in `pricing.md`.
+
 ---
 
 ## 3. Combining Instruments in Portfolios
@@ -134,10 +138,11 @@ results = portfolio.calc([DollarPrice, IRDelta])  # multiple risk measures
 
 ## See Also
 
-For detailed guidance on specific topics, see these focused files.
+For detailed guidance on specific topics, open the file whose topic or symptoms match the task.
 
-- `instruments.md` — Constructing all instrument types (IRSwap, XCcy swaps, FXOption, EqOption, etc.) and FX pitfalls
-- `pricing.md` — Pricing instruments and portfolios in gs_quant: PricingContext, HistoricalPricingContext for historical pricing over date ranges, and LiveMarket for real-time pricing. Covers pricing dates, market data location, batch mode, and async patterns.
+- `instruments.md` — Constructing all instrument types (IRSwap, XCcy swaps, FXOption, EqOption, etc.), strikes by asset class, and FX pitfalls
+- `pricing.md` — PricingContext, HistoricalPricingContext and LiveMarket: which close is used and market data location, choosing contexts, long calculations and `is_batch`, relative terms and `resolve()`. Symptoms: slow code, many requests, timeouts, prices that differ from other tools or look a day old.
+- `errors.md` — gs_quant error messages and what to do, and how to reach support when nothing fixes it.
 - `datasets.md` — Accessing market and reference data via the gs_quant Dataset class: get_data, get_data_series, get_data_last, get_coverage, uploading data, batching large queries. Covers TREOD for equities, FXIVOL_STANDARD, symbol dimensions, and common pitfalls.
 - `backtesting.md` — Guide to the gs_quant backtesting framework: Strategy, triggers, actions, GenericEngine, EquityVolEngine, transaction costs, and result extraction.
 - `measure.md` — writing custom measures with `@plot_measure` and `@risk_measure` decorators
