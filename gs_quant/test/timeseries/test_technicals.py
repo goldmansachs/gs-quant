@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright John Kingola. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -209,7 +211,8 @@ def test_relative_strength_index():
         3248.9199,
     ]
 
-    target_vals = [66.35899, 50.99377, 57.63855, 56.91475, 58.92162, 45.88014, 50.61763]
+    # Wilder's RSI: the first average is the plain mean of the first w changes, then smoothed
+    target_vals = [58.38271, 45.4167, 52.55484, 51.91803, 54.0826, 42.4268, 47.34544]
 
     w = 14
     SPX = pd.Series(data=SPX_values, index=dates)
@@ -221,6 +224,31 @@ def test_relative_strength_index():
     expected = pd.Series(data=np.ones(7) * 100, index=dates[15:])
     result = relative_strength_index(increasing_series, w)
     assert_series_equal(result, expected, check_names=False, obj="Relative Strength Index")
+
+
+def test_relative_strength_index_matches_wilder():
+    # independent implementation of Wilder's definition (New Concepts in Technical Trading Systems, 1978)
+    def wilder(prices, w):
+        changes = prices.diff().dropna()
+        gains = changes.clip(lower=0)
+        losses = (-changes).clip(lower=0)
+        avg_gain, avg_loss = gains.iloc[:w].mean(), losses.iloc[:w].mean()
+        out = {changes.index[w - 1]: 100 - 100 / (1 + avg_gain / avg_loss)}
+        for i in range(w, len(changes)):
+            avg_gain = (avg_gain * (w - 1) + gains.iloc[i]) / w
+            avg_loss = (avg_loss * (w - 1) + losses.iloc[i]) / w
+            out[changes.index[i]] = 100 - 100 / (1 + avg_gain / avg_loss)
+        return pd.Series(out)
+
+    dates = pd.bdate_range("2024-01-01", periods=60)
+    prices = pd.Series(100 + np.cumsum(np.random.default_rng(7).normal(0, 1, 60)), index=dates)
+    result = relative_strength_index(prices, 14)
+    reference = wilder(prices, 14)
+    common = result.index.intersection(reference.index)
+    assert len(common) == len(result)
+    assert_series_equal(
+        result, reference.loc[common], check_names=False, check_freq=False, obj="Relative Strength Index vs Wilder"
+    )
 
 
 def test_relative_strength_index_date_offset_window():

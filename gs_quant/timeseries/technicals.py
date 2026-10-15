@@ -9,6 +9,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# Portions copyright John Kingola. Licensed under Apache 2.0 license
 #
 #
 # Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.
@@ -185,20 +186,30 @@ def smoothed_moving_average(x: pd.Series, w: Union[Window, int, str] = Window(No
     if means.size < 1:
         return pd.Series(dtype=float)
     initial_moving_average = means.iloc[0]
-    if (isinstance(ramp, int) and ramp > 0) or isinstance(ramp, pd.DateOffset):
+    first_update = 1
+    if isinstance(ramp, int) and ramp > 0:
+        # Wilder's seed is the plain mean of the first `ramp` observations, x[0 : ramp], and the
+        # first smoothed value is the update from that seed with x[ramp]. Seeding from the mean
+        # ending at x[ramp] instead discarded x[0] and shifted every value by one observation.
+        all_means = mean(x, Window(window_size, 0))
+        initial_moving_average = all_means.iloc[ramp - 1]
+        first_update = 0
+        x = apply_ramp(x, w)
+    elif isinstance(ramp, pd.DateOffset):
         x = apply_ramp(x, w)
 
     smoothed_moving_averages = x.copy()
     smoothed_moving_averages *= 0
-    smoothed_moving_averages.iloc[0] = initial_moving_average
-    for i in range(1, len(x)):
+    if first_update == 1:
+        smoothed_moving_averages.iloc[0] = initial_moving_average
+    previous = initial_moving_average
+    for i in range(first_update, len(x)):
         if isinstance(window_size, int):
             window_num_elem = window_size
         else:
             window_num_elem = len(x[(x.index > (x.index[i] - window_size).date()) & (x.index <= x.index[i])])
-        smoothed_moving_averages.iloc[i] = (
-            (window_num_elem - 1) * smoothed_moving_averages.iloc[i - 1] + x.iloc[i]
-        ) / window_num_elem
+        previous = ((window_num_elem - 1) * previous + x.iloc[i]) / window_num_elem
+        smoothed_moving_averages.iloc[i] = previous
     return smoothed_moving_averages
 
 
