@@ -12,6 +12,7 @@ software distributed under the License is distributed on ans
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import asyncio
@@ -337,6 +338,8 @@ class GsSession(ContextBase):
         self._session = None
         self._async_clients: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
         self._async_close_tasks = set()
+        self._context_depth = 0
+        self._close_on_outer_exit = False
         self._sync_api: Optional['_SyncSessionAPI'] = None
         self._async_api: Optional['_AsyncSessionAPI'] = None
         self.domain = domain
@@ -410,13 +413,34 @@ class GsSession(ContextBase):
         self._authenticate()
         self._authenticate_async()
 
+    def _begin_session_context(self):
+        # A nested context must not overwrite the ownership of the outer one.
+        # Also retain the session while other tasks use it in parallel.
+        if self._context_depth == 0:
+            self._close_on_outer_exit = self._session is None
+        self._context_depth += 1
+
+    def _end_session_context(self) -> bool:
+        self._context_depth -= 1
+        if self._context_depth == 0:
+            should_close = self._close_on_outer_exit
+            self._close_on_outer_exit = False
+            return should_close
+        return False
+
     def _on_enter(self):
-        self.__close_on_exit = self._session is None
-        if not self._session:
-            self.init()
+        self._begin_session_context()
+        try:
+            if self._session is None:
+                self.init()
+        except BaseException:
+            if self._end_session_context():
+                self._close_async_clients()
+                self._session = None
+            raise
 
     def _on_exit(self, exc_type, exc_val, exc_tb):
-        if self.__close_on_exit:
+        if self._end_session_context():
             self._close_async_clients()
             self._session = None
 
@@ -462,16 +486,32 @@ class GsSession(ContextBase):
             self._async_clients.pop(loop, None)
 
     async def _on_aenter(self):
-        self.__close_on_exit = self._session is None
-        if self.__close_on_exit:
-            self.init()
-        self._init_async()
+        self._begin_session_context()
+        try:
+            if self._session is None:
+                self.init()
+            self._init_async()
+        except BaseException:
+            if self._end_session_context():
+                self._close_async_clients()
+                self._session = None
+            raise
 
     async def _on_aexit(self, exc_type, exc_val, exc_tb):
-        if self.__close_on_exit:
-            await self._close_async()
+        if self._end_session_context():
+            # Detach the exiting generation before yielding to the event loop.
+            # Otherwise a new context can enter while aclose() is suspended,
+            # and the old exit would then clear that new context's session.
+            client = self._async_clients.pop(asyncio.get_running_loop(), None)
             self._close_async_clients()
             self._session = None
+            if client is not None and not client.is_closed:
+                # A caller may cancel the exit while the client is closing.
+                # Keep the close task alive even when the exit is cancelled.
+                close_task = asyncio.create_task(client.aclose())
+                self._async_close_tasks.add(close_task)
+                close_task.add_done_callback(self._async_close_tasks.discard)
+                await asyncio.shield(close_task)
 
     def init(self, cookies=None):
         if not self._session:
