@@ -12,10 +12,12 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
 import json
+import math
 from typing import Annotated, Optional
 
 from gs_quant.data import Dataset
@@ -177,14 +179,38 @@ def get_underliers(
             response = user_session.sync.get(url)
         except Exception as e:
             return {"error": str(e)}
-    if "results" not in response:
+    if (
+        not isinstance(response, dict)
+        or not isinstance(response.get("results"), list)
+        or any(not isinstance(position, dict) for position in response["results"])
+    ):
         return {"error": "Unexpected response format, no results"}
     results_url = f"https://marquee.gs.com/s/products/{asset_id}/constituents"
-    if response["results"]:
-        close_positions = [r for r in response["results"] if r.get("positionType") == "close"] or response["results"]
+    # A non-finite market value is not valid JSON. Sanitize only the outgoing
+    # position copy, keeping the API response and finite values unchanged.
+    positions = [
+        {**position, "marketValue": None}
+        if isinstance(position.get("marketValue"), float)
+        and not math.isfinite(position["marketValue"])
+        else position
+        for position in response["results"]
+    ]
+    if positions:
+        close_positions = [r for r in positions if r.get("positionType") == "close"] or positions
         num_results = len(close_positions)
         if num_results > 20:
-            top_n = sorted(close_positions, key=lambda x: x.get("marketValue", 0), reverse=True)
+            # Non-finite market values must not outrank valid position values.
+            def market_value(position):
+                value = position.get("marketValue")
+                if isinstance(value, bool):
+                    return 0
+                if isinstance(value, int):
+                    # A Python int is finite; math.isfinite() can overflow
+                    # while converting arbitrarily large integers to floats.
+                    return value
+                return value if isinstance(value, float) and math.isfinite(value) else 0
+
+            top_n = sorted(close_positions, key=market_value, reverse=True)
             return {
                 "count": num_results,
                 "limitedTo": "First 20 results (by Market Value), please refer to the full list of underliers in Marquee in fullResultsUrl",
@@ -193,3 +219,5 @@ def get_underliers(
             }
         else:
             return {"count": num_results, "fullResultsURL": results_url, "underliers": close_positions}
+    # Always return a JSON-serializable payload, including when there are no positions.
+    return {"count": 0, "fullResultsURL": results_url, "underliers": []}
