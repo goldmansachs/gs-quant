@@ -50,6 +50,7 @@ from gs_quant.timeseries import (
     volatility,
 )
 from gs_quant.timeseries.econometrics import (
+    AnnualizeMode,
     RiskFreeRateCurrency,
     _get_ratio,
     corr_swap_correlation,
@@ -330,13 +331,45 @@ def test_annualize():
         annualize(invalid_series)
 
 
-def test_annualize_docstring_describes_volatility_scaling():
+def test_annualize_docstring_describes_both_scalings():
     doc = annualize.__doc__
-    assert 'volatility' in doc.lower()
     assert r'Y_t = X_t * \sqrt{F}' in doc
-    assert 'annualize(returns(prices))' not in doc
+    assert r'Y_t = X_t * F' in doc
+    assert 'AnnualizeMode.RETURN' in doc
     assert 'Useful for annualizing daily or monthly returns' not in doc
     assert 'time series of prices' not in doc
+
+
+def test_annualize_return_mode_scales_by_factor():
+    dates = [
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
+    ]
+    daily = pd.Series([0.01, 0.02, -0.01, 0.03, 0.0, -0.01], index=dates)
+
+    result = annualize(daily, AnnualizeMode.RETURN)
+
+    assert_series_equal(result, daily * 252, obj="Return annualization")
+    assert result.mean() == pytest.approx(daily.mean() * 252)
+    assert result.mean() != pytest.approx(daily.mean() * math.sqrt(252))
+
+    weekly_dates = [
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 8),
+        dt.date(2019, 1, 15),
+        dt.date(2019, 1, 22),
+        dt.date(2019, 1, 29),
+        dt.date(2019, 2, 6),
+    ]
+    weekly = pd.Series([0.01, 0.02, -0.01, 0.03, 0.0, -0.01], index=weekly_dates)
+    assert_series_equal(annualize(weekly, AnnualizeMode.RETURN), weekly * 52, obj="Weekly return annualization")
+
+    with pytest.raises(MqValueError):
+        annualize(daily, "return")
 
 
 def test_annualize_scales_volatility_not_mean_return():

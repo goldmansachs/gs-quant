@@ -59,6 +59,13 @@ class AnnualizationFactor(IntEnum):
     ANNUALLY = 1
 
 
+class AnnualizeMode(Enum):
+    """Scaling applied by :func:`annualize`."""
+
+    VOLATILITY = 'volatility'
+    RETURN = 'return'
+
+
 class SharpeAssets(Enum):
     USD = 'MAP35DA6K5B1YXGX'
     AUD = 'MAFRZWJ790MQY0EW'
@@ -518,20 +525,26 @@ def _get_annualization_factor(x):
 
 
 @plot_function
-def annualize(x: pd.Series) -> pd.Series:
+def annualize(x: pd.Series, mode: AnnualizeMode = AnnualizeMode.VOLATILITY) -> pd.Series:
     """
     Annualize series based on sample observation frequency
 
-    :param x: time series of a volatility or standard deviation
+    :param x: time series to annualize
+    :param mode: volatility scales by the square root of the annualization factor; return scales by the factor itself
     :return: date-based time series of annualized values
 
     **Usage**
 
-    Based on the number of days between observations, determines an annualization factor and scales the series by the
-    square root of that factor. This is the scaling for a volatility. A mean return annualizes by the factor itself,
-    not by its square root.
+    Based on the number of days between observations, determines an annualization factor and scales the series.
+    ``AnnualizeMode.VOLATILITY`` is the default and is the scaling for a volatility or standard deviation.
+    ``AnnualizeMode.RETURN`` annualizes a mean return by the factor itself.
 
-    :math:`Y_t = X_t * \\sqrt{F}`
+    =========   =============================
+    Mode        Scaling
+    =========   =============================
+    volatility  :math:`Y_t = X_t * \\sqrt{F}`
+    return      :math:`Y_t = X_t * F`
+    =========   =============================
 
     Annualization factors as follows, based on period implied by observations:
 
@@ -553,13 +566,21 @@ def annualize(x: pd.Series) -> pd.Series:
     >>> prices = generate_series(100)
     >>> ann = annualize(std(returns(prices)))
 
+    Annualize a mean return:
+
+    >>> ann_return = annualize(returns(prices), AnnualizeMode.RETURN)
+
     **See also**
 
-    :func:`std` :func:`volatility`
+    :func:`std` :func:`volatility` :func:`returns`
     """
 
     factor: int = _get_annualization_factor(x)
-    return x * math.sqrt(factor)
+    if mode == AnnualizeMode.VOLATILITY:
+        return x * math.sqrt(factor)
+    if mode == AnnualizeMode.RETURN:
+        return x * int(factor)
+    raise MqValueError('Unknown annualize mode (use volatility / return)')
 
 
 @plot_function
