@@ -9,6 +9,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# Portions copyright John Kingola. Licensed under Apache 2.0 license
 #
 #
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
@@ -374,25 +375,25 @@ def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) 
 
     Compute asset price series from simple returns:
 
-    :math:`Y_t = (1 + X_{t-1}) Y_{t-1}`
+    :math:`Y_t = (1 + X_t) Y_{t-1}`
 
-    where :math:`X_t` is the asset price at time :math:`t` and :math:`Y_0 = initial`
+    where :math:`X_t` is the return at time :math:`t` and :math:`Y_0 = initial`
 
     *Logarithmic*
 
     Compute asset price series from logarithmic returns:
 
-    :math:`Y_t = e^{X_{t-1}} Y_{t-1}`
+    :math:`Y_t = e^{X_t} Y_{t-1}`
 
-    where :math:`X_t` is the asset price at time :math:`t` and :math:`Y_0 = initial`
+    where :math:`X_t` is the return at time :math:`t` and :math:`Y_0 = initial`
 
     *Absolute*
 
     Compute asset price series from absolute returns:
 
-    :math:`Y_t = X_{t-1} + Y_{t-1}`
+    :math:`Y_t = X_t + Y_{t-1}`
 
-    where :math:`X_t` is the asset price at time :math:`t` and :math:`Y_0 = initial`
+    where :math:`X_t` is the return at time :math:`t` and :math:`Y_0 = initial`
 
     **Examples**
 
@@ -519,15 +520,17 @@ def _get_annualization_factor(x):
 @plot_function
 def annualize(x: pd.Series) -> pd.Series:
     """
-    Annualize series based on sample observation frequency
+    Annualize a volatility series based on sample observation frequency
 
-    :param x: time series of prices
+    :param x: time series of values that scale with the square root of time, such as a standard deviation of
+              returns
     :return: date-based time series of annualized values
 
     **Usage**
 
-    Based on number of days between observations, will determine an annualization factor and then adjust values
-    accordingly. Useful for annualizing daily or monthly returns
+    Based on number of days between observations, will determine an annualization factor and then scale values by
+    its square root. This is the scaling for a volatility. A mean return annualizes by the factor itself, not its
+    square root, so do not use this function on returns
 
     :math:`Y_t = X_t * \\sqrt{F}`
 
@@ -546,14 +549,14 @@ def annualize(x: pd.Series) -> pd.Series:
 
     **Examples**
 
-    Annualize daily returns series:
+    Annualize a rolling one-month standard deviation of daily returns:
 
     >>> prices = generate_series(100)
-    >>> ann = annualize(returns(prices))
+    >>> ann_vol = annualize(std(returns(prices), 22))
 
     **See also**
 
-    :func:`returns`
+    :func:`volatility` :func:`std` :func:`returns`
     """
 
     factor: int = _get_annualization_factor(x)
