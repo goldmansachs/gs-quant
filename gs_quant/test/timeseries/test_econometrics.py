@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Raj Odedra. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -150,6 +152,33 @@ def test_prices():
 
     with pytest.raises(MqValueError):
         prices(r, 1, "None")
+
+
+def test_prices_docstring_compounds_current_return():
+    doc = prices.__doc__
+    assert r'Y_t = (1 + X_t) Y_{t-1}' in doc
+    assert r'Y_t = e^{X_t} Y_{t-1}' in doc
+    assert r'Y_t = X_t + Y_{t-1}' in doc
+    assert 'X_{t-1}' not in doc
+
+
+def test_prices_compounds_current_observation():
+    dates = [dt.date(2019, 1, 1), dt.date(2019, 1, 2)]
+
+    simple = pd.Series([0.10, -0.20], index=dates)
+    assert_series_equal(prices(simple, 100), pd.Series([110.0, 88.0], index=dates), obj="Simple current return")
+
+    logarithmic = pd.Series([0.10, -0.20], index=dates)
+    expected_log = pd.Series(
+        [100 * math.exp(0.10), 100 * math.exp(0.10) * math.exp(-0.20)],
+        index=dates,
+    )
+    assert_series_equal(prices(logarithmic, 100, Returns.LOGARITHMIC), expected_log, obj="Log current return")
+
+    absolute = pd.Series([1.0, -0.5], index=dates)
+    assert_series_equal(
+        prices(absolute, 100, Returns.ABSOLUTE), pd.Series([101.0, 100.5], index=dates), obj="Absolute current return"
+    )
 
 
 def test_index():
@@ -299,6 +328,33 @@ def test_annualize():
 
     with pytest.raises(MqValueError):
         annualize(invalid_series)
+
+
+def test_annualize_docstring_describes_volatility_scaling():
+    doc = annualize.__doc__
+    assert 'volatility' in doc.lower()
+    assert r'Y_t = X_t * \sqrt{F}' in doc
+    assert 'annualize(returns(prices))' not in doc
+    assert 'Useful for annualizing daily or monthly returns' not in doc
+    assert 'time series of prices' not in doc
+
+
+def test_annualize_scales_volatility_not_mean_return():
+    dates = [
+        dt.date(2019, 1, 1),
+        dt.date(2019, 1, 2),
+        dt.date(2019, 1, 3),
+        dt.date(2019, 1, 4),
+        dt.date(2019, 1, 5),
+        dt.date(2019, 1, 6),
+    ]
+    series = pd.Series([0.01, 0.02, -0.01, 0.03, 0.0, -0.01], index=dates)
+
+    result = annualize(series)
+
+    assert_series_equal(result, series * math.sqrt(252), obj="Volatility annualization")
+    assert result.mean() == pytest.approx(series.mean() * math.sqrt(252))
+    assert result.mean() != pytest.approx(series.mean() * 252)
 
 
 def test_volatility():

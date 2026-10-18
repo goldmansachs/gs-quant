@@ -10,6 +10,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+# Portions copyright Raj Odedra. Licensed under Apache 2.0 license
 #
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
@@ -356,7 +357,7 @@ def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) 
     :param series: time series of returns
     :param initial: initial price level
     :param type: returns type: simple, logarithmic or absolute
-    :return: date-based time series of return
+    :return: date-based time series of prices
 
     **Usage**
 
@@ -374,25 +375,25 @@ def prices(series: pd.Series, initial: int = 1, type: Returns = Returns.SIMPLE) 
 
     Compute asset price series from simple returns:
 
-    :math:`Y_t = (1 + X_{t-1}) Y_{t-1}`
+    :math:`Y_t = (1 + X_t) Y_{t-1}`
 
-    where :math:`X_t` is the asset price at time :math:`t` and :math:`Y_0 = initial`
+    where :math:`X_t` is the return at time :math:`t` and :math:`Y_0 = initial`
 
     *Logarithmic*
 
     Compute asset price series from logarithmic returns:
 
-    :math:`Y_t = e^{X_{t-1}} Y_{t-1}`
+    :math:`Y_t = e^{X_t} Y_{t-1}`
 
-    where :math:`X_t` is the asset price at time :math:`t` and :math:`Y_0 = initial`
+    where :math:`X_t` is the return at time :math:`t` and :math:`Y_0 = initial`
 
     *Absolute*
 
     Compute asset price series from absolute returns:
 
-    :math:`Y_t = X_{t-1} + Y_{t-1}`
+    :math:`Y_t = X_t + Y_{t-1}`
 
-    where :math:`X_t` is the asset price at time :math:`t` and :math:`Y_0 = initial`
+    where :math:`X_t` is the return at time :math:`t` and :math:`Y_0 = initial`
 
     **Examples**
 
@@ -521,13 +522,14 @@ def annualize(x: pd.Series) -> pd.Series:
     """
     Annualize series based on sample observation frequency
 
-    :param x: time series of prices
+    :param x: time series of a volatility or standard deviation
     :return: date-based time series of annualized values
 
     **Usage**
 
-    Based on number of days between observations, will determine an annualization factor and then adjust values
-    accordingly. Useful for annualizing daily or monthly returns
+    Based on the number of days between observations, determines an annualization factor and scales the series by the
+    square root of that factor. This is the scaling for a volatility. A mean return annualizes by the factor itself,
+    not by its square root.
 
     :math:`Y_t = X_t * \\sqrt{F}`
 
@@ -546,14 +548,14 @@ def annualize(x: pd.Series) -> pd.Series:
 
     **Examples**
 
-    Annualize daily returns series:
+    Annualize the standard deviation of a daily return series:
 
     >>> prices = generate_series(100)
-    >>> ann = annualize(returns(prices))
+    >>> ann = annualize(std(returns(prices)))
 
     **See also**
 
-    :func:`returns`
+    :func:`std` :func:`volatility`
     """
 
     factor: int = _get_annualization_factor(x)
