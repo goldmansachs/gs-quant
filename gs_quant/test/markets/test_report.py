@@ -577,9 +577,6 @@ def test_get_thematic_breakdown(mocker):
     assert df.shape == (4, 9)
 
 
-
-
-
 @pytest.fixture
 def mocked_net_weight_report():
     report = MagicMock()
@@ -594,7 +591,9 @@ def test_net_weight_fields_are_not_mutated(mocked_net_weight_report):
         mocked_net_weight_report, start, end, asset_metadata_fields=fields
     )
     assert fields == ["gsid"]
-    assert mocked_net_weight_report.get_positions_data.call_args.kwargs["fields"] == ["gsid", "netWeight"]
+    assert mocked_net_weight_report.get_positions_data.call_args.kwargs["fields"] == [
+        "gsid", "netWeight"
+    ]
     assert result.to_dict("records") == [{"id": "MA1", "netWeight": 0.5}]
 
 
@@ -603,7 +602,10 @@ def test_net_weight_default_fields_do_not_accumulate(mocked_net_weight_report):
     for _ in range(3):
         PerformanceReport.get_position_net_weights(mocked_net_weight_report, start, end)
 
-    fields = [call.kwargs["fields"] for call in mocked_net_weight_report.get_positions_data.call_args_list]
+    fields = [
+        call.kwargs["fields"]
+        for call in mocked_net_weight_report.get_positions_data.call_args_list
+    ]
     assert fields == [["id", "name", "ticker", "netWeight"]] * 3
 
 
@@ -637,7 +639,9 @@ def test_net_weight_field_selection(mocked_net_weight_report, provided, expected
 
 def test_net_weight_retrieval_errors_are_wrapped(mocked_net_weight_report):
     mocked_net_weight_report.get_positions_data.side_effect = RuntimeError("service failure")
-    with pytest.raises(MqValueError, match="Error retrieving net weight data: service failure"):
+    with pytest.raises(
+        MqValueError, match="Error retrieving net weight data: service failure"
+    ):
         PerformanceReport.get_position_net_weights(
             mocked_net_weight_report, dt.date(2024, 1, 2), dt.date(2024, 1, 5)
         )
