@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright John Kingola. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -454,9 +456,10 @@ class BackTest(BaseBacktest):
         # Sharpe ratio (excess return over zero risk-free rate)
         sharpe = ann_return / ann_vol if ann_vol != 0 else np.nan
 
-        # Sortino ratio (downside deviation)
-        downside = daily_pnl[daily_pnl < 0]
-        downside_std = np.sqrt((downside**2).mean()) if len(downside) > 0 else 0.0
+        # Sortino ratio (downside deviation over all periods, with a zero target: Sortino and
+        # van der Meer 1991; dividing by the losing periods only overstates the ratio by
+        # sqrt(N / N_negative) and makes it depend on how the losses are spread)
+        downside_std = np.sqrt((np.minimum(daily_pnl, 0) ** 2).mean()) if len(daily_pnl) > 0 else 0.0
         ann_downside = downside_std * np.sqrt(annualisation_factor)
         sortino = ann_return / ann_downside if ann_downside != 0 else np.nan
 
