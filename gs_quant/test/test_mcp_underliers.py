@@ -130,3 +130,40 @@ def test_get_underliers_nonfinite_values_strict_json_payload(values):
     # Sanitizing the response must not mutate the API's original records.
     assert positions[0]["marketValue"] == values[0]
     assert positions[-1]["marketValue"] == values[-1]
+
+
+def test_get_underliers_missing_values_follow_negative_finite_values():
+    # Zero is a valid market value and must outrank missing/non-finite values.
+    valid_values = list(range(0, -21, -1))
+    positions = [
+        {"positionType": "close", "marketValue": None},
+        {"positionType": "close", "marketValue": float("nan")},
+        {"positionType": "close", "marketValue": float("inf")},
+        {"positionType": "close", "marketValue": False},
+    ] + [
+        {"positionType": "close", "marketValue": value}
+        for value in valid_values
+    ]
+    result = tools.get_underliers("MA123", user_session=_session({"results": positions}))
+    assert result["count"] == len(positions)
+    assert [item["marketValue"] for item in result["underliers"]] == valid_values[:20]
+    json.dumps(result, allow_nan=False)
+
+
+def test_get_underliers_very_negative_integer_still_out_ranks_missing():
+    # A finite Python integer can be smaller than any representable float.
+    finite = -(10 ** 400)
+    positions = [
+        {"positionType": "close", "marketValue": value}
+        for value in range(-1, -20, -1)
+    ]
+    positions += [
+        {"positionType": "close", "marketValue": None},
+        {"positionType": "close", "marketValue": finite},
+    ]
+    result = tools.get_underliers("MA123", user_session=_session({"results": positions}))
+    assert result["count"] == 21
+    # The first 19 are the finite values closest to zero; the extreme finite
+    # integer is still ahead of the missing entry rather than omitted.
+    assert result["underliers"][-1]["marketValue"] == finite
+    json.dumps(result, allow_nan=False)

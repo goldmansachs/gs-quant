@@ -203,12 +203,17 @@ def get_underliers(
             def market_value(position):
                 value = position.get("marketValue")
                 if isinstance(value, bool):
-                    return 0
+                    return float("-inf")
                 if isinstance(value, int):
                     # A Python int is finite; math.isfinite() can overflow
                     # while converting arbitrarily large integers to floats.
                     return value
-                return value if isinstance(value, float) and math.isfinite(value) else 0
+                if isinstance(value, float) and math.isfinite(value):
+                    return value
+                # Missing/non-finite values sort after *all* finite values,
+                # including negative values. Only this sort key is -inf;
+                # the returned response still contains JSON-safe None.
+                return float("-inf")
 
             top_n = sorted(close_positions, key=market_value, reverse=True)
             return {
