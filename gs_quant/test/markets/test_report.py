@@ -12,9 +12,11 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -22,6 +24,7 @@ from gs_quant.api.gs.data import GsDataApi
 from gs_quant.api.gs.portfolios import Portfolio
 from gs_quant.api.gs.thematics import GsThematicApi
 from gs_quant.common import ReportParameters
+from gs_quant.errors import MqValueError
 from gs_quant.markets.report import FactorRiskReport, PerformanceReport, ThematicReport, flatten_results_into_df
 from gs_quant.session import Environment, GsSession
 from gs_quant.target.portfolios import RiskAumSource
@@ -572,6 +575,95 @@ def test_get_thematic_breakdown(mocker):
     mocker.patch.object(GsThematicApi, 'get_thematics', return_value=thematics_endpoint_results)
     df = fake_pta.get_thematic_breakdown(date=dt.date(2020, 9, 14), basket_id='MA1C2Q2AAAT57AX7')
     assert df.shape == (4, 9)
+
+
+@pytest.fixture
+def mocked_net_weight_report():
+    report = MagicMock()
+    report.get_positions_data.return_value = [{"id": "MA1", "netWeight": 0.5}]
+    return report
+
+
+def test_net_weight_fields_are_not_mutated(mocked_net_weight_report):
+    fields = ["gsid"]
+    start, end = dt.date(2024, 1, 2), dt.date(2024, 1, 5)
+    result = PerformanceReport.get_position_net_weights(
+        mocked_net_weight_report, start, end, asset_metadata_fields=fields
+    )
+    assert fields == ["gsid"]
+    assert mocked_net_weight_report.get_positions_data.call_args.kwargs["fields"] == [
+        "gsid", "netWeight"
+    ]
+    assert result.to_dict("records") == [{"id": "MA1", "netWeight": 0.5}]
+
+
+def test_net_weight_default_fields_do_not_accumulate(mocked_net_weight_report):
+    start, end = dt.date(2024, 1, 2), dt.date(2024, 1, 5)
+    for _ in range(3):
+        PerformanceReport.get_position_net_weights(mocked_net_weight_report, start, end)
+
+    fields = [
+        call.kwargs["fields"]
+        for call in mocked_net_weight_report.get_positions_data.call_args_list
+    ]
+    assert fields == [["id", "name", "ticker", "netWeight"]] * 3
+
+
+@pytest.mark.parametrize(
+    "provided, expected",
+    [
+        (["id", "netWeight"], ["id", "netWeight"]),
+        ([], ["netWeight"]),
+        (["id", "ticker"], ["id", "ticker", "netWeight"]),
+    ],
+)
+def test_net_weight_field_selection(mocked_net_weight_report, provided, expected):
+    original_fields = list(provided)
+    PerformanceReport.get_position_net_weights(
+        mocked_net_weight_report,
+        dt.date(2024, 1, 2),
+        dt.date(2024, 1, 5),
+        asset_metadata_fields=provided,
+        position_type="close",
+        include_all_business_days=False,
+    )
+    mocked_net_weight_report.get_positions_data.assert_called_once_with(
+        start=dt.date(2024, 1, 2),
+        end=dt.date(2024, 1, 5),
+        fields=expected,
+        include_all_business_days=False,
+        position_type="close",
+    )
+    assert provided == original_fields
+
+
+def test_net_weight_retrieval_errors_are_wrapped(mocked_net_weight_report):
+    mocked_net_weight_report.get_positions_data.side_effect = RuntimeError("service failure")
+    with pytest.raises(
+        MqValueError, match="Error retrieving net weight data: service failure"
+    ):
+        PerformanceReport.get_position_net_weights(
+            mocked_net_weight_report, dt.date(2024, 1, 2), dt.date(2024, 1, 5)
+        )
+
+
+def test_net_weight_fields_preserved_when_retrieval_fails(mocked_net_weight_report):
+    fields = ["id", "ticker"]
+    mocked_net_weight_report.get_positions_data.side_effect = RuntimeError("service unavailable")
+    for _ in range(2):
+        with pytest.raises(MqValueError, match="service unavailable"):
+            PerformanceReport.get_position_net_weights(
+                mocked_net_weight_report,
+                dt.date(2024, 1, 2),
+                dt.date(2024, 1, 5),
+                asset_metadata_fields=fields,
+            )
+        assert fields == ["id", "ticker"]
+
+    assert all(
+        call.kwargs["fields"] == ["id", "ticker", "netWeight"]
+        for call in mocked_net_weight_report.get_positions_data.call_args_list
+    )
 
 
 if __name__ == '__main__':
