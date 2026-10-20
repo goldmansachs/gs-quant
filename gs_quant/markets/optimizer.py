@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -28,6 +29,7 @@ from dateutil.relativedelta import relativedelta
 from gs_quant.api.gs.assets import GsAssetApi
 from gs_quant.api.gs.hedges import GsHedgeApi
 from gs_quant.errors import MqValueError
+from gs_quant.lazy_defaults import TODAY, lazy_defaults
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.position_set import Position, PositionSet
 from gs_quant.markets.securities import Asset
@@ -38,10 +40,11 @@ from gs_quant.target.hedge import CorporateActionsTypes
 _logger = logging.getLogger(__name__)
 
 
+@lazy_defaults
 def resolve_assets_in_batches(
     identifiers: list[str],
     fields: list[str] = None,
-    as_of_date: dt.date = dt.date.today(),
+    as_of_date: dt.date = TODAY,
     batch_size: int = 100,
     **kwargs,
 ) -> list[dict]:
@@ -181,7 +184,8 @@ class TurnoverNotionalType(Enum):
 
 
 class AssetUniverse:
-    def __init__(self, identifiers: list[str], asset_ids: list[str] = None, as_of_date: dt.date = dt.date.today()):
+    @lazy_defaults
+    def __init__(self, identifiers: list[str], asset_ids: list[str] = None, as_of_date: dt.date = TODAY):
         self.__identifiers = identifiers
         self.__as_of_date = as_of_date
         self.__asset_ids = asset_ids
@@ -276,10 +280,11 @@ class AssetConstraint:
         }
 
     @classmethod
+    @lazy_defaults
     def build_many_constraints(
         cls,
         asset_constraints: Union[pd.DataFrame, list[dict]],
-        as_of_date: dt.date = dt.date.today(),
+        as_of_date: dt.date = TODAY,
         fail_on_unresolved_positions: bool = True,
         **kwargs,
     ):

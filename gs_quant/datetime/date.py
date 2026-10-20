@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import calendar as cal
@@ -22,6 +23,7 @@ from typing import Iterable, Optional, Union
 
 import numpy as np
 
+import gs_quant.lazy_defaults as _lazy
 from gs_quant.common import PricingLocation
 from gs_quant.datetime.gscalendar import GsCalendar
 
@@ -129,8 +131,9 @@ def business_day_offset(
     return tuple(res) if isinstance(res, np.ndarray) else res
 
 
+@_lazy.lazy_defaults
 def prev_business_date(
-    dates: DateOrDates = dt.date.today(), calendars: Union[str, tuple[str, ...]] = (), week_mask: Optional[str] = None
+    dates: DateOrDates = _lazy.TODAY, calendars: Union[str, tuple[str, ...]] = (), week_mask: Optional[str] = None
 ) -> DateOrDates:
     """
     Returns the previous business date for a given date or date series, defaulting to today.

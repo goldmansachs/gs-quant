@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import calendar
@@ -46,6 +47,7 @@ from gs_quant.data.core import DataAggregationOperator, IntervalFrequency
 from gs_quant.entities.entity import Entity, EntityIdentifier, EntityType, PositionedEntity
 from gs_quant.errors import MqRequestError, MqTypeError, MqValueError
 from gs_quant.json_encoder import JSONEncoder
+from gs_quant.lazy_defaults import TODAY, lazy_defaults
 from gs_quant.markets import PricingContext
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.session import GsSession
@@ -495,7 +497,8 @@ class Asset(Entity, metaclass=ABCMeta):
     def get_close_price_for_date(self, date: dt.date) -> pd.Series:
         return self.get_data_series(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY, date, date)
 
-    def get_close_prices(self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()) -> pd.Series:
+    @lazy_defaults
+    def get_close_prices(self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = TODAY) -> pd.Series:
         """
         Get close price series
 
@@ -521,10 +524,11 @@ class Asset(Entity, metaclass=ABCMeta):
         """
         return self.get_data_series(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY, start, end)
 
+    @lazy_defaults
     def get_hloc_prices(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
         interval_frequency: IntervalFrequency = IntervalFrequency.DAILY,
     ) -> pd.DataFrame:
         """
@@ -780,10 +784,11 @@ class SecMasterAsset(Asset):
                     operator=operator,
                 )
 
+    @lazy_defaults
     def get_hloc_prices(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
         interval_frequency: IntervalFrequency = IntervalFrequency.DAILY,
     ) -> pd.DataFrame:
         if self.__is_validate_range(start=start, end=end):
@@ -792,7 +797,8 @@ class SecMasterAsset(Asset):
                     start=start, end=end, interval_frequency=interval_frequency
                 )
 
-    def __is_validate_range(self, start: DateOrDatetime, end: DateOrDatetime = dt.date.today()) -> bool:
+    @lazy_defaults
+    def __is_validate_range(self, start: DateOrDatetime, end: DateOrDatetime = TODAY) -> bool:
         """
         Validates that only one Marquee Id exist in start and end.
         -   This function will return True if only one Marquee id exists in range.
@@ -906,8 +912,9 @@ class Stock(Asset):
     def get_currency(self) -> Optional[Currency]:
         return self.currency
 
+    @lazy_defaults
     def get_thematic_beta(
-        self, basket_identifier: str, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
+        self, basket_identifier: str, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = TODAY
     ) -> pd.DataFrame:
         response = GsAssetApi.resolve_assets(identifier=[basket_identifier], fields=['id', 'type'], limit=1)[
             basket_identifier

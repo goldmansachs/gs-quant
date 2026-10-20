@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -32,6 +33,7 @@ from gs_quant.api.gs.thematics import GsThematicApi, Region, ThematicMeasure
 from gs_quant.common import Currency, PositionTag, PositionType, ReportParameters
 from gs_quant.datetime import business_day_offset, prev_business_date
 from gs_quant.errors import MqValueError
+from gs_quant.lazy_defaults import TODAY, lazy_defaults
 from gs_quant.markets.report_utils import _get_ppaa_batches
 from gs_quant.target.coordinates import MDAPIDataBatchResponse
 from gs_quant.target.data import DataQuery, DataQueryResponse
@@ -812,10 +814,11 @@ class PerformanceReport(Report):
         formatted_aum_data = [{'date': data.date.strftime('%Y-%m-%d'), 'aum': data.aum} for data in aum_data]
         GsReportApi.upload_custom_aum(self.id, formatted_aum_data, clear_existing_data)
 
+    @lazy_defaults
     def get_positions_data(
         self,
         start: dt.date = None,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
         fields: [str] = None,
         include_all_business_days: bool = False,
         position_type: PositionType = None,

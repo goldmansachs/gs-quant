@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -34,6 +35,7 @@ from gs_quant.common import Entitlements, PositionType
 from gs_quant.context_base import nullcontext
 from gs_quant.errors import MqInternalServerError, MqRateLimitedError, MqTimeoutError, MqValueError
 from gs_quant.instrument import Instrument, Security
+from gs_quant.lazy_defaults import NOW, lazy_defaults
 from gs_quant.session import GsSession
 from gs_quant.target.assets import (
     Asset as __Asset,
@@ -358,12 +360,13 @@ class GsAssetApi:
     @_cached
     @backoff.on_exception(lambda: backoff.expo(base=2, factor=2), (MqTimeoutError, MqInternalServerError), max_tries=5)
     @backoff.on_exception(lambda: backoff.constant(90), MqRateLimitedError, max_tries=5)
+    @lazy_defaults
     def resolve_assets(
         cls,
         identifier: [str],
         fields: IdList = [],
         limit: int = 100,
-        as_of: dt.datetime = dt.datetime.today(),
+        as_of: dt.datetime = NOW,
         **kwargs,
     ) -> tuple[dict, ...]:
         where = dict(identifier=identifier, **kwargs)
@@ -371,12 +374,13 @@ class GsAssetApi:
         return GsSession.current.sync.post('/positions/resolver', payload=query)
 
     @classmethod
+    @lazy_defaults
     def get_many_asset_xrefs(
         cls,
         identifier: [str],
         fields: IdList = [],
         limit: int = 100,
-        as_of: dt.datetime = dt.datetime.today(),
+        as_of: dt.datetime = NOW,
         **kwargs,
     ) -> tuple[dict, ...]:
         where = dict(identifier=identifier, **kwargs)

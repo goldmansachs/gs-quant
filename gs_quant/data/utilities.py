@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -26,6 +27,7 @@ from typing import Any, Union
 
 import pandas as pd
 
+from gs_quant.lazy_defaults import NOW, lazy_defaults
 from gs_quant.session import GsSession
 from gs_quant.target.assets import EntityQuery, FieldFilterMap
 
@@ -128,7 +130,8 @@ class Utilities:
             yield iterable[ndx : min(ndx + n, iter_len)]
 
     @staticmethod
-    def fetch_data(dataset, symbols, start=dt.datetime.now(), end=dt.datetime.now(), dimension="assetId", auth=None):
+    @lazy_defaults
+    def fetch_data(dataset, symbols, start=NOW, end=NOW, dimension="assetId", auth=None):
         if auth is not None:
             auth()
         try:
@@ -239,7 +242,8 @@ class Utilities:
         return sorted(assets, key=lambda x: x.get("rank", 0), reverse=True)[0].get(out_type, "")
 
     @staticmethod
-    def map_identifiers(input_type: str, output_type: str, ids, as_of=dt.datetime.now()):
+    @lazy_defaults
+    def map_identifiers(input_type: str, output_type: str, ids, as_of=NOW):
         asset_batches = Utilities.batch(ids, n=1000)
         all_assets = []
         for asset_batch in asset_batches:

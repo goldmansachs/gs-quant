@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import importlib
@@ -863,7 +864,7 @@ def test_align_event_date_to_index_converts_between_different_timezones():
     Expectation: the helper converts the timestamp into the index timezone before normalizing.
     """
     london_index = pd.DatetimeIndex(pd.to_datetime(['2024-01-03 00:00:00']).tz_localize('Europe/London'))
-    new_york_event = pd.Timestamp('2024-01-02 20:00:00', tz='US/Eastern')
+    new_york_event = pd.Timestamp('2024-01-02 20:00:00', tz='America/New_York')
 
     assert align_event_date_to_index(london_index, new_york_event) == pd.Timestamp('2024-01-03', tz='Europe/London')
 

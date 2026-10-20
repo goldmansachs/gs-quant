@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -46,6 +47,7 @@ from gs_quant.entities.entitlements import Entitlements as BasketEntitlements
 from gs_quant.entities.entity import EntityType, PositionedEntity
 from gs_quant.errors import MqError, MqValueError
 from gs_quant.json_encoder import JSONEncoder
+from gs_quant.lazy_defaults import TODAY, lazy_defaults
 from gs_quant.markets.indices_utils import (
     BasketType,
     CorporateActionType,
@@ -459,10 +461,11 @@ class Basket(Asset, PositionedEntity):
         return GsIndexApi.cancel_rebalance(self.id, CustomBasketsRebalanceAction.default_instance())
 
     @_validate(ErrorMessage.UNINITIALIZED)
+    @lazy_defaults
     def get_corporate_actions(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today() + dt.timedelta(days=10),
+        end: dt.date = TODAY + dt.timedelta(days=10),
         ca_type: list[CorporateActionType] = CorporateActionType.to_list(),
     ) -> pd.DataFrame:
         """
@@ -497,10 +500,11 @@ class Basket(Asset, PositionedEntity):
         return pd.DataFrame(response)
 
     @_validate(ErrorMessage.UNINITIALIZED)
+    @lazy_defaults
     def get_fundamentals(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
         period: DataMeasure = DataMeasure.ONE_YEAR.value,
         direction: DataMeasure = DataMeasure.FORWARD.value,
         metrics: list[DataMeasure] = DataMeasure.list_fundamentals(),
@@ -596,10 +600,11 @@ class Basket(Asset, PositionedEntity):
         raise NotImplementedError
 
     @_validate(ErrorMessage.UNINITIALIZED)
+    @lazy_defaults
     def get_position_sets(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
         position_type: PositionType = PositionType.CLOSE,
         source: str = "Basket",
     ) -> list[PositionSet]:

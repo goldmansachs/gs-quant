@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -4958,7 +4959,7 @@ def test_implied_volatility_ng():
 
 
 def test_get_iso_data():
-    tz_map = {'MISO': 'US/Central', 'CAISO': 'US/Pacific'}
+    tz_map = {'MISO': 'America/Chicago', 'CAISO': 'America/Los_Angeles'}
     for key in tz_map:
         assert tm._get_iso_data(key)[0] == tz_map[key]
 

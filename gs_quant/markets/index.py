@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -30,6 +31,7 @@ from gs_quant.entities.tree_entity import AssetTreeNode, TreeHelper
 from gs_quant.errors import MqValueError
 from gs_quant.instrument import Instrument
 from gs_quant.json_encoder import JSONEncoder
+from gs_quant.lazy_defaults import TODAY, lazy_defaults
 from gs_quant.markets.indices_utils import IndicesDatasets, PriceType, ReturnType, STSIndexType
 from gs_quant.markets.securities import Asset, AssetType
 from gs_quant.target.data import DataQuery
@@ -111,10 +113,11 @@ class Index(Asset, PositionedEntity):
         else:
             raise MqValueError(f'{identifier} is not an Index identifier')
 
+    @lazy_defaults
     def get_fundamentals(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
         period: Optional[DataMeasure] = None,
         direction: DataMeasure = DataMeasure.FORWARD.value,
         metrics: list[DataMeasure] = DataMeasure.list_fundamentals(),
@@ -196,9 +199,8 @@ class Index(Asset, PositionedEntity):
 
         return prices
 
-    def get_close_price_for_date(
-        self, date: dt.date = dt.date.today(), price_type: list[PriceType] = None
-    ) -> pd.DataFrame:
+    @lazy_defaults
+    def get_close_price_for_date(self, date: dt.date = TODAY, price_type: list[PriceType] = None) -> pd.DataFrame:
         """
         Retrieve close prices for an index. Only STS indices support indicative prices.
 
@@ -239,10 +241,11 @@ class Index(Asset, PositionedEntity):
 
         return prices
 
+    @lazy_defaults
     def get_close_prices(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
         price_type: list[PriceType] = None,
     ) -> pd.DataFrame:
         """
@@ -412,7 +415,8 @@ class Index(Asset, PositionedEntity):
 
         return self.get_latest_position_set().get_positions()
 
-    def get_constituents_for_date(self, date: dt.date = dt.date.today()) -> pd.DataFrame:
+    @lazy_defaults
+    def get_constituents_for_date(self, date: dt.date = TODAY) -> pd.DataFrame:
         """
         Fetch the constituents of the index in a pandas dataframe for a the given date.
 
@@ -435,9 +439,8 @@ class Index(Asset, PositionedEntity):
 
         return self.get_position_set_for_date(date).get_positions()
 
-    def get_constituents(
-        self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
-    ) -> list[pd.DataFrame]:
+    @lazy_defaults
+    def get_constituents(self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = TODAY) -> list[pd.DataFrame]:
         """
         Fetch the constituents of the index in a pandas dataframe for the given date range
 
@@ -482,7 +485,8 @@ class Index(Asset, PositionedEntity):
 
         return GsAssetApi.get_instruments_for_positions(self.get_latest_position_set().to_target().positions)
 
-    def get_constituent_instruments_for_date(self, date: dt.date = dt.date.today()) -> tuple[Instrument, ...]:
+    @lazy_defaults
+    def get_constituent_instruments_for_date(self, date: dt.date = TODAY) -> tuple[Instrument, ...]:
         """
         Fetch the constituents of the index for a given date as instrument objects.
 
@@ -505,8 +509,9 @@ class Index(Asset, PositionedEntity):
 
         return GsAssetApi.get_instruments_for_positions(self.get_position_set_for_date(date).to_target().positions)
 
+    @lazy_defaults
     def get_constituent_instruments(
-        self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
+        self, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = TODAY
     ) -> tuple[tuple[Instrument, ...], ...]:
         """
         Fetch the constituents of the index as instrument objects for the given date range
