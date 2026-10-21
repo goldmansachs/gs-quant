@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -36,6 +37,7 @@ from gs_quant.common import (
     PositionTag as PositionTagTarget,
 )
 from gs_quant.errors import MqRequestError, MqValueError
+from gs_quant.lazy_defaults import TODAY, lazy_defaults
 from gs_quant.markets.position_set_utils import (
     _get_asset_temporal_xrefs,
     _group_temporal_xrefs_into_discrete_time_ranges,
@@ -237,10 +239,11 @@ class PositionSet:
 
     """
 
+    @lazy_defaults
     def __init__(
         self,
         positions: list[Position],
-        date: dt.date = dt.date.today(),
+        date: dt.date = TODAY,
         divisor: float = None,
         reference_notional: float = None,
         unresolved_positions: list[Position] = None,
@@ -920,7 +923,8 @@ class PositionSet:
         return cls(converted_positions, position_set.position_date, position_set.divisor)
 
     @classmethod
-    def from_list(cls, positions: list[str], date: dt.date = dt.date.today()):
+    @lazy_defaults
+    def from_list(cls, positions: list[str], date: dt.date = TODAY):
         """
         Create equally-weighted PostionSet instance from a list of identifiers
 
@@ -946,10 +950,11 @@ class PositionSet:
         return cls(converted_positions, date)
 
     @classmethod
+    @lazy_defaults
     def from_dicts(
         cls,
         positions: list[dict],
-        date: dt.date = dt.date.today(),
+        date: dt.date = TODAY,
         reference_notional: float = None,
         add_tags: bool = False,
     ):
@@ -977,10 +982,11 @@ class PositionSet:
         return cls.from_frame(positions_df, date, reference_notional, add_tags=add_tags)
 
     @classmethod
+    @lazy_defaults
     def from_frame(
         cls,
         positions: pd.DataFrame,
-        date: dt.date = dt.date.today(),
+        date: dt.date = TODAY,
         reference_notional: float = None,
         divisor: float = None,
         add_tags: bool = False,

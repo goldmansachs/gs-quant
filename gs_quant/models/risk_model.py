@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -29,6 +30,7 @@ from gs_quant.base import EnumBase
 from gs_quant.common import Currency
 from gs_quant.data import DataMeasure
 from gs_quant.errors import MqRequestError, MqValueError
+from gs_quant.lazy_defaults import NOW, lazy_defaults
 from gs_quant.markets.factor import Factor
 from gs_quant.markets.securities import AssetIdentifier, SecurityMaster
 from gs_quant.models.risk_model_utils import (
@@ -594,10 +596,11 @@ class MarqueeRiskModel(RiskModel):
         """
         GsFactorRiskModelApi.delete_risk_model_factor(self.id, factor_id)
 
+    @lazy_defaults
     def get_intraday_factor_data(
         self,
-        start_time: dt.datetime = dt.datetime.now() - dt.timedelta(hours=3),
-        end_time: dt.datetime = dt.datetime.now(),
+        start_time: dt.datetime = NOW - dt.timedelta(hours=3),
+        end_time: dt.datetime = NOW,
         factors: list[str] = None,
         factor_ids: list[str] = None,
         data_source: Union[IntradayFactorDataSource, str] = None,

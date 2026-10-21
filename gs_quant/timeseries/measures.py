@@ -9,6 +9,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 #
 # Plot Service will make use of appropriately decorated functions in this module.
 import calendar
@@ -3098,17 +3099,17 @@ def var_swap(
 
 
 def _get_iso_data(region: str):
-    timezone = 'US/Eastern'
+    timezone = 'America/New_York'
     peak_start = 7
     peak_end = 23
     weekends = [5, 6]
 
     if region in ['MISO', 'ERCOT', 'SPP']:
-        timezone = 'US/Central'
+        timezone = 'America/Chicago'
         peak_start = 6
         peak_end = 22
     if region == 'CAISO':
-        timezone = 'US/Pacific'
+        timezone = 'America/Los_Angeles'
         weekends = [6]
         peak_start = 6
         peak_end = 22

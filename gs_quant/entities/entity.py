@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -51,6 +52,7 @@ from gs_quant.data.coordinate import DataDimensions
 from gs_quant.entities.entitlements import Entitlements
 from gs_quant.entities.entity_utils import _explode_data
 from gs_quant.errors import MqError, MqValueError
+from gs_quant.lazy_defaults import TODAY, lazy_defaults
 from gs_quant.markets.indices_utils import BasketType, IndicesDatasets
 from gs_quant.markets.position_set import PositionSet
 from gs_quant.markets.report import (
@@ -391,10 +393,11 @@ class PositionedEntity(metaclass=ABCMeta):
             return PositionSet.from_target(response) if response else None
         raise NotImplementedError
 
+    @lazy_defaults
     def get_position_sets(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
         position_type: PositionType = PositionType.CLOSE,
     ) -> list[PositionSet]:
         if self.positioned_entity_type == EntityType.ASSET:
@@ -426,10 +429,11 @@ class PositionedEntity(metaclass=ABCMeta):
         else:
             raise NotImplementedError
 
+    @lazy_defaults
     def get_positions_data(
         self,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
         fields: [str] = None,
         position_type: PositionType = PositionType.CLOSE,
     ) -> list[dict]:
@@ -841,12 +845,13 @@ class PositionedEntity(metaclass=ABCMeta):
             attribution_table.append(new_entry)
         return pd.DataFrame(attribution_table)
 
+    @lazy_defaults
     def get_thematic_exposure(
         self,
         basket_identifier: str,
         notional: int = 10000000,
         start: dt.date = DateLimit.LOW_LIMIT.value,
-        end: dt.date = dt.date.today(),
+        end: dt.date = TODAY,
     ) -> pd.DataFrame:
         if not self.positioned_entity_type == EntityType.ASSET:
             raise NotImplementedError
@@ -873,8 +878,9 @@ class PositionedEntity(metaclass=ABCMeta):
         df = pd.DataFrame(df)
         return df.set_index('date')
 
+    @lazy_defaults
     def get_thematic_beta(
-        self, basket_identifier: str, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = dt.date.today()
+        self, basket_identifier: str, start: dt.date = DateLimit.LOW_LIMIT.value, end: dt.date = TODAY
     ) -> pd.DataFrame:
         if not self.positioned_entity_type == EntityType.ASSET:
             raise NotImplementedError

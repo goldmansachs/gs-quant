@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -40,6 +41,7 @@ from gs_quant.instrument import (
     EqVarianceSwap,
     Instrument,
 )
+from gs_quant.lazy_defaults import TODAY, lazy_defaults
 from gs_quant.target.backtests import (
     BacktestResult,
     BacktestRisk,
@@ -273,10 +275,11 @@ class StrategySystematic:
             return direction * quantity
         return None
 
+    @lazy_defaults
     def backtest(
         self,
         start: dt.date = None,
-        end: dt.date = dt.date.today() - dt.timedelta(days=1),
+        end: dt.date = TODAY - dt.timedelta(days=1),
         is_async: bool = False,
         measures: Iterable[FlowVolBacktestMeasure] = (FlowVolBacktestMeasure.ALL_MEASURES,),
         correlation_id: str = None,
