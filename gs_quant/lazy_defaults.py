@@ -75,9 +75,12 @@ def lazy_defaults(func: F) -> F:
 
     def resolved(args: tuple, kwargs: dict) -> inspect.BoundArguments:
         bound = signature.bind(*args, **kwargs)
+        # An explicitly supplied argument, even a LazyDefault marker, must
+        # not be evaluated by the default-resolution machinery.
+        supplied = set(bound.arguments)
         bound.apply_defaults()
         for name, default in lazy.items():
-            if bound.arguments[name] is default:
+            if name not in supplied:
                 bound.arguments[name] = default.resolve()
         return bound
 

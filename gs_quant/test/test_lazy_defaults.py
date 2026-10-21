@@ -82,6 +82,47 @@ class TestLazyDefaults:
             assert f(1, 5, 6, 7, c=9, extra='x') == (1, 5, (6, 7), 9, today, {'extra': 'x'})
             assert f(1, as_of=None) == (1, 2, (), 3, None, {})
 
+    def test_explicit_lazy_marker_is_not_resolved(self):
+        called = []
+
+        def factory():
+            called.append(True)
+            return 'resolved'
+
+        marker = LazyDefault(factory, 'MARKER')
+
+        @lazy_defaults
+        def f(value=marker):
+            return value
+
+        assert f(marker) is marker
+        assert f(value=marker) is marker
+        assert f(value=None) is None
+        assert called == []
+        assert f() == 'resolved'
+        assert called == [True]
+
+    def test_explicit_other_lazy_marker_is_preserved(self):
+        @lazy_defaults
+        def f(as_of=TODAY):
+            return as_of
+
+        replacement = LazyDefault(lambda: dt.date(2040, 1, 1), 'REPLACEMENT')
+        assert f(as_of=TODAY) is TODAY
+        assert f(as_of=replacement) is replacement
+
+        with freeze_time('2031-03-04'):
+            assert f() == dt.date(2031, 3, 4)
+
+    def test_coroutine_preserves_explicit_lazy_marker(self):
+        @lazy_defaults
+        async def f(at=NOW):
+            return at
+
+        assert asyncio.run(f(at=NOW)) is NOW
+        with freeze_time('2031-03-04 12:00:00'):
+            assert asyncio.run(f()) == dt.datetime(2031, 3, 4, 12)
+
     def test_two_lazy_parameters_are_resolved_independently(self):
         @lazy_defaults
         def f(start=TODAY - dt.timedelta(days=7), end=TODAY):
