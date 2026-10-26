@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Muhammad Mudassir. Licensed under Apache 2.0 license.
 """
 
 import datetime as dt
@@ -26,11 +28,41 @@ from gs_quant.backtests.triggers import (
     AggType,
     DateTrigger,
     DateTriggerRequirements,
+    EventTriggerRequirements,
     MeanReversionTriggerRequirements,
     NotTrigger,
     NotTriggerRequirements,
 )
+from gs_quant.data import Dataset
 from gs_quant.instrument import IRSwap, IRSwaption
+
+
+def test_event_trigger_requirements_respects_query_window(monkeypatch):
+    requested_start = dt.date(2026, 1, 1)
+    requested_end = dt.date(2026, 2, 1)
+    event_date = dt.datetime(2026, 1, 15)
+
+    captured = {}
+
+    def fake_get_data(self, start=None, end=None, **kwargs):
+        captured['start'] = start
+        captured['end'] = end
+        captured['kwargs'] = kwargs
+
+        return pd.DataFrame({'eventName': ['CPI']}, index=[event_date])
+
+    monkeypatch.setattr(Dataset, 'get_data', fake_get_data)
+
+    requirements = EventTriggerRequirements(
+        event_name='CPI',
+        start=requested_start,
+        end=requested_end,
+    )
+
+    assert requirements.get_trigger_times() == [event_date.date()]
+    assert captured['start'] == requested_start
+    assert captured['end'] == requested_end
+    assert captured['kwargs']['eventName'] == 'CPI'
 
 
 def test_date_trigger():
