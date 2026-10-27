@@ -44,7 +44,7 @@ def aggregate_queries(query_infos):
             series: ProcessorResult = ProcessorResult(
                 False, f'No dataset resolved for measure={coordinate.measure} with dimensions={coordinate.dimensions}'
             )
-            asyncio.get_event_loop().run_until_complete(query_info.processor.calculate(query_info.attr, series, None))
+            asyncio.run(query_info.processor.calculate(query_info.attr, series, None))
             continue
         dataset_mappings.setdefault(
             query_key,

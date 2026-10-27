@@ -287,7 +287,10 @@ class Base(ABC):
                 from types import UnionType
 
                 if isinstance(tp, UnionType):
-                    return any(cls.__is_type_match(arg, val) for arg in tp.__args__)
+                    args = tp.__args__
+                    if float in args:
+                        args += (int,)
+                    return any(cls.__is_type_match(arg, val) for arg in args)
         else:
             is_generic_alias = isinstance(tp, typing._GenericAlias)
         if not is_generic_alias:

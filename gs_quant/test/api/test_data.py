@@ -21,7 +21,6 @@ import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 from gs_quant.api.gs.data import GsDataApi
-from gs_quant.base import DictBase
 from gs_quant.context_base import ContextMeta
 from gs_quant.errors import MqValueError
 from gs_quant.markets import MarketDataCoordinate
@@ -444,20 +443,21 @@ def test_get_dataset_fields(mocker):
 
 
 def test_get_field_types(mocker):
+    # /data/fields/query returns raw JSON when `cls` is not passed, so `get_field_types` must
+    # read it as plain dicts rather than decoded DataSetFieldEntity objects (MMVIEW-13767:
+    # DataSetFieldEntityNumberParameters has no `.get()`, unlike a dict).
     mock_response = {
         "totalResults": 4,
         "results": [
-            DataSetFieldEntity(name="price", type_="number", parameters=DictBase({})),
-            DataSetFieldEntity(name="strikeReference", type_="string", parameters=DictBase({})),
-            DataSetFieldEntity(
-                name="adjDate", type_="string", field_java_type='DateField', parameters=DictBase({'format': 'date'})
-            ),
-            DataSetFieldEntity(
-                name="time",
-                type_="string",
-                field_java_type='DateTimeField',
-                parameters=DictBase({'format': 'date-time'}),
-            ),
+            {"name": "price", "type": "number", "parameters": {}},
+            {"name": "strikeReference", "type": "string", "parameters": {}},
+            {"name": "adjDate", "type": "string", "fieldJavaType": "DateField", "parameters": {"format": "date"}},
+            {
+                "name": "time",
+                "type": "string",
+                "fieldJavaType": "DateTimeField",
+                "parameters": {"format": "date-time"},
+            },
         ],
     }
 
@@ -475,8 +475,75 @@ def test_get_field_types(mocker):
     GsSession.current.sync.post.assert_called_once_with(
         '/data/fields/query',
         payload={'where': {'name': ['price', 'strikeReference', 'adjDate', 'time']}, 'limit': 4},
-        cls=DataSetFieldEntity,
     )
+
+
+def test_get_field_types_numeric_parameters(mocker):
+    # Regression test for MMVIEW-13767: the credit-vol dataset's numeric fields have non-null
+    # `parameters` (e.g. {"minimum": 0, "maximum": 1000}), which crashed the old
+    # `field.parameters.get('format')` call with AttributeError once parameters were decoded
+    # into a typed DataSetFieldEntityNumberParameters object instead of a dict.
+    mock_response = {
+        "results": [
+            {"name": "impliedVolatility", "type": "number", "parameters": {"minimum": 0, "maximum": 1000}},
+            {"name": "date", "type": "string", "parameters": {"format": "date"}},
+            {"name": "updateTime", "type": "string", "parameters": {"format": "date-time"}},
+            {"name": "assetId", "type": "string"},
+        ],
+    }
+
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
+    mocker.patch.object(GsSession.current.sync, 'post', return_value=mock_response)
+
+    response = GsDataApi.get_field_types(field_names=['impliedVolatility', 'date', 'updateTime', 'assetId'])
+
+    assert response == {
+        'impliedVolatility': 'number',
+        'date': 'date',
+        'updateTime': 'date-time',
+        'assetId': 'string',
+    }
+
+
+def test_get_field_types_malformed_result_falls_back(mocker):
+    # A result missing `name` should not raise - get_field_types should return {} so that
+    # construct_dataframe_with_types falls back to the catalog API (get_types).
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
+    mocker.patch.object(GsSession.current.sync, 'post', return_value={"results": [{"type": "number"}]})
+
+    response = GsDataApi.get_field_types(field_names=['impliedVolatility'])
+    assert response == {}
+
+
+def test_construct_dataframe_with_types_standard_fields(mocker):
+    # End-to-end guard: with standard_fields=True, get_field_types must still correctly
+    # identify date columns so they get converted with pd.to_datetime, not silently left as
+    # strings (which the getattr(parameters, 'format_', None) fix proposed on MMVIEW-13639
+    # would have caused).
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
+    mocker.patch.object(
+        GsSession.current.sync,
+        'post',
+        return_value={
+            "results": [
+                {"name": "impliedVolatility", "type": "number", "parameters": {"minimum": 0, "maximum": 1000}},
+                {"name": "date", "type": "string", "parameters": {"format": "date"}},
+                {"name": "assetId", "type": "string"},
+            ],
+        },
+    )
+
+    data = [{"date": "2026-10-12", "impliedVolatility": 12.5, "assetId": "MA123"}]
+    df = GsDataApi.construct_dataframe_with_types('CREDIT_VOL_DATASET', data, standard_fields=True)
+
+    assert df.index.name == 'date'
+    assert pd.api.types.is_datetime64_any_dtype(df.index)
 
 
 if __name__ == "__main__":

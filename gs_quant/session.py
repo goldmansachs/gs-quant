@@ -623,6 +623,14 @@ class GsSession(ContextBase):
                 )
         else:
             raise MqError('not implemented')
+        logger.debug(
+            "%s %s%s cookies: %s headers: %s",
+            method,
+            url,
+            path,
+            tuple(f'{k.name} {k.domain}' for k in self._session.cookies),
+            tuple(k for k in self._session.headers),
+        )
         return kwargs
 
     def _parse_response(

@@ -142,6 +142,8 @@ For detailed guidance on specific topics, open the file whose topic or symptoms 
 
 - `instruments.md` — Constructing all instrument types (IRSwap, XCcy swaps, FXOption, EqOption, etc.), strikes by asset class, and FX pitfalls
 - `pricing.md` — PricingContext, HistoricalPricingContext and LiveMarket: which close is used and market data location, choosing contexts, long calculations and `is_batch`, relative terms and `resolve()`. Symptoms: slow code, many requests, timeouts, prices that differ from other tools or look a day old.
+- `scenarios.md` — Shocking and overriding market data: patterns, shock sizes, equity vols, FX correlation, shocked P&L over time.
+- `risk-measures.md` — What each risk measure's number means: units, scaling with size, `currency=` and `aggregation_level=`, by asset class.
 - `errors.md` — gs_quant error messages and what to do, and how to reach support when nothing fixes it.
 - `datasets.md` — Accessing market and reference data via the gs_quant Dataset class: get_data, get_data_series, get_data_last, get_coverage, uploading data, batching large queries. Covers TREOD for equities, FXIVOL_STANDARD, symbol dimensions, and common pitfalls.
 - `backtesting.md` — Guide to the gs_quant backtesting framework: Strategy, triggers, actions, GenericEngine, EquityVolEngine, transaction costs, and result extraction.

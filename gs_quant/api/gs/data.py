@@ -1401,19 +1401,16 @@ class GsDataApi(DataApi):
     @classmethod
     def get_field_types(cls, field_names: Union[str, list[str]]):
         try:
-            fields = cls.get_dataset_fields(names=field_names, limit=len(field_names))
+            response = cls.get_session().sync.post(
+                '/data/fields/query', payload={'where': {'name': field_names}, 'limit': len(field_names)}
+            )
+            return {
+                f['name']: (f.get('parameters') or {}).get('format') or f.get('type')
+                for f in response.get('results', ())
+                if f.get('name')
+            }
         except Exception:
             return {}
-        if fields:
-            field_types = {}
-            field: DataSetFieldEntity
-            for field in fields:
-                field_name = field.name
-                field_type = field.type_
-                field_format = field.parameters.get('format') if field.parameters else None
-                field_types[field_name] = field_format or field_type
-            return field_types
-        return {}
 
     @classmethod
     def construct_dataframe_with_types(

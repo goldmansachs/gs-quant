@@ -428,13 +428,13 @@ class DataGrid:
 
         for query_info in self._data_queries:
             if isinstance(query_info, MeasureQueryInfo):
-                asyncio.get_event_loop().run_until_complete(
+                asyncio.run(
                     query_info.processor.calculate(
                         query_info.attr, ProcessorResult(True, None), self.rule_cache, query_info=query_info
                     )
                 )
             elif query_info.data is None or len(query_info.data) == 0:
-                asyncio.get_event_loop().run_until_complete(
+                asyncio.run(
                     query_info.processor.calculate(
                         query_info.attr,
                         ProcessorResult(False, f'No data found for Coordinate {query_info.query.coordinate}'),
@@ -442,7 +442,7 @@ class DataGrid:
                     )
                 )
             else:
-                asyncio.get_event_loop().run_until_complete(
+                asyncio.run(
                     query_info.processor.calculate(
                         query_info.attr, ProcessorResult(True, query_info.data), self.rule_cache
                     )

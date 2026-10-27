@@ -22,6 +22,13 @@ gs_quant's generic request timeout: the service it called (a dataset query, for 
 answer within 65 seconds. Retry; if it keeps happening, ask for less per call (for datasets, see
 "Iterating Over Large Queries" in `datasets.md`).
 
+### `ErrorValue object has no attribute …` / `… not 'ErrorValue'` / `unsupported operand type(s) for …: 'ErrorValue' …`
+A calculation failed. gs_quant doesn't raise when a calculation fails: `.result()` returns an
+`ErrorValue`, and these errors come from using it as if it were a number or a result. The cause is
+the text after `Error was`, or what `print(result)` shows. Check each result with
+`isinstance(result, ErrorValue)` before using it. Reading `.raw_value` on an `ErrorValue` doesn't
+raise: it returns `None`, so a failure can slip through as a missing number.
+
 ## If nothing here fixes it
 
 **Isolate the problem with the user before they contact support.** Cut their code down to the

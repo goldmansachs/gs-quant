@@ -120,6 +120,10 @@ jan_15 = result[dt.date(2025, 1, 15)]  # PortfolioRiskResult for that single dat
 result.dates  # tuple of dt.date
 ```
 
+**Failed dates.** If the calculation fails on some dates, the series leaves those dates out and
+keeps their `ErrorValue`s in `series.error`, a dict keyed by date. If it fails on every date,
+`.result()` returns the first date's `ErrorValue` instead of a series.
+
 ## Converting to DataFrames
 
 All result types support conversion to pandas DataFrames:
