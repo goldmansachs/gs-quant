@@ -146,5 +146,5 @@ For detailed guidance on specific topics, open the file whose topic or symptoms 
 - `risk-measures.md` — What each risk measure's number means: units, scaling with size, `currency=` and `aggregation_level=`, by asset class.
 - `errors.md` — gs_quant error messages and what to do, and how to reach support when nothing fixes it.
 - `datasets.md` — Accessing market and reference data via the gs_quant Dataset class: get_data, get_data_series, get_data_last, get_coverage, uploading data, batching large queries. Covers TREOD for equities, FXIVOL_STANDARD, symbol dimensions, and common pitfalls.
-- `backtesting.md` — Guide to the gs_quant backtesting framework: Strategy, triggers, actions, GenericEngine, EquityVolEngine, transaction costs, and result extraction.
+- `backtesting.md` — Guide to the gs_quant backtesting framework: when to price directly instead, Strategy, triggers, actions, GenericEngine, EquityVolEngine, transaction costs, skipping dates, P&L breakdowns, and result extraction.
 - `measure.md` — writing custom measures with `@plot_measure` and `@risk_measure` decorators

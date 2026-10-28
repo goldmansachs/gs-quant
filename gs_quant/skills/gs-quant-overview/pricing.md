@@ -75,9 +75,9 @@ After that time, if today's close isn't in yet, pricing fails.
 
 | Job | Use |
 |---|---|
-| Same instrument(s), many dates | one `HistoricalPricingContext` |
+| Same instrument(s), many dates, including a trade fixed on its start date and priced over its life | one `HistoricalPricingContext` per instrument or trade |
 | Many instruments, one date | one `PricingContext` around a `Portfolio` |
-| Instrument terms change per date (strike from that day's spot, expiry from a row, a field that must equal the pricing date) | an outer `PricingContext` with an inner dated one per date |
+| A new trade on each date, with terms from that date (strike from that day's spot, expiry from a row, a field that must equal the pricing date) | an outer `PricingContext` with an inner dated one per date |
 | A step needs an earlier result (resolve, then price later; hedge on the previous delta) | separate contexts in sequence, `.result()` in between |
 
 ```python
@@ -88,6 +88,10 @@ with PricingContext(market_data_location='NYC'):  # outer: sends everything on e
             prices[d] = inst.price()
 prices = {d: f.result() for d, f in prices.items()}
 ```
+
+**A job can combine shapes.** For example, strikes set from each start date's spot and each trade
+then priced over its life: work out the strikes first, then price each trade in one
+`HistoricalPricingContext` over its life.
 
 **Don't open and exit a `PricingContext` on every pass of a loop:** each exit sends and waits, so
 requests go one at a time. If you must, set `is_async=True` and call `.result()` only after the loop.

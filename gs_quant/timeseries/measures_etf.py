@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
 import re
 from enum import Enum
 from typing import Optional
@@ -23,6 +22,7 @@ import pandas as pd
 from gs_quant.data import DataContext, Dataset
 from gs_quant.entities.entity import Country, EntityType
 from gs_quant.errors import MqValueError
+from gs_quant.timeseries.etf_classification import ETF_CLASSIFICATION
 from gs_quant.timeseries.helper import plot_measure_entity
 from gs_quant.timeseries.measures import ExtendedSeries
 
@@ -48,47 +48,117 @@ ETF_FLOW_ALL = 'All'
 _ETF_FLOW_HIERARCHY = ('etfAssetClass', 'etfCategory', 'etfNicheFocus', 'etfFocus')
 
 
-class ETFAssetClass(Enum):
-    ALL = 'All'
-    EQUITY = 'Equity'
-    FIXED_INCOME = 'Fixed Income'
-    COMMODITIES = 'Commodities'
-    CURRENCY = 'Currency'
-    ALTERNATIVES = 'Alternatives'
-    ASSET_ALLOCATION = 'Asset Allocation'
+# ---------------------------------------------------------------------------
+# Static classification tree (FactSet Fund Exposure Sort).
+#
+# ETF_CLASSIFICATION is generated from the FactSet CSV and nested as:
+#     Asset Class  -> Category    -> Focus         -> Niche
+# which maps onto the dataset hierarchy levels used by this module as:
+#     etfAssetClass -> etfCategory -> etfNicheFocus -> etfFocus
+#
+# This tree lets the cascading drop-down (etf_flow_coverage) return the valid
+# children of a selection without having to query the dataset: pick an asset
+# class and get its categories, pick a category and get its focuses, and so on.
+# ---------------------------------------------------------------------------
 
 
-class ETFCategory(Enum):
-    ALL = 'All'
-    AGRICULTURE = 'Agriculture'
-    ASSET_ALLOCATION = 'Asset Allocation'
-    BASKET = 'Basket'
-    BROAD_MARKET = 'Broad Market'
-    BROAD_MARKET_ASSET_BACKED = 'Broad Market, Asset-backed'
-    BROAD_MARKET_BROAD_BASED = 'Broad Market, Broad-based'
-    CORPORATE_ASSET_BACKED = 'Corporate, Asset-backed'
-    CORPORATE_BANK_LOANS = 'Corporate, Bank Loans'
-    CORPORATE_BROAD_BASED = 'Corporate, Broad-based'
-    CORPORATE_CONVERTIBLE = 'Corporate, Convertible'
-    CORPORATE_PREFERRED = 'Corporate, Preferred'
-    ENERGY = 'Energy'
-    GOVERNMENT_AGENCY = 'Government, Agency'
-    GOVERNMENT_BROAD_BASED = 'Government, Broad-based'
-    GOVERNMENT_INFLATION_LINKED = 'Government, Inflation-linked'
-    GOVERNMENT_LOCAL_MUNICIPAL = 'Government, Local Authority/Municipal'
-    GOVERNMENT_MORTGAGE_BACKED = 'Government, Mortgage-backed'
-    GOVERNMENT_NON_NATIVE_CURRENCY = 'Government, Non-native currency'
-    GOVERNMENT_TREASURY = 'Government, Treasury'
-    HEDGE_FUND_STRATEGIES = 'Hedge Fund Strategies'
-    HIGH_DIVIDEND_YIELD = 'High Dividend Yield'
-    INDUSTRIAL_METALS = 'Industrial Metals'
-    METALS = 'Metals'
-    PAIR = 'Pair'
-    PRECIOUS_METALS = 'Precious Metals'
-    SECTOR = 'Sector'
-    SIZE_AND_STYLE = 'Size and Style'
-    STRUCTURED_OUTCOME = 'Structured Outcome'
-    TACTICAL_TOOLS = 'Tactical Tools'
+def _parser_safe_label(value):
+    """
+    Convert a raw dataset value to a label the plot expression parser accepts.
+
+    The parser only tolerates word characters and spaces, so commas, dashes,
+    slashes and ampersands (e.g. 'Government, Treasury', 'Long-Term',
+    'Local Authority/Municipal', 'Size & Style') are replaced with spaces and
+    runs of whitespace are collapsed.
+    """
+    if value is None or value == ETF_FLOW_ALL:
+        return value
+    return re.sub(r'\s+', ' ', re.sub(r'[^\w ]+', ' ', str(value))).strip()
+
+
+def _build_label_maps():
+    """
+    Build lookups from user-supplied labels to real dataset values.
+
+    Returns two dicts: one keyed by the parser-safe label and one keyed by the
+    lower-cased parser-safe label (so matching is also case-insensitive).
+    """
+    exact, lower = {}, {}
+
+    def register(value):
+        label = _parser_safe_label(value)
+        exact.setdefault(label, value)
+        lower.setdefault(label.lower(), value)
+        # also allow the raw dataset value (and its lower-case form) to resolve
+        exact.setdefault(value, value)
+        lower.setdefault(str(value).lower(), value)
+
+    for asset_class, categories in ETF_CLASSIFICATION.items():
+        register(asset_class)
+        for category, focuses in categories.items():
+            register(category)
+            for focus, niches in focuses.items():
+                register(focus)
+                for niche in niches:
+                    register(niche)
+    return exact, lower
+
+
+# Parser-safe label -> true dataset value, derived from the classification tree.
+_LABEL_TO_DATASET, _LABEL_TO_DATASET_LOWER = _build_label_maps()
+
+
+def _dataset_value(value):
+    """
+    Translate a (possibly parser-safe / differently-cased) label to the real
+    dataset value. 'All' (any case) and None pass through unchanged.
+    """
+    if value is None:
+        return value
+    if str(value).strip().lower() == ETF_FLOW_ALL.lower():
+        return ETF_FLOW_ALL
+    if value in _LABEL_TO_DATASET:
+        return _LABEL_TO_DATASET[value]
+    return _LABEL_TO_DATASET_LOWER.get(str(value).strip().lower(), value)
+
+
+def _classification_children(chosen: dict, next_level: str):
+    """
+    Return the valid children of a selection from the static classification tree.
+
+    ``chosen`` maps already-selected hierarchy dimensions to their real dataset
+    values; ``next_level`` is the dimension we want the options for. Returns a
+    list of raw (non-parser-safe) child values, or ``None`` if this branch of the
+    hierarchy is not represented in the CSV classification (so the caller can
+    fall back to querying the dataset).
+    """
+    # Levels in order, paired with the classification tree depth they index.
+    asset_class = chosen.get('etfAssetClass')
+    category = chosen.get('etfCategory')
+    niche_focus = chosen.get('etfNicheFocus')
+
+    if next_level == 'etfAssetClass':
+        return list(ETF_CLASSIFICATION.keys())
+
+    categories = ETF_CLASSIFICATION.get(asset_class)
+    if categories is None:
+        return None
+    if next_level == 'etfCategory':
+        return list(categories.keys())
+
+    focuses = categories.get(category)
+    if focuses is None:
+        return None
+    if next_level == 'etfNicheFocus':
+        return list(focuses.keys())
+
+    niches = focuses.get(niche_focus)
+    if niches is None:
+        return None
+    if next_level == 'etfFocus':
+        return list(niches)
+
+    return None  # pragma: no cover
 
 
 class ETFFlowMetric(Enum):
@@ -154,8 +224,8 @@ def _apply_client_filters(df: 'pd.DataFrame', client_filters: dict) -> 'pd.DataF
 
 def etf_flow_coverage(
     country_id: str,
-    asset_class=ETFAssetClass.ALL,
-    category=ETFCategory.ALL,
+    asset_class: str = ETF_FLOW_ALL,
+    category: str = ETF_FLOW_ALL,
     niche_focus: str = ETF_FLOW_ALL,
     focus: str = ETF_FLOW_ALL,
 ) -> list:
@@ -184,20 +254,19 @@ def etf_flow_coverage(
 
     Categories available for US Fixed Income:
 
-    >>> etf_flow_coverage('US', ETFAssetClass.FIXED_INCOME)
+    >>> etf_flow_coverage('US', 'Fixed Income')
 
-    Niche focuses available for US Fixed Income / Government, Treasury:
+    Niche focuses available for US Fixed Income / Government Treasury:
 
-    >>> etf_flow_coverage('US', ETFAssetClass.FIXED_INCOME, ETFCategory.GOVERNMENT_TREASURY)
+    >>> etf_flow_coverage('US', 'Fixed Income', 'Government Treasury')
     """
-    country_code = _resolve_country_code(country_id)
-    start, end = DataContext.current.start_date, DataContext.current.end_date
-
+    # Resolve the (possibly parser-safe / differently-cased) selections to real
+    # dataset values.
     selections = {
-        'etfAssetClass': _enum_or_str_value(asset_class),
-        'etfCategory': _enum_or_str_value(category),
-        'etfNicheFocus': _enum_or_str_value(niche_focus),
-        'etfFocus': _enum_or_str_value(focus),
+        'etfAssetClass': _dataset_value(_enum_or_str_value(asset_class)),
+        'etfCategory': _dataset_value(_enum_or_str_value(category)),
+        'etfNicheFocus': _dataset_value(_enum_or_str_value(niche_focus)),
+        'etfFocus': _dataset_value(_enum_or_str_value(focus)),
     }
 
     # Determine the next level to populate (first one still set to All).
@@ -214,6 +283,17 @@ def etf_flow_coverage(
         # Every level already selected - nothing further to drill into.
         return []
 
+    # First try the static classification tree built from the FactSet CSV: walk
+    # down the chosen branch and return the children at the next level. Values
+    # are returned as parser-safe labels so they can be used in plot expressions.
+    children = _classification_children(chosen, next_level)
+    if children is not None:
+        return [ETF_FLOW_ALL] + [_parser_safe_label(v) for v in children]
+
+    # Fall back to querying the dataset for branches not covered by the CSV.
+    country_code = _resolve_country_code(country_id)
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+
     server_filters, client_filters = _split_filters(chosen)
     query_filters = {'countryId': country_code, **server_filters}
 
@@ -229,76 +309,35 @@ def etf_flow_coverage(
         return [ETF_FLOW_ALL]
 
     values = sorted(v for v in df[next_level].dropna().unique())
-    return [ETF_FLOW_ALL] + values
+    return [ETF_FLOW_ALL] + [_parser_safe_label(v) for v in values]
 
 
-@plot_measure_entity(EntityType.COUNTRY)
-def etf_flow(
+def _etf_metric(
     country_id: str,
-    asset_class: ETFAssetClass = ETFAssetClass.ALL,
-    category: ETFCategory = ETFCategory.ALL,
-    niche_focus: str = ETF_FLOW_ALL,
-    focus: str = ETF_FLOW_ALL,
-    metric: ETFFlowMetric = ETFFlowMetric.TOTAL_FLOW,
-    *,
-    source: str = None,
-    real_time: bool = False,
-    request_id: Optional[str] = None,
+    asset_class: str,
+    category: str,
+    niche_focus: str,
+    focus: str,
+    metric: 'ETFFlowMetric',
 ) -> pd.Series:
     """
-    Aggregated FactSet ETF flows (and assets) for a country, with drill-down.
+    Shared implementation for the aggregated FactSet ETF measures.
 
-    The dataset is organised as a hierarchy below the country::
-
-        etfAssetClass -> etfCategory -> etfNicheFocus -> etfFocus
-
-    Pass ``All`` at any level to sum across every value underneath it. Specify a
-    value to narrow the aggregation to that branch of the hierarchy. A higher
-    level should be chosen before the next level has meaningful choices, e.g.
-    ``etf_flow(All)`` sums every flow in the country, ``etf_flow(Fixed Income, All)``
-    sums every flow in Fixed Income, whereas
-    ``etf_flow(Fixed Income, Government Treasury, All)`` restricts to the
-    Treasury category.
-
-    :param country_id: country entity (e.g. US) - resolved to the dataset countryId
-    :param asset_class: ETF asset class, or All to sum across all asset classes
-    :param category: etfCategory value, or All to sum across all categories
-    :param niche_focus: etfNicheFocus value, or All to sum across all niche focuses
-    :param focus: etfFocus value, or All to sum across all focuses
-    :param metric: value to aggregate - flow (default), shares outstanding, assets or fund count
-    :param source: name of function caller
-    :param real_time: whether to retrieve intraday data instead of EOD (not supported)
-    :param request_id: server request id
-    :return: aggregated daily time series for the selected slice of the hierarchy
-
-    **Examples**
-
-    Sum every ETF flow in the US:
-
-    >>> US.etf_flow(All)
-
-    Sum every Fixed Income ETF flow in the US:
-
-    >>> US.etf_flow(Fixed Income, All)
+    Every hierarchy level accepts a parser-safe label (case-insensitive) or the
+    sentinel ``All`` to sum across every value underneath it. Labels are
+    translated back to the real dataset values (which may contain commas, dashes,
+    slashes, ampersands) before querying.
     """
-    if real_time:
-        raise NotImplementedError('real-time ETF flow data is not available')
-    if not isinstance(asset_class, ETFAssetClass):
-        raise MqValueError('Invalid asset_class argument')
-    if not isinstance(category, ETFCategory):
-        raise MqValueError('Invalid category argument')
-    if not isinstance(metric, ETFFlowMetric):
-        raise MqValueError('Invalid metric argument')
-
     country_code = _resolve_country_code(country_id)
     start, end = DataContext.current.start_date, DataContext.current.end_date
 
-    # Build the equality filters for every level that is not "All".
+    # Resolve each (possibly parser-safe / differently-cased) selection and build
+    # the equality filters for every level that is not "All".
     selections = {
-        'etfAssetClass': _enum_or_str_value(asset_class),
-        'etfCategory': _enum_or_str_value(category),
-        'etfNicheFocus': _enum_or_str_value(niche_focus),
-        'etfFocus': _enum_or_str_value(focus),
+        'etfAssetClass': _dataset_value(_enum_or_str_value(asset_class)),
+        'etfCategory': _dataset_value(_enum_or_str_value(category)),
+        'etfNicheFocus': _dataset_value(_enum_or_str_value(niche_focus)),
+        'etfFocus': _dataset_value(_enum_or_str_value(focus)),
     }
     # Values with special characters (e.g. commas) cannot be filtered by the
     # backend, so apply the safe ones server-side and the rest client-side.
@@ -325,3 +364,107 @@ def etf_flow(
     series = ExtendedSeries(grouped, name=metric.value)
     series.dataset_ids = (ETF_FLOWS_DATASET_ID,)
     return series
+
+
+_ETF_MEASURE_DOC = """
+    Aggregated FactSet ETF {what} for a country, with drill-down.
+
+    The dataset is organised as a hierarchy below the country::
+
+        etfAssetClass -> etfCategory -> etfNicheFocus -> etfFocus
+
+    Pass ``All`` at any level to sum across every value underneath it, or a
+    parser-safe label (case-insensitive) to narrow to that branch. Lower levels
+    only have meaningful choices once the levels above are chosen, e.g.::
+
+        US.{fn}(All)                                     # whole country
+        US.{fn}(Fixed Income, All, All, All)             # all Fixed Income
+        US.{fn}(Fixed Income, Broad Market Asset backed, All, All)
+        US.{fn}(Fixed Income, Broad Market Asset backed, Broad Credit, Broad Maturities)
+
+    :param country_id: country entity (e.g. US) - resolved to the dataset countryId
+    :param asset_class: etfAssetClass value, or All to sum across all asset classes
+    :param category: etfCategory value, or All to sum across all categories
+    :param niche_focus: etfNicheFocus value, or All to sum across all niche focuses
+    :param focus: etfFocus value, or All to sum across all focuses
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD (not supported)
+    :param request_id: server request id
+    :return: aggregated daily time series for the selected slice of the hierarchy
+"""
+
+
+@plot_measure_entity(EntityType.COUNTRY)
+def total_etf_flow(
+    country_id: str,
+    asset_class: str = ETF_FLOW_ALL,
+    category: str = ETF_FLOW_ALL,
+    niche_focus: str = ETF_FLOW_ALL,
+    focus: str = ETF_FLOW_ALL,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
+    if real_time:
+        raise NotImplementedError('real-time ETF flow data is not available')
+    return _etf_metric(country_id, asset_class, category, niche_focus, focus, ETFFlowMetric.TOTAL_FLOW)
+
+
+@plot_measure_entity(EntityType.COUNTRY)
+def total_etf_shares_outstanding(
+    country_id: str,
+    asset_class: str = ETF_FLOW_ALL,
+    category: str = ETF_FLOW_ALL,
+    niche_focus: str = ETF_FLOW_ALL,
+    focus: str = ETF_FLOW_ALL,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
+    if real_time:
+        raise NotImplementedError('real-time ETF data is not available')
+    return _etf_metric(country_id, asset_class, category, niche_focus, focus, ETFFlowMetric.SHARES_OUTSTANDING)
+
+
+@plot_measure_entity(EntityType.COUNTRY)
+def total_etf_assets(
+    country_id: str,
+    asset_class: str = ETF_FLOW_ALL,
+    category: str = ETF_FLOW_ALL,
+    niche_focus: str = ETF_FLOW_ALL,
+    focus: str = ETF_FLOW_ALL,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
+    if real_time:
+        raise NotImplementedError('real-time ETF data is not available')
+    return _etf_metric(country_id, asset_class, category, niche_focus, focus, ETFFlowMetric.TOTAL_ASSETS)
+
+
+@plot_measure_entity(EntityType.COUNTRY)
+def total_etf_funds(
+    country_id: str,
+    asset_class: str = ETF_FLOW_ALL,
+    category: str = ETF_FLOW_ALL,
+    niche_focus: str = ETF_FLOW_ALL,
+    focus: str = ETF_FLOW_ALL,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
+    if real_time:
+        raise NotImplementedError('real-time ETF data is not available')
+    return _etf_metric(country_id, asset_class, category, niche_focus, focus, ETFFlowMetric.TOTAL_FUNDS)
+
+
+total_etf_flow.__doc__ = _ETF_MEASURE_DOC.format(what='flows', fn='total_etf_flow')
+total_etf_shares_outstanding.__doc__ = _ETF_MEASURE_DOC.format(
+    what='shares outstanding', fn='total_etf_shares_outstanding'
+)
+total_etf_assets.__doc__ = _ETF_MEASURE_DOC.format(what='assets', fn='total_etf_assets')
+total_etf_funds.__doc__ = _ETF_MEASURE_DOC.format(what='fund count', fn='total_etf_funds')

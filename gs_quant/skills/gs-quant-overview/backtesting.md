@@ -1,5 +1,16 @@
 # gs_quant Backtesting Guide
 
+## Do you need a backtest engine?
+
+**If the strategy is one instrument or a fixed portfolio held over a date range, with no triggers,
+rebalancing or hedging, don't use an engine: price it with a `HistoricalPricingContext`.** The
+engines add trade management (triggers, actions, hedges) on top of pricing on each date; with
+nothing to manage, price directly. For example, to track a trade entered on a given date, resolve
+it on that date, then price it over the range in one `HistoricalPricingContext` (see "Relative
+terms and resolve()" in `pricing.md`).
+
+---
+
 ## 1. Architecture Overview
 
 | Concept | Description |
@@ -58,7 +69,10 @@ from gs_quant.backtests.data_sources import GenericDataSource, GsDataSource, Mis
 | **EquityVolEngine** | Equity vol strategies (server-side) | EqOption, EqVarianceSwap |
 | **PredefinedAssetEngine** | Custom order-based backtests | Predefined assets |
 
-Use `GenericEngine` unless you specifically need `EquityVolEngine` performance for equity options.
+**`EquityVolEngine` is faster, but runs only on the equity underliers and dates for which the
+service holds market data, and accepts only a restricted strategy shape. `GenericEngine` prices
+anything gs_quant can price.** Use `GenericEngine` unless you need `EquityVolEngine`'s speed for
+equity options or variance swaps.
 
 ---
 
@@ -141,6 +155,29 @@ agg_req = AggregateTriggerRequirements(
 trigger = AggregateTrigger(agg_req, action)
 ```
 
+**To trigger when a risk is outside ±X**, put a requirement for each side in an `AggregateTrigger`
+with `ANY_OF`, and pass the measure in `run_backtest(risks=[...])`:
+
+```python
+from gs_quant.backtests.triggers import RiskTriggerRequirements, TriggerDirection
+
+delta = FXDelta(aggregation_level=AggregationLevel.Type, currency='USD')
+agg_req = AggregateTriggerRequirements(
+    triggers=[
+        RiskTriggerRequirements(risk=delta, trigger_level=50_000, direction=TriggerDirection.ABOVE),
+        RiskTriggerRequirements(risk=delta, trigger_level=-50_000, direction=TriggerDirection.BELOW),
+    ],
+    aggregate_type=AggType.ANY_OF,
+)
+trigger = AggregateTrigger(agg_req, action)
+backtest = GE.run_backtest(Strategy(None, trigger), start=start_date, end=end_date, risks=[delta])
+```
+
+**On each date `GenericEngine` calculates only the price, the measures in `risks=` and
+`pnl_explain`, and the measures of top-level `StrategyRiskTrigger`s and of `HedgeAction`s.** A risk
+condition inside an `AggregateTrigger` or `NotTrigger` isn't among them: without `risks=[delta]`,
+the run raises `ValueError: <measure> not computed`.
+
 ### 4.6 NotTrigger — Invert a Trigger
 
 ```python
@@ -159,12 +196,46 @@ trigger = NotTrigger(not_req, action)
 ```python
 action = AddTradeAction(
     priceables=instrument,
-    trade_duration='1m',  # tenor, date, 'expiration_date', 'next schedule', or None (forever)
+    trade_duration='1m',
     name='my_trade',
 )
 ```
 
-**`trade_duration` options:** `None` (hold forever), tenor string (`'1m'`, `'3m'`), `'expiration_date'` (hold until expiry), `'next schedule'` (auto-rolling), explicit `datetime.date`, or `datetime.timedelta`.
+**In `GenericEngine`, `trade_duration` sets when each added trade is closed:**
+
+- `None`: no closing date; the trade stays in the portfolio until the backtest ends or an exit
+  action removes it, even after it expires
+- a tenor such as `'1m'`: that long after the trade date
+- a `datetime.date`: on that date
+- the name of a date field on the instrument: on that field's date as resolved on the trade date,
+  for example `'expiration_date'` on an `FXOption`, `EqOption` or `IRSwaption`, or
+  `'termination_date'` on an `IRSwap`
+- `'next schedule'`: on the trigger's next date, for a trigger that has one, as a `PeriodicTrigger`
+  or `DateTrigger` does
+
+**In `GenericEngine`, each added trade is resolved on the date it is added, and the resolved trade
+is then held unchanged for its whole life**, so a field that resolution fills in keeps the value it
+had on that date. To keep a field unresolved, or to change how trades are built, subclass the
+action's handler and map the action to it when you create the engine. For example, to leave an
+inflation swap's `base_cpi` unset after the trade is added:
+
+```python
+from gs_quant.backtests.actions import AddTradeAction
+from gs_quant.backtests.generic_engine import GenericEngine
+from gs_quant.backtests.generic_engine_action_impls import AddTradeActionImpl
+from gs_quant.markets.portfolio import Portfolio
+
+
+class FloatingBaseCpiAddTrade(AddTradeActionImpl):
+    def _raise_order(self, state, trigger_info=None):
+        orders = super()._raise_order(state, trigger_info)
+        return {
+            d: (Portfolio([i.clone(base_cpi=None) for i in p.all_instruments]), ti) for d, (p, ti) in orders.items()
+        }
+
+
+engine = GenericEngine(action_impl_map={AddTradeAction: FloatingBaseCpiAddTrade})
+```
 
 ### 5.2 HedgeAction — Delta Hedge
 
@@ -192,6 +263,18 @@ action = AddScaledTradeAction(
     scaling_level=1_000_000,
 )
 ```
+
+**In `GenericEngine`, `scaling_type` sets the size of each added trade:**
+
+| `scaling_type` | Each trade is multiplied by |
+|---|---|
+| `ScalingActionType.size` | `scaling_level` |
+| `ScalingActionType.risk_measure` | `scaling_level` divided by `scaling_risk` of the action's priceables (summed) on the trade date, so the trade starts with that risk equal to `scaling_level` |
+| `ScalingActionType.NAV` | whatever makes the trade cost the cash available, net of transaction costs: `scaling_level` for the action's first trade, then the proceeds of the trades it closed since its previous one |
+
+For example, to spend a fixed premium on each trade, use `risk_measure` with `scaling_risk=Price`.
+On FX options this needs `premium=0`, or the premium is solved so that `Price` is zero (see "Always
+Set `premium=0` on FX Options" in `instruments.md`).
 
 ### 5.4 EnterPositionQuantityScaledAction — Quantity-Based Entry
 
@@ -235,9 +318,23 @@ trigger = StrategyRiskTrigger(trig_req, [exit_action, add_action])
 | `risks` | Additional risk measures to compute | None |
 | `show_progress` | Show progress bar | True |
 | `initial_value` | Starting cash value | 0 |
-| `result_ccy` | Currency for results | None |
+| `result_ccy` | Currency to report every risk, price and cash amount in; see below | None |
+| `holiday_calendar` | Dates left out of the schedule built from `start`, `end` and `frequency` | None |
 | `market_data_location` | `'LDN'`, `'NYC'`, `'HKG'`, `'TKO'` | None |
 | `is_batch` | Use websocket batching | True |
+
+**`result_ccy` adds `currency=` to every measure in the run**: the price, those in `risks`, those
+of triggers and actions, and those in `pnl_explain`. A measure that has no currency, for example
+`FXSpot`, `FXAnnualImpliedVol` or `IRFwdRate`, makes the run raise `Unparameterised risk`, so
+`result_ccy` can't be used with `fx_pnl_definition()`. In that case leave `result_ccy` unset and
+pass the currency only to the measures that take one: `GenericEngine(price_measure=Price(currency='EUR'))`
+for the price and cash, and for example `FXDelta(aggregation_level='Type', currency='EUR')` in `risks`.
+
+**To skip dates, for example ones whose market data fails, give the list of dates in three
+places**: `GenericEngine.run_backtest(holiday_calendar=...)` leaves them out of the schedule built
+from `start`, `end` and `frequency`, `PeriodicTriggerRequirements(calendar=...)` stops trades
+opening on them, and `holiday_calendar=` on each action stops a `trade_duration` given as a tenor
+from ending on them.
 
 ---
 
@@ -291,6 +388,27 @@ backtest = GE.run_backtest(
 )
 delta_series = backtest.result_summary[FXDelta(aggregation_level=AggregationLevel.Type, currency='USD')]
 ```
+
+### P&L Explain
+
+**`GenericEngine.run_backtest(pnl_explain=...)` splits the P&L into named parts, each a
+sensitivity times the daily move in a market quantity.** A `PnlDefinition` is a list of parts, each
+`PnlAttribute(attribute_name, attribute_metric, market_data_metric, scaling_factor)`, with
+`second_order=True` added for a second-order part. Each day, for every instrument held the day before, a part adds
+`scaling_factor * sensitivity * move`, or `0.5 * scaling_factor * sensitivity * move**2` when
+`second_order=True`, where `sensitivity` is `attribute_metric` on the day before and `move` is the
+change in `market_data_metric` since then. For FX options, `fx_pnl_definition()` gives delta, gamma
+and vega parts:
+
+```python
+from gs_quant.backtests.backtest_objects import fx_pnl_definition
+
+backtest = GE.run_backtest(strategy, start=start_date, end=end_date, frequency='1b', pnl_explain=fx_pnl_definition())
+explain = backtest.pnl_explain()  # {'PNL_delta': {date: cumulative P&L}, 'PNL_gamma': ..., 'VegaPnL': ...}
+```
+
+`fx_pnl_definition()`'s parts don't add up to the change in `Total`: they leave out, for example,
+time decay.
 
 ---
 
@@ -367,6 +485,7 @@ Transaction costs appear in `backtest.result_summary` as the `'Transaction Costs
 - **Order actions within a trigger** — exit before add: `PeriodicTrigger(trig_req, [exit_action, add_action])`
 - **Name your instruments** — names appear in trade_ledger and aid debugging
 - **`frequency='1b'`** for daily P&L; trigger frequency and evaluation frequency are independent
+- **Before a long run, time a short one when a trigger depends on the strategy's own risk**, for example a `StrategyRiskTrigger`: the engine then has to price each date before it can decide what to do on the next, so it sends requests one date at a time and a run over several years can take hours
 
 ---
 
@@ -397,6 +516,49 @@ trigger = PeriodicTrigger(trig_req, action)
 
 engine = EquityVolEngine()
 backtest = engine.run_backtest(Strategy(None, trigger), start=start_date, end=end_date)
+```
+
+**`EquityVolEngine` accepts only one shape of strategy**; `run_backtest` raises `RuntimeError`
+listing every rule the strategy breaks, and `EquityVolEngine.check_strategy(strategy)` returns that
+list without running. The main rules:
+
+- one underlier: every trade on the same asset
+- no initial portfolio, at most 3 triggers, each a `PeriodicTrigger` or an `AggregateTrigger` of one
+  `DateTrigger` and one `PortfolioTrigger` (`data_source='len'`, `trigger_level=0`)
+- one action per trigger, no two actions of the same type, each one of `AddTradeAction`,
+  `AddScaledTradeAction`, `EnterPositionQuantityScaledAction`, `HedgeAction` or `ExitTradeAction`
+- trades are `EqOption` or `EqVarianceSwap` whose `quantity`, `number_of_options` and `multiplier`
+  multiply to 1 (unset counts as 1); set the size on the action instead
+- a `PeriodicTrigger`'s `frequency` equals its action's `trade_duration`, so trades roll at a fixed
+  interval
+- the only hedge is a delta hedge (`risk=EqDelta`) with a synthetic forward: a long call and a short
+  put with the same underlier, strike and expiry
+
+The service applies further checks, for example a maximum expiry. For anything else, use
+`GenericEngine`.
+
+**`EquityVolEngine` returns a P&L breakdown by date, each part cumulative from the start**:
+`backtest.get_measure_series(FlowVolBacktestMeasure.PNL_delta)` (import `FlowVolBacktestMeasure`
+from `gs_quant.target.backtests`), and likewise `PNL_gamma`, `PNL_vega`, `PNL_theta`,
+`PNL_transactions` and the total `PNL`. `PNL_spot` is delta plus gamma plus the higher-order spot
+part, `PNL_vol` is vega plus the higher-order vol part, and `PNL_carry` is `PNL_spot` plus
+`PNL_theta`. `PNL` minus `PNL_spot`, `PNL_vol` and `PNL_theta` is the unexplained part.
+
+**To see the strike that a relative strike such as `'ATM'` gives on each date of a range**, request
+`Strike_Level` from the backtest API. The strike is set again on each date, and the result is
+`{'Strike Level': [['YYYY-MM-DD', strike], ...]}`:
+
+```python
+from gs_quant.api.gs.backtests import GsBacktestApi
+from gs_quant.target.backtests import BacktestRiskMeasureType, BacktestRiskPosition, BacktestRiskRequest
+
+request = BacktestRiskRequest(
+    positions=(BacktestRiskPosition(instrument=option, quantity=1),),
+    measures=(BacktestRiskMeasureType.Strike_Level,),
+    start_date=start_date,
+    end_date=end_date,
+)
+strikes = GsBacktestApi.calculate_position_risk(request)['Strike Level']
 ```
 
 ---
