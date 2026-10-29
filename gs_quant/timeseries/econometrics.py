@@ -10,6 +10,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+# Portions copyright Hemang Varshney. Licensed under Apache 2.0 license
 #
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
@@ -826,6 +827,10 @@ def correlation(
     :func:`std` :func:`returns`
 
     """
+    # The default window is the series length. Returns lose the leading observation, so the
+    # zero mean branch below must size that default on the cleaned returns instead, or the
+    # rolling window is one step longer than the data and yields an empty series (issue #387).
+    window_defaulted = w is None or (isinstance(w, Window) and w.w is None)
     w = normalize_window(x, w)
 
     if x.size < 1:
@@ -856,14 +861,15 @@ def correlation(
     clean_ret2 = aligned['r2']
 
     if assume_zero_mean:
+        w_returns = normalize_window(clean_ret1, Window(None, w.r)) if window_defaulted else w
 
         def daily_vols(returns):
-            vols = volatility(returns, w, returns_type=None, assume_zero_mean=True)
+            vols = volatility(returns, w_returns, returns_type=None, assume_zero_mean=True)
             annualization_factor = _get_annualization_factor(returns)
             result = vols.div(math.sqrt(annualization_factor) * 100)
             return result
 
-        zero_mean_cov = mean(clean_ret1 * clean_ret2, w)
+        zero_mean_cov = mean(clean_ret1 * clean_ret2, w_returns)
         vols_1 = daily_vols(clean_ret1)
         vols_2 = daily_vols(clean_ret2)
         corr = pd.Series(zero_mean_cov / (vols_1 * vols_2), index=clean_ret1.index)
