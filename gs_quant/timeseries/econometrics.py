@@ -9,6 +9,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# Portions copyright Boyina Gowtham. Licensed under Apache 2.0 license
 #
 #
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
@@ -129,7 +130,7 @@ def _annualized_return(
                 f'If w is not a relative date, method must be nan. You specified method: {interpolation_method.value}.'
             )
         starting = [0] * rolling
-        starting.extend([a for a in range(1, len(levels) - rolling + 1)])
+        starting.extend([a for a in range(0, len(levels) - rolling)])
         points = list(
             map(
                 lambda d, v, i: pow(v / levels.iloc[i], 365.25 / (d - levels.index[i]).days) - 1,
@@ -240,7 +241,7 @@ def sharpe_ratio(
     Given a price series P, risk-free rate R, and window of size w returns the rolling
     `Sharpe ratio <https://en.wikipedia.org/wiki/Sharpe_ratio>`_ S:
 
-    :math:`S_t = \\frac{(E_t / E_{t-w+1})^{365.25 / (D_t - D_{t-w})}-1}{volatility(E, w)_t}`
+    :math:`S_t = \\frac{(E_t / E_{t-w})^{365.25 / (D_t - D_{t-w})}-1}{volatility(E, w)_t}`
 
     Excess returns E are defined as:
 
