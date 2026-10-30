@@ -12,6 +12,7 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+Portions copyright Senanur Çetin. Licensed under Apache 2.0 license
 """
 
 import asyncio
@@ -163,9 +164,192 @@ def test_session_pickle_after_async_use(local_session):
     asyncio.run(call())
 
 
+
+def test_nested_sync_contexts_close_only_after_outer_exit(local_session):
+    session = _LocalSession(local_session.domain)
+    with session:
+        with session:
+            assert session._session is not None
+        assert session._session is not None
+    assert session._session is None
+    assert session._context_depth == 0
+
+
+def test_nested_async_contexts_close_client_only_after_outer_exit(local_session):
+    session = _LocalSession(local_session.domain)
+
+    async def run():
+        async with session:
+            async with session:
+                assert await session.async_.get('/ping') == {'auth': 'Bearer test'}
+                client = session._session_async
+            assert session._session is not None
+            assert session._session_async is client
+            assert not client.is_closed
+        assert session._session is None
+        assert client.is_closed
+        assert session._context_depth == 0
+
+    asyncio.run(run())
+
+
+def test_overlapping_async_contexts_close_after_last_exit(local_session):
+    session = _LocalSession(local_session.domain)
+
+    async def run():
+        first_entered = asyncio.Event()
+        second_entered = asyncio.Event()
+        first_left = asyncio.Event()
+
+        async def first():
+            async with session:
+                first_entered.set()
+                await second_entered.wait()
+                assert await session.async_.get('/ping') == {'auth': 'Bearer test'}
+            first_left.set()
+
+        async def second():
+            await first_entered.wait()
+            async with session:
+                second_entered.set()
+                await first_left.wait()
+                assert session._session is not None
+                assert await session.async_.get('/ping') == {'auth': 'Bearer test'}
+
+        await asyncio.gather(first(), second())
+        assert session._session is None
+        assert session._context_depth == 0
+
+    asyncio.run(run())
+
+
+def test_nested_contexts_do_not_close_preinitialised_session(local_session):
+    async def run():
+        async with local_session:
+            async with local_session:
+                assert await local_session.async_.get('/ping') == {'auth': 'Bearer test'}
+            assert local_session._session is not None
+        assert local_session._session is not None
+        assert local_session._context_depth == 0
+
+    asyncio.run(run())
+
+
+def test_failed_async_context_entry_restores_cleanup_ownership(local_session, monkeypatch):
+    session = _LocalSession(local_session.domain)
+
+    def fail():
+        raise RuntimeError('invalid proxy configuration')
+
+    monkeypatch.setattr(session, '_init_async', fail)
+    with pytest.raises(RuntimeError, match='invalid proxy configuration'):
+        asyncio.run(session._on_aenter())
+
+    assert session._context_depth == 0
+    assert session._session is None
+    assert not session._close_on_outer_exit
+
+
+def test_failed_nested_context_entry_preserves_outer_owner(local_session, monkeypatch):
+    session = _LocalSession(local_session.domain)
+
+    async def run():
+        async with session:
+            def fail():
+                raise RuntimeError('could not create async client')
+
+            monkeypatch.setattr(session, '_init_async', fail)
+            with pytest.raises(RuntimeError, match='could not create async client'):
+                await session._on_aenter()
+            assert session._context_depth == 1
+            assert session._session is not None
+
+    asyncio.run(run())
+    assert session._context_depth == 0
+    assert session._session is None
+
 def test_async_proxy_mounts():
     session = _LocalSession('http://127.0.0.1', proxies={'https': 'http://proxy:8080', 'http://host': 'http://p:1'})
     mounts = session._async_mounts()
     assert set(mounts) == {'https://', 'http://host'}
     assert all(isinstance(t, httpx.AsyncHTTPTransport) for t in mounts.values())
     assert _LocalSession('http://127.0.0.1')._async_mounts() is None
+
+
+def test_async_exit_does_not_clear_new_context_during_client_close(local_session, monkeypatch):
+    session = _LocalSession(local_session.domain)
+
+    async def run():
+        await session._on_aenter()
+        old_client = session._session_async
+        close_started = asyncio.Event()
+        allow_close = asyncio.Event()
+        original_close = old_client.aclose
+
+        async def delayed_close():
+            close_started.set()
+            await allow_close.wait()
+            await original_close()
+
+        monkeypatch.setattr(old_client, 'aclose', delayed_close)
+        old_exit = asyncio.create_task(session._on_aexit(None, None, None))
+        await close_started.wait()
+        try:
+            await session._on_aenter()
+            new_client = session._session_async
+            assert new_client is not old_client
+            assert session._context_depth == 1
+            assert session._session is not None
+            allow_close.set()
+            await old_exit
+            assert old_client.is_closed
+            assert session._session is not None
+            assert session._session_async is new_client
+            assert await session.async_.get('/ping') == {'auth': 'Bearer test'}
+            await session._on_aexit(None, None, None)
+            assert session._session is None
+        finally:
+            allow_close.set()
+            if not old_exit.done():
+                await old_exit
+
+    asyncio.run(run())
+
+
+def test_cancelled_async_exit_still_finishes_client_close(local_session, monkeypatch):
+    session = _LocalSession(local_session.domain)
+
+    async def run():
+        await session._on_aenter()
+        client = session._session_async
+        close_started = asyncio.Event()
+        allow_close = asyncio.Event()
+        original_close = client.aclose
+
+        async def delayed_close():
+            close_started.set()
+            await allow_close.wait()
+            await original_close()
+
+        monkeypatch.setattr(client, 'aclose', delayed_close)
+        exiting = asyncio.create_task(session._on_aexit(None, None, None))
+        try:
+            await asyncio.wait_for(close_started.wait(), timeout=2)
+            exiting.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await exiting
+
+            assert not client.is_closed
+            assert session._session is None
+            assert session._context_depth == 0
+        finally:
+            allow_close.set()
+
+        if session._async_close_tasks:
+            await asyncio.wait_for(
+                asyncio.gather(*list(session._async_close_tasks)), timeout=2
+            )
+        assert client.is_closed
+        assert not session._async_close_tasks
+
+    asyncio.run(run())
