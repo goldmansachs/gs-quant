@@ -457,8 +457,9 @@ class BackTest(BaseBacktest):
         sharpe = ann_return / ann_vol if ann_vol != 0 else np.nan
 
         # Sortino ratio (downside deviation over all periods, with a zero target: Sortino and
-        # van der Meer 1991; dividing by the losing periods only overstates the ratio by
-        # sqrt(N / N_negative) and makes it depend on how the losses are spread)
+        # van der Meer 1991; dividing by the losing periods only inflates the deviation by
+        # sqrt(N / N_negative), which pulls the ratio toward zero and makes it depend on how
+        # the losses are spread)
         downside_std = np.sqrt((np.minimum(daily_pnl, 0) ** 2).mean()) if len(daily_pnl) > 0 else 0.0
         ann_downside = downside_std * np.sqrt(annualisation_factor)
         sortino = ann_return / ann_downside if ann_downside != 0 else np.nan
