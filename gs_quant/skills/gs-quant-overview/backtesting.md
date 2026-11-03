@@ -485,7 +485,7 @@ Transaction costs appear in `backtest.result_summary` as the `'Transaction Costs
 - **Order actions within a trigger** — exit before add: `PeriodicTrigger(trig_req, [exit_action, add_action])`
 - **Name your instruments** — names appear in trade_ledger and aid debugging
 - **`frequency='1b'`** for daily P&L; trigger frequency and evaluation frequency are independent
-- **Before a long run, time a short one when a trigger depends on the strategy's own risk**, for example a `StrategyRiskTrigger`: the engine then has to price each date before it can decide what to do on the next, so it sends requests one date at a time and a run over several years can take hours
+- **Before a long run, time a short one when a trigger depends on the strategy's own risk**, for example a `StrategyRiskTrigger`: the engine then has to price each date before it can decide what to do on the next, so it sends requests one date at a time and a run over several years can take hours. To see where the short run spends its time, see "Tracing" in `pricing.md`
 
 ---
 

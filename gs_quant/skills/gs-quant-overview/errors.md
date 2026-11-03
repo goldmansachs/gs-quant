@@ -20,7 +20,8 @@ a wider Marquee issue), so retry later; if it persists, see "If nothing here fix
 ### `ReadTimeout: … Read timed out. (read timeout=65)`
 gs_quant's generic request timeout: the service it called (a dataset query, for example) didn't
 answer within 65 seconds. Retry; if it keeps happening, ask for less per call (for datasets, see
-"Iterating Over Large Queries" in `datasets.md`).
+"Iterating Over Large Queries" in `datasets.md`). If even a small query keeps timing out, see "If
+nothing here fixes it".
 
 ### `ErrorValue object has no attribute …` / `… not 'ErrorValue'` / `unsupported operand type(s) for …: 'ErrorValue' …`
 A calculation failed. gs_quant doesn't raise when a calculation fails: `.result()` returns an
@@ -37,5 +38,11 @@ measures as possible, no helper functions, classes or notebooks, every value wri
 an explicit pricing date and `market_data_location`. Confirm the snippet still reproduces it.
 
 **Then tell the user to email `gs-quant-support@ny.email.gs.com`** with that snippet, its full
-output (the error, or the number they got and the one they expected, plus any tracing link it
-shows) and the gs_quant version (`gs_quant.__version__`).
+output (the error, or the number they got and the one they expected) and the gs_quant version
+(`gs_quant.__version__`). A failed calculation's error ends with a `Trace url` (or, where there's no
+link, a `Trace id`) and a `request Id`: keep them in, they let support find the calculation. If the
+problem is slowness, add the snippet's `Tracer.print()` output (see "Tracing" in `pricing.md`).
+
+**If the problem is a dataset query that fails or times out even when small** (one asset, a few
+days), tell the user to email `GS-Marquee-Helpdesk@ny.email.gs.com` instead, with the same snippet
+and output.

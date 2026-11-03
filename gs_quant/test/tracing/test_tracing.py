@@ -21,7 +21,7 @@ from plotly.graph_objs import Figure
 
 from gs_quant.errors import MqError
 from gs_quant.tracing import Tracer
-from gs_quant.tracing.tracing import NOOP_TRACING_SCOPE
+from gs_quant.tracing.tracing import NAME_COLUMN_WIDTH, NOOP_TRACING_SCOPE
 
 
 def make_zero_duration(spans):
@@ -79,13 +79,14 @@ def test_tracer_print():
     make_zero_duration(Tracer.get_spans())
     tracer_str, _ = Tracer.print(reset=True)
     expected = '\n'.join(
-        [
-            'A                                                      0.0 ms',
-            '* B                                                    0.0 ms',
-            '* C                                                    0.0 ms',
-            '* * D                                                  0.0 ms',
-            '* * E                                                  0.0 ms [Error]',
-            'F                                                      0.0 ms',
+        f'{name:<{NAME_COLUMN_WIDTH}}     0.0 ms{suffix}'
+        for name, suffix in [
+            ('A', ''),
+            ('* B', ''),
+            ('* C', ''),
+            ('* * D', ''),
+            ('* * E', ' [Error]'),
+            ('F', ''),
         ]
     )
     assert tracer_str == expected
@@ -195,13 +196,14 @@ def test_span_activation():
     make_zero_duration(Tracer.get_spans())
     tracer_str, _ = Tracer.print(reset=True)
     expected = '\n'.join(
-        [
-            'parent                                                 0.0 ms',
-            '* child-2                                              0.0 ms',
-            '* child-3                                              0.0 ms',
-            '* child-1                                              0.0 ms',
-            '* * nested-child                                       0.0 ms',
-            '* * another-nested-child                               0.0 ms',
+        f'{name:<{NAME_COLUMN_WIDTH}}     0.0 ms'
+        for name in [
+            'parent',
+            '* child-2',
+            '* child-3',
+            '* child-1',
+            '* * nested-child',
+            '* * another-nested-child',
         ]
     )
     assert tracer_str == expected

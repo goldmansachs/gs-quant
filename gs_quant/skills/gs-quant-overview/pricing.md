@@ -33,6 +33,8 @@ delta = delta_f.result()
 | `is_batch` | Use batch mode for long-running calculations |
 | `is_async` | Return immediately without blocking |
 | `show_progress` | Display a tqdm progress bar |
+| `use_cache` | Reuse results already calculated in this Python session (default: `False`) |
+| `use_server_cache` | Let the GS servers reuse results of identical requests from the last 12 hours (default: `False`) |
 
 Inside an entered `PricingContext`, calculations return `PricingFuture` objects. Call `.result()` after exiting the context.
 
@@ -110,6 +112,42 @@ parallel.
 **Set `is_batch=True` on the context for calculations that take more than about 3 minutes.**
 Without it, each request must finish within about 3 minutes or fail; with it, results come back
 over a websocket and each request gets up to 10 minutes. If the websocket drops, see `errors.md`.
+
+---
+
+## Caching results: repeated calculations
+
+**`use_cache=True` reuses results within the Python session.** A calculation is answered from memory
+when the same instrument, including an identical one built separately, has already been calculated
+with the same measure, pricing date, market and scenario under a context with `use_cache=True`. It
+also works under `HistoricalPricingContext`, date by date. NaN results are cached; failed calculations
+and `LiveMarket` results aren't. Results stay in memory with no size limit, so a very large run can
+exhaust the Python process's memory. To force a recalculation, call `PricingCache.drop(instrument)`
+(`from gs_quant.markets.core import PricingCache`).
+
+**`use_server_cache=True` lets the GS servers reuse results instead**: they can answer an identical
+request (same instrument, measure, date and market) from a result calculated in the last 12 hours.
+NaN results are reused; failed calculations and `LiveMarket` results aren't, and this cache can't be
+cleared.
+
+---
+
+## Tracing: slow code, failed steps
+
+**To see where the time goes, run the code inside `with Tracer('label'):` and call `Tracer.print()`
+afterwards.** It prints each step, including every request gs_quant sent, with how long it took, and
+marks failed steps `[Error]`. In Jupyter, `%%trace` on the first line of a cell does the same for that
+cell, and `%%trace chart` draws a timeline instead (needs `plotly`).
+
+```python
+from gs_quant.markets import PricingContext
+from gs_quant.tracing import Tracer
+
+with Tracer('pricing'):
+    with PricingContext(pricing_date=dt.date(2026, 10, 23), market_data_location='NYC'):
+        price_f = swap.price()
+Tracer.print()
+```
 
 ---
 

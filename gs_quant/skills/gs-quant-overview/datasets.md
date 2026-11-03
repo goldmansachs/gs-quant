@@ -16,6 +16,10 @@ Pass the dataset ID string (visible in the Marquee catalog URL):
 ds = Dataset('FXIVOL_STANDARD')
 ```
 
+**Look up a dataset's fields with `GsDataApi.get_types('<ID>')` (`from gs_quant.api.gs.data import GsDataApi`)
+before guessing a field name**: it returns every field and its type. For what the fields mean, coverage, history and
+who supports the dataset, point the user to its page, `https://marquee.gs.com/s/developer/datasets/<ID>`.
+
 You can also use the built-in vendor enums:
 
 ```python
@@ -25,7 +29,7 @@ ds = Dataset(Dataset.TR.TREOD)
 
 > **Equities and listed instruments:** For equities and most listed instruments
 > (equity indices, ETFs, futures, etc.) the correct dataset is almost always `TREOD`
-> (Thomson Reuters End-of-Day). Use `bbid` as the symbol dimension.
+> (Thomson Reuters End-of-Day). Filter it by `bbid`.
 >
 > ```python
 > ds = Dataset('TREOD')
@@ -40,7 +44,7 @@ The primary method. Returns a `pandas.DataFrame` with one row per data point.
 df = ds.get_data(
     start=dt.date(2025, 1, 2),
     end=dt.date(2025, 3, 19),
-    bbid=['EURUSD', 'USDJPY'],  # filter by symbol dimension — passed as kwargs
+    bbid=['EURUSD', 'USDJPY'],  # filters are passed as kwargs
 )
 ```
 
@@ -53,10 +57,10 @@ df = ds.get_data(
 | `as_of` | Return data as it existed at this point in time |
 | `since` | Return data updated since this datetime |
 | `fields` | List of field names to return; omit for all fields |
-| `**kwargs` | Symbol dimension filters, e.g. `bbid=['EURUSD']`, `ticker='SPX'`, `assetId='...'` |
+| `**kwargs` | Filters, e.g. `bbid=['EURUSD']`, `ric='.SPX'`, `assetId='...'` |
 
-Filter kwargs match the dataset's symbol dimensions exactly — check the Marquee catalog
-page for the correct dimension name. Multiple values are passed as a list.
+Filter by the dataset's symbol dimension, which `GsDataApi.get_definition('<ID>').dimensions.symbol_dimensions`
+returns. When it is `assetId`, you can filter by `bbid` or `ric` instead. Multiple values are passed as a list.
 
 ```python
 # Filter by a single value
@@ -107,6 +111,46 @@ coverage = ds.get_coverage(include_history=True)
 coverage = coverage.sort_values('historyStartDate')
 ```
 
+## Index Constituents
+
+**`Index.get(identifier).get_constituents_for_date(date)` returns the constituents Marquee holds for
+an index on a date**: one row each, with columns `identifier`, `name`, `asset_id` and `quantity`.
+For SPX the identifiers are Bloomberg tickers such as `OKE UN`. If Marquee holds none for that
+date, the table is empty. `get_latest_constituents()` returns the latest.
+
+```python
+from gs_quant.markets.index import Index
+
+constituents = Index.get('SPX').get_constituents_for_date(dt.date(2020, 1, 2))
+```
+
+`SecurityMaster.get_asset(...).entity['underliers']` lists the current constituents as Marquee IDs
+only; for a past date use `Index`.
+
+## Realised Volatility
+
+**`gs_quant.timeseries.volatility(series, w)` turns a price series into rolling realised
+volatility**, annualised and in percent (20% comes back as `20.0`), unlike risk measures, which
+return vols as decimals. `w` is the window: a number of observations such as `22`, or a tenor such
+as `'1m'`.
+
+```python
+from gs_quant.timeseries import volatility
+
+close = Dataset('TREOD').get_data_series('closePrice', dt.date(2026, 6, 1), dt.date(2026, 9, 30), bbid='SPX')
+vol = volatility(close, 22)
+```
+
+## Intraday Data
+
+**Intraday data comes from datasets indexed by time, queried with `dt.datetime` bounds.** For
+example, for SPX, `TR` has bid, ask and trade prices, and `EDRVOL_PERCENT_INTRADAY` has implied vols
+by tenor and strike. Both take `bbid`; times without a time zone are read as UTC.
+
+```python
+ticks = Dataset('TR').get_data(dt.datetime(2026, 10, 26, 14, 0), dt.datetime(2026, 10, 26, 15, 0), bbid=['SPX'])
+```
+
 ## Iterating Over Large Queries
 
 For datasets with many assets or long date ranges, break queries into smaller chunks:
@@ -149,9 +193,10 @@ ds.upload_data(data)  # accepts list of dicts or a DataFrame
 
 ## Common Pitfalls
 
-- **Wrong dimension name** — each dataset has its own symbol dimension (`bbid`, `assetId`,
-  `ticker`, `ric`, etc.). Check the Marquee catalog page. Passing the wrong kwarg silently
-  returns an empty DataFrame.
+- **Unknown filter name** — raises `MqRequestError` with status 400. A value that matches nothing
+  usually returns an empty DataFrame, but some datasets raise the same 400 for it, so check both the
+  filter name and the value.
+- **`ticker` can match several assets** — `ticker='SPX'` does. Filter by `bbid`, `ric` or `assetId`.
 - **Query size limits** — very wide queries (many assets x long date range) will time out
   or be rejected. Iterate in batches as shown above.
 - **Entitlements** — if `get_data` returns an empty DataFrame unexpectedly, your session

@@ -638,10 +638,11 @@ class Tracer(ContextDecorator):
 
         def _build_tree(parent_span, depth):
             if as_string:
-                name = f'{"* " * depth}{parent_span.operation_name}'
+                prefix = "* " * depth
+                name = prefix + _truncate_middle(parent_span.operation_name, NAME_COLUMN_WIDTH - len(prefix))
                 elapsed = (parent_span.end_time - parent_span.start_time) / 1000000
                 error = " [Error]" if parent_span.is_error() else ""
-                lines.append(f'{name:<50}{elapsed:>8.1f} ms{error}')
+                lines.append(f'{name:<{NAME_COLUMN_WIDTH}}{elapsed:>8.1f} ms{error}')
             else:
                 lines.append((depth, parent_span))
             for child_span in reversed(spans_by_parent.get(parent_span.span_id, [])):
@@ -691,6 +692,29 @@ class Tracer(ContextDecorator):
                 return func(*args, **kwargs)
 
         return wrapper
+
+
+# Width (in characters) of the operation-name column when printing a trace as text.
+# Names longer than this (including their depth prefix) are truncated so the timing
+# column stays aligned regardless of how long/deeply-nested the span names are.
+NAME_COLUMN_WIDTH = 75
+
+
+def _truncate_middle(name: str, max_len: int) -> str:
+    """Truncate ``name`` to at most ``max_len`` chars, cutting out the middle with an ellipsis.
+
+    The head and (longer) tail are kept, since for dotted names like
+    ``a.b.c.MyClass.my_method`` the meaningful part is usually at the end.
+    """
+    max_len = max(max_len, 1)
+    if len(name) <= max_len:
+        return name
+    if max_len <= 3:
+        return name[:max_len]
+    keep = max_len - 3  # account for the '...'
+    head = keep // 3
+    tail = keep - head
+    return f'{name[:head]}...{name[-tail:]}'
 
 
 def parse_tracing_line_args(line: str) -> tuple[Optional[str], bool]:

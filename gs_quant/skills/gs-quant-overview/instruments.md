@@ -235,6 +235,8 @@ When constructing FX options (FXOption, FXBinary, FXMultiCrossBinary, etc.), if 
 
 **Solution:** Either set `premium=0` explicitly when you want `DollarPrice` to return the actual option present value, or use the risk measure `FairPremium`, `FairPremiumInPercent` which will ignore any premium specified on the instrument.
 
+**`EqBarrier` and `EqBinary` do the same; set `premium=0` on them too.** `EqOption`, `IRSwaption`, `IRCap` and `IRFloor` price their value without it.
+
 ```python
 from gs_quant import risk
 from gs_quant.instrument import FXOption, FXBinary

@@ -28,15 +28,6 @@ GsSession.use(
 - **`client_id` / `client_secret`** — OAuth2 application credentials. When both are provided the library creates an `OAuth2Session`.
 - **`scopes`** — Optional iterable of `GsSession.Scopes` values. Usually when pricing trade you will need `run_analytics`.
 
-### Kerberos / SSO (Internal GS)
-
-If no `client_id` is supplied, the library will attempt Kerberos or pass-through authentication automatically:
-This is for internal GS users only and requires appropriate network access and installation of gs-quant-internal.
-
-```python
-GsSession.use(Environment.PROD)
-```
-
 ### Using as a Context Manager
 
 ```python
@@ -141,10 +132,10 @@ results = portfolio.calc([DollarPrice, IRDelta])  # multiple risk measures
 For detailed guidance on specific topics, open the file whose topic or symptoms match the task.
 
 - `instruments.md` — Constructing all instrument types (IRSwap, XCcy swaps, FXOption, EqOption, etc.), strikes by asset class, and FX pitfalls
-- `pricing.md` — PricingContext, HistoricalPricingContext and LiveMarket: which close is used and market data location, choosing contexts, long calculations and `is_batch`, relative terms and `resolve()`. Symptoms: slow code, many requests, timeouts, prices that differ from other tools or look a day old.
+- `pricing.md` — PricingContext, HistoricalPricingContext and LiveMarket: which close is used and market data location, choosing contexts, long calculations and `is_batch`, caching results with `use_cache`, tracing slow or failing code with `Tracer`, relative terms and `resolve()`. Symptoms: slow code, many requests, timeouts, prices that differ from other tools or look a day old.
 - `scenarios.md` — Shocking and overriding market data: patterns, shock sizes, equity vols, FX correlation, shocked P&L over time.
 - `risk-measures.md` — What each risk measure's number means: units, scaling with size, `currency=` and `aggregation_level=`, by asset class.
 - `errors.md` — gs_quant error messages and what to do, and how to reach support when nothing fixes it.
-- `datasets.md` — Accessing market and reference data via the gs_quant Dataset class: get_data, get_data_series, get_data_last, get_coverage, uploading data, batching large queries. Covers TREOD for equities, FXIVOL_STANDARD, symbol dimensions, and common pitfalls.
+- `datasets.md` — Accessing market and reference data via the gs_quant Dataset class: get_data, get_data_series, get_data_last, get_coverage, uploading data, batching large queries. Covers TREOD for equities, FXIVOL_STANDARD, field and symbol dimension lookup, index constituents, realised volatility, intraday data, and common pitfalls.
 - `backtesting.md` — Guide to the gs_quant backtesting framework: when to price directly instead, Strategy, triggers, actions, GenericEngine, EquityVolEngine, transaction costs, skipping dates, P&L breakdowns, and result extraction.
 - `measure.md` — writing custom measures with `@plot_measure` and `@risk_measure` decorators
