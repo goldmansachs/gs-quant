@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Kwangbeom Choi. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -145,7 +147,7 @@ class GenericDataSource(DataSource):
                 self.data_set = self.data_set.sort_index()
             else:
                 self.data_set.at[state] = np.nan
-            self.data_set.sort_index()
+                self.data_set = self.data_set.sort_index()
             if self.missing_data_strategy == MissingDataStrategy.interpolate:
                 self.data_set = self.data_set.interpolate()
             elif self.missing_data_strategy == MissingDataStrategy.fill_forward:
