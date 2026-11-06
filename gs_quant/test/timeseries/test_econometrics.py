@@ -688,6 +688,11 @@ def test_beta():
     expected = pd.Series([np.nan, 0.8255252918287954, np.nan, -2.24327163719368], index=daily_dates[2:])
     assert_series_equal(result, expected, obj="beta with strdate window")
 
+    ts_idx = pd.DatetimeIndex(daily_dates)
+    result_ts = beta(x.set_axis(ts_idx), y.set_axis(ts_idx), Window('2d', 0))
+    result_date = beta(x, y, Window('2d', 0))
+    np.testing.assert_allclose(result_ts.values, result_date.values)
+
     with pytest.raises(MqTypeError):
         beta(x, y, '2d', 1)
 

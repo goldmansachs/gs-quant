@@ -40,6 +40,7 @@ from .helper import (
     normalize_window,
     plot_function,
     plot_session_function,
+    window_cutoff,
 )
 from .statistics import MeanType, mean, product, std, sum_
 
@@ -1035,7 +1036,7 @@ def beta(x: pd.Series, b: pd.Series, w: Union[Window, int, str] = Window(None, 0
         offset = w.w
         start = 0
         for i in range(1, size):
-            min_index_value = (series_index[i] - offset).date()
+            min_index_value = window_cutoff(series_index[i], offset)
             for idx in range(start, i + 1):
                 if series_index[idx] > min_index_value:
                     start = idx

@@ -312,6 +312,15 @@ dual_digital = FXMultiCrossBinary(
 )
 ```
 
+### 3. `FXOption` notional: two settings that silently change the trade
+
+**`notional_currency` must be one of the pair's two currencies.** Any other currency is read as the pair's first
+currency: `FXOption(pair='USDJPY', notional_currency='EUR', notional_amount=10e6)` is a 10m USD option. For 10m EUR
+of USDJPY, convert the 10m EUR to USD at spot and pass that amount with `notional_currency='USD'`.
+
+**Set `notional_amount` or `notional_amount_in_other_currency`, not both.** With both, the strike becomes their ratio,
+replacing `strike_price`.
+
 ## Equity Option
 
 ```python

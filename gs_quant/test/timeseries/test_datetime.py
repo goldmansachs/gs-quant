@@ -422,6 +422,11 @@ def test_date_range():
     with pytest.raises(MqTypeError):
         date_range(pd.Series([1]), 0, 0, 'string')
 
+    idx = pd.date_range('2019-01-01', periods=6, freq='D')
+    z = pd.Series(values, index=idx)
+    result = date_range(z, dt.date(2019, 1, 3), 1)
+    assert (result == z.iloc[2:5]).all()
+
 
 def test_append():
     x = pd.Series([3.1, 4.1, 5.1], index=pd.date_range('2019-01-03', '2019-01-05'))

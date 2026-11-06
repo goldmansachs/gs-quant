@@ -673,7 +673,8 @@ def sort_risk(df: pd.DataFrame, by: tuple[str, ...] = __risk_columns) -> pd.Data
     df_fields = [f for f in by if f in columns]
     df_fields.extend(f for f in columns if f not in df_fields)
 
-    result = pd.DataFrame.from_records(data, columns=columns)[df_fields]
+    # from_records on the object array from df.values no longer infers numeric dtypes as of pandas 3.1
+    result = pd.DataFrame.from_records(data, columns=columns).infer_objects()[df_fields]
     if 'date' in result:
         result = result.set_index('date')
 

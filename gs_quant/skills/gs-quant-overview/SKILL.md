@@ -131,9 +131,9 @@ results = portfolio.calc([DollarPrice, IRDelta])  # multiple risk measures
 
 For detailed guidance on specific topics, open the file whose topic or symptoms match the task.
 
-- `instruments.md` — Constructing all instrument types (IRSwap, XCcy swaps, FXOption, EqOption, etc.), strikes by asset class, and FX pitfalls
+- `instruments.md` — Constructing all instrument types (IRSwap, XCcy swaps, FXOption, EqOption, etc.), strikes by asset class, and FX pitfalls, including an `FXOption` notional in a third currency and a `strike_price` replaced by two notionals
 - `pricing.md` — PricingContext, HistoricalPricingContext and LiveMarket: which close is used and market data location, choosing contexts, long calculations and `is_batch`, caching results with `use_cache`, tracing slow or failing code with `Tracer`, relative terms and `resolve()`. Symptoms: slow code, many requests, timeouts, prices that differ from other tools or look a day old.
-- `scenarios.md` — Shocking and overriding market data: patterns, shock sizes, equity vols, FX correlation, shocked P&L over time.
+- `scenarios.md` — Shocking and overriding market data: patterns, shock sizes, equity vols, FX correlation, shocked P&L over time, rolling FX instruments forward with `RollFwd`.
 - `risk-measures.md` — What each risk measure's number means: units, scaling with size, `currency=` and `aggregation_level=`, by asset class.
 - `errors.md` — gs_quant error messages and what to do, and how to reach support when nothing fixes it.
 - `datasets.md` — Accessing market and reference data via the gs_quant Dataset class: get_data, get_data_series, get_data_last, get_coverage, uploading data, batching large queries. Covers TREOD for equities, FXIVOL_STANDARD, field and symbol dimension lookup, index constituents, realised volatility, intraday data, and common pitfalls.

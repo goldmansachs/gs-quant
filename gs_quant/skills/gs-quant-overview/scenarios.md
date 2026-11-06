@@ -53,6 +53,14 @@ points. To test a different correlation, override the cross's ATM vol curve.
 **For shocked P&L over time**, use a `HistoricalPricingContext` in place of the `PricingContext`
 above and subtract the two series.
 
+**On FX instruments, `RollFwd(date=...)` prices as if that much time had passed, and `realise_fwd`, `True` by default,
+decides where spot goes.** With `realise_fwd=False`, spot stays at today's level and the option's forward is rebuilt
+from it over the time the option still has to run: a 3-month option rolled 1 month gets today's 2-month forward. With
+`realise_fwd=True`, spot moves to today's forward for the roll date and the option's forward stays at today's. ATM vols
+stay with their tenors: after the roll, the 1-month ATM vol is today's, running to a date one month after the roll.
+Resolve the instrument first: a relative expiry such as `'3m'` resolves from the roll date, so it becomes a new 3-month
+option rather than the rolled one.
+
 ## Examples
 
 ```python

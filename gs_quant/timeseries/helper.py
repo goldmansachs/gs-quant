@@ -90,6 +90,11 @@ except ImportError as e:
         return pd.Series(values, index=s.index, dtype=np.double)
 
 
+def window_cutoff(idx, offset: pd.DateOffset):
+    cutoff = idx - offset
+    return cutoff if isinstance(idx, pd.Timestamp) else (cutoff.date() if isinstance(cutoff, dt.datetime) else cutoff)
+
+
 def _create_enum(name, members):
     return Enum(name, {n.upper(): n.lower() for n in members}, module=__name__)
 

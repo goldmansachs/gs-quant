@@ -199,13 +199,11 @@ def test_lag():
 
     result = lag(x, mode=LagMode.TRUNCATE)
     expected = pd.Series([np.nan, 1.0, 2.0, 3.0], index=dates)
-    expected.index.freq = None
-    assert_series_equal(result, expected, obj="Lag")
+    assert_series_equal(result, expected, check_freq=False, obj="Lag")
 
     result = lag(x, 2, LagMode.TRUNCATE)
     expected = pd.Series([np.nan, np.nan, 1.0, 2.0], index=dates)
-    expected.index.freq = None
-    assert_series_equal(result, expected, obj="Lag 2")
+    assert_series_equal(result, expected, check_freq=False, obj="Lag 2")
 
     result = lag(x, 2, LagMode.EXTEND)
     expected = pd.Series(

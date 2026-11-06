@@ -521,11 +521,10 @@ def date_range(
     if isinstance(end_date, int):
         end_date = x.index[-(1 + end_date)]
 
-    try:
+    if isinstance(start_date, dt.datetime):
         start_date = start_date.date()
+    if isinstance(end_date, dt.datetime):
         end_date = end_date.date()
-    except AttributeError:
-        pass
 
     if weekdays_only:
         week_mask = None
