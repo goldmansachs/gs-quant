@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright John Kingola. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -548,6 +550,25 @@ def test_correlation():
     result = correlation(x, y, "3m")
     expected = pd.Series(dtype=float, index=[])
     assert_series_equal(result, expected, obj="Correlation strdate as window with too large of window")
+
+
+def test_sharpe_ratio_annualization_factor():
+    # a seven-day calendar: the numerator is annualised by calendar days, the inferred factor is 252
+    r = np.tile([0.01, -0.005], 183)[:365]
+    er = pd.Series(100 * np.cumprod(1 + r), index=pd.date_range("2024-01-01", periods=365))
+
+    inferred = sharpe_ratio(er, curve_type=CurveType.EXCESS_RETURNS).iloc[-1]
+    consistent = sharpe_ratio(er, curve_type=CurveType.EXCESS_RETURNS, annualization_factor=365).iloc[-1]
+    assert consistent == pytest.approx(inferred * math.sqrt(252 / 365), rel=1e-9)
+
+    # passing the inferred factor explicitly changes nothing
+    same = sharpe_ratio(er, curve_type=CurveType.EXCESS_RETURNS, annualization_factor=252).iloc[-1]
+    assert same == pytest.approx(inferred, rel=1e-12)
+
+    # rolling window path
+    rolling = sharpe_ratio(er, w=22, curve_type=CurveType.EXCESS_RETURNS, annualization_factor=365)
+    rolling_inferred = sharpe_ratio(er, w=22, curve_type=CurveType.EXCESS_RETURNS)
+    assert_series_equal(rolling, rolling_inferred * math.sqrt(252 / 365))
 
 
 def test_correlation_returns():
