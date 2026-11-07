@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright John Kingola. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -548,6 +550,25 @@ def test_correlation():
     result = correlation(x, y, "3m")
     expected = pd.Series(dtype=float, index=[])
     assert_series_equal(result, expected, obj="Correlation strdate as window with too large of window")
+
+
+def test_correlation_zero_mean_default_window():
+    # The default window used to be sized on the prices, one longer than the aligned returns,
+    # so volatility() got an empty series and annualize() raised IndexError.
+    x = generate_series(60, Direction.END_TODAY)
+    y = generate_series(60, Direction.END_TODAY)
+
+    result = correlation(x, y, assume_zero_mean=True)
+    assert not result.empty
+    assert np.isfinite(result.iloc[-1])
+
+    # equivalent to asking for the full run of the 59 returns explicitly
+    expected = correlation(x, y, Window(59, 0), assume_zero_mean=True)
+    assert_series_equal(result, expected)
+
+    # an explicit window is unchanged by the fix
+    explicit = correlation(x, y, 22, assume_zero_mean=True)
+    assert np.isfinite(explicit.iloc[-1])
 
 
 def test_correlation_returns():
