@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Hemang Varshney. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -548,6 +550,38 @@ def test_correlation():
     result = correlation(x, y, "3m")
     expected = pd.Series(dtype=float, index=[])
     assert_series_equal(result, expected, obj="Correlation strdate as window with too large of window")
+
+
+def test_correlation_assume_zero_mean_default_window():
+    # GitHub issue #387: the default window is sized on prices, but returns lose the
+    # leading observation, so the window used to be one longer than the cleaned returns
+    # and the zero mean branch raised IndexError instead of returning a series.
+    dates = pd.bdate_range("2024-01-01", periods=60)
+    rng = np.random.default_rng(1)
+    x = pd.Series(100 * np.cumprod(1 + rng.normal(0, 0.01, 60)), index=dates)
+    y = pd.Series(100 * np.cumprod(1 + rng.normal(0, 0.01, 60)), index=dates)
+
+    result = correlation(x, y, assume_zero_mean=True)
+    expected = correlation(x, y, Window(59, 0), assume_zero_mean=True)
+
+    assert_series_equal(result, expected)
+    assert result.notna().any()
+    last = result.dropna().iloc[-1]
+    assert -1 <= last <= 1
+
+    # The short series used by test_correlation: 6 prices -> 5 cleaned returns.
+    x_short = pd.Series(
+        [100.0, 101, 103.02, 100.9596, 100.9596, 102.978792],
+        index=[dt.date(2019, 1, d) for d in (1, 2, 3, 4, 7, 8)],
+    )
+    y_short = pd.Series(
+        [100.0, 102.0, 104.0, 101.0, 100.95, 100.0],
+        index=x_short.index,
+    )
+    result_short = correlation(x_short, y_short, assume_zero_mean=True)
+    expected_short = correlation(x_short, y_short, Window(5, 0), assume_zero_mean=True)
+    assert_series_equal(result_short, expected_short)
+    assert result_short.notna().any()
 
 
 def test_correlation_returns():
