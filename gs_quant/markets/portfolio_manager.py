@@ -254,6 +254,7 @@ class PortfolioManager(PositionedEntity):
             if False not in is_done:
                 return [job_future.result() for job_future in report_futures]
             sleep(6)
+            counter -= 1
         raise MqValueError(
             f'Your reports for Portfolio {self.__portfolio_id} are taking longer than expected '
             f'to finish. Please contact the Marquee Analytics team at '
