@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Russlan Ramdowar. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -396,7 +398,7 @@ class BackTest(BaseBacktest):
 
         Returns a pandas Series with the following metrics:
 
-        - **Total PnL**: final value of the Total performance series
+        - **Total PnL**: final value of the Total performance series less initial capital
         - **Total Transaction Costs**: cumulative transaction costs (always negative or zero)
         - **Total Trades**: number of trades entered during the backtest
         - **Start Date / End Date**: backtest date range
@@ -405,7 +407,7 @@ class BackTest(BaseBacktest):
         - **Annualised Volatility**: standard deviation of daily P&L changes, annualised
         - **Sharpe Ratio**: annualised return / annualised volatility (assumes zero risk-free rate)
         - **Sortino Ratio**: annualised return / annualised downside deviation
-        - **Max Drawdown**: largest peak-to-trough decline in the Total series
+        - **Max Drawdown**: largest peak-to-trough decline, including the initial capital baseline
         - **Max Drawdown Duration (days)**: longest period (calendar days) spent in drawdown
         - **Calmar Ratio**: annualised return / |max drawdown|
         - **Average Daily PnL**: mean of daily PnL changes
@@ -415,8 +417,11 @@ class BackTest(BaseBacktest):
         - **% Positive Days**: proportion of days with positive PnL change
         - **Skewness**: skewness of daily PnL changes
         - **Kurtosis**: excess kurtosis of daily PnL changes
-        - **Peak PnL**: highest Total value reached
+        - **Peak PnL**: highest cumulative PnL reached, including the zero baseline
         - **Current Drawdown**: drawdown at the end of the backtest
+
+        Daily changes retain N-1 observations, with opening transaction costs included in the
+        first change. A single-row backtest has no daily observations but still reports its opening PnL.
 
         :param annualisation_factor: number of business days per year (default 252)
         :return: pandas Series of summary statistics
@@ -426,7 +431,13 @@ class BackTest(BaseBacktest):
             return pd.Series(dtype=float)
 
         total = summary[self.TOTAL_COLUMN]
-        daily_pnl = total.diff().dropna()
+        opening_cost = summary[self.TRANSACTION_COSTS_COLUMN].iloc[0] if self.TRANSACTION_COSTS_COLUMN in summary else 0
+        initial_value = total.iloc[0] - opening_cost
+        pnl = total - initial_value
+        # Fold the opening cost into the first change without adding a period to cost-free backtests.
+        daily_pnl = pnl.copy()
+        daily_pnl.iloc[0] = 0
+        daily_pnl = daily_pnl.diff().dropna()
 
         # Basic info
         start_date = total.index[0]
@@ -435,7 +446,7 @@ class BackTest(BaseBacktest):
         num_periods = len(daily_pnl)
 
         # Total PnL and transaction costs
-        total_pnl = total.iloc[-1]
+        total_pnl = pnl.iloc[-1]
         total_tc = summary[self.TRANSACTION_COSTS_COLUMN].iloc[-1] if self.TRANSACTION_COSTS_COLUMN in summary else 0
 
         # Trade count
@@ -461,8 +472,8 @@ class BackTest(BaseBacktest):
         sortino = ann_return / ann_downside if ann_downside != 0 else np.nan
 
         # Drawdown analysis
-        running_max = total.cummax()
-        drawdown = total - running_max
+        running_max = pnl.cummax().clip(lower=0)
+        drawdown = pnl - running_max
         max_drawdown = drawdown.min()
 
         # Calmar ratio
