@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Boyina Gowtham. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -779,7 +781,7 @@ def test_sharpe_ratio():
     np.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
     actual = sharpe_ratio(price_df['SPX'][:], RiskFreeRateCurrency.USD, '1m')
     expected = pd.Series(
-        [np.nan, np.nan, np.nan, 8.266434, 6.731811], index=pd.date_range(dt.date(2019, 2, 4), periods=5)
+        [11.594460, np.nan, np.nan, 8.266434, 6.731811], index=pd.date_range(dt.date(2019, 2, 4), periods=5)
     )
     np.testing.assert_almost_equal(actual[:5].values, expected.values, decimal=5)
     with pytest.raises(MqValueError):
@@ -794,6 +796,24 @@ def test_sharpe_ratio():
         er_df['ER'], 0.0175, 0, day_count_convention=DayCountConvention.ACTUAL_360, curve_type=CurveType.EXCESS_RETURNS
     )
     np.testing.assert_almost_equal(actual.values, er_df['SR'].values, decimal=5)
+
+
+def test_sharpe_ratio_first_complete_window():
+    # get_ratio_pure used to drop the first complete volatility window a second time
+    # (volatility already applies the ramp, then .iloc[1:] cut into it). At the window
+    # boundary that turned a computable value into NaN; check the first returned value.
+    rng = np.random.default_rng(3)
+    px = pd.Series(
+        100 * np.cumprod(1 + rng.normal(0.0005, 0.012, 120)), index=pd.bdate_range('2024-01-01', periods=120)
+    )
+    for w in (118, 119):
+        actual = sharpe_ratio(px, w=w, curve_type=CurveType.EXCESS_RETURNS)
+        assert len(actual) == len(px) - w
+        assert pd.notna(actual.iloc[0])
+
+    # one-month window: first ramped point is a complete window and must be returned
+    actual = sharpe_ratio(px, w='1m', curve_type=CurveType.EXCESS_RETURNS)
+    assert pd.notna(actual.iloc[0])
 
 
 if __name__ == "__main__":

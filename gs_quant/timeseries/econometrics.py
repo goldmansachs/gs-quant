@@ -9,6 +9,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# Portions copyright Boyina Gowtham. Licensed under Apache 2.0 license
 #
 #
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
@@ -149,7 +150,7 @@ def get_ratio_pure(
     w = normalize_window(er, w or None)  # continue to support 0 as an input for window
     ann_return = _annualized_return(er, w.w, interpolation_method=interpolation_method)
     long_enough = (er.index[-1] - w.w) >= er.index[0] if isinstance(w.w, pd.DateOffset) else w.w < len(er)
-    ann_vol = volatility(er, w).iloc[1:] if long_enough else volatility(er)
+    ann_vol = volatility(er, w) if long_enough else volatility(er)
     result = ann_return / ann_vol * 100
     return apply_ramp(result, w)
 
