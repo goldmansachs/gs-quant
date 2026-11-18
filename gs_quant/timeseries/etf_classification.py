@@ -13,7 +13,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
-
 # ---------------------------------------------------------------------------
 # AUTO-GENERATED from the FactSet "Fund Exposure Sort" classification overview.
 # Do not edit by hand - regenerate from the source CSV.

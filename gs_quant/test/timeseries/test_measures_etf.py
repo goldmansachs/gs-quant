@@ -321,5 +321,156 @@ def test_metric_functions_real_time_not_supported():
             fn('US', real_time=True)
 
 
+# ---------------------------------------------------------------------------
+# total_return
+# ---------------------------------------------------------------------------
+
+
+class _MockAsset:
+    def __init__(self, gsid='GSID123', close=None):
+        self._gsid = gsid
+        self._close = _close_series() if close is None else close
+
+    def get_marquee_id(self):
+        return 'MQID123'
+
+    def get_identifier(self, _id_type):
+        return self._gsid
+
+    def get_data_series(self, *_args, **_kwargs):
+        return self._close
+
+
+def _close_series():
+    idx = pd.DatetimeIndex(['2024-01-01', '2024-01-02', '2024-01-03'], name='date')
+    return pd.Series([100.0, 110.0, 120.0], index=idx)
+
+
+def _cash_dividend_actions():
+    # One cash dividend with ex-date (effectiveDate) inside the window
+    return [
+        {
+            'eventType': 'Cash Dividend',
+            'effectiveDate': '2024-01-02',
+            'records': [
+                {'instrument_type': 'Currency', 'dataValue': 2.0},
+            ],
+        },
+        # A non-dividend event that must be ignored
+        {
+            'eventType': 'Split',
+            'effectiveDate': '2024-01-02',
+            'records': [],
+        },
+    ]
+
+
+def test_total_return_real_time_not_supported():
+    with pytest.raises(NotImplementedError):
+        tm.total_return(_MockAsset(), real_time=True)
+
+
+def test_total_return_total_price_dividend():
+    replace = Replacer()
+    ca_mock = replace('gs_quant.timeseries.measures_etf.GsSecurityMasterApi.get_corporate_actions', Mock())
+    ca_mock.return_value = _cash_dividend_actions()
+
+    asset = _MockAsset()
+    with DataContext(dt.date(2024, 1, 1), dt.date(2024, 1, 3)):
+        total = tm.total_return(asset)
+        price = tm.total_return(asset, tm.TotalReturnComponent.PRICE)
+        dividend = tm.total_return(asset, tm.TotalReturnComponent.DIVIDEND)
+
+    # start price = 100; dividend of 2.0 applies from ex-date 2024-01-02 onward
+    # price %   : (100-100)/100, (110-100)/100, (120-100)/100  -> 0, 10, 20
+    assert list(price.round(6).values) == [0.0, 10.0, 20.0]
+    # dividend %: 0, 2/100, 2/100 -> 0, 2, 2
+    assert list(dividend.round(6).values) == [0.0, 2.0, 2.0]
+    # total %   : price + dividend -> 0, 12, 22
+    assert list(total.round(6).values) == [0.0, 12.0, 22.0]
+    replace.restore()
+
+
+def test_total_return_no_dividends():
+    replace = Replacer()
+    ca_mock = replace('gs_quant.timeseries.measures_etf.GsSecurityMasterApi.get_corporate_actions', Mock())
+    ca_mock.return_value = []
+
+    with DataContext(dt.date(2024, 1, 1), dt.date(2024, 1, 3)):
+        total = tm.total_return(_MockAsset())
+
+    # No dividends -> total return equals price-only return
+    assert list(total.round(6).values) == [0.0, 10.0, 20.0]
+    replace.restore()
+
+
+def test_total_return_no_price_raises():
+    with pytest.raises(MqValueError):
+        with DataContext(dt.date(2024, 1, 1), dt.date(2024, 1, 3)):
+            tm.total_return(_MockAsset(close=pd.Series(dtype=float)))
+
+
+def test_cash_dividends_lookup_failure_degrades_empty():
+    replace = Replacer()
+    # Corporate-actions lookup failing should degrade to an empty dividend series
+    ca_mock = replace('gs_quant.timeseries.measures_etf.GsSecurityMasterApi.get_corporate_actions', Mock())
+    ca_mock.side_effect = Exception('boom')
+
+    result = tm._cash_dividends_per_share(_MockAsset(), dt.date(2024, 1, 1), dt.date(2024, 1, 3))
+    assert result.empty
+    replace.restore()
+
+
+def test_cash_dividends_no_gsid_returns_empty():
+    # Asset with no GSID identifier -> empty dividend series
+    result = tm._cash_dividends_per_share(_MockAsset(gsid=None), dt.date(2024, 1, 1), dt.date(2024, 1, 3))
+    assert result.empty
+
+
+def test_cash_dividends_missing_effective_date_skipped():
+    replace = Replacer()
+    ca_mock = replace('gs_quant.timeseries.measures_etf.GsSecurityMasterApi.get_corporate_actions', Mock())
+    ca_mock.return_value = [
+        {
+            'eventType': 'Cash Dividend',
+            # no effectiveDate -> must be skipped
+            'records': [{'instrument_type': 'Currency', 'dataValue': 5.0}],
+        },
+    ]
+
+    result = tm._cash_dividends_per_share(_MockAsset(), dt.date(2024, 1, 1), dt.date(2024, 1, 3))
+    assert result.empty
+    replace.restore()
+
+
+def test_total_return_zero_start_price_raises():
+    replace = Replacer()
+    ca_mock = replace('gs_quant.timeseries.measures_etf.GsSecurityMasterApi.get_corporate_actions', Mock())
+    ca_mock.return_value = []
+
+    idx = pd.DatetimeIndex(['2024-01-01', '2024-01-02', '2024-01-03'], name='date')
+    zero_start = pd.Series([0.0, 110.0, 120.0], index=idx)
+    with pytest.raises(MqValueError):
+        with DataContext(dt.date(2024, 1, 1), dt.date(2024, 1, 3)):
+            tm.total_return(_MockAsset(close=zero_start))
+    replace.restore()
+
+
+def test_cash_dividends_out_of_window_excluded():
+    replace = Replacer()
+    ca_mock = replace('gs_quant.timeseries.measures_etf.GsSecurityMasterApi.get_corporate_actions', Mock())
+    ca_mock.return_value = [
+        {
+            'eventType': 'Cash Dividend',
+            'effectiveDate': '2023-12-01',  # before the window
+            'records': [{'instrument_type': 'Currency', 'dataValue': 5.0}],
+        },
+    ]
+
+    result = tm._cash_dividends_per_share(_MockAsset(), dt.date(2024, 1, 1), dt.date(2024, 1, 3))
+    assert result.empty
+    replace.restore()
+
+
 if __name__ == '__main__':
     pytest.main(args=[__file__])

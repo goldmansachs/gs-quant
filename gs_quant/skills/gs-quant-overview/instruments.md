@@ -11,10 +11,13 @@ each asset class's own syntax:
 |---|---|---|---|---|
 | Equities (`EqOption.strike_price`) | `'ATMS'` spot, `'ATMF'` forward | `'95%'` of spot, `'1.05*ATMF'` | `'25d'` | `'p=10%'` |
 | FX (`FXOption.strike_price`) | `'s'` spot, `'f'` forward | `'s+1%'`, `'1.05*s'` | `'25d'` | `'p=1%'` |
-| Rates (`IRSwaption.strike`, `IRSwap.fixed_rate`, `IRCap.cap_rate`) | `'ATM'` | `'ATM+25'`, `'ATM-25'` (bp) | `'25d'` | |
+| Rates (`IRSwaption.strike`, `IRSwap.fixed_rate`, `IRCap.cap_rate`) | `'ATM'` | `'ATM+25'`, `'ATM-25'` (bp) | `'25d'` | `'100000/pv'` |
 | Credit (`CDIndexOption.strike`) | `'s'` spot spread | `'s+1%'` | `'25d'` | |
 
 Deltas are unsigned; the option type sets the side.
+
+**For rates, `'<amount>/pv'` solves the strike or fixed rate that gives that price, in the instrument's currency.** It
+works on `IRSwaption`, `IRSwap` and `IRCapFloor`, not on `IRCap` or on straddles.
 
 ## Interest Rate Swap
 

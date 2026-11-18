@@ -4285,6 +4285,22 @@ def test__skew_term_fetcher():
     replace.restore()
 
 
+@pytest.mark.parametrize(
+    'date_value, expected',
+    [
+        (pd.Timestamp.today().normalize(), True),
+        (pd.Timestamp.today().normalize() - pd.Timedelta(days=5), False),
+        (pd.Timestamp.today().normalize() + pd.Timedelta(days=1), True),
+        (dt.date.today(), True),
+        (dt.date(2020, 1, 1), False),
+        (dt.datetime.now(), True),
+    ],
+)
+def test_is_on_or_after_today(date_value, expected):
+    # Timestamp vs dt.date comparisons raise TypeError on pandas >= 2; the helper must handle all date-likes
+    assert tm._is_on_or_after_today(date_value) is expected
+
+
 def test_skew_term():
     with DataContext('2018-01-01', '2040-01-01'):
         _skew_term_typical(tm.SkewReference.DELTA, 25)

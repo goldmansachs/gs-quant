@@ -488,7 +488,9 @@ def _get_custom_bd(exchange):
 
 
 @log_return(_logger, 'trying pricing dates')
-def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = None, buffer: int = 0):
+def _range_from_pricing_date(
+    exchange, pricing_date: Optional[GENERIC_DATE] = None, buffer: int = 0
+) -> tuple[Union[dt.date, pd.Timestamp], Union[dt.date, pd.Timestamp]]:
     if isinstance(pricing_date, dt.date):
         return pricing_date, pricing_date
 
@@ -506,6 +508,19 @@ def _range_from_pricing_date(exchange, pricing_date: Optional[GENERIC_DATE] = No
         end = today - dt.timedelta(days=relative_date_add(pricing_date, True))
         start = end - bd
     return start, end
+
+
+def _is_on_or_after_today(date_value: Union[dt.date, dt.datetime, pd.Timestamp]) -> bool:
+    """
+    Check whether a date-like value falls on or after today.
+
+    Safely compares dt.date, dt.datetime and pd.Timestamp values (pandas >= 2 refuses to compare Timestamp with
+    dt.date directly).
+
+    :param date_value: date-like value, e.g. as returned by _range_from_pricing_date
+    :return: True if date_value's calendar date is today or later
+    """
+    return pd.Timestamp(date_value).normalize() >= pd.Timestamp.today().normalize()
 
 
 def _market_data_timed(q, request_id=None, ignore_errors: bool = False):
@@ -2355,7 +2370,7 @@ def skew_term(
     dataset_ids = set()
     where = {'strikeReference': strike_reference.value, 'relativeStrike': q_strikes}
 
-    if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= dt.date.today()):  # intraday
+    if asset.asset_class == AssetClass.Equity and (pricing_date is None or _is_on_or_after_today(end)):  # intraday
         data_requests = [
             partial(
                 _get_latest_term_structure_data,
@@ -2490,8 +2505,8 @@ def vol_term(
 
     df = df_expiry = pd.DataFrame()
     dataset_ids = set()
-    today = dt.date.today()
-    if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # use intraday data
+    # use intraday data
+    if asset.asset_class == AssetClass.Equity and (pricing_date is None or _is_on_or_after_today(end)):
         df = _get_latest_term_structure_data(asset_id, QueryType.IMPLIED_VOLATILITY, where, 'tenor', source, request_id)
         df_expiry = _get_latest_term_structure_data(
             asset_id, QueryType.IMPLIED_VOLATILITY_BY_EXPIRATION, where, 'expirationDate', source, request_id
@@ -2951,10 +2966,10 @@ def var_term(
             df = pd.concat(sub_frames)
     else:
         asset_id = asset.get_marquee_id()
-        today = dt.date.today()
         df = pd.DataFrame()
 
-        if asset.asset_class == AssetClass.Equity and (pricing_date is None or end >= today):  # try intraday data
+        # try intraday data
+        if asset.asset_class == AssetClass.Equity and (pricing_date is None or _is_on_or_after_today(end)):
             df = _get_latest_term_structure_data(asset_id, QueryType.VAR_SWAP, None, 'tenor', source, request_id)
             dataset_ids.update(getattr(df, 'dataset_ids', ()))
 

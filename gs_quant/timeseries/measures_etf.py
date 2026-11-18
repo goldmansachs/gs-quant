@@ -19,11 +19,16 @@ from typing import Optional
 
 import pandas as pd
 
-from gs_quant.data import DataContext, Dataset
+from gs_quant.api.gs.data import QueryType
+from gs_quant.api.gs.secmaster import GsSecurityMasterApi, SecMasterIdentifiers
+from gs_quant.common import AssetClass, AssetType
+from gs_quant.data import DataContext, DataFrequency, Dataset
+from gs_quant.data.fields import DataMeasure
 from gs_quant.entities.entity import Country, EntityType
 from gs_quant.errors import MqValueError
+from gs_quant.markets.securities import Asset, AssetIdentifier
 from gs_quant.timeseries.etf_classification import ETF_CLASSIFICATION
-from gs_quant.timeseries.helper import plot_measure_entity
+from gs_quant.timeseries.helper import plot_measure, plot_measure_entity
 from gs_quant.timeseries.measures import ExtendedSeries
 
 # ---------------------------------------------------------------------------
@@ -468,3 +473,162 @@ total_etf_shares_outstanding.__doc__ = _ETF_MEASURE_DOC.format(
 )
 total_etf_assets.__doc__ = _ETF_MEASURE_DOC.format(what='assets', fn='total_etf_assets')
 total_etf_funds.__doc__ = _ETF_MEASURE_DOC.format(what='fund count', fn='total_etf_funds')
+
+
+# ---------------------------------------------------------------------------
+# Asset-level total return (price appreciation + dividends)
+# ---------------------------------------------------------------------------
+
+
+class TotalReturnComponent(Enum):
+    """Which part of the total return to return."""
+
+    TOTAL = 'total'        # price appreciation + cash dividends
+    PRICE = 'price'        # price appreciation only
+    DIVIDEND = 'dividend'  # dividend contribution only
+
+
+def _cash_dividends_per_share(asset: Asset, start, end) -> pd.Series:
+    """
+    Return cash dividends per share for an asset, indexed by effective (ex) date.
+
+    Dividends come from the Security Master corporate-actions endpoint, which
+    carries the true per-share cash amount for each 'Cash Dividend' event (the
+    price datasets' adjustedClosePrice is not dividend-adjusted, so we cannot
+    derive dividends from prices alone).
+    """
+    gsid = asset.get_identifier(AssetIdentifier.GSID)
+    if gsid is None:
+        return pd.Series(dtype=float)
+
+    try:
+        corporate_actions = GsSecurityMasterApi.get_corporate_actions(
+            id_value=gsid, id_type=SecMasterIdentifiers.GSID
+        )
+    except Exception:
+        return pd.Series(dtype=float)
+
+    amounts = {}
+    for ca in corporate_actions or []:
+        if ca.get('eventType') != 'Cash Dividend':
+            continue
+        eff = ca.get('effectiveDate')
+        if eff is None:
+            continue
+        eff_date = pd.Timestamp(eff)
+        if eff_date < pd.Timestamp(start) or eff_date > pd.Timestamp(end):
+            continue
+        # sum any cash records on the event (per share, in the dividend currency)
+        total = 0.0
+        for record in ca.get('records', []):
+            if record.get('instrument_type') == 'Currency' and record.get('dataValue') is not None:
+                total += float(record['dataValue'])
+        if total:
+            amounts[eff_date] = amounts.get(eff_date, 0.0) + total
+
+    if not amounts:
+        return pd.Series(dtype=float)
+    return pd.Series(amounts).sort_index()
+
+
+def _total_return_series(asset: Asset, component: 'TotalReturnComponent') -> pd.Series:
+    """
+    Build a cumulative total-return (%) series for an asset.
+
+    Total return captures both price appreciation and cash dividends. Because the
+    adjusted close price is not dividend-adjusted in the price datasets, the
+    dividend leg is taken from the corporate-actions (Cash Dividend) events and
+    accumulated by ex-date. Values are expressed in percentage points (i.e.
+    scaled by 100, so a 10% return is returned as ``10.0``)::
+
+        price return (t)    = 100 * (closePrice(t) - closePrice(start)) / closePrice(start)
+        dividend return (t) = 100 * (sum of dividends with ex-date <= t) / closePrice(start)
+        total return (t)    = 100 * (closePrice(t) - closePrice(start) + dividends(t)) / closePrice(start)
+    """
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+
+    close = asset.get_data_series(DataMeasure.CLOSE_PRICE, None, DataFrequency.DAILY, start, end)
+
+    if close is None or close.empty:
+        raise MqValueError(f'No close price data found for {asset.get_marquee_id()}')
+
+    close = close.sort_index()
+
+    # Starting price anchors the returns to the window; close(t) is the ending price.
+    start_price = close.iloc[0]
+    if start_price == 0:
+        raise MqValueError('Starting price is zero - cannot compute total return')
+
+    # Cumulative cash dividends per share, forward-filled onto the price dates.
+    dividends = _cash_dividends_per_share(asset, start, end)
+    if dividends.empty:
+        cum_div = pd.Series(0.0, index=close.index)
+    else:
+        cum_div = dividends.cumsum().reindex(close.index, method='ffill').fillna(0.0)
+
+    if component == TotalReturnComponent.PRICE:
+        # price only: (ending price - starting price) / starting price
+        values = (close - start_price) / start_price
+    elif component == TotalReturnComponent.DIVIDEND:
+        # dividend contribution: dividends / starting price
+        values = cum_div / start_price
+    else:
+        # total return: (ending price - starting price + dividends) / starting price
+        values = (close - start_price + cum_div) / start_price
+
+    series = ExtendedSeries(values * 100.0, name='totalReturn')
+    series.dataset_ids = getattr(close, 'dataset_ids', ())
+    return series
+
+
+@plot_measure(
+    (AssetClass.Equity,),
+    (AssetType.ETF, AssetType.Index, AssetType.Single_Stock),
+    [QueryType.SPOT],
+)
+def total_return(
+    asset: Asset,
+    component: TotalReturnComponent = TotalReturnComponent.TOTAL,
+    *,
+    source: str = None,
+    real_time: bool = False,
+    request_id: Optional[str] = None,
+) -> pd.Series:
+    """
+    Cumulative total return (%) of an asset over the date context, combining
+    price appreciation and cash dividends.
+
+    Total return is anchored at the start of the window and measured in
+    percentage points (i.e. scaled by 100, so a 10% return is returned as
+    ``10.0``)::
+
+        price     = 100 * (closePrice(t) / closePrice(start) - 1)                (price only)
+        dividend  = 100 * (sum of cash dividends, ex-date <= t) / close(start)   (dividends)
+        total     = price + dividend                                            (price + dividends)
+
+    Cash dividends are sourced from Security Master corporate-action events (the
+    price datasets are not dividend-adjusted), so the ``total`` component equals
+    ``100 * (ending price - starting price + dividends paid) / starting price`` on
+    the final date.
+
+    **Examples**
+
+    Total return of SPY (price + dividends)::
+
+        SPY.total_return()
+
+    Price-only return / dividend contribution::
+
+        SPY.total_return(price)
+        SPY.total_return(dividend)
+
+    :param asset: asset object loaded from security master
+    :param component: which part of the return to show - total, price or dividend
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD (not supported)
+    :param request_id: server request id
+    :return: cumulative total return (%) time series
+    """
+    if real_time:
+        raise NotImplementedError('real-time total return is not available')
+    return _total_return_series(asset, component)

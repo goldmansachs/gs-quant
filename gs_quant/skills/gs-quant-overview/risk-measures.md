@@ -69,7 +69,9 @@ take the difference from the unshocked values.
 
 **`IRDelta` is the present value change for a 1bp move in the instruments the curve is built
 from**. **`IRGammaParallelLocalCcy`** is the change in that delta, in local currency, for a 1bp
-move, so its unit is local currency per bp².
+move, so its unit is local currency per bp². **`IRGammaParallel`** is the same gamma in USD, so on a non-USD trade it
+differs from `IRGammaParallelLocalCcy` by the exchange rate; **`IRGamma`** splits it by the instruments the curve is
+built from, one row each (named in its `inner_mkt_*` columns), and its rows add up to about `IRGammaParallel`.
 
 **`IRVega` is the present value change for a 1bp rise in normal vol**; **`IRVegaParallel`** is the
 same in USD unless `currency=` is set, so on a non-USD trade it differs from
