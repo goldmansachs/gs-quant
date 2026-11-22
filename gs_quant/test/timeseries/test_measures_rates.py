@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Pengyi Peng. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -969,8 +971,7 @@ def test_policy_rate_expectation(mocker):
     mock_eur = Currency('MARFAGXDQRWM07Y2', 'EUR')
 
     with DataContext(dt.date(2019, 12, 6), dt.date(2019, 12, 6)):
-        replace = Replacer()
-        xrefs = replace('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs', Mock())
+        xrefs = mocker.patch('gs_quant.timeseries.measures.GsAssetApi.get_asset_xrefs')
         xrefs.return_value = [
             GsTemporalXRef(
                 dt.date(2019, 1, 1),
@@ -982,7 +983,7 @@ def test_policy_rate_expectation(mocker):
         ]
         mocker.patch.object(GsAssetApi, 'map_identifiers', side_effect=map_identifiers_default_mocker)
 
-        mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        mock_get_data = mocker.patch.object(Dataset, 'get_data')
         mock_get_data.return_value = mock_meeting_spot()
 
         actual_num = tm_rates.policy_rate_expectation(mock_eur, tm_rates.EventType.SPOT, tm_rates.RateType.ABSOLUTE, 0)
@@ -1040,18 +1041,16 @@ def test_policy_rate_expectation(mocker):
         with pytest.raises(MqError):
             tm_rates.policy_rate_expectation(mock_eur, tm_rates.EventType.MEETING, tm_rates.RateType.RELATIVE, -2)
 
-        mock_get_data = replace('gs_quant.data.dataset.Dataset.get_data', Mock())
+        mock_get_data = mocker.patch.object(Dataset, 'get_data')
         mock_get_data.return_value = pd.DataFrame()
         with pytest.raises(MqError):
             tm_rates.policy_rate_expectation(mock_eur, tm_rates.EventType.MEETING, tm_rates.RateType.ABSOLUTE, 2)
 
-        mock_get_data = replace('gs_quant.timeseries.measures_rates.policy_rate_expectation_rt', Mock())
+        mock_get_data = mocker.patch('gs_quant.timeseries.measures_rates.policy_rate_expectation_rt')
         mock_get_data.return_value = pd.DataFrame()
         assert tm_rates.policy_rate_expectation(
             mock_eur, tm_rates.EventType.MEETING, tm_rates.RateType.ABSOLUTE, 2, real_time=True
         ).empty
-
-    replace.restore()
 
 
 def mock_policy_rt_spot():
