@@ -17,6 +17,7 @@ This product uses the FRED® API but is not endorsed or certified
 by the Federal Reserve Bank of St. Louis. FRED terms of use
 available at https://research.stlouisfed.org/docs/api/terms_of_use.html
 """
+# Portions copyright 2026 Pengyi Peng. Licensed under Apache 2.0 license.
 
 import datetime as dt
 import textwrap
@@ -106,7 +107,7 @@ class FredDataApi(DataApi):
         """
 
         data = self.query_data(query, dataset_id)
-        return data.last('1D')
+        return data.tail(1)
 
     @staticmethod
     def __handle_response(response: str) -> pd.Series:

@@ -17,6 +17,7 @@ This product uses the FRED® API but is not endorsed or certified
 by the Federal Reserve Bank of St. Louis. FRED terms of use
 available at https://research.stlouisfed.org/docs/api/terms_of_use.html
 """
+# Portions copyright 2026 Pengyi Peng. Licensed under Apache 2.0 license.
 
 from unittest.mock import Mock
 
@@ -25,6 +26,7 @@ import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 from gs_quant.api.fred.data import FredDataApi
+from gs_quant.api.fred.fred_query import FredQuery
 from gs_quant.data import Dataset
 
 fredAPI = FredDataApi(api_key='')
@@ -125,3 +127,23 @@ def test_failed_get_data_series(mocker):
     mocker.patch('requests.get', side_effect=ValueError(_mock_requests_response(status=404)))
     with pytest.raises(ValueError):
         fred_data.get_data_series(field='GDP')
+
+
+@pytest.mark.parametrize(
+    'dates',
+    [
+        ['2026-11-06', '2026-11-09', '2026-11-10'],
+        ['2026-07-01', '2026-08-01', '2026-09-01'],
+        ['2026-11-10'],
+        [],
+    ],
+)
+def test_last_data(mocker, dates):
+    observations = pd.Series(range(len(dates)), index=pd.DatetimeIndex(dates, name='date'), dtype=float, name='TEST')
+    query = FredQuery()
+    query_data = mocker.patch.object(fredAPI, 'query_data', return_value=observations)
+
+    result = fredAPI.last_data(query, 'TEST')
+
+    assert_series_equal(result, observations.iloc[-1:])
+    query_data.assert_called_once_with(query, 'TEST')
