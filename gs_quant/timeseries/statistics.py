@@ -9,6 +9,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+# Portions copyright Muhammad Mudassir. Licensed under Apache 2.0 license
 #
 #
 # Marquee Plot Service will attempt to make public functions (not prefixed with _) from this module available.
@@ -1158,7 +1159,9 @@ class LinearRegression:
         :return: predicted values
         """
         df = pd.concat(X_predict, axis=1) if isinstance(X_predict, list) else X_predict.to_frame()
-        return self._res.predict(sm.add_constant(df) if self._fit_intercept else df)
+        if self._fit_intercept:
+            df = sm.add_constant(df, has_constant='add')
+        return self._res.predict(df)
 
     @plot_method
     def standard_deviation_of_errors(self) -> float:
