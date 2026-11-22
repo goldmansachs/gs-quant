@@ -398,6 +398,7 @@ class Report:
                     if job_future.done():
                         return job_future.result()
                     sleep(6)
+                    counter -= 1
                 raise MqValueError(
                     f'Your report {self.id} is taking longer than expected to finish. Please contact the '
                     'Marquee Analytics team at gs-marquee-analytics-support@gs.com'
