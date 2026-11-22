@@ -14,7 +14,16 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import weakref
+
 from .core import PricingCache, PricingContext, PositionContext
 from .historical import HistoricalPricingContext, BackToTheFuturePricingContext
 from .realtime import RealtimePricingContext
 from .markets import *
+
+
+def _clear_pricing_cache(cls):
+    cls._PricingCache__cache = weakref.WeakKeyDictionary()
+
+
+PricingCache.clear = classmethod(_clear_pricing_cache)
