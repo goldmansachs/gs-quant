@@ -1,0 +1,457 @@
+{
+  "method": "POST",
+  "path": "/v1/risk/calculate/bulk",
+  "contentType": "application/x-msgpack",
+  "encoding": "msgpack",
+  "body": [
+    "list",
+    {
+      "positions": [
+        "list",
+        {
+          "instrument": {
+            "payOrReceive": [
+              "str",
+              "Pay"
+            ],
+            "terminationDate": [
+              "str",
+              "10y"
+            ],
+            "notionalCurrency": [
+              "str",
+              "USD"
+            ],
+            "notionalAmount": [
+              "float",
+              1000000.0
+            ],
+            "effectiveDate": [
+              "str",
+              "2021-03-04"
+            ],
+            "fixedRate": [
+              "float",
+              0.01
+            ],
+            "fee": [
+              "float",
+              0.0
+            ],
+            "assetClass": [
+              "str",
+              "Rates"
+            ],
+            "type": [
+              "str",
+              "Swap"
+            ]
+          },
+          "instrumentName": [
+            "str",
+            "swap"
+          ],
+          "quantity": [
+            "int",
+            1
+          ]
+        },
+        {
+          "instrument": {
+            "underlier": [
+              "str",
+              ".SPX"
+            ],
+            "expirationDate": [
+              "str",
+              "3m"
+            ],
+            "strikePrice": [
+              "str",
+              "ATMF"
+            ],
+            "optionType": [
+              "str",
+              "Call"
+            ],
+            "optionStyle": [
+              "str",
+              "European"
+            ],
+            "numberOfOptions": [
+              "int",
+              10
+            ],
+            "premium": [
+              "float",
+              0.0
+            ],
+            "assetClass": [
+              "str",
+              "Equity"
+            ],
+            "type": [
+              "str",
+              "Option"
+            ]
+          },
+          "instrumentName": [
+            "str",
+            "spx_call"
+          ],
+          "quantity": [
+            "int",
+            1
+          ]
+        }
+      ],
+      "measures": [
+        "list",
+        {
+          "measureType": [
+            "str",
+            "PV"
+          ]
+        },
+        {
+          "assetClass": [
+            "str",
+            "Rates"
+          ],
+          "measureType": [
+            "str",
+            "Delta"
+          ],
+          "parameters": {
+            "aggregationLevel": [
+              "str",
+              "Type"
+            ],
+            "currency": [
+              "str",
+              "local"
+            ],
+            "parameterType": [
+              "str",
+              "FiniteDifference"
+            ]
+          }
+        }
+      ],
+      "pricingAndMarketDataAsOf": [
+        "list",
+        {
+          "pricingDate": [
+            "str",
+            "2021-03-04"
+          ],
+          "market": {
+            "date": [
+              "str",
+              "2021-03-04"
+            ],
+            "location": [
+              "str",
+              "NYC"
+            ],
+            "marketType": [
+              "str",
+              "CloseMarket"
+            ]
+          }
+        }
+      ],
+      "waitForResults": [
+        "bool",
+        true
+      ],
+      "scenario": {
+        "scenario": {
+          "shocks": [
+            "list",
+            {
+              "pattern": {
+                "mktType": [
+                  "str",
+                  "IR"
+                ],
+                "mktAsset": [
+                  "str",
+                  "USD"
+                ]
+              },
+              "shock": {
+                "shockType": [
+                  "str",
+                  "Absolute"
+                ],
+                "value": [
+                  "float",
+                  0.0001
+                ]
+              }
+            }
+          ],
+          "scenarioType": [
+            "str",
+            "MarketDataShockBasedScenario"
+          ]
+        },
+        "subtractBase": [
+          "bool",
+          false
+        ]
+      },
+      "parameters": {
+        "csaTerm": [
+          "str",
+          "USD-1"
+        ],
+        "rawResults": [
+          "bool",
+          true
+        ],
+        "useHistoricalDiddlesOnly": [
+          "bool",
+          false
+        ],
+        "marketBehaviour": [
+          "str",
+          "ContraintsBased"
+        ]
+      },
+      "requestVisibleToGs": [
+        "bool",
+        false
+      ],
+      "useCache": [
+        "bool",
+        false
+      ]
+    },
+    {
+      "positions": [
+        "list",
+        {
+          "instrument": {
+            "payOrReceive": [
+              "str",
+              "Pay"
+            ],
+            "terminationDate": [
+              "str",
+              "10y"
+            ],
+            "notionalCurrency": [
+              "str",
+              "USD"
+            ],
+            "notionalAmount": [
+              "float",
+              1000000.0
+            ],
+            "effectiveDate": [
+              "str",
+              "2021-03-04"
+            ],
+            "fixedRate": [
+              "float",
+              0.01
+            ],
+            "fee": [
+              "float",
+              0.0
+            ],
+            "assetClass": [
+              "str",
+              "Rates"
+            ],
+            "type": [
+              "str",
+              "Swap"
+            ]
+          },
+          "instrumentName": [
+            "str",
+            "swap"
+          ],
+          "quantity": [
+            "int",
+            1
+          ]
+        },
+        {
+          "instrument": {
+            "underlier": [
+              "str",
+              ".SPX"
+            ],
+            "expirationDate": [
+              "str",
+              "3m"
+            ],
+            "strikePrice": [
+              "str",
+              "ATMF"
+            ],
+            "optionType": [
+              "str",
+              "Call"
+            ],
+            "optionStyle": [
+              "str",
+              "European"
+            ],
+            "numberOfOptions": [
+              "int",
+              10
+            ],
+            "premium": [
+              "float",
+              0.0
+            ],
+            "assetClass": [
+              "str",
+              "Equity"
+            ],
+            "type": [
+              "str",
+              "Option"
+            ]
+          },
+          "instrumentName": [
+            "str",
+            "spx_call"
+          ],
+          "quantity": [
+            "int",
+            1
+          ]
+        }
+      ],
+      "measures": [
+        "list",
+        {
+          "measureType": [
+            "str",
+            "PV"
+          ]
+        },
+        {
+          "assetClass": [
+            "str",
+            "Rates"
+          ],
+          "measureType": [
+            "str",
+            "Delta"
+          ],
+          "parameters": {
+            "aggregationLevel": [
+              "str",
+              "Type"
+            ],
+            "currency": [
+              "str",
+              "local"
+            ],
+            "parameterType": [
+              "str",
+              "FiniteDifference"
+            ]
+          }
+        }
+      ],
+      "pricingAndMarketDataAsOf": [
+        "list",
+        {
+          "pricingDate": [
+            "str",
+            "2021-03-05"
+          ],
+          "market": {
+            "date": [
+              "str",
+              "2021-03-05"
+            ],
+            "location": [
+              "str",
+              "NYC"
+            ],
+            "marketType": [
+              "str",
+              "CloseMarket"
+            ]
+          }
+        }
+      ],
+      "waitForResults": [
+        "bool",
+        true
+      ],
+      "scenario": {
+        "scenario": {
+          "shocks": [
+            "list",
+            {
+              "pattern": {
+                "mktType": [
+                  "str",
+                  "IR"
+                ],
+                "mktAsset": [
+                  "str",
+                  "USD"
+                ]
+              },
+              "shock": {
+                "shockType": [
+                  "str",
+                  "Absolute"
+                ],
+                "value": [
+                  "float",
+                  0.0001
+                ]
+              }
+            }
+          ],
+          "scenarioType": [
+            "str",
+            "MarketDataShockBasedScenario"
+          ]
+        },
+        "subtractBase": [
+          "bool",
+          false
+        ]
+      },
+      "parameters": {
+        "csaTerm": [
+          "str",
+          "USD-1"
+        ],
+        "rawResults": [
+          "bool",
+          true
+        ],
+        "useHistoricalDiddlesOnly": [
+          "bool",
+          false
+        ],
+        "marketBehaviour": [
+          "str",
+          "ContraintsBased"
+        ]
+      },
+      "requestVisibleToGs": [
+        "bool",
+        false
+      ],
+      "useCache": [
+        "bool",
+        false
+      ]
+    }
+  ]
+}

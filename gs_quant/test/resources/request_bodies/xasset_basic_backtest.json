@@ -1,0 +1,46 @@
+{
+  "method": "POST",
+  "path": "/v1/backtests/xasset/strategy/basic",
+  "contentType": "application/json; charset=utf-8",
+  "encoding": "json",
+  "body": {
+    "dates": {
+      "startDate": "2021-01-04",
+      "endDate": "2021-03-04",
+      "frequency": "1b",
+      "holidayCalendar": null
+    },
+    "trades": [
+      {
+        "legs": [
+          {
+            "underlier": ".SPX",
+            "expirationDate": "2021-06-18",
+            "strikePrice": "ATMF",
+            "optionType": "Call",
+            "optionStyle": "European",
+            "numberOfOptions": 10,
+            "premium": 0.0,
+            "assetClass": "Equity",
+            "type": "Option"
+          }
+        ],
+        "buyFrequency": "1m",
+        "buyDates": [
+          "2021-01-04"
+        ],
+        "holdingPeriod": "1m",
+        "exitDates": null,
+        "quantity": 1.0,
+        "quantityType": null
+      }
+    ],
+    "measures": [
+      "PNL"
+    ],
+    "configuration": {
+      "cashAccrual": false,
+      "combineRollSignalEntries": false
+    }
+  }
+}

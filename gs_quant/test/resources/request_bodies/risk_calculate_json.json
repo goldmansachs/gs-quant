@@ -1,0 +1,93 @@
+{
+  "method": "POST",
+  "path": "/v1/risk/calculate/bulk",
+  "contentType": "application/json; charset=utf-8",
+  "encoding": "json",
+  "body": [
+    {
+      "positions": [
+        {
+          "instrument": {
+            "payOrReceive": "Pay",
+            "terminationDate": "10y",
+            "notionalCurrency": "USD",
+            "notionalAmount": 1000000.0,
+            "effectiveDate": "2021-03-04",
+            "fixedRate": 0.01,
+            "fee": 0.0,
+            "assetClass": "Rates",
+            "type": "Swap"
+          },
+          "instrumentName": "swap",
+          "quantity": 1
+        },
+        {
+          "instrument": {
+            "underlier": ".SPX",
+            "expirationDate": "3m",
+            "strikePrice": "ATMF",
+            "optionType": "Call",
+            "optionStyle": "European",
+            "numberOfOptions": 10,
+            "premium": 0.0,
+            "assetClass": "Equity",
+            "type": "Option"
+          },
+          "instrumentName": "spx_call",
+          "quantity": 1
+        }
+      ],
+      "measures": [
+        {
+          "measureType": "PV"
+        },
+        {
+          "assetClass": "Rates",
+          "measureType": "Delta",
+          "parameters": {
+            "aggregationLevel": "Type",
+            "currency": "local",
+            "parameterType": "FiniteDifference"
+          }
+        }
+      ],
+      "pricingAndMarketDataAsOf": [
+        {
+          "pricingDate": "2021-03-04",
+          "market": {
+            "date": "2021-03-04",
+            "location": "NYC",
+            "marketType": "CloseMarket"
+          }
+        }
+      ],
+      "waitForResults": true,
+      "scenario": {
+        "scenario": {
+          "shocks": [
+            {
+              "pattern": {
+                "mktType": "IR",
+                "mktAsset": "USD"
+              },
+              "shock": {
+                "shockType": "Absolute",
+                "value": 0.0001
+              }
+            }
+          ],
+          "scenarioType": "MarketDataShockBasedScenario"
+        },
+        "subtractBase": false
+      },
+      "parameters": {
+        "csaTerm": "USD-1",
+        "rawResults": true,
+        "useHistoricalDiddlesOnly": false,
+        "marketBehaviour": "ContraintsBased"
+      },
+      "requestVisibleToGs": false,
+      "useCache": false
+    }
+  ]
+}

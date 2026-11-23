@@ -1,0 +1,26 @@
+{
+  "path": "/data/DATASET/query",
+  "method": "POST",
+  "payload": {
+    "distinctConsecutive": false,
+    "endDate": "2021-03-05",
+    "fields": [
+      "price",
+      "volume"
+    ],
+    "remapSchemaToAlias": false,
+    "restrictFields": false,
+    "restrictSecondaryIdentifier": false,
+    "showLinkedDimensions": true,
+    "snapshot": false,
+    "startDate": "2021-03-04",
+    "useFieldAlias": false,
+    "useProjectProcessor": false,
+    "useTemporalXRef": false,
+    "where": {
+      "assetId": [
+        "MA123"
+      ]
+    }
+  }
+}

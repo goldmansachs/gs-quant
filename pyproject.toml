@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     "License :: OSI Approved :: Apache Software License",
 ]
@@ -108,6 +109,7 @@ test = [
     "plotly",
     "freezegun",
     "ruff",
+    "orjson",
 ]
 dev = [
     "wheel",
@@ -216,6 +218,15 @@ extend-aliases = { "datetime" = "dt" }
 [tool.uv]
 default-groups = ["test", "dev"]
 native-tls = true
+# Resolve packages only to versions ALL these interpreters can install.
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.10'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.11'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.12'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.13'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.14'",
+]
+
 
 [[tool.uv.index]]
 name = "aws"

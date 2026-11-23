@@ -1,0 +1,140 @@
+{
+  "method": "POST",
+  "path": "/v1/risk-internal/quote/workflow/save",
+  "contentType": "application/x-msgpack",
+  "encoding": "msgpack",
+  "body": [
+    "list",
+    {
+      "positions": [
+        "list",
+        {
+          "positions": [
+            "list",
+            {
+              "quantity": [
+                "float",
+                1.0
+              ],
+              "instrument": {
+                "payOrReceive": [
+                  "str",
+                  "Pay"
+                ],
+                "terminationDate": [
+                  "str",
+                  "10y"
+                ],
+                "notionalCurrency": [
+                  "str",
+                  "USD"
+                ],
+                "notionalAmount": [
+                  "float",
+                  1000000.0
+                ],
+                "effectiveDate": [
+                  "str",
+                  "2021-03-04"
+                ],
+                "fixedRate": [
+                  "float",
+                  0.01
+                ],
+                "fee": [
+                  "float",
+                  0.0
+                ],
+                "assetClass": [
+                  "str",
+                  "Rates"
+                ],
+                "type": [
+                  "str",
+                  "Swap"
+                ]
+              }
+            }
+          ],
+          "positionDate": [
+            "str",
+            "2021-03-04"
+          ]
+        }
+      ],
+      "measures": [
+        "list",
+        {
+          "measureType": [
+            "str",
+            "PV"
+          ]
+        }
+      ],
+      "pricingAndMarketDataAsOf": [
+        "list",
+        {
+          "pricingDate": [
+            "str",
+            "2021-03-04"
+          ]
+        }
+      ],
+      "reports": [
+        "list",
+        {
+          "reportType": [
+            "str",
+            "VisualStructuringReport"
+          ],
+          "positionSetId": [
+            "str",
+            "ps1"
+          ],
+          "asOfDate": [
+            "str",
+            "2021-03-04"
+          ],
+          "comments": [
+            "list",
+            {
+              "data": [
+                "str",
+                "abc"
+              ],
+              "imgType": [
+                "str",
+                "PNG"
+              ],
+              "commentType": [
+                "str",
+                "binaryImageComments"
+              ]
+            }
+          ],
+          "hedgeInstruction": {
+            "type": [
+              "str",
+              "DeltaHedge"
+            ]
+          }
+        }
+      ],
+      "entitlements": {
+        "readers": [
+          "list",
+          {
+            "type": [
+              "str",
+              "user"
+            ],
+            "value": [
+              "str",
+              "abc"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

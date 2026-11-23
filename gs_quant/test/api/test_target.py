@@ -17,22 +17,10 @@ under the License.
 import copy
 import inspect
 import pickle
-import sys
-import types
 
 from gs_quant.base import Base
 from gs_quant.common import Currency
-
-
-def classes(module_name) -> list:
-    module_path = 'gs_quant.target.' + module_name
-    __import__(module_path)
-    module = sys.modules[module_path]
-    return [
-        m
-        for n, m in inspect.getmembers(module)
-        if not isinstance(m, types.GenericAlias) and inspect.isclass(m) and issubclass(m, Base) and m is not Base
-    ]
+from gs_quant.test.dataclass_test_utils import generated_classes, generated_modules
 
 
 def test_enum():
@@ -44,36 +32,14 @@ def test_enum():
 
 
 def test_classes():
-    for module_name in (
-        'assets',
-        'backtests',
-        'charts',
-        'common',
-        'content',
-        'coordinates',
-        'countries',
-        'data',
-        'hedge',
-        'indices',
-        'instrument',
-        'monitor',
-        'portfolios',
-        'reports',
-        'risk',
-        'trades',
-        'workspaces_markets',
-    ):
-        for typ in classes(module_name):
-            if typ.__module__ != module_name:
-                continue
-
-            fields_by_name = typ._fields_by_name()
-            if not fields_by_name:
-                continue
-
-            obj = typ.default_instance()
-
-            for fld in fields_by_name.values():
-                _ = object.__getattribute__(obj, fld.name)
-                if fld.init:
-                    setattr(obj, fld.name, None)
+    # The contracts of these classes are tested in gs_quant/test/test_class_contracts.py
+    modules = generated_modules()
+    covered = set(generated_classes(modules))
+    assert covered
+    for module in modules:
+        defined = {
+            c
+            for c in vars(module).values()
+            if inspect.isclass(c) and c.__module__ == module.__name__ and issubclass(c, Base)
+        }
+        assert defined <= covered, module.__name__

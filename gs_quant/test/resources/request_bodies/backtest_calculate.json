@@ -1,0 +1,44 @@
+{
+  "method": "POST",
+  "path": "/v1/backtests/calculate",
+  "contentType": "application/json;charset=utf-8",
+  "encoding": "json",
+  "body": {
+    "name": "Flow Vol Backtest",
+    "type": "Volatility Flow",
+    "assetClass": "Equity",
+    "costNetting": false,
+    "currency": "USD",
+    "mqSymbol": "SPX",
+    "parameters": {
+      "tradingParameters": {
+        "quantity": 1,
+        "rollFrequency": "1m",
+        "scalingMethod": "fixedQuantity"
+      },
+      "indexInitialValue": 100.0,
+      "underliers": [
+        {
+          "instrument": {
+            "underlier": ".SPX",
+            "expirationDate": "3m",
+            "strikePrice": "ATMF",
+            "optionType": "Call",
+            "optionStyle": "European",
+            "numberOfOptions": 10,
+            "premium": 0.0,
+            "assetClass": "Equity",
+            "type": "Option"
+          },
+          "marketModel": "SFK"
+        }
+      ],
+      "measures": [
+        "ALL MEASURES"
+      ]
+    },
+    "startDate": "2021-01-04",
+    "endDate": "2021-03-04",
+    "cashAccrual": true
+  }
+}

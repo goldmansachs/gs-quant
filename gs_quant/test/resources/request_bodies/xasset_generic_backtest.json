@@ -1,0 +1,355 @@
+{
+  "method": "POST",
+  "path": "/v1/backtests/xasset/strategy/generic",
+  "contentType": "application/json; charset=utf-8",
+  "encoding": "json",
+  "body": {
+    "strategy": {
+      "initial_portfolio": [],
+      "triggers": [
+        {
+          "trigger_requirements": {
+            "dates": [
+              "2021-12-01"
+            ],
+            "entire_day": false,
+            "class_type": "date_trigger_requirements"
+          },
+          "actions": [
+            {
+              "priceables": [
+                {
+                  "pair": "USDJPY",
+                  "buy_sell": "Buy",
+                  "option_type": "Call",
+                  "notional_amount": 100000.0,
+                  "strike_price": "ATMF",
+                  "expiration_date": "2y",
+                  "asset_class": "FX",
+                  "type": "Option",
+                  "name": "Action1_2y_call"
+                }
+              ],
+              "trade_duration": "1m",
+              "name": "Action1",
+              "transaction_cost": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "transaction_cost_exit": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "holiday_calendar": null,
+              "class_type": "add_trade_action"
+            }
+          ],
+          "class_type": "date_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "start_date": "2023-04-11",
+            "end_date": "2023-12-25",
+            "frequency": "3m",
+            "calendar": [
+              "2024-02-29"
+            ],
+            "class_type": "periodic_trigger_requirements"
+          },
+          "actions": [
+            {
+              "priceables": [
+                {
+                  "pair": "USDJPY",
+                  "buy_sell": "Buy",
+                  "option_type": "Call",
+                  "notional_amount": 100000.0,
+                  "strike_price": "ATMF",
+                  "expiration_date": "2y",
+                  "asset_class": "FX",
+                  "type": "Option",
+                  "name": "Action2_2y_call"
+                }
+              ],
+              "trade_duration": "2023-04-11",
+              "name": "Action2",
+              "transaction_cost": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "transaction_cost_exit": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "holiday_calendar": null,
+              "class_type": "add_trade_action"
+            }
+          ],
+          "class_type": "periodic_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "dates": [
+              "2021-12-01"
+            ],
+            "entire_day": false,
+            "class_type": "date_trigger_requirements"
+          },
+          "actions": [
+            {
+              "priceables": [
+                {
+                  "pair": "USDJPY",
+                  "buy_sell": "Buy",
+                  "option_type": "Call",
+                  "notional_amount": 100000.0,
+                  "strike_price": "ATMF",
+                  "expiration_date": "2y",
+                  "asset_class": "FX",
+                  "type": "Option",
+                  "name": "Action3_2y_call"
+                }
+              ],
+              "trade_duration": "2023-12-25",
+              "name": "Action3",
+              "transaction_cost": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "transaction_cost_exit": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "holiday_calendar": null,
+              "class_type": "add_trade_action"
+            },
+            {
+              "risk": {
+                "assetClass": "FX",
+                "measureType": "Delta",
+                "parameters": {
+                  "aggregationLevel": "Type",
+                  "parameterType": "FiniteDifference"
+                },
+                "name": "FXDelta"
+              },
+              "priceables": {
+                "portfolio_name": "2y_hedge",
+                "instruments": [
+                  {
+                    "pair": "USDJPY",
+                    "settlement_date": "2y",
+                    "asset_class": "FX",
+                    "type": "Forward",
+                    "name": "HedgeAction_Priceable0"
+                  }
+                ]
+              },
+              "trade_duration": null,
+              "name": "HedgeAction",
+              "csa_term": null,
+              "scaling_parameter": "notional_amount",
+              "transaction_cost": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "transaction_cost_exit": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "risk_transformation": null,
+              "holiday_calendar": null,
+              "risk_percentage": 100,
+              "class_type": "hedge_action"
+            }
+          ],
+          "class_type": "date_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "start_date": "2023-04-11",
+            "end_date": "2023-12-25",
+            "frequency": "3m",
+            "calendar": [
+              "2024-02-29"
+            ],
+            "class_type": "periodic_trigger_requirements"
+          },
+          "actions": [],
+          "class_type": "periodic_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "start_time": "09:17:34",
+            "end_time": "10:07:57",
+            "frequency": 5.0,
+            "class_type": "intraday_trigger_requirements"
+          },
+          "actions": [],
+          "class_type": "intraday_periodic_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "data_source": {
+              "data_set": {
+                "2021-10-01": 0.98,
+                "2021-10-04": 1.0,
+                "2021-10-05": 1.04
+              },
+              "missing_data_strategy": "fill_forward",
+              "class_type": "generic_data_source"
+            },
+            "trigger_level": 1.1,
+            "direction": 2,
+            "class_type": "mkt_trigger_requirements"
+          },
+          "actions": [
+            {
+              "priceable_names": "2y_call",
+              "name": "ExitAction1",
+              "transaction_cost": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "class_type": "exit_trade_action"
+            }
+          ],
+          "class_type": "mkt_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "risk": {
+              "measureType": "Dollar Price",
+              "name": "DollarPrice"
+            },
+            "trigger_level": -1.4,
+            "direction": 2,
+            "class_type": "risk_trigger_requirements"
+          },
+          "actions": [
+            {
+              "priceable_names": null,
+              "name": "ExitEverything",
+              "transaction_cost": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "class_type": "exit_all_positions_action"
+            }
+          ],
+          "class_type": "strategy_risk_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "triggers": [
+              {
+                "dates": [
+                  "2021-12-01"
+                ],
+                "entire_day": false,
+                "class_type": "date_trigger_requirements"
+              },
+              {
+                "start_date": "2023-04-11",
+                "end_date": "2023-12-25",
+                "frequency": "3m",
+                "calendar": [
+                  "2024-02-29"
+                ],
+                "class_type": "periodic_trigger_requirements"
+              }
+            ],
+            "aggregate_type": 1,
+            "class_type": "aggregate_trigger_requirements"
+          },
+          "actions": [
+            {
+              "priceables": [
+                {
+                  "pair": "USDJPY",
+                  "buy_sell": "Buy",
+                  "option_type": "Call",
+                  "notional_amount": 100000.0,
+                  "strike_price": "ATMF",
+                  "expiration_date": "2y",
+                  "asset_class": "FX",
+                  "type": "Option",
+                  "name": "Scaled1_2y_call"
+                }
+              ],
+              "trade_duration": "1b",
+              "name": "Scaled1",
+              "scaling_type": "NAV",
+              "scaling_risk": null,
+              "scaling_level": 100,
+              "transaction_cost": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "transaction_cost_exit": {
+                "cost": 0,
+                "class_type": "constant_transaction_model"
+              },
+              "holiday_calendar": null,
+              "dated_priceables": null,
+              "class_type": "add_scaled_trade_action"
+            }
+          ],
+          "class_type": "aggregate_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "trigger": {
+              "dates": [
+                "2021-12-01"
+              ],
+              "entire_day": false,
+              "class_type": "date_trigger_requirements"
+            },
+            "class_type": "not_trigger_requirements"
+          },
+          "actions": [],
+          "class_type": "not_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "data_source": "len",
+            "trigger_level": 2,
+            "class_type": "portfolio_trigger_requirements"
+          },
+          "actions": [],
+          "class_type": "portfolio_trigger"
+        },
+        {
+          "trigger_requirements": {
+            "data_source": {
+              "data_set": "DATASET_ABC",
+              "asset_id": "ASSET123",
+              "min_date": "2023-04-11",
+              "max_date": "2023-12-25",
+              "value_header": "rate",
+              "class_type": "gs_data_source"
+            },
+            "z_score_bound": 1.5,
+            "rolling_mean_window": 0,
+            "rolling_std_window": 5,
+            "class_type": "mean_reversion_trigger_requirements"
+          },
+          "actions": [],
+          "class_type": "mean_reversion_trigger"
+        }
+      ],
+      "cash_accrual": null
+    },
+    "dates": [
+      "2023-04-11",
+      "2023-04-12"
+    ],
+    "measures": [
+      {
+        "measureType": "PV",
+        "name": "Price"
+      }
+    ]
+  }
+}
