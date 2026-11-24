@@ -13,13 +13,16 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 """
+
+import asyncio
+import logging
 import re
 from enum import Enum
 from typing import Optional
 
 import pandas as pd
 
-from gs_quant.api.gs.data import QueryType
+from gs_quant.api.gs.data import GsDataApi, QueryType
 from gs_quant.api.gs.secmaster import GsSecurityMasterApi, SecMasterIdentifiers
 from gs_quant.common import AssetClass, AssetType
 from gs_quant.data import DataContext, DataFrequency, Dataset
@@ -483,8 +486,8 @@ total_etf_funds.__doc__ = _ETF_MEASURE_DOC.format(what='fund count', fn='total_e
 class TotalReturnComponent(Enum):
     """Which part of the total return to return."""
 
-    TOTAL = 'total'        # price appreciation + cash dividends
-    PRICE = 'price'        # price appreciation only
+    TOTAL = 'total'  # price appreciation + cash dividends
+    PRICE = 'price'  # price appreciation only
     DIVIDEND = 'dividend'  # dividend contribution only
 
 
@@ -502,9 +505,7 @@ def _cash_dividends_per_share(asset: Asset, start, end) -> pd.Series:
         return pd.Series(dtype=float)
 
     try:
-        corporate_actions = GsSecurityMasterApi.get_corporate_actions(
-            id_value=gsid, id_type=SecMasterIdentifiers.GSID
-        )
+        corporate_actions = GsSecurityMasterApi.get_corporate_actions(id_value=gsid, id_type=SecMasterIdentifiers.GSID)
     except Exception:
         return pd.Series(dtype=float)
 
@@ -632,3 +633,230 @@ def total_return(
     if real_time:
         raise NotImplementedError('real-time total return is not available')
     return _total_return_series(asset, component)
+
+
+# ---------------------------------------------------------------------------
+# Leveraged ETF exposure (gross / net) by country
+#
+# Leveraged ETFs are identified from SF_FACTSET_ETF_REFERENCE_YRBSW3R0: an ETF is
+# leveraged when LEVERAGE_FACTOR is populated. Only ETFs whose ISO_COUNTRY matches
+# the country are included. AUM comes from SF_FACTSET_ETF_TIME_SERIES_YRBSW3R0 as
+# nav * sharesOutstanding.
+#
+#     gross exposure(t) = sum_i AUM_i(t) * |leverageFactor_i|
+#     net exposure(t)   = sum_i AUM_i(t) *  leverageFactor_i
+# ---------------------------------------------------------------------------
+
+ETF_REFERENCE_DATASET_ID = 'SF_FACTSET_ETF_REFERENCE_YRBSW3R0'
+ETF_TIME_SERIES_DATASET_ID = 'SF_FACTSET_ETF_TIME_SERIES_YRBSW3R0'
+
+_logger = logging.getLogger(__name__)
+
+# The data API accepts at most 500 ISINs per query and silently truncates a
+# response at 30,000 rows, so requests are split into (ISIN batch x date
+# window) tasks; any task that still comes back at the cap is bisected.
+_ISIN_CHUNK = 500
+_QUERY_ROW_CAP = 30000
+_TS_WINDOW_DAYS = 180
+_REFERENCE_LOOKBACK_DAYS = 7
+# Concurrent requests in flight; the data service starts failing above this.
+_MAX_CONCURRENCY = 8
+
+
+def _chunks(items, size=_ISIN_CHUNK):
+    for i in range(0, len(items), size):
+        yield items[i : i + size]
+
+
+def _date_windows(start, end, days=_TS_WINDOW_DAYS):
+    start, end = pd.Timestamp(start).date(), pd.Timestamp(end).date()
+    while start <= end:
+        stop = min(end, start + pd.Timedelta(days=days - 1))
+        yield start, stop
+        start = stop + pd.Timedelta(days=1)
+
+
+def _is_server_error(e) -> bool:
+    status = getattr(e, 'status', None)
+    return isinstance(status, int) and status >= 500
+
+
+def _run(coro):
+    """Run a coroutine from synchronous measure code (Jupyter is handled by nest_asyncio in gs_quant)."""
+    return asyncio.run(coro)
+
+
+async def _fetch_capped(ds, isins, start, end, semaphore):
+    """
+    Fetch one (isins, window) task via the async data API.
+
+    * Row cap hit -> bisect by date (then ISINs) and re-fetch.
+    * HTTP 5xx    -> the service fails deterministically on some bad (ETF, day)
+      records, so bisect straight away (ISINs first, then dates) and skip only
+      the single bad (ETF, day) cell with a warning.
+    """
+    single_cell = start >= end and len(isins) <= 1
+    try:
+        async with semaphore:
+            df = await ds.get_data_async(start=start, end=end, isin=isins)
+    except Exception as e:
+        if not _is_server_error(e):
+            raise
+        if single_cell:
+            _logger.warning('Skipping %s on %s: %s keeps returning a server error', isins, start, ds.id)
+            return []
+        truncated = True
+    else:
+        if df is None or len(df) < _QUERY_ROW_CAP or single_cell:
+            return [df] if df is not None and not df.empty else []
+        truncated = False
+
+    split_isins = len(isins) > 1 and (truncated or start >= end)
+    if split_isins:
+        half = len(isins) // 2
+        parts = [(isins[:half], start, end), (isins[half:], start, end)]
+    else:
+        mid = start + (end - start) // 2
+        parts = [(isins, start, mid), (isins, mid + pd.Timedelta(days=1), end)]
+    results = await asyncio.gather(*(_fetch_capped(ds, i, s, e, semaphore) for i, s, e in parts))
+    return [df for frames in results for df in frames]
+
+
+async def _fetch_time_series_async(ds, isins, start, end):
+    """Fetch the full nav / sharesOutstanding history for ``isins`` concurrently without hitting the row cap."""
+    semaphore = asyncio.Semaphore(_MAX_CONCURRENCY)
+    tasks = [
+        _fetch_capped(ds, chunk, s, e, semaphore)
+        for chunk in _chunks(isins, _ISIN_CHUNK)
+        for s, e in _date_windows(start, end)
+    ]
+    try:
+        results = await asyncio.gather(*tasks)
+    except Exception as e:
+        raise MqValueError(f'Could not query dataset {ds.id} because of {e}')
+    return [df for frames in results for df in frames]
+
+
+async def _leveraged_etfs_async(country_code: str) -> pd.Series:
+    """Return leverage factor indexed by ISIN for leveraged ETFs with ISO_COUNTRY == ``country_code``."""
+    try:
+        coverage = await GsDataApi.get_coverage_async(ETF_REFERENCE_DATASET_ID)
+    except Exception as e:
+        raise MqValueError(f'Could not query coverage of {ETF_REFERENCE_DATASET_ID} because of {e}')
+    isins = sorted({row['isin'] for row in coverage or [] if row.get('isin')})
+    if not isins:
+        raise MqValueError(f'No coverage found in {ETF_REFERENCE_DATASET_ID}')
+
+    # Reference data is a daily snapshot; a short lookback gives the latest row per ISIN.
+    end = pd.Timestamp.today().date()
+    start = end - pd.Timedelta(days=_REFERENCE_LOOKBACK_DAYS)
+    ds = Dataset(ETF_REFERENCE_DATASET_ID)
+    semaphore = asyncio.Semaphore(_MAX_CONCURRENCY)
+
+    async def fetch(chunk):
+        async with semaphore:
+            return await ds.get_data_async(start=start, end=end, isin=chunk, isoCountry=country_code)
+
+    try:
+        results = await asyncio.gather(*(fetch(chunk) for chunk in _chunks(isins)))
+    except Exception as e:
+        raise MqValueError(f'Could not query dataset {ETF_REFERENCE_DATASET_ID} because of {e}')
+    frames = [df for df in results if df is not None and not df.empty]
+    if not frames:
+        return pd.Series(dtype=float)
+    ref = pd.concat(frames)
+    if 'leverageFactor' not in ref.columns:
+        return pd.Series(dtype=float)
+    if 'isoCountry' in ref.columns:
+        ref = ref[ref['isoCountry'] == country_code]
+    ref = ref.dropna(subset=['leverageFactor']).sort_index()
+    return ref.groupby('isin')['leverageFactor'].last().astype(float)
+
+
+async def _leveraged_aum_frame_async(country_code: str, start, end) -> pd.DataFrame:
+    """Daily (isin, aum, leverageFactor) rows for the country's leveraged ETFs."""
+    factors = await _leveraged_etfs_async(country_code)
+    factors = factors[factors != 0]
+    if factors.empty:
+        raise MqValueError(f'No leveraged ETFs found in {ETF_REFERENCE_DATASET_ID} for {country_code}')
+
+    ds = Dataset(ETF_TIME_SERIES_DATASET_ID)
+    frames = await _fetch_time_series_async(ds, factors.index.tolist(), start, end)
+    if not frames:
+        raise MqValueError(f'No NAV / shares outstanding data found for leveraged ETFs in {country_code}')
+
+    ts = pd.concat(frames).dropna(subset=['nav', 'sharesOutstanding'])
+    if ts.empty:
+        raise MqValueError(f'No NAV / shares outstanding data found for leveraged ETFs in {country_code}')
+    # Drop duplicate (date, isin) rows that can appear when a capped task was bisected.
+    ts = ts[~pd.MultiIndex.from_arrays([ts.index, ts['isin']]).duplicated()]
+
+    return pd.DataFrame(
+        {
+            'isin': ts['isin'],
+            'aum': ts['nav'].astype(float) * ts['sharesOutstanding'].astype(float),
+            'leverageFactor': ts['isin'].map(factors).astype(float),
+        },
+        index=ts.index,
+    )
+
+
+def _leverage_exposure(country_id: str, gross: bool) -> pd.Series:
+    country_code = _resolve_country_code(country_id)
+    start, end = DataContext.current.start_date, DataContext.current.end_date
+
+    frame = _run(_leveraged_aum_frame_async(country_code, start, end))
+    lev = frame['leverageFactor'].abs() if gross else frame['leverageFactor']
+    grouped = (frame['aum'] * lev).groupby(level=0).sum().sort_index()
+
+    series = ExtendedSeries(grouped, name='grossLeverageExposure' if gross else 'netLeverageExposure')
+    series.dataset_ids = (ETF_REFERENCE_DATASET_ID, ETF_TIME_SERIES_DATASET_ID)
+    return series
+
+
+@plot_measure_entity(EntityType.COUNTRY)
+def gross_leverage_exposure(
+    country_id: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
+    """
+    Gross leveraged-ETF exposure for a country: sum over leveraged ETFs (non-empty
+    LEVERAGE_FACTOR) whose ISO_COUNTRY is the country of AUM * |leverage factor|,
+    where AUM = nav * sharesOutstanding.
+
+    **Examples**
+
+    >>> US.gross_leverage_exposure()
+
+    :param country_id: country entity (e.g. US), matched against ISO_COUNTRY
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD (not supported)
+    :param request_id: server request id
+    :return: daily gross leverage exposure time series
+    """
+    if real_time:
+        raise NotImplementedError('real-time leverage exposure is not available')
+    return _leverage_exposure(country_id, gross=True)
+
+
+@plot_measure_entity(EntityType.COUNTRY)
+def net_leverage_exposure(
+    country_id: str, *, source: str = None, real_time: bool = False, request_id: Optional[str] = None
+) -> pd.Series:
+    """
+    Net leveraged-ETF exposure for a country: sum over leveraged ETFs (non-empty
+    LEVERAGE_FACTOR) whose ISO_COUNTRY is the country of AUM * leverage factor
+    (inverse funds net off), where AUM = nav * sharesOutstanding.
+
+    **Examples**
+
+    >>> US.net_leverage_exposure()
+
+    :param country_id: country entity (e.g. US), matched against ISO_COUNTRY
+    :param source: name of function caller
+    :param real_time: whether to retrieve intraday data instead of EOD (not supported)
+    :param request_id: server request id
+    :return: daily net leverage exposure time series
+    """
+    if real_time:
+        raise NotImplementedError('real-time leverage exposure is not available')
+    return _leverage_exposure(country_id, gross=False)

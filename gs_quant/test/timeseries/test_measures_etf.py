@@ -236,18 +236,22 @@ def test_classification_children_deeper_levels():
     assert 'Short-Term' in niches
 
     # Unknown category -> None (branch not in the tree)
-    assert tm._classification_children(
-        {'etfAssetClass': 'Fixed Income', 'etfCategory': 'Not Real'}, 'etfNicheFocus'
-    ) is None
+    assert (
+        tm._classification_children({'etfAssetClass': 'Fixed Income', 'etfCategory': 'Not Real'}, 'etfNicheFocus')
+        is None
+    )
     # Unknown niche-focus -> None
-    assert tm._classification_children(
-        {
-            'etfAssetClass': 'Fixed Income',
-            'etfCategory': 'Government, Treasury',
-            'etfNicheFocus': 'Not Real',
-        },
-        'etfFocus',
-    ) is None
+    assert (
+        tm._classification_children(
+            {
+                'etfAssetClass': 'Fixed Income',
+                'etfCategory': 'Government, Treasury',
+                'etfNicheFocus': 'Not Real',
+            },
+            'etfFocus',
+        )
+        is None
+    )
 
 
 def test_etf_flow_coverage_dataset_fallback():
@@ -470,6 +474,249 @@ def test_cash_dividends_out_of_window_excluded():
     result = tm._cash_dividends_per_share(_MockAsset(), dt.date(2024, 1, 1), dt.date(2024, 1, 3))
     assert result.empty
     replace.restore()
+
+
+# ---------------------------------------------------------------------------
+# gross / net leverage exposure
+# ---------------------------------------------------------------------------
+
+
+class _StatusError(Exception):
+    def __init__(self, status):
+        super().__init__(f'status {status}')
+        self.status = status
+
+
+def _reference_frame():
+    idx = pd.DatetimeIndex(['2024-01-02'] * 3, name='date')
+    return pd.DataFrame(
+        {
+            'isin': ['LONG2X', 'SHORT3X', 'PLAIN'],
+            'isoCountry': ['US', 'US', 'US'],
+            'leverageFactor': [2.0, -3.0, None],
+        },
+        index=idx,
+    )
+
+
+def _timeseries_frame():
+    idx = pd.DatetimeIndex(['2024-01-01', '2024-01-01', '2024-01-02', '2024-01-02'], name='date')
+    return pd.DataFrame(
+        {
+            'isin': ['LONG2X', 'SHORT3X', 'LONG2X', 'SHORT3X'],
+            'nav': [10.0, 5.0, 11.0, 4.0],
+            'sharesOutstanding': [100.0, 200.0, 100.0, 200.0],
+        },
+        index=idx,
+    )
+
+
+def _mock_leverage_api(monkeypatch, ts_frame=None, ref_frame=None, coverage=None):
+    """Patch the async data API used by the leverage measures."""
+    ts_frame = _timeseries_frame() if ts_frame is None else ts_frame
+    ref_frame = _reference_frame() if ref_frame is None else ref_frame
+    coverage = [{'isin': 'LONG2X'}, {'isin': 'SHORT3X'}, {'isin': 'PLAIN'}] if coverage is None else coverage
+    calls = []
+
+    async def get_coverage_async(dataset_id, **kwargs):
+        return coverage
+
+    async def get_data_async(self, start=None, end=None, **kwargs):
+        calls.append((self.id, kwargs.get('isin')))
+        if self.id == tm.ETF_REFERENCE_DATASET_ID:
+            return ref_frame
+        if ts_frame.empty:
+            return ts_frame
+        return ts_frame[ts_frame['isin'].isin(kwargs['isin'])]
+
+    monkeypatch.setattr(tm.GsDataApi, 'get_coverage_async', get_coverage_async)
+    monkeypatch.setattr(tm.Dataset, 'get_data_async', get_data_async)
+    return calls
+
+
+def test_gross_leverage_exposure(monkeypatch):
+    _mock_leverage_api(monkeypatch)
+    with DataContext(dt.date(2024, 1, 1), dt.date(2024, 1, 2)):
+        actual = tm.gross_leverage_exposure('US')
+    # day1: 10*100*2 + 5*200*3 = 2000 + 3000 ; day2: 11*100*2 + 4*200*3 = 2200 + 2400
+    assert list(actual.values) == [5000.0, 4600.0]
+    assert actual.dataset_ids == (tm.ETF_REFERENCE_DATASET_ID, tm.ETF_TIME_SERIES_DATASET_ID)
+
+
+def test_net_leverage_exposure(monkeypatch):
+    calls = _mock_leverage_api(monkeypatch)
+    with DataContext(dt.date(2024, 1, 1), dt.date(2024, 1, 2)):
+        actual = tm.net_leverage_exposure('US')
+    # day1: 2000 - 3000 ; day2: 2200 - 2400
+    assert list(actual.values) == [-1000.0, -200.0]
+    # only the leveraged ETFs are requested from the time series dataset
+    ts_isins = [isins for ds_id, isins in calls if ds_id == tm.ETF_TIME_SERIES_DATASET_ID]
+    assert ts_isins == [['LONG2X', 'SHORT3X']]
+
+
+def test_leverage_exposure_real_time_not_supported():
+    for fn in (tm.gross_leverage_exposure, tm.net_leverage_exposure):
+        with pytest.raises(NotImplementedError):
+            fn('US', real_time=True)
+
+
+def test_leverage_exposure_no_leveraged_etfs_raises(monkeypatch):
+    _mock_leverage_api(monkeypatch, ref_frame=pd.DataFrame())
+    with pytest.raises(MqValueError):
+        with DataContext(dt.date(2024, 1, 1), dt.date(2024, 1, 2)):
+            tm.gross_leverage_exposure('US')
+
+
+def test_leverage_exposure_no_timeseries_raises(monkeypatch):
+    _mock_leverage_api(monkeypatch, ts_frame=pd.DataFrame())
+    with pytest.raises(MqValueError):
+        with DataContext(dt.date(2024, 1, 1), dt.date(2024, 1, 2)):
+            tm.net_leverage_exposure('US')
+
+
+def test_leverage_exposure_all_nan_timeseries_raises(monkeypatch):
+    nan_frame = _timeseries_frame()
+    nan_frame['nav'] = float('nan')
+    _mock_leverage_api(monkeypatch, ts_frame=nan_frame)
+    with pytest.raises(MqValueError):
+        with DataContext(dt.date(2024, 1, 1), dt.date(2024, 1, 2)):
+            tm.gross_leverage_exposure('US')
+
+
+def test_leveraged_etfs_filters_country_and_empty_factors(monkeypatch):
+    ref = _reference_frame()
+    ref.loc[ref['isin'] == 'SHORT3X', 'isoCountry'] = 'GB'
+    _mock_leverage_api(monkeypatch, ref_frame=ref)
+    assert tm._run(tm._leveraged_etfs_async('US')).to_dict() == {'LONG2X': 2.0}
+
+
+def test_leveraged_etfs_without_leverage_column_is_empty(monkeypatch):
+    _mock_leverage_api(monkeypatch, ref_frame=_reference_frame().drop(columns=['leverageFactor', 'isoCountry']))
+    assert tm._run(tm._leveraged_etfs_async('US')).empty
+
+
+def test_leveraged_etfs_empty_coverage_raises(monkeypatch):
+    _mock_leverage_api(monkeypatch, coverage=[{'isin': None}])
+    with pytest.raises(MqValueError):
+        tm._run(tm._leveraged_etfs_async('US'))
+
+
+def test_leveraged_etfs_coverage_error_raises(monkeypatch):
+    async def boom(dataset_id, **kwargs):
+        raise Exception('boom')
+
+    monkeypatch.setattr(tm.GsDataApi, 'get_coverage_async', boom)
+    with pytest.raises(MqValueError):
+        tm._run(tm._leveraged_etfs_async('US'))
+
+
+def test_leveraged_etfs_reference_query_error_raises(monkeypatch):
+    _mock_leverage_api(monkeypatch)
+
+    async def boom(self, **kwargs):
+        raise _StatusError(400)
+
+    monkeypatch.setattr(tm.Dataset, 'get_data_async', boom)
+    with pytest.raises(MqValueError):
+        tm._run(tm._leveraged_etfs_async('US'))
+
+
+def test_date_windows_cover_range_without_gaps():
+    windows = list(tm._date_windows(dt.date(2021, 1, 1), dt.date(2021, 12, 31), days=100))
+    assert windows[0][0] == dt.date(2021, 1, 1)
+    assert windows[-1][1] == dt.date(2021, 12, 31)
+    for (_, prev_end), (next_start, _) in zip(windows, windows[1:]):
+        assert next_start == prev_end + dt.timedelta(days=1)
+
+
+class _FakeDataset:
+    """Async dataset returning one row per (isin, day); ``fail`` decides which queries raise."""
+
+    id = 'X'
+
+    def __init__(self, fail=lambda start, end, isins: None):
+        self.fail = fail
+        self.calls = []
+
+    async def get_data_async(self, start, end, isin):
+        self.calls.append((start, end, tuple(isin)))
+        error = self.fail(start, end, isin)
+        if error is not None:
+            raise error
+        days = pd.date_range(start, end, name='date')
+        return pd.DataFrame(
+            {'isin': [i for _ in days for i in isin], 'nav': 1.0, 'sharesOutstanding': 1.0},
+            index=pd.DatetimeIndex([d for d in days for _ in isin], name='date'),
+        )
+
+
+def _fetch(ds, isins, start, end):
+    return tm._run(tm._fetch_capped(ds, isins, start, end, tm.asyncio.Semaphore(4)))
+
+
+def test_fetch_capped_splits_when_row_cap_hit(monkeypatch):
+    monkeypatch.setattr(tm, '_QUERY_ROW_CAP', 5)
+    ds = _FakeDataset()
+    frames = _fetch(ds, ['A', 'B', 'C'], dt.date(2024, 1, 1), dt.date(2024, 1, 4))
+    df = pd.concat(frames)
+    # 4 days x 3 isins = 12 rows, every (isin, day) returned exactly once after splitting
+    assert len(df) == 12
+    assert not pd.MultiIndex.from_arrays([df.index, df['isin']]).duplicated().any()
+    assert all(len(f) < 5 or (f.index.nunique() == 1 and f['isin'].nunique() == 1) for f in frames)
+
+
+def test_fetch_capped_single_cell_at_cap_is_returned(monkeypatch):
+    monkeypatch.setattr(tm, '_QUERY_ROW_CAP', 1)
+    frames = _fetch(_FakeDataset(), ['A'], dt.date(2024, 1, 1), dt.date(2024, 1, 1))
+    assert len(frames) == 1 and len(frames[0]) == 1
+
+
+def test_fetch_capped_empty_result():
+    class _Empty(_FakeDataset):
+        async def get_data_async(self, start, end, isin):
+            return pd.DataFrame()
+
+    assert _fetch(_Empty(), ['A'], dt.date(2024, 1, 1), dt.date(2024, 1, 2)) == []
+
+
+def test_fetch_capped_isolates_bad_isin_day():
+    """One bad (ISIN, day) record must not fail the query or cost the other ETFs' data."""
+    bad_isin, bad_day = 'I3', dt.date(2024, 1, 5)
+
+    def fail(start, end, isins):
+        return _StatusError(500) if bad_isin in isins and start <= bad_day <= end else None
+
+    ds = _FakeDataset(fail)
+    df = pd.concat(_fetch(ds, [f'I{i}' for i in range(8)], dt.date(2024, 1, 1), dt.date(2024, 1, 8)))
+    assert len(df) == 8 * 8 - 1
+    assert not ((df['isin'] == bad_isin) & (df.index == pd.Timestamp(bad_day))).any()
+    assert len(ds.calls) < 25  # isolated in a logarithmic number of calls
+
+
+def test_fetch_capped_non_server_error_raises():
+    ds = _FakeDataset(lambda start, end, isins: _StatusError(400))
+    with pytest.raises(_StatusError):
+        _fetch(ds, ['A', 'B'], dt.date(2024, 1, 1), dt.date(2024, 1, 2))
+
+
+def test_fetch_time_series_spans_windows_back_to_2021():
+    ds = _FakeDataset()
+    tm._run(tm._fetch_time_series_async(ds, ['A'], dt.date(2021, 1, 1), dt.date(2021, 12, 31)))
+    assert len(ds.calls) > 1
+    assert min(c[0] for c in ds.calls) == dt.date(2021, 1, 1)
+    assert max(c[1] for c in ds.calls) == dt.date(2021, 12, 31)
+
+
+def test_fetch_time_series_error_raises_mq_value_error():
+    ds = _FakeDataset(lambda start, end, isins: _StatusError(400))
+    with pytest.raises(MqValueError):
+        tm._run(tm._fetch_time_series_async(ds, ['A'], dt.date(2024, 1, 1), dt.date(2024, 1, 2)))
+
+
+def test_is_server_error():
+    assert tm._is_server_error(_StatusError(503))
+    assert not tm._is_server_error(_StatusError(404))
+    assert not tm._is_server_error(Exception('no status'))
 
 
 if __name__ == '__main__':
