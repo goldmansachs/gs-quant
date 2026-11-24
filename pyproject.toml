@@ -227,7 +227,6 @@ required-environments = [
     "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.14'",
 ]
 
-
 [[tool.uv.index]]
 name = "aws"
 url = "https://pypi.aws.site.gs.com/repository/pypi-group/simple"

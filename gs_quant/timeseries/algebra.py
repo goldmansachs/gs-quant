@@ -655,6 +655,17 @@ def filter_dates(
 
     """
 
+    def _is_plain_date(value: object) -> bool:
+        """True for dt.date but not dt.datetime / pd.Timestamp (which subclass dt.date)."""
+        return isinstance(value, dt.date) and not isinstance(value, dt.datetime)
+
+    def _to_index_type(value: dt.date) -> Union[dt.date, pd.Timestamp]:
+        """Convert a dt.date to a (tz-aligned) Timestamp when the series has a DatetimeIndex."""
+        if not isinstance(x.index, pd.DatetimeIndex):
+            return value
+        timestamp = pd.Timestamp(value)
+        return timestamp.tz_localize(x.index.tz) if x.index.tz is not None else timestamp
+
     if dates is None and operator is None:
         x = x.dropna(axis=0, how='any')
     elif dates is None:
@@ -662,6 +673,11 @@ def filter_dates(
     elif isinstance(dates, list) and operator not in [FilterOperator.EQUALS, FilterOperator.N_EQUALS]:
         raise MqValueError('Operator does not work for list of dates')
     else:
+        if isinstance(dates, list):
+            dates = [_to_index_type(date) for date in dates]
+        elif _is_plain_date(dates):
+            dates = _to_index_type(dates)
+
         if operator == FilterOperator.EQUALS:
             dates = dates if isinstance(dates, list) else [dates]
             x = x.loc[~x.index.isin(dates)]

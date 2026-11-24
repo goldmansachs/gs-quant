@@ -512,6 +512,30 @@ def test_filter_dates():
     with pytest.raises(MqValueError):
         algebra.filter_dates(all_pos, FilterOperator.GREATER, [dt.date(2019, 1, 2), dt.date(2019, 1, 4)])
 
+    datetime_index = pd.to_datetime(['2019-01-01', '2019-01-02', '2019-01-03', '2019-01-04'])
+    datetime_series = pd.Series([1.0, 1.0, 1.0, 1.0], index=datetime_index)
+    result = algebra.filter_dates(datetime_series, FilterOperator.LESS, dt.date(2019, 1, 3))
+    expected = pd.Series([1.0, 1.0], index=pd.to_datetime(['2019-01-03', '2019-01-04']))
+    assert_series_equal(result, expected, obj="zap: remove dates before certain date in datetime-index TS")
+
+    result = algebra.filter_dates(datetime_series, FilterOperator.EQUALS, [dt.date(2019, 1, 2)])
+    expected = pd.Series([1.0, 1.0, 1.0], index=pd.to_datetime(['2019-01-01', '2019-01-03', '2019-01-04']))
+    assert_series_equal(result, expected, obj="zap: date equals filter on datetime-index TS")
+
+    result = algebra.filter_dates(datetime_series, FilterOperator.N_EQUALS, [dt.date(2019, 1, 2), dt.date(2019, 1, 4)])
+    expected = pd.Series([1.0, 1.0], index=pd.to_datetime(['2019-01-02', '2019-01-04']))
+    assert_series_equal(result, expected, obj="zap: date not-equals list filter on datetime-index TS")
+
+    result = algebra.filter_dates(datetime_series, FilterOperator.GREATER, dt.date(2019, 1, 2))
+    expected = pd.Series([1.0, 1.0], index=pd.to_datetime(['2019-01-01', '2019-01-02']))
+    assert_series_equal(result, expected, obj="zap: remove dates after certain date in datetime-index TS")
+
+    tz_index = pd.date_range('2019-01-01', periods=4, tz='America/New_York')
+    tz_series = pd.Series([1.0, 1.0, 1.0, 1.0], index=tz_index)
+    result = algebra.filter_dates(tz_series, FilterOperator.LESS, dt.date(2019, 1, 3))
+    expected = pd.Series([1.0, 1.0], index=tz_index[2:])
+    assert_series_equal(result, expected, obj="zap: remove dates before certain date in tz-aware datetime-index TS")
+
 
 def test_smooth_spikes():
     s = pd.Series([1, 3])
