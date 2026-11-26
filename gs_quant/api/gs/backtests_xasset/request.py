@@ -146,6 +146,7 @@ class RiskRequest:
         metadata=config(encoder=encode_risk_measure_tuple, decoder=decode_risk_measure_tuple, exclude=exclude_none),
     )
     parameters: Optional[RiskRequestParameters] = field(default=None, metadata=config(exclude=exclude_none))
+    include_live_last_point: Optional[bool] = field(default=None, metadata=config(exclude=exclude_none))
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

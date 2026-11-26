@@ -63,3 +63,20 @@ def test_date_fields_round_trip_preserving_type():
     assert decode_optional_date_or_time('2024-01-01T14:30:00.000Z').replace(tzinfo=None) == dt.datetime(
         2024, 1, 1, 14, 30
     )
+
+
+def test_include_live_last_point_round_trip():
+    request = RiskRequest(
+        start_date=dt.date(2024, 1, 1),
+        end_date=dt.date(2024, 2, 1),
+        include_live_last_point=True,
+    )
+
+    payload = json.loads(request.to_json())
+
+    assert payload == {
+        'startDate': '2024-01-01',
+        'endDate': '2024-02-01',
+        'includeLiveLastPoint': True,
+    }
+    assert RiskRequest.from_dict(payload).include_live_last_point is True
