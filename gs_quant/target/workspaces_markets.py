@@ -63,7 +63,8 @@ class WorkspaceType(EnumBase, Enum):
 
     cashboard = 'cashboard'
     multiplot = 'multiplot'
-    study = 'study'    
+    study = 'study'
+    genui = 'genui'    
 
 
 @handle_camel_case_args
@@ -283,6 +284,9 @@ class DataGridComponentParameters(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+GenuiComponentParameters = dict
+
+
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
@@ -291,15 +295,6 @@ class LegendComponentParameters(Base):
     items: tuple[LegendItem, ...] = field(default=None, metadata=field_metadata)
     position: Optional[str] = field(default=None, metadata=field_metadata)
     transparent: Optional[bool] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class MonitorComponentParameters(Base):
-    height: float = field(default=None, metadata=field_metadata)
-    tooltip: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -426,9 +421,29 @@ class WorkspaceCallToAction(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class InlineMonitorDefinition(Base):
+    type_: EntitiesSupported = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    parameters: MonitorParameters = field(default=None, metadata=field_metadata)
+    polling_time: Optional[float] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class MonitorComponentParameters(Base):
+    height: float = field(default=None, metadata=field_metadata)
+    tooltip: Optional[str] = field(default=None, metadata=field_metadata)
+    monitor_definition: Optional[InlineMonitorDefinition] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class WorkspaceComponent(Base):
     id_: str = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
-    type_: ComponentType = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    type_: Union[ComponentType, str] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     hide: Optional[bool] = field(default=None, metadata=field_metadata)
     tags: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
     selections: Optional[tuple[ComponentSelection, ...]] = field(default=None, metadata=field_metadata)
@@ -472,3 +487,4 @@ class Workspace(Base):
     folder_name: Optional[str] = field(default=None, metadata=field_metadata)
     description: Optional[str] = field(default=None, metadata=field_metadata)
     children_aliases: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    conversation_id: Optional[str] = field(default=None, metadata=field_metadata)

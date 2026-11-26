@@ -23,6 +23,16 @@ from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
 
 
+class FactorIdentifierType(EnumBase, Enum):    
+    
+    """How to identify factors in the results. Applies to factor exposure and factor
+       portfolios data"""
+
+    Factor_Name = 'Factor Name'
+    Factor_Id = 'Factor Id'
+    Matrix_Order = 'Matrix Order'    
+
+
 class RiskModelCoverage(EnumBase, Enum):    
     
     """Allowed risk model coverages"""
@@ -92,7 +102,7 @@ class RiskModelDataMeasure(EnumBase, Enum):
     Factor_Cross_Sectional_Mean = 'Factor Cross Sectional Mean'    
 
 
-class RiskModelEventType(EnumBase, Enum):
+class RiskModelEventType(EnumBase, Enum):    
     
     """Event type for risk model class."""
 
@@ -134,7 +144,7 @@ class RiskModelUniverseIdentifier(EnumBase, Enum):
     gsid = 'gsid'
     isin = 'isin'
     ric = 'ric'
-    bbid = 'bbid'
+    bbid = 'bbid'    
 
 
 class RiskModelUniverseIdentifierRequest(EnumBase, Enum):    
@@ -356,6 +366,7 @@ class RiskModelDataRequest(Base):
     factors: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
     limit_factors: Optional[bool] = field(default=True, metadata=field_metadata)
     base_currency_factor: Optional[str] = field(default=None, metadata=field_metadata)
+    factor_identifier_type: Optional[FactorIdentifierType] = field(default=FactorIdentifierType.Factor_Id, metadata=field_metadata)
     format_: Optional[Format] = field(default=Format.Json, metadata=config(field_name='format', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 

@@ -66,7 +66,6 @@ class PnlResult(Base):
     factor_exposure: Optional[float] = field(default=None, metadata=field_metadata)
     exposure: Optional[float] = field(default=None, metadata=field_metadata)
     factor_shock: Optional[float] = field(default=None, metadata=field_metadata)
-    factor_cross_sectional_standard_deviation: Optional[float] = field(default=None, metadata=field_metadata)
     by_asset: Optional[ByAssetPnlResult] = field(default=None, metadata=field_metadata)
 
 

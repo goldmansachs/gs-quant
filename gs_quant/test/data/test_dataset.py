@@ -22,9 +22,18 @@ import pandas as pd
 import pytest
 
 from gs_quant.api.gs.data import GsDataApi
+from gs_quant.api.gs.users import GsUsersApi
 from gs_quant.data import Dataset
+from gs_quant.data.dataset import DBConfig, MarqueeDataIngestionLibrary
 from gs_quant.session import Environment, GsSession
-from gs_quant.target.data import DataQuery, DataSetDimensions, DataSetEntity, DataSetParameters, Format
+from gs_quant.target.data import (
+    DataQuery,
+    DataSetDimensions,
+    DataSetEntity,
+    DataSetParameters,
+    Format,
+    SnowflakeConfig,
+)
 
 test_types = {
     'date': 'date',
@@ -424,6 +433,23 @@ def test_get_data_bulk(mocker):
 
     assert mock.call_count == 1
     assert df.equals(df2)
+
+
+def test_create_dataset_sends_the_snowflake_config(mocker):
+    mocker.patch.object(GsUsersApi, 'get_current_user_info', return_value={'internal': True})
+    mocker.patch.object(GsUsersApi, 'get_current_app_managers', return_value=[])
+    provider = mocker.Mock()
+    data = pd.DataFrame({'date': ['2023-01-02'], 'isin': ['US0378331005'], 'price': [150.0]})
+
+    MarqueeDataIngestionLibrary(provider).create_dataset(data, 'TEST_DATASET', 'isin', 'date')
+
+    snowflake_config = provider.create.call_args.args[0].parameters.snowflake_config
+    assert isinstance(snowflake_config, SnowflakeConfig)
+    assert snowflake_config.to_dict() == {'db': 'TIMESERIES', 'IdColumn': 'ISIN', 'dateTimeColumn': 'DATE'}
+
+
+def test_db_config_keeps_its_old_name():
+    assert DBConfig is SnowflakeConfig
 
 
 if __name__ == "__main__":

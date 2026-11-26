@@ -205,8 +205,6 @@ class AssetType(EnumBase, Enum):
     MultiCrossDoubleTouchLeg = 'MultiCrossDoubleTouchLeg'
     Mutual_Fund = 'Mutual Fund'
     Native_Asset = 'Native Asset'
-    NDFSwap = 'NDFSwap'
-    NonDeliverableForward = 'NonDeliverableForward'
     Note = 'Note'
     OneTouch = 'OneTouch'
     Option = 'Option'
@@ -219,7 +217,6 @@ class AssetType(EnumBase, Enum):
     PivotScheduleLeg = 'PivotScheduleLeg'
     Preferred_Stock = 'Preferred Stock'
     Physical = 'Physical'
-    PhysicalForwardSeries = 'PhysicalForwardSeries'
     Precious_Metal = 'Precious Metal'
     Precious_Metal_Swap = 'Precious Metal Swap'
     Precious_Metal_RFQ = 'Precious Metal RFQ'
@@ -264,7 +261,10 @@ class AssetType(EnumBase, Enum):
     XccySwapMTM = 'XccySwapMTM'
     SyntheticOETTerms = 'SyntheticOETTerms'
     SyntheticSchedule = 'SyntheticSchedule'
-    SyntheticLeg = 'SyntheticLeg'    
+    SyntheticLeg = 'SyntheticLeg'
+    NDFSwap = 'NDFSwap'
+    NonDeliverableForward = 'NonDeliverableForward'
+    PhysicalForwardSeries = 'PhysicalForwardSeries'    
 
 
 class AswType(EnumBase, Enum):    
@@ -273,6 +273,17 @@ class AswType(EnumBase, Enum):
 
     Par = 'Par'
     Proceeds = 'Proceeds'    
+
+
+class AvailableUnitTypes(EnumBase, Enum):    
+    
+    """Enum listing supported unit types"""
+
+    percentage = 'percentage'
+    percentageWithSymbol = 'percentageWithSymbol'
+    bps = 'bps'
+    bp = 'bp'
+    x = 'x'    
 
 
 class BasketAction(EnumBase, Enum):    
@@ -1049,6 +1060,14 @@ class DayCountFraction(EnumBase, Enum):
     ACT_OVER_ACT_ISMA = 'ACT/ACT ISMA'
     _30_OVER_360 = '30/360'
     _30E_OVER_360 = '30E/360'    
+
+
+class EntitiesSupported(EnumBase, Enum):    
+    
+    """Enum listing supported entities"""
+
+    assets = 'assets'
+    tds = 'tds'    
 
 
 class EqBasketHistoryMethodology(EnumBase, Enum):    
@@ -4201,7 +4220,8 @@ class MarketDataVendor(EnumBase, Enum):
     QuantCube = 'QuantCube'
     Mkt_MediaStats = 'Mkt MediaStats'
     Cognitive_Credit = 'Cognitive Credit'
-    TP_Icap = 'TP Icap'    
+    TP_Icap = 'TP Icap'
+    Kalshi = 'Kalshi'    
 
 
 class NewOrUnwind(EnumBase, Enum):    
@@ -4308,6 +4328,30 @@ class PCOOrigin(EnumBase, Enum):
     PCOBackend = 'PCOBackend'    
 
 
+class ParameterRender(EnumBase, Enum):    
+    
+    """Enum listing supported column definition render types"""
+
+    bar = 'bar'
+    boxplot = 'boxplot'
+    chart = 'chart'
+    color = 'color'
+    default = 'default'
+    direction = 'direction'
+    heatmap = 'heatmap'
+    hidden = 'hidden'
+    multiColumnHeatmap = 'multiColumnHeatmap'
+    progress = 'progress'
+    range = 'range'
+    scale = 'scale'
+    simpleCandlestick = 'simpleCandlestick'
+    sparkline = 'sparkline'
+    stackedBarChart = 'stackedBarChart'
+    text = 'text'
+    treemap = 'treemap'
+    triColor = 'triColor'    
+
+
 class PayReceive(EnumBase, Enum):    
     
     """Pay or receive fixed"""
@@ -4354,6 +4398,17 @@ class PositionSetWeightingStrategy(EnumBase, Enum):
     Quantity = 'Quantity'
     Weight = 'Weight'
     Notional = 'Notional'    
+
+
+class PositionSourceType(EnumBase, Enum):    
+    
+    """Source object for position data"""
+
+    Portfolio = 'Portfolio'
+    Asset = 'Asset'
+    Backtest = 'Backtest'
+    RiskRequest = 'RiskRequest'
+    Hedge = 'Hedge'    
 
 
 class PricingLocation(EnumBase, Enum):    
@@ -4505,6 +4560,73 @@ class ReportJobPriority(EnumBase, Enum):
     Normal = 'Normal'    
 
 
+class ReportMeasures(EnumBase, Enum):    
+    
+    """Enums for measures to be outputted for the report"""
+
+    _ = ''
+    pnl = 'pnl'
+    longExposure = 'longExposure'
+    shortExposure = 'shortExposure'
+    assetCount = 'assetCount'
+    turnover = 'turnover'
+    assetCountLong = 'assetCountLong'
+    assetCountShort = 'assetCountShort'
+    netExposure = 'netExposure'
+    grossExposure = 'grossExposure'
+    tradingPnl = 'tradingPnl'
+    tradingCostPnl = 'tradingCostPnl'
+    servicingCostLongPnl = 'servicingCostLongPnl'
+    servicingCostShortPnl = 'servicingCostShortPnl'
+    exposure = 'exposure'
+    sensitivity = 'sensitivity'
+    mctr = 'mctr'
+    annualizedMCTRisk = 'annualizedMCTRisk'
+    annualizedRMCTRisk = 'annualizedRMCTRisk'
+    poRisk = 'poRisk'
+    price = 'price'
+    basePrice = 'basePrice'    
+
+
+class ReportStatus(EnumBase, Enum):    
+    
+    """Status of report run"""
+
+    new = 'new'
+    ready = 'ready'
+    executing = 'executing'
+    calculating = 'calculating'
+    done = 'done'
+    error = 'error'
+    cancelled = 'cancelled'
+    waiting = 'waiting'
+    queued = 'queued'    
+
+
+class ReportType(EnumBase, Enum):    
+    
+    """Type of report to execute"""
+
+    Portfolio_Performance_Analytics = 'Portfolio Performance Analytics'
+    Portfolio_Factor_Risk = 'Portfolio Factor Risk'
+    Portfolio_Aging = 'Portfolio Aging'
+    Portfolio_Thematic_Analytics = 'Portfolio Thematic Analytics'
+    Asset_Factor_Risk = 'Asset Factor Risk'
+    Asset_Thematic_Analytics = 'Asset Thematic Analytics'
+    Basket_Create = 'Basket Create'
+    Basket_Backcast = 'Basket Backcast'
+    Basket_Rebalance_Auto_Approval = 'Basket Rebalance Auto Approval'
+    Scenario = 'Scenario'
+    Iselect_Backtest = 'Iselect Backtest'
+    Backtest_Run = 'Backtest Run'
+    Analytics = 'Analytics'
+    Risk_Calculation = 'Risk Calculation'
+    Factor_Overview_Email = 'Factor Overview Email'
+    FactSet_Fundamentals_Analytics = 'FactSet Fundamentals Analytics'
+    PCO = 'PCO'
+    Systematic_Hedging = 'Systematic Hedging'    
+
+
 class ReturnStyle(EnumBase, Enum):    
     
     """Return calculation style"""
@@ -4519,6 +4641,17 @@ class ReturnType(EnumBase, Enum):
 
     Sum = 'Sum'
     Product = 'Product'    
+
+
+class RiskAumSource(EnumBase, Enum):    
+    
+    """Source of AUM for portfolio risk calculations."""
+
+    Gross = 'Gross'
+    Long = 'Long'
+    Short = 'Short'
+    Custom_AUM = 'Custom AUM'
+    Net = 'Net'    
 
 
 class RiskMeasureType(EnumBase, Enum):    
@@ -4687,6 +4820,23 @@ class Side(EnumBase, Enum):
     Bid = 'Bid'
     Ask = 'Ask'
     Mid = 'Mid'    
+
+
+class SortDirection(EnumBase, Enum):    
+    
+    """Enum with available sort directions"""
+
+    asc = 'asc'
+    desc = 'desc'
+    default = 'default'    
+
+
+class SortType(EnumBase, Enum):    
+    
+    """Enum listing supported sort types"""
+
+    value = 'value'
+    abs = 'abs'    
 
 
 class Strategy(EnumBase, Enum):    
@@ -4906,6 +5056,27 @@ class WeightingType(EnumBase, Enum):
     Dollar_Duration = 'Dollar Duration'    
 
 
+class WipiFilterOperation(EnumBase, Enum):    
+    
+    """Enum listing supported operations for wipi filters."""
+
+    eq = 'eq'
+    ne = 'ne'
+    gt = 'gt'
+    lt = 'lt'
+    gte = 'gte'
+    lte = 'lte'
+    last = 'last'    
+
+
+class WipiFilterType(EnumBase, Enum):    
+    
+    """Enum listing supported wipi filter types."""
+
+    AND = 'AND'
+    OR = 'OR'    
+
+
 class YesNo(EnumBase, Enum):    
     
     Yes = 'Yes'
@@ -5077,6 +5248,15 @@ class CSLSymCaseNamedParam(Base):
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class ColumnProperty(Base):
+    column_name: Optional[str] = field(default=None, metadata=field_metadata)
+    property_: Optional[str] = field(default=None, metadata=config(field_name='property', exclude=exclude_none))
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False, order=True)
 class CurrencyParameter(RiskMeasureParameter):
     value: Optional[str] = field(default=None, metadata=field_metadata)
@@ -5128,6 +5308,9 @@ class EqBasketRebalanceDateOverride(Base):
     new_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     existing_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+FieldMap = dict
 
 
 @handle_camel_case_args
@@ -5221,6 +5404,16 @@ class MarketDataVolSlice(Base):
 @dataclass(unsafe_hash=True, repr=False)
 class MktMarkingOptions(Base):
     mode: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class Movers(Base):
+    column_name: str = field(default=None, metadata=field_metadata)
+    top: Optional[float] = field(default=None, metadata=field_metadata)
+    bottom: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -5692,6 +5885,47 @@ class CloseMarket(BaseMarket):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class ColumnFormat(Base):
+    precision: float = field(default=None, metadata=field_metadata)
+    unit: Optional[AvailableUnitTypes] = field(default=None, metadata=field_metadata)
+    human_readable: Optional[bool] = field(default=None, metadata=field_metadata)
+    multiplier: Optional[float] = field(default=None, metadata=field_metadata)
+    axis_key: Optional[str] = field(default=None, metadata=field_metadata)
+    show_tooltip: Optional[bool] = field(default=None, metadata=field_metadata)
+    low_color: Optional[str] = field(default=None, metadata=field_metadata)
+    high_color: Optional[str] = field(default=None, metadata=field_metadata)
+    mid_color: Optional[str] = field(default=None, metadata=field_metadata)
+    low_value: Optional[float] = field(default=None, metadata=field_metadata)
+    high_value: Optional[float] = field(default=None, metadata=field_metadata)
+    mid_value: Optional[float] = field(default=None, metadata=field_metadata)
+    hide_value: Optional[bool] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class ColumnMappings(Base):
+    column_name: Optional[str] = field(default=None, metadata=field_metadata)
+    parameters: Optional[FieldMap] = field(default=None, metadata=field_metadata)
+    color: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class ColumnOperation(Base):
+    column_names: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    function_name: Optional[str] = field(default=None, metadata=field_metadata)
+    type_: Optional[str] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    parameters: Optional[FieldMap] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class CommodPrice(Base):
     unit: Optional[CommodUnit] = field(default=None, metadata=field_metadata)
     price: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
@@ -5756,6 +5990,18 @@ class EqBasketRebalanceCustomFrequencyRule(Base):
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class ExportParameters(Base):
+    tokens: tuple[str, ...] = field(default=None, metadata=field_metadata)
+    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
+    fields: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    label: Optional[str] = field(default=None, metadata=field_metadata)
+    start_date: Optional[str] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
 FieldValueMap = dict
 
 
@@ -5796,6 +6042,25 @@ class FiniteDifferenceParameter(RiskMeasureParameter):
     mkt_marking_options: Optional[MktMarkingOptions] = field(default=None, metadata=field_metadata)
     parameter_type: Optional[str] = field(init=False, default='FiniteDifference', metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class Function(Base):
+    measure: str = field(default=None, metadata=field_metadata)
+    frequency: str = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    start_date: Optional[str] = field(default=None, metadata=field_metadata)
+    end_date: Optional[str] = field(default=None, metadata=field_metadata)
+    start_time: Optional[str] = field(default=None, metadata=field_metadata)
+    end_time: Optional[str] = field(default=None, metadata=field_metadata)
+    should_use_search_until: Optional[bool] = field(default=None, metadata=field_metadata)
+    fields: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    parameters: Optional[FieldMap] = field(default=None, metadata=field_metadata)
+    where: Optional[FieldMap] = field(default=None, metadata=field_metadata)
+    vendor: Optional[str] = field(default=None, metadata=field_metadata)
+    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -6109,11 +6374,32 @@ class RollFwd(Scenario):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class Sort(Base):
+    column_name: str = field(default=None, metadata=field_metadata)
+    type_: Optional[SortType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    direction: Optional[SortDirection] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class TimestampedMarket(BaseMarket):
     timestamp: datetime.datetime = field(default=None, metadata=field_metadata)
     location: PricingLocation = field(default=None, metadata=field_metadata)
     base_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
     market_type: Optional[str] = field(init=False, default='TimestampedMarket', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class WipiRequestFilter(Base):
+    column: str = field(default=None, metadata=field_metadata)
+    operation: WipiFilterOperation = field(default=None, metadata=field_metadata)
+    value: Union[float, str] = field(default=None, metadata=field_metadata)
+    type_: Optional[WipiFilterType] = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -6205,6 +6491,30 @@ class CSLSchedule(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class ColumnDefinition(Base):
+    render: ParameterRender = field(default=None, metadata=field_metadata)
+    name: str = field(default=None, metadata=field_metadata)
+    enable_cell_flashing: Optional[bool] = field(default=None, metadata=field_metadata)
+    entity_property: Optional[str] = field(default=None, metadata=field_metadata)
+    function: Optional[Function] = field(default=None, metadata=field_metadata)
+    format_: Optional[ColumnFormat] = field(default=None, metadata=config(field_name='format', exclude=exclude_none))
+    width: Optional[float] = field(default=None, metadata=field_metadata)
+    column_property: Optional[ColumnProperty] = field(default=None, metadata=field_metadata)
+    column_operation: Optional[ColumnOperation] = field(default=None, metadata=field_metadata)
+    expression: Optional[str] = field(default=None, metadata=field_metadata)
+    expressions: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    start_date: Optional[str] = field(default=None, metadata=field_metadata)
+    end_date: Optional[str] = field(default=None, metadata=field_metadata)
+    tooltip: Optional[str] = field(default=None, metadata=field_metadata)
+    parent_column_name: Optional[str] = field(default=None, metadata=field_metadata)
+    primary: Optional[bool] = field(default=None, metadata=field_metadata)
+    pivots: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
+    disable_cell_tooltips: Optional[bool] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class CurveScenario(Scenario):
     market_data_pattern: Optional[MarketDataPattern] = field(default=None, metadata=field_metadata)
     parallel_shift: Optional[float] = field(default=None, metadata=field_metadata)
@@ -6214,6 +6524,17 @@ class CurveScenario(Scenario):
     tenor_end: Optional[float] = field(default=None, metadata=field_metadata)
     shock_type: Optional[MarketDataShockType] = field(default=None, metadata=field_metadata)
     scenario_type: Optional[str] = field(init=False, default='CurveScenario', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class EntityId(Base):
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    column_mappings: Optional[tuple[ColumnMappings, ...]] = field(default=None, metadata=field_metadata)
+    color: Optional[str] = field(default=None, metadata=field_metadata)
+    route_url: Optional[str] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -6436,8 +6757,8 @@ class FieldFilterMap(Base):
     last_updated_message: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     trading_restriction: Optional[Union[bool, tuple[bool, ...]]] = field(default=None, metadata=field_metadata)
     rcic: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
-    status: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     name_raw: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
+    status: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     asset_parameters_pay_or_receive: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     domains_data: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     client_name: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
@@ -6540,8 +6861,8 @@ class FieldFilterMap(Base):
     is_public: Optional[Union[bool, tuple[bool, ...]]] = field(default=None, metadata=field_metadata)
     ext_mkt_point1: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     product_type: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
-    sub_region_code: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     ext_mkt_point2: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
+    sub_region_code: Optional[Union[str, tuple[str, ...]]] = field(default=None, metadata=field_metadata)
     last_returns_end_date: Optional[Union[datetime.date, tuple[datetime.date, ...]]] = field(default=None, metadata=field_metadata)
     asset_parameters_fixed_rate: Optional[Union[Union[float, str], tuple[Union[float, str], ...]]] = field(default=None, metadata=field_metadata)
     asset_parameters_option_type: Optional[Union[Union[OptionType, str], tuple[Union[OptionType, str], ...]]] = field(default=None, metadata=field_metadata)
@@ -6902,6 +7223,17 @@ class RiskMeasure(Base):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
+class RowGroup(Base):
+    name: str = field(default=None, metadata=field_metadata)
+    entity_ids: tuple[EntityId, ...] = field(default=None, metadata=field_metadata)
+    movers: Optional[Movers] = field(default=None, metadata=field_metadata)
+    sort: Optional[Sort] = field(default=None, metadata=field_metadata)
+    export: Optional[ExportParameters] = field(default=None, metadata=field_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
 class DataSetFieldMap(Base):
     data_set_id: str = field(default=None, metadata=field_metadata)
     field_: str = field(default=None, metadata=config(field_name='field', exclude=exclude_none))
@@ -6938,6 +7270,21 @@ class MeasureScenario(Scenario):
     risk_measure: RiskMeasure = field(default=None, metadata=field_metadata)
     value: float = field(default=None, metadata=field_metadata)
     scenario_type: Optional[str] = field(init=False, default='MeasureScenario', metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class MonitorParameters(Base):
+    column_definitions: tuple[ColumnDefinition, ...] = field(default=None, metadata=field_metadata)
+    row_groups: tuple[RowGroup, ...] = field(default=None, metadata=field_metadata)
+    export: Optional[ExportParameters] = field(default=None, metadata=field_metadata)
+    ignore_business_day_logic: Optional[bool] = field(default=None, metadata=field_metadata)
+    horizontal_scroll: Optional[bool] = field(default=None, metadata=field_metadata)
+    mid_value_average: Optional[bool] = field(default=None, metadata=field_metadata)
+    aggregate_queries: Optional[bool] = field(default=None, metadata=field_metadata)
+    row_heatmap: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
 
@@ -7162,6 +7509,7 @@ class ReportParameters(Base):
     show_cash: Optional[bool] = field(default=None, metadata=field_metadata)
     show_exposure: Optional[bool] = field(default=None, metadata=field_metadata)
     enable_rfq: Optional[bool] = field(default=None, metadata=config(field_name='enableRFQ', exclude=exclude_none))
+    hrr_enabled: Optional[bool] = field(default=None, metadata=field_metadata)
     fixing_descriptions: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
     pco_origin: Optional[PCOOrigin] = field(default=None, metadata=field_metadata)
     pco_action_type: Optional[PCOActionType] = field(default=None, metadata=field_metadata)
@@ -7177,6 +7525,34 @@ class ReportParameters(Base):
     dependency_report_ids: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
     publicly_visible: Optional[bool] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
+
+
+@handle_camel_case_args
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass(unsafe_hash=True, repr=False)
+class Report(Base):
+    position_source_id: str = field(default=None, metadata=field_metadata)
+    position_source_type: PositionSourceType = field(default=None, metadata=field_metadata)
+    type_: ReportType = field(default=None, metadata=config(field_name='type', exclude=exclude_none))
+    parameters: ReportParameters = field(default=None, metadata=field_metadata)
+    calculation_time: Optional[float] = field(default=None, metadata=field_metadata)
+    data_set_id: Optional[str] = field(default=None, metadata=field_metadata)
+    asset_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    created_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    entitlements: Optional[Entitlements] = field(default=None, metadata=field_metadata)
+    earliest_start_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    entitlement_exclusions: Optional[EntitlementExclusions] = field(default=None, metadata=field_metadata)
+    id_: Optional[str] = field(default=None, metadata=config(field_name='id', exclude=exclude_none))
+    last_updated_by_id: Optional[str] = field(default=None, metadata=field_metadata)
+    last_updated_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    measures: Optional[tuple[ReportMeasures, ...]] = field(default=None, metadata=field_metadata)
+    name: Optional[str] = field(default=None, metadata=field_metadata)
+    owner_id: Optional[str] = field(default=None, metadata=field_metadata)
+    status: Optional[ReportStatus] = field(default=None, metadata=field_metadata)
+    latest_execution_time: Optional[datetime.datetime] = field(default=None, metadata=field_metadata)
+    latest_end_date: Optional[datetime.date] = field(default=None, metadata=field_metadata)
+    percentage_complete: Optional[float] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args

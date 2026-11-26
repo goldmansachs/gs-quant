@@ -36,20 +36,18 @@ from gs_quant.target.indices import (
     DynamicConstructionResponse,
     IndicesBackcastInputs,
     IndicesDynamicConstructInputs,
-    IndicesEditInputs,
+    IndicesEditInputTypes,
     IndicesRebalanceInputs,
-    ISelectActionRequest,
     ISelectRebalance,
-    ISelectRequest,
     ISelectResponse,
 )
 
 # type aliases -- can add for edit/backcast/etc. if STS implements them in future
 CreateRequest = Union[CustomBasketsCreateInputs, IndicesDynamicConstructInputs]
 CreateRepsonse = Union[CustomBasketsResponse, DynamicConstructionResponse]
-RebalanceRequest = Union[CustomBasketsRebalanceInputs, ISelectRebalance, ISelectRequest]
+RebalanceRequest = Union[CustomBasketsRebalanceInputs, ISelectRebalance]
 RebalanceResponse = Union[CustomBasketsResponse, ISelectResponse]
-RebalanceCancelRequest = Union[CustomBasketsRebalanceAction, ISelectActionRequest]
+RebalanceCancelRequest = CustomBasketsRebalanceAction
 RebalanceCancelResponse = Union[dict, ISelectResponse]
 ValidatedRequest = Union[CreateRequest, RebalanceRequest]
 
@@ -62,9 +60,7 @@ class GsIndexApi:
         IndicesDynamicConstructInputs: DynamicConstructionResponse,
         CustomBasketsRebalanceInputs: CustomBasketsResponse,
         ISelectRebalance: ISelectResponse,
-        ISelectRequest: ISelectResponse,
         CustomBasketsRebalanceAction: dict,
-        ISelectActionRequest: ISelectResponse,
     }
 
     @classmethod
@@ -77,7 +73,10 @@ class GsIndexApi:
     def edit(cls, id_: str, inputs: CustomBasketsEditInputs) -> CustomBasketsResponse:
         """Update basket metadata"""
         url = f'/indices/{id_}/edit'
-        inputs = IndicesEditInputs(parameters=inputs)
+        if isinstance(inputs, dict):
+            # The wrapper's union would decode a dict as its first member, a credit basket
+            inputs = CustomBasketsEditInputs.from_dict(inputs)
+        inputs = IndicesEditInputTypes(parameters=inputs)
         return GsSession.current.sync.post(url, payload=inputs, cls=CustomBasketsResponse)
 
     @classmethod
@@ -85,7 +84,7 @@ class GsIndexApi:
         """Rebalance existing index with new composition"""
         url = f'/indices/{id_}/rebalance'
         response_cls = cls._response_cls[type(inputs)]
-        inputs = IndicesRebalanceInputs(parameters=inputs) if not isinstance(inputs, ISelectRequest) else inputs
+        inputs = IndicesRebalanceInputs(parameters=inputs)
         return GsSession.current.sync.post(url, payload=inputs, cls=response_cls)
 
     @classmethod

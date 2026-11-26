@@ -136,7 +136,7 @@ BacktestStrategySignal = dict[str, float]
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestStrategyTransactionCostModelFixed(Base):
-    cost: Optional[float] = field(default=None, metadata=field_metadata)
+    cost: float = field(default=None, metadata=field_metadata)
     type_: Optional[str] = field(init=False, default='FixedCostModel', metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
@@ -145,8 +145,8 @@ class BacktestStrategyTransactionCostModelFixed(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestStrategyTransactionCostModelScaled(Base):
-    scaling_level: Optional[float] = field(default=None, metadata=field_metadata)
-    scaling_quantity_type: Optional[str] = field(default=None, metadata=field_metadata)
+    scaling_level: float = field(default=None, metadata=field_metadata)
+    scaling_quantity_type: str = field(default=None, metadata=field_metadata)
     type_: Optional[str] = field(init=False, default='ScaledCostModel', metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
@@ -357,7 +357,7 @@ class VolatilityWeightedWeightingModifierRefData(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestStrategyUnderlierHedge(Base):
-    risk_details: Optional[DeltaHedgeParameters] = field(default=None, metadata=field_metadata)
+    risk_details: DeltaHedgeParameters = field(default=None, metadata=field_metadata)
     quantity_percentage: Optional[float] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
@@ -479,8 +479,8 @@ class BacktestRiskPosition(Base):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
 class BacktestStrategyTransactionCostModelAggregate(Base):
-    models: Optional[tuple[Union[BacktestStrategyTransactionCostModelFixed, BacktestStrategyTransactionCostModelScaled], ...]] = field(default=None, metadata=field_metadata)
-    aggregation_type: Optional[str] = field(default=None, metadata=field_metadata)
+    models: tuple[Union[BacktestStrategyTransactionCostModelFixed, BacktestStrategyTransactionCostModelScaled], ...] = field(default=None, metadata=field_metadata)
+    aggregation_type: str = field(default=None, metadata=field_metadata)
     type_: Optional[str] = field(init=False, default='AggregateCostModel', metadata=config(field_name='type', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
 

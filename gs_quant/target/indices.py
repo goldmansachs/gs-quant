@@ -172,16 +172,6 @@ class CustomBasketsResponse(IndicesConstructResponseTypes):
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)
-class ISelectActionRequest(IndicesRebalanceActionTypes):
-    action_comment: str = field(default=None, metadata=field_metadata)
-    trader_attestations: Optional[Tuple[str, ...]] = field(default=None, metadata=field_metadata)
-    user_action: Optional[str] = field(default=None, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
 class ISelectError(Base):
     status_code: Optional[str] = field(default=None, metadata=config(field_name='Status_Code', exclude=exclude_none))
     validation_messages: Optional[tuple[str, ...]] = field(default=None, metadata=config(field_name='Validation_Messages', exclude=exclude_none))
@@ -189,14 +179,6 @@ class ISelectError(Base):
     index_parameters_errors: Optional[tuple[str, ...]] = field(default=None, metadata=config(field_name='Index_Parameters_Errors', exclude=exclude_none))
     underlyer_validation_errors: Optional[tuple[str, ...]] = field(default=None, metadata=config(field_name='Underlyer_Validation_Errors', exclude=exclude_none))
     name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class ISelectIndexParameter(Base):
-    name: Optional[str] = field(default=None, metadata=field_metadata)
-    value: Optional[Union[float, str]] = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args
@@ -370,31 +352,9 @@ class ISelectRebalance(Base):
     new_weights: Optional[tuple[ISelectNewWeight, ...]] = field(default=None, metadata=field_metadata)
     rebalance_date: Optional[str] = field(default=None, metadata=field_metadata)
     observation_date: Optional[str] = field(default=None, metadata=field_metadata)
-    new_parameters: Optional[Tuple[ISelectNewParameter, ...]] = field(default=None, metadata=field_metadata)
-    index_parameters: Optional[Tuple[ISelectIndexParameters, ...]] = field(default=None, metadata=field_metadata)
-    waiver_requested: Optional[bool] = field(default=None, metadata=field_metadata)
-    unwind_missing_constituents: Optional[bool] = field(default=True, metadata=field_metadata)
-    name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class ISelectRequest(IndicesRebalanceInputTypes):
-    rebalance_date: str = field(default=None, metadata=field_metadata)
-    use_new_rebalance_interface: bool = field(default=None, metadata=field_metadata)
     new_parameters: Optional[tuple[ISelectNewParameter, ...]] = field(default=None, metadata=field_metadata)
-    index_parameters: Optional[tuple[ISelectIndexParameter, ...]] = field(default=None, metadata=field_metadata)
-    new_weights: Optional[tuple[ISelectNewWeight, ...]] = field(default=None, metadata=field_metadata)
-    new_units: Optional[tuple[ISelectNewUnit, ...]] = field(default=None, metadata=field_metadata)
-    observation_date: Optional[str] = field(default=None, metadata=field_metadata)
-    entry_type: Optional[str] = field(default=None, metadata=field_metadata)
-    request_counter: Optional[int] = field(default=0, metadata=field_metadata)
+    index_parameters: Optional[tuple[ISelectIndexParameters, ...]] = field(default=None, metadata=field_metadata)
     waiver_requested: Optional[bool] = field(default=None, metadata=field_metadata)
-    presubmit: Optional[bool] = field(default=None, metadata=field_metadata)
-    requester_id: Optional[str] = field(default=None, metadata=field_metadata)
-    custom_basket_import: Optional[str] = field(default=None, metadata=field_metadata)
-    action: Optional[str] = field(default=None, metadata=field_metadata)
     unwind_missing_constituents: Optional[bool] = field(default=True, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
@@ -431,6 +391,7 @@ class ISelectResponse(Base):
     status: Optional[object] = field(default=None, metadata=field_metadata)
     submission_data: Optional[tuple] = field(default=None, metadata=field_metadata)
     submission_data_columns: Optional[tuple[ISelectConstituentColumn, ...]] = field(default=None, metadata=field_metadata)
+    submission_id: Optional[str] = field(default=None, metadata=field_metadata)
     submission_text: Optional[str] = field(default=None, metadata=field_metadata)
     valid: Optional[int] = field(default=None, metadata=field_metadata)
     validation_messages: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
@@ -618,13 +579,6 @@ class CustomBasketsRebalanceInputs(Base):
 class IndicesEditInputTypes(Base):
     parameters: Union[CreditCustomBasketEditInputs, CustomBasketsEditInputs] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
-
-
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class IndicesEditInputs(Base):
-    parameters: CustomBasketsEditInputs = field(default=None, metadata=field_metadata)
 
 
 @handle_camel_case_args

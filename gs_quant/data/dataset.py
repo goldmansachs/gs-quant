@@ -39,10 +39,13 @@ from gs_quant.target.data import (
     DataSetFieldEntity,
     DataSetParameters,
     DataSetType,
-    DBConfig,
     FieldColumnPair,
+    SnowflakeConfig,
 )
 from gs_quant.tracing import Tracer, tag_dataset_id, tag_row_count
+
+# Former name of SnowflakeConfig, kept importable from this module
+DBConfig = SnowflakeConfig
 
 
 class InvalidInputException(Exception):
@@ -746,7 +749,7 @@ class MarqueeDataIngestionLibrary:
         """
         parameters = DataSetParameters()
         parameters.frequency = 'Daily'
-        parameters.snowflake_config = DBConfig()
+        parameters.snowflake_config = SnowflakeConfig()
         parameters.snowflake_config.db = "TIMESERIES" if is_internal_user else "EXTERNAL"
         parameters.snowflake_config.date_time_column = self.to_upper_underscore(time_dimension)
         parameters.snowflake_config.id_column = self.to_upper_underscore(symbol_dimension)

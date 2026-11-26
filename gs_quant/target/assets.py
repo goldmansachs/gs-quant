@@ -298,7 +298,7 @@ class HedgeFundParameters(Base):
     preferences: Optional[DictBase] = field(default=None, metadata=field_metadata)
     regional_focus: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
     risk_taking_model: Optional[str] = field(default=None, metadata=field_metadata)
-    strategy: Optional[Strategy] = field(default=None, metadata=field_metadata)
+    strategy: Optional[str] = field(default=None, metadata=field_metadata)
     strategy_description: Optional[str] = field(default=None, metadata=field_metadata)
     targeted_gross_exposure: Optional[NumberRange] = field(default=None, metadata=field_metadata)
     targeted_net_exposure: Optional[NumberRange] = field(default=None, metadata=field_metadata)

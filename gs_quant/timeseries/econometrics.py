@@ -14,6 +14,7 @@
 # Chart Service will attempt to make public functions (not prefixed with _) from this module available. Such functions
 # should be fully documented: docstrings should describe parameters and the return value, and provide a 1-line
 # description. Type annotations should be provided for parameters.
+import datetime as dt
 import math
 from enum import Enum, IntEnum
 from typing import Optional, Union
@@ -270,13 +271,50 @@ def sharpe_ratio(
     )
 
 
+_PERIOD_TO_DATE_FREQUENCIES = {'ytd': 'Y', 'qtd': 'Q'}
+
+
+def _previous_period_close(series: pd.Series, freq: str) -> pd.Series:
+    index = pd.DatetimeIndex(series.index)
+    periods = index.to_period(freq)
+    closes = series.groupby(periods).last().shift(1)
+    return pd.Series(closes.reindex(periods).values, index=index)
+
+
+def lookback_start(obs: Union[Window, int, str], start: dt.date) -> Optional[dt.date]:
+    """
+    Earliest date returns needs data from for a ytd / qtd lookback to be populated from a start date
+
+    :param obs: lookback as passed to returns
+    :param start: first date the returns are required for
+    :return: last day of the calendar year / quarter before the one containing start for ytd / qtd, None for any
+             other lookback
+
+    **Examples**
+
+    >>> lookback_start('ytd', dt.date(2026, 10, 1))
+    datetime.date(2025, 12, 31)
+
+    **See also**
+
+    :func:`returns`
+    """
+    obs = getattr(obs, 'w', obs)
+    freq = _PERIOD_TO_DATE_FREQUENCIES.get(obs.lower()) if isinstance(obs, str) else None
+    if freq is None:
+        return None
+    period_start = pd.Timestamp(start).tz_localize(None).to_period(freq).start_time
+    return (period_start - pd.Timedelta(days=1)).date()
+
+
 @plot_function
 def returns(series: pd.Series, obs: Union[Window, int, str] = 1, type: Returns = Returns.SIMPLE) -> pd.Series:
     """
     Calculate returns from price series
 
     :param series: time series of prices
-    :param obs: number of observations or relative date e.g. 3d, 1w, 1m ( relative date should be of pattern \d+[dmywDMYW] ).
+    :param obs: number of observations or relative date e.g. 3d, 1w, 1m ( relative date should be of pattern \d+[dmywDMYW] ),
+                or ytd / qtd for returns since the close of the previous calendar year / quarter.
     :param type: returns type: simple, logarithmic or absolute
     :return: date-based time series of return
 
@@ -323,6 +361,10 @@ def returns(series: pd.Series, obs: Union[Window, int, str] = 1, type: Returns =
     >>> prices = generate_series(100)
     >>> returns = returns(prices)
 
+    Compute year-to-date returns, relative to the last price of the previous year
+
+    >>> ytd_returns = returns(prices, 'ytd')
+
     **See also**
 
     :func:`prices`
@@ -331,7 +373,10 @@ def returns(series: pd.Series, obs: Union[Window, int, str] = 1, type: Returns =
     if series.size < 1:
         return series
 
-    shifted_series = lag(series, obs, LagMode.TRUNCATE)
+    if isinstance(obs, str) and obs.lower() in _PERIOD_TO_DATE_FREQUENCIES:
+        shifted_series = _previous_period_close(series, _PERIOD_TO_DATE_FREQUENCIES[obs.lower()])
+    else:
+        shifted_series = lag(series, obs, LagMode.TRUNCATE)
 
     if isinstance(obs, str) and not isinstance(series.index, pd.DatetimeIndex):
         series = series.copy()

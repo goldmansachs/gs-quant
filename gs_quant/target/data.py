@@ -334,14 +334,6 @@ class AlloyConfig(Base):
     coverage_service: Optional[AlloyService] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)
 
-@handle_camel_case_args
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass(unsafe_hash=True, repr=False)
-class DBConfig(Base):
-    db: Optional[str] = field(default=None, metadata=field_metadata)
-    drg_id: Optional[str] = field(default=None, metadata=field_metadata)
-    id_column: Optional[str] = field(default=None, metadata=config(field_name='IdColumn', exclude=exclude_none))
-    date_time_column: Optional[str] = field(default=None, metadata=field_metadata)
 
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -430,7 +422,7 @@ class MarketDataMapping(Base):
     fields: Optional[tuple[MarketDataField, ...]] = field(default=None, metadata=field_metadata)
     rank: Optional[float] = field(default=None, metadata=field_metadata)
     filtered_fields: Optional[tuple[MarketDataFilteredField, ...]] = field(default=None, metadata=field_metadata)
-    asset_types: Optional[tuple[AssetType, ...]] = field(default=None, metadata=field_metadata)
+    asset_types: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
     entity_type: Optional[MeasureEntityType] = field(default=None, metadata=field_metadata)
     backtest_entity: Optional[MeasureBacktest] = field(default=None, metadata=field_metadata)
     kpi_entity: Optional[MeasureKpi] = field(default=None, metadata=field_metadata)
@@ -578,7 +570,6 @@ class DataSetParameters(Base):
     apply_market_data_entitlements: Optional[bool] = field(default=None, metadata=field_metadata)
     upload_data_policy: Optional[str] = field(default=None, metadata=field_metadata)
     logical_db: Optional[str] = field(default=None, metadata=field_metadata)
-    sla: Optional[str] = field(default=None, metadata=field_metadata)
     snowflake_db: Optional[str] = field(default=None, metadata=field_metadata)
     symbol_strategy: Optional[str] = field(default=None, metadata=field_metadata)
     sub_symbol_strategy: Optional[str] = field(default=None, metadata=field_metadata)

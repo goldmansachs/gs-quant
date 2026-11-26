@@ -86,6 +86,16 @@ class ShockUnit(EnumBase, Enum):
     standardDeviation = 'standardDeviation'    
 
 
+class TargetBenchmark(EnumBase, Enum):    
+    
+    """An Arrival benchmark tries to minimise slippage from arrival by balancing risk
+       vs impact subject to the specified urgency. A Close benchmark results in
+       a back-loaded schedule, minimizing slippage to the close."""
+
+    IS = 'IS'
+    CLOSE = 'CLOSE'    
+
+
 @handle_camel_case_args
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass(unsafe_hash=True, repr=False)

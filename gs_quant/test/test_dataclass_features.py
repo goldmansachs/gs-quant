@@ -61,8 +61,8 @@ from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import MarketDataShockBasedScenario, RollFwd
 from gs_quant.target.assets import CommodityPowerNode, HedgeFundParameters
 from gs_quant.target.backtests import BacktestStrategyTransactionCost, BacktestStrategyTransactionCostModelScaled
-from gs_quant.target.data import DataQuery, DBConfig
-from gs_quant.target.indices import IndicesEditInputs
+from gs_quant.target.data import DataQuery, SnowflakeConfig
+from gs_quant.target.indices import IndicesEditInputTypes
 from gs_quant.test import dataclass_test_utils as utils
 from gs_quant.workflow import (
     BinaryImageComments,
@@ -335,9 +335,8 @@ def test_hash_repr():
     assert repr(utils.parameterised_risk_measure()) == 'IRDelta(aggregation_level:Type, currency:local)'
 
 
-@pytest.mark.xfail(strict=True, reason='D-29: repr() raises for a generated class without a name field')
-@pytest.mark.parametrize('cls', (DBConfig, IndicesEditInputs))
-def test_repr_without_name_field(cls):
+@pytest.mark.parametrize('cls', (SnowflakeConfig, IndicesEditInputTypes))
+def test_repr_of_an_unnamed_instance(cls):
     assert repr(cls()).startswith(f'<{cls.__module__}.{cls.__name__} object at ')
 
 

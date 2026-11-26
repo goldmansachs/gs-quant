@@ -42,6 +42,7 @@ from gs_quant.timeseries import (
     correlation,
     generate_series,
     index,
+    lookback_start,
     max_drawdown,
     prices,
     returns,
@@ -107,6 +108,47 @@ def test_returns():
 
     with pytest.raises(MqValueError):
         returns(x, 1, "None")
+
+
+def test_returns_period_to_date():
+    dates = [
+        dt.date(2019, 12, 30),
+        dt.date(2019, 12, 31),
+        dt.date(2020, 2, 14),
+        dt.date(2020, 3, 31),
+        dt.date(2020, 4, 1),
+        dt.date(2020, 7, 1),
+    ]
+    x = pd.Series([90.0, 100.0, 110.0, 120.0, 132.0, 150.0], index=dates)
+    index = pd.DatetimeIndex(dates)
+
+    expected = pd.Series([np.nan, np.nan, 0.1, 0.2, 0.32, 0.5], index=index)
+    assert_series_equal(returns(x, 'ytd'), expected, obj="YTD simple returns")
+    assert_series_equal(returns(x, 'YTD'), expected, obj="YTD case insensitive")
+
+    expected = pd.Series([np.nan, np.nan, 0.1, 0.2, 0.1, 150.0 / 132.0 - 1], index=index)
+    assert_series_equal(returns(x, 'qtd'), expected, obj="QTD simple returns")
+
+    expected = pd.Series([np.nan, np.nan, 10.0, 20.0, 32.0, 50.0], index=index)
+    assert_series_equal(returns(x, 'ytd', Returns.ABSOLUTE), expected, obj="YTD absolute returns")
+
+
+@pytest.mark.parametrize(
+    'obs, expected',
+    [
+        ('ytd', dt.date(2025, 12, 31)),
+        ('QTD', dt.date(2026, 9, 30)),
+        (Window('ytd', 0), dt.date(2025, 12, 31)),
+        ('1m', None),
+        (5, None),
+    ],
+)
+def test_lookback_start(obs, expected):
+    assert lookback_start(obs, dt.date(2026, 10, 15)) == expected
+
+
+def test_lookback_start_ignores_time_and_timezone():
+    assert lookback_start('qtd', pd.Timestamp('2026-10-01 09:00', tz='UTC')) == dt.date(2026, 9, 30)
 
 
 def test_prices():

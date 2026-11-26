@@ -23,10 +23,7 @@ from dataclasses_json import LetterCase, config, dataclass_json
 from enum import Enum
 
 
-from gs_quant.target.reports import Report
-
-
-class ActiveWeightType(EnumBase, Enum):
+class ActiveWeightType(EnumBase, Enum):    
     
     """Weight type used to calculate active holdings."""
 
@@ -86,17 +83,6 @@ class RefreshInterval(EnumBase, Enum):
     End_Of_Week = 'End Of Week'
     Start_Of_Month = 'Start Of Month'
     End_Of_Month = 'End Of Month'    
-
-
-class RiskAumSource(EnumBase, Enum):    
-    
-    """Source of AUM for portfolio risk calculations."""
-
-    Gross = 'Gross'
-    Long = 'Long'
-    Short = 'Short'
-    Custom_AUM = 'Custom AUM'
-    Net = 'Net'    
 
 
 @handle_camel_case_args
@@ -212,6 +198,7 @@ class PCOPortfolioParameters(Base):
     show_cash: Optional[bool] = field(default=None, metadata=field_metadata)
     show_exposure: Optional[bool] = field(default=None, metadata=field_metadata)
     enable_rfq: Optional[bool] = field(default=None, metadata=config(field_name='enableRFQ', exclude=exclude_none))
+    hrr_enabled: Optional[bool] = field(default=None, metadata=field_metadata)
     ccys_enabled_for_deliverable: Optional[tuple[Currency, ...]] = field(default=None, metadata=field_metadata)
     fixing_descriptions: Optional[tuple[str, ...]] = field(default=None, metadata=field_metadata)
     pco_origin: Optional[PCOOrigin] = field(default=None, metadata=field_metadata)
@@ -260,7 +247,5 @@ class PortfolioTree(Base):
     tag_value: Optional[str] = field(default=None, metadata=field_metadata)
     leaf_tag_name: Optional[str] = field(default=None, metadata=field_metadata)
     reports: Optional[tuple[Report, ...]] = field(default=None, metadata=field_metadata)
-    # Using forward reference via string instead of Lazy annotations because latter doesn't work very well with
-    # dataclasses - https://bugs.python.org/issue39442
     sub_portfolios: Optional[tuple['PortfolioTree', ...]] = field(default=None, metadata=field_metadata)
     name: Optional[str] = field(default=None, metadata=name_metadata)

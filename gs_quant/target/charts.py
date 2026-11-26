@@ -384,6 +384,6 @@ class Chart(Base):
     annotations: Optional[tuple[ChartAnnotation, ...]] = field(default=None, metadata=field_metadata)
     template_variables: Optional[DictBase] = field(default=None, metadata=field_metadata)
     parameters: Optional[dict] = field(default=None, metadata=field_metadata)
-    controls: Optional[Tuple[Union[dict, bool, float, str], ...]] = field(default=None, metadata=field_metadata)
+    controls: Optional[tuple[Union[dict, bool, float, str], ...]] = field(default=None, metadata=field_metadata)
     ai: Optional[str] = field(default=None, metadata=field_metadata)
     ai_user_prompt: Optional[str] = field(default=None, metadata=field_metadata)

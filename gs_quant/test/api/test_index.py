@@ -15,8 +15,10 @@ under the License.
 """
 
 import datetime as dt
+import json
 from unittest import mock
 
+import pytest
 import testfixtures
 
 from gs_quant.api.gs.indices import GsIndexApi
@@ -30,6 +32,10 @@ from gs_quant.target.indices import (
     CustomBasketsRebalanceInputs,
     CustomBasketsResponse,
     IndicesCurrency,
+    IndicesEditInputTypes,
+    IndicesRebalanceInputs,
+    ISelectRebalance,
+    ISelectResponse,
     PublishParameters,
 )
 
@@ -193,3 +199,50 @@ def test_get_asset_positions_data(mocker):
     )
 
     testfixtures.compare(response, expected_response)
+
+
+@pytest.fixture
+def post(mocker):
+    mocker.patch.object(
+        GsSession.__class__, 'default_value', return_value=GsSession.get(Environment.QA, 'client_id', 'secret')
+    )
+    return mocker.patch.object(GsSession.current.sync, 'post')
+
+
+def test_edit_posts_the_inputs_as_parameters(post):
+    inputs = CustomBasketsEditInputs(name=name, flagship=True)
+
+    GsIndexApi.edit(basket_id, inputs)
+
+    post.assert_called_once_with(
+        f'/indices/{basket_id}/edit', payload=IndicesEditInputTypes(parameters=inputs), cls=CustomBasketsResponse
+    )
+    assert post.call_args.kwargs['payload'].to_dict() == {'parameters': inputs.to_dict()}
+
+
+def test_edit_posts_a_dict_as_an_equity_basket_edit(post):
+    GsIndexApi.edit(basket_id, {'name': name, 'flagship': True})
+
+    assert post.call_args.args == (f'/indices/{basket_id}/edit',)
+    assert json.loads(post.call_args.kwargs['payload'].to_json()) == {
+        'parameters': {'assetClass': 'Equity', 'name': name, 'flagship': True}
+    }
+
+
+@pytest.mark.parametrize(
+    'inputs, response_cls',
+    (
+        (
+            CustomBasketsRebalanceInputs(position_set=position_set, pricing_parameters=pricing_parameters),
+            CustomBasketsResponse,
+        ),
+        (ISelectRebalance(rebalance_date='2021-01-04'), ISelectResponse),
+    ),
+    ids=('custom basket', 'iselect'),
+)
+def test_rebalance_posts_the_inputs_as_parameters(post, inputs, response_cls):
+    GsIndexApi.rebalance(basket_id, inputs)
+
+    post.assert_called_once_with(
+        f'/indices/{basket_id}/rebalance', payload=IndicesRebalanceInputs(parameters=inputs), cls=response_cls
+    )
