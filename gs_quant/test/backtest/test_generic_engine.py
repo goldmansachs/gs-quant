@@ -12,6 +12,8 @@ software distributed under the License is distributed on an
 KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
+
+Portions copyright Russlan Ramdowar. Licensed under Apache 2.0 license
 """
 
 import datetime as dt
@@ -503,6 +505,18 @@ def test_scaled_transaction_cost(mocker):
         assert len(ledger) == 5
         assert round(summary[Price].sum()) == 90
         assert round(summary['Transaction Costs'].iloc[-1]) == 50000 * 0.0001 * 5 * -1
+
+        # Reuse the recorded pricing with nonzero capital, including the opening cost in daily PnL.
+        backtest_with_capital = GE.run_backtest(
+            strategy, start=start_date, end=end_date, frequency='1b', initial_value=1000
+        )
+        summary_with_capital = backtest_with_capital.result_summary
+        stats = backtest_with_capital.summary_stats()
+        pnl = summary_with_capital['Total'].iloc[-1] - 1000.0
+        assert summary_with_capital['Transaction Costs'].iloc[0] == -5.0
+        assert np.isclose(stats['Total PnL'], pnl)
+        assert np.isclose(stats['Average Daily PnL'], pnl / 4)
+        assert stats['% Positive Days'] == 50.0
 
 
 @patch.object(GenericEngine, 'new_pricing_context', mock_pricing_context)
