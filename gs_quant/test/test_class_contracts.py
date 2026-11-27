@@ -56,11 +56,6 @@ KNOWN_FAILURES = (
     ),
     KnownFailure(
         frozenset({'repr'}),
-        'D-29: repr() raises for a generated class without a name field',
-        lambda cls: bool(dataclasses.fields(cls)) and 'name' not in cls.__dataclass_fields__,
-    ),
-    KnownFailure(
-        frozenset({'repr'}),
         'D-29: repr() raises for a parameterised risk measure without a name or measure type',
         lambda cls: issubclass(cls, ParameterisedRiskMeasure),
     ),

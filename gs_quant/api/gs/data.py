@@ -35,7 +35,7 @@ from gs_quant.base import Base
 from gs_quant.common import Format, MarketDataVendor, PricingLocation
 from gs_quant.data.core import DataContext, DataFrequency
 from gs_quant.data.log import log_debug, log_warning
-from gs_quant.errors import MqValueError
+from gs_quant.errors import MqRequestError, MqValueError
 from gs_quant.json_encoder import JSONEncoder
 from gs_quant.markets import MarketDataCoordinate
 from gs_quant.target.coordinates import MDAPIDataBatchResponse, MDAPIDataQuery, MDAPIDataQueryResponse, MDAPIQueryField
@@ -441,6 +441,8 @@ class GsDataApi(DataApi):
         params = {**params, **kwargs}
         return params
 
+    COVERAGE_SCROLL_RETRIES = 3
+
     @classmethod
     def get_coverage(
         cls,
@@ -454,20 +456,31 @@ class GsDataApi(DataApi):
         **kwargs,
     ) -> list[dict]:
         session = cls.get_session()
-        params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
-        body = session.sync.get(f'/data/{dataset_id}/coverage', payload=params)
-        results = scroll_results = body['results']
-        total_results = body['totalResults']
-        while len(scroll_results) and len(results) < total_results:
-            scroll_id = body.get('scrollId')
-            if scroll_id is None:
-                break
-            params['scrollId'] = scroll_id
-            body = session.sync.get(f'/data/{dataset_id}/coverage', payload=params)
-            scroll_results = body['results']
-            results += scroll_results
-
-        return results
+        url = f'/data/{dataset_id}/coverage'
+        for attempt in range(cls.COVERAGE_SCROLL_RETRIES):
+            params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
+            try:
+                body = session.sync.get(url, payload=params)
+                results = scroll_results = body['results']
+                total_results = body['totalResults']
+                while len(scroll_results) and len(results) < total_results:
+                    # always continue from the most recent scrollId
+                    next_scroll_id = body.get('scrollId')
+                    if next_scroll_id is None:
+                        break
+                    params['scrollId'] = next_scroll_id
+                    body = session.sync.get(url, payload=params)
+                    scroll_results = body['results']
+                    results += scroll_results
+                return results
+            except MqRequestError as e:
+                # 409: scroll context expired / partial elastic search failure -> restart scroll from the beginning
+                if e.status != 409 or attempt == cls.COVERAGE_SCROLL_RETRIES - 1:
+                    raise
+                log_warning(
+                    '', _logger, f'Coverage scroll for {dataset_id} failed with 409, restarting (attempt {attempt + 1})'
+                )
+                scroll_id = None
 
     @classmethod
     async def get_coverage_async(
@@ -482,17 +495,30 @@ class GsDataApi(DataApi):
         **kwargs,
     ) -> list[dict]:
         session = cls.get_session()
-        params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
-        body = await session.async_.get(f'/data/{dataset_id}/coverage', payload=params)
-        results = scroll_results = body['results']
-        total_results = body['totalResults']
-        while len(scroll_results) and len(results) < total_results:
-            params['scrollId'] = body['scrollId']
-            body = await session.async_.get(f'/data/{dataset_id}/coverage', payload=params)
-            scroll_results = body['results']
-            if scroll_results:
-                results += scroll_results
-        return results
+        url = f'/data/{dataset_id}/coverage'
+        for attempt in range(cls.COVERAGE_SCROLL_RETRIES):
+            params = cls._build_params(scroll, scroll_id, limit, offset, fields, include_history, **kwargs)
+            try:
+                body = await session.async_.get(url, payload=params)
+                results = scroll_results = body['results']
+                total_results = body['totalResults']
+                while len(scroll_results) and len(results) < total_results:
+                    next_scroll_id = body.get('scrollId')
+                    if next_scroll_id is None:
+                        break
+                    params['scrollId'] = next_scroll_id
+                    body = await session.async_.get(url, payload=params)
+                    scroll_results = body['results']
+                    if scroll_results:
+                        results += scroll_results
+                return results
+            except MqRequestError as e:
+                if e.status != 409 or attempt == cls.COVERAGE_SCROLL_RETRIES - 1:
+                    raise
+                log_warning(
+                    '', _logger, f'Coverage scroll for {dataset_id} failed with 409, restarting (attempt {attempt + 1})'
+                )
+                scroll_id = None
 
     @classmethod
     def create(cls, definition: Union[DataSetEntity, dict]) -> DataSetEntity:

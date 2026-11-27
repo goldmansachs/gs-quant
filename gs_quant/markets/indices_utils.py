@@ -463,6 +463,9 @@ def get_flagships_performance(
     return pd.DataFrame(performance)
 
 
+COVERAGE_PAGE_SIZE = 500
+
+
 def get_flagships_constituents(
     fields: list[str] = [],
     basket_type: list[BasketType] = BasketType.to_list(),
@@ -472,6 +475,7 @@ def get_flagships_constituents(
     start: dt.date = None,
     end: dt.date = None,
     include_history: bool = True,
+    batch_size: int = COVERAGE_PAGE_SIZE,
     **kwargs,
 ) -> pd.DataFrame:
     """
@@ -486,6 +490,7 @@ def get_flagships_constituents(
     :param start: Start date for which to retrieve constituents (defaults to previous business day)
     :param end: End date for which to retrieve constituents (defaults to previous business day)
     :param include_history: Whether to include historical coverage metadata such as historyStartDate. Set to False if hitting timeouts.
+    :param batch_size: Number of coverage rows fetched per page (defaults to 500). Lower it if hitting timeouts.
     :return: flagship baskets constituents
 
     **Usage**
@@ -514,7 +519,14 @@ def get_flagships_constituents(
     )
     basket_ids = [b.get('id') for b in response]
     cov_dataset_id = __get_dataset_id(asset_class=asset_class[0], basket_type=basket_type[0], data_type='price')
-    coverage = GsDataApi.get_coverage(dataset_id=cov_dataset_id, fields=basket_fields, include_history=include_history)
+    # small pages so each scroll round trip finishes well within the scroll keep-alive window
+    coverage = GsDataApi.get_coverage(
+        dataset_id=cov_dataset_id,
+        fields=basket_fields,
+        include_history=include_history,
+        limit=batch_size,
+        scroll='1m',
+    )
     basket_map = {b['assetId']: {**b, 'constituents': []} for b in coverage if b['assetId'] in basket_ids}
 
     basket_dataset_query_map, constituents_data, tasks = {}, [], []

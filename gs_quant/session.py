@@ -87,6 +87,7 @@ class Domain:
     MDS_US_EAST = "MdsDomainEast"
     MDS_WEB = "MdsWebDomain"
     APP = "AppDomain"
+    MARQUEE_WEB = 'MarqueeWebDomain'
 
 
 class _SyncSessionAPI:
@@ -419,9 +420,6 @@ class GsSession(ContextBase):
         if self.__close_on_exit:
             self._close_async_clients()
             self._session = None
-
-    def _has_async_session(self) -> bool:
-        return self._session_async is not None
 
     def _async_mounts(self) -> Optional[dict]:
         if not self.proxies:
@@ -1158,7 +1156,6 @@ class GsSession(ContextBase):
         http_adapter: requests.adapters.HTTPAdapter = None,
         application_version: str = APP_VERSION,
         domain: Domain = Domain.APP,
-        is_jwt_login: bool = False,
         cookies: SimpleCookie = None,
     ) -> 'GsSession':
         """Return an instance of the appropriate session type for the given credentials"""
@@ -1206,16 +1203,6 @@ class GsSession(ContextBase):
                     application_version=application_version,
                     application=application,
                     mq_login_token=token,
-                )
-            elif is_jwt_login:
-                return MQLoginSession(
-                    environment_or_domain,
-                    domain=domain,
-                    api_version=api_version,
-                    http_adapter=http_adapter,
-                    application_version=application_version,
-                    application=application,
-                    jwt_token=token,
                 )
             else:
                 return PassThroughSession(
@@ -1352,11 +1339,26 @@ class PassThroughSession(GsSession):
         self._orig_domain = domain
         self.token = token
 
-    def _authenticate(self):
-        self._session.headers.update({'Authorization': 'Bearer {}'.format(self.token)})
+    def init(self, cookies=None):
+        if cookies:
+            authorization = cookies.get('Authorization')
+            if authorization:
+                self.token = authorization
+                if self._session:
+                    self._authenticate()
+                session_async = self._session_async
+                if session_async is not None:
+                    session_async.headers.update({'Authorization': f'Bearer {self.token}'})
+        super().init(cookies)
 
-    def _headers(self):
-        return [('Authorization', self._session.headers['Authorization'])]
+    def _init_async(self):
+        client = super()._init_async()
+        if self.token:
+            client.headers.update({'Authorization': f'Bearer {self.token}'})
+        return client
+
+    def _authenticate(self):
+        self._session.headers.update({'Authorization': f'Bearer {self.token}'})
 
 
 try:

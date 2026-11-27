@@ -61,8 +61,7 @@ from gs_quant.markets.portfolio import Portfolio
 from gs_quant.risk import MarketDataShockBasedScenario, RollFwd
 from gs_quant.target.assets import CommodityPowerNode, HedgeFundParameters
 from gs_quant.target.backtests import BacktestStrategyTransactionCost, BacktestStrategyTransactionCostModelScaled
-from gs_quant.target.data import DataQuery, SnowflakeConfig
-from gs_quant.target.indices import IndicesEditInputTypes
+from gs_quant.target.data import DataQuery
 from gs_quant.test import dataclass_test_utils as utils
 from gs_quant.workflow import (
     BinaryImageComments,
@@ -333,11 +332,6 @@ def test_hash_repr():
     assert repr(RollFwd(date='1m', realise_fwd=True)) == 'RollFwd(date:1m, realise_fwd:True, scenario_type:RollFwd)'
     assert repr(RollFwd(date='1m', name='fwd')) == 'fwd'
     assert repr(utils.parameterised_risk_measure()) == 'IRDelta(aggregation_level:Type, currency:local)'
-
-
-@pytest.mark.parametrize('cls', (SnowflakeConfig, IndicesEditInputTypes))
-def test_repr_of_an_unnamed_instance(cls):
-    assert repr(cls()).startswith(f'<{cls.__module__}.{cls.__name__} object at ')
 
 
 @pytest.mark.parametrize(
